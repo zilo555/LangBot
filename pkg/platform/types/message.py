@@ -643,6 +643,14 @@ class Unknown(MessageComponent):
     text: str
     """文本。"""
 
+class MiniPrograms(MessageComponent):
+    """小程序？"""
+    type: str = 'MiniPrograms'
+    """xml数据"""
+    xml_data: str
+    """首页图片"""
+    image_url: typing.Optional[str] = None
+
 
 class Voice(MessageComponent):
     """语音。"""

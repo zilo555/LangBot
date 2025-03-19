@@ -47,6 +47,8 @@ class GewechatMessageConverter(adapter.MessageConverter):
                 if not component.url:
                     pass
                 content_list.append({"type": "image", "image": component.url})
+            elif isinstance(component, platform_message.MiniPrograms):
+                content_list.append({"type": 'MiniPrograms', 'xml_data': component.xml_data, 'image_url': component.image_url})
 
 
             elif isinstance(component, platform_message.Voice):
@@ -361,6 +363,8 @@ class GeWeChatAdapter(adapter.MessagePlatformAdapter):
             elif msg['type'] == 'image':
 
                 self.bot.post_image(app_id=self.config['app_id'], to_wxid=target_id, img_url=msg["image"])
+            elif msg['type'] == 'MiniPrograms':
+                self.bot.forward_mini_app(app_id=self.config['app_id'], to_wxid=target_id, xml=msg['xml_data'], cover_img_url=msg['image_url'])
 
 
 
