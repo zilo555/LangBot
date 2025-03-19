@@ -672,6 +672,29 @@ class ForwardMiniPrograms(MessageComponent):
     image_url: typing.Optional[str] = None
 
 
+class EmoJi(MessageComponent):
+    """emoji表情"""
+    type: str = 'EmoJi'
+    """emojimd5"""
+    emoji_md5: str
+    """emoji大小"""
+    emoji_size: int
+
+
+class Link(MessageComponent):
+    """发送链接"""
+    type: str = 'Link'
+    """标题"""
+    link_title: str = ''
+    """链接描述"""
+    link_desc: str = ''
+    """链接地址"""
+    link_url: str = ''
+    """链接略缩图"""
+    link_thumb_url: str = ''
+
+
+
 class Voice(MessageComponent):
     """语音。"""
     type: str = "Voice"
