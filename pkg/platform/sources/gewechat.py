@@ -48,8 +48,10 @@ class GewechatMessageConverter(adapter.MessageConverter):
                     pass
                 content_list.append({"type": "image", "image": component.url})
             elif isinstance(component, platform_message.MiniPrograms):
-                content_list.append({"type": 'MiniPrograms', 'xml_data': component.xml_data, 'image_url': component.image_url})
-
+                # content_list.append({"type": 'MiniPrograms', 'xml_data': component.xml_data, 'image_url': component.image_url})
+                content_list.append({"type": 'MiniPrograms', 'mini_app_id': component.mini_app_id, 'display_name': component.display_name,
+                                     'page_path': component.page_path, 'cover_img_url': component.image_url, 'title': component.title,
+                                     'user_name': component.user_name})
 
             elif isinstance(component, platform_message.Voice):
                 content_list.append({"type": "voice", "url": component.url, "length": component.length})
@@ -364,7 +366,9 @@ class GeWeChatAdapter(adapter.MessagePlatformAdapter):
 
                 self.bot.post_image(app_id=self.config['app_id'], to_wxid=target_id, img_url=msg["image"])
             elif msg['type'] == 'MiniPrograms':
-                self.bot.forward_mini_app(app_id=self.config['app_id'], to_wxid=target_id, xml=msg['xml_data'], cover_img_url=msg['image_url'])
+                self.bot.post_mini_app(app_id=self.config['app_id'], to_wxid=target_id, mini_app_id=msg['mini_app_id']
+                                       , display_name=msg['display_name'], page_path=msg['page_path']
+                                       , cover_img_url=msg['cover_img_url'], title=msg['title'], user_name=msg['user_name'])
 
 
 

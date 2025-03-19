@@ -643,9 +643,29 @@ class Unknown(MessageComponent):
     text: str
     """文本。"""
 
+
+
+
 class MiniPrograms(MessageComponent):
-    """小程序？"""
+    """小程序"""
     type: str = 'MiniPrograms'
+    """小程序id"""
+    mini_app_id: str
+    """小程序归属用户id"""
+    user_name: str
+    """小程序名称"""
+    display_name: typing.Optional[str] = ''
+    """打开地址"""
+    page_path: typing.Optional[str] = 'None'
+    """小程序标题"""
+    title: typing.Optional[str] = 'None'
+    """首页图片"""
+    image_url: typing.Optional[str] = 'None'
+
+
+class ForwardMiniPrograms(MessageComponent):
+    """转发小程序"""
+    type: str = 'ForwardMiniPrograms'
     """xml数据"""
     xml_data: str
     """首页图片"""
