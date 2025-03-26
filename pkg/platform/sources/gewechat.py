@@ -397,6 +397,7 @@ class GeWeChatAdapter(adapter.MessagePlatformAdapter):
         content_list = await self.message_converter.yiri2target(message)
 
         ats = [item["target"] for item in content_list if item["type"] == "at"]
+        target_id = message_source.source_platform_object["Data"]["FromUserName"]["string"]
 
         for msg in content_list:
             if msg["type"] == "text":
@@ -417,6 +418,22 @@ class GeWeChatAdapter(adapter.MessagePlatformAdapter):
                     content=msg["content"],
                     ats=",".join(ats)
                 )
+            elif msg['type'] == 'image':
+
+                self.bot.post_image(app_id=self.config['app_id'], to_wxid=target_id, img_url=msg["image"])
+            elif msg['type'] == 'MiniPrograms':
+                self.bot.post_mini_app(app_id=self.config['app_id'], to_wxid=target_id, mini_app_id=msg['mini_app_id']
+                                       , display_name=msg['display_name'], page_path=msg['page_path']
+                                       , cover_img_url=msg['cover_img_url'], title=msg['title'], user_name=msg['user_name'])
+            elif msg['type'] == 'ForwardMiniPrograms':
+                self.bot.forward_mini_app(app_id=self.config['app_id'], to_wxid=target_id, xml=msg['xml_data'], cover_img_url=msg['inage_url'])
+            elif msg['type'] == 'emoji':
+                self.bot.post_emoji(app_id=self.config['app_id'], to_wxid=target_id,
+                                    emoji_md5=msg['emoji_md5'], emoji_size=msg['emoji_size'])
+            elif msg['type'] == 'Link':
+                self.bot.post_link(app_id=self.config['app_id'], to_wxid=target_id
+                                   , title=msg['link_title'], desc=msg['link_desc']
+                                   , link_url=msg['link_url'], thumb_url=msg['link_thumb_url'])
 
     async def is_muted(self, group_id: int) -> bool:
         pass
