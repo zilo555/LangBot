@@ -53,7 +53,7 @@ class GewechatMessageConverter(adapter.MessageConverter):
                                      'user_name': component.user_name})
             elif isinstance(component, platform_message.ForwardMiniPrograms):
                 content_list.append({"type": 'ForwardMiniPrograms', 'xml_data': component.xml_data, 'image_url': component.image_url})
-            elif isinstance(component, platform_message.EmoJi):
+            elif isinstance(component, platform_message.Emoji):
                 content_list.append({'type': 'emoji', 'emoji_md5': component.emoji_md5, 'emoji_size': component.emoji_size})
             elif isinstance(component, platform_message.Link):
                 content_list.append({'type': 'Link', 'link_title': component.link_title, 'link_desc': component.link_desc,
@@ -377,7 +377,7 @@ class GeWeChatAdapter(adapter.MessagePlatformAdapter):
                                        , display_name=msg['display_name'], page_path=msg['page_path']
                                        , cover_img_url=msg['cover_img_url'], title=msg['title'], user_name=msg['user_name'])
             elif msg['type'] == 'ForwardMiniPrograms':
-                self.bot.forward_mini_app(app_id=self.config['app_id'], to_wxid=target_id, xml=msg['xml_data'], cover_img_url=msg['inage_url'])
+                self.bot.forward_mini_app(app_id=self.config['app_id'], to_wxid=target_id, xml=msg['xml_data'], cover_img_url=msg['image_url'])
             elif msg['type'] == 'emoji':
                 self.bot.post_emoji(app_id=self.config['app_id'], to_wxid=target_id,
                                     emoji_md5=msg['emoji_md5'], emoji_size=msg['emoji_size'])
@@ -426,7 +426,7 @@ class GeWeChatAdapter(adapter.MessagePlatformAdapter):
                                        , display_name=msg['display_name'], page_path=msg['page_path']
                                        , cover_img_url=msg['cover_img_url'], title=msg['title'], user_name=msg['user_name'])
             elif msg['type'] == 'ForwardMiniPrograms':
-                self.bot.forward_mini_app(app_id=self.config['app_id'], to_wxid=target_id, xml=msg['xml_data'], cover_img_url=msg['inage_url'])
+                self.bot.forward_mini_app(app_id=self.config['app_id'], to_wxid=target_id, xml=msg['xml_data'], cover_img_url=msg['image_url'])
             elif msg['type'] == 'emoji':
                 self.bot.post_emoji(app_id=self.config['app_id'], to_wxid=target_id,
                                     emoji_md5=msg['emoji_md5'], emoji_size=msg['emoji_size'])

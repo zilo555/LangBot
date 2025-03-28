@@ -672,7 +672,7 @@ class ForwardMiniPrograms(MessageComponent):
     image_url: typing.Optional[str] = None
 
 
-class EmoJi(MessageComponent):
+class Emoji(MessageComponent):
     """emoji表情"""
     type: str = 'EmoJi'
     """emojimd5"""
@@ -858,6 +858,7 @@ class File(MessageComponent):
     """文件名称。"""
     size: int
     """文件大小。"""
+
     def __str__(self):
         return f'[文件]{self.name}'
 
