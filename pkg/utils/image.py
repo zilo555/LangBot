@@ -213,3 +213,7 @@ async def extract_b64_and_format(image_base64_data: str) -> typing.Tuple[str, st
     base64_str = image_base64_data.split(',')[-1]
     image_format = image_base64_data.split(':')[-1].split(';')[0].split('/')[-1]
     return base64_str, image_format
+
+
+async def get_slack_image_to_base64(pic_url:str):
+    pass
