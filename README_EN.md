@@ -24,7 +24,7 @@
 [![Discord](https://img.shields.io/discord/1335141740050649118?logo=discord&labelColor=%20%235462eb&logoColor=%20%23f5f5f5&color=%20%235462eb)](https://discord.gg/wdNEHETs87)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/RockChinQ/LangBot)](https://github.com/RockChinQ/LangBot/releases/latest)
  ![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.qchatgpt.rockchin.top%2Fapi%2Fv2%2Fview%2Frealtime%2Fcount_query%3Fminute%3D10080&query=%24.data.count&label=Usage(7days))
-<img src="https://img.shields.io/badge/python-3.10 | 3.11 | 3.12-blue.svg" alt="python">
+<img src="https://img.shields.io/badge/python-3.10 ~ 3.13 -blue.svg" alt="python">
 
 [简体中文](README.md) / [English](README_EN.md) / [日本語](README_JP.md)
 
@@ -90,6 +90,8 @@ Directly use the released version to run, see the [Manual Deployment](https://do
 | DingTalk | ✅ |  |
 | Discord | ✅ |  |
 | Telegram | ✅ |  |
+| Slack | 🚧 |  |
+| LINE | 🚧 |  |
 | WhatsApp | 🚧 |  |
 
 🚧: In development
@@ -115,11 +117,15 @@ Directly use the released version to run, see the [Manual Deployment](https://do
 
 ## 🤝 Community Contribution
 
-Thanks to the following contributors and everyone in the community for their contributions.
-
+Thank you for the following [code contributors](https://github.com/RockChinQ/LangBot/graphs/contributors) and other members in the community for their contributions to LangBot:
 
 <a href="https://github.com/RockChinQ/LangBot/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=RockChinQ/LangBot" />
 </a>
 
+And the core team members of LangBot:
 
+- [RockChinQ](https://github.com/RockChinQ)
+- [the-lazy-me](https://github.com/the-lazy-me)
+- [wangcham](https://github.com/wangcham)
+- [KaedeSAMA](https://github.com/KaedeSAMA)

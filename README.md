@@ -26,7 +26,7 @@
 [![QQ Group](https://img.shields.io/badge/%E7%A4%BE%E5%8C%BAQQ%E7%BE%A4-966235608-blue)](https://qm.qq.com/q/JLi38whHum)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/RockChinQ/LangBot)](https://github.com/RockChinQ/LangBot/releases/latest)
  ![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.qchatgpt.rockchin.top%2Fapi%2Fv2%2Fview%2Frealtime%2Fcount_query%3Fminute%3D10080&query=%24.data.count&label=%E4%BD%BF%E7%94%A8%E9%87%8F%EF%BC%887%E6%97%A5%EF%BC%89)
-<img src="https://img.shields.io/badge/python-3.10 | 3.11 | 3.12-blue.svg" alt="python">
+<img src="https://img.shields.io/badge/python-3.10 ~ 3.13 -blue.svg" alt="python">
 [![star](https://gitcode.com/RockChinQ/LangBot/star/badge.svg)](https://gitcode.com/RockChinQ/LangBot)
 
 [简体中文](README.md) / [English](README_EN.md) / [日本語](README_JP.md)
@@ -93,6 +93,8 @@
 | 钉钉 | ✅ |  |
 | Discord | ✅ |  |
 | Telegram | ✅ |  |
+| Slack | 🚧 |  |
+| LINE | 🚧 |  |
 | WhatsApp | 🚧 |  |
 
 🚧: 正在开发中
@@ -115,6 +117,7 @@
 | [阿里云百炼](https://bailian.console.aliyun.com/) | ✅ | 大模型聚合平台, LLMOps 平台 |
 | [火山方舟](https://console.volcengine.com/ark/region:ark+cn-beijing/model?vendor=Bytedance&view=LIST_VIEW) | ✅ | 大模型聚合平台, LLMOps 平台 |
 | [MCP](https://modelcontextprotocol.io/) | ✅ | 支持通过 MCP 协议获取工具 |
+
 ### TTS
 
 | 平台/模型 | 备注 |
@@ -131,9 +134,15 @@
 
 ## 😘 社区贡献
 
-LangBot 离不开以下贡献者和社区内所有人的贡献，我们欢迎任何形式的贡献和反馈。
-
+感谢以下[代码贡献者](https://github.com/RockChinQ/LangBot/graphs/contributors)和社区里其他成员对 LangBot 的贡献：
 
 <a href="https://github.com/RockChinQ/LangBot/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=RockChinQ/LangBot" />
 </a>
+
+以及 LangBot 核心团队成员：
+
+- [RockChinQ](https://github.com/RockChinQ)
+- [the-lazy-me](https://github.com/the-lazy-me)
+- [wangcham](https://github.com/wangcham)
+- [KaedeSAMA](https://github.com/KaedeSAMA)
