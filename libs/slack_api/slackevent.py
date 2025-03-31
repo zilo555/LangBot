@@ -16,10 +16,11 @@ class SlackEvent(dict):
             for el in elements:
                 if el.get("type") == "text":
                     return el.get("text", "")
-        if self.get("event",{}).get("channel_type") == 'channel':  
+                
+        if self.get("event",{}).get("channel_type") == 'channel': 
+
             message_text = next((el["text"] for block in self.get("event", {}).get("blocks", []) if block.get("type") == "rich_text" for element in block.get("elements", []) if element.get("type") == "rich_text_section" for el in element.get("elements", []) if el.get("type") == "text"), "")
             return message_text
-
 
         return "" 
 

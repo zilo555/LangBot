@@ -100,7 +100,6 @@
             "enable":true,
             "bot_token":"",
             "signing_secret":"",
-            "host":"0.0.0.0",
             "port":2288
         }
     ],
