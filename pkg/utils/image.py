@@ -215,5 +215,20 @@ async def extract_b64_and_format(image_base64_data: str) -> typing.Tuple[str, st
     return base64_str, image_format
 
 
-async def get_slack_image_to_base64(pic_url:str):
-    pass
+async def get_slack_image_to_base64(pic_url:str,bot_token:str):
+    """
+    将Slack图片转换为base64
+    """
+
+async def get_slack_image_to_base64(pic_url:str, bot_token:str):
+    headers = {"Authorization": f"Bearer {bot_token}"}
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(pic_url, headers=headers) as resp:
+                image_data = await resp.read()
+                return base64.b64encode(image_data).decode('utf-8')
+    except Exception as e:
+        raise(e)
+
+
+    

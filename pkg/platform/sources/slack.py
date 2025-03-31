@@ -32,13 +32,13 @@ class SlackMessageConverter(adapter.MessageConverter):
         return content_list
 
     @staticmethod
-    async def target2yiri(message:str,message_id:str,pic_url:str):
+    async def target2yiri(message:str,message_id:str,pic_url:str,bot:SlackClient):
         yiri_msg_list = []
         yiri_msg_list.append(
             platform_message.Source(id=message_id,time=datetime.datetime.now())
         )
         if pic_url is not None:
-            base64_url = await image.get_slack_image_to_base64(pic_url=pic_url)
+            base64_url = await image.get_slack_image_to_base64(pic_url=pic_url,bot_token=bot.bot_token)
             yiri_msg_list.append(
                 platform_message.Image(base64=base64_url)
             )
@@ -55,9 +55,9 @@ class SlackEventConverter(adapter.EventConverter):
         return event.source_platform_object
     
     @staticmethod
-    async def target2yiri(event:SlackEvent):
+    async def target2yiri(event:SlackEvent,bot:SlackClient):
         yiri_chain = await SlackMessageConverter.target2yiri(
-            message=event.text,message_id=event.message_id,pic_url=event.pic_url
+            message=event.text,message_id=event.message_id,pic_url=event.pic_url,bot=bot
         )
 
         if event.type == 'channel':
@@ -138,7 +138,6 @@ class SlackAdapter(adapter.MessagePlatformAdapter):
 
         for content in content_list:
             if slack_event.type == 'channel':
-                print("fasong1")
                 await self.bot.send_message_to_channle(
                     content['content'],slack_event.channel_id
                 )
@@ -162,7 +161,7 @@ class SlackAdapter(adapter.MessagePlatformAdapter):
             self.bot_account_id = "SlackBot"
             try:
                 return await callback(
-                    await self.event_converter.target2yiri(event),self
+                    await self.event_converter.target2yiri(event,self.bot),self
                 )
             except:
                 traceback.print_exc()

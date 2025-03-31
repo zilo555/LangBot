@@ -17,23 +17,33 @@ class SlackClient():
             self._message_handlers = {
             "example":[],
             }
-            self.bot_user_id = None # avoid block
+            self.bot_user_id = None # 避免机器人回复自己的消息
 
       async def handle_callback_request(self):
             try:
                   body = await request.get_data()
                   data = json.loads(body)
-                  print("shoudao:")
-                  print(data)
+                  if 'type' in data:
+                        if data['type'] == 'url_verification':
+                              return data['challenge']
+                  
                   bot_user_id = data.get("event",{}).get("bot_id","")
 
                   if self.bot_user_id and bot_user_id == self.bot_user_id:
                         return jsonify({'status': 'ok'})
                   
-                  if data and data.get("event", {}).get("channel_type") in ["im", "channel"]:
+                  # 处理私信
+                  if data and data.get("event", {}).get("channel_type") in ["im"]:
                         event = SlackEvent.from_payload(data)
                         await self._handle_message(event)
                         return jsonify({'status': 'ok'})
+                  
+                  #处理群聊
+                  if data.get("event",{}).get("type") == 'app_mention':
+                             data.setdefault("event", {})["channel_type"] = "channel"
+                             event = SlackEvent.from_payload(data)
+                             await self._handle_message(event)
+                             return jsonify({'status':'ok'})
             
             except Exception as e:
                  raise(e)
@@ -66,10 +76,6 @@ class SlackClient():
                   )
                   if self.bot_user_id is None and response.get("ok"):
                         self.bot_user_id = response["message"]["bot_id"]
-                        print("bot_id:")
-                        print(self.bot_user_id)
-                  print("fanhui:")
-                  print(response)
                   return 
             except Exception as e:
                   raise e
@@ -82,8 +88,6 @@ class SlackClient():
                   )
                   if self.bot_user_id is None and response.get("ok"):
                         self.bot_user_id = response["message"]["bot_id"]
-                        print("bot_id:")
-                        print(self.bot_user_id)
                   
                   return 
             except Exception as e:
