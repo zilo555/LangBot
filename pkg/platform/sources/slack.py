@@ -110,7 +110,7 @@ class SlackAdapter(adapter.MessagePlatformAdapter):
 
     def __init__(self,config:dict,ap:app.Application):
         self.config = config
-        self.ap = app.Application
+        self.ap = ap
         required_keys = [
             "bot_token",
             "signing_secret",
