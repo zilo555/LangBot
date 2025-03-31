@@ -158,7 +158,10 @@ class SlackAdapter(adapter.MessagePlatformAdapter):
         ],
     ):
         async def on_message(event:SlackEvent):
-            self.bot_account_id = "SlackBot"
+            if self.bot.bot_user_id:
+                self.bot_account_id = self.bot.bot_user_id
+            else:
+                self.bot_account_id = 'SlackBot'
             try:
                 return await callback(
                     await self.event_converter.target2yiri(event,self.bot),self
