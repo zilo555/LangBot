@@ -93,7 +93,7 @@
 | 钉钉 | ✅ |  |
 | Discord | ✅ |  |
 | Telegram | ✅ |  |
-| Slack | 🚧 |  |
+| Slack | ✅ |  |
 | LINE | 🚧 |  |
 | WhatsApp | 🚧 |  |
 
