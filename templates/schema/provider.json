@@ -368,7 +368,7 @@
                     "type": "string",
                     "title": "默认情景预设",
                     "description": "设置默认情景预设。值为空字符串时，将不使用情景预设（人格）",
-                    "default": ""
+                    "default": "You are a helpful assistant."
                 }
             },
             "patternProperties": {
