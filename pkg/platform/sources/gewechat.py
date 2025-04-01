@@ -47,16 +47,16 @@ class GewechatMessageConverter(adapter.MessageConverter):
                 if not component.url:
                     pass
                 content_list.append({"type": "image", "image": component.url})
-            elif isinstance(component, platform_message.MiniPrograms):
-                content_list.append({"type": 'MiniPrograms', 'mini_app_id': component.mini_app_id, 'display_name': component.display_name,
+            elif isinstance(component, platform_message.WeChatMiniPrograms):
+                content_list.append({"type": 'WeChatMiniPrograms', 'mini_app_id': component.mini_app_id, 'display_name': component.display_name,
                                      'page_path': component.page_path, 'cover_img_url': component.image_url, 'title': component.title,
                                      'user_name': component.user_name})
-            elif isinstance(component, platform_message.ForwardMiniPrograms):
-                content_list.append({"type": 'ForwardMiniPrograms', 'xml_data': component.xml_data, 'image_url': component.image_url})
-            elif isinstance(component, platform_message.Emoji):
-                content_list.append({'type': 'emoji', 'emoji_md5': component.emoji_md5, 'emoji_size': component.emoji_size})
-            elif isinstance(component, platform_message.Link):
-                content_list.append({'type': 'Link', 'link_title': component.link_title, 'link_desc': component.link_desc,
+            elif isinstance(component, platform_message.WeChatForwardMiniPrograms):
+                content_list.append({"type": 'WeChatForwardMiniPrograms', 'xml_data': component.xml_data, 'image_url': component.image_url})
+            elif isinstance(component, platform_message.WeChatEmoji):
+                content_list.append({'type': 'WeChatEmoji', 'emoji_md5': component.emoji_md5, 'emoji_size': component.emoji_size})
+            elif isinstance(component, platform_message.WeChatLink):
+                content_list.append({'type': 'WeChatLink', 'link_title': component.link_title, 'link_desc': component.link_desc,
                                      'link_thumb_url': component.link_thumb_url, 'link_url': component.link_url})
 
 
@@ -372,16 +372,16 @@ class GeWeChatAdapter(adapter.MessagePlatformAdapter):
             elif msg['type'] == 'image':
 
                 self.bot.post_image(app_id=self.config['app_id'], to_wxid=target_id, img_url=msg["image"])
-            elif msg['type'] == 'MiniPrograms':
+            elif msg['type'] == 'WeChatMiniPrograms':
                 self.bot.post_mini_app(app_id=self.config['app_id'], to_wxid=target_id, mini_app_id=msg['mini_app_id']
                                        , display_name=msg['display_name'], page_path=msg['page_path']
                                        , cover_img_url=msg['cover_img_url'], title=msg['title'], user_name=msg['user_name'])
-            elif msg['type'] == 'ForwardMiniPrograms':
+            elif msg['type'] == 'WeChatForwardMiniPrograms':
                 self.bot.forward_mini_app(app_id=self.config['app_id'], to_wxid=target_id, xml=msg['xml_data'], cover_img_url=msg['image_url'])
-            elif msg['type'] == 'emoji':
+            elif msg['type'] == 'WeChatEmoji':
                 self.bot.post_emoji(app_id=self.config['app_id'], to_wxid=target_id,
                                     emoji_md5=msg['emoji_md5'], emoji_size=msg['emoji_size'])
-            elif msg['type'] == 'Link':
+            elif msg['type'] == 'WeChatLink':
                 self.bot.post_link(app_id=self.config['app_id'], to_wxid=target_id
                                    ,title=msg['link_title'], desc=msg['link_desc']
                                    , link_url=msg['link_url'], thumb_url=msg['link_thumb_url'])
@@ -421,16 +421,16 @@ class GeWeChatAdapter(adapter.MessagePlatformAdapter):
             elif msg['type'] == 'image':
 
                 self.bot.post_image(app_id=self.config['app_id'], to_wxid=target_id, img_url=msg["image"])
-            elif msg['type'] == 'MiniPrograms':
+            elif msg['type'] == 'WeChatMiniPrograms':
                 self.bot.post_mini_app(app_id=self.config['app_id'], to_wxid=target_id, mini_app_id=msg['mini_app_id']
                                        , display_name=msg['display_name'], page_path=msg['page_path']
                                        , cover_img_url=msg['cover_img_url'], title=msg['title'], user_name=msg['user_name'])
-            elif msg['type'] == 'ForwardMiniPrograms':
+            elif msg['type'] == 'WeChatForwardMiniPrograms':
                 self.bot.forward_mini_app(app_id=self.config['app_id'], to_wxid=target_id, xml=msg['xml_data'], cover_img_url=msg['image_url'])
-            elif msg['type'] == 'emoji':
+            elif msg['type'] == 'WeChatEmoji':
                 self.bot.post_emoji(app_id=self.config['app_id'], to_wxid=target_id,
                                     emoji_md5=msg['emoji_md5'], emoji_size=msg['emoji_size'])
-            elif msg['type'] == 'Link':
+            elif msg['type'] == 'WeChatLink':
                 self.bot.post_link(app_id=self.config['app_id'], to_wxid=target_id
                                    , title=msg['link_title'], desc=msg['link_desc']
                                    , link_url=msg['link_url'], thumb_url=msg['link_thumb_url'])
