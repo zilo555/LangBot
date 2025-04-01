@@ -207,6 +207,9 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
                     "text": component['text'],
                 }
 
+                if self.config['markdown_card'] is True:
+                    args["parse_mode"] = "MarkdownV2"
+
                 if quote_origin:
                     args['reply_to_message_id'] = message_source.source_platform_object.message.id
 

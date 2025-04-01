@@ -131,7 +131,8 @@ class DingTalkAdapter(adapter.MessagePlatformAdapter):
             client_id=config["client_id"],
             client_secret=config["client_secret"],
             robot_name = config["robot_name"],
-            robot_code=config["robot_code"]
+            robot_code=config["robot_code"],
+            markdown_card=config["markdown_card"]
         )
     
     async def reply_message(

@@ -446,6 +446,11 @@
                                 "type": "string",
                                 "default": "",
                                 "description": "钉钉的robot_name"
+                            },
+                            "markdown_card": {
+                                "type": "boolean",
+                                "default": false,
+                                "description": "是否使用 Markdown 卡片发送消息"
                             }
                         }
                     },
@@ -466,6 +471,11 @@
                                 "type": "string",
                                 "default": "",
                                 "description": "Telegram 的 token"
+                            },
+                            "markdown_card": {
+                                "type": "boolean",
+                                "default": false,
+                                "description": "是否使用 Markdown 卡片发送消息"
                             }
                         }
                     }
