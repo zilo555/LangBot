@@ -147,7 +147,12 @@ class SlackAdapter(adapter.MessagePlatformAdapter):
                 )
     
     async def send_message(self, target_type: str, target_id: str, message: platform_message.MessageChain):
-        pass
+        content_list = await SlackMessageConverter.yiri2target(message)
+        for content in content_list:
+            if target_type == 'person':
+                await self.bot.send_message_to_one(content['content'],target_id)
+            if target_type == 'group':
+                await self.bot.send_message_to_channel(content['content'],target_id)
 
 
     def register_listener(
