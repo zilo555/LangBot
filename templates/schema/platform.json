@@ -478,6 +478,36 @@
                                 "description": "是否使用 Markdown 卡片发送消息"
                             }
                         }
+                    },
+                    {
+                        "title": "Slack 适配器",
+                        "description": "用于接入 Slack",
+                        "properties": {
+                            "adapter": {
+                                "type": "string",
+                                "const": "slack"
+                            },
+                            "enable": {
+                                "type": "boolean",
+                                "default": false,
+                                "description": "是否启用此适配器"
+                            },
+                            "bot_token": {
+                                "type": "string",
+                                "default": "",
+                                "description": "Slack 的 bot_token"
+                            },
+                            "signing_secret": {
+                                "type": "string",
+                                "default": "",
+                                "description": "Slack 的 signing_secret"
+                            },
+                            "port": {
+                                "type": "integer",
+                                "default": 2288,
+                                "description": "监听的端口"
+                            }
+                        }
                     }
                 ]
             }
