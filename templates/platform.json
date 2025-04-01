@@ -94,6 +94,13 @@
             "adapter":"telegram",
             "enable": false,
             "token":""
+        },
+        {
+            "adapter":"slack",
+            "enable":true,
+            "bot_token":"",
+            "signing_secret":"",
+            "port":2288
         }
     ],
     "track-function-calls": true,
