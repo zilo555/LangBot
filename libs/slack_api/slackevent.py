@@ -11,18 +11,44 @@ class SlackEvent(dict):
     
     @property
     def text(self) -> str:
+        
         if self.get("event", {}).get("channel_type") == "im":
-            elements = self["event"]["blocks"][0]["elements"][0]["elements"]
-            for el in elements:
-                if el.get("type") == "text":
-                    return el.get("text", "")
+                blocks = self.get("event", {}).get("blocks", [])
+                if not blocks:
+                    return ""
+
+                elements = blocks[0].get("elements", [])
+                if not elements:
+                    return "" 
+
+                elements = elements[0].get("elements", [])
+                text = ""
+
+                for el in elements:
+                    if el.get("type") == "text":
+                        text += el.get("text", "")
+                    elif el.get("type") == "link":
+                        text += el.get("url", "")
+
+                return text 
+
                 
         if self.get("event",{}).get("channel_type") == 'channel': 
-
-            message_text = next((el["text"] for block in self.get("event", {}).get("blocks", []) if block.get("type") == "rich_text" for element in block.get("elements", []) if element.get("type") == "rich_text_section" for el in element.get("elements", []) if el.get("type") == "text"), "")
+            message_text = ""
+            for block in self.get("event", {}).get("blocks", []):
+                if block.get("type") == "rich_text":
+                    for element in block.get("elements", []):
+                        if element.get("type") == "rich_text_section":
+                            parts = []
+                            for el in element.get("elements", []):
+                                if el.get("type") == "text":
+                                    parts.append(el["text"])
+                                elif el.get("type") == "link":
+                                    parts.append(el["url"])
+                            message_text = "".join(parts)
+                            
             return message_text
 
-        return "" 
 
     
     @property

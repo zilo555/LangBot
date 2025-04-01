@@ -32,6 +32,7 @@ class SlackClient():
                   if self.bot_user_id and bot_user_id == self.bot_user_id:
                         return jsonify({'status': 'ok'})
                   
+                  
                   # 处理私信
                   if data and data.get("event", {}).get("channel_type") in ["im"]:
                         event = SlackEvent.from_payload(data)
@@ -44,6 +45,8 @@ class SlackClient():
                              event = SlackEvent.from_payload(data)
                              await self._handle_message(event)
                              return jsonify({'status':'ok'})
+
+                  return jsonify({'status': 'ok'})
             
             except Exception as e:
                  raise(e)
@@ -68,7 +71,7 @@ class SlackClient():
             return func
         return decorator
 
-      async def send_message_to_channle(self,text:str,channel_id:str):
+      async def send_message_to_channel(self,text:str,channel_id:str):
             try:
                   response = await self.client.chat_postMessage(
                         channel=channel_id,

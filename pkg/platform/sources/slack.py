@@ -138,7 +138,7 @@ class SlackAdapter(adapter.MessagePlatformAdapter):
 
         for content in content_list:
             if slack_event.type == 'channel':
-                await self.bot.send_message_to_channle(
+                await self.bot.send_message_to_channel(
                     content['content'],slack_event.channel_id
                 )
             if slack_event.type == 'im':
@@ -158,10 +158,7 @@ class SlackAdapter(adapter.MessagePlatformAdapter):
         ],
     ):
         async def on_message(event:SlackEvent):
-            if self.bot.bot_user_id:
-                self.bot_account_id = self.bot.bot_user_id
-            else:
-                self.bot_account_id = 'SlackBot'
+            self.bot_account_id = 'SlackBot'
             try:
                 return await callback(
                     await self.event_converter.target2yiri(event,self.bot),self
