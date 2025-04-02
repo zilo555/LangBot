@@ -35,5 +35,6 @@ python-telegram-bot
 certifi
 mcp
 slack_sdk
+telegramify-markdown
 # indirect
 taskgroup==0.0.0a4
