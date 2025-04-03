@@ -19,7 +19,7 @@ class ModelScopeConfigCompletionMigration(migration.Migration):
         """
         if 'modelscope-chat-completions' not in self.ap.provider_cfg.data['requester']:
             self.ap.provider_cfg.data['requester']['modelscope-chat-completions'] = {
-                'base-url': 'https://api.modelscope.cn/v1',
+                'base-url': 'https://api-inference.modelscope.cn/v1',
                 'args': {},
                 'timeout': 120,
             }
