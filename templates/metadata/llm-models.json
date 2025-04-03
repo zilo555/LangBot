@@ -232,6 +232,96 @@
             "token_mgr": "zhipuai",
             "vision_supported": true,
             "tool_call_supported": true
+        },
+        {
+            "name": "Qwen/Qwen2.5-Coder-32B-Instruct",
+            "requester": "modelscope-chat-completions",
+            "token_mgr": "modelscope",
+            "tool_call_supported": true
+        },
+        {
+            "name": "Qwen/Qwen2.5-Coder-14B-Instruct",
+            "requester": "modelscope-chat-completions",
+            "token_mgr": "modelscope",
+            "tool_call_supported": true
+        },
+        {
+            "name": "Qwen/Qwen2.5-Coder-7B-Instruct",
+            "requester": "modelscope-chat-completions",
+            "token_mgr": "modelscope",
+            "tool_call_supported": true
+        },
+        {
+            "name": "Qwen/Qwen2.5-72B-Instruct",
+            "requester": "modelscope-chat-completions",
+            "token_mgr": "modelscope",
+            "tool_call_supported": true
+        },
+        {
+            "name": "Qwen/Qwen2.5-32B-Instruct",
+            "requester": "modelscope-chat-completions",
+            "token_mgr": "modelscope",
+            "tool_call_supported": true
+        },
+        {
+            "name": "Qwen/Qwen2.5-14B-Instruct",
+            "requester": "modelscope-chat-completions",
+            "token_mgr": "modelscope",
+            "tool_call_supported": true
+        },
+        {
+            "name": "Qwen/Qwen2.5-7B-Instruct",
+            "requester": "modelscope-chat-completions",
+            "token_mgr": "modelscope",
+            "tool_call_supported": true
+        },
+        {
+            "name": "Qwen/QwQ-32B-Preview",
+            "requester": "modelscope-chat-completions",
+            "token_mgr": "modelscope",
+            "tool_call_supported": true
+        },
+        {
+            "name": "Qwen/QwQ-32B",
+            "requester": "modelscope-chat-completions",
+            "token_mgr": "modelscope",
+            "tool_call_supported": true
+        },
+        {
+            "name": "LLM-Research/Llama-3.3-70B-Instruct",
+            "requester": "modelscope-chat-completions",
+            "token_mgr": "modelscope",
+            "tool_call_supported": true
+        },
+        {
+            "name": "LLM-Research/Meta-Llama-3.1-405B-Instruct",
+            "requester": "modelscope-chat-completions",
+            "token_mgr": "modelscope",
+            "tool_call_supported": true
+        },
+        {
+            "name": "LLM-Research/Meta-Llama-3.1-8B-Instruct",
+            "requester": "modelscope-chat-completions",
+            "token_mgr": "modelscope",
+            "tool_call_supported": true
+        },
+        {
+            "name": "LLM-Research/Meta-Llama-3.1-70B-Instruct",
+            "requester": "modelscope-chat-completions",
+            "token_mgr": "modelscope",
+            "tool_call_supported": true
+        },
+        {
+            "name": "mistralai/Ministral-8B-Instruct-2410",
+            "requester": "modelscope-chat-completions",
+            "token_mgr": "modelscope",
+            "tool_call_supported": true
+        },
+        {
+            "name": "deepseek-ai/DeepSeek-V3-0324",
+            "requester": "modelscope-chat-completions",
+            "token_mgr": "modelscope",
+            "tool_call_supported": true
         }
     ]
 }

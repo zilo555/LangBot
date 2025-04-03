@@ -113,6 +113,7 @@ LangBotはBTPanelにリストされています。BTPanelをインストール�
 | [Aliyun Bailian](https://bailian.console.aliyun.com/) | ✅ | LLMゲートウェイ(MaaS), LLMOpsプラットフォーム |
 | [Volc Engine Ark](https://console.volcengine.com/ark/region:ark+cn-beijing/model?vendor=Bytedance&view=LIST_VIEW) | ✅ | LLMゲートウェイ(MaaS), LLMOpsプラットフォーム |
 | [MCP](https://modelcontextprotocol.io/) | ✅ | MCPプロトコルをサポート |
+| [ModelScope](https://modelscope.cn/docs/model-service/API-Inference/intro) | ✅ |  |
 
 ## 🤝 コミュニティ貢献
 
