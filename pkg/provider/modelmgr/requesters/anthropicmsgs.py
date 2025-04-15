@@ -4,6 +4,8 @@ import typing
 import json
 import traceback
 import base64
+import platform
+import socket
 
 import anthropic
 import httpx
@@ -23,6 +25,12 @@ class AnthropicMessages(requester.LLMAPIRequester):
     client: anthropic.AsyncAnthropic
 
     async def initialize(self):
+        # 兼容 Windows 缺失 TCP_KEEPINTVL 和 TCP_KEEPCNT 的问题
+        if platform.system() == "Windows":
+            if not hasattr(socket, "TCP_KEEPINTVL"):
+                socket.TCP_KEEPINTVL = 0
+            if not hasattr(socket, "TCP_KEEPCNT"):
+                socket.TCP_KEEPCNT = 0
 
         httpx_client = anthropic._base_client.AsyncHttpxClientWrapper(
             base_url=self.ap.provider_cfg.data['requester']['anthropic-messages']['base-url'].replace(' ', ''),
