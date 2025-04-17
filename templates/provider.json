@@ -34,6 +34,9 @@
         ],
         "modelscope": [
             "xxxxxxxx"
+        ],
+        "ppio": [
+            "xxxxxxxx"
         ]
     },
     "requester": {
@@ -101,6 +104,11 @@
         },
         "modelscope-chat-completions": {
             "base-url": "https://api-inference.modelscope.cn/v1",
+            "args": {},
+            "timeout": 120
+        },
+        "ppio-chat-completions": {
+            "base-url": "https://api.ppinfra.com/v3/openai",
             "args": {},
             "timeout": 120
         }
