@@ -58,6 +58,8 @@ class GewechatMessageConverter(adapter.MessageConverter):
             elif isinstance(component, platform_message.WeChatLink):
                 content_list.append({'type': 'WeChatLink', 'link_title': component.link_title, 'link_desc': component.link_desc,
                                      'link_thumb_url': component.link_thumb_url, 'link_url': component.link_url})
+            elif isinstance(component, platform_message.WeChatForwardLink):
+                content_list.append({'type': 'WeChatLink', 'xml_data': component.xml_data})
 
 
             elif isinstance(component, platform_message.Voice):
@@ -108,6 +110,9 @@ class GewechatMessageConverter(adapter.MessageConverter):
                     
         elif message["Data"]["MsgType"] == 3:
             image_xml = message["Data"]["Content"]["string"]
+            if image_xml.startswith('wxid'):  # 此处处理群聊发送图片会有微信id开头
+                xml_list = image_xml.split('\n')[2:]
+                image_xml = '\n'.join(xml_list)
             if not image_xml:
                 return platform_message.MessageChain([
                     platform_message.Plain(text="[图片内容为空]")
@@ -135,10 +140,15 @@ class GewechatMessageConverter(adapter.MessageConverter):
                     platform_message.Plain(text=f"[图片处理失败]")
                 ])
         elif message["Data"]["MsgType"] == 34:
-            audio_base64 = message["Data"]["ImgBuf"]["buffer"]
-            return platform_message.MessageChain(
-                [platform_message.Voice(base64=f"data:audio/silk;base64,{audio_base64}")]
-            )
+            try:
+                audio_base64 = message["Data"]["ImgBuf"]["buffer"]
+                return platform_message.MessageChain(
+                    [platform_message.Voice(base64=f"data:audio/silk;base64,{audio_base64}")]
+                )
+            except Exception as e:
+                return platform_message.MessageChain(
+                    [platform_message.Plain(text="[无法解析群聊语音的消息]")]  # 小测了一下，免费版拿不到群聊语音消息的base64，或者用什么办法解析xml里的url?
+                )
         elif message["Data"]["MsgType"] == 49:
             # 支持微信聊天记录的消息类型，将 XML 内容转换为 MessageChain 传递
             try:
@@ -389,6 +399,11 @@ class GeWeChatAdapter(adapter.MessagePlatformAdapter):
                                    ,title=msg['link_title'], desc=msg['link_desc']
                                    , link_url=msg['link_url'], thumb_url=msg['link_thumb_url'])
 
+            elif msg['type'] == 'WeChatForwardMiniPrograms':
+                self.bot.forward_mini_app(app_id=self.config['app_id'], to_wxid=target_id, xml=msg['xml_data'])
+            elif msg['type'] == 'voice':
+                self.bot.post_voice(app_id=self.config['app_id'], to_wxid=target_id, voice_url=msg['voice_url'],voice_duration=msg['length'])
+
 
 
     async def reply_message(
@@ -437,6 +452,9 @@ class GeWeChatAdapter(adapter.MessagePlatformAdapter):
                 self.bot.post_link(app_id=self.config['app_id'], to_wxid=target_id
                                    , title=msg['link_title'], desc=msg['link_desc']
                                    , link_url=msg['link_url'], thumb_url=msg['link_thumb_url'])
+            elif msg['type'] == 'voice':
+                self.bot.post_voice(app_id=self.config['app_id'], to_wxid=target_id, voice_url=msg['voice_url'],
+                                    voice_duration=msg['length'])
 
     async def is_muted(self, group_id: int) -> bool:
         pass
