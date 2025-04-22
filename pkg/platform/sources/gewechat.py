@@ -59,7 +59,7 @@ class GewechatMessageConverter(adapter.MessageConverter):
                 content_list.append({'type': 'WeChatLink', 'link_title': component.link_title, 'link_desc': component.link_desc,
                                      'link_thumb_url': component.link_thumb_url, 'link_url': component.link_url})
             elif isinstance(component, platform_message.WeChatForwardLink):
-                content_list.append({'type': 'WeChatLink', 'xml_data': component.xml_data})
+                content_list.append({'type': 'WeChatForwardLink', 'xml_data': component.xml_data})
 
 
             elif isinstance(component, platform_message.Voice):
@@ -399,8 +399,8 @@ class GeWeChatAdapter(adapter.MessagePlatformAdapter):
                                    ,title=msg['link_title'], desc=msg['link_desc']
                                    , link_url=msg['link_url'], thumb_url=msg['link_thumb_url'])
 
-            elif msg['type'] == 'WeChatForwardMiniPrograms':
-                self.bot.forward_mini_app(app_id=self.config['app_id'], to_wxid=target_id, xml=msg['xml_data'])
+            elif msg['type'] == 'WeChatForwardLink':
+                self.bot.forward_url(app_id=self.config['app_id'], to_wxid=target_id, xml=msg['xml_data'])
             elif msg['type'] == 'voice':
                 self.bot.post_voice(app_id=self.config['app_id'], to_wxid=target_id, voice_url=msg['voice_url'],voice_duration=msg['length'])
 
@@ -452,6 +452,8 @@ class GeWeChatAdapter(adapter.MessagePlatformAdapter):
                 self.bot.post_link(app_id=self.config['app_id'], to_wxid=target_id
                                    , title=msg['link_title'], desc=msg['link_desc']
                                    , link_url=msg['link_url'], thumb_url=msg['link_thumb_url'])
+            elif msg['type'] == 'WeChatForwardLink':
+                self.bot.forward_url(app_id=self.config['app_id'], to_wxid=target_id, xml=msg['xml_data'])
             elif msg['type'] == 'voice':
                 self.bot.post_voice(app_id=self.config['app_id'], to_wxid=target_id, voice_url=msg['voice_url'],
                                     voice_duration=msg['length'])
