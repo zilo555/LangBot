@@ -860,3 +860,10 @@ class WeChatLink(MessageComponent):
     """链接略缩图"""
     link_thumb_url: str = ''
 
+
+class WeChatForwardLink(MessageComponent):
+    """转发链接。个人微信专用组件。"""
+    type: str = 'WeChatLink'
+    """xml数据"""
+    xml_data: str
+
