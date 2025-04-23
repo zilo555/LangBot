@@ -863,7 +863,7 @@ class WeChatLink(MessageComponent):
 
 class WeChatForwardLink(MessageComponent):
     """转发链接。个人微信专用组件。"""
-    type: str = 'WeChatLink'
+    type: str = 'WeChatForwardLink'
     """xml数据"""
     xml_data: str
 
