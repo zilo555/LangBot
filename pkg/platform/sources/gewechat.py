@@ -151,8 +151,9 @@ class GewechatMessageConverter(adapter.MessageConverter):
                 )
         elif message["Data"]["MsgType"] == 49:
             # 支持微信聊天记录的消息类型，将 XML 内容转换为 MessageChain 传递
+            content = message["Data"]["Content"]["string"]
             try:
-                content = message["Data"]["Content"]["string"]
+                # content = message["Data"]["Content"]["string"]
                 # 有三种可能的消息结构weid开头，私聊直接<?xml>和直接<msg>
                 if content.startswith('wxid'):
                     xml_list = content.split('\n')[2:]
@@ -192,24 +193,29 @@ class GewechatMessageConverter(adapter.MessageConverter):
                     return platform_message.MessageChain(message_list)
                 elif data_type == '51':
                     return platform_message.MessageChain(
-                        [platform_message.Plain(text=f'[视频号消息]')]
+                        [  # platform_message.Plain(text=f'[视频号消息]'),
+                         platform_message.Unknown(text=content)]
                     )
                     # print(content_data)
                 elif data_type == '2000':
                     return platform_message.MessageChain(
-                        [platform_message.Plain(text=f'[转账消息]')]
+                        [  # platform_message.Plain(text=f'[转账消息]'),
+                         platform_message.Unknown(text=content)]
                     )
                 elif data_type == '2001':
                     return platform_message.MessageChain(
-                        [platform_message.Plain(text=f'[红包消息]')]
+                        [  # platform_message.Plain(text=f'[红包消息]'),
+                         platform_message.Unknown(text=content)]
                     )
                 elif data_type == '5':
                     return platform_message.MessageChain(
-                        [platform_message.Plain(text=f'[公众号消息]')]
+                        [  # platform_message.Plain(text=f'[公众号消息]'),
+                         platform_message.Unknown(text=content)]
                     )
                 elif data_type == '33' or data_type == '36':
                     return platform_message.MessageChain(
-                        [platform_message.Plain(text=f'[小程序消息]')]
+                        [  # platform_message.Plain(text=f'[小程序消息]'),
+                         platform_message.Unknown(text=content)]
                     )
                 # print(data_type.text)
                 else:
@@ -219,8 +225,8 @@ class GewechatMessageConverter(adapter.MessageConverter):
                         content_bytes = content.encode('utf-8')
                         decoded_content = base64.b64decode(content_bytes)
                         return platform_message.MessageChain(
-                            [platform_message.Unknown(content=decoded_content)]
-                        )
+                            [platform_message.Unknown(text=decoded_content)]
+                        )  # 不对劲，十分有九分不对劲这里这么写不对吧
                     except Exception as e:
                         return platform_message.MessageChain(
                             [platform_message.Plain(text=content)]
@@ -228,7 +234,8 @@ class GewechatMessageConverter(adapter.MessageConverter):
             except Exception as e:
                 print(f"Error processing type 49 message: {str(e)}")
                 return platform_message.MessageChain(
-                    [platform_message.Plain(text="[无法解析的消息]")]
+                    [  # platform_message.Plain(text="[无法解析的消息]"),
+                     platform_message.Unknown(text=content)]
                 )
 
 class GewechatEventConverter(adapter.EventConverter):
@@ -402,7 +409,7 @@ class GeWeChatAdapter(adapter.MessagePlatformAdapter):
             elif msg['type'] == 'WeChatForwardLink':
                 self.bot.forward_url(app_id=self.config['app_id'], to_wxid=target_id, xml=msg['xml_data'])
             elif msg['type'] == 'voice':
-                self.bot.post_voice(app_id=self.config['app_id'], to_wxid=target_id, voice_url=msg['voice_url'],voice_duration=msg['length'])
+                self.bot.post_voice(app_id=self.config['app_id'], to_wxid=target_id, voice_url=msg['url'],voice_duration=msg['length'])
 
 
 
@@ -455,7 +462,7 @@ class GeWeChatAdapter(adapter.MessagePlatformAdapter):
             elif msg['type'] == 'WeChatForwardLink':
                 self.bot.forward_url(app_id=self.config['app_id'], to_wxid=target_id, xml=msg['xml_data'])
             elif msg['type'] == 'voice':
-                self.bot.post_voice(app_id=self.config['app_id'], to_wxid=target_id, voice_url=msg['voice_url'],
+                self.bot.post_voice(app_id=self.config['app_id'], to_wxid=target_id, voice_url=msg['url'],
                                     voice_duration=msg['length'])
 
     async def is_muted(self, group_id: int) -> bool:
