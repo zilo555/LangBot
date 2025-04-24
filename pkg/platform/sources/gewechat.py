@@ -219,18 +219,20 @@ class GewechatMessageConverter(adapter.MessageConverter):
                     )
                 # print(data_type.text)
                 else:
-
-
-                    try:
-                        content_bytes = content.encode('utf-8')
-                        decoded_content = base64.b64decode(content_bytes)
-                        return platform_message.MessageChain(
-                            [platform_message.Unknown(text=decoded_content)]
-                        )  # 不对劲，十分有九分不对劲这里这么写不对吧
-                    except Exception as e:
-                        return platform_message.MessageChain(
-                            [platform_message.Plain(text=content)]
+                    return platform_message.MessageChain(
+                            [platform_message.Unknown(text=content)]
                         )
+
+                    # try:
+                    #     content_bytes = content.encode('utf-8')
+                    #     decoded_content = base64.b64decode(content_bytes)
+                    #     return platform_message.MessageChain(
+                    #         [platform_message.Unknown(content=decoded_content)]
+                    #     )  # unknown中没有content
+                    # except Exception as e:
+                    #     return platform_message.MessageChain(
+                    #         [platform_message.Plain(text=content)]
+                    #     )
             except Exception as e:
                 print(f"Error processing type 49 message: {str(e)}")
                 return platform_message.MessageChain(
