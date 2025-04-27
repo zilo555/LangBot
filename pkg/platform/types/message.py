@@ -1,15 +1,14 @@
 import itertools
 import logging
+import typing
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-import typing
 
 import pydantic.v1 as pydantic
 
 from . import entities as platform_entities
 from .base import PlatformBaseModel, PlatformIndexedMetaclass, PlatformIndexedModel
-
 
 logger = logging.getLogger(__name__)
 
@@ -642,7 +641,8 @@ class Unknown(MessageComponent):
     """消息组件类型。"""
     text: str
     """文本。"""
-
+    def __str__(self):
+        return f'Unknown Message: {self.text}'
 
 class Voice(MessageComponent):
     """语音。"""
@@ -837,6 +837,8 @@ class WeChatForwardMiniPrograms(MessageComponent):
     xml_data: str
     """首页图片"""
     image_url: typing.Optional[str] = None
+    def __str__(self):
+        return self.xml_data
 
 
 class WeChatEmoji(MessageComponent):
@@ -866,4 +868,29 @@ class WeChatForwardLink(MessageComponent):
     type: str = 'WeChatForwardLink'
     """xml数据"""
     xml_data: str
+    def __str__(self):
+        return self.xml_data
 
+class WeChatForwardImage(MessageComponent):
+    """转发图片。个人微信专用组件。"""
+    type: str = 'WeChatForwardImage'
+    """xml数据"""
+    xml_data: str
+    def __str__(self):
+        return self.xml_data
+
+class WeChatForwardFile(MessageComponent):
+    """转发文件。个人微信专用组件。"""
+    type: str = 'WeChatForwardFile'
+    """xml数据"""
+    xml_data: str
+    def __str__(self):
+        return self.xml_data
+
+class WeChatAppMsg(MessageComponent):
+    """通用appmsg发送。个人微信专用组件。"""
+    type: str = 'WeChatAppMsg'
+    """xml数据"""
+    app_msg: str
+    def __str__(self):
+        return self.app_msg
