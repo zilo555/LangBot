@@ -1,350 +1,399 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios'
+import axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  AxiosError
+} from "axios";
 import {
-    ApiResponse, ApiRespProviderRequesters, ApiRespProviderRequester, ApiRespProviderLLMModels,
-    ApiRespProviderLLMModel, LLMModel, ApiRespPipelines, ApiRespPipeline, Pipeline, ApiRespPlatformAdapters,
-    ApiRespPlatformAdapter, ApiRespPlatformBots, ApiRespPlatformBot, Bot, ApiRespPlugins, ApiRespPlugin, Plugin,
-    ApiRespPluginConfig, PluginReorderElement, AsyncTaskCreatedResp, ApiRespSystemInfo, ApiRespAsyncTasks, AsyncTask,
-    ApiRespAsyncTask, ApiRespUserToken
-} from '../api/api-types'
-import { notification } from 'antd'
+  ApiRespProviderRequesters,
+  ApiRespProviderRequester,
+  ApiRespProviderLLMModels,
+  ApiRespProviderLLMModel,
+  LLMModel,
+  ApiRespPipelines,
+  ApiRespPipeline,
+  Pipeline,
+  ApiRespPlatformAdapters,
+  ApiRespPlatformAdapter,
+  ApiRespPlatformBots,
+  ApiRespPlatformBot,
+  Bot,
+  ApiRespPlugins,
+  ApiRespPlugin,
+  ApiRespPluginConfig,
+  PluginReorderElement,
+  AsyncTaskCreatedResp,
+  ApiRespSystemInfo,
+  ApiRespAsyncTasks,
+  ApiRespAsyncTask,
+  ApiRespUserToken
+} from "../api/api-types";
+import { notification } from "antd";
 
-type JSONValue = string | number | boolean | JSONObject | JSONArray | null
-interface JSONObject { [key: string]: JSONValue }
-interface JSONArray extends Array<JSONValue> { }
+type JSONValue = string | number | boolean | JSONObject | JSONArray | null;
+interface JSONObject {
+  [key: string]: JSONValue;
+}
+type JSONArray = Array<JSONValue>;
 
 export interface ResponseData<T = unknown> {
-    code: number
-    message: string
-    data: T
-    timestamp: number
+  code: number;
+  message: string;
+  data: T;
+  timestamp: number;
 }
 
 export interface RequestConfig extends AxiosRequestConfig {
-    isSSR?: boolean  // 服务端渲染标识
-    retry?: number   // 重试次数
+  isSSR?: boolean; // 服务端渲染标识
+  retry?: number; // 重试次数
 }
 
 class HttpClient {
-    private instance: AxiosInstance
-    // 暂不需要SSR
-    // private ssrInstance: AxiosInstance | null = null
+  private instance: AxiosInstance;
+  // 暂不需要SSR
+  // private ssrInstance: AxiosInstance | null = null
 
-    constructor(baseURL?: string) {
-        this.instance = axios.create({
-            baseURL: baseURL || this.getBaseUrl(),
-            timeout: 15000,
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
+  constructor(baseURL?: string) {
+    this.instance = axios.create({
+      baseURL: baseURL || this.getBaseUrl(),
+      timeout: 15000,
+      headers: {
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest"
+      }
+    });
 
-        this.initInterceptors()
+    this.initInterceptors();
+  }
+
+  // 兜底URL，如果使用未配置会走到这里
+  private getBaseUrl(): string {
+    return "http://localhost:5300";
+    // NOT IMPLEMENT
+    if (typeof window === "undefined") {
+      // 服务端环境
+      return "";
     }
+    // 客户端环境
+    return "";
+  }
 
-    // 兜底URL，如果使用未配置会走到这里
-    private getBaseUrl(): string {
-        return "http://localhost:5300"
-        // NOT IMPLEMENT
-        if (typeof window === 'undefined') {
-            // 服务端环境
-            return ""
+  // 获取Session
+  private async getSession() {
+    // NOT IMPLEMENT
+    return "";
+  }
+
+  // 同步获取Session
+  private getSessionSync() {
+    // NOT IMPLEMENT
+    return localStorage.getItem("token");
+  }
+
+  // 拦截器配置
+  private initInterceptors() {
+    // 请求拦截
+    this.instance.interceptors.request.use(
+      async (config) => {
+        // 服务端请求自动携带 cookie, Langbot暂时用不到SSR相关
+        // if (typeof window === 'undefined' && config.isSSR) { }
+        // cookie not required
+        // const { cookies } = await import('next/headers')
+        // config.headers.Cookie = cookies().toString()
+
+        // 客户端添加认证头
+        if (typeof window !== "undefined") {
+          const session = this.getSessionSync();
+          config.headers.Authorization = `Bearer ${session}`;
         }
-        // 客户端环境
-        return ""
-    }
 
-    // 获取Session
-    private async getSession() {
-        // NOT IMPLEMENT
-        return ""
-    }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
 
-    // 同步获取Session
-    private getSessionSync() {
-        // NOT IMPLEMENT
-        return localStorage.getItem("token")
-    }
+    // 响应拦截
+    this.instance.interceptors.response.use(
+      (response: AxiosResponse<ResponseData>) => {
+        // 响应拦截处理写在这里，暂无业务需要
 
-    // 拦截器配置
-    private initInterceptors() {
-        // 请求拦截
-        this.instance.interceptors.request.use(
-            async (config) => {
-                // 服务端请求自动携带 cookie, Langbot暂时用不到SSR相关
-                // if (typeof window === 'undefined' && config.isSSR) { }
-                // cookie not required
-                // const { cookies } = await import('next/headers')
-                // config.headers.Cookie = cookies().toString()
+        return response;
+      },
+      (error: AxiosError<ResponseData>) => {
+        // 统一错误处理
+        if (error.response) {
+          const { status, data } = error.response;
+          const errMessage = data?.message || error.message;
 
-                // 客户端添加认证头
-                if (typeof window !== 'undefined') {
-                    // NOT IMPLEMENT 从本地取Session，为空跳转到登陆页
-                    // const session = await this.getSession()
-                    const session = this.getSessionSync()
-                    config.headers.Authorization = `Bearer ${session}`
-                }
+          switch (status) {
+            case 401:
+              window.location.href = "/login";
+              break;
+            case 403:
+              console.error("Permission denied:", errMessage);
+              break;
+            case 500:
+              // TODO 弹Toast窗
+              // NOTE: move to component layer for customized message?
+              notification.error({
+                message: "服务器错误",
+                description: errMessage,
+                placement: "bottomRight"
+              });
+              console.error("Server error:", errMessage);
+              break;
+          }
 
-                return config
-            },
-            (error) => Promise.reject(error)
-        )
-
-        // 响应拦截
-        this.instance.interceptors.response.use(
-            (response: AxiosResponse<ResponseData>) => {
-                // 响应拦截处理写在这里，暂无业务需要
-
-                return response
-            },
-            (error: AxiosError<ResponseData>) => {
-                // 统一错误处理
-                if (error.response) {
-                    const { status, data } = error.response
-                    const errMessage = data?.message || error.message
-
-                    switch (status) {
-                        case 401:
-                            // 401 处理
-                            break
-                        case 403:
-                            console.error('Permission denied:', errMessage)
-                            break
-                        case 500:
-                            // TODO 弹Toast窗
-                            // NOTE: move to component layer for customized message?
-                            notification.error({
-                                message: "服务器错误",
-                                description: errMessage,
-                                placement: "bottomRight",
-                            })
-                            console.error('Server error:', errMessage)
-                            break
-                    }
-
-                    return Promise.reject({
-                        code: data?.code || status,
-                        message: errMessage,
-                        data: data?.data || null
-                    })
-                }
-
-                return Promise.reject({
-                    code: -1,
-                    message: error.message || 'Network Error',
-                    data: null
-                })
-            }
-        )
-    }
-
-
-    // 转换下划线为驼峰
-    private convertKeysToCamel(obj: JSONValue): JSONValue {
-        if (Array.isArray(obj)) {
-            return obj.map(v => this.convertKeysToCamel(v))
-        } else if (obj !== null && typeof obj === 'object') {
-            return Object.keys(obj).reduce((acc, key) => {
-                const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase())
-                acc[camelKey] = this.convertKeysToCamel((obj as JSONObject)[key])
-                return acc
-            }, {} as JSONObject)
+          return Promise.reject({
+            code: data?.code || status,
+            message: errMessage,
+            data: data?.data || null
+          });
         }
-        return obj
-    }
 
-    // 核心请求方法
-    public async request<T = unknown>(config: RequestConfig): Promise<T> {
-        try {
-            // 这里未来如果需要SSR可以将前面替换为SSR的instance
-            const instance = config.isSSR ? this.instance : this.instance
-            const response = await instance.request<ResponseData<T>>(config)
-            return response.data.data
-        } catch (error) {
-            return this.handleError(error)
-        }
-    }
+        return Promise.reject({
+          code: -1,
+          message: error.message || "Network Error",
+          data: null
+        });
+      }
+    );
+  }
 
-    private handleError(error: any): never {
-        if (axios.isCancel(error)) {
-            throw { code: -2, message: 'Request canceled', data: null }
-        }
-        throw error
+  // 转换下划线为驼峰
+  private convertKeysToCamel(obj: JSONValue): JSONValue {
+    if (Array.isArray(obj)) {
+      return obj.map((v) => this.convertKeysToCamel(v));
+    } else if (obj !== null && typeof obj === "object") {
+      return Object.keys(obj).reduce((acc, key) => {
+        const camelKey = key.replace(/_([a-z])/g, (_, letter) =>
+          letter.toUpperCase()
+        );
+        acc[camelKey] = this.convertKeysToCamel((obj as JSONObject)[key]);
+        return acc;
+      }, {} as JSONObject);
     }
+    return obj;
+  }
 
-    // 快捷方法
-    public get<T = unknown>(url: string, params?: object, config?: RequestConfig) {
-        return this.request<T>({ method: 'get', url, params, ...config })
+  // 核心请求方法
+  public async request<T = unknown>(config: RequestConfig): Promise<T> {
+    try {
+      // 这里未来如果需要SSR可以将前面替换为SSR的instance
+      const instance = config.isSSR ? this.instance : this.instance;
+      const response = await instance.request<ResponseData<T>>(config);
+      return response.data.data;
+    } catch (error) {
+      return this.handleError(error as object);
     }
+  }
 
-    public post<T = unknown>(url: string, data?: object, config?: RequestConfig) {
-        return this.request<T>({ method: 'post', url, data, ...config })
+  private handleError(error: object): never {
+    if (axios.isCancel(error)) {
+      throw { code: -2, message: "Request canceled", data: null };
     }
+    throw error;
+  }
 
-    public put<T = unknown>(url: string, data?: object, config?: RequestConfig) {
-        return this.request<T>({ method: 'put', url, data, ...config })
-    }
+  // 快捷方法
+  public get<T = unknown>(
+    url: string,
+    params?: object,
+    config?: RequestConfig
+  ) {
+    return this.request<T>({ method: "get", url, params, ...config });
+  }
 
-    public delete<T = unknown>(url: string, config?: RequestConfig) {
-        return this.request<T>({ method: 'delete', url, ...config })
-    }
+  public post<T = unknown>(url: string, data?: object, config?: RequestConfig) {
+    return this.request<T>({ method: "post", url, data, ...config });
+  }
 
-    // real api request implementation
-    // ============ Provider API ============
-    public getProviderRequesters(): Promise<ApiRespProviderRequesters> {
-        return this.get('/api/v1/provider/requesters')
-    }
+  public put<T = unknown>(url: string, data?: object, config?: RequestConfig) {
+    return this.request<T>({ method: "put", url, data, ...config });
+  }
 
-    public getProviderRequester(name: string): Promise<ApiRespProviderRequester> {
-        return this.get(`/api/v1/provider/requesters/${name}`)
-    }
+  public delete<T = unknown>(url: string, config?: RequestConfig) {
+    return this.request<T>({ method: "delete", url, ...config });
+  }
 
-    public getProviderRequesterIconURL(name: string): string {
-        return `/api/v1/provider/requesters/${name}/icon`
-    }
+  // real api request implementation
+  // ============ Provider API ============
+  public getProviderRequesters(): Promise<ApiRespProviderRequesters> {
+    return this.get("/api/v1/provider/requesters");
+  }
 
-    // ============ Provider Model LLM ============
-    public getProviderLLMModels(): Promise<ApiRespProviderLLMModels> {
-        return this.get('/api/v1/provider/models/llm')
-    }
+  public getProviderRequester(name: string): Promise<ApiRespProviderRequester> {
+    return this.get(`/api/v1/provider/requesters/${name}`);
+  }
 
-    public getProviderLLMModel(uuid: string): Promise<ApiRespProviderLLMModel> {
-        return this.get(`/api/v1/provider/models/llm/${uuid}`)
-    }
+  public getProviderRequesterIconURL(name: string): string {
+    return `/api/v1/provider/requesters/${name}/icon`;
+  }
 
-    public createProviderLLMModel(model: LLMModel): Promise<object> {
-        return this.post('/api/v1/provider/models/llm', model)
-    }
+  // ============ Provider Model LLM ============
+  public getProviderLLMModels(): Promise<ApiRespProviderLLMModels> {
+    return this.get("/api/v1/provider/models/llm");
+  }
 
-    public deleteProviderLLMModel(uuid: string): Promise<object> {
-        return this.delete(`/api/v1/provider/models/llm/${uuid}`)
-    }
+  public getProviderLLMModel(uuid: string): Promise<ApiRespProviderLLMModel> {
+    return this.get(`/api/v1/provider/models/llm/${uuid}`);
+  }
 
-    // ============ Pipeline API ============
-    public getGeneralPipelineMetadata(): Promise<object> {  // as designed, this method will be deprecated, and only for developer to check the prefered config schema
-        return this.get('/api/v1/pipelines/_/metadata')
-    }
+  public createProviderLLMModel(model: LLMModel): Promise<object> {
+    return this.post("/api/v1/provider/models/llm", model);
+  }
 
-    public getPipelines(): Promise<ApiRespPipelines> {
-        return this.get('/api/v1/pipelines')
-    }
+  public deleteProviderLLMModel(uuid: string): Promise<object> {
+    return this.delete(`/api/v1/provider/models/llm/${uuid}`);
+  }
 
-    public getPipeline(uuid: string): Promise<ApiRespPipeline> {
-        return this.get(`/api/v1/pipelines/${uuid}`)
-    }
+  // ============ Pipeline API ============
+  public getGeneralPipelineMetadata(): Promise<object> {
+    // as designed, this method will be deprecated, and only for developer to check the prefered config schema
+    return this.get("/api/v1/pipelines/_/metadata");
+  }
 
-    public createPipeline(pipeline: Pipeline): Promise<object> {
-        return this.post('/api/v1/pipelines', pipeline)
-    }
+  public getPipelines(): Promise<ApiRespPipelines> {
+    return this.get("/api/v1/pipelines");
+  }
 
-    public updatePipeline(uuid: string, pipeline: Pipeline): Promise<object> {
-        return this.put(`/api/v1/pipelines/${uuid}`, pipeline)
-    }
+  public getPipeline(uuid: string): Promise<ApiRespPipeline> {
+    return this.get(`/api/v1/pipelines/${uuid}`);
+  }
 
-    public deletePipeline(uuid: string): Promise<object> {
-        return this.delete(`/api/v1/pipelines/${uuid}`)
-    }
+  public createPipeline(pipeline: Pipeline): Promise<object> {
+    return this.post("/api/v1/pipelines", pipeline);
+  }
 
-    // ============ Platform API ============
-    public getAdapters(): Promise<ApiRespPlatformAdapters> {
-        return this.get('/api/v1/platform/adapters')
-    }
+  public updatePipeline(uuid: string, pipeline: Pipeline): Promise<object> {
+    return this.put(`/api/v1/pipelines/${uuid}`, pipeline);
+  }
 
-    public getAdapter(name: string): Promise<ApiRespPlatformAdapter> {
-        return this.get(`/api/v1/platform/adapters/${name}`)
-    }
+  public deletePipeline(uuid: string): Promise<object> {
+    return this.delete(`/api/v1/pipelines/${uuid}`);
+  }
 
-    public getAdapterIconURL(name: string): string {
-        return `/api/v1/platform/adapters/${name}/icon`
-    }
+  // ============ Platform API ============
+  public getAdapters(): Promise<ApiRespPlatformAdapters> {
+    return this.get("/api/v1/platform/adapters");
+  }
 
-    // ============ Platform Bots ============
-    public getBots(): Promise<ApiRespPlatformBots> {
-        return this.get('/api/v1/platform/bots')
-    }
+  public getAdapter(name: string): Promise<ApiRespPlatformAdapter> {
+    return this.get(`/api/v1/platform/adapters/${name}`);
+  }
 
-    public getBot(uuid: string): Promise<ApiRespPlatformBot> {
-        return this.get(`/api/v1/platform/bots/${uuid}`)
-    }
+  public getAdapterIconURL(name: string): string {
+    return `/api/v1/platform/adapters/${name}/icon`;
+  }
 
-    public createBot(bot: Bot): Promise<object> {
-        return this.post('/api/v1/platform/bots', bot)
-    }
+  // ============ Platform Bots ============
+  public getBots(): Promise<ApiRespPlatformBots> {
+    return this.get("/api/v1/platform/bots");
+  }
 
-    public updateBot(uuid: string, bot: Bot): Promise<object> {
-        return this.put(`/api/v1/platform/bots/${uuid}`, bot)
-    }
+  public getBot(uuid: string): Promise<ApiRespPlatformBot> {
+    return this.get(`/api/v1/platform/bots/${uuid}`);
+  }
 
-    public deleteBot(uuid: string): Promise<object> {
-        return this.delete(`/api/v1/platform/bots/${uuid}`)
-    }
+  public createBot(bot: Bot): Promise<object> {
+    return this.post("/api/v1/platform/bots", bot);
+  }
 
-    // ============ Plugins API ============
-    public getPlugins(): Promise<ApiRespPlugins> {
-        return this.get('/api/v1/plugins')
-    }
+  public updateBot(uuid: string, bot: Bot): Promise<object> {
+    return this.put(`/api/v1/platform/bots/${uuid}`, bot);
+  }
 
-    public getPlugin(author: string, name: string): Promise<ApiRespPlugin> {
-        return this.get(`/api/v1/plugins/${author}/${name}`)
-    }
+  public deleteBot(uuid: string): Promise<object> {
+    return this.delete(`/api/v1/platform/bots/${uuid}`);
+  }
 
-    public getPluginConfig(author: string, name: string): Promise<ApiRespPluginConfig> {
-        return this.get(`/api/v1/plugins/${author}/${name}/config`)
-    }
+  // ============ Plugins API ============
+  public getPlugins(): Promise<ApiRespPlugins> {
+    return this.get("/api/v1/plugins");
+  }
 
-    public updatePluginConfig(author: string, name: string, config: object): Promise<object> {
-        return this.put(`/api/v1/plugins/${author}/${name}/config`, config)
-    }
+  public getPlugin(author: string, name: string): Promise<ApiRespPlugin> {
+    return this.get(`/api/v1/plugins/${author}/${name}`);
+  }
 
-    public togglePlugin(author: string, name: string, target_enabled: boolean): Promise<object> {
-        return this.post(`/api/v1/plugins/${author}/${name}/toggle`, { target_enabled })
-    }
+  public getPluginConfig(
+    author: string,
+    name: string
+  ): Promise<ApiRespPluginConfig> {
+    return this.get(`/api/v1/plugins/${author}/${name}/config`);
+  }
 
-    public reorderPlugins(plugins: PluginReorderElement[]): Promise<object> {
-        return this.post('/api/v1/plugins/reorder', plugins)
-    }
+  public updatePluginConfig(
+    author: string,
+    name: string,
+    config: object
+  ): Promise<object> {
+    return this.put(`/api/v1/plugins/${author}/${name}/config`, config);
+  }
 
-    public updatePlugin(author: string, name: string): Promise<AsyncTaskCreatedResp> {
-        return this.post(`/api/v1/plugins/${author}/${name}/update`)
-    }
+  public togglePlugin(
+    author: string,
+    name: string,
+    target_enabled: boolean
+  ): Promise<object> {
+    return this.post(`/api/v1/plugins/${author}/${name}/toggle`, {
+      target_enabled
+    });
+  }
 
-    public installPluginFromGithub(source: string): Promise<AsyncTaskCreatedResp> {
-        return this.post('/api/v1/plugins/install/github', { source })
-    }
+  public reorderPlugins(plugins: PluginReorderElement[]): Promise<object> {
+    return this.post("/api/v1/plugins/reorder", plugins);
+  }
 
-    public removePlugin(author: string, name: string): Promise<AsyncTaskCreatedResp> {
-        return this.delete(`/api/v1/plugins/${author}/${name}`)
-    }
+  public updatePlugin(
+    author: string,
+    name: string
+  ): Promise<AsyncTaskCreatedResp> {
+    return this.post(`/api/v1/plugins/${author}/${name}/update`);
+  }
 
-    // ============ System API ============
-    public getSystemInfo(): Promise<ApiRespSystemInfo> {
-        return this.get('/api/v1/system/info')
-    }
+  public installPluginFromGithub(
+    source: string
+  ): Promise<AsyncTaskCreatedResp> {
+    return this.post("/api/v1/plugins/install/github", { source });
+  }
 
-    public getAsyncTasks(): Promise<ApiRespAsyncTasks> {
-        return this.get('/api/v1/system/tasks')
-    }
+  public removePlugin(
+    author: string,
+    name: string
+  ): Promise<AsyncTaskCreatedResp> {
+    return this.delete(`/api/v1/plugins/${author}/${name}`);
+  }
 
-    public getAsyncTask(id: number): Promise<ApiRespAsyncTask> {
-        return this.get(`/api/v1/system/tasks/${id}`)
-    }
+  // ============ System API ============
+  public getSystemInfo(): Promise<ApiRespSystemInfo> {
+    return this.get("/api/v1/system/info");
+  }
 
-    // ============ User API ============
-    public checkIfInited(): Promise<{initialized: boolean}> {
-        return this.get('/api/v1/user/init')
-    }
+  public getAsyncTasks(): Promise<ApiRespAsyncTasks> {
+    return this.get("/api/v1/system/tasks");
+  }
 
-    public initUser(user: string, password: string): Promise<object> {
-        return this.post('/api/v1/user/init', { user, password })
-    }
+  public getAsyncTask(id: number): Promise<ApiRespAsyncTask> {
+    return this.get(`/api/v1/system/tasks/${id}`);
+  }
 
-    public authUser(user: string, password: string): Promise<ApiRespUserToken> {
-        return this.post('/api/v1/user/auth', { user, password })
-    }
+  // ============ User API ============
+  public checkIfInited(): Promise<{ initialized: boolean }> {
+    return this.get("/api/v1/user/init");
+  }
 
-    public checkUserToken(): Promise<ApiRespUserToken> {
-        return this.get('/api/v1/user/check-token')
-    }
+  public initUser(user: string, password: string): Promise<object> {
+    return this.post("/api/v1/user/init", { user, password });
+  }
+
+  public authUser(user: string, password: string): Promise<ApiRespUserToken> {
+    return this.post("/api/v1/user/auth", { user, password });
+  }
+
+  public checkUserToken(): Promise<ApiRespUserToken> {
+    return this.get("/api/v1/user/check-token");
+  }
 }
 
-export const httpClient = new HttpClient("https://version-4.langbot.dev")
+export const httpClient = new HttpClient("https://version-4.langbot.dev");
