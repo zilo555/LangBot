@@ -65,11 +65,19 @@ class HTTPController:
             ginst = g(self.ap, self.quart_app)
             await ginst.initialize()
 
-        frontend_path = "web/dist"
+        frontend_path = "web/out"
 
         @self.quart_app.route("/")
         async def index():
             return await quart.send_from_directory(frontend_path, "index.html")
+        
+        @self.quart_app.route("/login")
+        async def login():
+            return await quart.send_from_directory(frontend_path, "login.html")
+        
+        @self.quart_app.route("/home")
+        async def home():
+            return await quart.send_from_directory(frontend_path, "home.html")
 
         @self.quart_app.route("/<path:path>")
         async def static_file(path: str):
