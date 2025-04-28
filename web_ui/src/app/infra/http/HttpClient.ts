@@ -339,7 +339,7 @@ class HttpClient {
     name: string,
     target_enabled: boolean
   ): Promise<object> {
-    return this.post(`/api/v1/plugins/${author}/${name}/toggle`, {
+    return this.put(`/api/v1/plugins/${author}/${name}/toggle`, {
       target_enabled
     });
   }

@@ -193,7 +193,7 @@ export interface MarketPlugin {
     artifacts_path: string
     stars: number
     downloads: number
-    status: "synced" | string // 可根据实际状态值扩展联合类型
+    status: "initialized" | "mounted" // 可根据实际状态值扩展联合类型
     synced_at: string
     pushed_at: string // 最后一次代码推送时间
 }

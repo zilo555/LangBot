@@ -8,7 +8,6 @@ import styles from "@/app/home/plugins/plugins.module.css";
 import {Modal, Input} from "antd";
 import {GithubOutlined} from "@ant-design/icons";
 import {httpClient} from "@/app/infra/http/HttpClient";
-import * as http from "node:http";
 
 export default function PluginInstalledComponent () {
     const [pluginList, setPluginList] = useState<PluginCardVO[]>([])
@@ -32,7 +31,8 @@ export default function PluginInstalledComponent () {
                     description: plugin.description.zh_CN,
                     handlerCount: 0,
                     name: plugin.name,
-                    version: plugin.version
+                    version: plugin.version,
+                    isInitialized: plugin.status === "initialized",
                 })
             }))
         })
