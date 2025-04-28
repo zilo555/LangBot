@@ -7,6 +7,8 @@ import PluginCardComponent from "@/app/home/plugins/plugin-installed/plugin-card
 import styles from "@/app/home/plugins/plugins.module.css";
 import {Modal, Input} from "antd";
 import {GithubOutlined} from "@ant-design/icons";
+import {httpClient} from "@/app/infra/http/HttpClient";
+import * as http from "node:http";
 
 export default function PluginInstalledComponent () {
     const [pluginList, setPluginList] = useState<PluginCardVO[]>([])
@@ -19,42 +21,21 @@ export default function PluginInstalledComponent () {
     }, [])
 
     function initData() {
-        getPluginList().then((value) => {
-            setPluginList(value)
-        })
+        getPluginList()
     }
 
-    async function getPluginList() {
-        return [
-            new PluginCardVO({
-                description: "一般的描述",
-                handlerCount: 0,
-                name: "插件AAA",
-                author: "/hana",
-                version: "0.1"
-            }),
-            new PluginCardVO({
-                description: "一般的描述",
-                handlerCount: 0,
-                name: "插件AAA",
-                author: "/hana",
-                version: "0.1"
-            }),
-            new PluginCardVO({
-                description: "一般的描述",
-                handlerCount: 0,
-                name: "插件AAA",
-                author: "/hana",
-                version: "0.1"
-            }),
-            new PluginCardVO({
-                description: "一般的描述",
-                handlerCount: 0,
-                name: "插件AAA",
-                author: "/hana",
-                version: "0.1"
-            })
-        ]
+    function getPluginList() {
+        httpClient.getPlugins().then((value) => {
+            setPluginList(value.plugins.map(plugin => {
+                return new PluginCardVO({
+                    author: plugin.author,
+                    description: plugin.description.zh_CN,
+                    handlerCount: 0,
+                    name: plugin.name,
+                    version: plugin.version
+                })
+            }))
+        })
     }
 
     function handleModalConfirm() {
@@ -63,8 +44,12 @@ export default function PluginInstalledComponent () {
     }
 
     function installPlugin(url: string) {
-        // TODO 接安装Plugin的接口
-        console.log("installPlugin: ", url)
+        httpClient.installPluginFromGithub(url).then(res => {
+            // 安装后重新拉取
+            getPluginList()
+        }).catch(err => {
+            console.log("error when install plugin:", err)
+        })
     }
     return (
         <div className={`${styles.pluginListContainer}`}>
