@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+import json
 import datetime
 import sqlalchemy
 
@@ -66,8 +67,7 @@ class PipelineService:
         pipeline_data['for_version'] = self.ap.ver_mgr.get_current_version()
         pipeline_data['stages'] = default_stage_order.copy()
         pipeline_data['is_default'] = default
-
-        # TODO: 检查pipeline config是否完整
+        pipeline_data['config'] = json.load(open('templates/default-pipeline-config.json', 'r', encoding='utf-8'))
 
         await self.ap.persistence_mgr.execute_async(
             sqlalchemy.insert(persistence_pipeline.LegacyPipeline).values(**pipeline_data)
