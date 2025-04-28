@@ -339,7 +339,7 @@ class PluginManager:
 
                     plugin.enabled = new_status
                     
-                    await self.dump_plugin_container_setting(self.plugin_containers)
+                    await self.dump_plugin_container_setting(plugin)
 
                     break
 
@@ -360,7 +360,8 @@ class PluginManager:
 
         self.plugin_containers.sort(key=lambda x: x.priority, reverse=True)
 
-        await self.dump_plugin_container_setting(self.plugin_containers)
+        for plugin in self.plugin_containers:
+            await self.dump_plugin_container_setting(plugin)
 
     async def set_plugin_config(self, plugin_container: context.RuntimeContainer, new_config: dict):
         plugin_container.plugin_config = new_config
