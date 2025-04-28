@@ -180,3 +180,25 @@ export interface AsyncTask {
 export interface ApiRespUserToken {
     token: string;
 }
+
+export interface MarketPlugin {
+    ID: number
+    CreatedAt: string // ISO 8601 格式日期
+    UpdatedAt: string
+    DeletedAt: string | null
+    name: string
+    author: string
+    description: string
+    repository: string // GitHub 仓库路径
+    artifacts_path: string
+    stars: number
+    downloads: number
+    status: "synced" | string // 可根据实际状态值扩展联合类型
+    synced_at: string
+    pushed_at: string // 最后一次代码推送时间
+}
+
+export interface MarketPluginResponse {
+    plugins: MarketPlugin[]
+    total: number
+}

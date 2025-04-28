@@ -6,9 +6,12 @@ import {PluginMarketCardVO} from "@/app/home/plugins/plugin-market/plugin-market
 import PluginMarketCardComponent from "@/app/home/plugins/plugin-market/plugin-market-card/PluginMarketCardComponent";
 import {Input, Pagination} from "antd";
 import {debounce} from "lodash"
+import {httpClient, spaceClient} from "@/app/infra/http/HttpClient";
 
 export default function PluginMarketComponent () {
     const [marketPluginList, setMarketPluginList] = useState<PluginMarketCardVO[]>([])
+    const [totalCount, setTotalCount] = useState(0)
+    const [nowPage, setNowPage] = useState(1)
     const [searchKeyword, setSearchKeyword] = useState("")
 
     useEffect(() => {
@@ -20,65 +23,25 @@ export default function PluginMarketComponent () {
     }
 
     function onInputSearchKeyword(keyword: string) {
+        // 这里记得加防抖，暂时没加
         setSearchKeyword(keyword)
-        debounceSearch(keyword)
+        setNowPage(1)
+        getPluginList(1, keyword)
     }
 
-    const debounceSearch = useCallback(
-        debounce((keyword: string) => {
-            console.log("debounce search", keyword)
-            searchPlugin(keyword).then(marketPluginList => {
-                setMarketPluginList(marketPluginList)
-            })
-        }, 500), []
-    )
 
-    async function searchPlugin(keyword: string, pageNumber: number = 1): Promise<PluginMarketCardVO[]> {
-        // TODO 实现搜索
-        const demoResult: PluginMarketCardVO[] =  []
-        for (let i = 0; i < keyword.length; i ++) {
-            demoResult.push(new PluginMarketCardVO({
-                author: "/hanahana",
-                description: "一个搜索测试的描述",
-                githubURL: "？",
-                name: "搜索插件" + i,
-                pluginId: `${i}`,
-                starCount: 19 + i,
-                version: `0.${i}`,
-            }))
-        }
-        return demoResult
-    }
-
-    function getPluginList(pageNumber: number = 1) {
-        new Promise<PluginMarketCardVO[]>((resolve, reject) => {
-            const result = [
-                new PluginMarketCardVO({
-                    pluginId: "aaa",
-                    description: "一般的描述",
-                    name: "插件AAA",
-                    author: "/hana",
-                    version: "0.1",
-                    githubURL: "",
-                    starCount: 23
-                }),
-            ]
-            for (let i = 0; i < pageNumber; i ++) {
-                result.push(
-                    new PluginMarketCardVO({
-                        pluginId: "aaa",
-                        description: "一般的描述",
-                        name: "插件AAA",
-                        author: "/hana",
-                        version: "0.1",
-                        githubURL: "",
-                        starCount: 23
-                    })
-                )
-            }
-            resolve(result)
-        }).then((value) => {
-            setMarketPluginList(value)
+    function getPluginList(page: number = nowPage, keyword: string = searchKeyword) {
+        spaceClient.getMarketPlugins(page, 10, keyword).then(res => {
+            setMarketPluginList(res.plugins.map(marketPlugin => new PluginMarketCardVO({
+                author: marketPlugin.author,
+                description: marketPlugin.description,
+                githubURL: marketPlugin.repository,
+                name: marketPlugin.name,
+                pluginId: String(marketPlugin.ID),
+                starCount: marketPlugin.stars,
+            })))
+            setTotalCount(res.total)
+            console.log("market plugins:", res)
         })
     }
 
@@ -104,8 +67,9 @@ export default function PluginMarketComponent () {
             </div>
             <Pagination
                 defaultCurrent={1}
-                total={500}
+                total={totalCount}
                 onChange={(pageNumber) => {
+                    setNowPage(pageNumber)
                     getPluginList(pageNumber)
                 }}
             />

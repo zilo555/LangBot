@@ -26,7 +26,7 @@ import {
   ApiRespSystemInfo,
   ApiRespAsyncTasks,
   ApiRespAsyncTask,
-  ApiRespUserToken
+  ApiRespUserToken, MarketPluginResponse
 } from "../api/api-types";
 import { notification } from "antd";
 
@@ -50,19 +50,22 @@ export interface RequestConfig extends AxiosRequestConfig {
 
 class HttpClient {
   private instance: AxiosInstance;
+  private disableToken: boolean = false
   // 暂不需要SSR
   // private ssrInstance: AxiosInstance | null = null
 
-  constructor(baseURL?: string) {
+  constructor(
+      baseURL?: string,
+      disableToken?: boolean
+  ) {
     this.instance = axios.create({
       baseURL: baseURL || this.getBaseUrl(),
       timeout: 15000,
       headers: {
         "Content-Type": "application/json",
-        "X-Requested-With": "XMLHttpRequest"
       }
     });
-
+    this.disableToken = disableToken || false
     this.initInterceptors();
   }
 
@@ -102,7 +105,7 @@ class HttpClient {
         // config.headers.Cookie = cookies().toString()
 
         // 客户端添加认证头
-        if (typeof window !== "undefined") {
+        if (typeof window !== "undefined" && !this.disableToken) {
           const session = this.getSessionSync();
           config.headers.Authorization = `Bearer ${session}`;
         }
@@ -352,6 +355,19 @@ class HttpClient {
     return this.post(`/api/v1/plugins/${author}/${name}/update`);
   }
 
+  public getMarketPlugins(
+    page: number,
+    page_size: number,
+    query: string,
+  ): Promise<MarketPluginResponse> {
+    return this.post(`/api/v1/market/plugins`, {
+      page,
+      page_size,
+      query,
+      sort_by: "stars",
+      sort_order: "DESC"
+    })
+  }
   public installPluginFromGithub(
     source: string
   ): Promise<AsyncTaskCreatedResp> {
@@ -397,3 +413,6 @@ class HttpClient {
 }
 
 export const httpClient = new HttpClient("https://version-4.langbot.dev");
+
+// 临时写法，未来两种Client都继承自HttpClient父类，不允许共享方法
+export const spaceClient = new HttpClient("https://space.langbot.app")

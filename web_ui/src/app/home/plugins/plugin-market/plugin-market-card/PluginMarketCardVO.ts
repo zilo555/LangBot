@@ -1,7 +1,6 @@
 export interface IPluginMarketCardVO {
     pluginId: string;
     author: string,
-    version: string,
     name: string,
     description: string,
     starCount: number,
@@ -13,7 +12,6 @@ export class PluginMarketCardVO implements IPluginMarketCardVO {
     description: string;
     name: string;
     author: string;
-    version: string;
     githubURL: string;
     starCount: number;
 
@@ -21,11 +19,8 @@ export class PluginMarketCardVO implements IPluginMarketCardVO {
         this.description = prop.description
         this.name = prop.name
         this.author = prop.author
-        this.version = prop.version
         this.githubURL = prop.githubURL
         this.starCount = prop.starCount
         this.pluginId = prop.pluginId
     }
-
-
 }
