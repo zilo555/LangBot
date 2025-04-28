@@ -5,6 +5,7 @@ export interface IPluginMarketCardVO {
     description: string,
     starCount: number,
     githubURL: string,
+    version: string,
 }
 
 export class PluginMarketCardVO implements IPluginMarketCardVO {
@@ -14,6 +15,7 @@ export class PluginMarketCardVO implements IPluginMarketCardVO {
     author: string;
     githubURL: string;
     starCount: number;
+    version: string;
 
     constructor(prop: IPluginMarketCardVO) {
         this.description = prop.description
@@ -22,5 +24,6 @@ export class PluginMarketCardVO implements IPluginMarketCardVO {
         this.githubURL = prop.githubURL
         this.starCount = prop.starCount
         this.pluginId = prop.pluginId
+        this.version = prop.version
     }
 }
