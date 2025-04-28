@@ -69,16 +69,43 @@ class HTTPController:
 
         @self.quart_app.route("/")
         async def index():
-            return await quart.send_from_directory(frontend_path, "index.html")
-        
-        @self.quart_app.route("/login")
-        async def login():
-            return await quart.send_from_directory(frontend_path, "login.html")
-        
-        @self.quart_app.route("/home")
-        async def home():
-            return await quart.send_from_directory(frontend_path, "home.html")
+            return await quart.send_from_directory(frontend_path, "index.html", mimetype="text/html")
 
         @self.quart_app.route("/<path:path>")
         async def static_file(path: str):
-            return await quart.send_from_directory(frontend_path, path)
+            if not os.path.exists(os.path.join(frontend_path, path)):
+                if os.path.exists(os.path.join(frontend_path, path+".html")):
+                    path += '.html'
+                else:
+                    return await quart.send_from_directory(frontend_path, '404.html')
+
+            mimetype = None
+
+            if path.endswith(".html"):
+                mimetype = "text/html"
+            elif path.endswith(".js"):
+                mimetype = "application/javascript"
+            elif path.endswith(".css"):
+                mimetype = "text/css"
+            elif path.endswith(".png"):
+                mimetype = "image/png"
+            elif path.endswith(".jpg"):
+                mimetype = "image/jpeg"
+            elif path.endswith(".jpeg"):
+                mimetype = "image/jpeg"
+            elif path.endswith(".gif"):
+                mimetype = "image/gif"
+            elif path.endswith(".svg"):
+                mimetype = "image/svg+xml"
+            elif path.endswith(".ico"):
+                mimetype = "image/x-icon"
+            elif path.endswith(".json"):
+                mimetype = "application/json"
+            elif path.endswith(".txt"):
+                mimetype = "text/plain"
+
+            return await quart.send_from_directory(
+                frontend_path,
+                path,
+                mimetype=mimetype
+            )
