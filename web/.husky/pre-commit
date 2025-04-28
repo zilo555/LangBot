@@ -1,3 +1,3 @@
-cd web_ui
+cd web
 pnpm lint-staged
 pnpm test
