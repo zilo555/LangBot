@@ -127,9 +127,9 @@ class HttpClient {
           const errMessage = data?.message || error.message;
 
           switch (status) {
-            // case 401:
-            //   window.location.href = "/login";
-            //   break;
+            case 401:
+              window.location.href = "/login";
+              break;
             case 403:
               console.error("Permission denied:", errMessage);
               break;
