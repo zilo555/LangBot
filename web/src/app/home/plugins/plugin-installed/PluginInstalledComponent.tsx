@@ -15,7 +15,7 @@ export default function PluginInstalledComponent() {
 
 
   useEffect(() => {
-    initData()
+    initData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
