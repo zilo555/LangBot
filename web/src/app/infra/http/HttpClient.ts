@@ -26,7 +26,8 @@ import {
   ApiRespSystemInfo,
   ApiRespAsyncTasks,
   ApiRespAsyncTask,
-  ApiRespUserToken, MarketPluginResponse
+  ApiRespUserToken,
+  MarketPluginResponse
 } from "../api/api-types";
 import { notification } from "antd";
 
@@ -50,22 +51,19 @@ export interface RequestConfig extends AxiosRequestConfig {
 
 class HttpClient {
   private instance: AxiosInstance;
-  private disableToken: boolean = false
+  private disableToken: boolean = false;
   // 暂不需要SSR
   // private ssrInstance: AxiosInstance | null = null
 
-  constructor(
-      baseURL?: string,
-      disableToken?: boolean
-  ) {
+  constructor(baseURL?: string, disableToken?: boolean) {
     this.instance = axios.create({
       baseURL: baseURL || this.getBaseUrl(),
       timeout: 15000,
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "application/json"
       }
     });
-    this.disableToken = disableToken || false
+    this.disableToken = disableToken || false;
     this.initInterceptors();
   }
 
@@ -129,9 +127,9 @@ class HttpClient {
           const errMessage = data?.message || error.message;
 
           switch (status) {
-            case 401:
-              window.location.href = "/login";
-              break;
+            // case 401:
+            //   window.location.href = "/login";
+            //   break;
             case 403:
               console.error("Permission denied:", errMessage);
               break;
@@ -358,7 +356,7 @@ class HttpClient {
   public getMarketPlugins(
     page: number,
     page_size: number,
-    query: string,
+    query: string
   ): Promise<MarketPluginResponse> {
     return this.post(`/api/v1/market/plugins`, {
       page,
@@ -366,7 +364,7 @@ class HttpClient {
       query,
       sort_by: "stars",
       sort_order: "DESC"
-    })
+    });
   }
   public installPluginFromGithub(
     source: string
@@ -415,4 +413,4 @@ class HttpClient {
 export const httpClient = new HttpClient("https://version-4.langbot.dev");
 
 // 临时写法，未来两种Client都继承自HttpClient父类，不允许共享方法
-export const spaceClient = new HttpClient("https://space.langbot.app")
+export const spaceClient = new HttpClient("https://space.langbot.app");
