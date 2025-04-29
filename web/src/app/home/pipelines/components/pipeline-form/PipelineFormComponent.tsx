@@ -13,10 +13,20 @@ import styles from "./pipelineFormStyle.module.css";
 import { httpClient } from "@/app/infra/http/HttpClient";
 import { LLMModel, Pipeline } from "@/app/infra/api/api-types";
 import { UUID } from "uuidjs";
+import {PipelineFormEntity} from "@/app/home/pipelines/components/pipeline-form/PipelineFormEntity";
 
 export default function PipelineFormComponent({
-  onFinish
+  initValues,
+  onFinish,
+  isEditMode,
+  pipelineId,
+  disableForm,
 }: {
+  pipelineId?: string;
+  isEditMode: boolean;
+  disableForm: boolean;
+  // 这里的写法很不安全不规范，未来流水线需要重新整理
+  initValues?: PipelineFormEntity;
   onFinish: () => void;
 }) {
   const [nowFormIndex, setNowFormIndex] = useState<number>(0);
@@ -39,6 +49,18 @@ export default function PipelineFormComponent({
   useEffect(() => {
     getLLMModelList();
   }, []);
+
+  useEffect(() => {
+    console.log("initValues change: ", initValues);
+    if (initValues) {
+      basicForm.setFieldsValue(initValues.basic);
+      aiForm.setFieldsValue(initValues.ai);
+      triggerForm.setFieldsValue(initValues.trigger);
+      safetyForm.setFieldsValue(initValues.safety);
+      outputForm.setFieldsValue(initValues.output);
+    }
+  }, [initValues]);
+
 
   function getLLMModelList() {
     httpClient
@@ -91,6 +113,14 @@ export default function PipelineFormComponent({
   }
 
   function handleCommit() {
+    if (isEditMode) {
+      handleModify()
+    } else {
+      handleCreate()
+    }
+  }
+
+  function handleCreate() {
     Promise.all([
       basicForm.validateFields(),
       aiForm.validateFields(),
@@ -98,13 +128,30 @@ export default function PipelineFormComponent({
       safetyForm.validateFields(),
       outputForm.validateFields()
     ])
-      .then(() => {
-        const pipeline = assembleForm();
-        httpClient.createPipeline(pipeline).then(() => onFinish());
-      })
-      .catch((e) => {
-        console.error(e);
-      });
+        .then(() => {
+          const pipeline = assembleForm();
+          httpClient.createPipeline(pipeline).then(() => onFinish());
+        })
+        .catch((e) => {
+          console.error(e);
+        });
+  }
+
+  function handleModify() {
+    Promise.all([
+      basicForm.validateFields(),
+      aiForm.validateFields(),
+      triggerForm.validateFields(),
+      safetyForm.validateFields(),
+      outputForm.validateFields()
+    ])
+        .then(() => {
+          const pipeline = assembleForm();
+          httpClient.updatePipeline(pipelineId || '', pipeline).then(() => onFinish());
+        })
+        .catch((e) => {
+          console.error(e);
+        });
   }
 
   // TODO 类型混乱，需要优化
@@ -142,6 +189,7 @@ export default function PipelineFormComponent({
           display: getNowFormLabel().name === "basic" ? "block" : "none"
         }}
         form={basicForm}
+        disabled={disableForm}
       >
         <Form.Item
           label="流水线名称"
@@ -172,6 +220,7 @@ export default function PipelineFormComponent({
         layout={"vertical"}
         style={{ display: getNowFormLabel().name === "ai" ? "block" : "none" }}
         form={aiForm}
+        disabled={disableForm}
       >
         {/* Runner 配置区块 */}
         <div className={`${styles.formItemSubtitle}`}>运行器</div>
@@ -331,6 +380,7 @@ export default function PipelineFormComponent({
           display: getNowFormLabel().name === "trigger" ? "block" : "none"
         }}
         form={triggerForm}
+        disabled={disableForm}
       >
         {/* 群响应规则块 */}
         <div className={`${styles.formItemSubtitle}`}> 群响应规则</div>
@@ -423,6 +473,7 @@ export default function PipelineFormComponent({
           display: getNowFormLabel().name === "safety" ? "block" : "none"
         }}
         form={safetyForm}
+        disabled={disableForm}
       >
         {/* 内容过滤块 content-filter */}
         <div className={`${styles.formItemSubtitle}`}> 内容过滤 </div>
@@ -488,6 +539,7 @@ export default function PipelineFormComponent({
           display: getNowFormLabel().name === "output" ? "block" : "none"
         }}
         form={outputForm}
+        disabled={disableForm}
       >
         {/* 长文本处理区块 */}
         <div className={`${styles.formItemSubtitle}`}> 长文本处理 </div>

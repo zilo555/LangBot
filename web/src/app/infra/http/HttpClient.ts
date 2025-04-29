@@ -27,7 +27,7 @@ import {
   ApiRespAsyncTasks,
   ApiRespAsyncTask,
   ApiRespUserToken,
-  MarketPluginResponse
+  MarketPluginResponse, GetPipelineResponseData
 } from "../api/api-types";
 import { notification } from "antd";
 
@@ -258,7 +258,7 @@ class HttpClient {
     return this.get("/api/v1/pipelines");
   }
 
-  public getPipeline(uuid: string): Promise<ApiRespPipeline> {
+  public getPipeline(uuid: string): Promise<GetPipelineResponseData> {
     return this.get(`/api/v1/pipelines/${uuid}`);
   }
 

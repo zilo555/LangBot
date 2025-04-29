@@ -6,11 +6,21 @@ import PipelineFormComponent from "./components/pipeline-form/PipelineFormCompon
 import { httpClient } from "@/app/infra/http/HttpClient";
 import { PipelineCardVO } from "@/app/home/pipelines/components/pipeline-card/PipelineCardVO";
 import PipelineCardComponent from "@/app/home/pipelines/components/pipeline-card/PipelineCardComponent";
+import {PipelineFormEntity} from "@/app/home/pipelines/components/pipeline-form/PipelineFormEntity";
 
 export default function PluginConfigPage() {
   const [modalOpen, setModalOpen] = useState<boolean>(false);
-  const [isEditForm] = useState(false);
+  const [isEditForm, setIsEditForm] = useState(false);
   const [pipelineList, setPipelineList] = useState<PipelineCardVO[]>([]);
+  const [selectedPipelineId, setSelectedPipelineId] = useState("")
+  const [selectedPipelineFormValue, setSelectedPipelineFormValue] = useState<PipelineFormEntity>({
+      basic: {},
+      ai: {},
+      trigger: {},
+      safety: {},
+      output: {},
+  })
+  const [disableForm, setDisableForm] = useState(false)
 
   useEffect(() => {
     getPipelines();
@@ -37,12 +47,29 @@ export default function PluginConfigPage() {
       });
   }
 
+  function getSelectedPipelineForm(id?: string) {
+      httpClient.getPipeline(id ?? selectedPipelineId).then((value) => {
+          setSelectedPipelineFormValue({
+              ai: value.pipeline.config.ai,
+              basic: {
+                  description: value.pipeline.description,
+                  name: value.pipeline.name,
+              },
+              output: value.pipeline.config.output,
+              safety: value.pipeline.config.safety,
+              trigger: value.pipeline.config.trigger,
+          })
+          setDisableForm(false)
+      })
+  }
+
   return (
     <div className={``}>
       <Modal
         title={isEditForm ? "编辑流水线" : "创建流水线"}
         centered
         open={modalOpen}
+        destroyOnClose={true}
         onOk={() => setModalOpen(false)}
         onCancel={() => setModalOpen(false)}
         width={700}
@@ -53,6 +80,10 @@ export default function PluginConfigPage() {
             getPipelines();
             setModalOpen(false);
           }}
+          isEditMode={isEditForm}
+          pipelineId={selectedPipelineId}
+          disableForm={disableForm}
+          initValues={selectedPipelineFormValue}
         />
       </Modal>
 
@@ -60,7 +91,18 @@ export default function PluginConfigPage() {
         <div className={``}>
           {pipelineList.map((pipeline) => {
             return (
-              <PipelineCardComponent key={pipeline.id} cardVO={pipeline} />
+              <div
+                key={pipeline.id}
+                onClick={() => {
+                    setDisableForm(true)
+                    setIsEditForm(true);
+                    setModalOpen(true);
+                    setSelectedPipelineId(pipeline.id)
+                    getSelectedPipelineForm(pipeline.id);
+                }}
+              >
+                <PipelineCardComponent cardVO={pipeline} />
+              </div>
             );
           })}
         </div>
