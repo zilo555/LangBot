@@ -41,8 +41,29 @@
 .cardFooter {
     width: 90%;
     height: 30px;
+    position: relative;
 }
 
+.footerContainer {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.linkAndToolContainer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+.switchContainer {
+    display: flex;
+    justify-content: flex-end;
+}
 
 .fontGray {
     color: #6C6C6C;
