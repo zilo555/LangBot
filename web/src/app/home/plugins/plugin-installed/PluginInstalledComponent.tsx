@@ -1,8 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import CreateCardComponent from "@/app/infra/basic-component/create-card-component/CreateCardComponent";
 import { PluginCardVO } from "@/app/home/plugins/plugin-installed/PluginCardVO";
-import { useEffect, useState } from "react";
 import PluginCardComponent from "@/app/home/plugins/plugin-installed/plugin-card/PluginCardComponent";
 import styles from "@/app/home/plugins/plugins.module.css";
 import { Modal, Input } from "antd";
@@ -66,16 +66,12 @@ export default function PluginInstalledComponent() {
                 fontSize: "30px",
                 marginRight: "20px"
               }}
-              type="setting"
             />
-            <span>从 GitHub 安装插件</span>
           </div>
         }
-        centered
         open={modalOpen}
-        onOk={() => handleModalConfirm()}
+        onOk={handleModalConfirm}
         onCancel={() => setModalOpen(false)}
-        width={500}
         destroyOnClose={true}
       >
         <div className={`${styles.modalBody}`}>
@@ -95,7 +91,6 @@ export default function PluginInstalledComponent() {
         );
       })}
       <CreateCardComponent
-        width={360}
         height={140}
         plusSize={90}
         onClick={() => {

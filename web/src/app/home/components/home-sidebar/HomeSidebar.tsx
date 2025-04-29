@@ -67,34 +67,42 @@ export default function HomeSidebar({
     }
   }
 
-  return (
-    <div className={`${styles.sidebarContainer}`}>
-      {/* LangBot、ICON区域 */}
-      <div className={`${styles.langbotIconContainer}`}>
-        {/* icon */}
-        <div className={`${styles.langbotIcon}`}>L</div>
-        <div className={`${styles.langbotText}`}>Langbot</div>
-      </div>
-      {/* 菜单列表，后期可升级成配置驱动 */}
-      <div>
-        {sidebarConfigList.map((config) => {
-          return (
-            <div
-              key={config.id}
-              onClick={() => {
-                console.log("click:", config.id);
-                handleChildClick(config);
-              }}
-            >
-              <SidebarChild
-                isSelected={selectedChild.id === config.id}
-                icon={config.icon}
-                name={config.name}
-              />
+
+    return (
+        <div className={`${styles.sidebarContainer}`}>
+            {/* LangBot、ICON区域 */}
+            <div className={`${styles.langbotIconContainer}`}>
+                {/* icon */}
+                <div className={`${styles.langbotIcon}`}>
+                    L
+                </div>
+                <div className={`${styles.langbotText}`}>
+                    Langbot
+                </div>
             </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+            {/* 菜单列表，后期可升级成配置驱动 */}
+            <div>
+                {
+                    sidebarConfigList.map(config => {
+                        return (
+                            <div
+                                key={config.id}
+                                onClick={() => {
+                                    console.log('click:', config.id)
+                                    handleChildClick(config)
+                                }}
+                            >
+                                <SidebarChild
+                                    isSelected={selectedChild.id === config.id}
+                                    icon={config.icon}
+                                    name={config.name}
+                                />
+                            </div>
+                        )
+                    })
+                }
+
+            </div>
+        </div>
+    );
 }

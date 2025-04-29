@@ -46,19 +46,22 @@ export default function PluginCardComponent({
       </div>
       {/*  footer  */}
       <div className={`${styles.cardFooter}`}>
-        <div className={`${styles.linkSettingContainer}`}>
-          <div className={`${styles.link}`}>
-            <LinkOutlined style={{ fontSize: "22px" }} />
-            <span>1</span>
+        <div className={`${styles.footerContainer}`}>
+          <div className={`${styles.linkAndToolContainer}`}>
+            <div className={`${styles.link}`}>
+              <LinkOutlined style={{ fontSize: "22px" }} />
+              <span>1</span>
+            </div>
+            <ToolOutlined style={{ fontSize: "22px" }} />
           </div>
-          <ToolOutlined style={{ fontSize: "22px" }} />
+          <div className={`${styles.switchContainer}`}>
+            <Switch
+              value={initialized}
+              onClick={handleEnable}
+              disabled={!switchEnable}
+            />
+          </div>
         </div>
-
-        <Switch
-          value={initialized}
-          onClick={handleEnable}
-          disabled={!switchEnable}
-        />
       </div>
     </div>
   );

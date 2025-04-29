@@ -1,6 +1,4 @@
 .cardContainer {
-    width: 360px;
-    height: 140px;
     box-sizing: border-box;
     background-color: #FFF;
     border-radius: 9px;
@@ -73,5 +71,6 @@
         color: #6062E7;
         align-self: center;
         justify-content: space-between;
+        align-items: center;
     }
 }
