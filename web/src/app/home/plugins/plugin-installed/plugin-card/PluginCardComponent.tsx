@@ -1,13 +1,33 @@
 import styles from "./pluginCard.module.css"
 import { PluginCardVO } from "@/app/home/plugins/plugin-installed/PluginCardVO";
 import { GithubOutlined, LinkOutlined, ToolOutlined } from '@ant-design/icons';
-import { Tag } from 'antd'
+import { Switch, Tag } from 'antd'
+import { useState } from "react";
+import { httpClient } from "@/app/infra/http/HttpClient";
 
 export default function PluginCardComponent({
     cardVO
 }: {
     cardVO: PluginCardVO
 }) {
+    const [initialized, setInitialized] = useState(cardVO.isInitialized);
+    const [switchEnable, setSwitchEnable] = useState(true);
+
+    function handleEnable() {
+        setSwitchEnable(false);
+        httpClient
+            .togglePlugin(cardVO.author, cardVO.name, !initialized)
+            .then(() => {
+                setInitialized(!initialized);
+            })
+            .catch((err) => {
+                console.log("error: ", err);
+            })
+            .finally(() => {
+                setSwitchEnable(true);
+            });
+    }
+
     return (
         <div className={`${styles.cardContainer}`}>
             {/*  header  */}

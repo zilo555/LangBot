@@ -18,7 +18,7 @@ export default function HomeLayout({
 }>) {
   const router = useRouter();
   const [title, setTitle] = useState<string>("")
-  const onSelectedChange = (child: SidebarChildVO) => {
+  const onSelectedChangeAction = (child: SidebarChildVO) => {
     setTitle(child.name)
   }
 
@@ -28,7 +28,7 @@ export default function HomeLayout({
 
       <Sider className="left">
         <HomeSidebar
-          onSelectedChange={onSelectedChange}
+          onSelectedChangeAction={onSelectedChangeAction}
         />
         {/* HomeSidebar 为侧边栏 */}
       </Sider>

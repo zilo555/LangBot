@@ -1,90 +1,70 @@
-"use client"
+"use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import styles from "@/app/home/plugins/plugins.module.css";
 import { PluginMarketCardVO } from "@/app/home/plugins/plugin-market/plugin-market-card/PluginMarketCardVO";
 import PluginMarketCardComponent from "@/app/home/plugins/plugin-market/plugin-market-card/PluginMarketCardComponent";
 import { Input, Pagination } from "antd";
-import { debounce } from "lodash"
+import { spaceClient } from "@/app/infra/http/HttpClient";
 
 export default function PluginMarketComponent() {
-    const [marketPluginList, setMarketPluginList] = useState<PluginMarketCardVO[]>([])
-    const [searchKeyword, setSearchKeyword] = useState("")
-    const [currentPage, setCurrentPage] = useState(1)
-    const [totalItems, setTotalItems] = useState(0)
-    const [loading, setLoading] = useState(false)
-    const pageSize = 10 // 每页显示的项目数量
+    const [marketPluginList, setMarketPluginList] = useState<
+        PluginMarketCardVO[]
+    >([]);
+    const [totalCount, setTotalCount] = useState(0);
+    const [nowPage, setNowPage] = useState(1);
+    const [searchKeyword, setSearchKeyword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const pageSize = 10;
 
     useEffect(() => {
-        fetchPlugins(searchKeyword, currentPage)
-    }, [currentPage])
+        initData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
-    // 获取插件列表，整合了搜索和分页功能
-    async function fetchPlugins(keyword: string = "", page: number = 1): Promise<void> {
-        setLoading(true)
-        try {
-            // 实际应用中，这里应该调用API获取数据
-            const result = await mockFetchPlugins(keyword, page, pageSize)
-            setMarketPluginList(result.data)
-            setTotalItems(result.total)
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    // 模拟从API获取数据
-    async function mockFetchPlugins(keyword: string, page: number, pageSize: number): Promise<{ data: PluginMarketCardVO[], total: number }> {
-        // 模拟API延迟
-        await new Promise(resolve => setTimeout(resolve, 300))
-
-        // 创建模拟数据
-        const allPlugins: PluginMarketCardVO[] = []
-        const totalPlugins = 50 // 模拟总数据量
-
-        for (let i = 0; i < totalPlugins; i++) {
-            allPlugins.push(new PluginMarketCardVO({
-                pluginId: `plugin-${i}`,
-                description: `这是插件 ${i} 的描述，包含一些详细信息`,
-                name: `插件 ${i}`,
-                author: `/author-${i % 5}`, // 模拟5个不同的作者
-                version: `0.${i % 10}`,
-                githubURL: `https://github.com/author-${i % 5}/plugin-${i}`,
-                starCount: 10 + Math.floor(Math.random() * 100)
-            }))
-        }
-
-        // 根据关键词过滤
-        const filtered = keyword
-            ? allPlugins.filter(p =>
-                p.name.toLowerCase().includes(keyword.toLowerCase()) ||
-                p.description.toLowerCase().includes(keyword.toLowerCase()))
-            : allPlugins
-
-        // 分页处理
-        const start = (page - 1) * pageSize
-        const end = start + pageSize
-        const paginatedData = filtered.slice(start, end)
-
-        return {
-            data: paginatedData,
-            total: filtered.length
-        }
+    function initData() {
+        getPluginList();
     }
 
     function onInputSearchKeyword(keyword: string) {
-        setSearchKeyword(keyword)
-        setCurrentPage(1) // 搜索时重置为第一页
-        debounceSearch(keyword)
+        // 这里记得加防抖，暂时没加
+        setSearchKeyword(keyword);
+        setNowPage(1);
+        getPluginList(1, keyword);
     }
 
-    const debounceSearch = useCallback(
-        debounce((keyword: string) => {
-            fetchPlugins(keyword, 1)
-        }, 500), []
-    )
+    function getPluginList(
+        page: number = nowPage,
+        keyword: string = searchKeyword
+    ) {
+        setLoading(true);
+        spaceClient.getMarketPlugins(page, pageSize, keyword).then((res) => {
+            setMarketPluginList(
+                res.plugins.map(
+                    (marketPlugin) =>
+                        new PluginMarketCardVO({
+                            author: marketPlugin.author,
+                            description: marketPlugin.description,
+                            githubURL: marketPlugin.repository,
+                            name: marketPlugin.name,
+                            pluginId: String(marketPlugin.ID),
+                            starCount: marketPlugin.stars,
+                            version: "version" in marketPlugin ? String(marketPlugin.version) : "1.0.0", // Default version if not provided
+                        })
+                )
+            );
+            setTotalCount(res.total);
+            setLoading(false);
+            console.log("market plugins:", res);
+        }).catch(error => {
+            console.error("获取插件列表失败:", error);
+            setLoading(false);
+        });
+    }
 
     function handlePageChange(page: number) {
-        setCurrentPage(page)
+        setNowPage(page);
+        getPluginList(page);
     }
 
     return (
@@ -111,11 +91,11 @@ export default function PluginMarketComponent() {
                     ))
                 )}
             </div>
-            {totalItems > 0 && (
+            {totalCount > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'center', width: '100%', marginTop: '20px' }}>
                     <Pagination
-                        current={currentPage}
-                        total={totalItems}
+                        current={nowPage}
+                        total={totalCount}
                         pageSize={pageSize}
                         onChange={handlePageChange}
                         showSizeChanger={false}
