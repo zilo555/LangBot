@@ -1,17 +1,13 @@
 from __future__ import annotations
 
-import json
 
-import asyncio
-import aiohttp
 import typing
 
 from . import chatcmpl
-from .. import entities, errors, requester
-from ....core import app, entities as core_entities
+from .. import requester
+from ....core import entities as core_entities
 from ... import entities as llm_entities
 from ...tools import entities as tools_entities
-from .. import entities as modelmgr_entities
 
 
 class GiteeAIChatCompletions(chatcmpl.OpenAIChatCompletions):
@@ -33,20 +29,20 @@ class GiteeAIChatCompletions(chatcmpl.OpenAIChatCompletions):
         self.client.api_key = use_model.token_mgr.get_token()
 
         args = extra_args.copy()
-        args["model"] = use_model.model_entity.name
+        args['model'] = use_model.model_entity.name
 
         if use_funcs:
             tools = await self.ap.tool_mgr.generate_tools_for_openai(use_funcs)
 
             if tools:
-                args["tools"] = tools
+                args['tools'] = tools
 
         # gitee 不支持多模态，把content都转换成纯文字
         for m in req_messages:
-            if 'content' in m and isinstance(m["content"], list):
-                m["content"] = " ".join([c["text"] for c in m["content"]])
+            if 'content' in m and isinstance(m['content'], list):
+                m['content'] = ' '.join([c['text'] for c in m['content']])
 
-        args["messages"] = req_messages
+        args['messages'] = req_messages
 
         resp = await self._req(args)
 

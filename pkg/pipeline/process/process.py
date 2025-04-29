@@ -1,18 +1,16 @@
 from __future__ import annotations
 
-from ...core import app, entities as core_entities
+from ...core import entities as core_entities
 from . import handler
 from .handlers import chat, command
 from .. import entities
-from .. import stage, entities
-from ...core import entities as core_entities
-from ...config import manager as cfg_mgr
+from .. import stage
 
 
-@stage.stage_class("MessageProcessor")
+@stage.stage_class('MessageProcessor')
 class Processor(stage.PipelineStage):
     """请求实际处理阶段
-    
+
     通过命令处理器和聊天处理器处理消息。
 
     改写：
@@ -35,11 +33,12 @@ class Processor(stage.PipelineStage):
         query: core_entities.Query,
         stage_inst_name: str,
     ) -> entities.StageProcessResult:
-        """处理
-        """
+        """处理"""
         message_text = str(query.message_chain).strip()
 
-        self.ap.logger.info(f"处理 {query.launcher_type.value}_{query.launcher_id} 的请求({query.query_id}): {message_text}")
+        self.ap.logger.info(
+            f'处理 {query.launcher_type.value}_{query.launcher_id} 的请求({query.query_id}): {message_text}'
+        )
 
         async def generator():
             cmd_prefix = self.ap.instance_config.data['command']['prefix']
@@ -50,5 +49,5 @@ class Processor(stage.PipelineStage):
             else:
                 async for result in self.chat_handler.handle(query):
                     yield result
-        
+
         return generator()
