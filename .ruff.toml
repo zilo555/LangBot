@@ -8,6 +8,7 @@ ignore = [
     "E741", # Ambiguous variable name: `l`
     "E722", # bare-except
     "E721", # type-comparison
+    "F821", # undefined-all
     "FURB113", # repeated-append
     "FURB152", # math-constant
     "UP007", # non-pep604-annotation
