@@ -1,26 +1,26 @@
 'use client';
 
-import React from "react";
+import React from 'react';
 import { ConfigProvider, theme } from 'antd';
 
 export default function LoginLayout({
-    children
+  children,
 }: Readonly<{
-    children: React.ReactNode;
+  children: React.ReactNode;
 }>) {
-    return (
-        <ConfigProvider
-            theme={{
-                token: {
-                    colorPrimary: '#2288ee',
-                    borderRadius: 6,
-                },
-                algorithm: theme.defaultAlgorithm,
-            }}
-        >
-            <div style={{ width: '100%', height: '100%' }}>
-                <main style={{ width: '100%', height: '100%' }}>{children}</main>
-            </div>
-        </ConfigProvider>
-    )
+  return (
+    <ConfigProvider
+      theme={{
+        token: {
+          colorPrimary: '#2288ee',
+          borderRadius: 6,
+        },
+        algorithm: theme.defaultAlgorithm,
+      }}
+    >
+      <div style={{ width: '100%', height: '100%' }}>
+        <main style={{ width: '100%', height: '100%' }}>{children}</main>
+      </div>
+    </ConfigProvider>
+  );
 }

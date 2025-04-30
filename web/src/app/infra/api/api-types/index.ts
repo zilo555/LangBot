@@ -57,7 +57,6 @@ export interface ApiRespPipelines {
   pipelines: Pipeline[];
 }
 
-
 export interface Pipeline {
   uuid: string;
   name: string;
@@ -203,7 +202,7 @@ export interface MarketPlugin {
   artifacts_path: string;
   stars: number;
   downloads: number;
-  status: "initialized" | "mounted"; // 可根据实际状态值扩展联合类型
+  status: 'initialized' | 'mounted'; // 可根据实际状态值扩展联合类型
   synced_at: string;
   pushed_at: string; // 最后一次代码推送时间
 }
@@ -213,24 +212,23 @@ export interface MarketPluginResponse {
   total: number;
 }
 
-
 interface GetPipelineConfig {
   ai: {
-    "dashscope-app-api": {
-      "api-key": string;
-      "app-id": string;
-      "app-type": "agent" | "workflow";
-      "references-quote"?: string;
+    'dashscope-app-api': {
+      'api-key': string;
+      'app-id': string;
+      'app-type': 'agent' | 'workflow';
+      'references-quote'?: string;
     };
-    "dify-service-api": {
-      "api-key": string;
-      "app-type": "chat" | "agent" | "workflow";
-      "base-url": string;
-      "thinking-convert": "plain" | "original" | "remove";
+    'dify-service-api': {
+      'api-key': string;
+      'app-type': 'chat' | 'agent' | 'workflow';
+      'base-url': string;
+      'thinking-convert': 'plain' | 'original' | 'remove';
       timeout?: number;
     };
-    "local-agent": {
-      "max-round": number;
+    'local-agent': {
+      'max-round': number;
       model: string;
       prompt: Array<{
         content: string;
@@ -238,50 +236,50 @@ interface GetPipelineConfig {
       }>;
     };
     runner: {
-      runner: "local-agent" | "dify-service-api" | "dashscope-app-api";
+      runner: 'local-agent' | 'dify-service-api' | 'dashscope-app-api';
     };
   };
   output: {
-    "force-delay": {
+    'force-delay': {
       max: number;
       min: number;
     };
-    "long-text-processing": {
-      "font-path": string;
-      strategy: "forward" | "image";
+    'long-text-processing': {
+      'font-path': string;
+      strategy: 'forward' | 'image';
       threshold: number;
     };
     misc: {
-      "at-sender": boolean;
-      "hide-exception": boolean;
-      "quote-origin": boolean;
-      "track-function-calls": boolean;
+      'at-sender': boolean;
+      'hide-exception': boolean;
+      'quote-origin': boolean;
+      'track-function-calls': boolean;
     };
   };
   safety: {
-    "content-filter": {
-      "check-sensitive-words": boolean;
-      scope: "all" | "income-msg" | "output-msg";
+    'content-filter': {
+      'check-sensitive-words': boolean;
+      scope: 'all' | 'income-msg' | 'output-msg';
     };
-    "rate-limit": {
+    'rate-limit': {
       limitation: number;
-      strategy: "drop" | "wait";
-      "window-length": number;
+      strategy: 'drop' | 'wait';
+      'window-length': number;
     };
   };
   trigger: {
-    "access-control": {
+    'access-control': {
       blacklist: string[];
-      mode: "blacklist" | "whitelist";
+      mode: 'blacklist' | 'whitelist';
       whitelist: string[];
     };
-    "group-respond-rules": {
+    'group-respond-rules': {
       at: boolean;
       prefix: string[];
       random: number;
       regexp: string[];
     };
-    "ignore-rules": {
+    'ignore-rules': {
       prefix: string[];
       regexp: string[];
     };

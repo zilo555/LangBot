@@ -1,4 +1,4 @@
 export interface IChooseRequesterEntity {
-    label: string
-    value: string
+  label: string;
+  value: string;
 }

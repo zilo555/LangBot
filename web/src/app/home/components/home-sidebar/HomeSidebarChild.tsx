@@ -1,4 +1,4 @@
-import styles from "./HomeSidebar.module.css";
+import styles from './HomeSidebar.module.css';
 
 export interface ISidebarChildVO {
   id: string;
@@ -24,7 +24,7 @@ export class SidebarChildVO {
 export function SidebarChild({
   icon,
   name,
-  isSelected
+  isSelected,
 }: {
   icon: string;
   name: string;

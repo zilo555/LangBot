@@ -1,4 +1,4 @@
-import { DynamicFormItemConfig } from "@/app/home/components/dynamic-form/DynamicFormItemConfig";
+import { DynamicFormItemConfig } from '@/app/home/components/dynamic-form/DynamicFormItemConfig';
 
 export interface IPipelineChildFormEntity {
   name: string;

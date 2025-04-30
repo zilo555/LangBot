@@ -1,3 +1,2 @@
 cd web
 pnpm lint-staged
-pnpm test

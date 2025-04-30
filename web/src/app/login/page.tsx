@@ -1,17 +1,17 @@
-"use client";
-import { Button, Input, Form, Checkbox, Divider } from "antd";
+'use client';
+import { Button, Input, Form, Checkbox, Divider } from 'antd';
 import {
   GoogleOutlined,
   LockOutlined,
   UserOutlined,
-  QqOutlined
-} from "@ant-design/icons";
-import styles from "./login.module.css";
-import { useEffect, useState } from "react";
+  QqOutlined,
+} from '@ant-design/icons';
+import styles from './login.module.css';
+import { useEffect, useState } from 'react';
 
-import { httpClient } from "@/app/infra/http/HttpClient";
-import "@ant-design/v5-patch-for-react-19";
-import { useRouter } from "next/navigation";
+import { httpClient } from '@/app/infra/http/HttpClient';
+import '@ant-design/v5-patch-for-react-19';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const router = useRouter();
@@ -32,7 +32,7 @@ export default function Home() {
         setIsInitialized(res.initialized);
       })
       .catch((err) => {
-        console.log("error at getIsInitialized: ", err);
+        console.log('error at getIsInitialized: ', err);
       });
   }
 
@@ -48,10 +48,10 @@ export default function Home() {
     httpClient
       .initUser(username, password)
       .then((res) => {
-        console.log("init user success: ", res);
+        console.log('init user success: ', res);
       })
       .catch((err) => {
-        console.log("init user error: ", err);
+        console.log('init user error: ', err);
       });
   }
 
@@ -59,12 +59,12 @@ export default function Home() {
     httpClient
       .authUser(username, password)
       .then((res) => {
-        localStorage.setItem("token", res.token);
-        console.log("login success: ", res);
-        router.push("/home");
+        localStorage.setItem('token', res.token);
+        console.log('login success: ', res);
+        router.push('/home');
       })
       .catch((err) => {
-        console.log("login error: ", err);
+        console.log('login error: ', err);
       });
   }
 
@@ -94,8 +94,8 @@ export default function Home() {
               <Form.Item
                 name="email"
                 rules={[
-                  { required: true, message: "请输入邮箱!" },
-                  { type: "email", message: "请输入有效的邮箱地址!" }
+                  { required: true, message: '请输入邮箱!' },
+                  { type: 'email', message: '请输入有效的邮箱地址!' },
                 ]}
               >
                 <Input
@@ -107,7 +107,7 @@ export default function Home() {
 
               <Form.Item
                 name="password"
-                rules={[{ required: true, message: "请输入密码!" }]}
+                rules={[{ required: true, message: '请输入密码!' }]}
               >
                 <Input.Password
                   placeholder="输入密码"
@@ -162,9 +162,9 @@ export default function Home() {
               >
                 {isRegisterMode
                   ? isInitialized
-                    ? "暂不提供注册"
-                    : "注册"
-                  : "登录"}
+                    ? '暂不提供注册'
+                    : '注册'
+                  : '登录'}
               </Button>
 
               <Divider className={styles.divider}>或</Divider>
@@ -179,7 +179,7 @@ export default function Home() {
                   使用谷歌账号登录
                 </Button>
               </div>
-              <div style={{ height: "10px" }}></div>
+              <div style={{ height: '10px' }}></div>
               <div className={styles.socialLogin}>
                 <Button
                   className={styles.socialButton}

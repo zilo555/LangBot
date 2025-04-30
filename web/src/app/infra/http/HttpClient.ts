@@ -2,8 +2,8 @@ import axios, {
   AxiosInstance,
   AxiosRequestConfig,
   AxiosResponse,
-  AxiosError
-} from "axios";
+  AxiosError,
+} from 'axios';
 import {
   ApiRespProviderRequesters,
   ApiRespProviderRequester,
@@ -11,7 +11,6 @@ import {
   ApiRespProviderLLMModel,
   LLMModel,
   ApiRespPipelines,
-  ApiRespPipeline,
   Pipeline,
   ApiRespPlatformAdapters,
   ApiRespPlatformAdapter,
@@ -27,9 +26,10 @@ import {
   ApiRespAsyncTasks,
   ApiRespAsyncTask,
   ApiRespUserToken,
-  MarketPluginResponse, GetPipelineResponseData
-} from "../api/api-types";
-import { notification } from "antd";
+  MarketPluginResponse,
+  GetPipelineResponseData,
+} from '../api/api-types';
+import { notification } from 'antd';
 
 type JSONValue = string | number | boolean | JSONObject | JSONArray | null;
 interface JSONObject {
@@ -60,8 +60,8 @@ class HttpClient {
       baseURL: baseURL || this.getBaseUrl(),
       timeout: 15000,
       headers: {
-        "Content-Type": "application/json"
-      }
+        'Content-Type': 'application/json',
+      },
     });
     this.disableToken = disableToken || false;
     this.initInterceptors();
@@ -69,26 +69,26 @@ class HttpClient {
 
   // 兜底URL，如果使用未配置会走到这里
   private getBaseUrl(): string {
-    return "http://localhost:5300";
+    return 'http://localhost:5300';
     // NOT IMPLEMENT
-    if (typeof window === "undefined") {
+    if (typeof window === 'undefined') {
       // 服务端环境
-      return "";
+      return '';
     }
     // 客户端环境
-    return "";
+    return '';
   }
 
   // 获取Session
   private async getSession() {
     // NOT IMPLEMENT
-    return "";
+    return '';
   }
 
   // 同步获取Session
   private getSessionSync() {
     // NOT IMPLEMENT
-    return localStorage.getItem("token");
+    return localStorage.getItem('token');
   }
 
   // 拦截器配置
@@ -103,14 +103,14 @@ class HttpClient {
         // config.headers.Cookie = cookies().toString()
 
         // 客户端添加认证头
-        if (typeof window !== "undefined" && !this.disableToken) {
+        if (typeof window !== 'undefined' && !this.disableToken) {
           const session = this.getSessionSync();
           config.headers.Authorization = `Bearer ${session}`;
         }
 
         return config;
       },
-      (error) => Promise.reject(error)
+      (error) => Promise.reject(error),
     );
 
     // 响应拦截
@@ -128,36 +128,36 @@ class HttpClient {
 
           switch (status) {
             case 401:
-              window.location.href = "/login";
+              window.location.href = '/login';
               break;
             case 403:
-              console.error("Permission denied:", errMessage);
+              console.error('Permission denied:', errMessage);
               break;
             case 500:
               // TODO 弹Toast窗
               // NOTE: move to component layer for customized message?
               notification.error({
-                message: "服务器错误",
+                message: '服务器错误',
                 description: errMessage,
-                placement: "bottomRight"
+                placement: 'bottomRight',
               });
-              console.error("Server error:", errMessage);
+              console.error('Server error:', errMessage);
               break;
           }
 
           return Promise.reject({
             code: data?.code || status,
             message: errMessage,
-            data: data?.data || null
+            data: data?.data || null,
           });
         }
 
         return Promise.reject({
           code: -1,
-          message: error.message || "Network Error",
-          data: null
+          message: error.message || 'Network Error',
+          data: null,
         });
-      }
+      },
     );
   }
 
@@ -165,10 +165,10 @@ class HttpClient {
   private convertKeysToCamel(obj: JSONValue): JSONValue {
     if (Array.isArray(obj)) {
       return obj.map((v) => this.convertKeysToCamel(v));
-    } else if (obj !== null && typeof obj === "object") {
+    } else if (obj !== null && typeof obj === 'object') {
       return Object.keys(obj).reduce((acc, key) => {
         const camelKey = key.replace(/_([a-z])/g, (_, letter) =>
-          letter.toUpperCase()
+          letter.toUpperCase(),
         );
         acc[camelKey] = this.convertKeysToCamel((obj as JSONObject)[key]);
         return acc;
@@ -191,7 +191,7 @@ class HttpClient {
 
   private handleError(error: object): never {
     if (axios.isCancel(error)) {
-      throw { code: -2, message: "Request canceled", data: null };
+      throw { code: -2, message: 'Request canceled', data: null };
     }
     throw error;
   }
@@ -200,27 +200,27 @@ class HttpClient {
   public get<T = unknown>(
     url: string,
     params?: object,
-    config?: RequestConfig
+    config?: RequestConfig,
   ) {
-    return this.request<T>({ method: "get", url, params, ...config });
+    return this.request<T>({ method: 'get', url, params, ...config });
   }
 
   public post<T = unknown>(url: string, data?: object, config?: RequestConfig) {
-    return this.request<T>({ method: "post", url, data, ...config });
+    return this.request<T>({ method: 'post', url, data, ...config });
   }
 
   public put<T = unknown>(url: string, data?: object, config?: RequestConfig) {
-    return this.request<T>({ method: "put", url, data, ...config });
+    return this.request<T>({ method: 'put', url, data, ...config });
   }
 
   public delete<T = unknown>(url: string, config?: RequestConfig) {
-    return this.request<T>({ method: "delete", url, ...config });
+    return this.request<T>({ method: 'delete', url, ...config });
   }
 
   // real api request implementation
   // ============ Provider API ============
   public getProviderRequesters(): Promise<ApiRespProviderRequesters> {
-    return this.get("/api/v1/provider/requesters");
+    return this.get('/api/v1/provider/requesters');
   }
 
   public getProviderRequester(name: string): Promise<ApiRespProviderRequester> {
@@ -233,7 +233,7 @@ class HttpClient {
 
   // ============ Provider Model LLM ============
   public getProviderLLMModels(): Promise<ApiRespProviderLLMModels> {
-    return this.get("/api/v1/provider/models/llm");
+    return this.get('/api/v1/provider/models/llm');
   }
 
   public getProviderLLMModel(uuid: string): Promise<ApiRespProviderLLMModel> {
@@ -241,7 +241,7 @@ class HttpClient {
   }
 
   public createProviderLLMModel(model: LLMModel): Promise<object> {
-    return this.post("/api/v1/provider/models/llm", model);
+    return this.post('/api/v1/provider/models/llm', model);
   }
 
   public deleteProviderLLMModel(uuid: string): Promise<object> {
@@ -251,11 +251,11 @@ class HttpClient {
   // ============ Pipeline API ============
   public getGeneralPipelineMetadata(): Promise<object> {
     // as designed, this method will be deprecated, and only for developer to check the prefered config schema
-    return this.get("/api/v1/pipelines/_/metadata");
+    return this.get('/api/v1/pipelines/_/metadata');
   }
 
   public getPipelines(): Promise<ApiRespPipelines> {
-    return this.get("/api/v1/pipelines");
+    return this.get('/api/v1/pipelines');
   }
 
   public getPipeline(uuid: string): Promise<GetPipelineResponseData> {
@@ -263,7 +263,7 @@ class HttpClient {
   }
 
   public createPipeline(pipeline: Pipeline): Promise<object> {
-    return this.post("/api/v1/pipelines", pipeline);
+    return this.post('/api/v1/pipelines', pipeline);
   }
 
   public updatePipeline(uuid: string, pipeline: Pipeline): Promise<object> {
@@ -276,7 +276,7 @@ class HttpClient {
 
   // ============ Platform API ============
   public getAdapters(): Promise<ApiRespPlatformAdapters> {
-    return this.get("/api/v1/platform/adapters");
+    return this.get('/api/v1/platform/adapters');
   }
 
   public getAdapter(name: string): Promise<ApiRespPlatformAdapter> {
@@ -289,7 +289,7 @@ class HttpClient {
 
   // ============ Platform Bots ============
   public getBots(): Promise<ApiRespPlatformBots> {
-    return this.get("/api/v1/platform/bots");
+    return this.get('/api/v1/platform/bots');
   }
 
   public getBot(uuid: string): Promise<ApiRespPlatformBot> {
@@ -297,7 +297,7 @@ class HttpClient {
   }
 
   public createBot(bot: Bot): Promise<object> {
-    return this.post("/api/v1/platform/bots", bot);
+    return this.post('/api/v1/platform/bots', bot);
   }
 
   public updateBot(uuid: string, bot: Bot): Promise<object> {
@@ -310,7 +310,7 @@ class HttpClient {
 
   // ============ Plugins API ============
   public getPlugins(): Promise<ApiRespPlugins> {
-    return this.get("/api/v1/plugins");
+    return this.get('/api/v1/plugins');
   }
 
   public getPlugin(author: string, name: string): Promise<ApiRespPlugin> {
@@ -319,7 +319,7 @@ class HttpClient {
 
   public getPluginConfig(
     author: string,
-    name: string
+    name: string,
   ): Promise<ApiRespPluginConfig> {
     return this.get(`/api/v1/plugins/${author}/${name}/config`);
   }
@@ -327,7 +327,7 @@ class HttpClient {
   public updatePluginConfig(
     author: string,
     name: string,
-    config: object
+    config: object,
   ): Promise<object> {
     return this.put(`/api/v1/plugins/${author}/${name}/config`, config);
   }
@@ -335,20 +335,20 @@ class HttpClient {
   public togglePlugin(
     author: string,
     name: string,
-    target_enabled: boolean
+    target_enabled: boolean,
   ): Promise<object> {
     return this.put(`/api/v1/plugins/${author}/${name}/toggle`, {
-      target_enabled
+      target_enabled,
     });
   }
 
   public reorderPlugins(plugins: PluginReorderElement[]): Promise<object> {
-    return this.post("/api/v1/plugins/reorder", plugins);
+    return this.post('/api/v1/plugins/reorder', plugins);
   }
 
   public updatePlugin(
     author: string,
-    name: string
+    name: string,
   ): Promise<AsyncTaskCreatedResp> {
     return this.post(`/api/v1/plugins/${author}/${name}/update`);
   }
@@ -356,36 +356,36 @@ class HttpClient {
   public getMarketPlugins(
     page: number,
     page_size: number,
-    query: string
+    query: string,
   ): Promise<MarketPluginResponse> {
     return this.post(`/api/v1/market/plugins`, {
       page,
       page_size,
       query,
-      sort_by: "stars",
-      sort_order: "DESC"
+      sort_by: 'stars',
+      sort_order: 'DESC',
     });
   }
   public installPluginFromGithub(
-    source: string
+    source: string,
   ): Promise<AsyncTaskCreatedResp> {
-    return this.post("/api/v1/plugins/install/github", { source });
+    return this.post('/api/v1/plugins/install/github', { source });
   }
 
   public removePlugin(
     author: string,
-    name: string
+    name: string,
   ): Promise<AsyncTaskCreatedResp> {
     return this.delete(`/api/v1/plugins/${author}/${name}`);
   }
 
   // ============ System API ============
   public getSystemInfo(): Promise<ApiRespSystemInfo> {
-    return this.get("/api/v1/system/info");
+    return this.get('/api/v1/system/info');
   }
 
   public getAsyncTasks(): Promise<ApiRespAsyncTasks> {
-    return this.get("/api/v1/system/tasks");
+    return this.get('/api/v1/system/tasks');
   }
 
   public getAsyncTask(id: number): Promise<ApiRespAsyncTask> {
@@ -394,23 +394,23 @@ class HttpClient {
 
   // ============ User API ============
   public checkIfInited(): Promise<{ initialized: boolean }> {
-    return this.get("/api/v1/user/init");
+    return this.get('/api/v1/user/init');
   }
 
   public initUser(user: string, password: string): Promise<object> {
-    return this.post("/api/v1/user/init", { user, password });
+    return this.post('/api/v1/user/init', { user, password });
   }
 
   public authUser(user: string, password: string): Promise<ApiRespUserToken> {
-    return this.post("/api/v1/user/auth", { user, password });
+    return this.post('/api/v1/user/auth', { user, password });
   }
 
   public checkUserToken(): Promise<ApiRespUserToken> {
-    return this.get("/api/v1/user/check-token");
+    return this.get('/api/v1/user/check-token');
   }
 }
 
-export const httpClient = new HttpClient("https://version-4.langbot.dev");
+export const httpClient = new HttpClient('https://version-4.langbot.dev');
 
 // 临时写法，未来两种Client都继承自HttpClient父类，不允许共享方法
-export const spaceClient = new HttpClient("https://space.langbot.app");
+export const spaceClient = new HttpClient('https://space.langbot.app');

@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import CreateCardComponent from "@/app/infra/basic-component/create-card-component/CreateCardComponent";
-import { PluginCardVO } from "@/app/home/plugins/plugin-installed/PluginCardVO";
-import PluginCardComponent from "@/app/home/plugins/plugin-installed/plugin-card/PluginCardComponent";
-import styles from "@/app/home/plugins/plugins.module.css";
-import { Modal, Input } from "antd";
-import { GithubOutlined } from "@ant-design/icons";
-import { httpClient } from "@/app/infra/http/HttpClient";
+import { useState, useEffect } from 'react';
+import CreateCardComponent from '@/app/infra/basic-component/create-card-component/CreateCardComponent';
+import { PluginCardVO } from '@/app/home/plugins/plugin-installed/PluginCardVO';
+import PluginCardComponent from '@/app/home/plugins/plugin-installed/plugin-card/PluginCardComponent';
+import styles from '@/app/home/plugins/plugins.module.css';
+import { Modal, Input } from 'antd';
+import { GithubOutlined } from '@ant-design/icons';
+import { httpClient } from '@/app/infra/http/HttpClient';
 
 export default function PluginInstalledComponent() {
   const [pluginList, setPluginList] = useState<PluginCardVO[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [githubURL, setGithubURL] = useState("");
+  const [githubURL, setGithubURL] = useState('');
 
   useEffect(() => {
     initData();
@@ -33,9 +33,9 @@ export default function PluginInstalledComponent() {
             handlerCount: 0,
             name: plugin.name,
             version: plugin.version,
-            isInitialized: plugin.status === "initialized"
+            isInitialized: plugin.status === 'initialized',
           });
-        })
+        }),
       );
     });
   }
@@ -53,7 +53,7 @@ export default function PluginInstalledComponent() {
         getPluginList();
       })
       .catch((err) => {
-        console.log("error when install plugin:", err);
+        console.log('error when install plugin:', err);
       });
   }
   return (
@@ -63,8 +63,8 @@ export default function PluginInstalledComponent() {
           <div className={`${styles.modalTitle}`}>
             <GithubOutlined
               style={{
-                fontSize: "30px",
-                marginRight: "20px"
+                fontSize: '30px',
+                marginRight: '20px',
               }}
             />
           </div>

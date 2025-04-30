@@ -1,15 +1,15 @@
-import styles from "./pluginMarketCard.module.css";
-import { GithubOutlined, StarOutlined } from "@ant-design/icons";
-import { PluginMarketCardVO } from "@/app/home/plugins/plugin-market/plugin-market-card/PluginMarketCardVO";
-import { Button } from "antd";
+import styles from './pluginMarketCard.module.css';
+import { GithubOutlined, StarOutlined } from '@ant-design/icons';
+import { PluginMarketCardVO } from '@/app/home/plugins/plugin-market/plugin-market-card/PluginMarketCardVO';
+import { Button } from 'antd';
 
 export default function PluginMarketCardComponent({
-  cardVO
+  cardVO,
 }: {
   cardVO: PluginMarketCardVO;
 }) {
   function handleInstallClick(pluginId: string) {
-    console.log("Install plugin: ", pluginId);
+    console.log('Install plugin: ', pluginId);
   }
 
   return (
@@ -19,7 +19,7 @@ export default function PluginMarketCardComponent({
         {/* left author */}
         <div className={`${styles.fontGray}`}>{cardVO.author}</div>
         {/*  right icon */}
-        <GithubOutlined style={{ fontSize: "26px" }} type="setting" />
+        <GithubOutlined style={{ fontSize: '26px' }} type="setting" />
       </div>
       {/*  content  */}
       <div className={`${styles.cardContent}`}>
@@ -30,13 +30,13 @@ export default function PluginMarketCardComponent({
       <div className={`${styles.cardFooter}`}>
         <div className={`${styles.linkSettingContainer}`}>
           <div className={`${styles.link}`}>
-            <StarOutlined style={{ fontSize: "22px" }} />
-            <span style={{ paddingLeft: "5px" }}>{cardVO.starCount}</span>
+            <StarOutlined style={{ fontSize: '22px' }} />
+            <span style={{ paddingLeft: '5px' }}>{cardVO.starCount}</span>
           </div>
         </div>
         <Button
           type="primary"
-          size={"small"}
+          size={'small'}
           onClick={() => {
             handleInstallClick(cardVO.pluginId);
           }}

@@ -1,12 +1,12 @@
-import styles from "./pluginCard.module.css";
-import { PluginCardVO } from "@/app/home/plugins/plugin-installed/PluginCardVO";
-import { GithubOutlined, LinkOutlined, ToolOutlined } from "@ant-design/icons";
-import { Switch, Tag } from "antd";
-import { useState } from "react";
-import { httpClient } from "@/app/infra/http/HttpClient";
+import styles from './pluginCard.module.css';
+import { PluginCardVO } from '@/app/home/plugins/plugin-installed/PluginCardVO';
+import { GithubOutlined, LinkOutlined, ToolOutlined } from '@ant-design/icons';
+import { Switch, Tag } from 'antd';
+import { useState } from 'react';
+import { httpClient } from '@/app/infra/http/HttpClient';
 
 export default function PluginCardComponent({
-  cardVO
+  cardVO,
 }: {
   cardVO: PluginCardVO;
 }) {
@@ -21,7 +21,7 @@ export default function PluginCardComponent({
         setInitialized(!initialized);
       })
       .catch((err) => {
-        console.log("error: ", err);
+        console.log('error: ', err);
       })
       .finally(() => {
         setSwitchEnable(true);
@@ -35,7 +35,7 @@ export default function PluginCardComponent({
         <div className={`${styles.fontGray}`}>{cardVO.author}</div>
         {/*  right icon & version  */}
         <div className={`${styles.iconVersionContainer}`}>
-          <GithubOutlined style={{ fontSize: "26px" }} type="setting" />
+          <GithubOutlined style={{ fontSize: '26px' }} type="setting" />
           <Tag color="#108ee9">v{cardVO.version}</Tag>
         </div>
       </div>
@@ -49,10 +49,10 @@ export default function PluginCardComponent({
         <div className={`${styles.footerContainer}`}>
           <div className={`${styles.linkAndToolContainer}`}>
             <div className={`${styles.link}`}>
-              <LinkOutlined style={{ fontSize: "22px" }} />
+              <LinkOutlined style={{ fontSize: '22px' }} />
               <span>1</span>
             </div>
-            <ToolOutlined style={{ fontSize: "22px" }} />
+            <ToolOutlined style={{ fontSize: '22px' }} />
           </div>
           <div className={`${styles.switchContainer}`}>
             <Switch

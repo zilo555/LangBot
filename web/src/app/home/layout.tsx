@@ -1,35 +1,31 @@
-"use client"
+'use client';
 
 import '@ant-design/v5-patch-for-react-19';
-import styles from "./layout.module.css"
-import HomeSidebar from "@/app/home/components/home-sidebar/HomeSidebar";
-import HomeTitleBar from "@/app/home/components/home-titlebar/HomeTitleBar";
-import React, { useState } from "react";
-import { SidebarChildVO } from "@/app/home/components/home-sidebar/HomeSidebarChild";
-import { useRouter } from 'next/navigation';
+import styles from './layout.module.css';
+import HomeSidebar from '@/app/home/components/home-sidebar/HomeSidebar';
+import HomeTitleBar from '@/app/home/components/home-titlebar/HomeTitleBar';
+import React, { useState } from 'react';
+import { SidebarChildVO } from '@/app/home/components/home-sidebar/HomeSidebarChild';
 import { Layout } from 'antd';
 
 const { Sider, Content } = Layout;
 
 export default function HomeLayout({
-  children
+  children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const router = useRouter();
-  const [title, setTitle] = useState<string>("")
+  const [title, setTitle] = useState<string>('');
   const onSelectedChangeAction = (child: SidebarChildVO) => {
-    setTitle(child.name)
-  }
+    setTitle(child.name);
+  };
 
   return (
     <Layout className={styles.homeLayoutContainer}>
       {/* homeLayoutContainer 是整个容器的入口,使用 flex 的左右布局 */}
 
       <Sider className="left">
-        <HomeSidebar
-          onSelectedChangeAction={onSelectedChangeAction}
-        />
+        <HomeSidebar onSelectedChangeAction={onSelectedChangeAction} />
         {/* HomeSidebar 为侧边栏 */}
       </Sider>
 
@@ -44,5 +40,5 @@ export default function HomeLayout({
         </Content>
       </Layout>
     </Layout>
-  )
+  );
 }
