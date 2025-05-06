@@ -228,7 +228,7 @@ class HttpClient {
   }
 
   public getProviderRequesterIconURL(name: string): string {
-    return `/api/v1/provider/requesters/${name}/icon`;
+    return this.instance.defaults.baseURL + `/api/v1/provider/requesters/${name}/icon`;
   }
 
   // ============ Provider Model LLM ============
@@ -284,7 +284,7 @@ class HttpClient {
   }
 
   public getAdapterIconURL(name: string): string {
-    return `/api/v1/platform/adapters/${name}/icon`;
+    return this.instance.defaults.baseURL + `/api/v1/platform/adapters/${name}/icon`;
   }
 
   // ============ Platform Bots ============
@@ -410,7 +410,8 @@ class HttpClient {
   }
 }
 
-export const httpClient = new HttpClient('https://version-4.langbot.dev');
+// export const httpClient = new HttpClient("https://version-4.langbot.dev");
+export const httpClient = new HttpClient("http://localhost:5300");
 
 // 临时写法，未来两种Client都继承自HttpClient父类，不允许共享方法
 export const spaceClient = new HttpClient('https://space.langbot.app');

@@ -23,7 +23,9 @@ class RequestersRouterGroup(group.RouterGroup):
 
             return self.success(data={'requester': requester_info})
 
-        @self.route('/<requester_name>/icon', methods=['GET'])
+        @self.route(
+            '/<requester_name>/icon', methods=['GET'], auth_type=group.AuthType.NONE
+        )
         async def _(requester_name: str) -> quart.Response:
             requester_manifest = (
                 self.ap.model_mgr.get_available_requester_manifest_by_name(

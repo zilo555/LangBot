@@ -23,7 +23,9 @@ class AdaptersRouterGroup(group.RouterGroup):
 
             return self.success(data={'adapter': adapter_info})
 
-        @self.route('/<adapter_name>/icon', methods=['GET'])
+        @self.route(
+            '/<adapter_name>/icon', methods=['GET'], auth_type=group.AuthType.NONE
+        )
         async def _(adapter_name: str) -> quart.Response:
             adapter_manifest = (
                 self.ap.platform_mgr.get_available_adapter_manifest_by_name(
