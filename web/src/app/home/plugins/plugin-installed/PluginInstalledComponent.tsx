@@ -91,8 +91,8 @@ export default function PluginInstalledComponent() {
         );
       })}
       <CreateCardComponent
-        height={140}
-        plusSize={90}
+        height={'140px'}
+        plusSize={'90px'}
         onClick={() => {
           setModalOpen(true);
         }}

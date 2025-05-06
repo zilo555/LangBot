@@ -1,9 +1,7 @@
 .cardContainer {
-    width: 360px;
-    height: 200px;
     background-color: #FFF;
     border-radius: 9px;
-    box-shadow: rgba(0, 0, 0, 0.4) 0 1px 1px -1px;
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
     align-items: center;

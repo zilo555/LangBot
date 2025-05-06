@@ -29,9 +29,11 @@ export default function LLMConfigPage() {
           console.log('model', model);
           return new LLMCardVO({
             id: model.uuid,
+            iconURL: httpClient.getProviderRequesterIconURL(model.requester),
             name: model.name,
-            company: model.requester,
-            URL: model.requester_config?.base_url,
+            providerLabel: model.requester.substring(0, 10),
+            baseURL: model.requester_config?.base_url,
+            abilities: model.abilities,
           });
         });
         console.log('get llmModelList', llmModelList);
@@ -85,6 +87,13 @@ export default function LLMConfigPage() {
       </Modal>
       {cardList.length > 0 && (
         <div className={`${styles.modelListContainer}`}>
+
+          <CreateCardComponent
+            width={'24rem'}
+            height={'10rem'}
+            plusSize={'90px'}
+            onClick={handleCreateModelClick}
+          />
           {cardList.map((cardVO) => {
             return (
               <div
@@ -97,12 +106,6 @@ export default function LLMConfigPage() {
               </div>
             );
           })}
-          <CreateCardComponent
-            width={360}
-            height={200}
-            plusSize={90}
-            onClick={handleCreateModelClick}
-          />
         </div>
       )}
 

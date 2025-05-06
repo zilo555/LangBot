@@ -151,8 +151,8 @@ export default function BotConfigPage() {
             );
           })}
           <CreateCardComponent
-            height={200}
-            plusSize={90}
+            height={'200px'}
+            plusSize={'90px'}
             onClick={handleCreateBotClick}
           />
         </div>

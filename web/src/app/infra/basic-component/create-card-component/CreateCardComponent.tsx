@@ -4,17 +4,19 @@ export default function CreateCardComponent({
   height,
   plusSize,
   onClick,
+  width = '100%',
 }: {
-  height: number;
-  plusSize: number;
+  height: string;
+  plusSize: string;
   onClick: () => void;
+  width?: string;
 }) {
   return (
     <div
       className={`${styles.cardContainer} ${styles.createCardContainer} `}
       style={{
-        width: `100%`,
-        height: `${height}px`,
+        width: `${width}`,
+        height: `${height}`,
         fontSize: `${plusSize}px`,
       }}
       onClick={onClick}

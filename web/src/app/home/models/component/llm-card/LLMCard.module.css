@@ -1,0 +1,106 @@
+.cardContainer {
+    width: 24rem;
+    height: 10rem;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+    padding: 1.2rem;
+}
+
+.iconBasicInfoContainer {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    gap: 0.8rem;
+    user-select: none;
+}
+
+.iconImage {
+    width: 4rem;
+    height: 4rem;
+    margin: 0.2rem;
+    border-radius: 50%;
+}
+
+.basicInfoContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.basicInfoText {
+    font-size: 1.4rem;
+    font-weight: bold;
+}
+
+.providerContainer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.2rem;
+}
+
+.providerIcon {
+    width: 1.2rem;
+    height: 1.2rem;
+    color: #626262;
+}
+
+.providerLabel {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #626262;
+}
+
+.baseURLContainer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.2rem;
+}
+
+.baseURLIcon {
+    width: 1.2rem;
+    height: 1.2rem;
+    color: #626262;
+}
+
+.baseURLText {
+    font-size: 1rem;
+    color: #626262;
+}
+
+.abilitiesContainer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.4rem;
+}
+
+.abilityBadge {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.2rem;
+    height: 1.6rem;
+    padding: 0.5rem;
+    border-radius: 0.8rem;
+    background-color: #66baff80;
+}
+
+.abilityIcon {
+    width: 1.2rem;
+    height: 1.2rem;
+    color: #2288ee;
+}
+
+.abilityLabel {
+    font-size: 1rem;
+    font-weight: 300;
+    color: #2288ee;
+}
