@@ -1,11 +1,16 @@
 .cardContainer {
     background-color: #FFF;
     border-radius: 9px;
-    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: space-evenly;
+    cursor: pointer;
+}
+
+.cardContainer:hover {
+    box-shadow: 0 0 15px 0 rgba(0, 0, 0, 0.05);
 }
 
 .createCardContainer {

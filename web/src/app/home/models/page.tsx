@@ -21,7 +21,15 @@ export default function LLMConfigPage() {
     getLLMModelList();
   }, []);
 
-  function getLLMModelList() {
+  async function getLLMModelList() {
+    const requesterNameListResp = await httpClient.getProviderRequesters();
+    const requesterNameList = requesterNameListResp.requesters.map((item) => {
+      return {
+        label: item.label.zh_CN,
+        value: item.name,
+      };
+    });
+
     httpClient
       .getProviderLLMModels()
       .then((resp) => {
@@ -31,7 +39,7 @@ export default function LLMConfigPage() {
             id: model.uuid,
             iconURL: httpClient.getProviderRequesterIconURL(model.requester),
             name: model.name,
-            providerLabel: model.requester.substring(0, 10),
+            providerLabel: requesterNameList.find((item) => item.value === model.requester)?.label || model.requester.substring(0, 10),
             baseURL: model.requester_config?.base_url,
             abilities: model.abilities,
           });

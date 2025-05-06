@@ -8,6 +8,7 @@ import {
 } from '@/app/home/components/home-sidebar/HomeSidebarChild';
 import { useRouter, usePathname } from 'next/navigation';
 import { sidebarConfigList } from '@/app/home/components/home-sidebar/sidbarConfigList';
+import langbotIcon from '../../assets/langbot-logo.webp';
 
 // TODO 侧边导航栏要加动画
 export default function HomeSidebar({
@@ -72,8 +73,12 @@ export default function HomeSidebar({
       {/* LangBot、ICON区域 */}
       <div className={`${styles.langbotIconContainer}`}>
         {/* icon */}
-        <div className={`${styles.langbotIcon}`}>L</div>
-        <div className={`${styles.langbotText}`}>Langbot</div>
+        <img className={`${styles.langbotIcon}`} src={langbotIcon.src} alt="langbot-icon" />
+        {/* 文字 */}
+        <div className={`${styles.langbotTextContainer}`}>
+          <div className={`${styles.langbotText}`}>LangBot</div>
+          <div className={`${styles.langbotVersion}`}>v4.0.0</div>
+        </div>
       </div>
       {/* 菜单列表，后期可升级成配置驱动 */}
       <div>
