@@ -2,14 +2,14 @@ import styles from './HomeSidebar.module.css';
 
 export interface ISidebarChildVO {
   id: string;
-  icon: string;
+  icon: React.ReactNode;
   name: string;
   route: string;
 }
 
 export class SidebarChildVO {
   id: string;
-  icon: string;
+  icon: React.ReactNode;
   name: string;
   route: string;
 
@@ -26,7 +26,7 @@ export function SidebarChild({
   name,
   isSelected,
 }: {
-  icon: string;
+  icon: React.ReactNode;
   name: string;
   isSelected: boolean;
 }) {
@@ -34,11 +34,12 @@ export function SidebarChild({
     <div
       className={`${styles.sidebarChildContainer} ${isSelected ? styles.sidebarSelected : styles.sidebarUnselected}`}
     >
-      <div className={`${styles.sidebarChildIcon}`} />
-      <div>
+      <div className={`${styles.sidebarChildIcon}`}>
         {icon}
-        {name}
       </div>
+      <span className={`${styles.sidebarChildName}`}>
+        {name}
+      </span>
     </div>
   );
 }

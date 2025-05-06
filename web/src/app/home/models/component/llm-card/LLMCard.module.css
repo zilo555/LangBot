@@ -87,20 +87,20 @@
     align-items: center;
     justify-content: flex-start;
     gap: 0.2rem;
-    height: 1.6rem;
+    height: 1.5rem;
     padding: 0.5rem;
     border-radius: 0.8rem;
     background-color: #66baff80;
 }
 
 .abilityIcon {
-    width: 1.2rem;
-    height: 1.2rem;
+    width: 1rem;
+    height: 1rem;
     color: #2288ee;
 }
 
 .abilityLabel {
-    font-size: 1rem;
-    font-weight: 300;
+    font-size: 0.8rem;
+    font-weight: 400;
     color: #2288ee;
 }
