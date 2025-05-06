@@ -1,26 +1,26 @@
 export interface IBotCardVO {
   id: string;
+  iconURL: string;
   name: string;
-  adapter: string;
   description: string;
-  updateTime: string;
-  pipelineName: string;
+  adapterLabel: string;
+  usePipelineName: string;
 }
 
 export class BotCardVO implements IBotCardVO {
   id: string;
-  adapter: string;
-  description: string;
+  iconURL: string;
   name: string;
-  updateTime: string;
-  pipelineName: string;
+  description: string;
+  adapterLabel: string;
+  usePipelineName: string;
 
   constructor(props: IBotCardVO) {
     this.id = props.id;
+    this.iconURL = props.iconURL;
     this.name = props.name;
-    this.adapter = props.adapter;
     this.description = props.description;
-    this.updateTime = props.updateTime;
-    this.pipelineName = props.pipelineName;
+    this.adapterLabel = props.adapterLabel;
+    this.usePipelineName = props.usePipelineName;
   }
 }

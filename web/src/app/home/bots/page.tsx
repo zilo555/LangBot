@@ -47,12 +47,12 @@ export default function BotConfigPage() {
       .then((resp) => {
         const botList: BotCardVO[] = resp.bots.map((bot: Bot) => {
           return new BotCardVO({
-            adapter: bot.adapter,
-            description: bot.description,
             id: bot.uuid || '',
+            iconURL: httpClient.getAdapterIconURL(bot.adapter),
             name: bot.name,
-            updateTime: bot.updated_at || '',
-            pipelineName: bot.use_pipeline_name || '',
+            description: bot.description,
+            adapterLabel: bot.adapter,
+            usePipelineName: bot.use_pipeline_name || '',
           });
         });
         if (botList.length === 0) {
@@ -138,6 +138,12 @@ export default function BotConfigPage() {
       {/* 注意：其余的返回内容需要保持在Spin组件外部 */}
       {pageShowRule === BotConfigPageShowRule.HAVE_BOT && (
         <div className={`${styles.botListContainer}`}>
+
+          <CreateCardComponent
+            height={'10rem'}
+            plusSize={'4rem'}
+            onClick={handleCreateBotClick}
+          />
           {botList.map((cardVO) => {
             return (
               <div
@@ -150,11 +156,6 @@ export default function BotConfigPage() {
               </div>
             );
           })}
-          <CreateCardComponent
-            height={'200px'}
-            plusSize={'90px'}
-            onClick={handleCreateBotClick}
-          />
         </div>
       )}
     </div>

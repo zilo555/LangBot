@@ -1,67 +1,86 @@
-.iconBasicInfoContainer {
-    width: 300px;
-    height: 100px;
-    margin-left: 20px;
-    display: flex;
-    flex-direction: row;
-}
-
 .cardContainer {
-    width: 360px;
-    height: 200px;
-    background-color: #FFF;
-    border-radius: 9px;
-    box-shadow: rgba(0, 0, 0, 0.4) 0 1px 1px -1px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: space-evenly;
+    width: 24rem;
+    height: 10rem;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.2);
+    padding: 1.2rem;
+    cursor: pointer;
 }
 
 .iconBasicInfoContainer {
-    width: 300px;
-    height: 100px;
-    margin-left: 20px;
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: row;
+    gap: 0.8rem;
+    user-select: none;
+    /* background-color: aqua; */
 }
 
-.icon {
-    width: 90px;
-    height: 90px;
-    border-radius: 5px;
-    font-size: 40px;
-    line-height: 90px;
-    text-align: center;
-    color: #ffffff;
-    background: rgba(96, 149, 209, 0.31);
-    border: 1px solid rgba(96, 149, 209, 0.31);
+.iconImage {
+    width: 4rem;
+    height: 4rem;
+    margin: 0.2rem;
+    /* border-radius: 50%; */
 }
 
 .basicInfoContainer {
-    width: 200px;
-    height: 90px;
-    padding-left: 20px;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    justify-content: space-between;
+    gap: 0.6rem;
 }
 
-.basicInfoText {
-
+.basicInfoNameContainer {
+    display: flex;
+    flex-direction: column;
 }
 
-.bigText {
-    font-size: 20px;
+.basicInfoName {
+    font-size: 1.4rem;
+    font-weight: 500;
 }
 
-.urlAndUpdateText {
-    margin-left: 20px;
+.basicInfoDescription {
+    font-size: 1.2rem;
+    font-weight: 300;
+    color: #b1b1b1;
 }
 
-.createCardContainer {
-    font-size: 90px;
-    background: #6062E7;
-    color: white;
+.basicInfoAdapterContainer {
+    display: flex;
+    flex-direction: row;
+    gap: 0.4rem;
+}
+
+.basicInfoAdapterIcon {
+    width: 1.2rem;
+    height: 1.2rem;
+    margin-top: 0.2rem;
+    color: #626262;
+}
+
+.basicInfoAdapterLabel {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #626262;
+}
+
+.basicInfoPipelineContainer {
+    display: flex;
+    flex-direction: row;
+    gap: 0.4rem;
+}
+
+.basicInfoPipelineIcon {
+    width: 1.2rem;
+    height: 1.2rem;
+    color: #626262;
+    margin-top: 0.2rem;
+}
+
+.basicInfoPipelineLabel {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #626262;
 }
