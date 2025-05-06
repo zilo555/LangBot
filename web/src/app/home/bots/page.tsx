@@ -10,7 +10,7 @@ import BotForm from '@/app/home/bots/components/bot-form/BotForm';
 import BotCard from '@/app/home/bots/components/bot-card/BotCard';
 import CreateCardComponent from '@/app/infra/basic-component/create-card-component/CreateCardComponent';
 import { httpClient } from '@/app/infra/http/HttpClient';
-import { Bot } from '@/app/infra/api/api-types';
+import { Bot, Adapter } from '@/app/infra/api/api-types';
 
 export default function BotConfigPage() {
   const router = useRouter();
@@ -41,7 +41,17 @@ export default function BotConfigPage() {
     return true;
   }
 
-  function getBotList() {
+  async function getBotList() {
+    setIsLoading(true);
+
+    const adapterListResp = await httpClient.getAdapters();
+    const adapterList = adapterListResp.adapters.map((adapter: Adapter) => {
+      return {
+        label: adapter.label.zh_CN,
+        value: adapter.name,
+      };
+    });
+
     httpClient
       .getBots()
       .then((resp) => {
@@ -51,7 +61,7 @@ export default function BotConfigPage() {
             iconURL: httpClient.getAdapterIconURL(bot.adapter),
             name: bot.name,
             description: bot.description,
-            adapterLabel: bot.adapter,
+            adapterLabel: adapterList.find((item) => item.value === bot.adapter)?.label || bot.adapter.substring(0, 10),
             usePipelineName: bot.use_pipeline_name || '',
           });
         });

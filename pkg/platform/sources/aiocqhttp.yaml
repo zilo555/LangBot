@@ -3,8 +3,8 @@ kind: MessagePlatformAdapter
 metadata:
   name: aiocqhttp
   label:
-    en_US: OneBot v11 Adapter
-    zh_CN: OneBot v11 适配器
+    en_US: OneBot v11
+    zh_CN: OneBot v11
   description:
     en_US: OneBot v11 Adapter
     zh_CN: OneBot v11 适配器，请查看文档了解使用方式
