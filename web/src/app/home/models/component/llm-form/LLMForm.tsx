@@ -1,4 +1,3 @@
-import styles from '@/app/home/models/LLMConfig.module.css';
 import { SelectProps } from 'antd';
 import { ICreateLLMField } from '@/app/home/models/ICreateLLMField';
 import { useEffect, useState } from 'react';
@@ -258,7 +257,7 @@ export default function LLMForm({
   }
 
   return (
-    <div className={styles.modalContainer}>
+    <div>
 
       <Dialog open={showDeleteConfirmModal} onOpenChange={setShowDeleteConfirmModal}>
         <DialogContent>
@@ -301,6 +300,7 @@ export default function LLMForm({
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="model_provider"
@@ -333,6 +333,7 @@ export default function LLMForm({
                 </FormItem>
               )}
             />
+            
             <FormField
               control={form.control}
               name="url"

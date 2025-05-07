@@ -1,8 +1,3 @@
-import {
-  BotFormEntity,
-  IBotFormEntity,
-} from '@/app/home/bots/components/bot-form/BotFormEntity';
-import { Button, Form, Input, notification, Select, Space } from 'antd';
 import { useEffect, useState } from 'react';
 import { IChooseAdapterEntity } from '@/app/home/bots/components/bot-form/ChooseAdapterEntity';
 import {
@@ -15,20 +10,70 @@ import DynamicFormComponent from '@/app/home/components/dynamic-form/DynamicForm
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { Bot } from '@/app/infra/api/api-types';
 
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Checkbox } from "@/components/ui/checkbox"
+
+const formSchema = z.object({
+  name: z.string().min(1, { message: '机器人名称不能为空' }),
+  description: z.string().min(1, { message: '机器人描述不能为空' }),
+  adapter: z.string().min(1, { message: '适配器不能为空' }),
+  adapter_config: z.record(z.string(), z.any()),
+});
+
 export default function BotForm({
   initBotId,
   onFormSubmit,
   onFormCancel,
+  onBotDeleted,
 }: {
   initBotId?: string;
-  onFormSubmit: (value: IBotFormEntity) => void;
-  onFormCancel: (value: IBotFormEntity) => void;
+  onFormSubmit: (value: z.infer<typeof formSchema>) => void;
+  onFormCancel: () => void;
+  onBotDeleted: () => void;
 }) {
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: '',
+      description: '一个机器人',
+      adapter: '',
+      adapter_config: {},
+    },
+  });
+
+
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+
   const [adapterNameToDynamicConfigMap, setAdapterNameToDynamicConfigMap] =
     useState(new Map<string, IDynamicFormItemConfig[]>());
-  const [form] = Form.useForm<IBotFormEntity>();
+  // const [form] = Form.useForm<IBotFormEntity>();
   const [showDynamicForm, setShowDynamicForm] = useState<boolean>(false);
-  const [dynamicForm] = Form.useForm();
+  // const [dynamicForm] = Form.useForm();
   const [adapterNameList, setAdapterNameList] = useState<
     IChooseAdapterEntity[]
   >([]);
@@ -78,29 +123,32 @@ export default function BotForm({
     });
     // 拉取初始化表单信息
     if (initBotId) {
-      getBotFieldById(initBotId).then((val) => {
-        form.setFieldsValue(val);
+      getBotConfig(initBotId).then((val) => {
+        // form.setFieldsValue(val);
         handleAdapterSelect(val.adapter);
-        dynamicForm.setFieldsValue(val.adapter_config);
+        // dynamicForm.setFieldsValue(val.adapter_config);
       });
     } else {
-      form.resetFields();
+      // form.resetFields();
     }
     setAdapterNameToDynamicConfigMap(adapterNameToDynamicConfigMap);
   }
 
-  async function onCreateMode() {}
+  async function onCreateMode() { }
 
-  function onEditMode() {}
+  function onEditMode() {
+    console.log('onEditMode', form.getValues());
 
-  async function getBotFieldById(botId: string): Promise<IBotFormEntity> {
+  }
+
+  async function getBotConfig(botId: string): Promise<z.infer<typeof formSchema>> {
     const bot = (await httpClient.getBot(botId)).bot;
-    return new BotFormEntity({
+    return {
       adapter: bot.adapter,
       description: bot.description,
       name: bot.name,
       adapter_config: bot.adapter_config,
-    });
+    };
   }
 
   function handleAdapterSelect(adapterName: string) {
@@ -119,11 +167,11 @@ export default function BotForm({
   }
 
   function handleSubmitButton() {
-    form.submit();
+    // form.submit();
   }
 
   function handleFormFinish() {
-    dynamicForm.submit();
+    // dynamicForm.submit();
   }
 
   // 只有通过外层固定表单验证才会走到这里，真正的提交逻辑在这里
@@ -132,12 +180,12 @@ export default function BotForm({
     console.log('set loading', true);
     if (initBotId) {
       // 编辑提交
-      console.log('submit edit', form.getFieldsValue(), value);
+      // console.log('submit edit', form.getFieldsValue(), value);
       const updateBot: Bot = {
         uuid: initBotId,
-        name: form.getFieldsValue().name,
-        description: form.getFieldsValue().description,
-        adapter: form.getFieldsValue().adapter,
+        name: form.getValues().name,
+        description: form.getValues().description,
+        adapter: form.getValues().adapter,
         adapter_config: value,
       };
       httpClient
@@ -145,55 +193,55 @@ export default function BotForm({
         .then((res) => {
           // TODO success toast
           console.log('update bot success', res);
-          onFormSubmit(form.getFieldsValue());
-          notification.success({
-            message: '更新成功',
-            description: '机器人更新成功',
-          });
+          onFormSubmit(form.getValues());
+          // notification.success({
+          //   message: '更新成功',
+          //   description: '机器人更新成功',
+          // });
         })
         .catch(() => {
           // TODO error toast
-          notification.error({
-            message: '更新失败',
-            description: '机器人更新失败',
-          });
+          // notification.error({
+          //   message: '更新失败',
+          //   description: '机器人更新失败',
+          // });
         })
         .finally(() => {
           setIsLoading(false);
-          form.resetFields();
-          dynamicForm.resetFields();
+          form.reset();
+          // dynamicForm.resetFields();
         });
     } else {
       // 创建提交
-      console.log('submit create', form.getFieldsValue(), value);
+      console.log('submit create', form.getValues(), value);
       const newBot: Bot = {
-        name: form.getFieldsValue().name,
-        description: form.getFieldsValue().description,
-        adapter: form.getFieldsValue().adapter,
+        name: form.getValues().name,
+        description: form.getValues().description,
+        adapter: form.getValues().adapter,
         adapter_config: value,
       };
       httpClient
         .createBot(newBot)
         .then((res) => {
           // TODO success toast
-          notification.success({
-            message: '创建成功',
-            description: '机器人创建成功',
-          });
+          // notification.success({
+          //   message: '创建成功',
+          //   description: '机器人创建成功',
+          // });
           console.log(res);
-          onFormSubmit(form.getFieldsValue());
+          onFormSubmit(form.getValues());
         })
         .catch(() => {
           // TODO error toast
-          notification.error({
-            message: '创建失败',
-            description: '机器人创建失败',
-          });
+          // notification.error({
+          //   message: '创建失败',
+          //   description: '机器人创建失败',
+          // });
         })
         .finally(() => {
           setIsLoading(false);
-          form.resetFields();
-          dynamicForm.resetFields();
+          form.reset();
+          // dynamicForm.resetFields();
         });
     }
     setShowDynamicForm(false);
@@ -203,90 +251,122 @@ export default function BotForm({
   }
 
   function handleSaveButton() {
-    form.submit();
+    form.handleSubmit(onDynamicFormSubmit)();
+  }
+
+  function deleteBot() {
+    if (initBotId) {
+      httpClient.deleteBot(initBotId).then(() => {
+        onBotDeleted();
+      });
+    }
   }
 
   return (
     <div>
-      <Form
-        form={form}
-        labelCol={{ span: 5 }}
-        wrapperCol={{ span: 18 }}
-        layout="vertical"
-        onFinish={handleFormFinish}
-        disabled={isLoading}
-      >
-        <Form.Item<IBotFormEntity>
-          label={'机器人名称'}
-          name={'name'}
-          rules={[{ required: true, message: '该项为必填项哦～' }]}
-        >
-          <Input
-            placeholder="为机器人取个好听的名字吧～"
-            style={{ width: 260 }}
-          ></Input>
-        </Form.Item>
+      <Dialog open={showDeleteConfirmModal} onOpenChange={setShowDeleteConfirmModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>删除确认</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>
+            你确定要删除这个机器人吗？
+          </DialogDescription>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteConfirmModal(false)}>
+              取消
+            </Button>
+            <Button variant="destructive" onClick={() => {
+              deleteBot();
+              setShowDeleteConfirmModal(false);
+            }}>
+              确认删除
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        <Form.Item<IBotFormEntity>
-          label={'描述'}
-          name={'description'}
-          rules={[{ required: true, message: '该项为必填项哦～' }]}
-        >
-          <Input placeholder="简单描述一下这个机器人"></Input>
-        </Form.Item>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onDynamicFormSubmit)} className="space-y-8">
+          <div className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>机器人名称<span className="text-red-500">*</span></FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>机器人描述<span className="text-red-500">*</span></FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <Form.Item<IBotFormEntity>
-          label={'平台/适配器选择'}
-          name={'adapter'}
-          rules={[{ required: true, message: '该项为必填项哦～' }]}
-        >
-          <Select
-            style={{ width: 220 }}
-            onChange={(value) => {
-              handleAdapterSelect(value);
-            }}
-            options={adapterNameList}
-          />
-        </Form.Item>
+            <FormField
+              control={form.control}
+              name="adapter"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>平台/适配器选择<span className="text-red-500">*</span></FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Select 
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          handleAdapterSelect(value);
+                        }} 
+                        value={field.value}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue placeholder="选择适配器" />
+                        </SelectTrigger>
+                        <SelectContent className="fixed z-[1000]">
+                          <SelectGroup>
+                            {adapterNameList.map((item) => (
+                              <SelectItem key={item.value} value={item.value}>
+                                {item.label}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <DialogFooter>
+            {!initBotId && (
+              <Button type="submit">提交</Button>
+            )}
+            {initBotId && (
+              <Button type="button" variant="destructive" onClick={() => setShowDeleteConfirmModal(true)}>
+                删除
+              </Button>
+            )}
+            <Button type="button" onClick={() => onFormCancel()}>
+              取消
+            </Button>
+          </DialogFooter>
+        </form>
       </Form>
-      {showDynamicForm && (
-        <DynamicFormComponent
-          form={dynamicForm}
-          itemConfigList={dynamicFormConfigList}
-          onSubmit={onDynamicFormSubmit}
-        />
-      )}
-      <Space>
-        {!initBotId && (
-          <Button
-            type="primary"
-            htmlType="button"
-            onClick={handleSubmitButton}
-            loading={isLoading}
-          >
-            提交
-          </Button>
-        )}
-        {initBotId && (
-          <Button
-            type="primary"
-            htmlType="submit"
-            onClick={handleSaveButton}
-            loading={isLoading}
-          >
-            保存
-          </Button>
-        )}
-        <Button
-          htmlType="button"
-          onClick={() => {
-            onFormCancel(form.getFieldsValue());
-          }}
-          disabled={isLoading}
-        >
-          取消
-        </Button>
-      </Space>
     </div>
   );
 }
