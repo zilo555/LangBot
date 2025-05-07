@@ -1,5 +1,6 @@
 import styles from './LLMCard.module.css';
 import { LLMCardVO } from '@/app/home/models/component/llm-card/LLMCardVO';
+import { Button } from '@/components/ui/button';
 
 function checkAbilityBadges(abilities: string[]) {
 

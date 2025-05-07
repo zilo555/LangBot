@@ -8,6 +8,7 @@ import { PipelineCardVO } from '@/app/home/pipelines/components/pipeline-card/Pi
 import PipelineCard from '@/app/home/pipelines/components/pipeline-card/PipelineCard';
 import { PipelineFormEntity } from '@/app/home/pipelines/components/pipeline-form/PipelineFormEntity';
 import styles from './pipelineConfig.module.css';
+import { Button } from '@/components/ui/button';
 
 export default function PluginConfigPage() {
   const [modalOpen, setModalOpen] = useState<boolean>(false);
@@ -72,6 +73,7 @@ export default function PluginConfigPage() {
 
   return (
     <div className={styles.configPageContainer}>
+      
       <Modal
         title={isEditForm ? '编辑流水线' : '创建流水线'}
         centered

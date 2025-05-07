@@ -3,12 +3,6 @@
     height: 100%;
 }
 
-.modalContainer {
-    width: 100%;
-    /*height: calc(100vh - 200px);*/
-    margin-top: 20px;
-}
-
 .modelListContainer {
     align-self: flex-start;
     justify-self: flex-start;

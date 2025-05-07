@@ -4,12 +4,20 @@ import { useState, useEffect } from 'react';
 import { LLMCardVO } from '@/app/home/models/component/llm-card/LLMCardVO';
 import styles from './LLMConfig.module.css';
 import EmptyAndCreateComponent from '@/app/home/components/empty-and-create-component/EmptyAndCreateComponent';
-import { Modal } from 'antd';
 import LLMCard from '@/app/home/models/component/llm-card/LLMCard';
 import LLMForm from '@/app/home/models/component/llm-form/LLMForm';
 import CreateCardComponent from '@/app/infra/basic-component/create-card-component/CreateCardComponent';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { LLMModel } from '@/app/infra/api/api-types';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+
 
 export default function LLMConfigPage() {
   const [cardList, setCardList] = useState<LLMCardVO[]>([]);
@@ -41,7 +49,7 @@ export default function LLMConfigPage() {
             name: model.name,
             providerLabel: requesterNameList.find((item) => item.value === model.requester)?.label || model.requester.substring(0, 10),
             baseURL: model.requester_config?.base_url,
-            abilities: model.abilities,
+            abilities: model.abilities || [],
           });
         });
         console.log('get llmModelList', llmModelList);
@@ -67,32 +75,30 @@ export default function LLMConfigPage() {
 
   return (
     <div className={styles.configPageContainer}>
-      <Modal
-        title={isEditForm ? '预览模型' : '创建模型'}
-        centered
-        open={modalOpen}
-        destroyOnClose={true}
-        onOk={() => setModalOpen(false)}
-        onCancel={() => setModalOpen(false)}
-        width={700}
-        footer={null}
-      >
-        <LLMForm
-          editMode={isEditForm}
-          initLLMId={nowSelectedLLM?.id}
-          onFormSubmit={() => {
-            setModalOpen(false);
-            getLLMModelList();
-          }}
-          onFormCancel={() => {
-            setModalOpen(false);
-          }}
-          onLLMDeleted={() => {
-            setModalOpen(false);
-            getLLMModelList();
-          }}
-        />
-      </Modal>
+
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="w-[700px] p-6">
+          <DialogHeader>
+            <DialogTitle>{isEditForm ? '预览模型' : '创建模型'}</DialogTitle>
+          </DialogHeader>
+          <LLMForm
+            editMode={isEditForm}
+            initLLMId={nowSelectedLLM?.id}
+            onFormSubmit={() => {
+              setModalOpen(false);
+              getLLMModelList();
+            }}
+            onFormCancel={() => {
+              setModalOpen(false);
+            }}
+            onLLMDeleted={() => {
+              setModalOpen(false);
+              getLLMModelList();
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+
       {cardList.length > 0 && (
         <div className={`${styles.modelListContainer}`}>
 

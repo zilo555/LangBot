@@ -46,9 +46,9 @@ export interface LLMModel {
     base_url: string;
     timeout: number;
   };
-  extra_args: object;
+  extra_args?: object;
   api_keys: string[];
-  abilities: string[];
+  abilities?: string[];
   // created_at: string;
   // updated_at: string;
 }

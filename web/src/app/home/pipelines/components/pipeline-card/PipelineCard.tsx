@@ -1,5 +1,6 @@
 import styles from './pipelineCard.module.css';
 import { PipelineCardVO } from '@/app/home/pipelines/components/pipeline-card/PipelineCardVO';
+import { Button } from '@/components/ui/button';
 
 export default function PipelineCard({
   cardVO,
