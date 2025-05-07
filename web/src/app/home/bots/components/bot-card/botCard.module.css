@@ -8,6 +8,10 @@
     cursor: pointer;
 }
 
+.cardContainer:hover {
+    box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.1);
+}
+
 .iconBasicInfoContainer {
     width: 100%;
     height: 100%;
