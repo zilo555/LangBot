@@ -2,11 +2,14 @@
     box-sizing: border-box;
     width: 200px;
     height: 100vh;
-    background-color: #FFF;
+    background-color: #ffffff;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding-block: 1rem;
     user-select: none;
+    box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
 }
 
 .langbotIconContainer {
@@ -45,6 +48,15 @@
     }
 }
 
+.sidebarTopContainer {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
 
 .sidebarChildContainer {
     width: 10rem;
@@ -77,4 +89,22 @@
     width: 20px;
     height: 20px;
     background-color: rgba(96, 149, 209, 0);
+}
+
+.sidebarBottomContainer {
+    width: 100%;
+    height: 100px;
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebarBottomChildContainer {
+    width: 100%;
+    height: 50px;
+    background-color: aqua;
+    display: flex;
+    flex-direction: row;
 }

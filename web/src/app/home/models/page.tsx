@@ -74,7 +74,7 @@ export default function LLMConfigPage() {
   }
 
   return (
-    <div className={styles.configPageContainer}>
+    <div >
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="w-[700px] p-6">

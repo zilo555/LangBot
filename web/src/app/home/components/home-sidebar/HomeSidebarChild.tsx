@@ -25,14 +25,17 @@ export function SidebarChild({
   icon,
   name,
   isSelected,
+  onClick,
 }: {
   icon: React.ReactNode;
   name: string;
   isSelected: boolean;
+  onClick: () => void;
 }) {
   return (
     <div
       className={`${styles.sidebarChildContainer} ${isSelected ? styles.sidebarSelected : styles.sidebarUnselected}`}
+      onClick={onClick}
     >
       <div className={`${styles.sidebarChildIcon}`}>
         {icon}
