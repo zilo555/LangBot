@@ -1,59 +1,86 @@
-.iconBasicInfoContainer {
-    width: 300px;
-    height: 100px;
-    margin-left: 20px;
+.cardContainer {
+    width: 24rem;
+    height: 10rem;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.2);
+    padding: 1.2rem;
+    cursor: pointer;
     display: flex;
     flex-direction: row;
-}
-
-.cardContainer {
-    width: 360px;
-    height: 200px;
-    background-color: #FFF;
-    border-radius: 9px;
-    box-shadow: rgba(0, 0, 0, 0.4) 0 1px 1px -1px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: space-evenly;
-}
-
-.icon {
-    width: 90px;
-    height: 90px;
-    border-radius: 5px;
-    font-size: 40px;
-    line-height: 90px;
-    text-align: center;
-    color: #ffffff;
-    background: rgba(96, 149, 209, 0.31);
-    border: 1px solid rgba(96, 149, 209, 0.31);
+    justify-content: space-between;
+    gap:0.5rem;
 }
 
 .basicInfoContainer {
-    width: 200px;
-    height: 90px;
-    padding-left: 20px;
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
     justify-content: space-between;
+    gap: 0.4rem;
 }
 
-.basicInfoText {
-
+.basicInfoNameContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
 }
 
-.bigText {
-    font-size: 20px;
+.basicInfoNameText {
+    font-size: 1.4rem;
+    font-weight: 500;
 }
 
-.urlAndUpdateText {
-    margin-left: 20px;
+.basicInfoDescriptionText {
+    font-size: 0.9rem;
+    font-weight: 400;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #b1b1b1;
 }
 
-.createCardContainer {
-    font-size: 90px;
-    background: #6062E7;
-    color: white;
+.basicInfoLastUpdatedTimeContainer {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.basicInfoUpdateTimeIcon {
+    width: 1.2rem;
+    height: 1.2rem;
+}
+
+.basicInfoUpdateTimeText {
+    font-size: 1rem;
+    font-weight: 400;
+}
+
+.operationContainer {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    width: 5rem;
+}
+
+.operationDefaultBadge {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+}
+
+.operationDefaultBadgeIcon {
+    width: 1.2rem;
+    height: 1.2rem;
+    color: #ffcd27;
+}
+
+.operationDefaultBadgeText {
+    font-size: 1rem;
+    font-weight: 400;
+    color: #ffcd27;
 }

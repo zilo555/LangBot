@@ -150,8 +150,9 @@ export default function BotConfigPage() {
         <div className={`${styles.botListContainer}`}>
 
           <CreateCardComponent
+            width={'24rem'}
             height={'10rem'}
-            plusSize={'4rem'}
+            plusSize={'90px'}
             onClick={handleCreateBotClick}
           />
           {botList.map((cardVO) => {

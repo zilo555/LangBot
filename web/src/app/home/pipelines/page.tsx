@@ -5,8 +5,9 @@ import CreateCardComponent from '@/app/infra/basic-component/create-card-compone
 import PipelineFormComponent from './components/pipeline-form/PipelineFormComponent';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { PipelineCardVO } from '@/app/home/pipelines/components/pipeline-card/PipelineCardVO';
-import PipelineCardComponent from '@/app/home/pipelines/components/pipeline-card/PipelineCardComponent';
+import PipelineCard from '@/app/home/pipelines/components/pipeline-card/PipelineCard';
 import { PipelineFormEntity } from '@/app/home/pipelines/components/pipeline-form/PipelineFormEntity';
+import styles from './pipelineConfig.module.css';
 
 export default function PluginConfigPage() {
   const [modalOpen, setModalOpen] = useState<boolean>(false);
@@ -31,13 +32,18 @@ export default function PluginConfigPage() {
     httpClient
       .getPipelines()
       .then((value) => {
+        let currentTime = new Date();
         const pipelineList = value.pipelines.map((pipeline) => {
+          let lastUpdatedTimeAgo = Math.floor((currentTime.getTime() - new Date(pipeline.updated_at).getTime()) / 1000 / 60 / 60 / 24);
+          
+          let lastUpdatedTimeAgoText = lastUpdatedTimeAgo > 0 ? ` ${lastUpdatedTimeAgo} 天前` : '今天';
+          
           return new PipelineCardVO({
-            createTime: pipeline.created_at,
+            lastUpdatedTimeAgo: lastUpdatedTimeAgoText,
             description: pipeline.description,
             id: pipeline.uuid,
             name: pipeline.name,
-            version: pipeline.for_version,
+            isDefault: pipeline.is_default,
           });
         });
         setPipelineList(pipelineList);
@@ -65,7 +71,7 @@ export default function PluginConfigPage() {
   }
 
   return (
-    <div className={``}>
+    <div className={styles.configPageContainer}>
       <Modal
         title={isEditForm ? '编辑流水线' : '创建流水线'}
         centered
@@ -89,7 +95,16 @@ export default function PluginConfigPage() {
       </Modal>
 
       {pipelineList.length > 0 && (
-        <div className={``}>
+        <div className={styles.pipelineListContainer}>
+          <CreateCardComponent
+            width={'24rem'}
+            height={'10rem'}
+            plusSize={'90px'}
+            onClick={() => {
+              setModalOpen(true);
+            }}
+          />
+
           {pipelineList.map((pipeline) => {
             return (
               <div
@@ -102,19 +117,12 @@ export default function PluginConfigPage() {
                   getSelectedPipelineForm(pipeline.id);
                 }}
               >
-                <PipelineCardComponent cardVO={pipeline} />
+                <PipelineCard cardVO={pipeline} />
               </div>
             );
           })}
         </div>
       )}
-      <CreateCardComponent
-        height={'200px'}
-        plusSize={'90px'}
-        onClick={() => {
-          setModalOpen(true);
-        }}
-      />
     </div>
   );
 }
