@@ -5,12 +5,19 @@ import styles from './botConfig.module.css';
 import EmptyAndCreateComponent from '@/app/home/components/empty-and-create-component/EmptyAndCreateComponent';
 import { useRouter } from 'next/navigation';
 import { BotCardVO } from '@/app/home/bots/components/bot-card/BotCardVO';
-import { Modal, notification, Spin } from 'antd';
 import BotForm from '@/app/home/bots/components/bot-form/BotForm';
 import BotCard from '@/app/home/bots/components/bot-card/BotCard';
 import CreateCardComponent from '@/app/infra/basic-component/create-card-component/CreateCardComponent';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { Bot, Adapter } from '@/app/infra/api/api-types';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 
 export default function BotConfigPage() {
   const router = useRouter();
@@ -75,11 +82,11 @@ export default function BotConfigPage() {
       .catch((err) => {
         console.error('get bot list error', err);
         // TODO HACK: need refactor to hook mode Notification, but it's not working under render
-        notification.error({
-          message: '获取机器人列表失败',
-          description: err.message,
-          placement: 'bottomRight',
-        });
+        // notification.error({
+        //   message: '获取机器人列表失败',
+        //   description: err.message,
+        //   placement: 'bottomRight',
+        // });
       })
       .finally(() => {
         setIsLoading(false);
@@ -105,7 +112,7 @@ export default function BotConfigPage() {
 
   return (
     <div className={styles.configPageContainer}>
-      <Spin spinning={isLoading} tip="加载中..." size="large">
+      {/* <Spin spinning={isLoading} tip="加载中..." size="large">
         <Modal
           title={isEditForm ? '编辑机器人' : '创建机器人'}
           centered
@@ -144,7 +151,28 @@ export default function BotConfigPage() {
             onButtonClick={handleCreateBotClick}
           />
         )}
-      </Spin>
+      </Spin> */}
+
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="w-[700px] p-6">
+          <DialogHeader>
+            <DialogTitle>{isEditForm ? '编辑机器人' : '创建机器人'}</DialogTitle>
+          </DialogHeader>
+          <BotForm
+            initBotId={nowSelectedBotCard?.id}
+            onFormSubmit={() => {
+              getBotList();
+              setModalOpen(false);
+            }}
+            onFormCancel={() => setModalOpen(false)}
+            onBotDeleted={() => {
+              getBotList();
+              setModalOpen(false);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
+
       {/* 注意：其余的返回内容需要保持在Spin组件外部 */}
       {pageShowRule === BotConfigPageShowRule.HAVE_BOT && (
         <div className={`${styles.botListContainer}`}>

@@ -77,6 +77,13 @@ export default function BotForm({
   const [adapterNameList, setAdapterNameList] = useState<
     IChooseAdapterEntity[]
   >([]);
+  const [adapterIconList, setAdapterIconList] = useState<
+    Record<string, string>
+  >({});
+  const [adapterDescriptionList, setAdapterDescriptionList] = useState<
+    Record<string, string>
+  >({});
+
   const [dynamicFormConfigList, setDynamicFormConfigList] = useState<
     IDynamicFormItemConfig[]
   >([]);
@@ -84,10 +91,19 @@ export default function BotForm({
 
   useEffect(() => {
     initBotFormComponent();
+
+    // 拉取初始化表单信息
     if (initBotId) {
-      onEditMode();
+      getBotConfig(initBotId).then((val) => {
+        form.setValue('name', val.name);
+        form.setValue('description', val.description);
+        form.setValue('adapter', val.adapter);
+        form.setValue('adapter_config', val.adapter_config);
+        handleAdapterSelect(val.adapter);
+        // dynamicForm.setFieldsValue(val.adapter_config);
+      });
     } else {
-      onCreateMode();
+      form.reset();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -104,6 +120,23 @@ export default function BotForm({
         };
       }),
     );
+
+    // 初始化适配器图标列表
+    setAdapterIconList(
+      rawAdapterList.adapters.reduce((acc, item) => {
+        acc[item.name] = httpClient.getAdapterIconURL(item.name);
+        return acc;
+      }, {} as Record<string, string>),
+    );
+
+    // 初始化适配器描述列表
+    setAdapterDescriptionList(
+      rawAdapterList.adapters.reduce((acc, item) => {
+        acc[item.name] = item.description.zh_CN;
+        return acc;
+      }, {} as Record<string, string>),
+    );
+
     // 初始化适配器表单map
     rawAdapterList.adapters.forEach((rawAdapter) => {
       adapterNameToDynamicConfigMap.set(
@@ -121,16 +154,6 @@ export default function BotForm({
         ),
       );
     });
-    // 拉取初始化表单信息
-    if (initBotId) {
-      getBotConfig(initBotId).then((val) => {
-        // form.setFieldsValue(val);
-        handleAdapterSelect(val.adapter);
-        // dynamicForm.setFieldsValue(val.adapter_config);
-      });
-    } else {
-      // form.resetFields();
-    }
     setAdapterNameToDynamicConfigMap(adapterNameToDynamicConfigMap);
   }
 
@@ -138,7 +161,7 @@ export default function BotForm({
 
   function onEditMode() {
     console.log('onEditMode', form.getValues());
-
+    
   }
 
   async function getBotConfig(botId: string): Promise<z.infer<typeof formSchema>> {
@@ -350,6 +373,25 @@ export default function BotForm({
                 </FormItem>
               )}
             />
+
+            {form.watch('adapter') && (
+              <div className="flex items-start gap-3 p-4 rounded-lg border">
+                <img 
+                  src={adapterIconList[form.watch('adapter')]} 
+                  alt="adapter icon"
+                  className="w-12 h-12"
+                />
+                <div className="flex flex-col gap-1">
+                  <div className="font-medium">
+                    {adapterNameList.find(item => item.value === form.watch('adapter'))?.label}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    {adapterDescriptionList[form.watch('adapter')]}
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
 
           <DialogFooter>
