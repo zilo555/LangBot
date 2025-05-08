@@ -97,6 +97,75 @@ export default function DynamicFormItemComponent({
         </Select>
       );
 
+    case DynamicFormItemType.PROMPT_EDITOR:
+      return (
+        <div className="space-y-2">
+          {field.value.map((item: { role: string; content: string }, index: number) => (
+            <div key={index} className="flex gap-2 items-center">
+              {/* 角色选择 */}
+              {index === 0 ? (
+                <div className="w-[120px] px-3 py-2 border rounded bg-gray-50 text-gray-500">system</div>
+              ) : (
+                <Select
+                  value={item.role}
+                  onValueChange={(value) => {
+                    const newValue = [...field.value];
+                    newValue[index] = { ...newValue[index], role: value };
+                    field.onChange(newValue);
+                  }}
+                >
+                  <SelectTrigger className="w-[120px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="user">user</SelectItem>
+                      <SelectItem value="assistant">assistant</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              )}
+              {/* 内容输入 */}
+              <Input
+                className="w-[300px]"
+                value={item.content}
+                onChange={(e) => {
+                  const newValue = [...field.value];
+                  newValue[index] = { ...newValue[index], content: e.target.value };
+                  field.onChange(newValue);
+                }}
+              />
+              {/* 删除按钮，第一轮不显示 */}
+              {index !== 0 && (
+                <button
+                  type="button"
+                  className="p-2 hover:bg-gray-100 rounded"
+                  onClick={() => {
+                    const newValue = field.value.filter((_: any, i: number) => i !== index);
+                    field.onChange(newValue);
+                  }}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-red-500">
+                    <path d="M7 4V2H17V4H22V6H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V6H2V4H7ZM6 6V20H18V6H6ZM9 9H11V17H9V9ZM13 9H15V17H13V9Z"></path>
+                  </svg>
+                </button>
+              )}
+            </div>
+          ))}
+          <Button
+            variant="outline"
+            onClick={() => {
+              field.onChange([
+                ...field.value,
+                { role: 'user', content: '' },
+              ]);
+            }}
+          >
+            添加回合
+          </Button>
+        </div>
+      );
+
     default:
       return <Input {...field} />;
   }
