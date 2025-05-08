@@ -7,6 +7,9 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Switch } from "@/components/ui/switch"
 import { ControllerRenderProps } from "react-hook-form";
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { httpClient } from "@/app/infra/http/HttpClient";
+import { LLMModel } from "@/app/infra/entities/api";
 
 export default function DynamicFormItemComponent({
   config,
@@ -15,6 +18,18 @@ export default function DynamicFormItemComponent({
   config: IDynamicFormItemSchema;
   field: ControllerRenderProps<any, any>;
 }) {
+  const [llmModels, setLlmModels] = useState<LLMModel[]>([]);
+
+  useEffect(() => {
+    if (config.type === DynamicFormItemType.LLM_MODEL_SELECTOR) {
+      httpClient.getProviderLLMModels().then((resp) => {
+        setLlmModels(resp.models);
+      }).catch((err) => {
+        console.error('获取 LLM 模型列表失败:', err);
+      });
+    }
+  }, [config.type]);
+
   switch (config.type) {
     case DynamicFormItemType.INT:
     case DynamicFormItemType.FLOAT:
@@ -66,6 +81,7 @@ export default function DynamicFormItemComponent({
             </div>
           ))}
           <Button
+            type="button"
             variant="outline"
             onClick={() => {
               field.onChange([...field.value, '']);
@@ -90,6 +106,27 @@ export default function DynamicFormItemComponent({
               {config.options?.map((option) => (
                 <SelectItem key={option.name} value={option.name}>
                   {option.label.zh_CN}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      );
+
+    case DynamicFormItemType.LLM_MODEL_SELECTOR:
+      return (
+        <Select
+          value={field.value}
+          onValueChange={field.onChange}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="请选择模型" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {llmModels.map((model) => (
+                <SelectItem key={model.uuid} value={model.uuid}>
+                  {model.name}
                 </SelectItem>
               ))}
             </SelectGroup>
