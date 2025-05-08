@@ -22,6 +22,32 @@ import {
 import { IDynamicFormItemSchema } from '@/app/infra/entities/form/dynamic';
 import DynamicFormComponent from '@/app/home/components/dynamic-form/DynamicFormComponent';
 import { Button } from '@/components/ui/button';
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { Input } from "@/components/ui/input"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+
+const formSchema = z.object({
+  basic: z.object({
+    name: z.string().min(1, { message: '名称不能为空' }),
+    description: z.string().min(1, { message: '描述不能为空' }),
+  }),
+  ai: z.record(z.string(), z.any()),
+  trigger: z.record(z.string(), z.any()),
+  safety: z.record(z.string(), z.any()),
+  output: z.record(z.string(), z.any()),
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 export default function PipelineFormComponent({
   initValues,
@@ -58,6 +84,17 @@ export default function PipelineFormComponent({
   const [safetyConfigTabSchema, setSafetyConfigTabSchema] = useState<PipelineConfigTab>();
   const [outputConfigTabSchema, setOutputConfigTabSchema] = useState<PipelineConfigTab>();
 
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      basic: {},
+      ai: {},
+      trigger: {},
+      safety: {},
+      output: {},
+    },
+  });
+
   useEffect(() => {
     getLLMModelList();
 
@@ -77,16 +114,11 @@ export default function PipelineFormComponent({
     });
   }, []);
 
-  // useEffect(() => {
-  //   console.log('initValues change: ', initValues);
-  //   if (initValues) {
-  //     // basicForm.setFieldsValue(initValues.basic);
-  //     // aiForm.setFieldsValue(initValues.ai);
-  //     // triggerForm.setFieldsValue(initValues.trigger);
-  //     // safetyForm.setFieldsValue(initValues.safety);
-  //     // outputForm.setFieldsValue(initValues.output);
-  //   }
-  // }, [aiForm, basicForm, initValues, outputForm, safetyForm, triggerForm]);
+  useEffect(() => {
+    if (initValues) {
+      form.reset(initValues);
+    }
+  }, [initValues, form]);
 
   function getLLMModelList() {
     httpClient
@@ -138,120 +170,154 @@ export default function PipelineFormComponent({
     }
   }
 
-  function handleCommit() {
+  function handleFormSubmit(values: FormValues) {
     if (isEditMode) {
-      handleModify();
+      handleModify(values);
     } else {
-      handleCreate();
+      handleCreate(values);
     }
   }
 
-  function handleCreate() {
-    // Promise.all([
-    //   // basicForm.validateFields(),
-    //   // aiForm.validateFields(),
-    //   // triggerForm.validateFields(),
-    //   // safetyForm.validateFields(),
-    //   // outputForm.validateFields(),
-    // ])
-    //   .then(() => {
-    //     const pipeline = assembleForm();
-    //     httpClient.createPipeline(pipeline).then(() => onFinish());
-    //   })
-    //   .catch((e) => {
-    //     console.error(e);
-    //   });
+  function handleCreate(values: FormValues) {
+    const pipeline: Pipeline = {
+      config: values,
+      created_at: '',
+      description: '',
+      for_version: '',
+      name: '',
+      stages: [],
+      updated_at: '',
+      uuid: UUID.generate(),
+      is_default: false,
+    };
+    httpClient.createPipeline(pipeline).then(() => onFinish());
   }
 
-  function handleModify() {
-    // Promise.all([
-    //   // basicForm.validateFields(),
-    //   // aiForm.validateFields(),
-    //   // triggerForm.validateFields(),
-    //   // safetyForm.validateFields(),
-    //   // outputForm.validateFields(),
-    // ])
-    //   .then(() => {
-    //     const pipeline = assembleForm();
-    //     httpClient
-    //       .updatePipeline(pipelineId || '', pipeline)
-    //       .then(() => onFinish());
-    //   })
-    //   .catch((e) => {
-    //     console.error(e);
-    //   });
+  function handleModify(values: FormValues) {
+    const pipeline: Pipeline = {
+      config: values,
+      created_at: '',
+      description: '',
+      for_version: '',
+      name: '',
+      stages: [],
+      updated_at: '',
+      uuid: pipelineId || '',
+      is_default: false,
+    };
+    httpClient.updatePipeline(pipelineId || '', pipeline).then(() => onFinish());
   }
 
-  // TODO 类型混乱，需要优化
-  // function assembleForm(): Pipeline {
-  //   console.log('basicForm:', basicForm.getFieldsValue());
-  //   console.log('aiForm:', aiForm.getFieldsValue());
-  //   console.log('triggerForm:', triggerForm.getFieldsValue());
-  //   console.log('safetyForm:', safetyForm.getFieldsValue());
-  //   console.log('outputForm:', outputForm.getFieldsValue());
-  //   const config: object = {
-  //     ai: aiForm.getFieldsValue(),
-  //     trigger: triggerForm.getFieldsValue(),
-  //     safety: safetyForm.getFieldsValue(),
-  //     output: outputForm.getFieldsValue(),
-  //   };
-
-  //   return {
-  //     config,
-  //     created_at: '',
-  //     description: basicForm.getFieldsValue().description,
-  //     for_version: '',
-  //     name: basicForm.getFieldsValue().name,
-  //     stages: [],
-  //     updated_at: '',
-  //     uuid: UUID.generate(),
-  //   };
-  // }
+  function renderDynamicForms(stage: PipelineConfigStage, formName: keyof FormValues) {
+    return (
+      <div key={stage.name} className="space-y-4 mb-6">
+        <div className="text-lg font-medium">{stage.label.zh_CN}</div>
+        {stage.description && (
+          <div className="text-sm text-gray-500">{stage.description.zh_CN}</div>
+        )}
+        <DynamicFormComponent
+          itemConfigList={stage.config}
+          initialValues={(form.watch(formName) as Record<string, any>)?.[stage.name] || {}}
+          onSubmit={(values) => {
+            const currentValues = form.getValues(formName) as Record<string, any> || {};
+            form.setValue(formName, {
+              ...currentValues,
+              [stage.name]: values,
+            });
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-
-      <Tabs defaultValue={getNowFormLabel().name}>
-        <TabsList>
-          {formLabelList.map((formLabel) => (
-            <TabsTrigger key={formLabel.name} value={formLabel.name}>
-              {formLabel.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-        {formLabelList.map((formLabel) => (
-          <TabsContent key={formLabel.name} value={formLabel.name}>
-            <h1>{formLabel.label}</h1>
-            <div>name: {formLabel.name}</div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleFormSubmit)}>
+          <Tabs defaultValue={getNowFormLabel().name}>
+            <TabsList>
+              {formLabelList.map((formLabel) => (
+                <TabsTrigger key={formLabel.name} value={formLabel.name}>
+                  {formLabel.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
             
-          </TabsContent>
-        ))}
-      </Tabs>
+            {formLabelList.map((formLabel) => (
+              <TabsContent key={formLabel.name} value={formLabel.name}>
+                <h1 className="text-xl font-bold mb-4">{formLabel.label}</h1>
+                
+                {formLabel.name === 'basic' && (
+                  <div className="space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="basic.name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>名称<span className="text-red-500">*</span></FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
+                    <FormField
+                      control={form.control}
+                      name="basic.description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>描述<span className="text-red-500">*</span></FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
 
-      {/* <div className={`${styles.changeFormButtonGroupContainer}`}>
-        <Button
-          type="primary"
-          icon={<CaretLeftOutlined />}
-          onClick={reduceFormLabelIndex}
-          disabled={!getPreFormLabel()}
-        >
-          {getPreFormLabel()?.label || '暂无更多'}
-        </Button>
-        <Button
-          type="primary"
-          icon={<CaretRightOutlined />}
-          onClick={addFormLabelIndex}
-          disabled={!getNextFormLabel()}
-          iconPosition={'end'}
-        >
-          {getNextFormLabel()?.label || '暂无更多'}
-        </Button>
+                {formLabel.name === 'ai' && aiConfigTabSchema && (
+                  <div className="space-y-6">
+                    {aiConfigTabSchema.stages.map((stage) => renderDynamicForms(stage, 'ai'))}
+                  </div>
+                )}
 
-        <Button type="primary" onClick={handleCommit}>
-          提交
-        </Button>
-      </div> */}
+                {formLabel.name === 'trigger' && triggerConfigTabSchema && (
+                  <div className="space-y-6">
+                    {triggerConfigTabSchema.stages.map((stage) => renderDynamicForms(stage, 'trigger'))}
+                  </div>
+                )}
+
+                {formLabel.name === 'safety' && safetyConfigTabSchema && (
+                  <div className="space-y-6">
+                    {safetyConfigTabSchema.stages.map((stage) => renderDynamicForms(stage, 'safety'))}
+                  </div>
+                )}
+
+                {formLabel.name === 'output' && outputConfigTabSchema && (
+                  <div className="space-y-6">
+                    {outputConfigTabSchema.stages.map((stage) => renderDynamicForms(stage, 'output'))}
+                  </div>
+                )}
+              </TabsContent>
+            ))}
+          </Tabs>
+
+          <div className="sticky bottom-0 left-0 right-0 bg-background border-t p-4 mt-4">
+            <div className="flex justify-end gap-2">
+              <Button type="submit">
+                {isEditMode ? '保存' : '提交'}
+              </Button>
+              <Button type="button" variant="outline" onClick={onFinish}>
+                取消
+              </Button>
+            </div>
+          </div>
+        </form>
+      </Form>
     </div>
   );
 }

@@ -18,5 +18,6 @@ export interface PipelineConfigTab {
 export interface PipelineConfigStage {
   name: string;
   label: I18nLabel;
+  description?: I18nLabel;
   config: IDynamicFormItemSchema[];
 }
