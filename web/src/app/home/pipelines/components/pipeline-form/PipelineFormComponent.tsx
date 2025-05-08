@@ -194,16 +194,24 @@ export default function PipelineFormComponent({
   }
 
   function handleModify(values: FormValues) {
+
+    const realConfig = {
+      ai: values.ai,
+      trigger: values.trigger,
+      safety: values.safety,
+      output: values.output,
+    };
+    
     const pipeline: Pipeline = {
-      config: values,
-      created_at: '',
-      description: '',
-      for_version: '',
-      name: '',
-      stages: [],
-      updated_at: '',
-      uuid: pipelineId || '',
-      is_default: false,
+      config: realConfig,
+      // created_at: '',
+      description: values.basic.description,
+      // for_version: '',
+      name: values.basic.name,
+      // stages: [],
+      // updated_at: '',
+      // uuid: pipelineId || '',
+      // is_default: false,
     };
     httpClient.updatePipeline(pipelineId || '', pipeline).then(() => onFinish());
   }

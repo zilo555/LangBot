@@ -64,15 +64,15 @@ export interface ApiRespPipelines {
 }
 
 export interface Pipeline {
-  uuid: string;
+  uuid?: string;
   name: string;
   description: string;
-  for_version: string;
+  for_version?: string;
   config: object;
-  stages: string[];
-  is_default: boolean;
-  created_at: string;
-  updated_at: string;
+  stages?: string[];
+  is_default?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ApiRespPlatformAdapters {
