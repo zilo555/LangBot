@@ -3,6 +3,7 @@ import { IChooseAdapterEntity } from '@/app/home/bots/components/bot-form/Choose
 import {
   DynamicFormItemConfig,
   IDynamicFormItemConfig,
+  getDefaultValues,
   parseDynamicFormItemType,
 } from '@/app/home/components/dynamic-form/DynamicFormItemConfig';
 import { UUID } from 'uuidjs';
@@ -182,6 +183,9 @@ export default function BotForm({
       console.log(dynamicFormConfigList);
       if (dynamicFormConfigList) {
         setDynamicFormConfigList(dynamicFormConfigList);
+        if (!initBotId) {
+          form.setValue('adapter_config', getDefaultValues(dynamicFormConfigList));
+        }
       }
       setShowDynamicForm(true);
     } else {
@@ -209,7 +213,7 @@ export default function BotForm({
         name: form.getValues().name,
         description: form.getValues().description,
         adapter: form.getValues().adapter,
-        adapter_config: value,
+        adapter_config: form.getValues().adapter_config,
       };
       httpClient
         .updateBot(initBotId, updateBot)
@@ -241,7 +245,7 @@ export default function BotForm({
         name: form.getValues().name,
         description: form.getValues().description,
         adapter: form.getValues().adapter,
-        adapter_config: value,
+        adapter_config: form.getValues().adapter_config,
       };
       httpClient
         .createBot(newBot)

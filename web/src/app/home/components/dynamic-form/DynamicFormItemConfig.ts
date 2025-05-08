@@ -54,3 +54,10 @@ export function isDynamicFormItemType(
 export function parseDynamicFormItemType(value: string): DynamicFormItemType {
   return isDynamicFormItemType(value) ? value : DynamicFormItemType.UNKNOWN;
 }
+
+export function getDefaultValues(itemConfigList: IDynamicFormItemConfig[]): Record<string, any> {
+  return itemConfigList.reduce((acc, item) => {
+    acc[item.name] = item.default;
+    return acc;
+  }, {} as Record<string, any>);
+}
