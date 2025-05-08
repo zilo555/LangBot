@@ -153,6 +153,7 @@ export default function DynamicFormItemComponent({
             </div>
           ))}
           <Button
+            type="button"
             variant="outline"
             onClick={() => {
               field.onChange([

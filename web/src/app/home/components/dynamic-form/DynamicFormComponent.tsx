@@ -45,6 +45,15 @@ export default function DynamicFormComponent({
         case 'select':
           fieldSchema = z.string();
           break;
+        case 'llm-model-selector':
+          fieldSchema = z.string();
+          break;
+        case 'prompt-editor':
+          fieldSchema = z.array(z.object({
+            content: z.string(),
+            role: z.string(),
+          }));
+          break;
         default:
           fieldSchema = z.string();
       }
