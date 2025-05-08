@@ -154,22 +154,24 @@ export default function BotConfigPage() {
       </Spin> */}
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="w-[700px] p-6">
-          <DialogHeader>
+        <DialogContent className="w-[700px] max-h-[80vh] p-0 flex flex-col">
+          <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle>{isEditForm ? '编辑机器人' : '创建机器人'}</DialogTitle>
           </DialogHeader>
-          <BotForm
-            initBotId={nowSelectedBotCard?.id}
-            onFormSubmit={() => {
-              getBotList();
-              setModalOpen(false);
-            }}
-            onFormCancel={() => setModalOpen(false)}
-            onBotDeleted={() => {
-              getBotList();
-              setModalOpen(false);
-            }}
-          />
+          <div className="flex-1 overflow-y-auto px-6">
+            <BotForm
+              initBotId={nowSelectedBotCard?.id}
+              onFormSubmit={() => {
+                getBotList();
+                setModalOpen(false);
+              }}
+              onFormCancel={() => setModalOpen(false)}
+              onBotDeleted={() => {
+                getBotList();
+                setModalOpen(false);
+              }}
+            />
+          </div>
         </DialogContent>
       </Dialog>
 

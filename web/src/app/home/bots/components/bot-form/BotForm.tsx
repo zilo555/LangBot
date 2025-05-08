@@ -161,7 +161,7 @@ export default function BotForm({
 
   function onEditMode() {
     console.log('onEditMode', form.getValues());
-    
+
   }
 
   async function getBotConfig(botId: string): Promise<z.infer<typeof formSchema>> {
@@ -347,11 +347,11 @@ export default function BotForm({
                   <FormLabel>平台/适配器选择<span className="text-red-500">*</span></FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Select 
+                      <Select
                         onValueChange={(value) => {
                           field.onChange(value);
                           handleAdapterSelect(value);
-                        }} 
+                        }}
                         value={field.value}
                       >
                         <SelectTrigger className="w-[180px]">
@@ -376,8 +376,8 @@ export default function BotForm({
 
             {form.watch('adapter') && (
               <div className="flex items-start gap-3 p-4 rounded-lg border">
-                <img 
-                  src={adapterIconList[form.watch('adapter')]} 
+                <img
+                  src={adapterIconList[form.watch('adapter')]}
                   alt="adapter icon"
                   className="w-12 h-12"
                 />
@@ -392,21 +392,41 @@ export default function BotForm({
               </div>
             )}
 
+            {showDynamicForm && dynamicFormConfigList.length > 0 && (
+              <div className="space-y-4">
+                <div className="text-lg font-medium">适配器配置</div>
+                <DynamicFormComponent
+                  itemConfigList={dynamicFormConfigList}
+                  initialValues={form.watch('adapter_config')}
+                  onSubmit={(values) => {
+                    form.setValue('adapter_config', values);
+                  }}
+                />
+              </div>
+            )}
+
           </div>
 
-          <DialogFooter>
-            {!initBotId && (
-              <Button type="submit">提交</Button>
-            )}
-            {initBotId && (
-              <Button type="button" variant="destructive" onClick={() => setShowDeleteConfirmModal(true)}>
-                删除
+          <div className="sticky bottom-0 left-0 right-0 bg-background border-t p-4 mt-4">
+            <div className="flex justify-end gap-2">
+              {!initBotId && (
+                <Button type="submit" onClick={form.handleSubmit(onDynamicFormSubmit)}>提交</Button>
+              )}
+              {initBotId && (
+                <>
+                  <Button type="button" variant="destructive" onClick={() => setShowDeleteConfirmModal(true)}>
+                    删除
+                  </Button>
+                  <Button type="button" onClick={form.handleSubmit(onDynamicFormSubmit)}>
+                    保存
+                  </Button>
+                </>
+              )}
+              <Button type="button" onClick={() => onFormCancel()}>
+                取消
               </Button>
-            )}
-            <Button type="button" onClick={() => onFormCancel()}>
-              取消
-            </Button>
-          </DialogFooter>
+            </div>
+          </div>
         </form>
       </Form>
     </div>

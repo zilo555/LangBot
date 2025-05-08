@@ -35,9 +35,11 @@ export interface IDynamicFormItemLabel {
 
 export enum DynamicFormItemType {
   INT = 'integer',
-  STRING = 'string',
+  FLOAT = 'float',
   BOOLEAN = 'boolean',
+  STRING = 'string',
   STRING_ARRAY = 'array[string]',
+  SELECT = 'select',
   UNKNOWN = 'unknown',
 }
 
