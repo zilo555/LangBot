@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { IChooseAdapterEntity } from '@/app/home/bots/components/bot-form/ChooseAdapterEntity';
+import { IChooseAdapterEntity, IPipelineEntity } from '@/app/home/bots/components/bot-form/ChooseEntity';
 import {
   DynamicFormItemConfig,
   IDynamicFormItemConfig,
@@ -37,12 +37,15 @@ import {
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Switch } from "@/components/ui/switch"
 
 const formSchema = z.object({
   name: z.string().min(1, { message: '机器人名称不能为空' }),
   description: z.string().min(1, { message: '机器人描述不能为空' }),
   adapter: z.string().min(1, { message: '适配器不能为空' }),
   adapter_config: z.record(z.string(), z.any()),
+  enable: z.boolean(),
+  use_pipeline_uuid: z.string().min(1, { message: '流水线不能为空' }),
 });
 
 export default function BotForm({
@@ -64,6 +67,8 @@ export default function BotForm({
       description: '一个机器人',
       adapter: '',
       adapter_config: {},
+      enable: true,
+      use_pipeline_uuid: '',
     },
   });
 
@@ -85,6 +90,10 @@ export default function BotForm({
     Record<string, string>
   >({});
 
+  const [pipelineNameList, setPipelineNameList] = useState<
+    IPipelineEntity[]
+  >([]);
+
   const [dynamicFormConfigList, setDynamicFormConfigList] = useState<
     IDynamicFormItemConfig[]
   >([]);
@@ -100,6 +109,9 @@ export default function BotForm({
         form.setValue('description', val.description);
         form.setValue('adapter', val.adapter);
         form.setValue('adapter_config', val.adapter_config);
+        form.setValue('enable', val.enable);
+        form.setValue('use_pipeline_uuid', val.use_pipeline_uuid || '');
+        console.log('form', form.getValues());
         handleAdapterSelect(val.adapter);
         // dynamicForm.setFieldsValue(val.adapter_config);
       });
@@ -138,6 +150,19 @@ export default function BotForm({
       }, {} as Record<string, string>),
     );
 
+    if (initBotId) {
+      // 初始化流水线列表
+      const rawPipelineList = await httpClient.getPipelines();
+      setPipelineNameList(
+        rawPipelineList.pipelines.map((item) => {
+          return {
+            label: item.name,
+            value: item.uuid,
+          };
+        }),
+      );
+    }
+
     // 初始化适配器表单map
     rawAdapterList.adapters.forEach((rawAdapter) => {
       adapterNameToDynamicConfigMap.set(
@@ -172,6 +197,8 @@ export default function BotForm({
       description: bot.description,
       name: bot.name,
       adapter_config: bot.adapter_config,
+      enable: bot.enable ?? true,
+      use_pipeline_uuid: bot.use_pipeline_uuid,
     };
   }
 
@@ -214,6 +241,8 @@ export default function BotForm({
         description: form.getValues().description,
         adapter: form.getValues().adapter,
         adapter_config: form.getValues().adapter_config,
+        enable: form.getValues().enable,
+        use_pipeline_uuid: form.getValues().use_pipeline_uuid,
       };
       httpClient
         .updateBot(initBotId, updateBot)
@@ -316,6 +345,54 @@ export default function BotForm({
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onDynamicFormSubmit)} className="space-y-8">
           <div className="space-y-4">
+            {/* 是否启用 & 绑定流水线  仅在编辑模式 */}
+            {initBotId && (
+              <div className="flex items-center gap-6">
+              <FormField
+                control={form.control}
+                name="enable"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col justify-start gap-[0.8rem] h-[3.8rem]">
+                    <FormLabel>是否启用</FormLabel>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="use_pipeline_uuid"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col justify-start gap-[0.8rem] h-[3.8rem]">
+                    <FormLabel>绑定流水线</FormLabel>
+                    <FormControl>
+                      <Select
+                        onValueChange={field.onChange}
+                        {...field}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="选择流水线" />
+                        </SelectTrigger>
+                        <SelectContent className="fixed z-[1000]">
+                          <SelectGroup>
+                            {pipelineNameList.map((item) => (
+                              <SelectItem key={item.value} value={item.value}>
+                                {item.label}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+              </div>
+
+            )}
+
             <FormField
               control={form.control}
               name="name"
