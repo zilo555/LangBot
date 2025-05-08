@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { IChooseAdapterEntity, IPipelineEntity } from '@/app/home/bots/components/bot-form/ChooseEntity';
 import {
   DynamicFormItemConfig,
-  IDynamicFormItemConfig,
   getDefaultValues,
   parseDynamicFormItemType,
 } from '@/app/home/components/dynamic-form/DynamicFormItemConfig';
+import { IDynamicFormItemSchema } from '@/app/infra/entities/form/dynamic';
 import { UUID } from 'uuidjs';
 import DynamicFormComponent from '@/app/home/components/dynamic-form/DynamicFormComponent';
 import { httpClient } from '@/app/infra/http/HttpClient';
@@ -76,7 +76,7 @@ export default function BotForm({
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
 
   const [adapterNameToDynamicConfigMap, setAdapterNameToDynamicConfigMap] =
-    useState(new Map<string, IDynamicFormItemConfig[]>());
+    useState(new Map<string, IDynamicFormItemSchema[]>());
   // const [form] = Form.useForm<IBotFormEntity>();
   const [showDynamicForm, setShowDynamicForm] = useState<boolean>(false);
   // const [dynamicForm] = Form.useForm();
@@ -95,7 +95,7 @@ export default function BotForm({
   >([]);
 
   const [dynamicFormConfigList, setDynamicFormConfigList] = useState<
-    IDynamicFormItemConfig[]
+    IDynamicFormItemSchema[]
   >([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 

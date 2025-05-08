@@ -1,5 +1,4 @@
 'use client';
-import { Modal } from 'antd';
 import { useState, useEffect } from 'react';
 import CreateCardComponent from '@/app/infra/basic-component/create-card-component/CreateCardComponent';
 import PipelineFormComponent from './components/pipeline-form/PipelineFormComponent';
@@ -8,6 +7,14 @@ import { PipelineCardVO } from '@/app/home/pipelines/components/pipeline-card/Pi
 import PipelineCard from '@/app/home/pipelines/components/pipeline-card/PipelineCard';
 import { PipelineFormEntity } from '@/app/home/pipelines/components/pipeline-form/PipelineFormEntity';
 import styles from './pipelineConfig.module.css';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { Button } from '@/components/ui/button';
 
 export default function PluginConfigPage() {
@@ -74,7 +81,7 @@ export default function PluginConfigPage() {
   return (
     <div className={styles.configPageContainer}>
       
-      <Modal
+      {/* <Modal
         title={isEditForm ? '编辑流水线' : '创建流水线'}
         centered
         open={modalOpen}
@@ -94,7 +101,27 @@ export default function PluginConfigPage() {
           disableForm={disableForm}
           initValues={selectedPipelineFormValue}
         />
-      </Modal>
+      </Modal> */}
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {isEditForm ? '编辑流水线' : '创建流水线'}
+            </DialogTitle>
+          </DialogHeader>
+          <PipelineFormComponent
+            onFinish={() => {
+              getPipelines();
+              setModalOpen(false);
+            }}
+            isEditMode={isEditForm}
+            pipelineId={selectedPipelineId}
+            disableForm={disableForm}
+            initValues={selectedPipelineFormValue}
+          />
+        </DialogContent>
+      </Dialog>
+      
 
       {pipelineList.length > 0 && (
         <div className={styles.pipelineListContainer}>

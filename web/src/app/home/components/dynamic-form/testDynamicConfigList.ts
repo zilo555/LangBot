@@ -1,10 +1,10 @@
 import {
-  DynamicFormItemConfig,
   DynamicFormItemType,
-  IDynamicFormItemConfig,
-} from '@/app/home/components/dynamic-form/DynamicFormItemConfig';
+  IDynamicFormItemSchema,
+} from '@/app/infra/entities/form/dynamic';
+import { DynamicFormItemConfig } from '@/app/home/components/dynamic-form/DynamicFormItemConfig';
 
-export const testDynamicConfigList: IDynamicFormItemConfig[] = [
+export const testDynamicConfigList: IDynamicFormItemSchema[] = [
   new DynamicFormItemConfig({
     default: '',
     id: '111',

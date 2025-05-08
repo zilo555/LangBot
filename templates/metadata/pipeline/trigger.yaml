@@ -28,11 +28,9 @@ stages:
         description:
           en_US: The prefix of the message
           zh_CN: 消息前缀
-        type: array
+        type: array[string]
         required: true
         default: []
-        items:
-          type: string
       - name: regexp
         label:
           en_US: Regexp
@@ -40,11 +38,9 @@ stages:
         description:
           en_US: The regexp of the message
           zh_CN: 消息正则表达式
-        type: array
+        type: array[string]
         required: true
         default: []
-        items:
-          type: string
       - name: random
         label:
           en_US: Random
@@ -83,20 +79,16 @@ stages:
         label:
           en_US: Blacklist
           zh_CN: 黑名单
-        type: array
+        type: array[string]
         required: true
         default: []
-        items:
-          type: string
       - name: whitelist
         label:
           en_US: Whitelist
           zh_CN: 白名单
-        type: array
+        type: array[string]
         required: true
         default: []
-        items:
-          type: string
   - name: ignore-rules
     label:
       en_US: Ignore Rules
@@ -109,11 +101,9 @@ stages:
         description:
           en_US: The prefix of the message
           zh_CN: 消息前缀
-        type: array
+        type: array[string]
         required: true
         default: []
-        items:
-          type: string
       - name: regexp
         label:
           en_US: Regexp
@@ -121,8 +111,6 @@ stages:
         description:
           en_US: The regexp of the message
           zh_CN: 消息正则表达式
-        type: array
+        type: array[string]
         required: true
         default: []
-        items:
-          type: string

@@ -1,4 +1,4 @@
-import { IDynamicFormItemConfig } from '@/app/home/components/dynamic-form/DynamicFormItemConfig';
+import { IDynamicFormItemSchema } from '@/app/infra/entities/form/dynamic';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -18,7 +18,7 @@ export default function DynamicFormComponent({
   onSubmit,
   initialValues,
 }: {
-  itemConfigList: IDynamicFormItemConfig[];
+  itemConfigList: IDynamicFormItemSchema[];
   onSubmit?: (val: object) => unknown;
   initialValues?: Record<string, any>;
 }) {
