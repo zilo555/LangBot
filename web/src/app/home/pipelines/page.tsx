@@ -111,6 +111,7 @@ export default function PluginConfigPage() {
             height={'10rem'}
             plusSize={'90px'}
             onClick={() => {
+              setIsEditForm(false);
               setModalOpen(true);
             }}
           />

@@ -1,15 +1,9 @@
 
 import { useEffect, useState } from 'react';
 import { httpClient } from '@/app/infra/http/HttpClient';
-import { LLMModel, Pipeline } from '@/app/infra/entities/api';
-import { UUID } from 'uuidjs';
+import { Pipeline } from '@/app/infra/entities/api';
 import { PipelineFormEntity, PipelineConfigTab, PipelineConfigStage } from '@/app/infra/entities/pipeline';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  getDefaultValues,
-  parseDynamicFormItemType,
-} from '@/app/home/components/dynamic-form/DynamicFormItemConfig';
-import { IDynamicFormItemSchema } from '@/app/infra/entities/form/dynamic';
 import DynamicFormComponent from '@/app/home/components/dynamic-form/DynamicFormComponent';
 import { Button } from '@/components/ui/button';
 import { useForm } from "react-hook-form"
@@ -19,25 +13,12 @@ import { Input } from "@/components/ui/input"
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
 
-const formSchema = z.object({
-  basic: z.object({
-    name: z.string().min(1, { message: '名称不能为空' }),
-    description: z.string().min(1, { message: '描述不能为空' }),
-  }),
-  ai: z.record(z.string(), z.any()),
-  trigger: z.record(z.string(), z.any()),
-  safety: z.record(z.string(), z.any()),
-  output: z.record(z.string(), z.any()),
-});
-
-type FormValues = z.infer<typeof formSchema>;
 
 export default function PipelineFormComponent({
   initValues,
@@ -53,16 +34,38 @@ export default function PipelineFormComponent({
   initValues?: PipelineFormEntity;
   onFinish: () => void;
 }) {
-  const [nowFormIndex, setNowFormIndex] = useState<number>(0);
-  const [nowAIRunner, setNowAIRunner] = useState('');
-  // const [llmModelList, setLlmModelList] = useState<SelectProps['options']>([]);
+
+  const formSchema = isEditMode ? z.object({
+    basic: z.object({
+      name: z.string().min(1, { message: '名称不能为空' }),
+      description: z.string().min(1, { message: '描述不能为空' }),
+    }),
+    ai: z.record(z.string(), z.any()),
+    trigger: z.record(z.string(), z.any()),
+    safety: z.record(z.string(), z.any()),
+    output: z.record(z.string(), z.any()),
+  })
+    : z.object({
+      basic: z.object({
+        name: z.string().min(1, { message: '名称不能为空' }),
+        description: z.string().min(1, { message: '描述不能为空' }),
+      }),
+      ai: z.record(z.string(), z.any()).optional(),
+      trigger: z.record(z.string(), z.any()).optional(),
+      safety: z.record(z.string(), z.any()).optional(),
+      output: z.record(z.string(), z.any()).optional(),
+    });
+
+  type FormValues = z.infer<typeof formSchema>;
   // 这里不好，可以改成enum等
-  const formLabelList: FormLabel[] = [
+  const formLabelList: FormLabel[] = isEditMode ? [
     { label: '基础信息', name: 'basic' },
     { label: 'AI能力', name: 'ai' },
     { label: '触发条件', name: 'trigger' },
     { label: '安全能力', name: 'safety' },
     { label: '输出处理', name: 'output' },
+  ] : [
+    { label: '基础信息', name: 'basic' },
   ];
   // const [basicForm] = Form.useForm();
   // const [aiForm] = Form.useForm();
@@ -86,7 +89,6 @@ export default function PipelineFormComponent({
   });
 
   useEffect(() => {
-    getLLMModelList();
 
     // get config schema from metadata
     httpClient.getGeneralPipelineMetadata().then((resp) => {
@@ -108,59 +110,19 @@ export default function PipelineFormComponent({
     if (initValues) {
       form.reset(initValues);
     }
+
+    if (!isEditMode) {
+      form.reset({
+        basic: {
+          name: '',
+          description: '',
+        },
+      });
+    }
   }, [initValues, form]);
 
-  function getLLMModelList() {
-    httpClient
-      .getProviderLLMModels()
-      .then((resp) => {
-        // setLlmModelList(
-        //   resp.models.map((model: LLMModel) => {
-        //     return {
-        //       value: model.uuid,
-        //       label: model.name,
-        //     };
-        //   }),
-        // );
-      })
-      .catch((err) => {
-        console.error('get LLM model list error', err);
-      });
-  }
-
-  function getNowFormLabel() {
-    return formLabelList[nowFormIndex];
-  }
-
-  function getPreFormLabel(): undefined | FormLabel {
-    if (nowFormIndex !== undefined && nowFormIndex > 0) {
-      return formLabelList[nowFormIndex - 1];
-    } else {
-      return undefined;
-    }
-  }
-
-  function getNextFormLabel(): undefined | FormLabel {
-    if (nowFormIndex !== undefined && nowFormIndex < formLabelList.length - 1) {
-      return formLabelList[nowFormIndex + 1];
-    } else {
-      return undefined;
-    }
-  }
-
-  function addFormLabelIndex() {
-    if (nowFormIndex < formLabelList.length - 1) {
-      setNowFormIndex(nowFormIndex + 1);
-    }
-  }
-
-  function reduceFormLabelIndex() {
-    if (nowFormIndex > 0) {
-      setNowFormIndex(nowFormIndex - 1);
-    }
-  }
-
   function handleFormSubmit(values: FormValues) {
+    console.log('handleFormSubmit', values);
     if (isEditMode) {
       handleModify(values);
     } else {
@@ -169,16 +131,10 @@ export default function PipelineFormComponent({
   }
 
   function handleCreate(values: FormValues) {
+    console.log('handleCreate', values);
     const pipeline: Pipeline = {
-      config: values,
-      created_at: '',
-      description: '',
-      for_version: '',
-      name: '',
-      stages: [],
-      updated_at: '',
-      uuid: UUID.generate(),
-      is_default: false,
+      description: values.basic.description,
+      name: values.basic.name,
     };
     httpClient.createPipeline(pipeline).then(() => onFinish());
   }
@@ -191,7 +147,7 @@ export default function PipelineFormComponent({
       safety: values.safety,
       output: values.output,
     };
-    
+
     const pipeline: Pipeline = {
       config: realConfig,
       // created_at: '',
@@ -211,7 +167,7 @@ export default function PipelineFormComponent({
     if (formName === 'ai') {
       // 获取当前选择的 runner
       const currentRunner = form.watch('ai.runner.runner');
-      
+
       // 如果是 runner 配置项，直接渲染
       if (stage.name === 'runner') {
         return (
@@ -234,7 +190,7 @@ export default function PipelineFormComponent({
           </div>
         );
       }
-      
+
       // 如果不是当前选择的 runner 对应的配置项，则不渲染
       if (stage.name !== currentRunner) {
         return null;
@@ -266,7 +222,7 @@ export default function PipelineFormComponent({
     <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleFormSubmit)}>
-          <Tabs defaultValue={getNowFormLabel().name}>
+          <Tabs defaultValue={formLabelList[0].name}>
             <TabsList>
               {formLabelList.map((formLabel) => (
                 <TabsTrigger key={formLabel.name} value={formLabel.name}>
@@ -274,11 +230,11 @@ export default function PipelineFormComponent({
                 </TabsTrigger>
               ))}
             </TabsList>
-            
+
             {formLabelList.map((formLabel) => (
-              <TabsContent key={formLabel.name} value={formLabel.name}>
+              <TabsContent key={formLabel.name} value={formLabel.name} className='pr-6'>
                 <h1 className="text-xl font-bold mb-4">{formLabel.label}</h1>
-                
+
                 {formLabel.name === 'basic' && (
                   <div className="space-y-6">
                     <FormField
@@ -311,28 +267,32 @@ export default function PipelineFormComponent({
                   </div>
                 )}
 
-                {formLabel.name === 'ai' && aiConfigTabSchema && (
-                  <div className="space-y-6">
-                    {aiConfigTabSchema.stages.map((stage) => renderDynamicForms(stage, 'ai'))}
-                  </div>
-                )}
+                {isEditMode && (
+                  <>
+                    {formLabel.name === 'ai' && aiConfigTabSchema && (
+                      <div className="space-y-6">
+                        {aiConfigTabSchema.stages.map((stage) => renderDynamicForms(stage, 'ai'))}
+                      </div>
+                    )}
 
-                {formLabel.name === 'trigger' && triggerConfigTabSchema && (
-                  <div className="space-y-6">
-                    {triggerConfigTabSchema.stages.map((stage) => renderDynamicForms(stage, 'trigger'))}
-                  </div>
-                )}
+                    {formLabel.name === 'trigger' && triggerConfigTabSchema && (
+                      <div className="space-y-6">
+                        {triggerConfigTabSchema.stages.map((stage) => renderDynamicForms(stage, 'trigger'))}
+                      </div>
+                    )}
 
-                {formLabel.name === 'safety' && safetyConfigTabSchema && (
-                  <div className="space-y-6">
-                    {safetyConfigTabSchema.stages.map((stage) => renderDynamicForms(stage, 'safety'))}
-                  </div>
-                )}
+                    {formLabel.name === 'safety' && safetyConfigTabSchema && (
+                      <div className="space-y-6">
+                        {safetyConfigTabSchema.stages.map((stage) => renderDynamicForms(stage, 'safety'))}
+                      </div>
+                    )}
 
-                {formLabel.name === 'output' && outputConfigTabSchema && (
-                  <div className="space-y-6">
-                    {outputConfigTabSchema.stages.map((stage) => renderDynamicForms(stage, 'output'))}
-                  </div>
+                    {formLabel.name === 'output' && outputConfigTabSchema && (
+                      <div className="space-y-6">
+                        {outputConfigTabSchema.stages.map((stage) => renderDynamicForms(stage, 'output'))}
+                      </div>
+                    )}
+                  </>
                 )}
               </TabsContent>
             ))}
