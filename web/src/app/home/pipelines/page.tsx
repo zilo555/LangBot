@@ -42,16 +42,16 @@ export default function PluginConfigPage() {
       .then((value) => {
         let currentTime = new Date();
         const pipelineList = value.pipelines.map((pipeline) => {
-          let lastUpdatedTimeAgo = Math.floor((currentTime.getTime() - new Date(pipeline.updated_at).getTime()) / 1000 / 60 / 60 / 24);
+          let lastUpdatedTimeAgo = Math.floor((currentTime.getTime() - new Date(pipeline.updated_at ?? currentTime.getTime()).getTime()) / 1000 / 60 / 60 / 24);
           
           let lastUpdatedTimeAgoText = lastUpdatedTimeAgo > 0 ? ` ${lastUpdatedTimeAgo} 天前` : '今天';
           
           return new PipelineCardVO({
             lastUpdatedTimeAgo: lastUpdatedTimeAgoText,
             description: pipeline.description,
-            id: pipeline.uuid,
+            id: pipeline.uuid ?? '',
             name: pipeline.name,
-            isDefault: pipeline.is_default,
+            isDefault: pipeline.is_default ?? false,
           });
         });
         setPipelineList(pipelineList);
