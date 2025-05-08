@@ -100,7 +100,7 @@ export default function BotForm({
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    initBotFormComponent();
+    initBotFormComponent().then(() => {
 
     // 拉取初始化表单信息
     if (initBotId) {
@@ -115,18 +115,31 @@ export default function BotForm({
         handleAdapterSelect(val.adapter);
         // dynamicForm.setFieldsValue(val.adapter_config);
       });
+      
     } else {
       form.reset();
     }
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
   async function initBotFormComponent() {
+    // 初始化流水线列表
+    const pipelinesRes = await httpClient.getPipelines();
+    console.log('rawPipelineList', pipelinesRes);
+    setPipelineNameList(
+      pipelinesRes.pipelines.map((item) => {
+        return {
+          label: item.name,
+          value: item.uuid,
+        };
+      }),
+    );
+
     // 拉取adapter
-    const rawAdapterList = await httpClient.getAdapters();
-    // 初始化适配器选择列表
+    const adaptersRes = await httpClient.getAdapters();
+    console.log('rawAdapterList', adaptersRes);
     setAdapterNameList(
-      rawAdapterList.adapters.map((item) => {
+      adaptersRes.adapters.map((item) => {
         return {
           label: item.label.zh_CN,
           value: item.name,
@@ -136,7 +149,7 @@ export default function BotForm({
 
     // 初始化适配器图标列表
     setAdapterIconList(
-      rawAdapterList.adapters.reduce((acc, item) => {
+      adaptersRes.adapters.reduce((acc, item) => {
         acc[item.name] = httpClient.getAdapterIconURL(item.name);
         return acc;
       }, {} as Record<string, string>),
@@ -144,27 +157,14 @@ export default function BotForm({
 
     // 初始化适配器描述列表
     setAdapterDescriptionList(
-      rawAdapterList.adapters.reduce((acc, item) => {
+      adaptersRes.adapters.reduce((acc, item) => {
         acc[item.name] = item.description.zh_CN;
         return acc;
       }, {} as Record<string, string>),
     );
 
-    if (initBotId) {
-      // 初始化流水线列表
-      const rawPipelineList = await httpClient.getPipelines();
-      setPipelineNameList(
-        rawPipelineList.pipelines.map((item) => {
-          return {
-            label: item.name,
-            value: item.uuid,
-          };
-        }),
-      );
-    }
-
     // 初始化适配器表单map
-    rawAdapterList.adapters.forEach((rawAdapter) => {
+    adaptersRes.adapters.forEach((rawAdapter) => {
       adapterNameToDynamicConfigMap.set(
         rawAdapter.name,
         rawAdapter.spec.config.map(
@@ -198,7 +198,7 @@ export default function BotForm({
       name: bot.name,
       adapter_config: bot.adapter_config,
       enable: bot.enable ?? true,
-      use_pipeline_uuid: bot.use_pipeline_uuid,
+      use_pipeline_uuid: bot.use_pipeline_uuid ?? '',
     };
   }
 
@@ -348,47 +348,47 @@ export default function BotForm({
             {/* 是否启用 & 绑定流水线  仅在编辑模式 */}
             {initBotId && (
               <div className="flex items-center gap-6">
-              <FormField
-                control={form.control}
-                name="enable"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col justify-start gap-[0.8rem] h-[3.8rem]">
-                    <FormLabel>是否启用</FormLabel>
-                    <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="enable"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col justify-start gap-[0.8rem] h-[3.8rem]">
+                      <FormLabel>是否启用</FormLabel>
+                      <FormControl>
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
 
-              <FormField
-                control={form.control}
-                name="use_pipeline_uuid"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col justify-start gap-[0.8rem] h-[3.8rem]">
-                    <FormLabel>绑定流水线</FormLabel>
-                    <FormControl>
-                      <Select
-                        onValueChange={field.onChange}
-                        {...field}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="选择流水线" />
-                        </SelectTrigger>
-                        <SelectContent className="fixed z-[1000]">
-                          <SelectGroup>
-                            {pipelineNameList.map((item) => (
-                              <SelectItem key={item.value} value={item.value}>
-                                {item.label}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        </SelectContent>
-                      </Select>
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+                <FormField
+                  control={form.control}
+                  name="use_pipeline_uuid"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col justify-start gap-[0.8rem] h-[3.8rem]">
+                      <FormLabel>绑定流水线</FormLabel>
+                      <FormControl>
+                        <Select
+                          onValueChange={field.onChange}
+                          {...field}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="选择流水线" />
+                          </SelectTrigger>
+                          <SelectContent className="fixed z-[1000]">
+                            <SelectGroup>
+                              {pipelineNameList.map((item) => (
+                                <SelectItem key={item.value} value={item.value}>
+                                  {item.label}
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
               </div>
 
             )}
