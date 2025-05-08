@@ -1,15 +1,5 @@
-// import {
-//   Form,
-//   Button,
-//   Switch,
-//   Select,
-//   Input,
-//   InputNumber,
-//   SelectProps,
-// } from 'antd';
-import { CaretLeftOutlined, CaretRightOutlined } from '@ant-design/icons';
+
 import { useEffect, useState } from 'react';
-import styles from './pipelineFormStyle.module.css';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { LLMModel, Pipeline } from '@/app/infra/entities/api';
 import { UUID } from 'uuidjs';

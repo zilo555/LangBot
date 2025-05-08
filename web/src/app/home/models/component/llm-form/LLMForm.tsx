@@ -1,4 +1,3 @@
-import { SelectProps } from 'antd';
 import { ICreateLLMField } from '@/app/home/models/ICreateLLMField';
 import { useEffect, useState } from 'react';
 import { IChooseRequesterEntity } from '@/app/home/models/component/llm-form/ChooseRequesterEntity';
@@ -91,7 +90,7 @@ export default function LLMForm({
   const [extraArgs, setExtraArgs] = useState<{key: string, type: 'string' | 'number' | 'boolean', value: string}[]>([]);
 
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
-  const abilityOptions: SelectProps['options'] = [
+  const abilityOptions: { label: string, value: string }[] = [
     {
       label: '视觉能力',
       value: 'vision',

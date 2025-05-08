@@ -82,22 +82,24 @@ export default function PluginConfigPage() {
     <div className={styles.configPageContainer}>
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent>
-          <DialogHeader>
+        <DialogContent  className="w-[700px] max-h-[80vh] p-0 flex flex-col">
+          <DialogHeader className="px-6 pt-6 pb-4">
             <DialogTitle>
               {isEditForm ? '编辑流水线' : '创建流水线'}
             </DialogTitle>
           </DialogHeader>
-          <PipelineFormComponent
-            onFinish={() => {
-              getPipelines();
-              setModalOpen(false);
-            }}
-            isEditMode={isEditForm}
-            pipelineId={selectedPipelineId}
-            disableForm={disableForm}
-            initValues={selectedPipelineFormValue}
-          />
+          <div className="flex-1 overflow-y-auto px-6">
+            <PipelineFormComponent
+              onFinish={() => {
+                getPipelines();
+                setModalOpen(false);
+              }}
+              isEditMode={isEditForm}
+              pipelineId={selectedPipelineId}
+              disableForm={disableForm}
+              initValues={selectedPipelineFormValue}
+            />
+          </div>
         </DialogContent>
       </Dialog>
       

@@ -112,46 +112,6 @@ export default function BotConfigPage() {
 
   return (
     <div className={styles.configPageContainer}>
-      {/* <Spin spinning={isLoading} tip="加载中..." size="large">
-        <Modal
-          title={isEditForm ? '编辑机器人' : '创建机器人'}
-          centered
-          open={modalOpen}
-          onOk={() => setModalOpen(false)}
-          onCancel={() => setModalOpen(false)}
-          width={700}
-          footer={null}
-          destroyOnClose={true}
-        >
-          <BotForm
-            initBotId={nowSelectedBotCard?.id}
-            onFormSubmit={() => {
-              getBotList();
-              setModalOpen(false);
-            }}
-            onFormCancel={() => setModalOpen(false)}
-          />
-        </Modal>
-        {pageShowRule === BotConfigPageShowRule.NO_LLM && (
-          <EmptyAndCreateComponent
-            title={'需要先创建大模型才能配置机器人哦～'}
-            subTitle={'快去创建一个吧！'}
-            buttonText={'创建大模型 GO！'}
-            onButtonClick={() => {
-              router.push('/home/models');
-            }}
-          />
-        )}
-
-        {pageShowRule === BotConfigPageShowRule.NO_BOT && (
-          <EmptyAndCreateComponent
-            title={'您还未配置机器人哦～'}
-            subTitle={'快去创建一个吧！'}
-            buttonText={'创建机器人 +'}
-            onButtonClick={handleCreateBotClick}
-          />
-        )}
-      </Spin> */}
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="w-[700px] max-h-[80vh] p-0 flex flex-col">
