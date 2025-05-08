@@ -98,43 +98,27 @@ export default function LLMConfigPage() {
           />
         </DialogContent>
       </Dialog>
+      <div className={`${styles.modelListContainer}`}>
 
-      {cardList.length > 0 && (
-        <div className={`${styles.modelListContainer}`}>
-
-          <CreateCardComponent
-            width={'24rem'}
-            height={'10rem'}
-            plusSize={'90px'}
-            onClick={handleCreateModelClick}
-          />
-          {cardList.map((cardVO) => {
-            return (
-              <div
-                key={cardVO.id}
-                onClick={() => {
-                  selectLLM(cardVO);
-                }}
-              >
-                <LLMCard cardVO={cardVO}></LLMCard>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {cardList.length === 0 && (
-        <div className={`${styles.emptyContainer}`}>
-          <EmptyAndCreateComponent
-            title={'模型列表空空如也～'}
-            subTitle={'快去创建一个吧！'}
-            buttonText={'创建模型 +'}
-            onButtonClick={() => {
-              handleCreateModelClick();
-            }}
-          />
-        </div>
-      )}
+        <CreateCardComponent
+          width={'24rem'}
+          height={'10rem'}
+          plusSize={'90px'}
+          onClick={handleCreateModelClick}
+        />
+        {cardList.map((cardVO) => {
+          return (
+            <div
+              key={cardVO.id}
+              onClick={() => {
+                selectLLM(cardVO);
+              }}
+            >
+              <LLMCard cardVO={cardVO}></LLMCard>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
