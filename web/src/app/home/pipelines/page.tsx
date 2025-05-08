@@ -1,13 +1,20 @@
 'use client';
-import { Modal } from 'antd';
 import { useState, useEffect } from 'react';
 import CreateCardComponent from '@/app/infra/basic-component/create-card-component/CreateCardComponent';
 import PipelineFormComponent from './components/pipeline-form/PipelineFormComponent';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { PipelineCardVO } from '@/app/home/pipelines/components/pipeline-card/PipelineCardVO';
 import PipelineCard from '@/app/home/pipelines/components/pipeline-card/PipelineCard';
-import { PipelineFormEntity } from '@/app/home/pipelines/components/pipeline-form/PipelineFormEntity';
+import { PipelineFormEntity } from '@/app/infra/entities/pipeline';
 import styles from './pipelineConfig.module.css';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { Button } from '@/components/ui/button';
 
 export default function PluginConfigPage() {
@@ -35,16 +42,16 @@ export default function PluginConfigPage() {
       .then((value) => {
         let currentTime = new Date();
         const pipelineList = value.pipelines.map((pipeline) => {
-          let lastUpdatedTimeAgo = Math.floor((currentTime.getTime() - new Date(pipeline.updated_at).getTime()) / 1000 / 60 / 60 / 24);
-          
+          let lastUpdatedTimeAgo = Math.floor((currentTime.getTime() - new Date(pipeline.updated_at ?? currentTime.getTime()).getTime()) / 1000 / 60 / 60 / 24);
+
           let lastUpdatedTimeAgoText = lastUpdatedTimeAgo > 0 ? ` ${lastUpdatedTimeAgo} 天前` : '今天';
-          
+
           return new PipelineCardVO({
             lastUpdatedTimeAgo: lastUpdatedTimeAgoText,
             description: pipeline.description,
-            id: pipeline.uuid,
+            id: pipeline.uuid ?? '',
             name: pipeline.name,
-            isDefault: pipeline.is_default,
+            isDefault: pipeline.is_default ?? false,
           });
         });
         setPipelineList(pipelineList);
@@ -73,58 +80,64 @@ export default function PluginConfigPage() {
 
   return (
     <div className={styles.configPageContainer}>
-      
-      <Modal
-        title={isEditForm ? '编辑流水线' : '创建流水线'}
-        centered
-        open={modalOpen}
-        destroyOnClose={true}
-        onOk={() => setModalOpen(false)}
-        onCancel={() => setModalOpen(false)}
-        width={700}
-        footer={null}
-      >
-        <PipelineFormComponent
-          onFinish={() => {
-            getPipelines();
-            setModalOpen(false);
+
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="w-[700px] max-h-[80vh] p-0 flex flex-col">
+          <DialogHeader className="px-6 pt-6 pb-4">
+            <DialogTitle>
+              {isEditForm ? '编辑流水线' : '创建流水线'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto px-6">
+            <PipelineFormComponent
+              onNewPipelineCreated={(pipelineId) => {
+                setDisableForm(true);
+                setIsEditForm(true);
+                setModalOpen(true);
+                setSelectedPipelineId(pipelineId);
+                getSelectedPipelineForm(pipelineId);
+              }}
+              onFinish={() => {
+                getPipelines();
+                setModalOpen(false);
+              }}
+              isEditMode={isEditForm}
+              pipelineId={selectedPipelineId}
+              disableForm={disableForm}
+              initValues={selectedPipelineFormValue}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <div className={styles.pipelineListContainer}>
+        <CreateCardComponent
+          width={'24rem'}
+          height={'10rem'}
+          plusSize={'90px'}
+          onClick={() => {
+            setIsEditForm(false);
+            setModalOpen(true);
           }}
-          isEditMode={isEditForm}
-          pipelineId={selectedPipelineId}
-          disableForm={disableForm}
-          initValues={selectedPipelineFormValue}
         />
-      </Modal>
 
-      {pipelineList.length > 0 && (
-        <div className={styles.pipelineListContainer}>
-          <CreateCardComponent
-            width={'24rem'}
-            height={'10rem'}
-            plusSize={'90px'}
-            onClick={() => {
-              setModalOpen(true);
-            }}
-          />
-
-          {pipelineList.map((pipeline) => {
-            return (
-              <div
-                key={pipeline.id}
-                onClick={() => {
-                  setDisableForm(true);
-                  setIsEditForm(true);
-                  setModalOpen(true);
-                  setSelectedPipelineId(pipeline.id);
-                  getSelectedPipelineForm(pipeline.id);
-                }}
-              >
-                <PipelineCard cardVO={pipeline} />
-              </div>
-            );
-          })}
-        </div>
-      )}
+        {pipelineList.map((pipeline) => {
+          return (
+            <div
+              key={pipeline.id}
+              onClick={() => {
+                setDisableForm(true);
+                setIsEditForm(true);
+                setModalOpen(true);
+                setSelectedPipelineId(pipeline.id);
+                getSelectedPipelineForm(pipeline.id);
+              }}
+            >
+              <PipelineCard cardVO={pipeline} />
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

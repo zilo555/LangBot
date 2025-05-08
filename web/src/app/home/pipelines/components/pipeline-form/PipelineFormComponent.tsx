@@ -1,23 +1,29 @@
+
+import { useEffect, useState } from 'react';
+import { httpClient } from '@/app/infra/http/HttpClient';
+import { Pipeline } from '@/app/infra/entities/api';
+import { PipelineFormEntity, PipelineConfigTab, PipelineConfigStage } from '@/app/infra/entities/pipeline';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import DynamicFormComponent from '@/app/home/components/dynamic-form/DynamicFormComponent';
+import { Button } from '@/components/ui/button';
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
+import { Input } from "@/components/ui/input"
 import {
   Form,
-  Button,
-  Switch,
-  Select,
-  Input,
-  InputNumber,
-  SelectProps,
-} from 'antd';
-import { CaretLeftOutlined, CaretRightOutlined } from '@ant-design/icons';
-import { useEffect, useState } from 'react';
-import styles from './pipelineFormStyle.module.css';
-import { httpClient } from '@/app/infra/http/HttpClient';
-import { LLMModel, Pipeline } from '@/app/infra/api/api-types';
-import { UUID } from 'uuidjs';
-import { PipelineFormEntity } from '@/app/home/pipelines/components/pipeline-form/PipelineFormEntity';
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+
 
 export default function PipelineFormComponent({
   initValues,
   onFinish,
+  onNewPipelineCreated,
   isEditMode,
   pipelineId,
   disableForm,
@@ -28,625 +34,287 @@ export default function PipelineFormComponent({
   // 这里的写法很不安全不规范，未来流水线需要重新整理
   initValues?: PipelineFormEntity;
   onFinish: () => void;
+  onNewPipelineCreated: (pipelineId: string) => void;
 }) {
-  const [nowFormIndex, setNowFormIndex] = useState<number>(0);
-  const [nowAIRunner, setNowAIRunner] = useState('');
-  const [llmModelList, setLlmModelList] = useState<SelectProps['options']>([]);
+
+  const formSchema = isEditMode ? z.object({
+    basic: z.object({
+      name: z.string().min(1, { message: '名称不能为空' }),
+      description: z.string().min(1, { message: '描述不能为空' }),
+    }),
+    ai: z.record(z.string(), z.any()),
+    trigger: z.record(z.string(), z.any()),
+    safety: z.record(z.string(), z.any()),
+    output: z.record(z.string(), z.any()),
+  })
+    : z.object({
+      basic: z.object({
+        name: z.string().min(1, { message: '名称不能为空' }),
+        description: z.string().min(1, { message: '描述不能为空' }),
+      }),
+      ai: z.record(z.string(), z.any()).optional(),
+      trigger: z.record(z.string(), z.any()).optional(),
+      safety: z.record(z.string(), z.any()).optional(),
+      output: z.record(z.string(), z.any()).optional(),
+    });
+
+  type FormValues = z.infer<typeof formSchema>;
   // 这里不好，可以改成enum等
-  const formLabelList: FormLabel[] = [
-    { label: '基础', name: 'basic' },
+  const formLabelList: FormLabel[] = isEditMode ? [
+    { label: '基础信息', name: 'basic' },
     { label: 'AI能力', name: 'ai' },
     { label: '触发条件', name: 'trigger' },
     { label: '安全能力', name: 'safety' },
     { label: '输出处理', name: 'output' },
+  ] : [
+    { label: '基础信息', name: 'basic' },
   ];
-  const [basicForm] = Form.useForm();
-  const [aiForm] = Form.useForm();
-  const [triggerForm] = Form.useForm();
-  const [safetyForm] = Form.useForm();
-  const [outputForm] = Form.useForm();
+  // const [basicForm] = Form.useForm();
+  // const [aiForm] = Form.useForm();
+  // const [triggerForm] = Form.useForm();
+  // const [safetyForm] = Form.useForm();
+  // const [outputForm] = Form.useForm();
+  const [aiConfigTabSchema, setAIConfigTabSchema] = useState<PipelineConfigTab>();
+  const [triggerConfigTabSchema, setTriggerConfigTabSchema] = useState<PipelineConfigTab>();
+  const [safetyConfigTabSchema, setSafetyConfigTabSchema] = useState<PipelineConfigTab>();
+  const [outputConfigTabSchema, setOutputConfigTabSchema] = useState<PipelineConfigTab>();
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      basic: {},
+      ai: {},
+      trigger: {},
+      safety: {},
+      output: {},
+    },
+  });
 
   useEffect(() => {
-    getLLMModelList();
+
+    // get config schema from metadata
+    httpClient.getGeneralPipelineMetadata().then((resp) => {
+      for (const config of resp.configs) {
+        if (config.name === 'ai') {
+          setAIConfigTabSchema(config);
+        } else if (config.name === 'trigger') {
+          setTriggerConfigTabSchema(config);
+        } else if (config.name === 'safety') {
+          setSafetyConfigTabSchema(config);
+        } else if (config.name === 'output') {
+          setOutputConfigTabSchema(config);
+        }
+      }
+    });
   }, []);
 
   useEffect(() => {
-    console.log('initValues change: ', initValues);
     if (initValues) {
-      basicForm.setFieldsValue(initValues.basic);
-      aiForm.setFieldsValue(initValues.ai);
-      triggerForm.setFieldsValue(initValues.trigger);
-      safetyForm.setFieldsValue(initValues.safety);
-      outputForm.setFieldsValue(initValues.output);
+      form.reset(initValues);
     }
-  }, [aiForm, basicForm, initValues, outputForm, safetyForm, triggerForm]);
 
-  function getLLMModelList() {
-    httpClient
-      .getProviderLLMModels()
-      .then((resp) => {
-        setLlmModelList(
-          resp.models.map((model: LLMModel) => {
-            return {
-              value: model.uuid,
-              label: model.name,
-            };
-          }),
-        );
-      })
-      .catch((err) => {
-        console.error('get LLM model list error', err);
+    if (!isEditMode) {
+      form.reset({
+        basic: {
+          name: '',
+          description: '',
+        },
       });
-  }
-
-  function getNowFormLabel() {
-    return formLabelList[nowFormIndex];
-  }
-
-  function getPreFormLabel(): undefined | FormLabel {
-    if (nowFormIndex !== undefined && nowFormIndex > 0) {
-      return formLabelList[nowFormIndex - 1];
-    } else {
-      return undefined;
     }
-  }
+  }, [initValues, form]);
 
-  function getNextFormLabel(): undefined | FormLabel {
-    if (nowFormIndex !== undefined && nowFormIndex < formLabelList.length - 1) {
-      return formLabelList[nowFormIndex + 1];
-    } else {
-      return undefined;
-    }
-  }
-
-  function addFormLabelIndex() {
-    if (nowFormIndex < formLabelList.length - 1) {
-      setNowFormIndex(nowFormIndex + 1);
-    }
-  }
-
-  function reduceFormLabelIndex() {
-    if (nowFormIndex > 0) {
-      setNowFormIndex(nowFormIndex - 1);
-    }
-  }
-
-  function handleCommit() {
+  function handleFormSubmit(values: FormValues) {
+    console.log('handleFormSubmit', values);
     if (isEditMode) {
-      handleModify();
+      handleModify(values);
     } else {
-      handleCreate();
+      handleCreate(values);
     }
   }
 
-  function handleCreate() {
-    Promise.all([
-      basicForm.validateFields(),
-      aiForm.validateFields(),
-      triggerForm.validateFields(),
-      safetyForm.validateFields(),
-      outputForm.validateFields(),
-    ])
-      .then(() => {
-        const pipeline = assembleForm();
-        httpClient.createPipeline(pipeline).then(() => onFinish());
-      })
-      .catch((e) => {
-        console.error(e);
-      });
+  function handleCreate(values: FormValues) {
+    console.log('handleCreate', values);
+    const pipeline: Pipeline = {
+      description: values.basic.description,
+      name: values.basic.name,
+    };
+    httpClient.createPipeline(pipeline).then((resp) => {
+      onFinish();
+      onNewPipelineCreated(resp.uuid);
+    });
   }
 
-  function handleModify() {
-    Promise.all([
-      basicForm.validateFields(),
-      aiForm.validateFields(),
-      triggerForm.validateFields(),
-      safetyForm.validateFields(),
-      outputForm.validateFields(),
-    ])
-      .then(() => {
-        const pipeline = assembleForm();
-        httpClient
-          .updatePipeline(pipelineId || '', pipeline)
-          .then(() => onFinish());
-      })
-      .catch((e) => {
-        console.error(e);
-      });
+  function handleModify(values: FormValues) {
+
+    const realConfig = {
+      ai: values.ai,
+      trigger: values.trigger,
+      safety: values.safety,
+      output: values.output,
+    };
+
+    const pipeline: Pipeline = {
+      config: realConfig,
+      // created_at: '',
+      description: values.basic.description,
+      // for_version: '',
+      name: values.basic.name,
+      // stages: [],
+      // updated_at: '',
+      // uuid: pipelineId || '',
+      // is_default: false,
+    };
+    httpClient.updatePipeline(pipelineId || '', pipeline).then(() => onFinish());
   }
 
-  // TODO 类型混乱，需要优化
-  function assembleForm(): Pipeline {
-    console.log('basicForm:', basicForm.getFieldsValue());
-    console.log('aiForm:', aiForm.getFieldsValue());
-    console.log('triggerForm:', triggerForm.getFieldsValue());
-    console.log('safetyForm:', safetyForm.getFieldsValue());
-    console.log('outputForm:', outputForm.getFieldsValue());
-    const config: object = {
-      ai: aiForm.getFieldsValue(),
-      trigger: triggerForm.getFieldsValue(),
-      safety: safetyForm.getFieldsValue(),
-      output: outputForm.getFieldsValue(),
-    };
+  function renderDynamicForms(stage: PipelineConfigStage, formName: keyof FormValues) {
+    // 如果是 AI 配置，需要特殊处理
+    if (formName === 'ai') {
+      // 获取当前选择的 runner
+      const currentRunner = form.watch('ai.runner.runner');
 
-    return {
-      config,
-      created_at: '',
-      description: basicForm.getFieldsValue().description,
-      for_version: '',
-      name: basicForm.getFieldsValue().name,
-      stages: [],
-      updated_at: '',
-      uuid: UUID.generate(),
-    };
+      // 如果是 runner 配置项，直接渲染
+      if (stage.name === 'runner') {
+        return (
+          <div key={stage.name} className="space-y-4 mb-6">
+            <div className="text-lg font-medium">{stage.label.zh_CN}</div>
+            {stage.description && (
+              <div className="text-sm text-gray-500">{stage.description.zh_CN}</div>
+            )}
+            <DynamicFormComponent
+              itemConfigList={stage.config}
+              initialValues={(form.watch(formName) as Record<string, any>)?.[stage.name] || {}}
+              onSubmit={(values) => {
+                const currentValues = form.getValues(formName) as Record<string, any> || {};
+                form.setValue(formName, {
+                  ...currentValues,
+                  [stage.name]: values,
+                });
+              }}
+            />
+          </div>
+        );
+      }
+
+      // 如果不是当前选择的 runner 对应的配置项，则不渲染
+      if (stage.name !== currentRunner) {
+        return null;
+      }
+    }
+
+    return (
+      <div key={stage.name} className="space-y-4 mb-6">
+        <div className="text-lg font-medium">{stage.label.zh_CN}</div>
+        {stage.description && (
+          <div className="text-sm text-gray-500">{stage.description.zh_CN}</div>
+        )}
+        <DynamicFormComponent
+          itemConfigList={stage.config}
+          initialValues={(form.watch(formName) as Record<string, any>)?.[stage.name] || {}}
+          onSubmit={(values) => {
+            const currentValues = form.getValues(formName) as Record<string, any> || {};
+            form.setValue(formName, {
+              ...currentValues,
+              [stage.name]: values,
+            });
+          }}
+        />
+      </div>
+    );
   }
 
   return (
     <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-      <h1>{getNowFormLabel().label}</h1>
-      <Form
-        layout={'vertical'}
-        style={{
-          display: getNowFormLabel().name === 'basic' ? 'block' : 'none',
-        }}
-        form={basicForm}
-        disabled={disableForm}
-      >
-        <Form.Item
-          label="流水线名称"
-          name={'name'}
-          rules={[
-            {
-              required: true,
-            },
-          ]}
-        >
-          <Input />
-        </Form.Item>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleFormSubmit)}>
+          <Tabs defaultValue={formLabelList[0].name}>
+            <TabsList>
+              {formLabelList.map((formLabel) => (
+                <TabsTrigger key={formLabel.name} value={formLabel.name}>
+                  {formLabel.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
 
-        <Form.Item
-          label="流水线描述"
-          name={'description'}
-          rules={[
-            {
-              required: true,
-            },
-          ]}
-        >
-          <Input />
-        </Form.Item>
-      </Form>
-      {/*  AI能力表单 ai  */}
-      <Form
-        layout={'vertical'}
-        style={{ display: getNowFormLabel().name === 'ai' ? 'block' : 'none' }}
-        form={aiForm}
-        disabled={disableForm}
-      >
-        {/* Runner 配置区块 */}
-        <div className={`${styles.formItemSubtitle}`}>运行器</div>
-        <Form.Item
-          label="运行器"
-          name={['runner', 'runner']}
-          rules={[{ required: true }]}
-        >
-          <Select
-            options={[
-              { label: '内置 Agent', value: 'local-agent' },
-              { label: 'Dify 服务 API', value: 'dify-service-api' },
-              { label: '阿里云百炼平台 API', value: 'dashscope-app-api' },
-            ]}
-            onChange={(value) => setNowAIRunner(value)}
-          />
-        </Form.Item>
+            {formLabelList.map((formLabel) => (
+              <TabsContent key={formLabel.name} value={formLabel.name} className='pr-6'>
+                <h1 className="text-xl font-bold mb-4">{formLabel.label}</h1>
 
-        {/* 内置 Agent 配置区块 */}
-        {nowAIRunner === 'local-agent' && (
-          <>
-            <div className={`${styles.formItemSubtitle}`}>配置内置Agent</div>
-            <Form.Item
-              label="模型"
-              name={['local-agent', 'model']}
-              rules={[{ required: true }]}
-              tooltip="从模型库中选择"
-            >
-              <Select
-                options={llmModelList}
-                placeholder="请选择语言模型"
-                showSearch
-              />
-            </Form.Item>
-            <Form.Item
-              label="最大回合数"
-              name={['local-agent', 'max-round']}
-              rules={[
-                {
-                  required: true,
-                },
-              ]}
-            >
-              <InputNumber precision={0} />
-            </Form.Item>
-            {/*  TODO 这里要做转换处理  */}
-            <Form.Item
-              label="提示词"
-              name={['local-agent', 'prompt']}
-              rules={[{ required: true }]}
-              tooltip="按JSON格式输入"
-            >
-              <Input.TextArea
-                rows={4}
-                placeholder={`示例结构：{ "role": "user", "content": "你好" } `}
-              />
-            </Form.Item>
-          </>
-        )}
-        {/* Dify 服务 API 区块 */}
-        {nowAIRunner === 'dify-service-api' && (
-          <>
-            <div className={`${styles.formItemSubtitle}`}>配置Dify服务API</div>
-            <Form.Item
-              label="基础 URL"
-              name={['dify-service-api', 'base-url']}
-              rules={[
-                { required: true },
-                { type: 'url', message: '请输入有效的URL地址' },
-              ]}
-            >
-              <Input />
-            </Form.Item>
-            <Form.Item
-              label="应用类型"
-              name={['dify-service-api', 'app-type']}
-              initialValue={'chat'}
-              rules={[{ required: true }]}
-            >
-              <Select
-                options={[
-                  { label: '聊天（包括Chatflow）', value: 'chat' },
-                  { label: 'Agent', value: 'agent' },
-                  { label: '工作流', value: 'workflow' },
-                ]}
-              />
-            </Form.Item>
-            <Form.Item
-              label="API 密钥"
-              name={['dify-service-api', 'api-key']}
-              rules={[{ required: true }]}
-            >
-              <Input.Password visibilityToggle={false} />
-            </Form.Item>
-            <Form.Item
-              label="思维链转换"
-              name={['dify-service-api', 'thinking-convert']}
-              rules={[{ required: true }]}
-            >
-              <Select
-                options={[
-                  { label: '转换成 \<think\>...\<\/think\>', value: 'plain' },
-                  { label: '原始', value: 'original' },
-                  { label: '移除', value: 'remove' },
-                ]}
-              />
-            </Form.Item>
-          </>
-        )}
-        {/* 阿里云百炼区块 */}
-        {nowAIRunner === 'dashscope-app-api' && (
-          <>
-            <div className={`${styles.formItemSubtitle}`}>
-              配置阿里云百炼平台 API
+                {formLabel.name === 'basic' && (
+                  <div className="space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="basic.name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>名称<span className="text-red-500">*</span></FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="basic.description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>描述<span className="text-red-500">*</span></FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+
+                {isEditMode && (
+                  <>
+                    {formLabel.name === 'ai' && aiConfigTabSchema && (
+                      <div className="space-y-6">
+                        {aiConfigTabSchema.stages.map((stage) => renderDynamicForms(stage, 'ai'))}
+                      </div>
+                    )}
+
+                    {formLabel.name === 'trigger' && triggerConfigTabSchema && (
+                      <div className="space-y-6">
+                        {triggerConfigTabSchema.stages.map((stage) => renderDynamicForms(stage, 'trigger'))}
+                      </div>
+                    )}
+
+                    {formLabel.name === 'safety' && safetyConfigTabSchema && (
+                      <div className="space-y-6">
+                        {safetyConfigTabSchema.stages.map((stage) => renderDynamicForms(stage, 'safety'))}
+                      </div>
+                    )}
+
+                    {formLabel.name === 'output' && outputConfigTabSchema && (
+                      <div className="space-y-6">
+                        {outputConfigTabSchema.stages.map((stage) => renderDynamicForms(stage, 'output'))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </TabsContent>
+            ))}
+          </Tabs>
+
+          <div className="sticky bottom-0 left-0 right-0 bg-background border-t p-4 mt-4">
+            <div className="flex justify-end gap-2">
+              <Button type="submit">
+                {isEditMode ? '保存' : '提交'}
+              </Button>
+              <Button type="button" variant="outline" onClick={onFinish}>
+                取消
+              </Button>
             </div>
-            <Form.Item
-              label="应用类型"
-              name={['dashscope-app-api', 'app-type']}
-              rules={[{ required: true }]}
-            >
-              <Select
-                options={[
-                  { label: 'Agent', value: 'agent' },
-                  { label: '工作流', value: 'workflow' },
-                ]}
-              />
-            </Form.Item>
-            <Form.Item
-              label="API 密钥"
-              name={['dashscope-app-api', 'api-key']}
-              rules={[{ required: true }]}
-            >
-              <Input.Password visibilityToggle={false} />
-            </Form.Item>
-            <Form.Item
-              label="应用 ID"
-              name={['dashscope-app-api', 'app-id']}
-              rules={[{ required: true }]}
-            >
-              <Input />
-            </Form.Item>
-            <Form.Item
-              label="引用文本"
-              name={['dashscope-app-api', 'references_quote']}
-              initialValue={'参考资料来自:'}
-            >
-              <Input.TextArea rows={2} />
-            </Form.Item>
-          </>
-        )}
+          </div>
+        </form>
       </Form>
-
-      {/*  触发条件表单 trigger */}
-      <Form
-        layout={'vertical'}
-        style={{
-          display: getNowFormLabel().name === 'trigger' ? 'block' : 'none',
-        }}
-        form={triggerForm}
-        disabled={disableForm}
-      >
-        {/* 群响应规则块 */}
-        <div className={`${styles.formItemSubtitle}`}> 群响应规则</div>
-        <Form.Item
-          label={'是否在消息@机器人时触发'}
-          name={['group-respond-rules', 'at']}
-          rules={[{ required: true }]}
-        >
-          <Switch />
-        </Form.Item>
-        <Form.Item
-          label={'消息前缀'}
-          name={['group-respond-rules', 'prefix']}
-          rules={[{ required: true }]}
-        >
-          <Select
-            options={[{ value: '"type": "string"', label: '"type": "string"' }]}
-          />
-        </Form.Item>
-        <Form.Item
-          label={'正则表达式'}
-          name={['group-respond-rules', 'regexp']}
-          rules={[{ required: true }]}
-        >
-          <Select mode="tags" options={[]} />
-        </Form.Item>
-        <Form.Item
-          label={'随机'}
-          name={['group-respond-rules', 'random']}
-          rules={[{ required: false }]}
-        >
-          <InputNumber max={1} min={0} step={0.05} />
-        </Form.Item>
-        <div className={`${styles.formItemSubtitle}`}> 访问控制 </div>
-        <Form.Item
-          label={'模式'}
-          name={['access-control', 'mode']}
-          rules={[{ required: true }]}
-          tooltip={'访问控制模式'}
-        >
-          <Select
-            options={[
-              { label: '黑名单', value: 'blacklist' },
-              { label: '白名单', value: 'Whitelist' },
-            ]}
-          />
-        </Form.Item>
-
-        <Form.Item
-          label={'黑名单'}
-          name={['access-control', 'blacklist']}
-          rules={[{ required: true }]}
-        >
-          <Select mode={'tags'} options={[]} />
-        </Form.Item>
-
-        <Form.Item
-          label={'白名单'}
-          name={['access-control', 'whitelist']}
-          rules={[{ required: true }]}
-        >
-          <Select mode={'tags'} options={[]} />
-        </Form.Item>
-
-        <div className={`${styles.formItemSubtitle}`}> 消息忽略规则 </div>
-
-        <Form.Item
-          label={'前缀'}
-          name={['ignore-rules', 'whitelist']}
-          rules={[{ required: true }]}
-          tooltip={'消息前缀'}
-        >
-          <Select mode={'tags'} options={[]} />
-        </Form.Item>
-
-        <Form.Item
-          label={'正则表达式'}
-          name={['ignore-rules', 'regexp']}
-          rules={[{ required: true }]}
-          tooltip={'消息正则表达式'}
-        >
-          <Select mode={'tags'} options={[]} />
-        </Form.Item>
-      </Form>
-
-      {/*  安全控制表单 safety  */}
-      <Form
-        layout={'vertical'}
-        style={{
-          display: getNowFormLabel().name === 'safety' ? 'block' : 'none',
-        }}
-        form={safetyForm}
-        disabled={disableForm}
-      >
-        {/* 内容过滤块 content-filter */}
-        <div className={`${styles.formItemSubtitle}`}> 内容过滤 </div>
-        <Form.Item
-          label={'检查范围'}
-          name={['content-filter', 'scope']}
-          rules={[{ required: true }]}
-        >
-          <Select
-            options={[
-              { label: '全部', value: 'all' },
-              { label: '传入消息（用户消息）', value: 'income-msg' },
-              { label: '传出消息（机器人消息）', value: 'output-msg' },
-            ]}
-          />
-        </Form.Item>
-
-        <Form.Item
-          label={'检查敏感词'}
-          name={['content-filter', 'check-sensitive-words']}
-          rules={[{ required: true }]}
-        >
-          <Switch />
-        </Form.Item>
-
-        {/* 速率限制块 rate-limit */}
-        <div className={`${styles.formItemSubtitle}`}> 速率限制 </div>
-        <Form.Item
-          label={'窗口长度（秒）'}
-          name={['rate-limit', 'window-length']}
-          rules={[{ required: true }]}
-          initialValue={60}
-        >
-          <InputNumber></InputNumber>
-        </Form.Item>
-        <Form.Item
-          label={'限制次数'}
-          name={['rate-limit', 'limitation']}
-          rules={[{ required: true }]}
-          initialValue={60}
-        >
-          <InputNumber />
-        </Form.Item>
-        <Form.Item
-          label={'策略'}
-          name={['rate-limit', 'strategy']}
-          rules={[{ required: true }]}
-          initialValue={'drop'}
-        >
-          <Select
-            options={[
-              { label: '丢弃', value: 'drop' },
-              { label: '等待', value: 'wait' },
-            ]}
-          />
-        </Form.Item>
-      </Form>
-
-      {/*  输出处理控制表单 output  */}
-      <Form
-        layout={'vertical'}
-        style={{
-          display: getNowFormLabel().name === 'output' ? 'block' : 'none',
-        }}
-        form={outputForm}
-        disabled={disableForm}
-      >
-        {/* 长文本处理区块 */}
-        <div className={`${styles.formItemSubtitle}`}> 长文本处理 </div>
-        <Form.Item
-          label="阈值"
-          name={['long-text-processing', 'threshold']}
-          rules={[{ required: true }]}
-        >
-          <InputNumber />
-        </Form.Item>
-        <Form.Item
-          label="策略"
-          name={['long-text-processing', 'strategy']}
-          rules={[{ required: true }]}
-        >
-          <Select
-            options={[
-              { label: '转发消息组件', value: 'forward' },
-              { label: '转换为图片', value: 'image' },
-            ]}
-          />
-        </Form.Item>
-        <Form.Item
-          label="字体路径"
-          name={['long-text-processing', 'font-path']}
-          rules={[{ required: true }]}
-        >
-          <Input />
-        </Form.Item>
-
-        {/* 强制延迟区块 */}
-        <div className={`${styles.formItemSubtitle}`}> 强制延迟 </div>
-        <Form.Item
-          label="最小秒数"
-          name={['force-delay', 'min']}
-          rules={[{ required: true }]}
-        >
-          <InputNumber />
-        </Form.Item>
-        <Form.Item
-          label="最大秒数"
-          name={['force-delay', 'max']}
-          rules={[{ required: true }]}
-        >
-          <InputNumber />
-        </Form.Item>
-
-        {/* 杂项区块 */}
-        <div className={`${styles.formItemSubtitle}`}> 杂项 </div>
-        <Form.Item
-          label="不输出异常信息给用户"
-          name={['misc', 'hide-exception']}
-          rules={[{ required: true }]}
-          valuePropName="checked"
-        >
-          <Switch />
-        </Form.Item>
-        <Form.Item
-          label="在回复中@发送者"
-          name={['misc', 'at-sender']}
-          rules={[{ required: true }]}
-          valuePropName="checked"
-        >
-          <Switch />
-        </Form.Item>
-        <Form.Item
-          label="引用原文"
-          name={['misc', 'quote-origin']}
-          rules={[{ required: true }]}
-          valuePropName="checked"
-        >
-          <Switch />
-        </Form.Item>
-        <Form.Item
-          label="跟踪函数调用"
-          name={['misc', 'track-function-calls']}
-          rules={[{ required: true }]}
-          valuePropName="checked"
-        >
-          <Switch />
-        </Form.Item>
-      </Form>
-
-      <div className={`${styles.changeFormButtonGroupContainer}`}>
-        <Button
-          type="primary"
-          icon={<CaretLeftOutlined />}
-          onClick={reduceFormLabelIndex}
-          disabled={!getPreFormLabel()}
-        >
-          {getPreFormLabel()?.label || '暂无更多'}
-        </Button>
-        <Button
-          type="primary"
-          icon={<CaretRightOutlined />}
-          onClick={addFormLabelIndex}
-          disabled={!getNextFormLabel()}
-          iconPosition={'end'}
-        >
-          {getNextFormLabel()?.label || '暂无更多'}
-        </Button>
-
-        <Button type="primary" onClick={handleCommit}>
-          提交
-        </Button>
-      </div>
     </div>
   );
 }

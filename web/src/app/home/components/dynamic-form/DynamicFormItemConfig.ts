@@ -1,23 +1,17 @@
-export interface IDynamicFormItemConfig {
-  id: string;
-  default: string | number | boolean | Array<unknown>;
-  label: IDynamicFormItemLabel;
-  name: string;
-  required: boolean;
-  type: DynamicFormItemType;
-  description?: IDynamicFormItemLabel;
-}
+import { IDynamicFormItemSchema, DynamicFormItemType, IDynamicFormItemOption } from '@/app/infra/entities/form/dynamic';
+import { I18nLabel } from '@/app/infra/entities/common';
 
-export class DynamicFormItemConfig implements IDynamicFormItemConfig {
+export class DynamicFormItemConfig implements IDynamicFormItemSchema {
   id: string;
   name: string;
   default: string | number | boolean | Array<unknown>;
-  label: IDynamicFormItemLabel;
+  label: I18nLabel;
   required: boolean;
   type: DynamicFormItemType;
-  description?: IDynamicFormItemLabel;
+  description?: I18nLabel;
+  options?: IDynamicFormItemOption[];
 
-  constructor(params: IDynamicFormItemConfig) {
+  constructor(params: IDynamicFormItemSchema) {
     this.id = params.id;
     this.name = params.name;
     this.default = params.default;
@@ -25,23 +19,10 @@ export class DynamicFormItemConfig implements IDynamicFormItemConfig {
     this.required = params.required;
     this.type = params.type;
     this.description = params.description;
+    this.options = params.options;
   }
 }
 
-export interface IDynamicFormItemLabel {
-  en_US: string;
-  zh_CN: string;
-}
-
-export enum DynamicFormItemType {
-  INT = 'integer',
-  FLOAT = 'float',
-  BOOLEAN = 'boolean',
-  STRING = 'string',
-  STRING_ARRAY = 'array[string]',
-  SELECT = 'select',
-  UNKNOWN = 'unknown',
-}
 
 export function isDynamicFormItemType(
   value: string,
@@ -55,7 +36,7 @@ export function parseDynamicFormItemType(value: string): DynamicFormItemType {
   return isDynamicFormItemType(value) ? value : DynamicFormItemType.UNKNOWN;
 }
 
-export function getDefaultValues(itemConfigList: IDynamicFormItemConfig[]): Record<string, any> {
+export function getDefaultValues(itemConfigList: IDynamicFormItemSchema[]): Record<string, any> {
   return itemConfigList.reduce((acc, item) => {
     acc[item.name] = item.default;
     return acc;

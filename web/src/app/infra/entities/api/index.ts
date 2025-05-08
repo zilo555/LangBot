@@ -1,3 +1,7 @@
+import { IDynamicFormItemSchema } from '@/app/infra/entities/form/dynamic';
+import { I18nLabel } from '@/app/infra/entities/common';
+import { PipelineConfigTab } from '@/app/infra/entities/pipeline';
+
 export interface ApiResponse<T> {
   code: number;
   data: T;
@@ -26,7 +30,9 @@ export interface Requester {
   label: I18nText;
   description: I18nText;
   icon?: string;
-  spec: object;
+  spec: {
+    config: IDynamicFormItemSchema[];
+  }
 }
 
 export interface ApiRespProviderLLMModels {
@@ -58,15 +64,15 @@ export interface ApiRespPipelines {
 }
 
 export interface Pipeline {
-  uuid: string;
+  uuid?: string;
   name: string;
   description: string;
-  for_version: string;
+  for_version?: string;
   config: object;
-  stages: string[];
-  is_default: boolean;
-  created_at: string;
-  updated_at: string;
+  stages?: string[];
+  is_default?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ApiRespPlatformAdapters {
@@ -301,4 +307,8 @@ interface GetPipeline {
 
 export interface GetPipelineResponseData {
   pipeline: GetPipeline;
+}
+
+export interface GetPipelineMetadataResponseData {
+  configs: PipelineConfigTab[];
 }

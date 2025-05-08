@@ -9,7 +9,7 @@ import BotForm from '@/app/home/bots/components/bot-form/BotForm';
 import BotCard from '@/app/home/bots/components/bot-card/BotCard';
 import CreateCardComponent from '@/app/infra/basic-component/create-card-component/CreateCardComponent';
 import { httpClient } from '@/app/infra/http/HttpClient';
-import { Bot, Adapter } from '@/app/infra/api/api-types';
+import { Bot, Adapter } from '@/app/infra/entities/api';
 import {
   Dialog,
   DialogContent,
@@ -20,27 +20,14 @@ import {
 } from "@/components/ui/dialog"
 
 export default function BotConfigPage() {
-  const router = useRouter();
-  const [pageShowRule, setPageShowRule] = useState<BotConfigPageShowRule>(
-    BotConfigPageShowRule.NO_BOT,
-  );
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [botList, setBotList] = useState<BotCardVO[]>([]);
   const [isEditForm, setIsEditForm] = useState(false);
   const [nowSelectedBotCard, setNowSelectedBotCard] = useState<BotCardVO>();
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     // TODO：补齐加载转圈逻辑
-    setIsLoading(true);
-    checkHasLLM().then((hasLLM) => {
-      if (hasLLM) {
-        getBotList();
-      } else {
-        setPageShowRule(BotConfigPageShowRule.NO_LLM);
-        setIsLoading(false);
-      }
-    });
+
   }, []);
 
   async function checkHasLLM(): Promise<boolean> {
@@ -49,7 +36,6 @@ export default function BotConfigPage() {
   }
 
   async function getBotList() {
-    setIsLoading(true);
 
     const adapterListResp = await httpClient.getAdapters();
     const adapterList = adapterListResp.adapters.map((adapter: Adapter) => {
@@ -72,11 +58,6 @@ export default function BotConfigPage() {
             usePipelineName: bot.use_pipeline_name || '',
           });
         });
-        if (botList.length === 0) {
-          setPageShowRule(BotConfigPageShowRule.NO_BOT);
-        } else {
-          setPageShowRule(BotConfigPageShowRule.HAVE_BOT);
-        }
         setBotList(botList);
       })
       .catch((err) => {
@@ -89,7 +70,7 @@ export default function BotConfigPage() {
         // });
       })
       .finally(() => {
-        setIsLoading(false);
+        // setIsLoading(false);
       });
   }
 
@@ -112,46 +93,6 @@ export default function BotConfigPage() {
 
   return (
     <div className={styles.configPageContainer}>
-      {/* <Spin spinning={isLoading} tip="加载中..." size="large">
-        <Modal
-          title={isEditForm ? '编辑机器人' : '创建机器人'}
-          centered
-          open={modalOpen}
-          onOk={() => setModalOpen(false)}
-          onCancel={() => setModalOpen(false)}
-          width={700}
-          footer={null}
-          destroyOnClose={true}
-        >
-          <BotForm
-            initBotId={nowSelectedBotCard?.id}
-            onFormSubmit={() => {
-              getBotList();
-              setModalOpen(false);
-            }}
-            onFormCancel={() => setModalOpen(false)}
-          />
-        </Modal>
-        {pageShowRule === BotConfigPageShowRule.NO_LLM && (
-          <EmptyAndCreateComponent
-            title={'需要先创建大模型才能配置机器人哦～'}
-            subTitle={'快去创建一个吧！'}
-            buttonText={'创建大模型 GO！'}
-            onButtonClick={() => {
-              router.push('/home/models');
-            }}
-          />
-        )}
-
-        {pageShowRule === BotConfigPageShowRule.NO_BOT && (
-          <EmptyAndCreateComponent
-            title={'您还未配置机器人哦～'}
-            subTitle={'快去创建一个吧！'}
-            buttonText={'创建机器人 +'}
-            onButtonClick={handleCreateBotClick}
-          />
-        )}
-      </Spin> */}
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="w-[700px] max-h-[80vh] p-0 flex flex-col">
@@ -176,7 +117,6 @@ export default function BotConfigPage() {
       </Dialog>
 
       {/* 注意：其余的返回内容需要保持在Spin组件外部 */}
-      {pageShowRule === BotConfigPageShowRule.HAVE_BOT && (
         <div className={`${styles.botListContainer}`}>
 
           <CreateCardComponent
@@ -198,13 +138,6 @@ export default function BotConfigPage() {
             );
           })}
         </div>
-      )}
     </div>
   );
-}
-
-enum BotConfigPageShowRule {
-  NO_LLM,
-  NO_BOT,
-  HAVE_BOT,
 }

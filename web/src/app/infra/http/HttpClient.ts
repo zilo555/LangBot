@@ -28,7 +28,8 @@ import {
   ApiRespUserToken,
   MarketPluginResponse,
   GetPipelineResponseData,
-} from '../api/api-types';
+  GetPipelineMetadataResponseData
+} from '@/app/infra/entities/api';
 import { notification } from 'antd';
 
 type JSONValue = string | number | boolean | JSONObject | JSONArray | null;
@@ -249,7 +250,7 @@ class HttpClient {
   }
 
   // ============ Pipeline API ============
-  public getGeneralPipelineMetadata(): Promise<object> {
+  public getGeneralPipelineMetadata(): Promise<GetPipelineMetadataResponseData> {
     // as designed, this method will be deprecated, and only for developer to check the prefered config schema
     return this.get('/api/v1/pipelines/_/metadata');
   }

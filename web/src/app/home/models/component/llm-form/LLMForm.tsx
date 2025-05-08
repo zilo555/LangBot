@@ -1,9 +1,8 @@
-import { SelectProps } from 'antd';
 import { ICreateLLMField } from '@/app/home/models/ICreateLLMField';
 import { useEffect, useState } from 'react';
 import { IChooseRequesterEntity } from '@/app/home/models/component/llm-form/ChooseRequesterEntity';
 import { httpClient } from '@/app/infra/http/HttpClient';
-import { LLMModel } from '@/app/infra/api/api-types';
+import { LLMModel } from '@/app/infra/entities/api';
 import { UUID } from 'uuidjs';
 
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -91,7 +90,7 @@ export default function LLMForm({
   const [extraArgs, setExtraArgs] = useState<{key: string, type: 'string' | 'number' | 'boolean', value: string}[]>([]);
 
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
-  const abilityOptions: SelectProps['options'] = [
+  const abilityOptions: { label: string, value: string }[] = [
     {
       label: '视觉能力',
       value: 'vision',
@@ -178,7 +177,7 @@ export default function LLMForm({
         const config = item.spec.config;
         for (let i = 0; i < config.length; i++) {
           if (config[i].name == 'base_url') {
-            return config[i].default;
+            return config[i].default?.toString() || '';
           }
         }
         return '';
