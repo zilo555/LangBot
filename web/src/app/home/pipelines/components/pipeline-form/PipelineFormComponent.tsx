@@ -209,6 +209,40 @@ export default function PipelineFormComponent({
   }
 
   function renderDynamicForms(stage: PipelineConfigStage, formName: keyof FormValues) {
+    // 如果是 AI 配置，需要特殊处理
+    if (formName === 'ai') {
+      // 获取当前选择的 runner
+      const currentRunner = form.watch('ai.runner.runner');
+      
+      // 如果是 runner 配置项，直接渲染
+      if (stage.name === 'runner') {
+        return (
+          <div key={stage.name} className="space-y-4 mb-6">
+            <div className="text-lg font-medium">{stage.label.zh_CN}</div>
+            {stage.description && (
+              <div className="text-sm text-gray-500">{stage.description.zh_CN}</div>
+            )}
+            <DynamicFormComponent
+              itemConfigList={stage.config}
+              initialValues={(form.watch(formName) as Record<string, any>)?.[stage.name] || {}}
+              onSubmit={(values) => {
+                const currentValues = form.getValues(formName) as Record<string, any> || {};
+                form.setValue(formName, {
+                  ...currentValues,
+                  [stage.name]: values,
+                });
+              }}
+            />
+          </div>
+        );
+      }
+      
+      // 如果不是当前选择的 runner 对应的配置项，则不渲染
+      if (stage.name !== currentRunner) {
+        return null;
+      }
+    }
+
     return (
       <div key={stage.name} className="space-y-4 mb-6">
         <div className="text-lg font-medium">{stage.label.zh_CN}</div>

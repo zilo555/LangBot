@@ -8,7 +8,7 @@ import LLMCard from '@/app/home/models/component/llm-card/LLMCard';
 import LLMForm from '@/app/home/models/component/llm-form/LLMForm';
 import CreateCardComponent from '@/app/infra/basic-component/create-card-component/CreateCardComponent';
 import { httpClient } from '@/app/infra/http/HttpClient';
-import { LLMModel } from '@/app/infra/api/api-types';
+import { LLMModel } from '@/app/infra/entities/api';
 import {
   Dialog,
   DialogContent,
