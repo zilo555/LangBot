@@ -90,6 +90,13 @@ export default function PluginConfigPage() {
           </DialogHeader>
           <div className="flex-1 overflow-y-auto px-6">
             <PipelineFormComponent
+              onNewPipelineCreated={(pipelineId) => {
+                setDisableForm(true);
+                setIsEditForm(true);
+                setModalOpen(true);
+                setSelectedPipelineId(pipelineId);
+                getSelectedPipelineForm(pipelineId);
+              }}
               onFinish={() => {
                 getPipelines();
                 setModalOpen(false);

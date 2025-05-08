@@ -23,6 +23,7 @@ import {
 export default function PipelineFormComponent({
   initValues,
   onFinish,
+  onNewPipelineCreated,
   isEditMode,
   pipelineId,
   disableForm,
@@ -33,6 +34,7 @@ export default function PipelineFormComponent({
   // 这里的写法很不安全不规范，未来流水线需要重新整理
   initValues?: PipelineFormEntity;
   onFinish: () => void;
+  onNewPipelineCreated: (pipelineId: string) => void;
 }) {
 
   const formSchema = isEditMode ? z.object({
@@ -136,7 +138,10 @@ export default function PipelineFormComponent({
       description: values.basic.description,
       name: values.basic.name,
     };
-    httpClient.createPipeline(pipeline).then(() => onFinish());
+    httpClient.createPipeline(pipeline).then((resp) => {
+      onFinish();
+      onNewPipelineCreated(resp.uuid);
+    });
   }
 
   function handleModify(values: FormValues) {
