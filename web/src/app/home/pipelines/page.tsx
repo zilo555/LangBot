@@ -5,7 +5,7 @@ import PipelineFormComponent from './components/pipeline-form/PipelineFormCompon
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { PipelineCardVO } from '@/app/home/pipelines/components/pipeline-card/PipelineCardVO';
 import PipelineCard from '@/app/home/pipelines/components/pipeline-card/PipelineCard';
-import { PipelineFormEntity } from '@/app/home/pipelines/components/pipeline-form/PipelineFormEntity';
+import { PipelineFormEntity } from '@/app/infra/entities/pipeline';
 import styles from './pipelineConfig.module.css';
 import {
   Dialog,
@@ -80,28 +80,7 @@ export default function PluginConfigPage() {
 
   return (
     <div className={styles.configPageContainer}>
-      
-      {/* <Modal
-        title={isEditForm ? '编辑流水线' : '创建流水线'}
-        centered
-        open={modalOpen}
-        destroyOnClose={true}
-        onOk={() => setModalOpen(false)}
-        onCancel={() => setModalOpen(false)}
-        width={700}
-        footer={null}
-      >
-        <PipelineFormComponent
-          onFinish={() => {
-            getPipelines();
-            setModalOpen(false);
-          }}
-          isEditMode={isEditForm}
-          pipelineId={selectedPipelineId}
-          disableForm={disableForm}
-          initValues={selectedPipelineFormValue}
-        />
-      </Modal> */}
+
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent>
           <DialogHeader>
