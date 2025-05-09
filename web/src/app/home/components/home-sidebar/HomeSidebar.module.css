@@ -2,14 +2,14 @@
     box-sizing: border-box;
     width: 200px;
     height: 100vh;
-    background-color: #ffffff;
+    background-color: #eee;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     justify-content: space-between;
     padding-block: 1rem;
     user-select: none;
-    box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1);
+    /* box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.1); */
 }
 
 .langbotIconContainer {
@@ -64,7 +64,6 @@
     margin: 0.8rem 0;
     padding-left: 2rem;
     font-size: 1rem;
-    background-color: #fff;
     border-radius: 12px;
     display: flex;
     flex-direction: row;
@@ -81,7 +80,6 @@
 }
 
 .sidebarUnselected {
-    background-color: white;
     color: #6C6C6C;
 }
 
@@ -94,7 +92,6 @@
 .sidebarBottomContainer {
     width: 100%;
     height: 100px;
-    background-color: #ffffff;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -104,7 +101,6 @@
 .sidebarBottomChildContainer {
     width: 100%;
     height: 50px;
-    background-color: aqua;
     display: flex;
     flex-direction: row;
 }
