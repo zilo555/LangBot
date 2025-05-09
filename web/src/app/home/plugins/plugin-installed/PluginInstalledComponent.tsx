@@ -5,9 +5,17 @@ import CreateCardComponent from '@/app/infra/basic-component/create-card-compone
 import { PluginCardVO } from '@/app/home/plugins/plugin-installed/PluginCardVO';
 import PluginCardComponent from '@/app/home/plugins/plugin-installed/plugin-card/PluginCardComponent';
 import styles from '@/app/home/plugins/plugins.module.css';
-import { Modal, Input } from 'antd';
-import { GithubOutlined } from '@ant-design/icons';
+import { GithubIcon } from 'lucide-react';
 import { httpClient } from '@/app/infra/http/HttpClient';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export default function PluginInstalledComponent() {
   const [pluginList, setPluginList] = useState<PluginCardVO[]>([]);
@@ -56,33 +64,33 @@ export default function PluginInstalledComponent() {
         console.log('error when install plugin:', err);
       });
   }
+  
   return (
     <div className={`${styles.pluginListContainer}`}>
-      <Modal
-        title={
-          <div className={`${styles.modalTitle}`}>
-            <GithubOutlined
-              style={{
-                fontSize: '30px',
-                marginRight: '20px',
-              }}
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="w-[500px] p-6">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-4">
+              <GithubIcon className="size-6" />
+              <span>从GitHub安装插件</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            <p className="mb-2">目前仅支持从 GitHub 安装</p>
+            <Input
+              placeholder="请输入插件的Github链接"
+              value={githubURL}
+              onChange={(e) => setGithubURL(e.target.value)}
+              className="mb-4"
             />
           </div>
-        }
-        open={modalOpen}
-        onOk={handleModalConfirm}
-        onCancel={() => setModalOpen(false)}
-        destroyOnClose={true}
-      >
-        <div className={`${styles.modalBody}`}>
-          <div>目前仅支持从 GitHub 安装</div>
-          <Input
-            placeholder="请输入插件的Github链接"
-            value={githubURL}
-            onChange={(e) => setGithubURL(e.target.value)}
-          />
-        </div>
-      </Modal>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setModalOpen(false)}>取消</Button>
+            <Button onClick={handleModalConfirm}>确认</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
       {pluginList.map((vo, index) => {
         return (
           <div key={index}>
@@ -90,6 +98,7 @@ export default function PluginInstalledComponent() {
           </div>
         );
       })}
+      
       <CreateCardComponent
         height={'140px'}
         plusSize={'90px'}
