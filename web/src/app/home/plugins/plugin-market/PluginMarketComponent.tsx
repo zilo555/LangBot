@@ -4,8 +4,18 @@ import { useEffect, useState } from 'react';
 import styles from '@/app/home/plugins/plugins.module.css';
 import { PluginMarketCardVO } from '@/app/home/plugins/plugin-market/plugin-market-card/PluginMarketCardVO';
 import PluginMarketCardComponent from '@/app/home/plugins/plugin-market/plugin-market-card/PluginMarketCardComponent';
-import { Input, Pagination } from 'antd';
 import { spaceClient } from '@/app/infra/http/HttpClient';
+import { Input } from '@/components/ui/input';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function PluginMarketComponent({
   askInstallPlugin,
@@ -19,6 +29,8 @@ export default function PluginMarketComponent({
   const [nowPage, setNowPage] = useState(1);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sortByValue, setSortByValue] = useState<string>('stars');
+  const [sortOrderValue, setSortOrderValue] = useState<string>('DESC');
   const pageSize = 10;
 
   useEffect(() => {
@@ -40,10 +52,12 @@ export default function PluginMarketComponent({
   function getPluginList(
     page: number = nowPage,
     keyword: string = searchKeyword,
+    sortBy: string = sortByValue,
+    sortOrder: string = sortOrderValue,
   ) {
     setLoading(true);
     spaceClient
-      .getMarketPlugins(page, pageSize, keyword)
+      .getMarketPlugins(page, pageSize, keyword, sortBy, sortOrder)
       .then((res) => {
         setMarketPluginList(
           res.plugins.map(
@@ -89,23 +103,97 @@ export default function PluginMarketComponent({
     getPluginList(page);
   }
 
+  function handleSortChange(value: string) {
+    const [newSortBy, newSortOrder] = value.split(',').map(s => s.trim());
+    setSortByValue(newSortBy);
+    setSortOrderValue(newSortOrder);
+    setNowPage(1);
+    getPluginList(1, searchKeyword, newSortBy, newSortOrder);
+  }
+
   return (
     <div className={`${styles.marketComponentBody}`}>
-      <Input
-        style={{
-          width: '300px',
-          marginBottom: '10px',
-        }}
-        value={searchKeyword}
-        placeholder="搜索插件"
-        onChange={(e) => onInputSearchKeyword(e.target.value)}
-      />
+      <div className="flex items-center justify-start mb-2 mt-2">
+        <Input
+          style={{
+            width: '300px',
+          }}
+          value={searchKeyword}
+          placeholder="搜索插件"
+          onChange={(e) => onInputSearchKeyword(e.target.value)}
+        />
+
+        <Select value={`${sortByValue},${sortOrderValue}`} onValueChange={handleSortChange}>
+          <SelectTrigger className="w-[180px] ml-2">
+            <SelectValue placeholder="排序方式" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="stars,DESC">最多星标</SelectItem>
+            <SelectItem value="created_at,DESC">最近新增</SelectItem>
+            <SelectItem value="pushed_at,DESC">最近更新</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <div className="flex items-center justify-end ml-2">
+          {totalCount > 0 && (
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => handlePageChange(nowPage - 1)}
+                    className={nowPage <= 1 ? 'pointer-events-none opacity-50' : ''}
+                  />
+                </PaginationItem>
+
+                {/* 如果总页数大于5，则只显示5页，如果总页数小于5，则显示所有页 */}
+                {(() => {
+                  const totalPages = Math.ceil(totalCount / pageSize);
+                  const maxVisiblePages = 5;
+                  let startPage = Math.max(1, nowPage - Math.floor(maxVisiblePages / 2));
+                  let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+                  if (endPage - startPage + 1 < maxVisiblePages) {
+                    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                  }
+
+                  return Array.from({ length: endPage - startPage + 1 }, (_, i) => {
+                    const pageNum = startPage + i;
+                    return (
+                      <PaginationItem key={pageNum}>
+                        <PaginationLink
+                          isActive={pageNum === nowPage}
+                          onClick={() => handlePageChange(pageNum)}
+                        >
+                          <span className="text-black select-none">
+                            {pageNum}
+                          </span>
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  });
+                })()}
+
+
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => handlePageChange(nowPage + 1)}
+                    className={nowPage >= Math.ceil(totalCount / pageSize) ? 'pointer-events-none opacity-50' : ''}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          )}
+        </div>
+      </div>
+
       <div className={`${styles.pluginListContainer}`}>
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '20px' }}>加载中...</div>
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            {/* 加载中... */}
+          </div>
         ) : marketPluginList.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '20px' }}>
-            没有找到匹配的插件
+            {/* 没有找到匹配的插件 */}
           </div>
         ) : (
           marketPluginList.map((vo, index) => (
@@ -117,24 +205,6 @@ export default function PluginMarketComponent({
           ))
         )}
       </div>
-      {totalCount > 0 && (
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            width: '100%',
-            marginTop: '20px',
-          }}
-        >
-          <Pagination
-            current={nowPage}
-            total={totalCount}
-            pageSize={pageSize}
-            onChange={handlePageChange}
-            showSizeChanger={false}
-          />
-        </div>
-      )}
     </div>
   );
 }

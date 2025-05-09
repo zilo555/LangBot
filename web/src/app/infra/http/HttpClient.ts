@@ -360,13 +360,15 @@ class HttpClient {
     page: number,
     page_size: number,
     query: string,
+    sort_by: string = 'stars',
+    sort_order: string = 'DESC',
   ): Promise<MarketPluginResponse> {
     return this.post(`/api/v1/market/plugins`, {
       page,
       page_size,
       query,
-      sort_by: 'stars',
-      sort_order: 'DESC',
+      sort_by,
+      sort_order,
     });
   }
   public installPluginFromGithub(
