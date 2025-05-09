@@ -26,7 +26,7 @@ export default function PluginForm({
 }) {
   const [pluginInfo, setPluginInfo] = useState<Plugin>();
   const [pluginConfig, setPluginConfig] = useState<ApiRespPluginConfig>();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsLoading] = useState(false);
 
   useEffect(() => {
     // 获取插件信息
@@ -57,26 +57,42 @@ export default function PluginForm({
 
   return (
     <div>
-      <div className="space-y-4">
-        <div className="text-lg font-medium">插件配置</div>
-        <div className="text-sm text-gray-500">
+      <div className="space-y-2">
+        <div className="text-lg font-medium">{pluginInfo.name}</div>
+        <div className="text-sm text-gray-500 pb-2">
           {pluginInfo.description.zh_CN}
         </div>
-        <DynamicFormComponent
-          itemConfigList={pluginInfo.config_schema}
-          initialValues={pluginConfig.config}
-          onSubmit={handleSubmit}
-        />
+        {pluginInfo.config_schema.length > 0 && (
+          <DynamicFormComponent
+            itemConfigList={pluginInfo.config_schema}
+            initialValues={pluginConfig.config}
+          onSubmit={(values) => {
+            let config = pluginConfig.config;
+            config = {
+              ...config,
+              ...values,
+            };
+            setPluginConfig({
+                config: config,
+              });
+            }}
+          />
+        )}
+        {pluginInfo.config_schema.length === 0 && (
+          <div className="text-sm text-gray-500">
+            该插件没有配置项。
+          </div>
+        )}
       </div>
 
       <div className="sticky bottom-0 left-0 right-0 bg-background border-t p-4 mt-4">
         <div className="flex justify-end gap-2">
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             onClick={() => handleSubmit(pluginConfig.config)}
-            disabled={isLoading}
+            disabled={isSaving}
           >
-            {isLoading ? '保存中...' : '保存配置'}
+            {isSaving ? '保存中...' : '保存配置'}
           </Button>
           <Button type="button" variant="outline" onClick={onFormCancel}>
             取消
