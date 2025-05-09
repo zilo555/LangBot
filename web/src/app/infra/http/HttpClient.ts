@@ -263,7 +263,9 @@ class HttpClient {
     return this.get(`/api/v1/pipelines/${uuid}`);
   }
 
-  public createPipeline(pipeline: Pipeline): Promise<object> {
+  public createPipeline(pipeline: Pipeline): Promise<{
+    uuid: string;
+  }> {
     return this.post('/api/v1/pipelines', pipeline);
   }
 

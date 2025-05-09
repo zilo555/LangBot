@@ -135,6 +135,7 @@ export default function PipelineFormComponent({
   function handleCreate(values: FormValues) {
     console.log('handleCreate', values);
     const pipeline: Pipeline = {
+      config: {},
       description: values.basic.description,
       name: values.basic.name,
     };
