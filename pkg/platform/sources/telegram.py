@@ -236,5 +236,6 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
         await self.application.start()
 
     async def kill(self) -> bool:
-        await self.application.stop()
+        if self.application.running:
+            await self.application.stop()
         return True
