@@ -129,7 +129,13 @@ class HttpClient {
 
           switch (status) {
             case 401:
-              window.location.href = '/login';
+              
+              console.log('401 error: ', errMessage, error.request);
+              console.log('responseURL', error.request.responseURL)
+              localStorage.removeItem('token');
+              if (!error.request.responseURL.includes('/check-token')) {
+                window.location.href = '/login';
+              }
               break;
             case 403:
               console.error('Permission denied:', errMessage);

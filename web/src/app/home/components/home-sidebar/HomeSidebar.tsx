@@ -8,7 +8,7 @@ import {
 } from '@/app/home/components/home-sidebar/HomeSidebarChild';
 import { useRouter, usePathname } from 'next/navigation';
 import { sidebarConfigList } from '@/app/home/components/home-sidebar/sidbarConfigList';
-import langbotIcon from '../../assets/langbot-logo.webp';
+import langbotIcon from '@/app/assets/langbot-logo.webp';
 import { Button } from '@/components/ui/button';
 
 // TODO 侧边导航栏要加动画

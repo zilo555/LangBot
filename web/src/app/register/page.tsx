@@ -14,6 +14,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { useEffect, useState } from 'react';
 import { httpClient } from '@/app/infra/http/HttpClient';
@@ -26,7 +27,7 @@ const formSchema = z.object({
   password: z.string().min(1, "请输入密码"),
 });
 
-export default function Login() {
+export default function Register() {
   const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -39,15 +40,14 @@ export default function Login() {
 
   useEffect(() => {
     getIsInitialized();
-    checkIfAlreadyLoggedIn();
   }, []);
 
   function getIsInitialized() {
     httpClient
       .checkIfInited()
       .then((res) => {
-        if (!res.initialized) {
-          router.push('/register');
+        if (res.initialized) {
+          router.push('/login');
         }
       })
       .catch((err) => {
@@ -55,32 +55,19 @@ export default function Login() {
       });
   }
 
-  function checkIfAlreadyLoggedIn() {
-    httpClient.checkUserToken()
-      .then((res) => {
-        if (res.token) {
-          localStorage.setItem('token', res.token);
-          router.push('/home');
-        }
-      })
-      .catch((err) => {
-        console.log('error at checkIfAlreadyLoggedIn: ', err);
-      });
-  }
   function onSubmit(values: z.infer<typeof formSchema>) {
-    handleLogin(values.email, values.password);
+    handleRegister(values.email, values.password);
   }
 
-  function handleLogin(username: string, password: string) {
+  function handleRegister(username: string, password: string) {
     httpClient
-      .authUser(username, password)
+      .initUser(username, password)
       .then((res) => {
-        localStorage.setItem('token', res.token);
-        console.log('login success: ', res);
-        router.push('/home');
+        console.log('init user success: ', res);
+        router.push('/login');
       })
       .catch((err) => {
-        console.log('login error: ', err);
+        console.log('init user error: ', err);
       });
   }
 
@@ -90,10 +77,12 @@ export default function Login() {
         <CardHeader>
           <img src={langbotIcon.src} alt="LangBot" className="w-16 h-16 mb-4 mx-auto" />
           <CardTitle className="text-2xl text-center">
-            欢迎回到 LangBot 👋
+            初始化 LangBot 👋
           </CardTitle>
           <CardDescription className="text-center">
-            登录以继续
+            这是您首次启动 LangBot
+            <br />
+            您填写的邮箱和密码将作为初始管理员账号
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -146,7 +135,7 @@ export default function Login() {
                 type="submit"
                 className="w-full mt-4 cursor-pointer"
               >
-                登录
+                注册
               </Button>
             </form>
           </Form>
