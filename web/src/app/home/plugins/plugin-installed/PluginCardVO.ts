@@ -1,26 +1,38 @@
 export interface IPluginCardVO {
   author: string;
-  version: string;
   name: string;
   description: string;
-  handlerCount: number;
-  isInitialized: boolean;
+  version: string;
+  enabled: boolean;
+  priority: number;
+  status: string;
+  tools: object[];
+  event_handlers: object;
+  repository: string;
 }
 
 export class PluginCardVO implements IPluginCardVO {
-  description: string;
-  handlerCount: number;
-  name: string;
   author: string;
+  name: string;
+  description: string;
   version: string;
-  isInitialized: boolean;
+  enabled: boolean;
+  priority: number;
+  status: string;
+  tools: object[];
+  event_handlers: object;
+  repository: string;
 
   constructor(prop: IPluginCardVO) {
-    this.description = prop.description;
-    this.handlerCount = prop.handlerCount;
-    this.name = prop.name;
     this.author = prop.author;
+    this.description = prop.description;
+    this.enabled = prop.enabled;
+    this.event_handlers = prop.event_handlers;
+    this.name = prop.name;
+    this.priority = prop.priority;
+    this.repository = prop.repository;
+    this.status = prop.status;
+    this.tools = prop.tools;
     this.version = prop.version;
-    this.isInitialized = prop.isInitialized;
   }
 }

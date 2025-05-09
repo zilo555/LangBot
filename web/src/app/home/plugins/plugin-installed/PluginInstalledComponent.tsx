@@ -40,10 +40,14 @@ const PluginInstalledComponent = forwardRef<PluginInstalledComponentRef>((props,
           return new PluginCardVO({
             author: plugin.author,
             description: plugin.description.zh_CN,
-            handlerCount: 0,
+            enabled: plugin.enabled,
             name: plugin.name,
             version: plugin.version,
-            isInitialized: plugin.status === 'initialized',
+            status: plugin.status,
+            tools: plugin.tools,
+            event_handlers: plugin.event_handlers,
+            repository: plugin.repository,
+            priority: plugin.priority,
           });
         }),
       );
