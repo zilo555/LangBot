@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import styles from '@/app/home/plugins/plugins.module.css';
 import { PluginMarketCardVO } from '@/app/home/plugins/plugin-market/plugin-market-card/PluginMarketCardVO';
 import PluginMarketCardComponent from '@/app/home/plugins/plugin-market/plugin-market-card/PluginMarketCardComponent';
@@ -31,6 +31,7 @@ export default function PluginMarketComponent({
   const [loading, setLoading] = useState(false);
   const [sortByValue, setSortByValue] = useState<string>('stars');
   const [sortOrderValue, setSortOrderValue] = useState<string>('DESC');
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const pageSize = 10;
 
   useEffect(() => {
@@ -43,10 +44,18 @@ export default function PluginMarketComponent({
   }
 
   function onInputSearchKeyword(keyword: string) {
-    // 这里记得加防抖，暂时没加
     setSearchKeyword(keyword);
-    setNowPage(1);
-    getPluginList(1, keyword);
+    
+    // 清除之前的定时器
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
+
+    // 设置新的定时器
+    searchTimeout.current = setTimeout(() => {
+      setNowPage(1);
+      getPluginList(1, keyword);
+    }, 500);
   }
 
   function getPluginList(

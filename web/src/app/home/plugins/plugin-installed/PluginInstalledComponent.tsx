@@ -4,6 +4,7 @@ import { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import CreateCardComponent from '@/app/infra/basic-component/create-card-component/CreateCardComponent';
 import { PluginCardVO } from '@/app/home/plugins/plugin-installed/PluginCardVO';
 import PluginCardComponent from '@/app/home/plugins/plugin-installed/plugin-card/PluginCardComponent';
+import PluginForm from '@/app/home/plugins/plugin-installed/plugin-form/PluginForm';
 import styles from '@/app/home/plugins/plugins.module.css';
 import { GithubIcon } from 'lucide-react';
 import { httpClient } from '@/app/infra/http/HttpClient';
@@ -23,6 +24,8 @@ export interface PluginInstalledComponentRef {
 
 const PluginInstalledComponent = forwardRef<PluginInstalledComponentRef>((props, ref) => {
   const [pluginList, setPluginList] = useState<PluginCardVO[]>([]);
+  const [modalOpen, setModalOpen] = useState<boolean>(false);
+  const [selectedPlugin, setSelectedPlugin] = useState<PluginCardVO | null>(null);
 
   useEffect(() => {
     initData();
@@ -57,13 +60,38 @@ const PluginInstalledComponent = forwardRef<PluginInstalledComponentRef>((props,
   useImperativeHandle(ref, () => ({
     refreshPluginList: getPluginList
   }));
+
+  function handlePluginClick(plugin: PluginCardVO) {
+    setSelectedPlugin(plugin);
+    setModalOpen(true);
+  }
   
   return (
     <div className={`${styles.pluginListContainer}`}>
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="w-[700px] p-6">
+          <DialogHeader>
+            <DialogTitle>插件配置</DialogTitle>
+          </DialogHeader>
+          {selectedPlugin && (
+            <PluginForm
+              pluginAuthor={selectedPlugin.author}
+              pluginName={selectedPlugin.name}
+              onFormSubmit={() => {
+                setModalOpen(false);
+                getPluginList();
+              }}
+              onFormCancel={() => {
+                setModalOpen(false);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
       
       {pluginList.map((vo, index) => {
         return (
-          <div key={index}>
+          <div key={index} onClick={() => handlePluginClick(vo)}>
             <PluginCardComponent cardVO={vo} />
           </div>
         );

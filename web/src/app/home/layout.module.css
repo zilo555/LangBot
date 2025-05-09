@@ -20,6 +20,7 @@
     border-radius: 1.5rem 0 0 1.5rem;
     margin-left: 0.6rem;
     margin-top: 0.6rem;
+    box-shadow: 0 0 6px 0 rgba(0, 0, 0, 0.05);
 }
 
 .mainContent {

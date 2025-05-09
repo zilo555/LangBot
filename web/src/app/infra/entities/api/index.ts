@@ -145,7 +145,7 @@ export interface Plugin {
   main_file: string;
   pkg_path: string;
   repository: string;
-  config_schema: object;
+  config_schema: IDynamicFormItemSchema[];
 }
 
 export interface ApiRespPluginConfig {

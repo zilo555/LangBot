@@ -183,13 +183,6 @@ export default function BotForm({
     setAdapterNameToDynamicConfigMap(adapterNameToDynamicConfigMap);
   }
 
-  async function onCreateMode() { }
-
-  function onEditMode() {
-    console.log('onEditMode', form.getValues());
-
-  }
-
   async function getBotConfig(botId: string): Promise<z.infer<typeof formSchema>> {
     const bot = (await httpClient.getBot(botId)).bot;
     return {
@@ -503,7 +496,7 @@ export default function BotForm({
                   </Button>
                 </>
               )}
-              <Button type="button" onClick={() => onFormCancel()}>
+              <Button type="button" variant="outline" onClick={() => onFormCancel()}>
                 取消
               </Button>
             </div>

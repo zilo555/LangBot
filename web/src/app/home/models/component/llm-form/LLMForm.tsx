@@ -467,7 +467,7 @@ export default function LLMForm({
                 删除
               </Button>
             )}
-            <Button type="button" onClick={() => onFormCancel()}>
+            <Button type="button" variant="outline" onClick={() => onFormCancel()}>
               取消
             </Button>
           </DialogFooter>
