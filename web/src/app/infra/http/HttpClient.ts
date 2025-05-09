@@ -24,11 +24,11 @@ import {
   AsyncTaskCreatedResp,
   ApiRespSystemInfo,
   ApiRespAsyncTasks,
-  ApiRespAsyncTask,
   ApiRespUserToken,
   MarketPluginResponse,
   GetPipelineResponseData,
-  GetPipelineMetadataResponseData
+  GetPipelineMetadataResponseData,
+  AsyncTask
 } from '@/app/infra/entities/api';
 import { notification } from 'antd';
 
@@ -391,7 +391,7 @@ class HttpClient {
     return this.get('/api/v1/system/tasks');
   }
 
-  public getAsyncTask(id: number): Promise<ApiRespAsyncTask> {
+  public getAsyncTask(id: number): Promise<AsyncTask> {
     return this.get(`/api/v1/system/tasks/${id}`);
   }
 

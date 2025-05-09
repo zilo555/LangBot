@@ -168,10 +168,6 @@ export interface ApiRespAsyncTasks {
   tasks: AsyncTask[];
 }
 
-export interface ApiRespAsyncTask {
-  task: AsyncTask;
-}
-
 export interface AsyncTaskRuntimeInfo {
   done: boolean;
   exception?: string;
