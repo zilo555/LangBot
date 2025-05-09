@@ -13,6 +13,12 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
+enum PluginRemoveStatus {
+  WAIT_INPUT = 'WAIT_INPUT',
+  REMOVING = 'REMOVING',
+  ERROR = 'ERROR',
+}
+
 export default function PluginForm({
   pluginAuthor,
   pluginName,
@@ -27,6 +33,10 @@ export default function PluginForm({
   const [pluginInfo, setPluginInfo] = useState<Plugin>();
   const [pluginConfig, setPluginConfig] = useState<ApiRespPluginConfig>();
   const [isSaving, setIsLoading] = useState(false);
+
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [pluginRemoveStatus, setPluginRemoveStatus] = useState<PluginRemoveStatus>(PluginRemoveStatus.WAIT_INPUT);
+  const [pluginRemoveError, setPluginRemoveError] = useState<string | null>(null);
 
   useEffect(() => {
     // 获取插件信息
@@ -55,8 +65,92 @@ export default function PluginForm({
     return <div>加载中...</div>;
   }
 
+  function deletePlugin() {
+    setPluginRemoveStatus(PluginRemoveStatus.REMOVING);
+    httpClient.removePlugin(pluginAuthor, pluginName).then((res) => {
+      
+      const taskId = res.task_id;
+      
+      const interval = setInterval(() => {
+        httpClient.getAsyncTask(taskId).then((res) => {
+          if (res.runtime.done) {
+            clearInterval(interval);
+            if (res.runtime.exception) {
+              setPluginRemoveError(res.runtime.exception);
+              setPluginRemoveStatus(PluginRemoveStatus.ERROR);
+            } else {
+              setPluginRemoveStatus(PluginRemoveStatus.WAIT_INPUT);
+              setShowDeleteConfirmModal(false);
+              onFormSubmit();
+            }
+          }
+        });
+      }, 1000);
+
+    }).catch((error) => {
+      setPluginRemoveError(error.message);
+      setPluginRemoveStatus(PluginRemoveStatus.ERROR);
+    })
+  }
+
   return (
     <div>
+
+      <Dialog open={showDeleteConfirmModal} onOpenChange={setShowDeleteConfirmModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>删除确认</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>
+            {pluginRemoveStatus === PluginRemoveStatus.WAIT_INPUT && (
+              <div>
+                你确定要删除插件（{pluginAuthor}/{pluginName}）吗？
+              </div>
+            )}
+            {pluginRemoveStatus === PluginRemoveStatus.REMOVING && (
+              <div>删除中...</div>
+            )}
+            {pluginRemoveStatus === PluginRemoveStatus.ERROR && (
+              <div>
+                删除失败：
+                <div className="text-red-500">{pluginRemoveError}</div>
+              </div>
+            )}
+          </DialogDescription>
+          <DialogFooter>
+            {pluginRemoveStatus === PluginRemoveStatus.WAIT_INPUT && (
+              <Button variant="outline" onClick={() => {
+                setShowDeleteConfirmModal(false);
+                setPluginRemoveStatus(PluginRemoveStatus.WAIT_INPUT);
+              }}>
+              取消
+            </Button>
+            )}
+            {pluginRemoveStatus === PluginRemoveStatus.WAIT_INPUT && (
+              <Button variant="destructive" onClick={() => {
+                deletePlugin();
+              }}>
+                确认删除
+              </Button>
+            )}
+            {pluginRemoveStatus === PluginRemoveStatus.REMOVING && (
+              <Button variant="destructive" disabled>
+                删除中...
+              </Button>
+            )}
+            {pluginRemoveStatus === PluginRemoveStatus.ERROR && (
+              <Button variant="default" onClick={() => {
+                setShowDeleteConfirmModal(false);
+                // setPluginRemoveStatus(PluginRemoveStatus.WAIT_INPUT);
+              }}>
+                关闭
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+  
       <div className="space-y-2">
         <div className="text-lg font-medium">{pluginInfo.name}</div>
         <div className="text-sm text-gray-500 pb-2">
@@ -66,13 +160,13 @@ export default function PluginForm({
           <DynamicFormComponent
             itemConfigList={pluginInfo.config_schema}
             initialValues={pluginConfig.config}
-          onSubmit={(values) => {
-            let config = pluginConfig.config;
-            config = {
-              ...config,
-              ...values,
-            };
-            setPluginConfig({
+            onSubmit={(values) => {
+              let config = pluginConfig.config;
+              config = {
+                ...config,
+                ...values,
+              };
+              setPluginConfig({
                 config: config,
               });
             }}
@@ -87,6 +181,18 @@ export default function PluginForm({
 
       <div className="sticky bottom-0 left-0 right-0 bg-background border-t p-4 mt-4">
         <div className="flex justify-end gap-2">
+
+          <Button
+            variant="destructive"
+            onClick={() => {
+              setShowDeleteConfirmModal(true);
+              setPluginRemoveStatus(PluginRemoveStatus.WAIT_INPUT);
+            }}
+            disabled={pluginRemoveStatus === PluginRemoveStatus.REMOVING}
+          >
+            {pluginRemoveStatus === PluginRemoveStatus.REMOVING ? '删除中...' : '删除插件'}
+          </Button>
+
           <Button
             type="submit"
             onClick={() => handleSubmit(pluginConfig.config)}
