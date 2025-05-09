@@ -9,7 +9,7 @@ import { IDynamicFormItemSchema } from '@/app/infra/entities/form/dynamic';
 import { UUID } from 'uuidjs';
 import DynamicFormComponent from '@/app/home/components/dynamic-form/DynamicFormComponent';
 import { httpClient } from '@/app/infra/http/HttpClient';
-import { Bot } from '@/app/infra/api/api-types';
+import { Bot } from '@/app/infra/entities/api';
 
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -130,7 +130,7 @@ export default function BotForm({
       pipelinesRes.pipelines.map((item) => {
         return {
           label: item.name,
-          value: item.uuid,
+          value: item.uuid ?? '',
         };
       }),
     );
