@@ -133,7 +133,7 @@ export default function PluginMarketComponent({
         />
 
         <Select value={`${sortByValue},${sortOrderValue}`} onValueChange={handleSortChange}>
-          <SelectTrigger className="w-[180px] ml-2">
+          <SelectTrigger className="w-[180px] ml-2 cursor-pointer">
             <SelectValue placeholder="排序方式" />
           </SelectTrigger>
           <SelectContent>
@@ -147,7 +147,7 @@ export default function PluginMarketComponent({
           {totalCount > 0 && (
             <Pagination>
               <PaginationContent>
-                <PaginationItem>
+                <PaginationItem className='cursor-pointer'>
                   <PaginationPrevious
                     onClick={() => handlePageChange(nowPage - 1)}
                     className={nowPage <= 1 ? 'pointer-events-none opacity-50' : ''}
@@ -168,7 +168,7 @@ export default function PluginMarketComponent({
                   return Array.from({ length: endPage - startPage + 1 }, (_, i) => {
                     const pageNum = startPage + i;
                     return (
-                      <PaginationItem key={pageNum}>
+                      <PaginationItem key={pageNum} className='cursor-pointer'>
                         <PaginationLink
                           isActive={pageNum === nowPage}
                           onClick={() => handlePageChange(pageNum)}
@@ -183,7 +183,7 @@ export default function PluginMarketComponent({
                 })()}
 
 
-                <PaginationItem>
+                <PaginationItem className='cursor-pointer'>
                   <PaginationNext
                     onClick={() => handlePageChange(nowPage + 1)}
                     className={nowPage >= Math.ceil(totalCount / pageSize) ? 'pointer-events-none opacity-50' : ''}

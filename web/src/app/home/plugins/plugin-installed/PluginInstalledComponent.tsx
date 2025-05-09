@@ -93,8 +93,8 @@ const PluginInstalledComponent = forwardRef<PluginInstalledComponentRef>((props,
       
       {pluginList.map((vo, index) => {
         return (
-          <div key={index} onClick={() => handlePluginClick(vo)}>
-            <PluginCardComponent cardVO={vo} />
+          <div key={index}>
+            <PluginCardComponent cardVO={vo} onCardClick={() => handlePluginClick(vo)} />
           </div>
         );
       })}
