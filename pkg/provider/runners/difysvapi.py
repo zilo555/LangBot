@@ -114,6 +114,8 @@ class DifyServiceAPIRunner(runner.RequestRunner):
         inputs = {}
         
         inputs.update(query.variables)
+        
+        chunk = None  # 初始化chunk变量，防止在没有响应时引用错误
 
         async for chunk in self.dify_client.chat_messages(
             inputs=inputs,
@@ -171,6 +173,8 @@ class DifyServiceAPIRunner(runner.RequestRunner):
         inputs.update(query.variables)
 
         pending_agent_message = ''
+        
+        chunk = None  # 初始化chunk变量，防止在没有响应时引用错误
 
         async for chunk in self.dify_client.chat_messages(
             inputs=inputs,
