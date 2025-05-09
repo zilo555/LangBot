@@ -26,14 +26,8 @@ export default function BotConfigPage() {
   const [nowSelectedBotCard, setNowSelectedBotCard] = useState<BotCardVO>();
 
   useEffect(() => {
-    // TODO：补齐加载转圈逻辑
-
+    getBotList();
   }, []);
-
-  async function checkHasLLM(): Promise<boolean> {
-    // NOT IMPL
-    return true;
-  }
 
   async function getBotList() {
 
