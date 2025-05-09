@@ -21,6 +21,7 @@ import { httpClient } from '@/app/infra/http/HttpClient';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock } from "lucide-react";
 import langbotIcon from '@/app/assets/langbot-logo.webp';
+import { toast } from "sonner";
 
 const formSchema = z.object({
   email: z.string().email("请输入有效的邮箱地址"),
@@ -64,10 +65,12 @@ export default function Register() {
       .initUser(username, password)
       .then((res) => {
         console.log('init user success: ', res);
+        toast.success("初始化成功 请登录");
         router.push('/login');
       })
       .catch((err) => {
         console.log('init user error: ', err);
+        toast.error("初始化失败：" + err.message);
       });
   }
 

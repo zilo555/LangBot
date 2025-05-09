@@ -31,7 +31,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-
+import { toast } from "sonner"
 const extraArgSchema = z.object({
   key: z.string().min(1, { message: '键名不能为空' }),
   type: z.enum(['string', 'number', 'boolean']),
@@ -242,6 +242,9 @@ export default function LLMForm({
     };
     httpClient.createProviderLLMModel(requestParam).then(() => {
       onFormSubmit(value);
+      toast.success("创建成功");
+    }).catch((err) => {
+      toast.error("创建失败：" + err.message);
     });
   }
 
@@ -251,6 +254,9 @@ export default function LLMForm({
     if (initLLMId) {
       httpClient.deleteProviderLLMModel(initLLMId).then(() => {
         onLLMDeleted();
+        toast.success("删除成功");
+      }).catch((err) => {
+        toast.error("删除失败：" + err.message);
       });
     }
   }

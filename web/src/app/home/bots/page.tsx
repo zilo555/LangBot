@@ -18,7 +18,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-
+import { toast } from "sonner";
 export default function BotConfigPage() {
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [botList, setBotList] = useState<BotCardVO[]>([]);
@@ -56,12 +56,7 @@ export default function BotConfigPage() {
       })
       .catch((err) => {
         console.error('get bot list error', err);
-        // TODO HACK: need refactor to hook mode Notification, but it's not working under render
-        // notification.error({
-        //   message: '获取机器人列表失败',
-        //   description: err.message,
-        //   placement: 'bottomRight',
-        // });
+        toast.error("获取机器人列表失败：" + err.message);
       })
       .finally(() => {
         // setIsLoading(false);

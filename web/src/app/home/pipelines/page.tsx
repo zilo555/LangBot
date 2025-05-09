@@ -16,7 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Button } from '@/components/ui/button';
-
+import { toast } from "sonner"
 export default function PluginConfigPage() {
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [isEditForm, setIsEditForm] = useState(false);
@@ -57,8 +57,8 @@ export default function PluginConfigPage() {
         setPipelineList(pipelineList);
       })
       .catch((error) => {
-        // TODO toast
         console.log(error);
+        toast.error("获取流水线列表失败：" + error.message);
       });
   }
 

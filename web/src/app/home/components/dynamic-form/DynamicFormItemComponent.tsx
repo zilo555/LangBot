@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { httpClient } from "@/app/infra/http/HttpClient";
 import { LLMModel } from "@/app/infra/entities/api";
+import { toast } from "sonner";
 
 export default function DynamicFormItemComponent({
   config,
@@ -25,7 +26,7 @@ export default function DynamicFormItemComponent({
       httpClient.getProviderLLMModels().then((resp) => {
         setLlmModels(resp.models);
       }).catch((err) => {
-        console.error('获取 LLM 模型列表失败:', err);
+        toast.error("获取 LLM 模型列表失败：" + err.message);
       });
     }
   }, [config.type]);

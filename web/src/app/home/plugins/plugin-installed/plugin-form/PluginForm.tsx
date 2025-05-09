@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 enum PluginRemoveStatus {
   WAIT_INPUT = 'WAIT_INPUT',
@@ -51,14 +52,14 @@ export default function PluginForm({
 
   const handleSubmit = async (values: object) => {
     setIsLoading(true);
-    try {
-      await httpClient.updatePluginConfig(pluginAuthor, pluginName, values);
-      onFormSubmit();
-    } catch (error) {
-      console.error('更新插件配置失败:', error);
-    } finally {
-      setIsLoading(false);
-    }
+      httpClient.updatePluginConfig(pluginAuthor, pluginName, values).then(() => {
+        onFormSubmit();
+        toast.success("保存成功");
+      }).catch((error) => {
+        toast.error("保存失败：" + error.message);
+      }).finally(() => {
+        setIsLoading(false);
+      });
   };
 
   if (!pluginInfo || !pluginConfig) {

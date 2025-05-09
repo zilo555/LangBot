@@ -1,5 +1,5 @@
 import { GetMetaDataResponse } from '@/app/infra/api/api-types/pipelines/GetMetaDataResponse';
-import { ApiResponse } from '@/app/infra/api/api-types';
+import { ApiResponse } from '@/app/infra/entities/api';
 
 export async function fetchPipelineMetaData(): Promise<
   ApiResponse<GetMetaDataResponse>

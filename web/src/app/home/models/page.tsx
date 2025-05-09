@@ -17,7 +17,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-
+import { toast } from "sonner";
 
 export default function LLMConfigPage() {
   const [cardList, setCardList] = useState<LLMCardVO[]>([]);
@@ -56,8 +56,8 @@ export default function LLMConfigPage() {
         setCardList(llmModelList);
       })
       .catch((err) => {
-        // TODO error toast
         console.error('get LLM model list error', err);
+        toast.error("获取模型列表失败：" + err.message);
       });
   }
 

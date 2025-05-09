@@ -14,6 +14,7 @@ import { Bot } from '@/app/infra/entities/api';
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
+import { toast } from "sonner"
 
 import {
   Dialog,
@@ -44,8 +45,8 @@ const formSchema = z.object({
   description: z.string().min(1, { message: '机器人描述不能为空' }),
   adapter: z.string().min(1, { message: '适配器不能为空' }),
   adapter_config: z.record(z.string(), z.any()),
-  enable: z.boolean(),
-  use_pipeline_uuid: z.string().min(1, { message: '流水线不能为空' }),
+  enable: z.boolean().optional(),
+  use_pipeline_uuid: z.string().optional(),
 });
 
 export default function BotForm({
@@ -114,6 +115,8 @@ export default function BotForm({
         console.log('form', form.getValues());
         handleAdapterSelect(val.adapter);
         // dynamicForm.setFieldsValue(val.adapter_config);
+      }).catch((err) => {
+        toast.error("获取机器人配置失败：" + err.message);
       });
       
     } else {
@@ -182,25 +185,30 @@ export default function BotForm({
     });
     setAdapterNameToDynamicConfigMap(adapterNameToDynamicConfigMap);
   }
-
   async function getBotConfig(botId: string): Promise<z.infer<typeof formSchema>> {
-    const bot = (await httpClient.getBot(botId)).bot;
-    return {
-      adapter: bot.adapter,
-      description: bot.description,
-      name: bot.name,
-      adapter_config: bot.adapter_config,
-      enable: bot.enable ?? true,
-      use_pipeline_uuid: bot.use_pipeline_uuid ?? '',
-    };
+    return new Promise((resolve, reject) => {
+      httpClient.getBot(botId)
+        .then(res => {
+          const bot = res.bot;
+          resolve({
+            adapter: bot.adapter,
+            description: bot.description, 
+            name: bot.name,
+            adapter_config: bot.adapter_config,
+            enable: bot.enable ?? true,
+            use_pipeline_uuid: bot.use_pipeline_uuid ?? '',
+          });
+        })
+        .catch(err => {
+          reject(err);
+        });
+    });
   }
 
   function handleAdapterSelect(adapterName: string) {
-    console.log('Select adapter: ', adapterName);
     if (adapterName) {
       const dynamicFormConfigList =
         adapterNameToDynamicConfigMap.get(adapterName);
-      console.log(dynamicFormConfigList);
       if (dynamicFormConfigList) {
         setDynamicFormConfigList(dynamicFormConfigList);
         if (!initBotId) {
@@ -240,20 +248,12 @@ export default function BotForm({
       httpClient
         .updateBot(initBotId, updateBot)
         .then((res) => {
-          // TODO success toast
           console.log('update bot success', res);
           onFormSubmit(form.getValues());
-          // notification.success({
-          //   message: '更新成功',
-          //   description: '机器人更新成功',
-          // });
+          toast.success("保存成功");
         })
-        .catch(() => {
-          // TODO error toast
-          // notification.error({
-          //   message: '更新失败',
-          //   description: '机器人更新失败',
-          // });
+        .catch((err) => {
+          toast.error("保存失败：" + err.message);
         })
         .finally(() => {
           setIsLoading(false);
@@ -272,20 +272,12 @@ export default function BotForm({
       httpClient
         .createBot(newBot)
         .then((res) => {
-          // TODO success toast
-          // notification.success({
-          //   message: '创建成功',
-          //   description: '机器人创建成功',
-          // });
           console.log(res);
           onFormSubmit(form.getValues());
+          toast.success("创建成功");
         })
-        .catch(() => {
-          // TODO error toast
-          // notification.error({
-          //   message: '创建失败',
-          //   description: '机器人创建失败',
-          // });
+        .catch((err) => {
+          toast.error("创建失败：" + err.message);
         })
         .finally(() => {
           setIsLoading(false);
@@ -295,8 +287,6 @@ export default function BotForm({
     }
     setShowDynamicForm(false);
     console.log('set loading', false);
-    // TODO 刷新bot列表
-    // TODO 关闭当前弹窗 Already closed @setShowDynamicForm(false)?
   }
 
   function handleSaveButton() {
@@ -307,6 +297,8 @@ export default function BotForm({
     if (initBotId) {
       httpClient.deleteBot(initBotId).then(() => {
         onBotDeleted();
+      }).catch((err) => {
+        toast.error("删除失败：" + err.message);
       });
     }
   }

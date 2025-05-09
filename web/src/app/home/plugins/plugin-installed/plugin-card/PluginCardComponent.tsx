@@ -4,6 +4,7 @@ import { httpClient } from '@/app/infra/http/HttpClient';
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 
 export default function PluginCardComponent({
   cardVO,
@@ -24,7 +25,7 @@ export default function PluginCardComponent({
         setEnabled(!enabled);
       })
       .catch((err) => {
-        console.log('error: ', err);
+        toast.error("修改失败：" + err.message);
       })
       .finally(() => {
         setSwitchEnable(true);

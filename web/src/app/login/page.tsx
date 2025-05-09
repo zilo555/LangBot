@@ -20,6 +20,7 @@ import { httpClient } from '@/app/infra/http/HttpClient';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock } from "lucide-react";
 import langbotIcon from '@/app/assets/langbot-logo.webp';
+import { toast } from "sonner"
 
 const formSchema = z.object({
   email: z.string().email("请输入有效的邮箱地址"),
@@ -78,9 +79,12 @@ export default function Login() {
         localStorage.setItem('token', res.token);
         console.log('login success: ', res);
         router.push('/home');
+        toast.success("登录成功");
       })
       .catch((err) => {
         console.log('login error: ', err);
+
+        toast.error("登录失败，请检查邮箱和密码是否正确");
       });
   }
 

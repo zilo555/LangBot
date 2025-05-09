@@ -18,7 +18,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-
+import { toast } from "sonner"
 
 export default function PipelineFormComponent({
   initValues,
@@ -142,6 +142,9 @@ export default function PipelineFormComponent({
     httpClient.createPipeline(pipeline).then((resp) => {
       onFinish();
       onNewPipelineCreated(resp.uuid);
+      toast.success("创建成功 请编辑流水线详细参数");
+    }).catch((err) => {
+      toast.error("创建失败：" + err.message);
     });
   }
 
@@ -165,7 +168,12 @@ export default function PipelineFormComponent({
       // uuid: pipelineId || '',
       // is_default: false,
     };
-    httpClient.updatePipeline(pipelineId || '', pipeline).then(() => onFinish());
+    httpClient.updatePipeline(pipelineId || '', pipeline).then(() => {
+      onFinish();
+      toast.success("保存成功");
+    }).catch((err) => {
+      toast.error("保存失败：" + err.message);
+    });
   }
 
   function renderDynamicForms(stage: PipelineConfigStage, formName: keyof FormValues) {

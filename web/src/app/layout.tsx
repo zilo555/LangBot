@@ -1,5 +1,6 @@
 import './global.css';
 import type { Metadata } from 'next';
+import { Toaster } from '@/components/ui/sonner';
 
 export const metadata: Metadata = {
   title: 'LangBot',
@@ -13,7 +14,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={``}>{children}</body>
+      <body className={``}>
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }

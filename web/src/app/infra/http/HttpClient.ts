@@ -30,7 +30,8 @@ import {
   GetPipelineMetadataResponseData,
   AsyncTask
 } from '@/app/infra/entities/api';
-import { notification } from 'antd';
+import { toast } from "sonner"
+
 
 type JSONValue = string | number | boolean | JSONObject | JSONArray | null;
 interface JSONObject {
@@ -141,13 +142,8 @@ class HttpClient {
               console.error('Permission denied:', errMessage);
               break;
             case 500:
-              // TODO 弹Toast窗
               // NOTE: move to component layer for customized message?
-              notification.error({
-                message: '服务器错误',
-                description: errMessage,
-                placement: 'bottomRight',
-              });
+              // toast.error(errMessage);
               console.error('Server error:', errMessage);
               break;
           }
