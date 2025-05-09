@@ -69,13 +69,14 @@ const PluginInstalledComponent = forwardRef<PluginInstalledComponentRef>((props,
   return (
     <div className={`${styles.pluginListContainer}`}>
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="w-[700px] p-6">
-          <DialogHeader>
+        <DialogContent className="w-[700px] max-h-[80vh] p-0 flex flex-col">
+          <DialogHeader  className="px-6 pt-6 pb-2">
             <DialogTitle>插件配置</DialogTitle>
           </DialogHeader>
-          {selectedPlugin && (
-            <PluginForm
-              pluginAuthor={selectedPlugin.author}
+          <div className="flex-1 overflow-y-auto px-6">
+            {selectedPlugin && (
+              <PluginForm
+                pluginAuthor={selectedPlugin.author}
               pluginName={selectedPlugin.name}
               onFormSubmit={() => {
                 setModalOpen(false);
@@ -83,9 +84,10 @@ const PluginInstalledComponent = forwardRef<PluginInstalledComponentRef>((props,
               }}
               onFormCancel={() => {
                 setModalOpen(false);
-              }}
-            />
-          )}
+                }}
+              />
+            )}
+          </div>
         </DialogContent>
       </Dialog>
       
