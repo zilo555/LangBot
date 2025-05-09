@@ -7,7 +7,11 @@ import PluginMarketCardComponent from '@/app/home/plugins/plugin-market/plugin-m
 import { Input, Pagination } from 'antd';
 import { spaceClient } from '@/app/infra/http/HttpClient';
 
-export default function PluginMarketComponent() {
+export default function PluginMarketComponent({
+  askInstallPlugin,
+}: {
+  askInstallPlugin: (githubURL: string) => void,
+}) {
   const [marketPluginList, setMarketPluginList] = useState<
     PluginMarketCardVO[]
   >([]);
@@ -43,19 +47,31 @@ export default function PluginMarketComponent() {
       .then((res) => {
         setMarketPluginList(
           res.plugins.map(
-            (marketPlugin) =>
-              new PluginMarketCardVO({
-                author: marketPlugin.author,
+            (marketPlugin) => {
+              let repository = marketPlugin.repository;
+              if (repository.startsWith('https://github.com/')) {
+                repository = repository.replace('https://github.com/', '');
+              }
+
+              if (repository.startsWith('github.com/')) {
+                repository = repository.replace('github.com/', '');
+              }
+
+              const author = repository.split('/')[0];
+              const name = repository.split('/')[1];
+              return new PluginMarketCardVO({
+                author: author,
                 description: marketPlugin.description,
-                githubURL: marketPlugin.repository,
-                name: marketPlugin.name,
+                githubURL: `https://github.com/${repository}`,
+                name: name,
                 pluginId: String(marketPlugin.ID),
                 starCount: marketPlugin.stars,
                 version:
                   'version' in marketPlugin
                     ? String(marketPlugin.version)
                     : '1.0.0', // Default version if not provided
-              }),
+              });
+            },
           ),
         );
         setTotalCount(res.total);
@@ -94,7 +110,9 @@ export default function PluginMarketComponent() {
         ) : (
           marketPluginList.map((vo, index) => (
             <div key={`${vo.pluginId}-${index}`}>
-              <PluginMarketCardComponent cardVO={vo} />
+              <PluginMarketCardComponent cardVO={vo} installPlugin={(githubURL) => {
+                askInstallPlugin(githubURL);
+              }} />
             </div>
           ))
         )}

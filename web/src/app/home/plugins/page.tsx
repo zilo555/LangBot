@@ -86,7 +86,12 @@ export default function PluginConfigPage() {
           <PluginInstalledComponent ref={pluginInstalledRef} />
         </TabsContent>
         <TabsContent value="market">
-          <PluginMarketComponent />
+          <PluginMarketComponent askInstallPlugin={(githubURL) => {
+            setGithubURL(githubURL);
+            setModalOpen(true);
+            setPluginInstallStatus(PluginInstallStatus.WAIT_INPUT);
+            setInstallError(null);
+          }} />
         </TabsContent>
       </Tabs>
 
@@ -96,7 +101,7 @@ export default function PluginConfigPage() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-4">
               <GithubIcon className="size-6" />
-              <span>从GitHub安装插件</span>
+              <span>从 GitHub 安装插件</span>
             </DialogTitle>
           </DialogHeader>
           {pluginInstallStatus === PluginInstallStatus.WAIT_INPUT && (
