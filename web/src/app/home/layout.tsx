@@ -17,20 +17,16 @@ export default function HomeLayout({
   };
 
   return (
-
     <div className={styles.homeLayoutContainer}>
       <aside className={styles.sidebar}>
         <HomeSidebar onSelectedChangeAction={onSelectedChangeAction} />
       </aside>
-      
+
       <div className={styles.main}>
         <HomeTitleBar title={title} />
-        
-        <main className={styles.mainContent}>
-          {children}
-        </main>
-      </div>
 
+        <main className={styles.mainContent}>{children}</main>
+      </div>
     </div>
   );
 }

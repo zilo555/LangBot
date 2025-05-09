@@ -5,9 +5,9 @@ import { httpClient } from '@/app/infra/http/HttpClient';
 import { LLMModel } from '@/app/infra/entities/api';
 import { UUID } from 'uuidjs';
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 
 import {
   Dialog,
@@ -15,10 +15,9 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogFooter,
-} from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -27,31 +26,44 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { toast } from "sonner"
-const extraArgSchema = z.object({
-  key: z.string().min(1, { message: '键名不能为空' }),
-  type: z.enum(['string', 'number', 'boolean']),
-  value: z.string(),
-}).superRefine((data, ctx) => {
-  if (data.type === 'number' && isNaN(Number(data.value))) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "必须是有效的数字",
-      path: ['value'],
-    });
-  }
-  if (data.type === 'boolean' && data.value !== 'true' && data.value !== 'false') {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "必须是 true 或 false",
-      path: ['value'],
-    });
-  }
-});
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
+const extraArgSchema = z
+  .object({
+    key: z.string().min(1, { message: '键名不能为空' }),
+    type: z.enum(['string', 'number', 'boolean']),
+    value: z.string(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.type === 'number' && isNaN(Number(data.value))) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: '必须是有效的数字',
+        path: ['value'],
+      });
+    }
+    if (
+      data.type === 'boolean' &&
+      data.value !== 'true' &&
+      data.value !== 'false'
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: '必须是 true 或 false',
+        path: ['value'],
+      });
+    }
+  });
 
 const formSchema = z.object({
   name: z.string().min(1, { message: '模型名称不能为空' }),
@@ -60,7 +72,7 @@ const formSchema = z.object({
   api_key: z.string().min(1, { message: 'API Key不能为空' }),
   abilities: z.array(z.string()),
   extra_args: z.array(extraArgSchema).optional(),
-})
+});
 
 export default function LLMForm({
   editMode,
@@ -87,10 +99,12 @@ export default function LLMForm({
     },
   });
 
-  const [extraArgs, setExtraArgs] = useState<{key: string, type: 'string' | 'number' | 'boolean', value: string}[]>([]);
+  const [extraArgs, setExtraArgs] = useState<
+    { key: string; type: 'string' | 'number' | 'boolean'; value: string }[]
+  >([]);
 
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
-  const abilityOptions: { label: string, value: string }[] = [
+  const abilityOptions: { label: string; value: string }[] = [
     {
       label: '视觉能力',
       value: 'vision',
@@ -115,21 +129,21 @@ export default function LLMForm({
         form.setValue('model_provider', val.model_provider);
         form.setValue('url', val.url);
         form.setValue('api_key', val.api_key);
-        form.setValue('abilities', val.abilities as ("vision" | "func_call")[]); 
+        form.setValue('abilities', val.abilities as ('vision' | 'func_call')[]);
         // 转换extra_args为新格式
-        if(val.extra_args) {
-          const args = val.extra_args.map(arg => {
+        if (val.extra_args) {
+          const args = val.extra_args.map((arg) => {
             const [key, value] = arg.split(':');
             let type: 'string' | 'number' | 'boolean' = 'string';
-            if(!isNaN(Number(value))) {
+            if (!isNaN(Number(value))) {
               type = 'number';
-            } else if(value === 'true' || value === 'false') {
+            } else if (value === 'true' || value === 'false') {
               type = 'boolean';
             }
             return {
               key,
               type,
-              value
+              value,
             };
           });
           setExtraArgs(args);
@@ -143,14 +157,18 @@ export default function LLMForm({
   }, []);
 
   const addExtraArg = () => {
-    setExtraArgs([...extraArgs, {key: '', type: 'string', value: ''}]);
+    setExtraArgs([...extraArgs, { key: '', type: 'string', value: '' }]);
   };
 
-  const updateExtraArg = (index: number, field: 'key' | 'type' | 'value', value: string) => {
+  const updateExtraArg = (
+    index: number,
+    field: 'key' | 'type' | 'value',
+    value: string,
+  ) => {
     const newArgs = [...extraArgs];
     newArgs[index] = {
       ...newArgs[index],
-      [field]: value
+      [field]: value,
     };
     setExtraArgs(newArgs);
     form.setValue('extra_args', newArgs);
@@ -216,11 +234,12 @@ export default function LLMForm({
   function onCreateLLM(value: z.infer<typeof formSchema>) {
     console.log('create llm', value);
     // 转换extra_args为对象格式
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const extraArgsObj: Record<string, any> = {};
-    value.extra_args?.forEach(arg => {
-      if(arg.type === 'number') {
+    value.extra_args?.forEach((arg) => {
+      if (arg.type === 'number') {
         extraArgsObj[arg.key] = Number(arg.value);
-      } else if(arg.type === 'boolean') {
+      } else if (arg.type === 'boolean') {
         extraArgsObj[arg.key] = arg.value === 'true';
       } else {
         extraArgsObj[arg.key] = arg.value;
@@ -240,46 +259,56 @@ export default function LLMForm({
       api_keys: [value.api_key],
       abilities: value.abilities,
     };
-    httpClient.createProviderLLMModel(requestParam).then(() => {
-      onFormSubmit(value);
-      toast.success("创建成功");
-    }).catch((err) => {
-      toast.error("创建失败：" + err.message);
-    });
+    httpClient
+      .createProviderLLMModel(requestParam)
+      .then(() => {
+        onFormSubmit(value);
+        toast.success('创建成功');
+      })
+      .catch((err) => {
+        toast.error('创建失败：' + err.message);
+      });
   }
-
-  function handleAbilitiesChange() { }
 
   function deleteModel() {
     if (initLLMId) {
-      httpClient.deleteProviderLLMModel(initLLMId).then(() => {
-        onLLMDeleted();
-        toast.success("删除成功");
-      }).catch((err) => {
-        toast.error("删除失败：" + err.message);
-      });
+      httpClient
+        .deleteProviderLLMModel(initLLMId)
+        .then(() => {
+          onLLMDeleted();
+          toast.success('删除成功');
+        })
+        .catch((err) => {
+          toast.error('删除失败：' + err.message);
+        });
     }
   }
 
   return (
     <div>
-
-      <Dialog open={showDeleteConfirmModal} onOpenChange={setShowDeleteConfirmModal}>
+      <Dialog
+        open={showDeleteConfirmModal}
+        onOpenChange={setShowDeleteConfirmModal}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>删除确认</DialogTitle>
           </DialogHeader>
-          <DialogDescription>
-            你确定要删除这个模型吗？
-          </DialogDescription>
+          <DialogDescription>你确定要删除这个模型吗？</DialogDescription>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteConfirmModal(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirmModal(false)}
+            >
               取消
             </Button>
-            <Button variant="destructive" onClick={() => {
-              deleteModel();
-              setShowDeleteConfirmModal(false);
-            }}>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                deleteModel();
+                setShowDeleteConfirmModal(false);
+              }}
+            >
               确认删除
             </Button>
           </DialogFooter>
@@ -287,14 +316,19 @@ export default function LLMForm({
       </Dialog>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
+        <form
+          onSubmit={form.handleSubmit(handleFormSubmit)}
+          className="space-y-8"
+        >
           <div className="space-y-4">
             <FormField
               control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>模型名称<span className="text-red-500">*</span></FormLabel>
+                  <FormLabel>
+                    模型名称<span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -311,15 +345,22 @@ export default function LLMForm({
               name="model_provider"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>模型供应商<span className="text-red-500">*</span></FormLabel>
+                  <FormLabel>
+                    模型供应商<span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
-                    <Select onValueChange={(value) => {
-                      field.onChange(value);
-                      const index = requesterNameList.findIndex(item => item.value === value);
-                      if(index !== -1) {
-                        form.setValue('url', requesterDefaultURLList[index]);
-                      }
-                    }} value={field.value}>
+                    <Select
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        const index = requesterNameList.findIndex(
+                          (item) => item.value === value,
+                        );
+                        if (index !== -1) {
+                          form.setValue('url', requesterDefaultURLList[index]);
+                        }
+                      }}
+                      value={field.value}
+                    >
                       <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="选择模型供应商" />
                       </SelectTrigger>
@@ -338,13 +379,15 @@ export default function LLMForm({
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="url"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>请求URL<span className="text-red-500">*</span></FormLabel>
+                  <FormLabel>
+                    请求URL<span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -357,7 +400,9 @@ export default function LLMForm({
               name="api_key"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>API Key<span className="text-red-500">*</span></FormLabel>
+                  <FormLabel>
+                    API Key<span className="text-red-500">*</span>
+                  </FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -368,13 +413,11 @@ export default function LLMForm({
             <FormField
               control={form.control}
               name="abilities"
-              render={({ field }) => (
+              render={() => (
                 <FormItem>
                   <FormLabel>能力</FormLabel>
                   <div className="mb-0">
-                    <FormDescription>
-                      选择模型能力
-                    </FormDescription>
+                    <FormDescription>选择模型能力</FormDescription>
                   </div>
                   {abilityOptions.map((item) => (
                     <FormField
@@ -389,15 +432,21 @@ export default function LLMForm({
                           >
                             <FormControl>
                               <Checkbox
-                                checked={Array.isArray(field.value) && field.value?.includes(item.value)}
+                                checked={
+                                  Array.isArray(field.value) &&
+                                  field.value?.includes(item.value)
+                                }
                                 onCheckedChange={(checked) => {
                                   return checked
-                                    ? field.onChange([...(field.value || []), item.value])
+                                    ? field.onChange([
+                                        ...(field.value || []),
+                                        item.value,
+                                      ])
                                     : field.onChange(
                                         field.value?.filter(
-                                          (value) => value !== item.value
-                                        )
-                                      )
+                                          (value) => value !== item.value,
+                                        ),
+                                      );
                                 }}
                               />
                             </FormControl>
@@ -405,7 +454,7 @@ export default function LLMForm({
                               {item.label}
                             </FormLabel>
                           </FormItem>
-                        )
+                        );
                       }}
                     />
                   ))}
@@ -419,14 +468,18 @@ export default function LLMForm({
               <div className="space-y-2">
                 {extraArgs.map((arg, index) => (
                   <div key={index} className="flex gap-2">
-                    <Input 
+                    <Input
                       placeholder="键名"
                       value={arg.key}
-                      onChange={(e) => updateExtraArg(index, 'key', e.target.value)}
+                      onChange={(e) =>
+                        updateExtraArg(index, 'key', e.target.value)
+                      }
                     />
-                    <Select 
+                    <Select
                       value={arg.type}
-                      onValueChange={(value) => updateExtraArg(index, 'type', value)}
+                      onValueChange={(value) =>
+                        updateExtraArg(index, 'type', value)
+                      }
                     >
                       <SelectTrigger className="w-[120px]">
                         <SelectValue placeholder="类型" />
@@ -437,17 +490,24 @@ export default function LLMForm({
                         <SelectItem value="boolean">布尔值</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Input 
+                    <Input
                       placeholder="值"
                       value={arg.value}
-                      onChange={(e) => updateExtraArg(index, 'value', e.target.value)}
+                      onChange={(e) =>
+                        updateExtraArg(index, 'value', e.target.value)
+                      }
                     />
-                    <button 
+                    <button
                       type="button"
                       className="p-2 hover:bg-gray-100 rounded"
                       onClick={() => removeExtraArg(index)}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-red-500">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="w-5 h-5 text-red-500"
+                      >
                         <path d="M7 4V2H17V4H22V6H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V6H2V4H7ZM6 6V20H18V6H6ZM9 9H11V17H9V9ZM13 9H15V17H13V9Z"></path>
                       </svg>
                     </button>
@@ -462,24 +522,28 @@ export default function LLMForm({
               </FormDescription>
               <FormMessage />
             </FormItem>
-            
           </div>
           <DialogFooter>
-            {!editMode && (
-              <Button type="submit">提交</Button>
-            )}
+            {!editMode && <Button type="submit">提交</Button>}
             {editMode && (
-              <Button type="button" variant="destructive" onClick={() => setShowDeleteConfirmModal(true)}>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => setShowDeleteConfirmModal(true)}
+              >
                 删除
               </Button>
             )}
-            <Button type="button" variant="outline" onClick={() => onFormCancel()}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onFormCancel()}
+            >
               取消
             </Button>
           </DialogFooter>
         </form>
       </Form>
-
     </div>
   );
 }

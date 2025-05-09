@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { ApiRespPlugin, ApiRespPluginConfig, Plugin } from '@/app/infra/entities/api';
+import { ApiRespPluginConfig, Plugin } from '@/app/infra/entities/api';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import DynamicFormComponent from '@/app/home/components/dynamic-form/DynamicFormComponent';
-import { IDynamicFormItemSchema } from '@/app/infra/entities/form/dynamic';
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -11,8 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { toast } from "sonner";
+} from '@/components/ui/dialog';
+import { toast } from 'sonner';
 
 enum PluginRemoveStatus {
   WAIT_INPUT = 'WAIT_INPUT',
@@ -36,8 +35,11 @@ export default function PluginForm({
   const [isSaving, setIsLoading] = useState(false);
 
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
-  const [pluginRemoveStatus, setPluginRemoveStatus] = useState<PluginRemoveStatus>(PluginRemoveStatus.WAIT_INPUT);
-  const [pluginRemoveError, setPluginRemoveError] = useState<string | null>(null);
+  const [pluginRemoveStatus, setPluginRemoveStatus] =
+    useState<PluginRemoveStatus>(PluginRemoveStatus.WAIT_INPUT);
+  const [pluginRemoveError, setPluginRemoveError] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     // 获取插件信息
@@ -52,12 +54,16 @@ export default function PluginForm({
 
   const handleSubmit = async (values: object) => {
     setIsLoading(true);
-      httpClient.updatePluginConfig(pluginAuthor, pluginName, values).then(() => {
+    httpClient
+      .updatePluginConfig(pluginAuthor, pluginName, values)
+      .then(() => {
         onFormSubmit();
-        toast.success("保存成功");
-      }).catch((error) => {
-        toast.error("保存失败：" + error.message);
-      }).finally(() => {
+        toast.success('保存成功');
+      })
+      .catch((error) => {
+        toast.error('保存失败：' + error.message);
+      })
+      .finally(() => {
         setIsLoading(false);
       });
   };
@@ -68,36 +74,39 @@ export default function PluginForm({
 
   function deletePlugin() {
     setPluginRemoveStatus(PluginRemoveStatus.REMOVING);
-    httpClient.removePlugin(pluginAuthor, pluginName).then((res) => {
-      
-      const taskId = res.task_id;
-      
-      const interval = setInterval(() => {
-        httpClient.getAsyncTask(taskId).then((res) => {
-          if (res.runtime.done) {
-            clearInterval(interval);
-            if (res.runtime.exception) {
-              setPluginRemoveError(res.runtime.exception);
-              setPluginRemoveStatus(PluginRemoveStatus.ERROR);
-            } else {
-              setPluginRemoveStatus(PluginRemoveStatus.WAIT_INPUT);
-              setShowDeleteConfirmModal(false);
-              onFormSubmit();
-            }
-          }
-        });
-      }, 1000);
+    httpClient
+      .removePlugin(pluginAuthor, pluginName)
+      .then((res) => {
+        const taskId = res.task_id;
 
-    }).catch((error) => {
-      setPluginRemoveError(error.message);
-      setPluginRemoveStatus(PluginRemoveStatus.ERROR);
-    })
+        const interval = setInterval(() => {
+          httpClient.getAsyncTask(taskId).then((res) => {
+            if (res.runtime.done) {
+              clearInterval(interval);
+              if (res.runtime.exception) {
+                setPluginRemoveError(res.runtime.exception);
+                setPluginRemoveStatus(PluginRemoveStatus.ERROR);
+              } else {
+                setPluginRemoveStatus(PluginRemoveStatus.WAIT_INPUT);
+                setShowDeleteConfirmModal(false);
+                onFormSubmit();
+              }
+            }
+          });
+        }, 1000);
+      })
+      .catch((error) => {
+        setPluginRemoveError(error.message);
+        setPluginRemoveStatus(PluginRemoveStatus.ERROR);
+      });
   }
 
   return (
     <div>
-
-      <Dialog open={showDeleteConfirmModal} onOpenChange={setShowDeleteConfirmModal}>
+      <Dialog
+        open={showDeleteConfirmModal}
+        onOpenChange={setShowDeleteConfirmModal}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>删除确认</DialogTitle>
@@ -120,17 +129,23 @@ export default function PluginForm({
           </DialogDescription>
           <DialogFooter>
             {pluginRemoveStatus === PluginRemoveStatus.WAIT_INPUT && (
-              <Button variant="outline" onClick={() => {
-                setShowDeleteConfirmModal(false);
-                setPluginRemoveStatus(PluginRemoveStatus.WAIT_INPUT);
-              }}>
-              取消
-            </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowDeleteConfirmModal(false);
+                  setPluginRemoveStatus(PluginRemoveStatus.WAIT_INPUT);
+                }}
+              >
+                取消
+              </Button>
             )}
             {pluginRemoveStatus === PluginRemoveStatus.WAIT_INPUT && (
-              <Button variant="destructive" onClick={() => {
-                deletePlugin();
-              }}>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  deletePlugin();
+                }}
+              >
                 确认删除
               </Button>
             )}
@@ -140,10 +155,13 @@ export default function PluginForm({
               </Button>
             )}
             {pluginRemoveStatus === PluginRemoveStatus.ERROR && (
-              <Button variant="default" onClick={() => {
-                setShowDeleteConfirmModal(false);
-                // setPluginRemoveStatus(PluginRemoveStatus.WAIT_INPUT);
-              }}>
+              <Button
+                variant="default"
+                onClick={() => {
+                  setShowDeleteConfirmModal(false);
+                  // setPluginRemoveStatus(PluginRemoveStatus.WAIT_INPUT);
+                }}
+              >
                 关闭
               </Button>
             )}
@@ -151,7 +169,6 @@ export default function PluginForm({
         </DialogContent>
       </Dialog>
 
-  
       <div className="space-y-2">
         <div className="text-lg font-medium">{pluginInfo.name}</div>
         <div className="text-sm text-gray-500 pb-2">
@@ -160,7 +177,7 @@ export default function PluginForm({
         {pluginInfo.config_schema.length > 0 && (
           <DynamicFormComponent
             itemConfigList={pluginInfo.config_schema}
-            initialValues={pluginConfig.config}
+            initialValues={pluginConfig.config as Record<string, object>}
             onSubmit={(values) => {
               let config = pluginConfig.config;
               config = {
@@ -174,15 +191,12 @@ export default function PluginForm({
           />
         )}
         {pluginInfo.config_schema.length === 0 && (
-          <div className="text-sm text-gray-500">
-            该插件没有配置项。
-          </div>
+          <div className="text-sm text-gray-500">该插件没有配置项。</div>
         )}
       </div>
 
       <div className="sticky bottom-0 left-0 right-0 bg-background border-t p-4 mt-4">
         <div className="flex justify-end gap-2">
-
           <Button
             variant="destructive"
             onClick={() => {
@@ -191,7 +205,9 @@ export default function PluginForm({
             }}
             disabled={pluginRemoveStatus === PluginRemoveStatus.REMOVING}
           >
-            {pluginRemoveStatus === PluginRemoveStatus.REMOVING ? '删除中...' : '删除插件'}
+            {pluginRemoveStatus === PluginRemoveStatus.REMOVING
+              ? '删除中...'
+              : '删除插件'}
           </Button>
 
           <Button

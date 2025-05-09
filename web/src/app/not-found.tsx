@@ -1,8 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Button } from "@/components/ui/button";
-import { GithubIcon } from "lucide-react";
+import { Button } from '@/components/ui/button';
 
 export default function NotFound() {
   const router = useRouter();
@@ -22,7 +21,8 @@ export default function NotFound() {
               页面不存在
             </h1>
             <p className="text-base text-gray-600 max-w-[450px] mx-auto mb-8">
-              您要查找的页面似乎不存在。请检查您输入的 URL 是否正确，或者返回首页。
+              您要查找的页面似乎不存在。请检查您输入的 URL
+              是否正确，或者返回首页。
             </p>
           </div>
 

@@ -1,12 +1,16 @@
 'use client';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import {
   Form,
   FormControl,
@@ -14,17 +18,17 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { useEffect, useState } from 'react';
+} from '@/components/ui/form';
+import { useEffect } from 'react';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock } from "lucide-react";
+import { Mail, Lock } from 'lucide-react';
 import langbotIcon from '@/app/assets/langbot-logo.webp';
-import { toast } from "sonner"
+import { toast } from 'sonner';
 
 const formSchema = z.object({
-  email: z.string().email("请输入有效的邮箱地址"),
-  password: z.string().min(1, "请输入密码"),
+  email: z.string().email('请输入有效的邮箱地址'),
+  password: z.string().min(1, '请输入密码'),
 });
 
 export default function Login() {
@@ -33,8 +37,8 @@ export default function Login() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: '',
+      password: '',
     },
   });
 
@@ -57,7 +61,8 @@ export default function Login() {
   }
 
   function checkIfAlreadyLoggedIn() {
-    httpClient.checkUserToken()
+    httpClient
+      .checkUserToken()
       .then((res) => {
         if (res.token) {
           localStorage.setItem('token', res.token);
@@ -79,12 +84,12 @@ export default function Login() {
         localStorage.setItem('token', res.token);
         console.log('login success: ', res);
         router.push('/home');
-        toast.success("登录成功");
+        toast.success('登录成功');
       })
       .catch((err) => {
         console.log('login error: ', err);
 
-        toast.error("登录失败，请检查邮箱和密码是否正确");
+        toast.error('登录失败，请检查邮箱和密码是否正确');
       });
   }
 
@@ -92,13 +97,15 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-[360px]">
         <CardHeader>
-          <img src={langbotIcon.src} alt="LangBot" className="w-16 h-16 mb-4 mx-auto" />
+          <img
+            src={langbotIcon.src}
+            alt="LangBot"
+            className="w-16 h-16 mb-4 mx-auto"
+          />
           <CardTitle className="text-2xl text-center">
             欢迎回到 LangBot 👋
           </CardTitle>
-          <CardDescription className="text-center">
-            登录以继续
-          </CardDescription>
+          <CardDescription className="text-center">登录以继续</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -146,10 +153,7 @@ export default function Login() {
                 )}
               />
 
-              <Button
-                type="submit"
-                className="w-full mt-4 cursor-pointer"
-              >
+              <Button type="submit" className="w-full mt-4 cursor-pointer">
                 登录
               </Button>
             </form>

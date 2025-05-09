@@ -1,12 +1,16 @@
 'use client';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import {
   Form,
   FormControl,
@@ -14,18 +18,17 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
-} from "@/components/ui/form";
-import { useEffect, useState } from 'react';
+} from '@/components/ui/form';
+import { useEffect } from 'react';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock } from "lucide-react";
+import { Mail, Lock } from 'lucide-react';
 import langbotIcon from '@/app/assets/langbot-logo.webp';
-import { toast } from "sonner";
+import { toast } from 'sonner';
 
 const formSchema = z.object({
-  email: z.string().email("请输入有效的邮箱地址"),
-  password: z.string().min(1, "请输入密码"),
+  email: z.string().email('请输入有效的邮箱地址'),
+  password: z.string().min(1, '请输入密码'),
 });
 
 export default function Register() {
@@ -34,8 +37,8 @@ export default function Register() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: '',
+      password: '',
     },
   });
 
@@ -65,12 +68,12 @@ export default function Register() {
       .initUser(username, password)
       .then((res) => {
         console.log('init user success: ', res);
-        toast.success("初始化成功 请登录");
+        toast.success('初始化成功 请登录');
         router.push('/login');
       })
       .catch((err) => {
         console.log('init user error: ', err);
-        toast.error("初始化失败：" + err.message);
+        toast.error('初始化失败：' + err.message);
       });
   }
 
@@ -78,7 +81,11 @@ export default function Register() {
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Card className="w-[360px]">
         <CardHeader>
-          <img src={langbotIcon.src} alt="LangBot" className="w-16 h-16 mb-4 mx-auto" />
+          <img
+            src={langbotIcon.src}
+            alt="LangBot"
+            className="w-16 h-16 mb-4 mx-auto"
+          />
           <CardTitle className="text-2xl text-center">
             初始化 LangBot 👋
           </CardTitle>
@@ -134,10 +141,7 @@ export default function Register() {
                 )}
               />
 
-              <Button
-                type="submit"
-                className="w-full mt-4 cursor-pointer"
-              >
+              <Button type="submit" className="w-full mt-4 cursor-pointer">
                 注册
               </Button>
             </form>

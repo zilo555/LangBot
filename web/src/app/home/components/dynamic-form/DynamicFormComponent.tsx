@@ -1,7 +1,7 @@
 import { IDynamicFormItemSchema } from '@/app/infra/entities/form/dynamic';
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import {
   Form,
   FormControl,
@@ -9,7 +9,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
+} from '@/components/ui/form';
 import DynamicFormItemComponent from '@/app/home/components/dynamic-form/DynamicFormItemComponent';
 import { useEffect } from 'react';
 
@@ -20,53 +20,62 @@ export default function DynamicFormComponent({
 }: {
   itemConfigList: IDynamicFormItemSchema[];
   onSubmit?: (val: object) => unknown;
-  initialValues?: Record<string, any>;
+  initialValues?: Record<string, object>;
 }) {
   // 根据 itemConfigList 动态生成 zod schema
   const formSchema = z.object(
-    itemConfigList.reduce((acc, item) => {
-      let fieldSchema;
-      switch (item.type) {
-        case 'integer':
-          fieldSchema = z.number();
-          break;
-        case 'float':
-          fieldSchema = z.number();
-          break;
-        case 'boolean':
-          fieldSchema = z.boolean();
-          break;
-        case 'string':
-          fieldSchema = z.string();
-          break;
-        case 'array[string]':
-          fieldSchema = z.array(z.string());
-          break;
-        case 'select':
-          fieldSchema = z.string();
-          break;
-        case 'llm-model-selector':
-          fieldSchema = z.string();
-          break;
-        case 'prompt-editor':
-          fieldSchema = z.array(z.object({
-            content: z.string(),
-            role: z.string(),
-          }));
-          break;
-        default:
-          fieldSchema = z.string();
-      }
+    itemConfigList.reduce(
+      (acc, item) => {
+        let fieldSchema;
+        switch (item.type) {
+          case 'integer':
+            fieldSchema = z.number();
+            break;
+          case 'float':
+            fieldSchema = z.number();
+            break;
+          case 'boolean':
+            fieldSchema = z.boolean();
+            break;
+          case 'string':
+            fieldSchema = z.string();
+            break;
+          case 'array[string]':
+            fieldSchema = z.array(z.string());
+            break;
+          case 'select':
+            fieldSchema = z.string();
+            break;
+          case 'llm-model-selector':
+            fieldSchema = z.string();
+            break;
+          case 'prompt-editor':
+            fieldSchema = z.array(
+              z.object({
+                content: z.string(),
+                role: z.string(),
+              }),
+            );
+            break;
+          default:
+            fieldSchema = z.string();
+        }
 
-      if (item.required && (fieldSchema instanceof z.ZodString || fieldSchema instanceof z.ZodArray)) {
-        fieldSchema = fieldSchema.min(1, { message: '此字段为必填项' });
-      }
+        if (
+          item.required &&
+          (fieldSchema instanceof z.ZodString ||
+            fieldSchema instanceof z.ZodArray)
+        ) {
+          fieldSchema = fieldSchema.min(1, { message: '此字段为必填项' });
+        }
 
-      return {
-        ...acc,
-        [item.name]: fieldSchema,
-      };
-    }, {} as Record<string, z.ZodTypeAny>)
+        return {
+          ...acc,
+          [item.name]: fieldSchema,
+        };
+      },
+      {} as Record<string, z.ZodTypeAny>,
+    ),
   );
 
   type FormValues = z.infer<typeof formSchema>;
@@ -88,11 +97,14 @@ export default function DynamicFormComponent({
     console.log('initialValues', initialValues);
     if (initialValues) {
       // 合并默认值和初始值
-      const mergedValues = itemConfigList.reduce((acc, item) => {
-        acc[item.name] = initialValues[item.name] ?? item.default;
-        return acc;
-      }, {} as Record<string, any>);
-      
+      const mergedValues = itemConfigList.reduce(
+        (acc, item) => {
+          acc[item.name] = initialValues[item.name] ?? item.default;
+          return acc;
+        },
+        {} as Record<string, object>,
+      );
+
       Object.entries(mergedValues).forEach(([key, value]) => {
         form.setValue(key as keyof FormValues, value);
       });
@@ -101,14 +113,17 @@ export default function DynamicFormComponent({
 
   // 监听表单值变化
   useEffect(() => {
-    const subscription = form.watch((value) => {
+    const subscription = form.watch(() => {
       // 获取完整的表单值，确保包含所有默认值
       const formValues = form.getValues();
       console.log('formValues', formValues);
-      const finalValues = itemConfigList.reduce((acc, item) => {
-        acc[item.name] = formValues[item.name] ?? item.default;
-        return acc;
-      }, {} as Record<string, any>);
+      const finalValues = itemConfigList.reduce(
+        (acc, item) => {
+          acc[item.name] = formValues[item.name] ?? item.default;
+          return acc;
+        },
+        {} as Record<string, object>,
+      );
       console.log('finalValues', finalValues);
       onSubmit?.(finalValues);
     });
@@ -125,12 +140,12 @@ export default function DynamicFormComponent({
             name={config.name as keyof FormValues}
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{config.label.zh_CN} {config.required && <span className="text-red-500">*</span>}</FormLabel>
+                <FormLabel>
+                  {config.label.zh_CN}{' '}
+                  {config.required && <span className="text-red-500">*</span>}
+                </FormLabel>
                 <FormControl>
-                  <DynamicFormItemComponent
-                    config={config}
-                    field={field}
-                  />
+                  <DynamicFormItemComponent config={config} field={field} />
                 </FormControl>
                 {config.description && (
                   <p className="text-sm text-muted-foreground">

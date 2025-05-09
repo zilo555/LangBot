@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { LLMCardVO } from '@/app/home/models/component/llm-card/LLMCardVO';
 import styles from './LLMConfig.module.css';
-import EmptyAndCreateComponent from '@/app/home/components/empty-and-create-component/EmptyAndCreateComponent';
 import LLMCard from '@/app/home/models/component/llm-card/LLMCard';
 import LLMForm from '@/app/home/models/component/llm-form/LLMForm';
 import CreateCardComponent from '@/app/infra/basic-component/create-card-component/CreateCardComponent';
@@ -12,12 +11,10 @@ import { LLMModel } from '@/app/infra/entities/api';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { toast } from "sonner";
+} from '@/components/ui/dialog';
+import { toast } from 'sonner';
 
 export default function LLMConfigPage() {
   const [cardList, setCardList] = useState<LLMCardVO[]>([]);
@@ -47,7 +44,9 @@ export default function LLMConfigPage() {
             id: model.uuid,
             iconURL: httpClient.getProviderRequesterIconURL(model.requester),
             name: model.name,
-            providerLabel: requesterNameList.find((item) => item.value === model.requester)?.label || model.requester.substring(0, 10),
+            providerLabel:
+              requesterNameList.find((item) => item.value === model.requester)
+                ?.label || model.requester.substring(0, 10),
             baseURL: model.requester_config?.base_url,
             abilities: model.abilities || [],
           });
@@ -57,7 +56,7 @@ export default function LLMConfigPage() {
       })
       .catch((err) => {
         console.error('get LLM model list error', err);
-        toast.error("获取模型列表失败：" + err.message);
+        toast.error('获取模型列表失败：' + err.message);
       });
   }
 
@@ -74,8 +73,7 @@ export default function LLMConfigPage() {
   }
 
   return (
-    <div >
-
+    <div>
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="w-[700px] p-6">
           <DialogHeader>
@@ -99,7 +97,6 @@ export default function LLMConfigPage() {
         </DialogContent>
       </Dialog>
       <div className={`${styles.modelListContainer}`}>
-
         <CreateCardComponent
           width={'24rem'}
           height={'10rem'}

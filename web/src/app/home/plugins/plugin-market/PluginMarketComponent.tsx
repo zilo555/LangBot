@@ -9,18 +9,23 @@ import { Input } from '@/components/ui/input';
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+} from '@/components/ui/pagination';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export default function PluginMarketComponent({
   askInstallPlugin,
 }: {
-  askInstallPlugin: (githubURL: string) => void,
+  askInstallPlugin: (githubURL: string) => void;
 }) {
   const [marketPluginList, setMarketPluginList] = useState<
     PluginMarketCardVO[]
@@ -45,7 +50,7 @@ export default function PluginMarketComponent({
 
   function onInputSearchKeyword(keyword: string) {
     setSearchKeyword(keyword);
-    
+
     // 清除之前的定时器
     if (searchTimeout.current) {
       clearTimeout(searchTimeout.current);
@@ -69,33 +74,31 @@ export default function PluginMarketComponent({
       .getMarketPlugins(page, pageSize, keyword, sortBy, sortOrder)
       .then((res) => {
         setMarketPluginList(
-          res.plugins.map(
-            (marketPlugin) => {
-              let repository = marketPlugin.repository;
-              if (repository.startsWith('https://github.com/')) {
-                repository = repository.replace('https://github.com/', '');
-              }
+          res.plugins.map((marketPlugin) => {
+            let repository = marketPlugin.repository;
+            if (repository.startsWith('https://github.com/')) {
+              repository = repository.replace('https://github.com/', '');
+            }
 
-              if (repository.startsWith('github.com/')) {
-                repository = repository.replace('github.com/', '');
-              }
+            if (repository.startsWith('github.com/')) {
+              repository = repository.replace('github.com/', '');
+            }
 
-              const author = repository.split('/')[0];
-              const name = repository.split('/')[1];
-              return new PluginMarketCardVO({
-                author: author,
-                description: marketPlugin.description,
-                githubURL: `https://github.com/${repository}`,
-                name: name,
-                pluginId: String(marketPlugin.ID),
-                starCount: marketPlugin.stars,
-                version:
-                  'version' in marketPlugin
-                    ? String(marketPlugin.version)
-                    : '1.0.0', // Default version if not provided
-              });
-            },
-          ),
+            const author = repository.split('/')[0];
+            const name = repository.split('/')[1];
+            return new PluginMarketCardVO({
+              author: author,
+              description: marketPlugin.description,
+              githubURL: `https://github.com/${repository}`,
+              name: name,
+              pluginId: String(marketPlugin.ID),
+              starCount: marketPlugin.stars,
+              version:
+                'version' in marketPlugin
+                  ? String(marketPlugin.version)
+                  : '1.0.0', // Default version if not provided
+            });
+          }),
         );
         setTotalCount(res.total);
         setLoading(false);
@@ -113,7 +116,7 @@ export default function PluginMarketComponent({
   }
 
   function handleSortChange(value: string) {
-    const [newSortBy, newSortOrder] = value.split(',').map(s => s.trim());
+    const [newSortBy, newSortOrder] = value.split(',').map((s) => s.trim());
     setSortByValue(newSortBy);
     setSortOrderValue(newSortOrder);
     setNowPage(1);
@@ -132,7 +135,10 @@ export default function PluginMarketComponent({
           onChange={(e) => onInputSearchKeyword(e.target.value)}
         />
 
-        <Select value={`${sortByValue},${sortOrderValue}`} onValueChange={handleSortChange}>
+        <Select
+          value={`${sortByValue},${sortOrderValue}`}
+          onValueChange={handleSortChange}
+        >
           <SelectTrigger className="w-[180px] ml-2 cursor-pointer">
             <SelectValue placeholder="排序方式" />
           </SelectTrigger>
@@ -147,10 +153,12 @@ export default function PluginMarketComponent({
           {totalCount > 0 && (
             <Pagination>
               <PaginationContent>
-                <PaginationItem className='cursor-pointer'>
+                <PaginationItem className="cursor-pointer">
                   <PaginationPrevious
                     onClick={() => handlePageChange(nowPage - 1)}
-                    className={nowPage <= 1 ? 'pointer-events-none opacity-50' : ''}
+                    className={
+                      nowPage <= 1 ? 'pointer-events-none opacity-50' : ''
+                    }
                   />
                 </PaginationItem>
 
@@ -158,35 +166,50 @@ export default function PluginMarketComponent({
                 {(() => {
                   const totalPages = Math.ceil(totalCount / pageSize);
                   const maxVisiblePages = 5;
-                  let startPage = Math.max(1, nowPage - Math.floor(maxVisiblePages / 2));
-                  let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                  let startPage = Math.max(
+                    1,
+                    nowPage - Math.floor(maxVisiblePages / 2),
+                  );
+                  const endPage = Math.min(
+                    totalPages,
+                    startPage + maxVisiblePages - 1,
+                  );
 
                   if (endPage - startPage + 1 < maxVisiblePages) {
                     startPage = Math.max(1, endPage - maxVisiblePages + 1);
                   }
 
-                  return Array.from({ length: endPage - startPage + 1 }, (_, i) => {
-                    const pageNum = startPage + i;
-                    return (
-                      <PaginationItem key={pageNum} className='cursor-pointer'>
-                        <PaginationLink
-                          isActive={pageNum === nowPage}
-                          onClick={() => handlePageChange(pageNum)}
+                  return Array.from(
+                    { length: endPage - startPage + 1 },
+                    (_, i) => {
+                      const pageNum = startPage + i;
+                      return (
+                        <PaginationItem
+                          key={pageNum}
+                          className="cursor-pointer"
                         >
-                          <span className="text-black select-none">
-                            {pageNum}
-                          </span>
-                        </PaginationLink>
-                      </PaginationItem>
-                    );
-                  });
+                          <PaginationLink
+                            isActive={pageNum === nowPage}
+                            onClick={() => handlePageChange(pageNum)}
+                          >
+                            <span className="text-black select-none">
+                              {pageNum}
+                            </span>
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    },
+                  );
                 })()}
 
-
-                <PaginationItem className='cursor-pointer'>
+                <PaginationItem className="cursor-pointer">
                   <PaginationNext
                     onClick={() => handlePageChange(nowPage + 1)}
-                    className={nowPage >= Math.ceil(totalCount / pageSize) ? 'pointer-events-none opacity-50' : ''}
+                    className={
+                      nowPage >= Math.ceil(totalCount / pageSize)
+                        ? 'pointer-events-none opacity-50'
+                        : ''
+                    }
                   />
                 </PaginationItem>
               </PaginationContent>
@@ -207,9 +230,12 @@ export default function PluginMarketComponent({
         ) : (
           marketPluginList.map((vo, index) => (
             <div key={`${vo.pluginId}-${index}`}>
-              <PluginMarketCardComponent cardVO={vo} installPlugin={(githubURL) => {
-                askInstallPlugin(githubURL);
-              }} />
+              <PluginMarketCardComponent
+                cardVO={vo}
+                installPlugin={(githubURL) => {
+                  askInstallPlugin(githubURL);
+                }}
+              />
             </div>
           ))
         )}

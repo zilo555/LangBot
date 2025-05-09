@@ -1,4 +1,8 @@
-import { IDynamicFormItemSchema, DynamicFormItemType, IDynamicFormItemOption } from '@/app/infra/entities/form/dynamic';
+import {
+  IDynamicFormItemSchema,
+  DynamicFormItemType,
+  IDynamicFormItemOption,
+} from '@/app/infra/entities/form/dynamic';
 import { I18nLabel } from '@/app/infra/entities/common';
 
 export class DynamicFormItemConfig implements IDynamicFormItemSchema {
@@ -23,7 +27,6 @@ export class DynamicFormItemConfig implements IDynamicFormItemSchema {
   }
 }
 
-
 export function isDynamicFormItemType(
   value: string,
 ): value is DynamicFormItemType {
@@ -36,9 +39,16 @@ export function parseDynamicFormItemType(value: string): DynamicFormItemType {
   return isDynamicFormItemType(value) ? value : DynamicFormItemType.UNKNOWN;
 }
 
-export function getDefaultValues(itemConfigList: IDynamicFormItemSchema[]): Record<string, any> {
-  return itemConfigList.reduce((acc, item) => {
-    acc[item.name] = item.default;
-    return acc;
-  }, {} as Record<string, any>);
+export function getDefaultValues(
+  itemConfigList: IDynamicFormItemSchema[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Record<string, any> {
+  return itemConfigList.reduce(
+    (acc, item) => {
+      acc[item.name] = item.default;
+      return acc;
+    },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    {} as Record<string, any>,
+  );
 }

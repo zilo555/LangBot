@@ -1,5 +1,4 @@
 import { IDynamicFormItemSchema } from '@/app/infra/entities/form/dynamic';
-import { I18nLabel } from '@/app/infra/entities/common';
 import { PipelineConfigTab } from '@/app/infra/entities/pipeline';
 
 export interface ApiResponse<T> {
@@ -32,7 +31,7 @@ export interface Requester {
   icon?: string;
   spec: {
     config: IDynamicFormItemSchema[];
-  }
+  };
 }
 
 export interface ApiRespProviderLLMModels {

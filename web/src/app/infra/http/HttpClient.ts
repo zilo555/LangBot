@@ -28,10 +28,8 @@ import {
   MarketPluginResponse,
   GetPipelineResponseData,
   GetPipelineMetadataResponseData,
-  AsyncTask
+  AsyncTask,
 } from '@/app/infra/entities/api';
-import { toast } from "sonner"
-
 
 type JSONValue = string | number | boolean | JSONObject | JSONArray | null;
 interface JSONObject {
@@ -130,9 +128,8 @@ class HttpClient {
 
           switch (status) {
             case 401:
-              
               console.log('401 error: ', errMessage, error.request);
-              console.log('responseURL', error.request.responseURL)
+              console.log('responseURL', error.request.responseURL);
               localStorage.removeItem('token');
               if (!error.request.responseURL.includes('/check-token')) {
                 window.location.href = '/login';
@@ -231,7 +228,10 @@ class HttpClient {
   }
 
   public getProviderRequesterIconURL(name: string): string {
-    return this.instance.defaults.baseURL + `/api/v1/provider/requesters/${name}/icon`;
+    return (
+      this.instance.defaults.baseURL +
+      `/api/v1/provider/requesters/${name}/icon`
+    );
   }
 
   // ============ Provider Model LLM ============
@@ -289,7 +289,9 @@ class HttpClient {
   }
 
   public getAdapterIconURL(name: string): string {
-    return this.instance.defaults.baseURL + `/api/v1/platform/adapters/${name}/icon`;
+    return (
+      this.instance.defaults.baseURL + `/api/v1/platform/adapters/${name}/icon`
+    );
   }
 
   // ============ Platform Bots ============
@@ -418,7 +420,7 @@ class HttpClient {
 }
 
 // export const httpClient = new HttpClient("https://version-4.langbot.dev");
-export const httpClient = new HttpClient("http://localhost:5300");
+export const httpClient = new HttpClient('http://localhost:5300');
 
 // 临时写法，未来两种Client都继承自HttpClient父类，不允许共享方法
 export const spaceClient = new HttpClient('https://space.langbot.app');

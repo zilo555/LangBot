@@ -1,15 +1,18 @@
-
 import { useEffect, useState } from 'react';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { Pipeline } from '@/app/infra/entities/api';
-import { PipelineFormEntity, PipelineConfigTab, PipelineConfigStage } from '@/app/infra/entities/pipeline';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  PipelineFormEntity,
+  PipelineConfigTab,
+  PipelineConfigStage,
+} from '@/app/infra/entities/pipeline';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DynamicFormComponent from '@/app/home/components/dynamic-form/DynamicFormComponent';
 import { Button } from '@/components/ui/button';
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { z } from "zod"
-import { Input } from "@/components/ui/input"
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Input } from '@/components/ui/input';
 import {
   Form,
   FormControl,
@@ -17,8 +20,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { toast } from "sonner"
+} from '@/components/ui/form';
+import { toast } from 'sonner';
 
 export default function PipelineFormComponent({
   initValues,
@@ -26,7 +29,6 @@ export default function PipelineFormComponent({
   onNewPipelineCreated,
   isEditMode,
   pipelineId,
-  disableForm,
 }: {
   pipelineId?: string;
   isEditMode: boolean;
@@ -36,48 +38,52 @@ export default function PipelineFormComponent({
   onFinish: () => void;
   onNewPipelineCreated: (pipelineId: string) => void;
 }) {
-
-  const formSchema = isEditMode ? z.object({
-    basic: z.object({
-      name: z.string().min(1, { message: '名称不能为空' }),
-      description: z.string().min(1, { message: '描述不能为空' }),
-    }),
-    ai: z.record(z.string(), z.any()),
-    trigger: z.record(z.string(), z.any()),
-    safety: z.record(z.string(), z.any()),
-    output: z.record(z.string(), z.any()),
-  })
+  const formSchema = isEditMode
+    ? z.object({
+        basic: z.object({
+          name: z.string().min(1, { message: '名称不能为空' }),
+          description: z.string().min(1, { message: '描述不能为空' }),
+        }),
+        ai: z.record(z.string(), z.any()),
+        trigger: z.record(z.string(), z.any()),
+        safety: z.record(z.string(), z.any()),
+        output: z.record(z.string(), z.any()),
+      })
     : z.object({
-      basic: z.object({
-        name: z.string().min(1, { message: '名称不能为空' }),
-        description: z.string().min(1, { message: '描述不能为空' }),
-      }),
-      ai: z.record(z.string(), z.any()).optional(),
-      trigger: z.record(z.string(), z.any()).optional(),
-      safety: z.record(z.string(), z.any()).optional(),
-      output: z.record(z.string(), z.any()).optional(),
-    });
+        basic: z.object({
+          name: z.string().min(1, { message: '名称不能为空' }),
+          description: z.string().min(1, { message: '描述不能为空' }),
+        }),
+        ai: z.record(z.string(), z.any()).optional(),
+        trigger: z.record(z.string(), z.any()).optional(),
+        safety: z.record(z.string(), z.any()).optional(),
+        output: z.record(z.string(), z.any()).optional(),
+      });
 
   type FormValues = z.infer<typeof formSchema>;
   // 这里不好，可以改成enum等
-  const formLabelList: FormLabel[] = isEditMode ? [
-    { label: '基础信息', name: 'basic' },
-    { label: 'AI能力', name: 'ai' },
-    { label: '触发条件', name: 'trigger' },
-    { label: '安全能力', name: 'safety' },
-    { label: '输出处理', name: 'output' },
-  ] : [
-    { label: '基础信息', name: 'basic' },
-  ];
+  const formLabelList: FormLabel[] = isEditMode
+    ? [
+        { label: '基础信息', name: 'basic' },
+        { label: 'AI能力', name: 'ai' },
+        { label: '触发条件', name: 'trigger' },
+        { label: '安全能力', name: 'safety' },
+        { label: '输出处理', name: 'output' },
+      ]
+    : [{ label: '基础信息', name: 'basic' }];
   // const [basicForm] = Form.useForm();
   // const [aiForm] = Form.useForm();
   // const [triggerForm] = Form.useForm();
   // const [safetyForm] = Form.useForm();
   // const [outputForm] = Form.useForm();
-  const [aiConfigTabSchema, setAIConfigTabSchema] = useState<PipelineConfigTab>();
-  const [triggerConfigTabSchema, setTriggerConfigTabSchema] = useState<PipelineConfigTab>();
-  const [safetyConfigTabSchema, setSafetyConfigTabSchema] = useState<PipelineConfigTab>();
-  const [outputConfigTabSchema, setOutputConfigTabSchema] = useState<PipelineConfigTab>();
+  const [aiConfigTabSchema, setAIConfigTabSchema] =
+    useState<PipelineConfigTab>();
+  const [triggerConfigTabSchema, setTriggerConfigTabSchema] =
+    useState<PipelineConfigTab>();
+  const [safetyConfigTabSchema, setSafetyConfigTabSchema] =
+    useState<PipelineConfigTab>();
+  const [outputConfigTabSchema, setOutputConfigTabSchema] =
+    useState<PipelineConfigTab>();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -91,7 +97,6 @@ export default function PipelineFormComponent({
   });
 
   useEffect(() => {
-
     // get config schema from metadata
     httpClient.getGeneralPipelineMetadata().then((resp) => {
       for (const config of resp.configs) {
@@ -121,7 +126,7 @@ export default function PipelineFormComponent({
         },
       });
     }
-  }, [initValues, form]);
+  }, [initValues, form, isEditMode]);
 
   function handleFormSubmit(values: FormValues) {
     console.log('handleFormSubmit', values);
@@ -139,17 +144,19 @@ export default function PipelineFormComponent({
       description: values.basic.description,
       name: values.basic.name,
     };
-    httpClient.createPipeline(pipeline).then((resp) => {
-      onFinish();
-      onNewPipelineCreated(resp.uuid);
-      toast.success("创建成功 请编辑流水线详细参数");
-    }).catch((err) => {
-      toast.error("创建失败：" + err.message);
-    });
+    httpClient
+      .createPipeline(pipeline)
+      .then((resp) => {
+        onFinish();
+        onNewPipelineCreated(resp.uuid);
+        toast.success('创建成功 请编辑流水线详细参数');
+      })
+      .catch((err) => {
+        toast.error('创建失败：' + err.message);
+      });
   }
 
   function handleModify(values: FormValues) {
-
     const realConfig = {
       ai: values.ai,
       trigger: values.trigger,
@@ -168,15 +175,21 @@ export default function PipelineFormComponent({
       // uuid: pipelineId || '',
       // is_default: false,
     };
-    httpClient.updatePipeline(pipelineId || '', pipeline).then(() => {
-      onFinish();
-      toast.success("保存成功");
-    }).catch((err) => {
-      toast.error("保存失败：" + err.message);
-    });
+    httpClient
+      .updatePipeline(pipelineId || '', pipeline)
+      .then(() => {
+        onFinish();
+        toast.success('保存成功');
+      })
+      .catch((err) => {
+        toast.error('保存失败：' + err.message);
+      });
   }
 
-  function renderDynamicForms(stage: PipelineConfigStage, formName: keyof FormValues) {
+  function renderDynamicForms(
+    stage: PipelineConfigStage,
+    formName: keyof FormValues,
+  ) {
     // 如果是 AI 配置，需要特殊处理
     if (formName === 'ai') {
       // 获取当前选择的 runner
@@ -188,13 +201,21 @@ export default function PipelineFormComponent({
           <div key={stage.name} className="space-y-4 mb-6">
             <div className="text-lg font-medium">{stage.label.zh_CN}</div>
             {stage.description && (
-              <div className="text-sm text-gray-500">{stage.description.zh_CN}</div>
+              <div className="text-sm text-gray-500">
+                {stage.description.zh_CN}
+              </div>
             )}
             <DynamicFormComponent
               itemConfigList={stage.config}
-              initialValues={(form.watch(formName) as Record<string, any>)?.[stage.name] || {}}
+              initialValues={
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                (form.watch(formName) as Record<string, any>)?.[stage.name] ||
+                {}
+              }
               onSubmit={(values) => {
-                const currentValues = form.getValues(formName) as Record<string, any> || {};
+                const currentValues =
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  (form.getValues(formName) as Record<string, any>) || {};
                 form.setValue(formName, {
                   ...currentValues,
                   [stage.name]: values,
@@ -219,9 +240,14 @@ export default function PipelineFormComponent({
         )}
         <DynamicFormComponent
           itemConfigList={stage.config}
-          initialValues={(form.watch(formName) as Record<string, any>)?.[stage.name] || {}}
+          initialValues={
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (form.watch(formName) as Record<string, any>)?.[stage.name] || {}
+          }
           onSubmit={(values) => {
-            const currentValues = form.getValues(formName) as Record<string, any> || {};
+            const currentValues =
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (form.getValues(formName) as Record<string, any>) || {};
             form.setValue(formName, {
               ...currentValues,
               [stage.name]: values,
@@ -246,7 +272,11 @@ export default function PipelineFormComponent({
             </TabsList>
 
             {formLabelList.map((formLabel) => (
-              <TabsContent key={formLabel.name} value={formLabel.name} className='pr-6'>
+              <TabsContent
+                key={formLabel.name}
+                value={formLabel.name}
+                className="pr-6"
+              >
                 <h1 className="text-xl font-bold mb-4">{formLabel.label}</h1>
 
                 {formLabel.name === 'basic' && (
@@ -256,7 +286,9 @@ export default function PipelineFormComponent({
                       name="basic.name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>名称<span className="text-red-500">*</span></FormLabel>
+                          <FormLabel>
+                            名称<span className="text-red-500">*</span>
+                          </FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
@@ -270,7 +302,9 @@ export default function PipelineFormComponent({
                       name="basic.description"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>描述<span className="text-red-500">*</span></FormLabel>
+                          <FormLabel>
+                            描述<span className="text-red-500">*</span>
+                          </FormLabel>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
@@ -285,25 +319,33 @@ export default function PipelineFormComponent({
                   <>
                     {formLabel.name === 'ai' && aiConfigTabSchema && (
                       <div className="space-y-6">
-                        {aiConfigTabSchema.stages.map((stage) => renderDynamicForms(stage, 'ai'))}
+                        {aiConfigTabSchema.stages.map((stage) =>
+                          renderDynamicForms(stage, 'ai'),
+                        )}
                       </div>
                     )}
 
                     {formLabel.name === 'trigger' && triggerConfigTabSchema && (
                       <div className="space-y-6">
-                        {triggerConfigTabSchema.stages.map((stage) => renderDynamicForms(stage, 'trigger'))}
+                        {triggerConfigTabSchema.stages.map((stage) =>
+                          renderDynamicForms(stage, 'trigger'),
+                        )}
                       </div>
                     )}
 
                     {formLabel.name === 'safety' && safetyConfigTabSchema && (
                       <div className="space-y-6">
-                        {safetyConfigTabSchema.stages.map((stage) => renderDynamicForms(stage, 'safety'))}
+                        {safetyConfigTabSchema.stages.map((stage) =>
+                          renderDynamicForms(stage, 'safety'),
+                        )}
                       </div>
                     )}
 
                     {formLabel.name === 'output' && outputConfigTabSchema && (
                       <div className="space-y-6">
-                        {outputConfigTabSchema.stages.map((stage) => renderDynamicForms(stage, 'output'))}
+                        {outputConfigTabSchema.stages.map((stage) =>
+                          renderDynamicForms(stage, 'output'),
+                        )}
                       </div>
                     )}
                   </>
@@ -314,9 +356,7 @@ export default function PipelineFormComponent({
 
           <div className="sticky bottom-0 left-0 right-0 bg-background border-t p-4 mt-4">
             <div className="flex justify-end gap-2">
-              <Button type="submit">
-                {isEditMode ? '保存' : '提交'}
-              </Button>
+              <Button type="submit">{isEditMode ? '保存' : '提交'}</Button>
               <Button type="button" variant="outline" onClick={onFinish}>
                 取消
               </Button>

@@ -10,13 +10,10 @@ import styles from './pipelineConfig.module.css';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { Button } from '@/components/ui/button';
-import { toast } from "sonner"
+} from '@/components/ui/dialog';
+import { toast } from 'sonner';
 export default function PluginConfigPage() {
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [isEditForm, setIsEditForm] = useState(false);
@@ -40,11 +37,21 @@ export default function PluginConfigPage() {
     httpClient
       .getPipelines()
       .then((value) => {
-        let currentTime = new Date();
+        const currentTime = new Date();
         const pipelineList = value.pipelines.map((pipeline) => {
-          let lastUpdatedTimeAgo = Math.floor((currentTime.getTime() - new Date(pipeline.updated_at ?? currentTime.getTime()).getTime()) / 1000 / 60 / 60 / 24);
+          const lastUpdatedTimeAgo = Math.floor(
+            (currentTime.getTime() -
+              new Date(
+                pipeline.updated_at ?? currentTime.getTime(),
+              ).getTime()) /
+              1000 /
+              60 /
+              60 /
+              24,
+          );
 
-          let lastUpdatedTimeAgoText = lastUpdatedTimeAgo > 0 ? ` ${lastUpdatedTimeAgo} 天前` : '今天';
+          const lastUpdatedTimeAgoText =
+            lastUpdatedTimeAgo > 0 ? ` ${lastUpdatedTimeAgo} 天前` : '今天';
 
           return new PipelineCardVO({
             lastUpdatedTimeAgo: lastUpdatedTimeAgoText,
@@ -58,7 +65,7 @@ export default function PluginConfigPage() {
       })
       .catch((error) => {
         console.log(error);
-        toast.error("获取流水线列表失败：" + error.message);
+        toast.error('获取流水线列表失败：' + error.message);
       });
   }
 
@@ -80,7 +87,6 @@ export default function PluginConfigPage() {
 
   return (
     <div className={styles.configPageContainer}>
-
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="w-[700px] max-h-[80vh] p-0 flex flex-col">
           <DialogHeader className="px-6 pt-6 pb-4">
