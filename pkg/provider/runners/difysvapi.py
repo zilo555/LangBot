@@ -114,6 +114,8 @@ class DifyServiceAPIRunner(runner.RequestRunner):
         inputs = {}
         
         inputs.update(query.variables)
+        
+        chunk = None  # 初始化chunk变量，防止在没有响应时引用错误
 
         async for chunk in self.dify_client.chat_messages(
             inputs=inputs,
@@ -144,6 +146,9 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                         content=self._try_convert_thinking(basic_mode_pending_chunk),
                     )
                     basic_mode_pending_chunk = ''
+        
+        if chunk is None:
+            raise errors.DifyAPIError("Dify API 没有返回任何响应，请检查网络连接和API配置")
 
         query.session.using_conversation.uuid = chunk["conversation_id"]
 
@@ -171,6 +176,8 @@ class DifyServiceAPIRunner(runner.RequestRunner):
         inputs.update(query.variables)
 
         pending_agent_message = ''
+        
+        chunk = None  # 初始化chunk变量，防止在没有响应时引用错误
 
         async for chunk in self.dify_client.chat_messages(
             inputs=inputs,
@@ -234,6 +241,9 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                         )
                 if chunk['event'] == 'error':
                     raise errors.DifyAPIError("dify 服务错误: " + chunk['message'])
+        
+        if chunk is None:
+            raise errors.DifyAPIError("Dify API 没有返回任何响应，请检查网络连接和API配置")
 
         query.session.using_conversation.uuid = chunk["conversation_id"]
 
