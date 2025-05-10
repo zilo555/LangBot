@@ -34,7 +34,7 @@ export default function PluginMarketComponent({
   const [nowPage, setNowPage] = useState(1);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [sortByValue, setSortByValue] = useState<string>('stars');
+  const [sortByValue, setSortByValue] = useState<string>('pushed_at');
   const [sortOrderValue, setSortOrderValue] = useState<string>('DESC');
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const pageSize = 10;
