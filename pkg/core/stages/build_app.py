@@ -51,8 +51,8 @@ class BuildAppStage(stage.BootingStage):
         ap.log_cache = log_cache
 
         persistence_mgr_inst = persistencemgr.PersistenceManager(ap)
-        await persistence_mgr_inst.initialize()
         ap.persistence_mgr = persistence_mgr_inst
+        await persistence_mgr_inst.initialize()
 
         plugin_mgr_inst = plugin_mgr.PluginManager(ap)
         await plugin_mgr_inst.initialize()

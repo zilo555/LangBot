@@ -76,7 +76,7 @@ class PersistenceManager:
                 'for_version': self.ap.ver_mgr.get_current_version(),
                 'stages': pipeline_service.default_stage_order,
                 'is_default': True,
-                'name': 'Chat Pipeline',
+                'name': 'ChatPipeline',
                 'description': '默认提供的流水线，您配置的机器人、第一个模型将自动绑定到此流水线',
                 'config': pipeline_config,
             }

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import secrets
 import os
 
 from .. import stage, app
@@ -50,12 +49,6 @@ class LoadConfigStage(stage.BootingStage):
                 completion=False,
             )
 
-        if os.path.exists('data/metadata/instance-secret.json'):
-            ap.instance_secret_meta = await config.load_json_config(
-                'data/metadata/instance-secret.json',
-                template_data={'jwt_secret': secrets.token_hex(16)},
-            )
-            await ap.instance_secret_meta.dump_config()
         # ======= deprecated =======
 
         ap.instance_config = await config.load_yaml_config(
