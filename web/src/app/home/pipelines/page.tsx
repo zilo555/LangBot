@@ -28,6 +28,8 @@ export default function PluginConfigPage() {
       output: {},
     });
   const [disableForm, setDisableForm] = useState(false);
+  const [selectedPipelineIsDefault, setSelectedPipelineIsDefault] =
+    useState(false);
 
   useEffect(() => {
     getPipelines();
@@ -81,6 +83,7 @@ export default function PluginConfigPage() {
         safety: value.pipeline.config.safety,
         trigger: value.pipeline.config.trigger,
       });
+      setSelectedPipelineIsDefault(value.pipeline.is_default ?? false);
       setDisableForm(false);
     });
   }
@@ -111,6 +114,7 @@ export default function PluginConfigPage() {
               pipelineId={selectedPipelineId}
               disableForm={disableForm}
               initValues={selectedPipelineFormValue}
+              isDefaultPipeline={selectedPipelineIsDefault}
             />
           </div>
         </DialogContent>

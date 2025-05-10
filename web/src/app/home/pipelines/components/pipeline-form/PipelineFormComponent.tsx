@@ -22,15 +22,25 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 export default function PipelineFormComponent({
   initValues,
+  isDefaultPipeline,
   onFinish,
   onNewPipelineCreated,
   isEditMode,
   pipelineId,
 }: {
   pipelineId?: string;
+  isDefaultPipeline: boolean;
   isEditMode: boolean;
   disableForm: boolean;
   // 这里的写法很不安全不规范，未来流水线需要重新整理
@@ -84,6 +94,7 @@ export default function PipelineFormComponent({
     useState<PipelineConfigTab>();
   const [outputConfigTabSchema, setOutputConfigTabSchema] =
     useState<PipelineConfigTab>();
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -258,8 +269,51 @@ export default function PipelineFormComponent({
     );
   }
 
+  function deletePipeline() {
+    httpClient
+      .deletePipeline(pipelineId || '')
+      .then(() => {
+        onFinish();
+        toast.success('删除成功');
+      })
+      .catch((err) => {
+        toast.error('删除失败：' + err.message);
+      });
+  }
+
   return (
     <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+      <Dialog
+        open={showDeleteConfirmModal}
+        onOpenChange={setShowDeleteConfirmModal}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>删除确认</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>
+            你确定要删除这个流水线吗？已绑定此流水线的机器人将无法使用。
+          </DialogDescription>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirmModal(false)}
+            >
+              取消
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                deletePipeline();
+                setShowDeleteConfirmModal(false);
+              }}
+            >
+              确认删除
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleFormSubmit)}>
           <Tabs defaultValue={formLabelList[0].name}>
@@ -355,9 +409,36 @@ export default function PipelineFormComponent({
           </Tabs>
 
           <div className="sticky bottom-0 left-0 right-0 bg-background border-t p-4 mt-4">
-            <div className="flex justify-end gap-2">
-              <Button type="submit">{isEditMode ? '保存' : '提交'}</Button>
-              <Button type="button" variant="outline" onClick={onFinish}>
+            <div className="flex justify-end items-center gap-2">
+              {isEditMode && isDefaultPipeline && (
+                <span className="text-red-500 text-[0.7rem]">
+                  默认流水线不可删除
+                </span>
+              )}
+
+              {isEditMode && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => {
+                    setShowDeleteConfirmModal(true);
+                  }}
+                  disabled={form.formState.isSubmitting || isDefaultPipeline}
+                  className="cursor-pointer"
+                >
+                  删除
+                </Button>
+              )}
+
+              <Button type="submit" className="cursor-pointer">
+                {isEditMode ? '保存' : '提交'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onFinish}
+                className="cursor-pointer"
+              >
                 取消
               </Button>
             </div>
