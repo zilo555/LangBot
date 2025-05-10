@@ -24,9 +24,7 @@ export default function HomeSidebar({
     handleRouteChange(pathname);
   }, [pathname]);
 
-  const [selectedChild, setSelectedChild] = useState<SidebarChildVO>(
-    sidebarConfigList[0],
-  );
+  const [selectedChild, setSelectedChild] = useState<SidebarChildVO>();
 
   useEffect(() => {
     console.log('HomeSidebar挂载完成');
@@ -42,7 +40,17 @@ export default function HomeSidebar({
   }
 
   function initSelect() {
-    handleChildClick(sidebarConfigList[0]);
+    // 根据当前路径选择对应的菜单项
+    const currentPath = pathname;
+    const matchedChild = sidebarConfigList.find(
+      (childConfig) => childConfig.route === currentPath,
+    );
+    if (matchedChild) {
+      handleChildClick(matchedChild);
+    } else {
+      // 如果没有匹配的路径，则默认选择第一个
+      handleChildClick(sidebarConfigList[0]);
+    }
   }
 
   function handleRoute(child: SidebarChildVO) {
@@ -98,7 +106,10 @@ export default function HomeSidebar({
               >
                 <SidebarChild
                   onClick={() => {}}
-                  isSelected={selectedChild.id === config.id}
+                  isSelected={
+                    selectedChild !== undefined &&
+                    selectedChild.id === config.id
+                  }
                   icon={config.icon}
                   name={config.name}
                 />
