@@ -39,6 +39,7 @@ required_deps = {
     'mcp': 'mcp',
     'sqlmodel': 'sqlmodel',
     'telegramify_markdown': 'telegramify-markdown',
+    'slack_sdk': 'slack_sdk',
 }
 
 

@@ -24,7 +24,11 @@ class LocalAgentRunner(runner.RequestRunner):
 
         # 首次请求
         msg = await query.use_llm_model.requester.invoke_llm(
-            query, query.use_llm_model, req_messages, query.use_funcs
+            query,
+            query.use_llm_model,
+            req_messages,
+            query.use_funcs,
+            extra_args=query.use_llm_model.model_entity.extra_args,
         )
 
         yield msg
@@ -66,7 +70,11 @@ class LocalAgentRunner(runner.RequestRunner):
 
             # 处理完所有调用，再次请求
             msg = await query.use_llm_model.requester.invoke_llm(
-                query, query.use_llm_model, req_messages, query.use_funcs
+                query,
+                query.use_llm_model,
+                req_messages,
+                query.use_funcs,
+                extra_args=query.use_llm_model.model_entity.extra_args,
             )
 
             yield msg

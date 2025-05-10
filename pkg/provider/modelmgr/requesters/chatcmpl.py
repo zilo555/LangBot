@@ -26,7 +26,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
     async def initialize(self):
         self.client = openai.AsyncClient(
             api_key='',
-            base_url=self.requester_cfg['base-url'].replace(' ', ''),
+            base_url=self.requester_cfg['base_url'].replace(' ', ''),
             timeout=self.requester_cfg['timeout'],
             http_client=httpx.AsyncClient(
                 trust_env=True, timeout=self.requester_cfg['timeout']
@@ -79,7 +79,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
     ) -> llm_entities.Message:
         self.client.api_key = use_model.token_mgr.get_token()
 
-        args = extra_args.copy()
+        args = {}
         args['model'] = use_model.model_entity.name
 
         if use_funcs:
@@ -103,7 +103,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         args['messages'] = messages
 
         # 发送请求
-        resp = await self._req(args, extra_body=self.requester_cfg['args'])
+        resp = await self._req(args, extra_body=extra_args)
 
         # 处理请求结果
         message = await self._make_msg(resp)
