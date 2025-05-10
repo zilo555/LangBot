@@ -83,7 +83,7 @@ export default function LLMForm({
 }: {
   editMode: boolean;
   initLLMId?: string;
-  onFormSubmit: (value: z.infer<typeof formSchema>) => void;
+  onFormSubmit: () => void;
   onFormCancel: () => void;
   onLLMDeleted: () => void;
 }) {
@@ -222,20 +222,7 @@ export default function LLMForm({
   }
 
   function handleFormSubmit(value: z.infer<typeof formSchema>) {
-    if (editMode) {
-      // 暂不支持更改模型
-      // onSaveEdit(value)
-    } else {
-      onCreateLLM(value);
-    }
-    form.reset();
-  }
-
-  function onCreateLLM(value: z.infer<typeof formSchema>) {
-    console.log('create llm', value);
-    // 转换extra_args为对象格式
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const extraArgsObj: Record<string, any> = {};
+    const extraArgsObj: Record<string, string | number | boolean> = {};
     value.extra_args?.forEach((arg) => {
       if (arg.type === 'number') {
         extraArgsObj[arg.key] = Number(arg.value);
@@ -246,8 +233,8 @@ export default function LLMForm({
       }
     });
 
-    const requestParam: LLMModel = {
-      uuid: UUID.generate(),
+    const llmModel: LLMModel = {
+      uuid: editMode ? initLLMId || '' : UUID.generate(),
       name: value.name,
       description: '',
       requester: value.model_provider,
@@ -259,15 +246,36 @@ export default function LLMForm({
       api_keys: [value.api_key],
       abilities: value.abilities,
     };
-    httpClient
-      .createProviderLLMModel(requestParam)
-      .then(() => {
-        onFormSubmit(value);
-        toast.success('创建成功');
-      })
-      .catch((err) => {
-        toast.error('创建失败：' + err.message);
+
+    if (editMode) {
+      onSaveEdit(llmModel).then(() => {
+        form.reset();
       });
+    } else {
+      onCreateLLM(llmModel).then(() => {
+        form.reset();
+      });
+    }
+  }
+
+  async function onCreateLLM(llmModel: LLMModel) {
+    try {
+      await httpClient.createProviderLLMModel(llmModel);
+      onFormSubmit();
+      toast.success('创建成功');
+    } catch (err) {
+      toast.error('创建失败：' + (err as Error).message);
+    }
+  }
+
+  async function onSaveEdit(llmModel: LLMModel) {
+    try {
+      await httpClient.updateProviderLLMModel(initLLMId || '', llmModel);
+      onFormSubmit();
+      toast.success('保存成功');
+    } catch (err) {
+      toast.error('保存失败：' + (err as Error).message);
+    }
   }
 
   function deleteModel() {
@@ -524,7 +532,6 @@ export default function LLMForm({
             </FormItem>
           </div>
           <DialogFooter>
-            {!editMode && <Button type="submit">提交</Button>}
             {editMode && (
               <Button
                 type="button"
@@ -534,6 +541,9 @@ export default function LLMForm({
                 删除
               </Button>
             )}
+
+            <Button type="submit">{editMode ? '保存' : '提交'}</Button>
+
             <Button
               type="button"
               variant="outline"

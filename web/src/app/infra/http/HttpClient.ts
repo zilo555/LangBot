@@ -256,6 +256,13 @@ class HttpClient {
     return this.delete(`/api/v1/provider/models/llm/${uuid}`);
   }
 
+  public updateProviderLLMModel(
+    uuid: string,
+    model: LLMModel,
+  ): Promise<object> {
+    return this.put(`/api/v1/provider/models/llm/${uuid}`, model);
+  }
+
   // ============ Pipeline API ============
   public getGeneralPipelineMetadata(): Promise<GetPipelineMetadataResponseData> {
     // as designed, this method will be deprecated, and only for developer to check the prefered config schema
@@ -431,8 +438,8 @@ class HttpClient {
 }
 
 // export const httpClient = new HttpClient("https://version-4.langbot.dev");
-// export const httpClient = new HttpClient('http://localhost:5300');
-export const httpClient = new HttpClient('/');
+export const httpClient = new HttpClient('http://localhost:5300');
+// export const httpClient = new HttpClient('/');
 
 // 临时写法，未来两种Client都继承自HttpClient父类，不允许共享方法
 export const spaceClient = new HttpClient('https://space.langbot.app');

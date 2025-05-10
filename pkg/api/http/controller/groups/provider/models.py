@@ -19,7 +19,7 @@ class LLMModelsRouterGroup(group.RouterGroup):
 
                 return self.success(data={'uuid': model_uuid})
 
-        @self.route('/<model_uuid>', methods=['GET', 'DELETE'])
+        @self.route('/<model_uuid>', methods=['GET', 'PUT', 'DELETE'])
         async def _(model_uuid: str) -> str:
             if quart.request.method == 'GET':
                 model = await self.ap.model_service.get_llm_model(model_uuid)
@@ -28,12 +28,12 @@ class LLMModelsRouterGroup(group.RouterGroup):
                     return self.http_status(404, -1, 'model not found')
 
                 return self.success(data={'model': model})
-            # elif quart.request.method == 'PUT':
-            #     json_data = await quart.request.json
+            elif quart.request.method == 'PUT':
+                json_data = await quart.request.json
 
-            #     await self.ap.model_service.update_llm_model(model_uuid, json_data)
+                await self.ap.model_service.update_llm_model(model_uuid, json_data)
 
-            #     return self.success()
+                return self.success()
             elif quart.request.method == 'DELETE':
                 await self.ap.model_service.delete_llm_model(model_uuid)
 
