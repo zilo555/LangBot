@@ -411,19 +411,18 @@ export default function PipelineFormComponent({
           <div className="sticky bottom-0 left-0 right-0 bg-background border-t p-4 mt-4">
             <div className="flex justify-end items-center gap-2">
               {isEditMode && isDefaultPipeline && (
-                <span className="text-red-500 text-[0.7rem]">
+                <span className="text-gray-500 text-[0.7rem]">
                   默认流水线不可删除
                 </span>
               )}
 
-              {isEditMode && (
+              {isEditMode && !isDefaultPipeline && (
                 <Button
                   type="button"
                   variant="destructive"
                   onClick={() => {
                     setShowDeleteConfirmModal(true);
                   }}
-                  disabled={form.formState.isSubmitting || isDefaultPipeline}
                   className="cursor-pointer"
                 >
                   删除
