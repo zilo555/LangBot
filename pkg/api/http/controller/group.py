@@ -75,6 +75,11 @@ class RouterGroup(abc.ABC):
                     try:
                         user_email = await self.ap.user_service.verify_jwt_token(token)
 
+                        # check if this account exists
+                        user = await self.ap.user_service.get_user_by_email(user_email)
+                        if not user:
+                            return self.http_status(401, -1, '用户不存在')
+
                         # 检查f是否接受user_email参数
                         if 'user_email' in f.__code__.co_varnames:
                             kwargs['user_email'] = user_email

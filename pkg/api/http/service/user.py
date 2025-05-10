@@ -35,6 +35,14 @@ class UserService:
             )
         )
 
+    async def get_user_by_email(self, user_email: str) -> user.User | None:
+        result = await self.ap.persistence_mgr.execute_async(
+            sqlalchemy.select(user.User).where(user.User.user == user_email)
+        )
+
+        result_list = result.all()
+        return result_list[0] if result_list is not None and len(result_list) > 0 else None
+
     async def authenticate(self, user_email: str, password: str) -> str | None:
         result = await self.ap.persistence_mgr.execute_async(
             sqlalchemy.select(user.User).where(user.User.user == user_email)
