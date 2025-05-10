@@ -304,6 +304,7 @@ export default function BotForm({
         .deleteBot(initBotId)
         .then(() => {
           onBotDeleted();
+          toast.success('删除成功');
         })
         .catch((err) => {
           toast.error('删除失败：' + err.message);
