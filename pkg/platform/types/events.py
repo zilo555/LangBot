@@ -25,13 +25,7 @@ class Event(pydantic.BaseModel):
         return (
             self.__class__.__name__
             + '('
-            + ', '.join(
-                (
-                    f'{k}={repr(v)}'
-                    for k, v in self.__dict__.items()
-                    if k != 'type' and v
-                )
-            )
+            + ', '.join((f'{k}={repr(v)}' for k, v in self.__dict__.items() if k != 'type' and v))
             + ')'
         )
 

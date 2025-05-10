@@ -21,9 +21,7 @@ from ..types import entities as platform_entities
 
 class TelegramMessageConverter(adapter.MessageConverter):
     @staticmethod
-    async def yiri2target(
-        message_chain: platform_message.MessageChain, bot: telegram.Bot
-    ) -> list[dict]:
+    async def yiri2target(message_chain: platform_message.MessageChain, bot: telegram.Bot) -> list[dict]:
         components = []
 
         for component in message_chain:
@@ -45,18 +43,12 @@ class TelegramMessageConverter(adapter.MessageConverter):
                 components.append({'type': 'photo', 'photo': photo_bytes})
             elif isinstance(component, platform_message.Forward):
                 for node in component.node_list:
-                    components.extend(
-                        await TelegramMessageConverter.yiri2target(
-                            node.message_chain, bot
-                        )
-                    )
+                    components.extend(await TelegramMessageConverter.yiri2target(node.message_chain, bot))
 
         return components
 
     @staticmethod
-    async def target2yiri(
-        message: telegram.Message, bot: telegram.Bot, bot_account_id: str
-    ):
+    async def target2yiri(message: telegram.Message, bot: telegram.Bot, bot_account_id: str):
         message_components = []
 
         def parse_message_text(text: str) -> list[platform_message.MessageComponent]:
@@ -103,9 +95,7 @@ class TelegramEventConverter(adapter.EventConverter):
 
     @staticmethod
     async def target2yiri(event: Update, bot: telegram.Bot, bot_account_id: str):
-        lb_message = await TelegramMessageConverter.target2yiri(
-            event.message, bot, bot_account_id
-        )
+        lb_message = await TelegramMessageConverter.target2yiri(event.message, bot, bot_account_id)
 
         if event.effective_chat.type == 'private':
             return platform_events.FriendMessage(
@@ -166,9 +156,7 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
                 return
 
             try:
-                lb_event = await self.event_converter.target2yiri(
-                    update, self.bot, self.bot_account_id
-                )
+                lb_event = await self.event_converter.target2yiri(update, self.bot, self.bot_account_id)
                 await self.listeners[type(lb_event)](lb_event, self)
             except Exception:
                 print(traceback.format_exc())
@@ -176,14 +164,10 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
         self.application = ApplicationBuilder().token(self.config['token']).build()
         self.bot = self.application.bot
         self.application.add_handler(
-            MessageHandler(
-                filters.TEXT | (filters.COMMAND) | filters.PHOTO, telegram_callback
-            )
+            MessageHandler(filters.TEXT | (filters.COMMAND) | filters.PHOTO, telegram_callback)
         )
 
-    async def send_message(
-        self, target_type: str, target_id: str, message: platform_message.MessageChain
-    ):
+    async def send_message(self, target_type: str, target_id: str, message: platform_message.MessageChain):
         pass
 
     async def reply_message(
@@ -210,9 +194,7 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
                 if self.config['markdown_card'] is True:
                     args['parse_mode'] = 'MarkdownV2'
         if quote_origin:
-            args['reply_to_message_id'] = (
-                message_source.source_platform_object.message.id
-            )
+            args['reply_to_message_id'] = message_source.source_platform_object.message.id
 
         await self.bot.send_message(**args)
 
@@ -222,18 +204,14 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
     def register_listener(
         self,
         event_type: typing.Type[platform_events.Event],
-        callback: typing.Callable[
-            [platform_events.Event, adapter.MessagePlatformAdapter], None
-        ],
+        callback: typing.Callable[[platform_events.Event, adapter.MessagePlatformAdapter], None],
     ):
         self.listeners[event_type] = callback
 
     def unregister_listener(
         self,
         event_type: typing.Type[platform_events.Event],
-        callback: typing.Callable[
-            [platform_events.Event, adapter.MessagePlatformAdapter], None
-        ],
+        callback: typing.Callable[[platform_events.Event, adapter.MessagePlatformAdapter], None],
     ):
         self.listeners.pop(event_type)
 

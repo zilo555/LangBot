@@ -15,8 +15,6 @@ class QCGCenterURLConfigMigration(migration.Migration):
         """执行迁移"""
 
         if 'qcg-center-url' not in self.ap.system_cfg.data:
-            self.ap.system_cfg.data['qcg-center-url'] = (
-                'https://api.qchatgpt.rockchin.top/api/v2'
-            )
+            self.ap.system_cfg.data['qcg-center-url'] = 'https://api.qchatgpt.rockchin.top/api/v2'
 
         await self.ap.system_cfg.dump_config()

@@ -22,9 +22,7 @@ class DingTalkMessageConverter(adapter.MessageConverter):
     async def target2yiri(event: DingTalkEvent, bot_name: str):
         yiri_msg_list = []
         yiri_msg_list.append(
-            platform_message.Source(
-                id=event.incoming_message.message_id, time=datetime.datetime.now()
-            )
+            platform_message.Source(id=event.incoming_message.message_id, time=datetime.datetime.now())
         )
 
         for atUser in event.incoming_message.at_users:
@@ -133,9 +131,7 @@ class DingTalkAdapter(adapter.MessagePlatformAdapter):
         content = await DingTalkMessageConverter.yiri2target(message)
         await self.bot.send_message(content, incoming_message)
 
-    async def send_message(
-        self, target_type: str, target_id: str, message: platform_message.MessageChain
-    ):
+    async def send_message(self, target_type: str, target_id: str, message: platform_message.MessageChain):
         content = await DingTalkMessageConverter.yiri2target(message)
         if target_type == 'person':
             await self.bot.send_proactive_message_to_one(target_id, content)
@@ -145,16 +141,12 @@ class DingTalkAdapter(adapter.MessagePlatformAdapter):
     def register_listener(
         self,
         event_type: typing.Type[platform_events.Event],
-        callback: typing.Callable[
-            [platform_events.Event, adapter.MessagePlatformAdapter], None
-        ],
+        callback: typing.Callable[[platform_events.Event, adapter.MessagePlatformAdapter], None],
     ):
         async def on_message(event: DingTalkEvent):
             try:
                 return await callback(
-                    await self.event_converter.target2yiri(
-                        event, self.config['robot_name']
-                    ),
+                    await self.event_converter.target2yiri(event, self.config['robot_name']),
                     self,
                 )
             except Exception:
@@ -174,8 +166,6 @@ class DingTalkAdapter(adapter.MessagePlatformAdapter):
     async def unregister_listener(
         self,
         event_type: type,
-        callback: typing.Callable[
-            [platform_events.Event, MessagePlatformAdapter], None
-        ],
+        callback: typing.Callable[[platform_events.Event, MessagePlatformAdapter], None],
     ):
         return super().unregister_listener(event_type, callback)

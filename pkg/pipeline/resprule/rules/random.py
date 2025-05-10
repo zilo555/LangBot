@@ -18,6 +18,4 @@ class RandomRespRule(rule_model.GroupRespondRule):
     ) -> entities.RuleJudgeResult:
         random_rate = rule_dict['random']
 
-        return entities.RuleJudgeResult(
-            matching=random.random() < random_rate, replacement=message_chain
-        )
+        return entities.RuleJudgeResult(matching=random.random() < random_rate, replacement=message_chain)

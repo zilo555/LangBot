@@ -21,10 +21,7 @@ class CommandHandler(handler.MessageHandler):
 
         privilege = 1
 
-        if (
-            f'{query.launcher_type.value}_{query.launcher_id}'
-            in self.ap.instance_config.data['admins']
-        ):
+        if f'{query.launcher_type.value}_{query.launcher_id}' in self.ap.instance_config.data['admins']:
             privilege = 2
 
         spt = command_text.split(' ')
@@ -54,25 +51,17 @@ class CommandHandler(handler.MessageHandler):
 
                 query.resp_messages.append(mc)
 
-                yield entities.StageProcessResult(
-                    result_type=entities.ResultType.CONTINUE, new_query=query
-                )
+                yield entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
             else:
-                yield entities.StageProcessResult(
-                    result_type=entities.ResultType.INTERRUPT, new_query=query
-                )
+                yield entities.StageProcessResult(result_type=entities.ResultType.INTERRUPT, new_query=query)
 
         else:
             if event_ctx.event.alter is not None:
-                query.message_chain = platform_message.MessageChain(
-                    [platform_message.Plain(event_ctx.event.alter)]
-                )
+                query.message_chain = platform_message.MessageChain([platform_message.Plain(event_ctx.event.alter)])
 
             session = await self.ap.sess_mgr.get_session(query)
 
-            async for ret in self.ap.cmd_mgr.execute(
-                command_text=command_text, query=query, session=session
-            ):
+            async for ret in self.ap.cmd_mgr.execute(command_text=command_text, query=query, session=session):
                 if ret.error is not None:
                     query.resp_messages.append(
                         llm_entities.Message(
@@ -81,13 +70,9 @@ class CommandHandler(handler.MessageHandler):
                         )
                     )
 
-                    self.ap.logger.info(
-                        f'命令({query.query_id})报错: {self.cut_str(str(ret.error))}'
-                    )
+                    self.ap.logger.info(f'命令({query.query_id})报错: {self.cut_str(str(ret.error))}')
 
-                    yield entities.StageProcessResult(
-                        result_type=entities.ResultType.CONTINUE, new_query=query
-                    )
+                    yield entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
                 elif ret.text is not None or ret.image_url is not None:
                     content: list[llm_entities.ContentElement] = []
 
@@ -95,9 +80,7 @@ class CommandHandler(handler.MessageHandler):
                         content.append(llm_entities.ContentElement.from_text(ret.text))
 
                     if ret.image_url is not None:
-                        content.append(
-                            llm_entities.ContentElement.from_image_url(ret.image_url)
-                        )
+                        content.append(llm_entities.ContentElement.from_image_url(ret.image_url))
 
                     query.resp_messages.append(
                         llm_entities.Message(
@@ -108,10 +91,6 @@ class CommandHandler(handler.MessageHandler):
 
                     self.ap.logger.info(f'命令返回: {self.cut_str(str(content[0]))}')
 
-                    yield entities.StageProcessResult(
-                        result_type=entities.ResultType.CONTINUE, new_query=query
-                    )
+                    yield entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
                 else:
-                    yield entities.StageProcessResult(
-                        result_type=entities.ResultType.INTERRUPT, new_query=query
-                    )
+                    yield entities.StageProcessResult(result_type=entities.ResultType.INTERRUPT, new_query=query)

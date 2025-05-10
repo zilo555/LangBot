@@ -144,15 +144,9 @@ class QQOfficialClient:
             'group_openid': msg.get('d', {}).get('group_openid', {}),
         }
         attachments = msg.get('d', {}).get('attachments', [])
-        image_attachments = [
-            attachment['url']
-            for attachment in attachments
-            if await self.is_image(attachment)
-        ]
+        image_attachments = [attachment['url'] for attachment in attachments if await self.is_image(attachment)]
         image_attachments_type = [
-            attachment['content_type']
-            for attachment in attachments
-            if await self.is_image(attachment)
+            attachment['content_type'] for attachment in attachments if await self.is_image(attachment)
         ]
         if image_attachments:
             message_data['image_attachments'] = image_attachments[0]
@@ -211,9 +205,7 @@ class QQOfficialClient:
             else:
                 raise Exception(response.read().decode())
 
-    async def send_channle_group_text_msg(
-        self, channel_id: str, content: str, msg_id: str
-    ):
+    async def send_channle_group_text_msg(self, channel_id: str, content: str, msg_id: str):
         """发送频道群聊消息"""
         if not await self.check_access_token():
             await self.get_access_token()
@@ -235,9 +227,7 @@ class QQOfficialClient:
             else:
                 raise Exception(response)
 
-    async def send_channle_private_text_msg(
-        self, guild_id: str, content: str, msg_id: str
-    ):
+    async def send_channle_private_text_msg(self, guild_id: str, content: str, msg_id: str):
         """发送频道私聊消息"""
         if not await self.check_access_token():
             await self.get_access_token()

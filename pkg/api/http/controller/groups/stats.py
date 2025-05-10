@@ -8,9 +8,7 @@ class StatsRouterGroup(group.RouterGroup):
         async def _() -> str:
             conv_count = 0
             for session in self.ap.sess_mgr.session_list:
-                conv_count += len(
-                    session.conversations if session.conversations is not None else []
-                )
+                conv_count += len(session.conversations if session.conversations is not None else [])
 
             return self.success(
                 data={

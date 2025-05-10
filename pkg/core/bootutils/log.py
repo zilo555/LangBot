@@ -26,9 +26,7 @@ async def init_logging(extra_handlers: list[logging.Handler] = None) -> logging.
     if constants.debug_mode:
         level = logging.DEBUG
 
-    log_file_name = 'data/logs/langbot-%s.log' % time.strftime(
-        '%Y-%m-%d', time.localtime()
-    )
+    log_file_name = 'data/logs/langbot-%s.log' % time.strftime('%Y-%m-%d', time.localtime())
 
     qcg_logger = logging.getLogger('langbot')
 
@@ -43,9 +41,7 @@ async def init_logging(extra_handlers: list[logging.Handler] = None) -> logging.
     stream_handler = logging.StreamHandler(sys.stdout)
     # stream_handler.setLevel(level)
     # stream_handler.setFormatter(color_formatter)
-    stream_handler.stream = open(
-        sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1
-    )
+    stream_handler.stream = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
 
     log_handlers: list[logging.Handler] = [
         stream_handler,

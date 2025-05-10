@@ -45,9 +45,7 @@ class ToolLoader(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def invoke_tool(
-        self, query: core_entities.Query, name: str, parameters: dict
-    ) -> typing.Any:
+    async def invoke_tool(self, query: core_entities.Query, name: str, parameters: dict) -> typing.Any:
         """执行工具调用"""
         pass
 

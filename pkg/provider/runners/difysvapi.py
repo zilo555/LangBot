@@ -26,10 +26,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
         self.pipeline_config = pipeline_config
 
         valid_app_types = ['chat', 'agent', 'workflow']
-        if (
-            self.pipeline_config['ai']['dify-service-api']['app-type']
-            not in valid_app_types
-        ):
+        if self.pipeline_config['ai']['dify-service-api']['app-type'] not in valid_app_types:
             raise errors.DifyAPIError(
                 f'不支持的 Dify 应用类型: {self.pipeline_config["ai"]["dify-service-api"]["app-type"]}'
             )
@@ -48,16 +45,10 @@ class DifyServiceAPIRunner(runner.RequestRunner):
         ):
             return resp_text
 
-        if (
-            self.pipeline_config['ai']['dify-service-api']['thinking-convert']
-            == 'original'
-        ):
+        if self.pipeline_config['ai']['dify-service-api']['thinking-convert'] == 'original':
             return resp_text
 
-        if (
-            self.pipeline_config['ai']['dify-service-api']['thinking-convert']
-            == 'remove'
-        ):
+        if self.pipeline_config['ai']['dify-service-api']['thinking-convert'] == 'remove':
             return re.sub(
                 r'<details style="color:gray;background-color: #f8f8f8;padding: 8px;border-radius: 4px;" open> <summary> Thinking... </summary>.*?</details>',
                 '',
@@ -65,18 +56,13 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                 flags=re.DOTALL,
             )
 
-        if (
-            self.pipeline_config['ai']['dify-service-api']['thinking-convert']
-            == 'plain'
-        ):
+        if self.pipeline_config['ai']['dify-service-api']['thinking-convert'] == 'plain':
             pattern = r'<details style="color:gray;background-color: #f8f8f8;padding: 8px;border-radius: 4px;" open> <summary> Thinking... </summary>(.*?)</details>'
             thinking_text = re.search(pattern, resp_text, flags=re.DOTALL)
             content_text = re.sub(pattern, '', resp_text, flags=re.DOTALL)
             return f'<think>{thinking_text.group(1)}</think>\n{content_text}'
 
-    async def _preprocess_user_message(
-        self, query: core_entities.Query
-    ) -> tuple[str, list[str]]:
+    async def _preprocess_user_message(self, query: core_entities.Query) -> tuple[str, list[str]]:
         """预处理用户消息，提取纯文本，并将图片上传到 Dify 服务
 
         Returns:
@@ -90,9 +76,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                 if ce.type == 'text':
                     plain_text += ce.text
                 elif ce.type == 'image_base64':
-                    image_b64, image_format = await image.extract_b64_and_format(
-                        ce.image_base64
-                    )
+                    image_b64, image_format = await image.extract_b64_and_format(ce.image_base64)
                     file_bytes = base64.b64decode(image_b64)
                     file = ('img.png', file_bytes, f'image/{image_format}')
                     file_upload_resp = await self.dify_client.upload_file(
@@ -106,9 +90,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
 
         return plain_text, image_ids
 
-    async def _chat_messages(
-        self, query: core_entities.Query
-    ) -> typing.AsyncGenerator[llm_entities.Message, None]:
+    async def _chat_messages(self, query: core_entities.Query) -> typing.AsyncGenerator[llm_entities.Message, None]:
         """调用聊天助手"""
         cov_id = query.session.using_conversation.uuid or ''
 
@@ -151,9 +133,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                     if chunk['data']['node_type'] == 'answer':
                         yield llm_entities.Message(
                             role='assistant',
-                            content=self._try_convert_thinking(
-                                chunk['data']['outputs']['answer']
-                            ),
+                            content=self._try_convert_thinking(chunk['data']['outputs']['answer']),
                         )
             elif mode == 'basic':
                 if chunk['event'] == 'message':
@@ -166,9 +146,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                     basic_mode_pending_chunk = ''
 
         if chunk is None:
-            raise errors.DifyAPIError(
-                'Dify API 没有返回任何响应，请检查网络连接和API配置'
-            )
+            raise errors.DifyAPIError('Dify API 没有返回任何响应，请检查网络连接和API配置')
 
         query.session.using_conversation.uuid = chunk['conversation_id']
 
@@ -217,9 +195,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                 pending_agent_message += chunk['answer']
             else:
                 if pending_agent_message.strip() != '':
-                    pending_agent_message = pending_agent_message.replace(
-                        '</details>Action:', '</details>'
-                    )
+                    pending_agent_message = pending_agent_message.replace('</details>Action:', '</details>')
                     yield llm_entities.Message(
                         role='assistant',
                         content=self._try_convert_thinking(pending_agent_message),
@@ -227,9 +203,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                 pending_agent_message = ''
 
                 if chunk['event'] == 'agent_thought':
-                    if (
-                        chunk['tool'] != '' and chunk['observation'] != ''
-                    ):  # 工具调用结果，跳过
+                    if chunk['tool'] != '' and chunk['observation'] != '':  # 工具调用结果，跳过
                         continue
 
                     if chunk['tool']:
@@ -258,23 +232,17 @@ class DifyServiceAPIRunner(runner.RequestRunner):
 
                         yield llm_entities.Message(
                             role='assistant',
-                            content=[
-                                llm_entities.ContentElement.from_image_url(image_url)
-                            ],
+                            content=[llm_entities.ContentElement.from_image_url(image_url)],
                         )
                 if chunk['event'] == 'error':
                     raise errors.DifyAPIError('dify 服务错误: ' + chunk['message'])
 
         if chunk is None:
-            raise errors.DifyAPIError(
-                'Dify API 没有返回任何响应，请检查网络连接和API配置'
-            )
+            raise errors.DifyAPIError('Dify API 没有返回任何响应，请检查网络连接和API配置')
 
         query.session.using_conversation.uuid = chunk['conversation_id']
 
-    async def _workflow_messages(
-        self, query: core_entities.Query
-    ) -> typing.AsyncGenerator[llm_entities.Message, None]:
+    async def _workflow_messages(self, query: core_entities.Query) -> typing.AsyncGenerator[llm_entities.Message, None]:
         """调用工作流"""
 
         if not query.session.using_conversation.uuid:
@@ -315,10 +283,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                 continue
 
             if chunk['event'] == 'node_started':
-                if (
-                    chunk['data']['node_type'] == 'start'
-                    or chunk['data']['node_type'] == 'end'
-                ):
+                if chunk['data']['node_type'] == 'start' or chunk['data']['node_type'] == 'end':
                     continue
 
                 msg = llm_entities.Message(
@@ -349,9 +314,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
 
                 yield msg
 
-    async def run(
-        self, query: core_entities.Query
-    ) -> typing.AsyncGenerator[llm_entities.Message, None]:
+    async def run(self, query: core_entities.Query) -> typing.AsyncGenerator[llm_entities.Message, None]:
         """运行请求"""
         if self.pipeline_config['ai']['dify-service-api']['app-type'] == 'chat':
             async for msg in self._chat_messages(query):

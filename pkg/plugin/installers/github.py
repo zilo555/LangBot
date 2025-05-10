@@ -58,9 +58,7 @@ class GitHubRepoInstaller(installer.PluginInstaller):
                 ssl=ssl_context,  # 使用自定义SSL上下文来验证证书
             ) as resp:
                 if resp.status != 200:
-                    raise errors.PluginInstallerError(
-                        f'下载源码失败: {await resp.text()}'
-                    )
+                    raise errors.PluginInstallerError(f'下载源码失败: {await resp.text()}')
                 zip_resp = await resp.read()
 
         if await aiofiles_os.path.exists('temp/' + target_path):
@@ -101,9 +99,7 @@ class GitHubRepoInstaller(installer.PluginInstaller):
     ):
         """安装插件"""
         task_context.trace('下载插件源码...', 'install-plugin')
-        repo_label = await self.download_plugin_source_code(
-            plugin_source, 'plugins/', task_context
-        )
+        repo_label = await self.download_plugin_source_code(plugin_source, 'plugins/', task_context)
         task_context.trace('安装插件依赖...', 'install-plugin')
         await self.install_requirements('plugins/' + repo_label)
         task_context.trace('完成.', 'install-plugin')

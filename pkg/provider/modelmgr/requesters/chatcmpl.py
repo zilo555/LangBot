@@ -28,9 +28,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
             api_key='',
             base_url=self.requester_cfg['base_url'].replace(' ', ''),
             timeout=self.requester_cfg['timeout'],
-            http_client=httpx.AsyncClient(
-                trust_env=True, timeout=self.requester_cfg['timeout']
-            ),
+            http_client=httpx.AsyncClient(trust_env=True, timeout=self.requester_cfg['timeout']),
         )
 
     async def _req(
@@ -50,20 +48,11 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         if 'role' not in chatcmpl_message or chatcmpl_message['role'] is None:
             chatcmpl_message['role'] = 'assistant'
 
-        reasoning_content = (
-            chatcmpl_message['reasoning_content']
-            if 'reasoning_content' in chatcmpl_message
-            else None
-        )
+        reasoning_content = chatcmpl_message['reasoning_content'] if 'reasoning_content' in chatcmpl_message else None
 
         # deepseek的reasoner模型
         if reasoning_content is not None:
-            chatcmpl_message['content'] = (
-                '<think>\n'
-                + reasoning_content
-                + '\n</think>\n'
-                + chatcmpl_message['content']
-            )
+            chatcmpl_message['content'] = '<think>\n' + reasoning_content + '\n</think>\n' + chatcmpl_message['content']
 
         message = llm_entities.Message(**chatcmpl_message)
 
@@ -124,10 +113,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
             content = msg_dict.get('content')
             if isinstance(content, list):
                 # 检查 content 列表中是否每个部分都是文本
-                if all(
-                    isinstance(part, dict) and part.get('type') == 'text'
-                    for part in content
-                ):
+                if all(isinstance(part, dict) and part.get('type') == 'text' for part in content):
                     # 将所有文本部分合并为一个字符串
                     msg_dict['content'] = '\n'.join(part['text'] for part in content)
             req_messages.append(msg_dict)

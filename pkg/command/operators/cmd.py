@@ -9,9 +9,7 @@ from .. import operator, entities, errors
 class CmdOperator(operator.CommandOperator):
     """命令列表"""
 
-    async def execute(
-        self, context: entities.ExecuteContext
-    ) -> typing.AsyncGenerator[entities.CommandReturn, None]:
+    async def execute(self, context: entities.ExecuteContext) -> typing.AsyncGenerator[entities.CommandReturn, None]:
         """执行"""
         if len(context.crt_params) == 0:
             reply_str = '当前所有命令: \n\n'
@@ -30,16 +28,12 @@ class CmdOperator(operator.CommandOperator):
             cmd = None
 
             for _cmd in self.ap.cmd_mgr.cmd_list:
-                if (cmd_name == _cmd.name or cmd_name in _cmd.alias) and (
-                    _cmd.parent_class is None
-                ):
+                if (cmd_name == _cmd.name or cmd_name in _cmd.alias) and (_cmd.parent_class is None):
                     cmd = _cmd
                     break
 
             if cmd is None:
-                yield entities.CommandReturn(
-                    error=errors.CommandNotFoundError(cmd_name)
-                )
+                yield entities.CommandReturn(error=errors.CommandNotFoundError(cmd_name))
             else:
                 reply_str = f'{cmd.name}: {cmd.help}\n\n'
                 reply_str += f'使用方法: \n{cmd.usage}'

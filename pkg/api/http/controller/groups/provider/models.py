@@ -9,9 +9,7 @@ class LLMModelsRouterGroup(group.RouterGroup):
         @self.route('', methods=['GET', 'POST'])
         async def _() -> str:
             if quart.request.method == 'GET':
-                return self.success(
-                    data={'models': await self.ap.model_service.get_llm_models()}
-                )
+                return self.success(data={'models': await self.ap.model_service.get_llm_models()})
             elif quart.request.method == 'POST':
                 json_data = await quart.request.json
 

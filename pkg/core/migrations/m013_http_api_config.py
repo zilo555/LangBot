@@ -9,10 +9,7 @@ class HttpApiConfigMigration(migration.Migration):
 
     async def need_migrate(self) -> bool:
         """判断当前环境是否需要运行此迁移"""
-        return (
-            'http-api' not in self.ap.system_cfg.data
-            or 'persistence' not in self.ap.system_cfg.data
-        )
+        return 'http-api' not in self.ap.system_cfg.data or 'persistence' not in self.ap.system_cfg.data
 
     async def run(self):
         """执行迁移"""

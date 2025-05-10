@@ -43,15 +43,11 @@ class RuntimeMCPSession:
             env=self.server_config['env'],
         )
 
-        stdio_transport = await self.exit_stack.enter_async_context(
-            stdio_client(server_params)
-        )
+        stdio_transport = await self.exit_stack.enter_async_context(stdio_client(server_params))
 
         stdio, write = stdio_transport
 
-        self.session = await self.exit_stack.enter_async_context(
-            ClientSession(stdio, write)
-        )
+        self.session = await self.exit_stack.enter_async_context(ClientSession(stdio, write))
 
         await self.session.initialize()
 
@@ -66,25 +62,19 @@ class RuntimeMCPSession:
 
         sseio, write = sse_transport
 
-        self.session = await self.exit_stack.enter_async_context(
-            ClientSession(sseio, write)
-        )
+        self.session = await self.exit_stack.enter_async_context(ClientSession(sseio, write))
 
         await self.session.initialize()
 
     async def initialize(self):
-        self.ap.logger.debug(
-            f'初始化 MCP 会话: {self.server_name} {self.server_config}'
-        )
+        self.ap.logger.debug(f'初始化 MCP 会话: {self.server_name} {self.server_config}')
 
         if self.server_config['mode'] == 'stdio':
             await self._init_stdio_python_server()
         elif self.server_config['mode'] == 'sse':
             await self._init_sse_server()
         else:
-            raise ValueError(
-                f'无法识别 MCP 服务器类型: {self.server_name}: {self.server_config}'
-            )
+            raise ValueError(f'无法识别 MCP 服务器类型: {self.server_name}: {self.server_config}')
 
         tools = await self.session.list_tools()
 
@@ -132,9 +122,7 @@ class MCPLoader(loader.ToolLoader):
         self._last_listed_functions = []
 
     async def initialize(self):
-        for server_config in self.ap.instance_config.data.get('mcp', {}).get(
-            'servers', []
-        ):
+        for server_config in self.ap.instance_config.data.get('mcp', {}).get('servers', []):
             if not server_config['enable']:
                 continue
             session = RuntimeMCPSession(server_config['name'], server_config, self.ap)
@@ -155,9 +143,7 @@ class MCPLoader(loader.ToolLoader):
     async def has_tool(self, name: str) -> bool:
         return name in [f.name for f in self._last_listed_functions]
 
-    async def invoke_tool(
-        self, query: core_entities.Query, name: str, parameters: dict
-    ) -> typing.Any:
+    async def invoke_tool(self, query: core_entities.Query, name: str, parameters: dict) -> typing.Any:
         for server_name, session in self.sessions.items():
             for function in session.functions:
                 if function.name == name:

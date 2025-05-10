@@ -25,9 +25,7 @@ class OAMessageConverter(adapter.MessageConverter):
     @staticmethod
     async def target2yiri(message: str, message_id=-1):
         yiri_msg_list = []
-        yiri_msg_list.append(
-            platform_message.Source(id=message_id, time=datetime.datetime.now())
-        )
+        yiri_msg_list.append(platform_message.Source(id=message_id, time=datetime.datetime.now()))
 
         yiri_msg_list.append(platform_message.Plain(text=message))
         chain = platform_message.MessageChain(yiri_msg_list)
@@ -39,9 +37,7 @@ class OAEventConverter(adapter.EventConverter):
     @staticmethod
     async def target2yiri(event: OAEvent):
         if event.type == 'text':
-            yiri_chain = await OAMessageConverter.target2yiri(
-                event.message, event.message_id
-            )
+            yiri_chain = await OAMessageConverter.target2yiri(event.message, event.message_id)
 
             friend = platform_entities.Friend(
                 id=event.user_id,
@@ -81,9 +77,7 @@ class OfficialAccountAdapter(adapter.MessagePlatformAdapter):
         ]
         missing_keys = [key for key in required_keys if key not in config]
         if missing_keys:
-            raise ParamNotEnoughError(
-                '微信公众号缺少相关配置项，请查看文档或联系管理员'
-            )
+            raise ParamNotEnoughError('微信公众号缺少相关配置项，请查看文档或联系管理员')
 
         if self.config['Mode'] == 'drop':
             self.bot = OAClient(
@@ -114,28 +108,20 @@ class OfficialAccountAdapter(adapter.MessagePlatformAdapter):
             await self.bot.set_message(message_source.message_chain.message_id, content)
         elif isinstance(self.bot, OAClientForLongerResponse):
             from_user = message_source.sender.id
-            await self.bot.set_message(
-                from_user, message_source.message_chain.message_id, content
-            )
+            await self.bot.set_message(from_user, message_source.message_chain.message_id, content)
 
-    async def send_message(
-        self, target_type: str, target_id: str, message: platform_message.MessageChain
-    ):
+    async def send_message(self, target_type: str, target_id: str, message: platform_message.MessageChain):
         pass
 
     def register_listener(
         self,
         event_type: type,
-        callback: typing.Callable[
-            [platform_events.Event, MessagePlatformAdapter], None
-        ],
+        callback: typing.Callable[[platform_events.Event, MessagePlatformAdapter], None],
     ):
         async def on_message(event: OAEvent):
             self.bot_account_id = event.receiver_id
             try:
-                return await callback(
-                    await self.event_converter.target2yiri(event), self
-                )
+                return await callback(await self.event_converter.target2yiri(event), self)
             except Exception:
                 traceback.print_exc()
 
@@ -161,8 +147,6 @@ class OfficialAccountAdapter(adapter.MessagePlatformAdapter):
     async def unregister_listener(
         self,
         event_type: type,
-        callback: typing.Callable[
-            [platform_events.Event, MessagePlatformAdapter], None
-        ],
+        callback: typing.Callable[[platform_events.Event, MessagePlatformAdapter], None],
     ):
         return super().unregister_listener(event_type, callback)

@@ -41,9 +41,7 @@ class ConfigManager:
         self.file.save_sync(self.data)
 
 
-async def load_python_module_config(
-    config_name: str, template_name: str, completion: bool = True
-) -> ConfigManager:
+async def load_python_module_config(config_name: str, template_name: str, completion: bool = True) -> ConfigManager:
     """加载Python模块配置文件
 
     Args:

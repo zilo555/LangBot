@@ -44,9 +44,7 @@ class PreProcessor(stage.PipelineStage):
         query.use_llm_model = conversation.use_llm_model
 
         query.use_funcs = (
-            conversation.use_funcs
-            if query.use_llm_model.model_entity.abilities.__contains__('tool_call')
-            else None
+            conversation.use_funcs if query.use_llm_model.model_entity.abilities.__contains__('tool_call') else None
         )
 
         query.variables = {
@@ -59,10 +57,9 @@ class PreProcessor(stage.PipelineStage):
 
         # Check if this model supports vision, if not, remove all images
         # TODO this checking should be performed in runner, and in this stage, the image should be reserved
-        if (
-            query.pipeline_config['ai']['runner']['runner'] == 'local-agent'
-            and not query.use_llm_model.model_entity.abilities.__contains__('vision')
-        ):
+        if query.pipeline_config['ai']['runner'][
+            'runner'
+        ] == 'local-agent' and not query.use_llm_model.model_entity.abilities.__contains__('vision'):
             for msg in query.messages:
                 if isinstance(msg.content, list):
                     for me in msg.content:
@@ -78,14 +75,11 @@ class PreProcessor(stage.PipelineStage):
                 content_list.append(llm_entities.ContentElement.from_text(me.text))
                 plain_text += me.text
             elif isinstance(me, platform_message.Image):
-                if (
-                    query.pipeline_config['ai']['runner']['runner'] != 'local-agent'
-                    or query.use_llm_model.model_entity.abilities.__contains__('vision')
-                ):
+                if query.pipeline_config['ai']['runner'][
+                    'runner'
+                ] != 'local-agent' or query.use_llm_model.model_entity.abilities.__contains__('vision'):
                     if me.base64 is not None:
-                        content_list.append(
-                            llm_entities.ContentElement.from_image_base64(me.base64)
-                        )
+                        content_list.append(llm_entities.ContentElement.from_image_base64(me.base64))
 
         query.variables['user_message_text'] = plain_text
 
@@ -104,6 +98,4 @@ class PreProcessor(stage.PipelineStage):
         query.prompt.messages = event_ctx.event.default_prompt
         query.messages = event_ctx.event.prompt
 
-        return entities.StageProcessResult(
-            result_type=entities.ResultType.CONTINUE, new_query=query
-        )
+        return entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)

@@ -57,9 +57,7 @@ async def get_gewechat_image_base64(
                 ) as response:
                     if response.status != 200:
                         # print(response)
-                        raise Exception(
-                            f'获取gewechat图片下载失败: {await response.text()}'
-                        )
+                        raise Exception(f'获取gewechat图片下载失败: {await response.text()}')
 
                     resp_data = await response.json()
                     if resp_data.get('ret') != 200:
@@ -79,9 +77,7 @@ async def get_gewechat_image_base64(
             try:
                 async with session.get(download_url) as img_response:
                     if img_response.status != 200:
-                        raise Exception(
-                            f'下载图片失败: {await img_response.text()}, URL: {download_url}'
-                        )
+                        raise Exception(f'下载图片失败: {await img_response.text()}, URL: {download_url}')
 
                     image_data = await img_response.read()
 
@@ -128,9 +124,7 @@ async def get_wecom_image_base64(pic_url: str) -> tuple[str, str]:
             return image_base64, image_format
 
 
-async def get_qq_official_image_base64(
-    pic_url: str, content_type: str
-) -> tuple[str, str]:
+async def get_qq_official_image_base64(pic_url: str, content_type: str) -> tuple[str, str]:
     """
     下载QQ官方图片，
     并且转换为base64格式

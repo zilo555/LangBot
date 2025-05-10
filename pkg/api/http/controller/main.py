@@ -70,15 +70,12 @@ class HTTPController:
 
         @self.quart_app.route('/')
         async def index():
-            return await quart.send_from_directory(
-                frontend_path, 'index.html', mimetype='text/html'
-            )
+            return await quart.send_from_directory(frontend_path, 'index.html', mimetype='text/html')
 
         @self.quart_app.route('/<path:path>')
         async def static_file(path: str):
             if not (
-                os.path.exists(os.path.join(frontend_path, path))
-                and os.path.isfile(os.path.join(frontend_path, path))
+                os.path.exists(os.path.join(frontend_path, path)) and os.path.isfile(os.path.join(frontend_path, path))
             ):
                 if os.path.exists(os.path.join(frontend_path, path + '.html')):
                     path += '.html'
@@ -110,6 +107,4 @@ class HTTPController:
             elif path.endswith('.txt'):
                 mimetype = 'text/plain'
 
-            return await quart.send_from_directory(
-                frontend_path, path, mimetype=mimetype
-            )
+            return await quart.send_from_directory(frontend_path, path, mimetype=mimetype)

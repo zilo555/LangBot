@@ -60,9 +60,7 @@ class ContentFilter(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    async def process(
-        self, query: core_entities.Query, message: str = None, image_url=None
-    ) -> entities.FilterResult:
+    async def process(self, query: core_entities.Query, message: str = None, image_url=None) -> entities.FilterResult:
         """处理消息
 
         分为前后阶段，具体取决于 enable_stages 的值。

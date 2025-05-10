@@ -14,9 +14,7 @@ from .. import operator, entities, errors
 class ModelOperator(operator.CommandOperator):
     """Model命令"""
 
-    async def execute(
-        self, context: entities.ExecuteContext
-    ) -> typing.AsyncGenerator[entities.CommandReturn, None]:
+    async def execute(self, context: entities.ExecuteContext) -> typing.AsyncGenerator[entities.CommandReturn, None]:
         content = '模型列表:\n'
 
         model_list = self.ap.model_mgr.model_list
@@ -31,15 +29,11 @@ class ModelOperator(operator.CommandOperator):
         yield entities.CommandReturn(text=content.strip())
 
 
-@operator.operator_class(
-    name='show', help='显示模型详情', privilege=2, parent_class=ModelOperator
-)
+@operator.operator_class(name='show', help='显示模型详情', privilege=2, parent_class=ModelOperator)
 class ModelShowOperator(operator.CommandOperator):
     """Model Show命令"""
 
-    async def execute(
-        self, context: entities.ExecuteContext
-    ) -> typing.AsyncGenerator[entities.CommandReturn, None]:
+    async def execute(self, context: entities.ExecuteContext) -> typing.AsyncGenerator[entities.CommandReturn, None]:
         model_name = context.crt_params[0]
 
         model = None
@@ -49,9 +43,7 @@ class ModelShowOperator(operator.CommandOperator):
                 break
 
         if model is None:
-            yield entities.CommandReturn(
-                error=errors.CommandError(f'未找到模型 {model_name}')
-            )
+            yield entities.CommandReturn(error=errors.CommandError(f'未找到模型 {model_name}'))
         else:
             content = '模型详情\n'
             content += f'名称: {model.name}\n'
@@ -65,15 +57,11 @@ class ModelShowOperator(operator.CommandOperator):
             yield entities.CommandReturn(text=content.strip())
 
 
-@operator.operator_class(
-    name='set', help='设置默认使用模型', privilege=2, parent_class=ModelOperator
-)
+@operator.operator_class(name='set', help='设置默认使用模型', privilege=2, parent_class=ModelOperator)
 class ModelSetOperator(operator.CommandOperator):
     """Model Set命令"""
 
-    async def execute(
-        self, context: entities.ExecuteContext
-    ) -> typing.AsyncGenerator[entities.CommandReturn, None]:
+    async def execute(self, context: entities.ExecuteContext) -> typing.AsyncGenerator[entities.CommandReturn, None]:
         model_name = context.crt_params[0]
 
         model = None
@@ -83,12 +71,8 @@ class ModelSetOperator(operator.CommandOperator):
                 break
 
         if model is None:
-            yield entities.CommandReturn(
-                error=errors.CommandError(f'未找到模型 {model_name}')
-            )
+            yield entities.CommandReturn(error=errors.CommandError(f'未找到模型 {model_name}'))
         else:
             self.ap.provider_cfg.data['model'] = model_name
             await self.ap.provider_cfg.dump_config()
-            yield entities.CommandReturn(
-                text=f'已设置当前使用模型为 {model_name}，重置会话以生效'
-            )
+            yield entities.CommandReturn(text=f'已设置当前使用模型为 {model_name}，重置会话以生效')

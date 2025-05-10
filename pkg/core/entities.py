@@ -87,8 +87,7 @@ class Query(pydantic.BaseModel):
     """使用的函数，由前置处理器阶段设置"""
 
     resp_messages: (
-        typing.Optional[list[llm_entities.Message]]
-        | typing.Optional[list[platform_message.MessageChain]]
+        typing.Optional[list[llm_entities.Message]] | typing.Optional[list[platform_message.MessageChain]]
     ) = []
     """由Process阶段生成的回复消息对象列表"""
 
@@ -130,13 +129,9 @@ class Conversation(pydantic.BaseModel):
 
     messages: list[llm_entities.Message]
 
-    create_time: typing.Optional[datetime.datetime] = pydantic.Field(
-        default_factory=datetime.datetime.now
-    )
+    create_time: typing.Optional[datetime.datetime] = pydantic.Field(default_factory=datetime.datetime.now)
 
-    update_time: typing.Optional[datetime.datetime] = pydantic.Field(
-        default_factory=datetime.datetime.now
-    )
+    update_time: typing.Optional[datetime.datetime] = pydantic.Field(default_factory=datetime.datetime.now)
 
     use_llm_model: requester.RuntimeLLMModel
 
@@ -162,17 +157,11 @@ class Session(pydantic.BaseModel):
 
     using_conversation: typing.Optional[Conversation] = None
 
-    conversations: typing.Optional[list[Conversation]] = pydantic.Field(
-        default_factory=list
-    )
+    conversations: typing.Optional[list[Conversation]] = pydantic.Field(default_factory=list)
 
-    create_time: typing.Optional[datetime.datetime] = pydantic.Field(
-        default_factory=datetime.datetime.now
-    )
+    create_time: typing.Optional[datetime.datetime] = pydantic.Field(default_factory=datetime.datetime.now)
 
-    update_time: typing.Optional[datetime.datetime] = pydantic.Field(
-        default_factory=datetime.datetime.now
-    )
+    update_time: typing.Optional[datetime.datetime] = pydantic.Field(default_factory=datetime.datetime.now)
 
     semaphore: typing.Optional[asyncio.Semaphore] = None
     """当前会话的信号量，用于限制并发"""

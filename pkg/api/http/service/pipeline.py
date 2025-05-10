@@ -39,15 +39,11 @@ class PipelineService:
         ]
 
     async def get_pipelines(self) -> list[dict]:
-        result = await self.ap.persistence_mgr.execute_async(
-            sqlalchemy.select(persistence_pipeline.LegacyPipeline)
-        )
+        result = await self.ap.persistence_mgr.execute_async(sqlalchemy.select(persistence_pipeline.LegacyPipeline))
 
         pipelines = result.all()
         return [
-            self.ap.persistence_mgr.serialize_model(
-                persistence_pipeline.LegacyPipeline, pipeline
-            )
+            self.ap.persistence_mgr.serialize_model(persistence_pipeline.LegacyPipeline, pipeline)
             for pipeline in pipelines
         ]
 
@@ -63,23 +59,17 @@ class PipelineService:
         if pipeline is None:
             return None
 
-        return self.ap.persistence_mgr.serialize_model(
-            persistence_pipeline.LegacyPipeline, pipeline
-        )
+        return self.ap.persistence_mgr.serialize_model(persistence_pipeline.LegacyPipeline, pipeline)
 
     async def create_pipeline(self, pipeline_data: dict, default: bool = False) -> str:
         pipeline_data['uuid'] = str(uuid.uuid4())
         pipeline_data['for_version'] = self.ap.ver_mgr.get_current_version()
         pipeline_data['stages'] = default_stage_order.copy()
         pipeline_data['is_default'] = default
-        pipeline_data['config'] = json.load(
-            open('templates/default-pipeline-config.json', 'r', encoding='utf-8')
-        )
+        pipeline_data['config'] = json.load(open('templates/default-pipeline-config.json', 'r', encoding='utf-8'))
 
         await self.ap.persistence_mgr.execute_async(
-            sqlalchemy.insert(persistence_pipeline.LegacyPipeline).values(
-                **pipeline_data
-            )
+            sqlalchemy.insert(persistence_pipeline.LegacyPipeline).values(**pipeline_data)
         )
 
         pipeline = await self.get_pipeline(pipeline_data['uuid'])

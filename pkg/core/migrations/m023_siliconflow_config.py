@@ -10,9 +10,7 @@ class SiliconFlowConfigMigration(migration.Migration):
     async def need_migrate(self) -> bool:
         """判断当前环境是否需要运行此迁移"""
 
-        return (
-            'siliconflow-chat-completions' not in self.ap.provider_cfg.data['requester']
-        )
+        return 'siliconflow-chat-completions' not in self.ap.provider_cfg.data['requester']
 
     async def run(self):
         """执行迁移"""

@@ -92,9 +92,7 @@ class PluginsRouterGroup(group.RouterGroup):
             await self.ap.plugin_mgr.reorder_plugins(data.get('plugins'))
             return self.success()
 
-        @self.route(
-            '/install/github', methods=['POST'], auth_type=group.AuthType.USER_TOKEN
-        )
+        @self.route('/install/github', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
         async def _() -> str:
             data = await quart.request.json
 

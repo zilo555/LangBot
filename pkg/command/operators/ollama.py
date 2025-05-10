@@ -13,9 +13,7 @@ from .. import operator, entities, errors
     usage='!ollama\n!ollama show <模型名>\n!ollama pull <模型名>\n!ollama del <模型名>',
 )
 class OllamaOperator(operator.CommandOperator):
-    async def execute(
-        self, context: entities.ExecuteContext
-    ) -> typing.AsyncGenerator[entities.CommandReturn, None]:
+    async def execute(self, context: entities.ExecuteContext) -> typing.AsyncGenerator[entities.CommandReturn, None]:
         try:
             content: str = '模型列表:\n'
             model_list: list = ollama.list().get('models', [])
@@ -25,9 +23,7 @@ class OllamaOperator(operator.CommandOperator):
                 content += f'大小: {bytes_to_mb(model["size"])}MB\n\n'
             yield entities.CommandReturn(text=f'{content.strip()}')
         except ollama.ResponseError:
-            yield entities.CommandReturn(
-                error=errors.CommandError('无法获取模型列表，请确认 Ollama 服务正常')
-            )
+            yield entities.CommandReturn(error=errors.CommandError('无法获取模型列表，请确认 Ollama 服务正常'))
 
 
 def bytes_to_mb(num_bytes):
@@ -35,13 +31,9 @@ def bytes_to_mb(num_bytes):
     return format(mb, '.2f')
 
 
-@operator.operator_class(
-    name='show', help='ollama模型详情', privilege=2, parent_class=OllamaOperator
-)
+@operator.operator_class(name='show', help='ollama模型详情', privilege=2, parent_class=OllamaOperator)
 class OllamaShowOperator(operator.CommandOperator):
-    async def execute(
-        self, context: entities.ExecuteContext
-    ) -> typing.AsyncGenerator[entities.CommandReturn, None]:
+    async def execute(self, context: entities.ExecuteContext) -> typing.AsyncGenerator[entities.CommandReturn, None]:
         content: str = '模型详情:\n'
         try:
             show: dict = ollama.show(model=context.crt_params[0])
@@ -60,27 +52,19 @@ class OllamaShowOperator(operator.CommandOperator):
             content += json.dumps(show, indent=4)
             yield entities.CommandReturn(text=content.strip())
         except ollama.ResponseError:
-            yield entities.CommandReturn(
-                error=errors.CommandError('无法获取模型详情，请确认 Ollama 服务正常')
-            )
+            yield entities.CommandReturn(error=errors.CommandError('无法获取模型详情，请确认 Ollama 服务正常'))
 
 
-@operator.operator_class(
-    name='pull', help='ollama模型拉取', privilege=2, parent_class=OllamaOperator
-)
+@operator.operator_class(name='pull', help='ollama模型拉取', privilege=2, parent_class=OllamaOperator)
 class OllamaPullOperator(operator.CommandOperator):
-    async def execute(
-        self, context: entities.ExecuteContext
-    ) -> typing.AsyncGenerator[entities.CommandReturn, None]:
+    async def execute(self, context: entities.ExecuteContext) -> typing.AsyncGenerator[entities.CommandReturn, None]:
         try:
             model_list: list = ollama.list().get('models', [])
             if context.crt_params[0] in [model['name'] for model in model_list]:
                 yield entities.CommandReturn(text='模型已存在')
                 return
         except ollama.ResponseError:
-            yield entities.CommandReturn(
-                error=errors.CommandError('无法获取模型列表，请确认 Ollama 服务正常')
-            )
+            yield entities.CommandReturn(error=errors.CommandError('无法获取模型列表，请确认 Ollama 服务正常'))
             return
 
         on_progress: bool = False
@@ -108,13 +92,9 @@ class OllamaPullOperator(operator.CommandOperator):
             yield entities.CommandReturn(text=f'拉取失败: {e.error}')
 
 
-@operator.operator_class(
-    name='del', help='ollama模型删除', privilege=2, parent_class=OllamaOperator
-)
+@operator.operator_class(name='del', help='ollama模型删除', privilege=2, parent_class=OllamaOperator)
 class OllamaDelOperator(operator.CommandOperator):
-    async def execute(
-        self, context: entities.ExecuteContext
-    ) -> typing.AsyncGenerator[entities.CommandReturn, None]:
+    async def execute(self, context: entities.ExecuteContext) -> typing.AsyncGenerator[entities.CommandReturn, None]:
         try:
             ret: str = ollama.delete(model=context.crt_params[0])['status']
         except ollama.ResponseError as e:

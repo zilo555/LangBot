@@ -23,20 +23,10 @@ class ProxyManager:
             'https://': os.getenv('HTTPS_PROXY') or os.getenv('https_proxy'),
         }
 
-        if (
-            'http' in self.ap.instance_config.data['proxy']
-            and self.ap.instance_config.data['proxy']['http']
-        ):
-            self.forward_proxies['http://'] = self.ap.instance_config.data['proxy'][
-                'http'
-            ]
-        if (
-            'https' in self.ap.instance_config.data['proxy']
-            and self.ap.instance_config.data['proxy']['https']
-        ):
-            self.forward_proxies['https://'] = self.ap.instance_config.data['proxy'][
-                'https'
-            ]
+        if 'http' in self.ap.instance_config.data['proxy'] and self.ap.instance_config.data['proxy']['http']:
+            self.forward_proxies['http://'] = self.ap.instance_config.data['proxy']['http']
+        if 'https' in self.ap.instance_config.data['proxy'] and self.ap.instance_config.data['proxy']['https']:
+            self.forward_proxies['https://'] = self.ap.instance_config.data['proxy']['https']
 
         # 设置到环境变量
         os.environ['HTTP_PROXY'] = self.forward_proxies['http://'] or ''

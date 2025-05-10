@@ -16,9 +16,7 @@ class ContentIgnore(filter_model.ContentFilter):
             entities.EnableStage.PRE,
         ]
 
-    async def process(
-        self, query: core_entities.Query, message: str
-    ) -> entities.FilterResult:
+    async def process(self, query: core_entities.Query, message: str) -> entities.FilterResult:
         if 'prefix' in query.pipeline_config['trigger']['ignore-rules']:
             for rule in query.pipeline_config['trigger']['ignore-rules']['prefix']:
                 if message.startswith(rule):

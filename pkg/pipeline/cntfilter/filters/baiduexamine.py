@@ -21,19 +21,13 @@ class BaiduCloudExamine(filter_model.ContentFilter):
                 BAIDU_EXAMINE_TOKEN_URL,
                 params={
                     'grant_type': 'client_credentials',
-                    'client_id': self.ap.pipeline_cfg.data['baidu-cloud-examine'][
-                        'api-key'
-                    ],
-                    'client_secret': self.ap.pipeline_cfg.data['baidu-cloud-examine'][
-                        'api-secret'
-                    ],
+                    'client_id': self.ap.pipeline_cfg.data['baidu-cloud-examine']['api-key'],
+                    'client_secret': self.ap.pipeline_cfg.data['baidu-cloud-examine']['api-secret'],
                 },
             ) as resp:
                 return (await resp.json())['access_token']
 
-    async def process(
-        self, query: core_entities.Query, message: str
-    ) -> entities.FilterResult:
+    async def process(self, query: core_entities.Query, message: str) -> entities.FilterResult:
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 BAIDU_EXAMINE_URL.format(await self._get_token()),

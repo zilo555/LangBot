@@ -65,9 +65,7 @@ class RouterGroup(abc.ABC):
             async def handler_error(*args, **kwargs):
                 if auth_type == AuthType.USER_TOKEN:
                     # 从Authorization头中获取token
-                    token = quart.request.headers.get('Authorization', '').replace(
-                        'Bearer ', ''
-                    )
+                    token = quart.request.headers.get('Authorization', '').replace('Bearer ', '')
 
                     if not token:
                         return self.http_status(401, -1, '未提供有效的用户令牌')

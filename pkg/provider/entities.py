@@ -80,17 +80,13 @@ class Message(pydantic.BaseModel):
 
     def readable_str(self) -> str:
         if self.content is not None:
-            return (
-                str(self.role) + ': ' + str(self.get_content_platform_message_chain())
-            )
+            return str(self.role) + ': ' + str(self.get_content_platform_message_chain())
         elif self.tool_calls is not None:
             return f'调用工具: {self.tool_calls[0].id}'
         else:
             return '未知消息'
 
-    def get_content_platform_message_chain(
-        self, prefix_text: str = ''
-    ) -> platform_message.MessageChain | None:
+    def get_content_platform_message_chain(self, prefix_text: str = '') -> platform_message.MessageChain | None:
         """将内容转换为平台消息 MessageChain 对象
 
         Args:
@@ -100,9 +96,7 @@ class Message(pydantic.BaseModel):
         if self.content is None:
             return None
         elif isinstance(self.content, str):
-            return platform_message.MessageChain(
-                [platform_message.Plain(prefix_text + self.content)]
-            )
+            return platform_message.MessageChain([platform_message.Plain(prefix_text + self.content)])
         elif isinstance(self.content, list):
             mc = []
             for ce in self.content:

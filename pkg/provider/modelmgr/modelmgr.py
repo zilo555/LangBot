@@ -43,16 +43,12 @@ class ModelManager:
         self.requester_dict = {}
 
     async def initialize(self):
-        self.requester_components = self.ap.discover.get_components_by_kind(
-            'LLMAPIRequester'
-        )
+        self.requester_components = self.ap.discover.get_components_by_kind('LLMAPIRequester')
 
         # forge requester class dict
         requester_dict: dict[str, type[requester.LLMAPIRequester]] = {}
         for component in self.requester_components:
-            requester_dict[component.metadata.name] = (
-                component.get_python_component_class()
-            )
+            requester_dict[component.metadata.name] = component.get_python_component_class()
 
         self.requester_dict = requester_dict
 
@@ -65,9 +61,7 @@ class ModelManager:
         self.llm_models = []
 
         # llm models
-        result = await self.ap.persistence_mgr.execute_async(
-            sqlalchemy.select(persistence_model.LLMModel)
-        )
+        result = await self.ap.persistence_mgr.execute_async(sqlalchemy.select(persistence_model.LLMModel))
 
         llm_models = result.all()
 
@@ -77,9 +71,7 @@ class ModelManager:
 
     async def load_llm_model(
         self,
-        model_info: persistence_model.LLMModel
-        | sqlalchemy.Row[persistence_model.LLMModel]
-        | dict,
+        model_info: persistence_model.LLMModel | sqlalchemy.Row[persistence_model.LLMModel] | dict,
     ):
         """加载模型"""
 
@@ -88,9 +80,7 @@ class ModelManager:
         elif isinstance(model_info, dict):
             model_info = persistence_model.LLMModel(**model_info)
 
-        requester_inst = self.requester_dict[model_info.requester](
-            ap=self.ap, config=model_info.requester_config
-        )
+        requester_inst = self.requester_dict[model_info.requester](ap=self.ap, config=model_info.requester_config)
 
         await requester_inst.initialize()
 
@@ -136,9 +126,7 @@ class ModelManager:
                 return component.to_plain_dict()
         return None
 
-    def get_available_requester_manifest_by_name(
-        self, name: str
-    ) -> engine.Component | None:
+    def get_available_requester_manifest_by_name(self, name: str) -> engine.Component | None:
         """通过名称获取请求器清单"""
         for component in self.requester_components:
             if component.metadata.name == name:

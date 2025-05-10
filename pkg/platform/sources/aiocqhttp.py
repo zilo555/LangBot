@@ -58,13 +58,7 @@ class AiocqhttpMessageConverter(adapter.MessageConverter):
                     msg_list.append(aiocqhttp.MessageSegment.record(msg.path))
             elif type(msg) is platform_message.Forward:
                 for node in msg.node_list:
-                    msg_list.extend(
-                        (
-                            await AiocqhttpMessageConverter.yiri2target(
-                                node.message_chain
-                            )
-                        )[0]
-                    )
+                    msg_list.extend((await AiocqhttpMessageConverter.yiri2target(node.message_chain))[0])
 
             else:
                 msg_list.append(aiocqhttp.MessageSegment.text(str(msg)))
@@ -77,9 +71,7 @@ class AiocqhttpMessageConverter(adapter.MessageConverter):
 
         yiri_msg_list = []
 
-        yiri_msg_list.append(
-            platform_message.Source(id=message_id, time=datetime.datetime.now())
-        )
+        yiri_msg_list.append(platform_message.Source(id=message_id, time=datetime.datetime.now()))
 
         for msg in message:
             if msg.type == 'at':
@@ -94,14 +86,8 @@ class AiocqhttpMessageConverter(adapter.MessageConverter):
             elif msg.type == 'text':
                 yiri_msg_list.append(platform_message.Plain(text=msg.data['text']))
             elif msg.type == 'image':
-                image_base64, image_format = await image.qq_image_url_to_base64(
-                    msg.data['url']
-                )
-                yiri_msg_list.append(
-                    platform_message.Image(
-                        base64=f'data:image/{image_format};base64,{image_base64}'
-                    )
-                )
+                image_base64, image_format = await image.qq_image_url_to_base64(msg.data['url'])
+                yiri_msg_list.append(platform_message.Image(base64=f'data:image/{image_format};base64,{image_base64}'))
 
         chain = platform_message.MessageChain(yiri_msg_list)
 
@@ -115,9 +101,7 @@ class AiocqhttpEventConverter(adapter.EventConverter):
 
     @staticmethod
     async def target2yiri(event: aiocqhttp.Event):
-        yiri_chain = await AiocqhttpMessageConverter.target2yiri(
-            event.message, event.message_id
-        )
+        yiri_chain = await AiocqhttpMessageConverter.target2yiri(event.message, event.message_id)
 
         if event.message_type == 'group':
             permission = 'MEMBER'
@@ -137,9 +121,7 @@ class AiocqhttpEventConverter(adapter.EventConverter):
                         name=event.sender['nickname'],
                         permission=platform_entities.Permission.Member,
                     ),
-                    special_title=event.sender['title']
-                    if 'title' in event.sender
-                    else '',
+                    special_title=event.sender['title'] if 'title' in event.sender else '',
                     join_timestamp=0,
                     last_speak_timestamp=0,
                     mute_time_remaining=0,
@@ -191,9 +173,7 @@ class AiocqhttpAdapter(adapter.MessagePlatformAdapter):
         else:
             self.bot = aiocqhttp.CQHttp()
 
-    async def send_message(
-        self, target_type: str, target_id: str, message: platform_message.MessageChain
-    ):
+    async def send_message(self, target_type: str, target_id: str, message: platform_message.MessageChain):
         aiocq_msg = (await AiocqhttpMessageConverter.yiri2target(message))[0]
 
         if target_type == 'group':
@@ -207,14 +187,10 @@ class AiocqhttpAdapter(adapter.MessagePlatformAdapter):
         message: platform_message.MessageChain,
         quote_origin: bool = False,
     ):
-        aiocq_event = await AiocqhttpEventConverter.yiri2target(
-            message_source, self.bot_account_id
-        )
+        aiocq_event = await AiocqhttpEventConverter.yiri2target(message_source, self.bot_account_id)
         aiocq_msg = (await AiocqhttpMessageConverter.yiri2target(message))[0]
         if quote_origin:
-            aiocq_msg = (
-                aiocqhttp.MessageSegment.reply(aiocq_event.message_id) + aiocq_msg
-            )
+            aiocq_msg = aiocqhttp.MessageSegment.reply(aiocq_event.message_id) + aiocq_msg
 
         return await self.bot.send(aiocq_event, aiocq_msg)
 
@@ -224,16 +200,12 @@ class AiocqhttpAdapter(adapter.MessagePlatformAdapter):
     def register_listener(
         self,
         event_type: typing.Type[platform_events.Event],
-        callback: typing.Callable[
-            [platform_events.Event, adapter.MessagePlatformAdapter], None
-        ],
+        callback: typing.Callable[[platform_events.Event, adapter.MessagePlatformAdapter], None],
     ):
         async def on_message(event: aiocqhttp.Event):
             self.bot_account_id = event.self_id
             try:
-                return await callback(
-                    await self.event_converter.target2yiri(event), self
-                )
+                return await callback(await self.event_converter.target2yiri(event), self)
             except Exception:
                 traceback.print_exc()
 
@@ -245,9 +217,7 @@ class AiocqhttpAdapter(adapter.MessagePlatformAdapter):
     def unregister_listener(
         self,
         event_type: typing.Type[platform_events.Event],
-        callback: typing.Callable[
-            [platform_events.Event, adapter.MessagePlatformAdapter], None
-        ],
+        callback: typing.Callable[[platform_events.Event, adapter.MessagePlatformAdapter], None],
     ):
         return super().unregister_listener(event_type, callback)
 

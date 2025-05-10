@@ -26,7 +26,9 @@ class DashScopeAPIRunner(runner.RequestRunner):
     app_type: str  # 应用类型
     app_id: str  # 应用ID
     api_key: str  # API Key
-    references_quote: str  # 引用资料提示（当展示回答来源功能开启时，这个变量会作为引用资料名前的提示，可在provider.json中配置）
+    references_quote: (
+        str  # 引用资料提示（当展示回答来源功能开启时，这个变量会作为引用资料名前的提示，可在provider.json中配置）
+    )
 
     def __init__(self, ap: app.Application, pipeline_config: dict):
         """初始化"""
@@ -42,9 +44,7 @@ class DashScopeAPIRunner(runner.RequestRunner):
         # 初始化Dashscope 参数配置
         self.app_id = self.pipeline_config['ai']['dashscope-app-api']['app-id']
         self.api_key = self.pipeline_config['ai']['dashscope-app-api']['api-key']
-        self.references_quote = self.pipeline_config['ai']['dashscope-app-api'][
-            'references_quote'
-        ]
+        self.references_quote = self.pipeline_config['ai']['dashscope-app-api']['references_quote']
 
     def _replace_references(self, text, references_dict):
         """阿里云百炼平台的自定义应用支持资料引用，此函数可以将引用标签替换为参考资料"""
@@ -65,9 +65,7 @@ class DashScopeAPIRunner(runner.RequestRunner):
         # 使用 re.sub() 进行替换
         return pattern.sub(replacement, text)
 
-    async def _preprocess_user_message(
-        self, query: core_entities.Query
-    ) -> tuple[str, list[str]]:
+    async def _preprocess_user_message(self, query: core_entities.Query) -> tuple[str, list[str]]:
         """预处理用户消息，提取纯文本，阿里云提供的上传文件方法过于复杂，暂不支持上传文件（包括图片）"""
         plain_text = ''
         image_ids = []
@@ -91,9 +89,7 @@ class DashScopeAPIRunner(runner.RequestRunner):
 
         return plain_text, image_ids
 
-    async def _agent_messages(
-        self, query: core_entities.Query
-    ) -> typing.AsyncGenerator[llm_entities.Message, None]:
+    async def _agent_messages(self, query: core_entities.Query) -> typing.AsyncGenerator[llm_entities.Message, None]:
         """Dashscope 智能体对话请求"""
 
         # 局部变量
@@ -151,9 +147,7 @@ class DashScopeAPIRunner(runner.RequestRunner):
             content=pending_content,
         )
 
-    async def _workflow_messages(
-        self, query: core_entities.Query
-    ) -> typing.AsyncGenerator[llm_entities.Message, None]:
+    async def _workflow_messages(self, query: core_entities.Query) -> typing.AsyncGenerator[llm_entities.Message, None]:
         """Dashscope 工作流对话请求"""
 
         # 局部变量
@@ -216,9 +210,7 @@ class DashScopeAPIRunner(runner.RequestRunner):
             content=pending_content,
         )
 
-    async def run(
-        self, query: core_entities.Query
-    ) -> typing.AsyncGenerator[llm_entities.Message, None]:
+    async def run(self, query: core_entities.Query) -> typing.AsyncGenerator[llm_entities.Message, None]:
         """运行"""
         if self.app_type == 'agent':
             async for msg in self._agent_messages(query):

@@ -13,17 +13,12 @@ class DifyThinkingConfigMigration(migration.Migration):
         if 'options' not in self.ap.provider_cfg.data['dify-service-api']:
             return True
 
-        if (
-            'convert-thinking-tips'
-            not in self.ap.provider_cfg.data['dify-service-api']['options']
-        ):
+        if 'convert-thinking-tips' not in self.ap.provider_cfg.data['dify-service-api']['options']:
             return True
 
         return False
 
     async def run(self):
         """执行迁移"""
-        self.ap.provider_cfg.data['dify-service-api']['options'] = {
-            'convert-thinking-tips': 'plain'
-        }
+        self.ap.provider_cfg.data['dify-service-api']['options'] = {'convert-thinking-tips': 'plain'}
         await self.ap.provider_cfg.dump_config()

@@ -18,9 +18,7 @@ from ...utils import image
 
 class WecomMessageConverter(adapter.MessageConverter):
     @staticmethod
-    async def yiri2target(
-        message_chain: platform_message.MessageChain, bot: WecomClient
-    ):
+    async def yiri2target(message_chain: platform_message.MessageChain, bot: WecomClient):
         content_list = []
 
         for msg in message_chain:
@@ -40,13 +38,7 @@ class WecomMessageConverter(adapter.MessageConverter):
                 )
             elif type(msg) is platform_message.Forward:
                 for node in msg.node_list:
-                    content_list.extend(
-                        (
-                            await WecomMessageConverter.yiri2target(
-                                node.message_chain, bot
-                            )
-                        )
-                    )
+                    content_list.extend((await WecomMessageConverter.yiri2target(node.message_chain, bot)))
             else:
                 content_list.append(
                     {
@@ -60,9 +52,7 @@ class WecomMessageConverter(adapter.MessageConverter):
     @staticmethod
     async def target2yiri(message: str, message_id: int = -1):
         yiri_msg_list = []
-        yiri_msg_list.append(
-            platform_message.Source(id=message_id, time=datetime.datetime.now())
-        )
+        yiri_msg_list.append(platform_message.Source(id=message_id, time=datetime.datetime.now()))
 
         yiri_msg_list.append(platform_message.Plain(text=message))
         chain = platform_message.MessageChain(yiri_msg_list)
@@ -72,15 +62,9 @@ class WecomMessageConverter(adapter.MessageConverter):
     @staticmethod
     async def target2yiri_image(picurl: str, message_id: int = -1):
         yiri_msg_list = []
-        yiri_msg_list.append(
-            platform_message.Source(id=message_id, time=datetime.datetime.now())
-        )
+        yiri_msg_list.append(platform_message.Source(id=message_id, time=datetime.datetime.now()))
         image_base64, image_format = await image.get_wecom_image_base64(pic_url=picurl)
-        yiri_msg_list.append(
-            platform_message.Image(
-                base64=f'data:image/{image_format};base64,{image_base64}'
-            )
-        )
+        yiri_msg_list.append(platform_message.Image(base64=f'data:image/{image_format};base64,{image_base64}'))
         chain = platform_message.MessageChain(yiri_msg_list)
 
         return chain
@@ -88,9 +72,7 @@ class WecomMessageConverter(adapter.MessageConverter):
 
 class WecomEventConverter:
     @staticmethod
-    async def yiri2target(
-        event: platform_events.Event, bot_account_id: int, bot: WecomClient
-    ) -> WecomEvent:
+    async def yiri2target(event: platform_events.Event, bot_account_id: int, bot: WecomClient) -> WecomEvent:
         # only for extracting user information
 
         if type(event) is platform_events.GroupMessage:
@@ -124,18 +106,14 @@ class WecomEventConverter:
         """
         # 转换消息链
         if event.type == 'text':
-            yiri_chain = await WecomMessageConverter.target2yiri(
-                event.message, event.message_id
-            )
+            yiri_chain = await WecomMessageConverter.target2yiri(event.message, event.message_id)
             friend = platform_entities.Friend(
                 id=f'u{event.user_id}',
                 nickname=str(event.agent_id),
                 remark='',
             )
 
-            return platform_events.FriendMessage(
-                sender=friend, message_chain=yiri_chain, time=event.timestamp
-            )
+            return platform_events.FriendMessage(sender=friend, message_chain=yiri_chain, time=event.timestamp)
         elif event.type == 'image':
             friend = platform_entities.Friend(
                 id=f'u{event.user_id}',
@@ -143,13 +121,9 @@ class WecomEventConverter:
                 remark='',
             )
 
-            yiri_chain = await WecomMessageConverter.target2yiri_image(
-                picurl=event.picurl, message_id=event.message_id
-            )
+            yiri_chain = await WecomMessageConverter.target2yiri_image(picurl=event.picurl, message_id=event.message_id)
 
-            return platform_events.FriendMessage(
-                sender=friend, message_chain=yiri_chain, time=event.timestamp
-            )
+            return platform_events.FriendMessage(sender=friend, message_chain=yiri_chain, time=event.timestamp)
 
 
 class WecomAdapter(adapter.MessagePlatformAdapter):
@@ -190,26 +164,18 @@ class WecomAdapter(adapter.MessagePlatformAdapter):
         message: platform_message.MessageChain,
         quote_origin: bool = False,
     ):
-        Wecom_event = await WecomEventConverter.yiri2target(
-            message_source, self.bot_account_id, self.bot
-        )
+        Wecom_event = await WecomEventConverter.yiri2target(message_source, self.bot_account_id, self.bot)
         content_list = await WecomMessageConverter.yiri2target(message, self.bot)
         fixed_user_id = Wecom_event.user_id
         # 删掉开头的u
         fixed_user_id = fixed_user_id[1:]
         for content in content_list:
             if content['type'] == 'text':
-                await self.bot.send_private_msg(
-                    fixed_user_id, Wecom_event.agent_id, content['content']
-                )
+                await self.bot.send_private_msg(fixed_user_id, Wecom_event.agent_id, content['content'])
             elif content['type'] == 'image':
-                await self.bot.send_image(
-                    fixed_user_id, Wecom_event.agent_id, content['media_id']
-                )
+                await self.bot.send_image(fixed_user_id, Wecom_event.agent_id, content['media_id'])
 
-    async def send_message(
-        self, target_type: str, target_id: str, message: platform_message.MessageChain
-    ):
+    async def send_message(self, target_type: str, target_id: str, message: platform_message.MessageChain):
         """企业微信目前只有发送给个人的方法，
         构造target_id的方式为前半部分为账户id，后半部分为agent_id,中间使用“|”符号隔开。
         """
@@ -220,25 +186,19 @@ class WecomAdapter(adapter.MessagePlatformAdapter):
         if target_type == 'person':
             for content in content_list:
                 if content['type'] == 'text':
-                    await self.bot.send_private_msg(
-                        user_id, agent_id, content['content']
-                    )
+                    await self.bot.send_private_msg(user_id, agent_id, content['content'])
                 if content['type'] == 'image':
                     await self.bot.send_image(user_id, agent_id, content['media'])
 
     def register_listener(
         self,
         event_type: typing.Type[platform_events.Event],
-        callback: typing.Callable[
-            [platform_events.Event, adapter.MessagePlatformAdapter], None
-        ],
+        callback: typing.Callable[[platform_events.Event, adapter.MessagePlatformAdapter], None],
     ):
         async def on_message(event: WecomEvent):
             self.bot_account_id = event.receiver_id
             try:
-                return await callback(
-                    await self.event_converter.target2yiri(event), self
-                )
+                return await callback(await self.event_converter.target2yiri(event), self)
             except Exception:
                 traceback.print_exc()
 
@@ -265,8 +225,6 @@ class WecomAdapter(adapter.MessagePlatformAdapter):
     async def unregister_listener(
         self,
         event_type: type,
-        callback: typing.Callable[
-            [platform_events.Event, MessagePlatformAdapter], None
-        ],
+        callback: typing.Callable[[platform_events.Event, MessagePlatformAdapter], None],
     ):
         return super().unregister_listener(event_type, callback)

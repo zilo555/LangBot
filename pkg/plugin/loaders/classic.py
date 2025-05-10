@@ -35,16 +35,12 @@ class PluginLoader(loader.PluginLoader):
 
     def register(
         self, name: str, description: str, version: str, author: str
-    ) -> typing.Callable[
-        [typing.Type[context.BasePlugin]], typing.Type[context.BasePlugin]
-    ]:
+    ) -> typing.Callable[[typing.Type[context.BasePlugin]], typing.Type[context.BasePlugin]]:
         self.ap.logger.debug(f'注册插件 {name} {version} by {author}')
         container = context.RuntimeContainer(
             plugin_name=name,
             plugin_label=discover_engine.I18nString(en_US=name, zh_CN=name),
-            plugin_description=discover_engine.I18nString(
-                en_US=description, zh_CN=description
-            ),
+            plugin_description=discover_engine.I18nString(en_US=description, zh_CN=description),
             plugin_version=version,
             plugin_author=author,
             plugin_repository='',
@@ -64,16 +60,12 @@ class PluginLoader(loader.PluginLoader):
 
     # 过时
     # 最早将于 v3.4 版本移除
-    def on(
-        self, event: typing.Type[events.BaseEventModel]
-    ) -> typing.Callable[[typing.Callable], typing.Callable]:
+    def on(self, event: typing.Type[events.BaseEventModel]) -> typing.Callable[[typing.Callable], typing.Callable]:
         """注册过时的事件处理器"""
         self.ap.logger.debug(f'注册事件处理器 {event.__name__}')
 
         def wrapper(func: typing.Callable) -> typing.Callable:
-            async def handler(
-                plugin: context.BasePlugin, ctx: context.EventContext
-            ) -> None:
+            async def handler(plugin: context.BasePlugin, ctx: context.EventContext) -> None:
                 args = {
                     'host': ctx.host,
                     'event': ctx,
@@ -104,15 +96,9 @@ class PluginLoader(loader.PluginLoader):
 
         def wrapper(func: typing.Callable) -> typing.Callable:
             function_schema = funcschema.get_func_schema(func)
-            function_name = (
-                self._current_container.plugin_name
-                + '-'
-                + (func.__name__ if name is None else name)
-            )
+            function_name = self._current_container.plugin_name + '-' + (func.__name__ if name is None else name)
 
-            async def handler(
-                plugin: context.BasePlugin, query: core_entities.Query, *args, **kwargs
-            ):
+            async def handler(plugin: context.BasePlugin, query: core_entities.Query, *args, **kwargs):
                 return func(*args, **kwargs)
 
             llm_function = tools_entities.LLMFunction(
@@ -129,9 +115,7 @@ class PluginLoader(loader.PluginLoader):
 
         return wrapper
 
-    def handler(
-        self, event: typing.Type[events.BaseEventModel]
-    ) -> typing.Callable[[typing.Callable], typing.Callable]:
+    def handler(self, event: typing.Type[events.BaseEventModel]) -> typing.Callable[[typing.Callable], typing.Callable]:
         """注册事件处理器"""
         self.ap.logger.debug(f'注册事件处理器 {event.__name__}')
 
@@ -161,11 +145,7 @@ class PluginLoader(loader.PluginLoader):
                 return func
 
             function_schema = funcschema.get_func_schema(func)
-            function_name = (
-                self._current_container.plugin_name
-                + '-'
-                + (func.__name__ if name is None else name)
-            )
+            function_name = self._current_container.plugin_name + '-' + (func.__name__ if name is None else name)
 
             llm_function = tools_entities.LLMFunction(
                 name=function_name,
@@ -193,9 +173,7 @@ class PluginLoader(loader.PluginLoader):
             else:
                 try:
                     self._current_pkg_path = 'plugins/' + path_prefix
-                    self._current_module_path = (
-                        'plugins/' + path_prefix + item.name + '.py'
-                    )
+                    self._current_module_path = 'plugins/' + path_prefix + item.name + '.py'
 
                     self._current_container = None
 
@@ -205,9 +183,7 @@ class PluginLoader(loader.PluginLoader):
                         self.plugins.append(self._current_container)
                         self.ap.logger.debug(f'插件 {self._current_container} 已加载')
                 except Exception:
-                    self.ap.logger.error(
-                        f'加载插件模块 {prefix + item.name} 时发生错误'
-                    )
+                    self.ap.logger.error(f'加载插件模块 {prefix + item.name} 时发生错误')
                     traceback.print_exc()
 
     async def load_plugins(self):

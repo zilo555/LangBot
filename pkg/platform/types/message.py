@@ -51,13 +51,7 @@ class MessageComponent(PlatformIndexedModel, metaclass=MessageComponentMetaclass
         return (
             self.__class__.__name__
             + '('
-            + ', '.join(
-                (
-                    f'{k}={repr(v)}'
-                    for k, v in self.__dict__.items()
-                    if k != 'type' and v
-                )
-            )
+            + ', '.join((f'{k}={repr(v)}' for k, v in self.__dict__.items() if k != 'type' and v))
             + ')'
         )
 
@@ -65,14 +59,10 @@ class MessageComponent(PlatformIndexedModel, metaclass=MessageComponentMetaclass
         # 解析参数列表，将位置参数转化为具名参数
         parameter_names = self.__parameter_names__
         if len(args) > len(parameter_names):
-            raise TypeError(
-                f'`{self.type}`需要{len(parameter_names)}个参数，但传入了{len(args)}个。'
-            )
+            raise TypeError(f'`{self.type}`需要{len(parameter_names)}个参数，但传入了{len(args)}个。')
         for name, value in zip(parameter_names, args):
             if name in kwargs:
-                raise TypeError(
-                    f'在 `{self.type}` 中，具名参数 `{name}` 与位置参数重复。'
-                )
+                raise TypeError(f'在 `{self.type}` 中，具名参数 `{name}` 与位置参数重复。')
             kwargs[name] = value
 
         super().__init__(**kwargs)
@@ -140,9 +130,7 @@ class MessageChain(PlatformBaseModel):
             elif isinstance(msg, str):
                 result.append(Plain(msg))
             else:
-                raise TypeError(
-                    f'消息链中元素需为 dict 或 str 或 MessageComponent，当前类型：{type(msg)}'
-                )
+                raise TypeError(f'消息链中元素需为 dict 或 str 或 MessageComponent，当前类型：{type(msg)}')
         return result
 
     @pydantic.validator('__root__', always=True, pre=True)
@@ -175,9 +163,7 @@ class MessageChain(PlatformBaseModel):
     def __iter__(self):
         yield from self.__root__
 
-    def get_first(
-        self, t: typing.Type[TMessageComponent]
-    ) -> typing.Optional[TMessageComponent]:
+    def get_first(self, t: typing.Type[TMessageComponent]) -> typing.Optional[TMessageComponent]:
         """获取消息链中第一个符合类型的消息组件。"""
         for component in self:
             if isinstance(component, t):
@@ -191,9 +177,7 @@ class MessageChain(PlatformBaseModel):
     def __getitem__(self, index: slice) -> typing.List[MessageComponent]: ...
 
     @typing.overload
-    def __getitem__(
-        self, index: typing.Type[TMessageComponent]
-    ) -> typing.List[TMessageComponent]: ...
+    def __getitem__(self, index: typing.Type[TMessageComponent]) -> typing.List[TMessageComponent]: ...
 
     @typing.overload
     def __getitem__(
@@ -208,17 +192,13 @@ class MessageChain(PlatformBaseModel):
             typing.Type[TMessageComponent],
             typing.Tuple[typing.Type[TMessageComponent], int],
         ],
-    ) -> typing.Union[
-        MessageComponent, typing.List[MessageComponent], typing.List[TMessageComponent]
-    ]:
+    ) -> typing.Union[MessageComponent, typing.List[MessageComponent], typing.List[TMessageComponent]]:
         return self.get(index)
 
     def __setitem__(
         self,
         key: typing.Union[int, slice],
-        value: typing.Union[
-            MessageComponent, str, typing.Iterable[typing.Union[MessageComponent, str]]
-        ],
+        value: typing.Union[MessageComponent, str, typing.Iterable[typing.Union[MessageComponent, str]]],
     ):
         if isinstance(value, str):
             value = Plain(value)
@@ -234,9 +214,7 @@ class MessageChain(PlatformBaseModel):
 
     def has(
         self,
-        sub: typing.Union[
-            MessageComponent, typing.Type[MessageComponent], 'MessageChain', str
-        ],
+        sub: typing.Union[MessageComponent, typing.Type[MessageComponent], 'MessageChain', str],
     ) -> bool:
         """判断消息链中：
         1. 是否有某个消息组件。
@@ -271,9 +249,7 @@ class MessageChain(PlatformBaseModel):
     def __len__(self) -> int:
         return len(self.__root__)
 
-    def __add__(
-        self, other: typing.Union['MessageChain', MessageComponent, str]
-    ) -> 'MessageChain':
+    def __add__(self, other: typing.Union['MessageChain', MessageComponent, str]) -> 'MessageChain':
         if isinstance(other, MessageChain):
             return self.__class__(self.__root__ + other.__root__)
         if isinstance(other, str):
@@ -286,9 +262,7 @@ class MessageChain(PlatformBaseModel):
         if isinstance(other, MessageComponent):
             return self.__class__([other] + self.__root__)
         if isinstance(other, str):
-            return self.__class__(
-                [typing.cast(MessageComponent, Plain(other))] + self.__root__
-            )
+            return self.__class__([typing.cast(MessageComponent, Plain(other))] + self.__root__)
         return NotImplemented
 
     def __mul__(self, other: int):
@@ -346,9 +320,7 @@ class MessageChain(PlatformBaseModel):
             return self.__root__.index(x, i, j)
         raise TypeError(f'类型不匹配，当前类型：{type(x)}')
 
-    def count(
-        self, x: typing.Union[MessageComponent, typing.Type[MessageComponent]]
-    ) -> int:
+    def count(self, x: typing.Union[MessageComponent, typing.Type[MessageComponent]]) -> int:
         """返回消息链中 x 出现的次数。
 
         Args:
@@ -443,9 +415,7 @@ class MessageChain(PlatformBaseModel):
 
     @classmethod
     def join(cls, *args: typing.Iterable[typing.Union[str, MessageComponent]]):
-        return cls(
-            Plain(c) if isinstance(c, str) else c for c in itertools.chain(*args)
-        )
+        return cls(Plain(c) if isinstance(c, str) else c for c in itertools.chain(*args))
 
     @property
     def source(self) -> typing.Optional['Source']:
@@ -557,11 +527,7 @@ class Image(MessageComponent):
     """图片的 Base64 编码。"""
 
     def __eq__(self, other):
-        return (
-            isinstance(other, Image)
-            and self.type == other.type
-            and self.uuid == other.uuid
-        )
+        return isinstance(other, Image) and self.type == other.type and self.uuid == other.uuid
 
     def __str__(self):
         return '[图片]'
@@ -818,9 +784,7 @@ class ForwardMessageNode(pydantic.BaseModel):
         Returns:
             ForwardMessageNode: 生成的一条消息。
         """
-        return ForwardMessageNode(
-            sender_id=sender.id, sender_name=sender.get_name(), message_chain=message
-        )
+        return ForwardMessageNode(sender_id=sender.id, sender_name=sender.get_name(), message_chain=message)
 
 
 class ForwardMessageDiaplay(pydantic.BaseModel):

@@ -11,23 +11,17 @@ class PipelinesRouterGroup(group.RouterGroup):
         @self.route('', methods=['GET', 'POST'])
         async def _() -> str:
             if quart.request.method == 'GET':
-                return self.success(
-                    data={'pipelines': await self.ap.pipeline_service.get_pipelines()}
-                )
+                return self.success(data={'pipelines': await self.ap.pipeline_service.get_pipelines()})
             elif quart.request.method == 'POST':
                 json_data = await quart.request.json
 
-                pipeline_uuid = await self.ap.pipeline_service.create_pipeline(
-                    json_data
-                )
+                pipeline_uuid = await self.ap.pipeline_service.create_pipeline(json_data)
 
                 return self.success(data={'uuid': pipeline_uuid})
 
         @self.route('/_/metadata', methods=['GET'])
         async def _() -> str:
-            return self.success(
-                data={'configs': await self.ap.pipeline_service.get_pipeline_metadata()}
-            )
+            return self.success(data={'configs': await self.ap.pipeline_service.get_pipeline_metadata()})
 
         @self.route('/<pipeline_uuid>', methods=['GET', 'PUT', 'DELETE'])
         async def _(pipeline_uuid: str) -> str:

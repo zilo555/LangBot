@@ -65,9 +65,7 @@ class ContentFilterStage(stage.PipelineStage):
         """
 
         if query.pipeline_config['safety']['content-filter']['scope'] == 'output-msg':
-            return entities.StageProcessResult(
-                result_type=entities.ResultType.CONTINUE, new_query=query
-            )
+            return entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
         else:
             for filter in self.filter_chain:
                 if filter_entities.EnableStage.PRE in filter.enable_stages:
@@ -86,13 +84,9 @@ class ContentFilterStage(stage.PipelineStage):
                     elif result.level == filter_entities.ResultLevel.PASS:  # 传到下一个
                         message = result.replacement
 
-            query.message_chain = platform_message.MessageChain(
-                platform_message.Plain(message)
-            )
+            query.message_chain = platform_message.MessageChain(platform_message.Plain(message))
 
-            return entities.StageProcessResult(
-                result_type=entities.ResultType.CONTINUE, new_query=query
-            )
+            return entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
 
     async def _post_process(
         self,
@@ -103,9 +97,7 @@ class ContentFilterStage(stage.PipelineStage):
         只要是 PASS 或者 MASKED 的就通过此 filter，将其 replacement 设置为message，进入下一个 filter
         """
         if query.pipeline_config['safety']['content-filter']['scope'] == 'income-msg':
-            return entities.StageProcessResult(
-                result_type=entities.ResultType.CONTINUE, new_query=query
-            )
+            return entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
         else:
             message = message.strip()
             for filter in self.filter_chain:
@@ -127,13 +119,9 @@ class ContentFilterStage(stage.PipelineStage):
 
             query.resp_messages[-1].content = message
 
-            return entities.StageProcessResult(
-                result_type=entities.ResultType.CONTINUE, new_query=query
-            )
+            return entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
 
-    async def process(
-        self, query: core_entities.Query, stage_inst_name: str
-    ) -> entities.StageProcessResult:
+    async def process(self, query: core_entities.Query, stage_inst_name: str) -> entities.StageProcessResult:
         """处理"""
         if stage_inst_name == 'PreContentFilterStage':
             contain_non_text = False
@@ -147,9 +135,7 @@ class ContentFilterStage(stage.PipelineStage):
 
             if contain_non_text:
                 self.ap.logger.debug('消息中包含非文本消息，跳过内容过滤器检查。')
-                return entities.StageProcessResult(
-                    result_type=entities.ResultType.CONTINUE, new_query=query
-                )
+                return entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
 
             return await self._pre_process(str(query.message_chain).strip(), query)
         elif stage_inst_name == 'PostContentFilterStage':
@@ -162,8 +148,6 @@ class ContentFilterStage(stage.PipelineStage):
                 self.ap.logger.debug(
                     'resp_messages[-1] 不是 Message 类型或 query.resp_messages[-1].content 不是 str 类型，跳过内容过滤器检查。'
                 )
-                return entities.StageProcessResult(
-                    result_type=entities.ResultType.CONTINUE, new_query=query
-                )
+                return entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
         else:
             raise ValueError(f'未知的 stage_inst_name: {stage_inst_name}')

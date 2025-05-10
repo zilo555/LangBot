@@ -28,9 +28,7 @@ class ToolManager:
             await loader_inst.initialize()
             self.loaders.append(loader_inst)
 
-    async def get_all_functions(
-        self, plugin_enabled: bool = None
-    ) -> list[entities.LLMFunction]:
+    async def get_all_functions(self, plugin_enabled: bool = None) -> list[entities.LLMFunction]:
         """获取所有函数"""
         all_functions: list[entities.LLMFunction] = []
 
@@ -39,9 +37,7 @@ class ToolManager:
 
         return all_functions
 
-    async def generate_tools_for_openai(
-        self, use_funcs: list[entities.LLMFunction]
-    ) -> list:
+    async def generate_tools_for_openai(self, use_funcs: list[entities.LLMFunction]) -> list:
         """生成函数列表"""
         tools = []
 
@@ -58,9 +54,7 @@ class ToolManager:
 
         return tools
 
-    async def generate_tools_for_anthropic(
-        self, use_funcs: list[entities.LLMFunction]
-    ) -> list:
+    async def generate_tools_for_anthropic(self, use_funcs: list[entities.LLMFunction]) -> list:
         """为anthropic生成函数列表
 
         e.g.
@@ -95,9 +89,7 @@ class ToolManager:
 
         return tools
 
-    async def execute_func_call(
-        self, query: core_entities.Query, name: str, parameters: dict
-    ) -> typing.Any:
+    async def execute_func_call(self, query: core_entities.Query, name: str, parameters: dict) -> typing.Any:
         """执行函数调用"""
 
         for loader in self.loaders:

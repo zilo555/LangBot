@@ -49,9 +49,7 @@ class LongTextStrategy(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    async def process(
-        self, message: str, query: core_entities.Query
-    ) -> list[platform_message.MessageComponent]:
+    async def process(self, message: str, query: core_entities.Query) -> list[platform_message.MessageComponent]:
         """处理长文本
 
         在 platform.json 中配置 long-text-process 字段，只要 文本长度超过了 threshold 就会调用此方法

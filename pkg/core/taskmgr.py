@@ -35,9 +35,7 @@ class TaskContext:
         if action is not None:
             self.set_current_action(action)
 
-        self._log(
-            f'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")} | {self.current_action} | {msg}'
-        )
+        self._log(f'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")} | {self.current_action} | {msg}')
 
     def to_dict(self) -> dict:
         return {'current_action': self.current_action, 'log': self.log}
@@ -104,9 +102,7 @@ class TaskWrapper:
         name: str = '',
         label: str = '',
         context: TaskContext = None,
-        scopes: list[core_entities.LifecycleControlScope] = [
-            core_entities.LifecycleControlScope.APPLICATION
-        ],
+        scopes: list[core_entities.LifecycleControlScope] = [core_entities.LifecycleControlScope.APPLICATION],
     ):
         self.id = TaskWrapper._id_index
         TaskWrapper._id_index += 1
@@ -141,7 +137,9 @@ class TaskWrapper:
             exception_traceback = 'Traceback (most recent call last):\n'
 
             for frame in self.task_stack:
-                exception_traceback += f'  File "{frame.f_code.co_filename}", line {frame.f_lineno}, in {frame.f_code.co_name}\n'
+                exception_traceback += (
+                    f'  File "{frame.f_code.co_filename}", line {frame.f_lineno}, in {frame.f_code.co_name}\n'
+                )
 
             exception_traceback += f'    {self.assume_exception().__str__()}\n'
 
@@ -156,13 +154,9 @@ class TaskWrapper:
             'runtime': {
                 'done': self.task.done(),
                 'state': self.task._state,
-                'exception': self.assume_exception().__str__()
-                if self.assume_exception() is not None
-                else None,
+                'exception': self.assume_exception().__str__() if self.assume_exception() is not None else None,
                 'exception_traceback': exception_traceback,
-                'result': self.assume_result().__str__()
-                if self.assume_result() is not None
-                else None,
+                'result': self.assume_result().__str__() if self.assume_result() is not None else None,
             },
         }
 
@@ -191,13 +185,9 @@ class AsyncTaskManager:
         name: str = '',
         label: str = '',
         context: TaskContext = None,
-        scopes: list[core_entities.LifecycleControlScope] = [
-            core_entities.LifecycleControlScope.APPLICATION
-        ],
+        scopes: list[core_entities.LifecycleControlScope] = [core_entities.LifecycleControlScope.APPLICATION],
     ) -> TaskWrapper:
-        wrapper = TaskWrapper(
-            self.ap, coro, task_type, kind, name, label, context, scopes
-        )
+        wrapper = TaskWrapper(self.ap, coro, task_type, kind, name, label, context, scopes)
         self.tasks.append(wrapper)
         return wrapper
 
@@ -208,9 +198,7 @@ class AsyncTaskManager:
         name: str = '',
         label: str = '',
         context: TaskContext = None,
-        scopes: list[core_entities.LifecycleControlScope] = [
-            core_entities.LifecycleControlScope.APPLICATION
-        ],
+        scopes: list[core_entities.LifecycleControlScope] = [core_entities.LifecycleControlScope.APPLICATION],
     ) -> TaskWrapper:
         return self.create_task(coro, 'user', kind, name, label, context, scopes)
 
@@ -225,9 +213,7 @@ class AsyncTaskManager:
         type: str = None,
     ) -> dict:
         return {
-            'tasks': [
-                t.to_dict() for t in self.tasks if type is None or t.task_type == type
-            ],
+            'tasks': [t.to_dict() for t in self.tasks if type is None or t.task_type == type],
             'id_index': TaskWrapper._id_index,
         }
 

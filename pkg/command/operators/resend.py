@@ -5,13 +5,9 @@ import typing
 from .. import operator, entities, errors
 
 
-@operator.operator_class(
-    name='resend', help='重发当前会话的最后一条消息', usage='!resend'
-)
+@operator.operator_class(name='resend', help='重发当前会话的最后一条消息', usage='!resend')
 class ResendOperator(operator.CommandOperator):
-    async def execute(
-        self, context: entities.ExecuteContext
-    ) -> typing.AsyncGenerator[entities.CommandReturn, None]:
+    async def execute(self, context: entities.ExecuteContext) -> typing.AsyncGenerator[entities.CommandReturn, None]:
         # 回滚到最后一条用户message前
         if context.session.using_conversation is None:
             yield entities.CommandReturn(error=errors.CommandError('当前没有对话'))

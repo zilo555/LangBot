@@ -16,9 +16,7 @@ class LLMModel(Base):
     api_keys = sqlalchemy.Column(sqlalchemy.JSON, nullable=False)
     abilities = sqlalchemy.Column(sqlalchemy.JSON, nullable=False, default=[])
     extra_args = sqlalchemy.Column(sqlalchemy.JSON, nullable=False, default={})
-    created_at = sqlalchemy.Column(
-        sqlalchemy.DateTime, nullable=False, server_default=sqlalchemy.func.now()
-    )
+    created_at = sqlalchemy.Column(sqlalchemy.DateTime, nullable=False, server_default=sqlalchemy.func.now())
     updated_at = sqlalchemy.Column(
         sqlalchemy.DateTime,
         nullable=False,

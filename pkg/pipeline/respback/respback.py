@@ -15,9 +15,7 @@ from ...core import entities as core_entities
 class SendResponseBackStage(stage.PipelineStage):
     """发送响应消息"""
 
-    async def process(
-        self, query: core_entities.Query, stage_inst_name: str
-    ) -> entities.StageProcessResult:
+    async def process(self, query: core_entities.Query, stage_inst_name: str) -> entities.StageProcessResult:
         """处理"""
 
         random_range = (
@@ -34,9 +32,7 @@ class SendResponseBackStage(stage.PipelineStage):
         if query.pipeline_config['output']['misc']['at-sender'] and isinstance(
             query.message_event, platform_events.GroupMessage
         ):
-            query.resp_message_chain[-1].insert(
-                0, platform_message.At(query.message_event.sender.id)
-            )
+            query.resp_message_chain[-1].insert(0, platform_message.At(query.message_event.sender.id))
 
         quote_origin = query.pipeline_config['output']['misc']['quote-origin']
 
@@ -46,6 +42,4 @@ class SendResponseBackStage(stage.PipelineStage):
             quote_origin=quote_origin,
         )
 
-        return entities.StageProcessResult(
-            result_type=entities.ResultType.CONTINUE, new_query=query
-        )
+        return entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)

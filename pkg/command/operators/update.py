@@ -8,9 +8,7 @@ from .. import operator, entities, errors
 
 @operator.operator_class(name='update', help='更新程序', usage='!update', privilege=2)
 class UpdateCommand(operator.CommandOperator):
-    async def execute(
-        self, context: entities.ExecuteContext
-    ) -> typing.AsyncGenerator[entities.CommandReturn, None]:
+    async def execute(self, context: entities.ExecuteContext) -> typing.AsyncGenerator[entities.CommandReturn, None]:
         try:
             yield entities.CommandReturn(text='正在进行更新...')
             if await self.ap.ver_mgr.update_all():
@@ -19,6 +17,4 @@ class UpdateCommand(operator.CommandOperator):
                 yield entities.CommandReturn(text='当前已是最新版本')
         except Exception as e:
             traceback.print_exc()
-            yield entities.CommandReturn(
-                error=errors.CommandError('更新失败: ' + str(e))
-            )
+            yield entities.CommandReturn(error=errors.CommandError('更新失败: ' + str(e)))

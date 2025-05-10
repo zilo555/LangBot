@@ -29,12 +29,8 @@ class ConversationMessageTruncator(stage.PipelineStage):
         else:
             raise ValueError(f'未知的截断器: {use_method}')
 
-    async def process(
-        self, query: core_entities.Query, stage_inst_name: str
-    ) -> entities.StageProcessResult:
+    async def process(self, query: core_entities.Query, stage_inst_name: str) -> entities.StageProcessResult:
         """处理"""
         query = await self.trun.truncate(query)
 
-        return entities.StageProcessResult(
-            result_type=entities.ResultType.CONTINUE, new_query=query
-        )
+        return entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)

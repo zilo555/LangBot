@@ -25,9 +25,7 @@ class DingTalkClient:
         self.secret = client_secret
         # 在 DingTalkClient 中传入自己作为参数，避免循环导入
         self.EchoTextHandler = EchoTextHandler(self)
-        self.client.register_callback_handler(
-            dingtalk_stream.chatbot.ChatbotMessage.TOPIC, self.EchoTextHandler
-        )
+        self.client.register_callback_handler(dingtalk_stream.chatbot.ChatbotMessage.TOPIC, self.EchoTextHandler)
         self._message_handlers = {
             'example': [],
         }
@@ -86,9 +84,7 @@ class DingTalkClient:
 
             if response.status_code == 200:
                 file_bytes = response.content
-                base64_str = base64.b64encode(file_bytes).decode(
-                    'utf-8'
-                )  # 返回字符串格式
+                base64_str = base64.b64encode(file_bytes).decode('utf-8')  # 返回字符串格式
                 return base64_str
             else:
                 raise Exception('获取文件失败')
@@ -151,9 +147,7 @@ class DingTalkClient:
             for handler in self._message_handlers[msg_type]:
                 await handler(event)
 
-    async def get_message(
-        self, incoming_message: dingtalk_stream.chatbot.ChatbotMessage
-    ):
+    async def get_message(self, incoming_message: dingtalk_stream.chatbot.ChatbotMessage):
         try:
             # print(json.dumps(incoming_message.to_dict(), indent=4, ensure_ascii=False))
             message_data = {
@@ -170,9 +164,7 @@ class DingTalkClient:
                     if 'text' in item:
                         message_data['Content'] = item['text']
                     if incoming_message.get_image_list()[0]:
-                        message_data['Picture'] = await self.download_image(
-                            incoming_message.get_image_list()[0]
-                        )
+                        message_data['Picture'] = await self.download_image(incoming_message.get_image_list()[0])
                 message_data['Type'] = 'text'
 
             elif incoming_message.message_type == 'text':
@@ -180,15 +172,11 @@ class DingTalkClient:
 
                 message_data['Type'] = 'text'
             elif incoming_message.message_type == 'picture':
-                message_data['Picture'] = await self.download_image(
-                    incoming_message.get_image_list()[0]
-                )
+                message_data['Picture'] = await self.download_image(incoming_message.get_image_list()[0])
 
                 message_data['Type'] = 'image'
             elif incoming_message.message_type == 'audio':
-                message_data['Audio'] = await self.get_audio_url(
-                    incoming_message.to_dict()['content']['downloadCode']
-                )
+                message_data['Audio'] = await self.get_audio_url(incoming_message.to_dict()['content']['downloadCode'])
 
                 message_data['Type'] = 'audio'
 

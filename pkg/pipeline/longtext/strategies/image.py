@@ -27,18 +27,14 @@ class Text2ImageStrategy(strategy_model.LongTextStrategy):
             encoding='utf-8',
         )
 
-    async def process(
-        self, message: str, query: core_entities.Query
-    ) -> list[platform_message.MessageComponent]:
+    async def process(self, message: str, query: core_entities.Query) -> list[platform_message.MessageComponent]:
         img_path = self.text_to_image(
             text_str=message,
             save_as='temp/{}.png'.format(int(time.time())),
             query=query,
         )
 
-        compressed_path, size = self.compress_image(
-            img_path, outfile='temp/{}_compressed.png'.format(int(time.time()))
-        )
+        compressed_path, size = self.compress_image(img_path, outfile='temp/{}_compressed.png'.format(int(time.time())))
 
         with open(compressed_path, 'rb') as f:
             img = f.read()
@@ -165,10 +161,7 @@ class Text2ImageStrategy(strategy_model.LongTextStrategy):
                     numbers = self.indexNumber(rest_text)
 
                     for number in numbers:
-                        if (
-                            number[1] < point < number[1] + len(number[0])
-                            and number[1] != 0
-                        ):
+                        if number[1] < point < number[1] + len(number[0]) and number[1] != 0:
                             point = number[1]
                             break
 
@@ -181,9 +174,7 @@ class Text2ImageStrategy(strategy_model.LongTextStrategy):
                     else:
                         continue
         # 准备画布
-        img = Image.new(
-            'RGBA', (width, max(280, len(final_lines) * 35 + 65)), (255, 255, 255, 255)
-        )
+        img = Image.new('RGBA', (width, max(280, len(final_lines) * 35 + 65)), (255, 255, 255, 255))
         draw = ImageDraw.Draw(img, mode='RGBA')
 
         self.ap.logger.debug('正在绘制图片...')

@@ -31,10 +31,7 @@ class PlatformBaseModel(BaseModel, metaclass=PlatformMetaclass):
 
     def __repr__(self) -> str:
         return (
-            self.__class__.__name__
-            + '('
-            + ', '.join((f'{k}={repr(v)}' for k, v in self.__dict__.items() if v))
-            + ')'
+            self.__class__.__name__ + '(' + ', '.join((f'{k}={repr(v)}' for k, v in self.__dict__.items() if v)) + ')'
         )
 
     class Config:

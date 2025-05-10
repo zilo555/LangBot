@@ -160,9 +160,7 @@ class Application:
         """打印访问 webui 的提示"""
 
         if not os.path.exists(os.path.join('.', 'web/out')):
-            self.logger.warning(
-                'WebUI 文件缺失，请根据文档获取：https://docs.langbot.app/webui/intro.html'
-            )
+            self.logger.warning('WebUI 文件缺失，请根据文档获取：https://docs.langbot.app/webui/intro.html')
             return
 
         host_ip = '127.0.0.1'

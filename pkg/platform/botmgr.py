@@ -132,14 +132,10 @@ class PlatformManager:
         self.adapter_dict = {}
 
     async def initialize(self):
-        self.adapter_components = self.ap.discover.get_components_by_kind(
-            'MessagePlatformAdapter'
-        )
+        self.adapter_components = self.ap.discover.get_components_by_kind('MessagePlatformAdapter')
         adapter_dict: dict[str, type[msadapter.MessagePlatformAdapter]] = {}
         for component in self.adapter_components:
-            adapter_dict[component.metadata.name] = (
-                component.get_python_component_class()
-            )
+            adapter_dict[component.metadata.name] = component.get_python_component_class()
         self.adapter_dict = adapter_dict
 
         await self.load_bots_from_db()
@@ -152,9 +148,7 @@ class PlatformManager:
 
         self.bots = []
 
-        result = await self.ap.persistence_mgr.execute_async(
-            sqlalchemy.select(persistence_bot.Bot)
-        )
+        result = await self.ap.persistence_mgr.execute_async(sqlalchemy.select(persistence_bot.Bot))
 
         bots = result.all()
 
@@ -172,13 +166,9 @@ class PlatformManager:
         elif isinstance(bot_entity, dict):
             bot_entity = persistence_bot.Bot(**bot_entity)
 
-        adapter_inst = self.adapter_dict[bot_entity.adapter](
-            bot_entity.adapter_config, self.ap
-        )
+        adapter_inst = self.adapter_dict[bot_entity.adapter](bot_entity.adapter_config, self.ap)
 
-        runtime_bot = RuntimeBot(
-            ap=self.ap, bot_entity=bot_entity, adapter=adapter_inst
-        )
+        runtime_bot = RuntimeBot(ap=self.ap, bot_entity=bot_entity, adapter=adapter_inst)
 
         await runtime_bot.initialize()
 
@@ -209,9 +199,7 @@ class PlatformManager:
                 return component.to_plain_dict()
         return None
 
-    def get_available_adapter_manifest_by_name(
-        self, name: str
-    ) -> engine.Component | None:
+    def get_available_adapter_manifest_by_name(self, name: str) -> engine.Component | None:
         for component in self.adapter_components:
             if component.metadata.name == name:
                 return component

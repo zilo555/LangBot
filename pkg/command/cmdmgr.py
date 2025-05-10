@@ -40,18 +40,14 @@ class CommandManager:
         # 应用命令权限配置
         for cls in operator.preregistered_operators:
             if cls.path in self.ap.instance_config.data['command']['privilege']:
-                cls.lowest_privilege = self.ap.instance_config.data['command'][
-                    'privilege'
-                ][cls.path]
+                cls.lowest_privilege = self.ap.instance_config.data['command']['privilege'][cls.path]
 
         # 实例化所有类
         self.cmd_list = [cls(self.ap) for cls in operator.preregistered_operators]
 
         # 设置所有类的子节点
         for cmd in self.cmd_list:
-            cmd.children = [
-                child for child in self.cmd_list if child.parent_class == cmd.__class__
-            ]
+            cmd.children = [child for child in self.cmd_list if child.parent_class == cmd.__class__]
 
         # 初始化所有类
         for cmd in self.cmd_list:
@@ -68,10 +64,7 @@ class CommandManager:
         found = False
         if len(context.crt_params) > 0:  # 查找下一个参数是否对应此节点的某个子节点名
             for oper in operator_list:
-                if (
-                    context.crt_params[0] == oper.name
-                    or context.crt_params[0] in oper.alias
-                ) and (
+                if (context.crt_params[0] == oper.name or context.crt_params[0] in oper.alias) and (
                     oper.parent_class is None or oper.parent_class == operator.__class__
                 ):
                     found = True
@@ -85,14 +78,10 @@ class CommandManager:
 
         if not found:  # 如果下一个参数未在此节点的子节点中找到，则执行此节点或者报错
             if operator is None:
-                yield entities.CommandReturn(
-                    error=errors.CommandNotFoundError(context.crt_params[0])
-                )
+                yield entities.CommandReturn(error=errors.CommandNotFoundError(context.crt_params[0]))
             else:
                 if operator.lowest_privilege > context.privilege:
-                    yield entities.CommandReturn(
-                        error=errors.CommandPrivilegeError(operator.name)
-                    )
+                    yield entities.CommandReturn(error=errors.CommandPrivilegeError(operator.name))
                 else:
                     async for ret in operator.execute(context):
                         yield ret
@@ -107,10 +96,7 @@ class CommandManager:
 
         privilege = 1
 
-        if (
-            f'{query.launcher_type.value}_{query.launcher_id}'
-            in self.ap.instance_config.data['admins']
-        ):
+        if f'{query.launcher_type.value}_{query.launcher_id}' in self.ap.instance_config.data['admins']:
             privilege = 2
 
         ctx = entities.ExecuteContext(

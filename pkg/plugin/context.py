@@ -165,9 +165,7 @@ class APIHost:
         langbot_version = ''
 
         try:
-            langbot_version = (
-                self.ap.ver_mgr.get_current_version()
-            )  # 从updater模块获取版本号
+            langbot_version = self.ap.ver_mgr.get_current_version()  # 从updater模块获取版本号
         except Exception:
             return False
 
@@ -237,9 +235,7 @@ class EventContext:
             message_source=self.event.query.message_event, message=message_chain
         )
 
-    async def send_message(
-        self, target_type: str, target_id: str, message: platform_message.MessageChain
-    ):
+    async def send_message(self, target_type: str, target_id: str, message: platform_message.MessageChain):
         """主动发送消息
 
         Args:
@@ -247,9 +243,7 @@ class EventContext:
             target_id (str): 目标ID
             message (platform.types.MessageChain): 源平台的消息链，若用户使用的不是源平台适配器，程序也能自动转换为目标平台消息链
         """
-        await self.event.query.adapter.send_message(
-            target_type=target_type, target_id=target_id, message=message
-        )
+        await self.event.query.adapter.send_message(target_type=target_type, target_id=target_id, message=message)
 
     def prevent_postorder(self):
         """阻止后续插件执行"""
@@ -378,8 +372,7 @@ class RuntimeContainer(pydantic.BaseModel):
             'priority': self.priority,
             'config_schema': self.config_schema,
             'event_handlers': {
-                event_name.__name__: handler.__name__
-                for event_name, handler in self.event_handlers.items()
+                event_name.__name__: handler.__name__ for event_name, handler in self.event_handlers.items()
             },
             'tools': [
                 {

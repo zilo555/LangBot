@@ -45,9 +45,7 @@ class DiscordMessageConverter(adapter.MessageConverter):
                     with open(ele.path, 'rb') as f:
                         image_bytes = f.read()
 
-                image_files.append(
-                    discord.File(fp=image_bytes, filename=f'{uuid.uuid4()}.png')
-                )
+                image_files.append(discord.File(fp=image_bytes, filename=f'{uuid.uuid4()}.png'))
             elif isinstance(ele, platform_message.Plain):
                 text_string += ele.text
             elif isinstance(ele, platform_message.Forward):
@@ -65,9 +63,7 @@ class DiscordMessageConverter(adapter.MessageConverter):
     async def target2yiri(message: discord.Message) -> platform_message.MessageChain:
         lb_msg_list = []
 
-        msg_create_time = datetime.datetime.fromtimestamp(
-            int(message.created_at.timestamp())
-        )
+        msg_create_time = datetime.datetime.fromtimestamp(int(message.created_at.timestamp()))
 
         lb_msg_list.append(platform_message.Source(id=message.id, time=msg_create_time))
 
@@ -97,11 +93,7 @@ class DiscordMessageConverter(adapter.MessageConverter):
                 else:
                     mid_at_component.append(platform_message.At(target=mid_at[2:-1]))
 
-                return (
-                    text_element_recur(text_split[0])
-                    + mid_at_component
-                    + text_element_recur(text_split[1])
-                )
+                return text_element_recur(text_split[0]) + mid_at_component + text_element_recur(text_split[1])
             else:
                 return [platform_message.Plain(text=text_ele)]
 
@@ -114,11 +106,7 @@ class DiscordMessageConverter(adapter.MessageConverter):
                     image_data = await response.read()
                     image_base64 = base64.b64encode(image_data).decode('utf-8')
                     image_format = response.headers['Content-Type']
-                    element_list.append(
-                        platform_message.Image(
-                            base64=f'data:{image_format};base64,{image_base64}'
-                        )
-                    )
+                    element_list.append(platform_message.Image(base64=f'data:{image_format};base64,{image_base64}'))
 
         return platform_message.MessageChain(element_list)
 
@@ -208,9 +196,7 @@ class DiscordAdapter(adapter.MessagePlatformAdapter):
 
         self.bot = MyClient(intents=intents, **args)
 
-    async def send_message(
-        self, target_type: str, target_id: str, message: platform_message.MessageChain
-    ):
+    async def send_message(self, target_type: str, target_id: str, message: platform_message.MessageChain):
         pass
 
     async def reply_message(
@@ -243,18 +229,14 @@ class DiscordAdapter(adapter.MessagePlatformAdapter):
     def register_listener(
         self,
         event_type: typing.Type[platform_events.Event],
-        callback: typing.Callable[
-            [platform_events.Event, adapter.MessagePlatformAdapter], None
-        ],
+        callback: typing.Callable[[platform_events.Event, adapter.MessagePlatformAdapter], None],
     ):
         self.listeners[event_type] = callback
 
     def unregister_listener(
         self,
         event_type: typing.Type[platform_events.Event],
-        callback: typing.Callable[
-            [platform_events.Event, adapter.MessagePlatformAdapter], None
-        ],
+        callback: typing.Callable[[platform_events.Event, adapter.MessagePlatformAdapter], None],
     ):
         self.listeners.pop(event_type)
 

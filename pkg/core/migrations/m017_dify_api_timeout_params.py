@@ -11,8 +11,7 @@ class DifyAPITimeoutParamsMigration(migration.Migration):
         """判断当前环境是否需要运行此迁移"""
         return (
             'timeout' not in self.ap.provider_cfg.data['dify-service-api']['chat']
-            or 'timeout'
-            not in self.ap.provider_cfg.data['dify-service-api']['workflow']
+            or 'timeout' not in self.ap.provider_cfg.data['dify-service-api']['workflow']
             or 'agent' not in self.ap.provider_cfg.data['dify-service-api']
         )
 

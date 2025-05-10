@@ -14,10 +14,8 @@ class LogsRouterGroup(group.RouterGroup):
             start_page_number = int(quart.request.args.get('start_page_number', 0))
             start_offset = int(quart.request.args.get('start_offset', 0))
 
-            logs_str, end_page_number, end_offset = (
-                self.ap.log_cache.get_log_by_pointer(
-                    start_page_number=start_page_number, start_offset=start_offset
-                )
+            logs_str, end_page_number, end_offset = self.ap.log_cache.get_log_by_pointer(
+                start_page_number=start_page_number, start_offset=start_offset
             )
 
             return self.success(

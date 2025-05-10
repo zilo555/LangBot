@@ -29,9 +29,7 @@ def import_dir(path: str):
     for file in os.listdir(path):
         if file.endswith('.py') and file != '__init__.py':
             full_path = os.path.join(path, file)
-            rel_path = full_path.replace(
-                os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ''
-            )
+            rel_path = full_path.replace(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '')
             rel_path = rel_path[1:]
             rel_path = rel_path.replace('/', '.')[:-3]
             importlib.import_module(rel_path)

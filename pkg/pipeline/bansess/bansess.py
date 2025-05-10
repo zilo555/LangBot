@@ -14,9 +14,7 @@ class BanSessionCheckStage(stage.PipelineStage):
     async def initialize(self, pipeline_config: dict):
         pass
 
-    async def process(
-        self, query: core_entities.Query, stage_inst_name: str
-    ) -> entities.StageProcessResult:
+    async def process(self, query: core_entities.Query, stage_inst_name: str) -> entities.StageProcessResult:
         found = False
 
         mode = query.pipeline_config['trigger']['access-control']['mode']
@@ -41,11 +39,7 @@ class BanSessionCheckStage(stage.PipelineStage):
             ctn = not found
 
         return entities.StageProcessResult(
-            result_type=entities.ResultType.CONTINUE
-            if ctn
-            else entities.ResultType.INTERRUPT,
+            result_type=entities.ResultType.CONTINUE if ctn else entities.ResultType.INTERRUPT,
             new_query=query,
-            console_notice=f'根据访问控制忽略消息: {query.launcher_type.value}_{query.launcher_id}'
-            if not ctn
-            else '',
+            console_notice=f'根据访问控制忽略消息: {query.launcher_type.value}_{query.launcher_id}' if not ctn else '',
         )

@@ -23,9 +23,7 @@ class OpenAIConfigMigration(migration.Migration):
 
         self.ap.provider_cfg.data['keys']['openai'] = old_openai_config['api-keys']
 
-        self.ap.provider_cfg.data['model'] = old_openai_config[
-            'chat-completions-params'
-        ]['model']
+        self.ap.provider_cfg.data['model'] = old_openai_config['chat-completions-params']['model']
 
         del old_openai_config['chat-completions-params']['model']
 

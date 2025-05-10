@@ -60,18 +60,14 @@ class VersionManager:
                 latest_rls = rls
         self.ap.logger.info('更新日志: {}'.format(rls_notes))
 
-        if latest_rls == {} and not self.is_newer(
-            latest_tag_name, current_tag
-        ):  # 没有新版本
+        if latest_rls == {} and not self.is_newer(latest_tag_name, current_tag):  # 没有新版本
             return False
 
         # 下载最新版本的zip到temp目录
         self.ap.logger.info('开始下载最新版本: {}'.format(latest_rls['zipball_url']))
 
         zip_url = latest_rls['zipball_url']
-        zip_resp = requests.get(
-            url=zip_url, proxies=self.ap.proxy_mgr.get_forward_proxies()
-        )
+        zip_resp = requests.get(url=zip_url, proxies=self.ap.proxy_mgr.get_forward_proxies())
         zip_data = zip_resp.content
 
         # 检查temp/updater目录
@@ -82,11 +78,7 @@ class VersionManager:
         with open('temp/updater/{}.zip'.format(latest_rls['tag_name']), 'wb') as f:
             f.write(zip_data)
 
-        self.ap.logger.info(
-            '下载最新版本完成: {}'.format(
-                'temp/updater/{}.zip'.format(latest_rls['tag_name'])
-            )
-        )
+        self.ap.logger.info('下载最新版本完成: {}'.format('temp/updater/{}.zip'.format(latest_rls['tag_name'])))
 
         # 解压zip到temp/updater/<tag_name>/
         import zipfile
@@ -97,17 +89,13 @@ class VersionManager:
 
             shutil.rmtree('temp/updater/{}'.format(latest_rls['tag_name']))
         os.mkdir('temp/updater/{}'.format(latest_rls['tag_name']))
-        with zipfile.ZipFile(
-            'temp/updater/{}.zip'.format(latest_rls['tag_name']), 'r'
-        ) as zip_ref:
+        with zipfile.ZipFile('temp/updater/{}.zip'.format(latest_rls['tag_name']), 'r') as zip_ref:
             zip_ref.extractall('temp/updater/{}'.format(latest_rls['tag_name']))
 
         # 覆盖源码
         source_root = ''
         # 找到temp/updater/<tag_name>/中的第一个子目录路径
-        for root, dirs, files in os.walk(
-            'temp/updater/{}'.format(latest_rls['tag_name'])
-        ):
+        for root, dirs, files in os.walk('temp/updater/{}'.format(latest_rls['tag_name'])):
             if root != 'temp/updater/{}'.format(latest_rls['tag_name']):
                 source_root = root
                 break

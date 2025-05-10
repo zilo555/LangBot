@@ -32,9 +32,7 @@ class MessagePlatformAdapter(metaclass=abc.ABCMeta):
         self.config = config
         self.ap = ap
 
-    async def send_message(
-        self, target_type: str, target_id: str, message: platform_message.MessageChain
-    ):
+    async def send_message(self, target_type: str, target_id: str, message: platform_message.MessageChain):
         """主动发送消息
 
         Args:
@@ -66,9 +64,7 @@ class MessagePlatformAdapter(metaclass=abc.ABCMeta):
     def register_listener(
         self,
         event_type: typing.Type[platform_message.Event],
-        callback: typing.Callable[
-            [platform_message.Event, MessagePlatformAdapter], None
-        ],
+        callback: typing.Callable[[platform_message.Event, MessagePlatformAdapter], None],
     ):
         """注册事件监听器
 
@@ -81,9 +77,7 @@ class MessagePlatformAdapter(metaclass=abc.ABCMeta):
     def unregister_listener(
         self,
         event_type: typing.Type[platform_message.Event],
-        callback: typing.Callable[
-            [platform_message.Event, MessagePlatformAdapter], None
-        ],
+        callback: typing.Callable[[platform_message.Event, MessagePlatformAdapter], None],
     ):
         """注销事件监听器
 

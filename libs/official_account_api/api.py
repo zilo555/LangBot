@@ -68,9 +68,7 @@ class OAClient:
             elif request.method == 'POST':
                 encryt_msg = await request.data
                 wxcpt = WXBizMsgCrypt(self.token, self.aes, self.appid)
-                ret, xml_msg = wxcpt.DecryptMsg(
-                    encryt_msg, msg_signature, timestamp, nonce
-                )
+                ret, xml_msg = wxcpt.DecryptMsg(encryt_msg, msg_signature, timestamp, nonce)
                 xml_msg = xml_msg.decode('utf-8')
 
                 if ret != 0:
@@ -112,9 +110,7 @@ class OAClient:
                     #     create_time=int(time.time()),
                     #     content = "请求失效：暂不支持公众号超过15秒的请求，如有需求，请联系 LangBot 团队。"
                     # )
-                    print(
-                        '请求失效：暂不支持公众号超过15秒的请求，如有需求，请联系 LangBot 团队。'
-                    )
+                    print('请求失效：暂不支持公众号超过15秒的请求，如有需求，请联系 LangBot 团队。')
                     return ''
 
         except Exception:
@@ -128,12 +124,8 @@ class OAClient:
             'FromUserName': root.find('FromUserName').text,
             'CreateTime': int(root.find('CreateTime').text),
             'MsgType': root.find('MsgType').text,
-            'Content': root.find('Content').text
-            if root.find('Content') is not None
-            else None,
-            'MsgId': int(root.find('MsgId').text)
-            if root.find('MsgId') is not None
-            else None,
+            'Content': root.find('Content').text if root.find('Content') is not None else None,
+            'MsgId': int(root.find('MsgId').text) if root.find('MsgId') is not None else None,
         }
 
         return message_data
@@ -225,9 +217,7 @@ class OAClientForLongerResponse:
             elif request.method == 'POST':
                 encryt_msg = await request.data
                 wxcpt = WXBizMsgCrypt(self.token, self.aes, self.appid)
-                ret, xml_msg = wxcpt.DecryptMsg(
-                    encryt_msg, msg_signature, timestamp, nonce
-                )
+                ret, xml_msg = wxcpt.DecryptMsg(encryt_msg, msg_signature, timestamp, nonce)
                 xml_msg = xml_msg.decode('utf-8')
 
                 if ret != 0:
@@ -238,18 +228,12 @@ class OAClientForLongerResponse:
                 from_user = root.find('FromUserName').text
                 to_user = root.find('ToUserName').text
 
-                if (
-                    self.msg_queue.get(from_user)
-                    and self.msg_queue[from_user][0]['content']
-                ):
+                if self.msg_queue.get(from_user) and self.msg_queue[from_user][0]['content']:
                     queue_top = self.msg_queue[from_user].pop(0)
                     queue_content = queue_top['content']
 
                     # 弹出用户消息
-                    if (
-                        self.user_msg_queue.get(from_user)
-                        and self.user_msg_queue[from_user]
-                    ):
+                    if self.user_msg_queue.get(from_user) and self.user_msg_queue[from_user]:
                         self.user_msg_queue[from_user].pop(0)
 
                     response_xml = xml_template.format(
@@ -268,10 +252,7 @@ class OAClientForLongerResponse:
                         content=self.loading_message,
                     )
 
-                    if (
-                        self.user_msg_queue.get(from_user)
-                        and self.user_msg_queue[from_user][0]['content']
-                    ):
+                    if self.user_msg_queue.get(from_user) and self.user_msg_queue[from_user][0]['content']:
                         return response_xml
                     else:
                         message_data = await self.get_message(xml_msg)
@@ -299,12 +280,8 @@ class OAClientForLongerResponse:
             'FromUserName': root.find('FromUserName').text,
             'CreateTime': int(root.find('CreateTime').text),
             'MsgType': root.find('MsgType').text,
-            'Content': root.find('Content').text
-            if root.find('Content') is not None
-            else None,
-            'MsgId': int(root.find('MsgId').text)
-            if root.find('MsgId') is not None
-            else None,
+            'Content': root.find('Content').text if root.find('Content') is not None else None,
+            'MsgId': int(root.find('MsgId').text) if root.find('MsgId') is not None else None,
         }
 
         return message_data

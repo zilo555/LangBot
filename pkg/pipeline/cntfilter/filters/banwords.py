@@ -13,9 +13,7 @@ class BanWordFilter(filter_model.ContentFilter):
     async def initialize(self):
         pass
 
-    async def process(
-        self, query: core_entities.Query, message: str
-    ) -> entities.FilterResult:
+    async def process(self, query: core_entities.Query, message: str) -> entities.FilterResult:
         found = False
 
         for word in self.ap.sensitive_meta.data['words']:
@@ -31,9 +29,7 @@ class BanWordFilter(filter_model.ContentFilter):
                             self.ap.sensitive_meta.data['mask'] * len(match[i]),
                         )
                     else:
-                        message = message.replace(
-                            match[i], self.ap.sensitive_meta.data['mask_word']
-                        )
+                        message = message.replace(match[i], self.ap.sensitive_meta.data['mask_word'])
 
         return entities.FilterResult(
             level=entities.ResultLevel.MASKED if found else entities.ResultLevel.PASS,

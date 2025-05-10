@@ -71,14 +71,10 @@ class LarkMessageConverter(adapter.MessageConverter):
                         pending_paragraph.append({'tag': 'md', 'text': text})
                     except UnicodeError:
                         # If still fails, replace invalid characters
-                        text = msg.text.encode('utf-8', errors='replace').decode(
-                            'utf-8'
-                        )
+                        text = msg.text.encode('utf-8', errors='replace').decode('utf-8')
                         pending_paragraph.append({'tag': 'md', 'text': text})
             elif isinstance(msg, platform_message.At):
-                pending_paragraph.append(
-                    {'tag': 'at', 'user_id': msg.target, 'style': []}
-                )
+                pending_paragraph.append({'tag': 'at', 'user_id': msg.target, 'style': []})
             elif isinstance(msg, platform_message.AtAll):
                 pending_paragraph.append({'tag': 'at', 'user_id': 'all', 'style': []})
             elif isinstance(msg, platform_message.Image):
@@ -166,11 +162,7 @@ class LarkMessageConverter(adapter.MessageConverter):
                         os.unlink(temp_file.name)
             elif isinstance(msg, platform_message.Forward):
                 for node in msg.node_list:
-                    message_elements.extend(
-                        await LarkMessageConverter.yiri2target(
-                            node.message_chain, api_client
-                        )
-                    )
+                    message_elements.extend(await LarkMessageConverter.yiri2target(node.message_chain, api_client))
 
         if pending_paragraph:
             message_elements.append(pending_paragraph)
@@ -186,13 +178,9 @@ class LarkMessageConverter(adapter.MessageConverter):
 
         lb_msg_list = []
 
-        msg_create_time = datetime.datetime.fromtimestamp(
-            int(message.create_time) / 1000
-        )
+        msg_create_time = datetime.datetime.fromtimestamp(int(message.create_time) / 1000)
 
-        lb_msg_list.append(
-            platform_message.Source(id=message.message_id, time=msg_create_time)
-        )
+        lb_msg_list.append(platform_message.Source(id=message.message_id, time=msg_create_time))
 
         if message.message_type == 'text':
             element_list = []
@@ -222,9 +210,7 @@ class LarkMessageConverter(adapter.MessageConverter):
                 left_text = text_split[0]
                 right_text = text_split[1]
 
-                new_list.extend(
-                    text_element_recur({'tag': 'text', 'text': left_text, 'style': []})
-                )
+                new_list.extend(text_element_recur({'tag': 'text', 'text': left_text, 'style': []}))
 
                 new_list.append(
                     {
@@ -235,15 +221,11 @@ class LarkMessageConverter(adapter.MessageConverter):
                     }
                 )
 
-                new_list.extend(
-                    text_element_recur({'tag': 'text', 'text': right_text, 'style': []})
-                )
+                new_list.extend(text_element_recur({'tag': 'text', 'text': right_text, 'style': []}))
 
                 return new_list
 
-            element_list = text_element_recur(
-                {'tag': 'text', 'text': message_content['text'], 'style': []}
-            )
+            element_list = text_element_recur({'tag': 'text', 'text': message_content['text'], 'style': []})
 
             message_content = {'title': '', 'content': element_list}
 
@@ -258,9 +240,7 @@ class LarkMessageConverter(adapter.MessageConverter):
 
             message_content['content'] = new_list
         elif message.message_type == 'image':
-            message_content['content'] = [
-                {'tag': 'img', 'image_key': message_content['image_key'], 'style': []}
-            ]
+            message_content['content'] = [{'tag': 'img', 'image_key': message_content['image_key'], 'style': []}]
 
         for ele in message_content['content']:
             if ele['tag'] == 'text':
@@ -278,9 +258,7 @@ class LarkMessageConverter(adapter.MessageConverter):
                     .build()
                 )
 
-                response: GetMessageResourceResponse = (
-                    await api_client.im.v1.message_resource.aget(request)
-                )
+                response: GetMessageResourceResponse = await api_client.im.v1.message_resource.aget(request)
 
                 if not response.success():
                     raise Exception(
@@ -292,11 +270,7 @@ class LarkMessageConverter(adapter.MessageConverter):
 
                 image_format = response.raw.headers['content-type']
 
-                lb_msg_list.append(
-                    platform_message.Image(
-                        base64=f'data:{image_format};base64,{image_base64}'
-                    )
-                )
+                lb_msg_list.append(platform_message.Image(base64=f'data:{image_format};base64,{image_base64}'))
 
         return platform_message.MessageChain(lb_msg_list)
 
@@ -312,9 +286,7 @@ class LarkEventConverter(adapter.EventConverter):
     async def target2yiri(
         event: lark_oapi.im.v1.P2ImMessageReceiveV1, api_client: lark_oapi.Client
     ) -> platform_events.Event:
-        message_chain = await LarkMessageConverter.target2yiri(
-            event.event.message, api_client
-        )
+        message_chain = await LarkMessageConverter.target2yiri(event.event.message, api_client)
 
         if event.event.message.chat_type == 'p2p':
             return platform_events.FriendMessage(
@@ -402,9 +374,7 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
                 p2v1.schema = context.schema
                 if 'im.message.receive_v1' == type:
                     try:
-                        event = await self.event_converter.target2yiri(
-                            p2v1, self.api_client
-                        )
+                        event = await self.event_converter.target2yiri(p2v1, self.api_client)
                     except Exception:
                         traceback.print_exc()
 
@@ -425,26 +395,15 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
             asyncio.create_task(on_message(event))
 
         event_handler = (
-            lark_oapi.EventDispatcherHandler.builder('', '')
-            .register_p2_im_message_receive_v1(sync_on_message)
-            .build()
+            lark_oapi.EventDispatcherHandler.builder('', '').register_p2_im_message_receive_v1(sync_on_message).build()
         )
 
         self.bot_account_id = config['bot_name']
 
-        self.bot = lark_oapi.ws.Client(
-            config['app_id'], config['app_secret'], event_handler=event_handler
-        )
-        self.api_client = (
-            lark_oapi.Client.builder()
-            .app_id(config['app_id'])
-            .app_secret(config['app_secret'])
-            .build()
-        )
+        self.bot = lark_oapi.ws.Client(config['app_id'], config['app_secret'], event_handler=event_handler)
+        self.api_client = lark_oapi.Client.builder().app_id(config['app_id']).app_secret(config['app_secret']).build()
 
-    async def send_message(
-        self, target_type: str, target_id: str, message: platform_message.MessageChain
-    ):
+    async def send_message(self, target_type: str, target_id: str, message: platform_message.MessageChain):
         pass
 
     async def reply_message(
@@ -455,9 +414,7 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
     ):
         # 不再需要了，因为message_id已经被包含到message_chain中
         # lark_event = await self.event_converter.yiri2target(message_source)
-        lark_message = await self.message_converter.yiri2target(
-            message, self.api_client
-        )
+        lark_message = await self.message_converter.yiri2target(message, self.api_client)
 
         final_content = {
             'zh_cn': {
@@ -480,9 +437,7 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
             .build()
         )
 
-        response: ReplyMessageResponse = await self.api_client.im.v1.message.areply(
-            request
-        )
+        response: ReplyMessageResponse = await self.api_client.im.v1.message.areply(request)
 
         if not response.success():
             raise Exception(
@@ -495,18 +450,14 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
     def register_listener(
         self,
         event_type: typing.Type[platform_events.Event],
-        callback: typing.Callable[
-            [platform_events.Event, adapter.MessagePlatformAdapter], None
-        ],
+        callback: typing.Callable[[platform_events.Event, adapter.MessagePlatformAdapter], None],
     ):
         self.listeners[event_type] = callback
 
     def unregister_listener(
         self,
         event_type: typing.Type[platform_events.Event],
-        callback: typing.Callable[
-            [platform_events.Event, adapter.MessagePlatformAdapter], None
-        ],
+        callback: typing.Callable[[platform_events.Event, adapter.MessagePlatformAdapter], None],
     ):
         self.listeners.pop(event_type)
 

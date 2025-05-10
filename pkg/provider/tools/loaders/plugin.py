@@ -48,9 +48,7 @@ class PluginToolLoader(loader.ToolLoader):
                     return function, plugin.plugin_inst
         return None, None
 
-    async def invoke_tool(
-        self, query: core_entities.Query, name: str, parameters: dict
-    ) -> typing.Any:
+    async def invoke_tool(self, query: core_entities.Query, name: str, parameters: dict) -> typing.Any:
         try:
             function, plugin = await self._get_function_and_plugin(name)
             if function is None:

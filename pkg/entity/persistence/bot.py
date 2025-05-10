@@ -16,9 +16,7 @@ class Bot(Base):
     enable = sqlalchemy.Column(sqlalchemy.Boolean, nullable=False, default=False)
     use_pipeline_name = sqlalchemy.Column(sqlalchemy.String(255), nullable=True)
     use_pipeline_uuid = sqlalchemy.Column(sqlalchemy.String(255), nullable=True)
-    created_at = sqlalchemy.Column(
-        sqlalchemy.DateTime, nullable=False, server_default=sqlalchemy.func.now()
-    )
+    created_at = sqlalchemy.Column(sqlalchemy.DateTime, nullable=False, server_default=sqlalchemy.func.now())
     updated_at = sqlalchemy.Column(
         sqlalchemy.DateTime,
         nullable=False,

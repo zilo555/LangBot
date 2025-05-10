@@ -29,9 +29,7 @@ class NakuruProjectMessageConverter(adapter_model.MessageConverter):
         elif type(message_chain) is str:
             msg_list = [platform_message.Plain(message_chain)]
         else:
-            raise Exception(
-                'Unknown message type: ' + str(message_chain) + str(type(message_chain))
-            )
+            raise Exception('Unknown message type: ' + str(message_chain) + str(type(message_chain)))
 
         nakuru_msg_list = []
 
@@ -63,9 +61,7 @@ class NakuruProjectMessageConverter(adapter_model.MessageConverter):
                 # 遍历并转换
                 for yiri_forward_node in yiri_forward_node_list:
                     try:
-                        content_list = NakuruProjectMessageConverter.yiri2target(
-                            yiri_forward_node.message_chain
-                        )
+                        content_list = NakuruProjectMessageConverter.yiri2target(yiri_forward_node.message_chain)
                         nakuru_forward_node = nkc.Node(
                             name=yiri_forward_node.sender_name,
                             uin=yiri_forward_node.sender_id,
@@ -87,9 +83,7 @@ class NakuruProjectMessageConverter(adapter_model.MessageConverter):
         return nakuru_msg_list
 
     @staticmethod
-    def target2yiri(
-        message_chain: typing.Any, message_id: int = -1
-    ) -> platform_message.MessageChain:
+    def target2yiri(message_chain: typing.Any, message_id: int = -1) -> platform_message.MessageChain:
         """将Yiri的消息链转换为YiriMirai的消息链"""
         assert type(message_chain) is list
 
@@ -97,9 +91,7 @@ class NakuruProjectMessageConverter(adapter_model.MessageConverter):
         import datetime
 
         # 添加Source组件以标记message_id等信息
-        yiri_msg_list.append(
-            platform_message.Source(id=message_id, time=datetime.datetime.now())
-        )
+        yiri_msg_list.append(platform_message.Source(id=message_id, time=datetime.datetime.now()))
         for component in message_chain:
             if type(component) is nkc.Plain:
                 yiri_msg_list.append(platform_message.Plain(text=component.text))
@@ -130,9 +122,7 @@ class NakuruProjectEventConverter(adapter_model.EventConverter):
 
     @staticmethod
     def target2yiri(event: typing.Any) -> platform_events.Event:
-        yiri_chain = NakuruProjectMessageConverter.target2yiri(
-            event.message, event.message_id
-        )
+        yiri_chain = NakuruProjectMessageConverter.target2yiri(event.message, event.message_id)
         if type(event) is nakuru.FriendMessage:  # 私聊消息事件
             return platform_events.FriendMessage(
                 sender=platform_entities.Friend(
@@ -206,9 +196,7 @@ class NakuruAdapter(adapter_model.MessagePlatformAdapter):
     ):
         task = None
 
-        converted_msg = (
-            self.message_converter.yiri2target(message) if not converted else message
-        )
+        converted_msg = self.message_converter.yiri2target(message) if not converted else message
 
         # 检查是否有转发消息
         has_forward = False
@@ -250,13 +238,9 @@ class NakuruAdapter(adapter_model.MessagePlatformAdapter):
                 ),
             )
         if type(message_source) is platform_events.GroupMessage:
-            await self.send_message(
-                'group', message_source.sender.group.id, message, converted=True
-            )
+            await self.send_message('group', message_source.sender.group.id, message, converted=True)
         elif type(message_source) is platform_events.FriendMessage:
-            await self.send_message(
-                'person', message_source.sender.id, message, converted=True
-            )
+            await self.send_message('person', message_source.sender.id, message, converted=True)
         else:
             raise Exception('Unknown message source type: ' + str(type(message_source)))
 
@@ -264,17 +248,13 @@ class NakuruAdapter(adapter_model.MessagePlatformAdapter):
         import time
 
         # 检查是否被禁言
-        group_member_info = asyncio.run(
-            self.bot.getGroupMemberInfo(group_id, self.bot_account_id)
-        )
+        group_member_info = asyncio.run(self.bot.getGroupMemberInfo(group_id, self.bot_account_id))
         return group_member_info.shut_up_timestamp > int(time.time())
 
     def register_listener(
         self,
         event_type: typing.Type[platform_events.Event],
-        callback: typing.Callable[
-            [platform_events.Event, adapter_model.MessagePlatformAdapter], None
-        ],
+        callback: typing.Callable[[platform_events.Event, adapter_model.MessagePlatformAdapter], None],
     ):
         try:
             source_cls = NakuruProjectEventConverter.yiri2target(event_type)
@@ -301,9 +281,7 @@ class NakuruAdapter(adapter_model.MessagePlatformAdapter):
     def unregister_listener(
         self,
         event_type: typing.Type[platform_events.Event],
-        callback: typing.Callable[
-            [platform_events.Event, adapter_model.MessagePlatformAdapter], None
-        ],
+        callback: typing.Callable[[platform_events.Event, adapter_model.MessagePlatformAdapter], None],
     ):
         nakuru_event_name = self.event_converter.yiri2target(event_type).__name__
 
@@ -312,10 +290,7 @@ class NakuruAdapter(adapter_model.MessagePlatformAdapter):
         # 从本对象的监听器列表中查找并删除
         target_wrapper = None
         for listener in self.listener_list:
-            if (
-                listener['event_type'] == event_type
-                and listener['callable'] == callback
-            ):
+            if listener['event_type'] == event_type and listener['callable'] == callback:
                 target_wrapper = listener['wrapper']
                 self.listener_list.remove(listener)
                 break
@@ -334,14 +309,8 @@ class NakuruAdapter(adapter_model.MessagePlatformAdapter):
             import requests
 
             resp = requests.get(
-                url='http://{}:{}/get_login_info'.format(
-                    self.cfg['host'], self.cfg['http_port']
-                ),
-                headers={
-                    'Authorization': 'Bearer ' + self.cfg['token']
-                    if 'token' in self.cfg
-                    else ''
-                },
+                url='http://{}:{}/get_login_info'.format(self.cfg['host'], self.cfg['http_port']),
+                headers={'Authorization': 'Bearer ' + self.cfg['token'] if 'token' in self.cfg else ''},
                 timeout=5,
                 proxies=None,
             )
@@ -349,9 +318,7 @@ class NakuruAdapter(adapter_model.MessagePlatformAdapter):
                 raise Exception('go-cqhttp拒绝访问，请检查配置文件中nakuru适配器的配置')
             self.bot_account_id = int(resp.json()['data']['user_id'])
         except Exception:
-            raise Exception(
-                '获取go-cqhttp账号信息失败, 请检查是否已启动go-cqhttp并配置正确'
-            )
+            raise Exception('获取go-cqhttp账号信息失败, 请检查是否已启动go-cqhttp并配置正确')
         await self.bot._run()
         self.ap.logger.info('运行 Nakuru 适配器')
         while True:

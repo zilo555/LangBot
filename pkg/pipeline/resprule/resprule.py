@@ -32,13 +32,9 @@ class GroupRespondRuleCheckStage(stage.PipelineStage):
             await rule_inst.initialize()
             self.rule_matchers.append(rule_inst)
 
-    async def process(
-        self, query: core_entities.Query, stage_inst_name: str
-    ) -> entities.StageProcessResult:
+    async def process(self, query: core_entities.Query, stage_inst_name: str) -> entities.StageProcessResult:
         if query.launcher_type.value != 'group':  # 只处理群消息
-            return entities.StageProcessResult(
-                result_type=entities.ResultType.CONTINUE, new_query=query
-            )
+            return entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
 
         rules = query.pipeline_config['trigger']['group-respond-rules']
 
@@ -49,9 +45,7 @@ class GroupRespondRuleCheckStage(stage.PipelineStage):
         #     use_rule = rules[str(query.launcher_id)]
 
         for rule_matcher in self.rule_matchers:  # 任意一个匹配就放行
-            res = await rule_matcher.match(
-                str(query.message_chain), query.message_chain, use_rule, query
-            )
+            res = await rule_matcher.match(str(query.message_chain), query.message_chain, use_rule, query)
             if res.matching:
                 query.message_chain = res.replacement
 
@@ -60,6 +54,4 @@ class GroupRespondRuleCheckStage(stage.PipelineStage):
                     new_query=query,
                 )
 
-        return entities.StageProcessResult(
-            result_type=entities.ResultType.INTERRUPT, new_query=query
-        )
+        return entities.StageProcessResult(result_type=entities.ResultType.INTERRUPT, new_query=query)

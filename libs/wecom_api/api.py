@@ -45,9 +45,7 @@ class WecomClient:
         return bool(self.access_token and self.access_token.strip())
 
     async def check_access_token_for_contacts(self):
-        return bool(
-            self.access_token_for_contacts and self.access_token_for_contacts.strip()
-        )
+        return bool(self.access_token_for_contacts and self.access_token_for_contacts.strip())
 
     async def get_access_token(self, secret):
         url = f'https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid={self.corpid}&corpsecret={secret}'
@@ -61,15 +59,9 @@ class WecomClient:
 
     async def get_users(self):
         if not self.check_access_token_for_contacts():
-            self.access_token_for_contacts = await self.get_access_token(
-                self.secret_for_contacts
-            )
+            self.access_token_for_contacts = await self.get_access_token(self.secret_for_contacts)
 
-        url = (
-            self.base_url
-            + '/user/list_id?access_token='
-            + self.access_token_for_contacts
-        )
+        url = self.base_url + '/user/list_id?access_token=' + self.access_token_for_contacts
         async with httpx.AsyncClient() as client:
             params = {
                 'cursor': '',
@@ -88,15 +80,9 @@ class WecomClient:
 
     async def send_to_all(self, content: str, agent_id: int):
         if not self.check_access_token_for_contacts():
-            self.access_token_for_contacts = await self.get_access_token(
-                self.secret_for_contacts
-            )
+            self.access_token_for_contacts = await self.get_access_token(self.secret_for_contacts)
 
-            url = (
-                self.base_url
-                + '/message/send?access_token='
-                + self.access_token_for_contacts
-            )
+            url = self.base_url + '/message/send?access_token=' + self.access_token_for_contacts
             user_ids = await self.get_users()
             user_ids_string = '|'.join(user_ids)
             async with httpx.AsyncClient() as client:
@@ -187,27 +173,21 @@ class WecomClient:
 
             if request.method == 'GET':
                 echostr = request.args.get('echostr')
-                ret, reply_echo_str = self.wxcpt.VerifyURL(
-                    msg_signature, timestamp, nonce, echostr
-                )
+                ret, reply_echo_str = self.wxcpt.VerifyURL(msg_signature, timestamp, nonce, echostr)
                 if ret != 0:
                     raise Exception(f'验证失败，错误码: {ret}')
                 return reply_echo_str
 
             elif request.method == 'POST':
                 encrypt_msg = await request.data
-                ret, xml_msg = self.wxcpt.DecryptMsg(
-                    encrypt_msg, msg_signature, timestamp, nonce
-                )
+                ret, xml_msg = self.wxcpt.DecryptMsg(encrypt_msg, msg_signature, timestamp, nonce)
                 if ret != 0:
                     raise Exception(f'消息解密失败，错误码: {ret}')
 
                 # 解析消息并处理
                 message_data = await self.get_message(xml_msg)
                 if message_data:
-                    event = WecomEvent.from_payload(
-                        message_data
-                    )  # 转换为 WecomEvent 对象
+                    event = WecomEvent.from_payload(message_data)  # 转换为 WecomEvent 对象
                     if event:
                         await self._handle_message(event)
 
@@ -253,23 +233,13 @@ class WecomClient:
             'FromUserName': root.find('FromUserName').text,
             'CreateTime': int(root.find('CreateTime').text),
             'MsgType': root.find('MsgType').text,
-            'Content': root.find('Content').text
-            if root.find('Content') is not None
-            else None,
-            'MsgId': int(root.find('MsgId').text)
-            if root.find('MsgId') is not None
-            else None,
-            'AgentID': int(root.find('AgentID').text)
-            if root.find('AgentID') is not None
-            else None,
+            'Content': root.find('Content').text if root.find('Content') is not None else None,
+            'MsgId': int(root.find('MsgId').text) if root.find('MsgId') is not None else None,
+            'AgentID': int(root.find('AgentID').text) if root.find('AgentID') is not None else None,
         }
         if message_data['MsgType'] == 'image':
-            message_data['MediaId'] = (
-                root.find('MediaId').text if root.find('MediaId') is not None else None
-            )
-            message_data['PicUrl'] = (
-                root.find('PicUrl').text if root.find('PicUrl') is not None else None
-            )
+            message_data['MediaId'] = root.find('MediaId').text if root.find('MediaId') is not None else None
+            message_data['PicUrl'] = root.find('PicUrl').text if root.find('PicUrl') is not None else None
 
         return message_data
 
@@ -298,12 +268,7 @@ class WecomClient:
         if not await self.check_access_token():
             self.access_token = await self.get_access_token(self.secret)
 
-        url = (
-            self.base_url
-            + '/media/upload?access_token='
-            + self.access_token
-            + '&type=file'
-        )
+        url = self.base_url + '/media/upload?access_token=' + self.access_token + '&type=file'
         file_bytes = None
         file_name = 'uploaded_file.txt'
 

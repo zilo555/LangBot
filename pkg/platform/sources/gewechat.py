@@ -40,14 +40,10 @@ class GewechatMessageConverter(adapter.MessageConverter):
                 content_list.append({'type': 'image', 'image': component.url})
 
             elif isinstance(component, platform_message.Voice):
-                content_list.append(
-                    {'type': 'voice', 'url': component.url, 'length': component.length}
-                )
+                content_list.append({'type': 'voice', 'url': component.url, 'length': component.length})
             elif isinstance(component, platform_message.Forward):
                 for node in component.node_list:
-                    content_list.extend(
-                        await GewechatMessageConverter.yiri2target(node.message_chain)
-                    )
+                    content_list.extend(await GewechatMessageConverter.yiri2target(node.message_chain))
                 content_list.append({'type': 'image', 'image': component.url})
             elif isinstance(component, platform_message.WeChatMiniPrograms):
                 content_list.append(
@@ -88,44 +84,26 @@ class GewechatMessageConverter(adapter.MessageConverter):
                     }
                 )
             elif isinstance(component, platform_message.WeChatForwardLink):
-                content_list.append(
-                    {'type': 'WeChatForwardLink', 'xml_data': component.xml_data}
-                )
+                content_list.append({'type': 'WeChatForwardLink', 'xml_data': component.xml_data})
             elif isinstance(component, platform_message.Voice):
-                content_list.append(
-                    {'type': 'voice', 'url': component.url, 'length': component.length}
-                )
+                content_list.append({'type': 'voice', 'url': component.url, 'length': component.length})
             elif isinstance(component, platform_message.WeChatForwardImage):
-                content_list.append(
-                    {'type': 'WeChatForwardImage', 'xml_data': component.xml_data}
-                )
+                content_list.append({'type': 'WeChatForwardImage', 'xml_data': component.xml_data})
             elif isinstance(component, platform_message.WeChatForwardFile):
-                content_list.append(
-                    {'type': 'WeChatForwardFile', 'xml_data': component.xml_data}
-                )
+                content_list.append({'type': 'WeChatForwardFile', 'xml_data': component.xml_data})
             elif isinstance(component, platform_message.WeChatAppMsg):
-                content_list.append(
-                    {'type': 'WeChatAppMsg', 'app_msg': component.app_msg}
-                )
+                content_list.append({'type': 'WeChatAppMsg', 'app_msg': component.app_msg})
             # 引用消息转发
             elif isinstance(component, platform_message.WeChatForwardQuote):
-                content_list.append(
-                    {'type': 'WeChatAppMsg', 'app_msg': component.app_msg}
-                )
+                content_list.append({'type': 'WeChatAppMsg', 'app_msg': component.app_msg})
             elif isinstance(component, platform_message.Forward):
                 for node in component.node_list:
                     if node.message_chain:
-                        content_list.extend(
-                            await GewechatMessageConverter.yiri2target(
-                                node.message_chain
-                            )
-                        )
+                        content_list.extend(await GewechatMessageConverter.yiri2target(node.message_chain))
 
         return content_list
 
-    async def target2yiri(
-        self, message: dict, bot_account_id: str
-    ) -> platform_message.MessageChain:
+    async def target2yiri(self, message: dict, bot_account_id: str) -> platform_message.MessageChain:
         """外部消息转平台消息"""
         # 数据预处理
         message_list = []
@@ -163,28 +141,20 @@ class GewechatMessageConverter(adapter.MessageConverter):
 
         return platform_message.MessageChain(message_list)
 
-    async def _handler_text(
-        self, message: Optional[dict], content_no_preifx: str
-    ) -> platform_message.MessageChain:
+    async def _handler_text(self, message: Optional[dict], content_no_preifx: str) -> platform_message.MessageChain:
         """处理文本消息 (msg_type=1)"""
         if message and self._is_group_message(message):
             pattern = r'@\S{1,20}'
             content_no_preifx = re.sub(pattern, '', content_no_preifx)
 
-        return platform_message.MessageChain(
-            [platform_message.Plain(content_no_preifx)]
-        )
+        return platform_message.MessageChain([platform_message.Plain(content_no_preifx)])
 
-    async def _handler_image(
-        self, message: Optional[dict], content_no_preifx: str
-    ) -> platform_message.MessageChain:
+    async def _handler_image(self, message: Optional[dict], content_no_preifx: str) -> platform_message.MessageChain:
         """处理图像消息 (msg_type=3)"""
         try:
             image_xml = content_no_preifx
             if not image_xml:
-                return platform_message.MessageChain(
-                    [platform_message.Unknown('[图片内容为空]')]
-                )
+                return platform_message.MessageChain([platform_message.Unknown('[图片内容为空]')])
 
             base64_str, image_format = await image.get_gewechat_image_base64(
                 gewechat_url=self.config['gewechat_url'],
@@ -196,21 +166,15 @@ class GewechatMessageConverter(adapter.MessageConverter):
             )
 
             elements = [
-                platform_message.Image(
-                    base64=f'data:image/{image_format};base64,{base64_str}'
-                ),
+                platform_message.Image(base64=f'data:image/{image_format};base64,{base64_str}'),
                 platform_message.WeChatForwardImage(xml_data=image_xml),  # 微信消息转发
             ]
             return platform_message.MessageChain(elements)
         except Exception as e:
             print(f'处理图片失败: {str(e)}')
-            return platform_message.MessageChain(
-                [platform_message.Unknown('[图片处理失败]')]
-            )
+            return platform_message.MessageChain([platform_message.Unknown('[图片处理失败]')])
 
-    async def _handler_voice(
-        self, message: Optional[dict], content_no_preifx: str
-    ) -> platform_message.MessageChain:
+    async def _handler_voice(self, message: Optional[dict], content_no_preifx: str) -> platform_message.MessageChain:
         """处理语音消息 (msg_type=34)"""
         message_List = []
         try:
@@ -223,9 +187,7 @@ class GewechatMessageConverter(adapter.MessageConverter):
                 return platform_message.MessageChain(message_List)
 
             # 转换为平台支持的语音格式（如 Silk 格式）
-            voice_element = platform_message.Voice(
-                base64=f'data:audio/silk;base64,{audio_base64}'
-            )
+            voice_element = platform_message.Voice(base64=f'data:audio/silk;base64,{audio_base64}')
             message_List.append(voice_element)
 
         except KeyError as e:
@@ -237,9 +199,7 @@ class GewechatMessageConverter(adapter.MessageConverter):
 
         return platform_message.MessageChain(message_List)
 
-    async def _handler_compound(
-        self, message: Optional[dict], content_no_preifx: str
-    ) -> platform_message.MessageChain:
+    async def _handler_compound(self, message: Optional[dict], content_no_preifx: str) -> platform_message.MessageChain:
         """处理复合消息 (msg_type=49)，根据子类型分派"""
         try:
             xml_data = ET.fromstring(content_no_preifx)
@@ -254,33 +214,21 @@ class GewechatMessageConverter(adapter.MessageConverter):
                     '6': self._handler_compound_file,
                     '33': self._handler_compound_mini_program,
                     '36': self._handler_compound_mini_program,
-                    '2000': partial(
-                        self._handler_compound_unsupported, text='[转账消息]'
-                    ),
-                    '2001': partial(
-                        self._handler_compound_unsupported, text='[红包消息]'
-                    ),
-                    '51': partial(
-                        self._handler_compound_unsupported, text='[视频号消息]'
-                    ),
+                    '2000': partial(self._handler_compound_unsupported, text='[转账消息]'),
+                    '2001': partial(self._handler_compound_unsupported, text='[红包消息]'),
+                    '51': partial(self._handler_compound_unsupported, text='[视频号消息]'),
                 }
 
-                handler = sub_handler_map.get(
-                    data_type, self._handler_compound_unsupported
-                )
+                handler = sub_handler_map.get(data_type, self._handler_compound_unsupported)
                 return await handler(
                     message=message,  # 原始msg
                     xml_data=xml_data,  # xml数据
                 )
             else:
-                return platform_message.MessageChain(
-                    [platform_message.Unknown(text=content_no_preifx)]
-                )
+                return platform_message.MessageChain([platform_message.Unknown(text=content_no_preifx)])
         except Exception as e:
             print(f'解析复合消息失败: {str(e)}')
-            return platform_message.MessageChain(
-                [platform_message.Unknown(text=content_no_preifx)]
-            )
+            return platform_message.MessageChain([platform_message.Unknown(text=content_no_preifx)])
 
     async def _handler_compound_quote(
         self, message: Optional[dict], xml_data: ET.Element
@@ -296,9 +244,7 @@ class GewechatMessageConverter(adapter.MessageConverter):
             user_data = appmsg_data.findtext('.//title') or ''
             quote_data = appmsg_data.find('.//refermsg').findtext('.//content')
             message_list.append(
-                platform_message.WeChatForwardQuote(
-                    app_msg=ET.tostring(appmsg_data, encoding='unicode')
-                )
+                platform_message.WeChatForwardQuote(app_msg=ET.tostring(appmsg_data, encoding='unicode'))
             )
         # quote_data原始的消息
         if quote_data:
@@ -311,22 +257,14 @@ class GewechatMessageConverter(adapter.MessageConverter):
                     # 引用消息展开
                     quote_data_xml = ET.fromstring(quote_data)
                     if quote_data_xml.find('img'):
-                        quote_data_message_list.extend(
-                            await self._handler_image(None, quote_data)
-                        )
+                        quote_data_message_list.extend(await self._handler_image(None, quote_data))
                     elif quote_data_xml.find('voicemsg'):
-                        quote_data_message_list.extend(
-                            await self._handler_voice(None, quote_data)
-                        )
+                        quote_data_message_list.extend(await self._handler_voice(None, quote_data))
                     elif quote_data_xml.find('videomsg'):
-                        quote_data_message_list.extend(
-                            await self._handler_default(None, quote_data)
-                        )  # 先不处理
+                        quote_data_message_list.extend(await self._handler_default(None, quote_data))  # 先不处理
                     else:
                         # appmsg
-                        quote_data_message_list.extend(
-                            await self._handler_compound(None, quote_data)
-                        )
+                        quote_data_message_list.extend(await self._handler_compound(None, quote_data))
             except Exception as e:
                 print(f'处理引用消息异常 expcetion:{e}')
                 quote_data_message_list.append(platform_message.Plain(quote_data))
@@ -351,18 +289,12 @@ class GewechatMessageConverter(adapter.MessageConverter):
         #         print(f"quote_message_chain plain [msg_type={comp.type}][message={comp.text}]")
         return platform_message.MessageChain(message_list)
 
-    async def _handler_compound_file(
-        self, message: dict, xml_data: ET.Element
-    ) -> platform_message.MessageChain:
+    async def _handler_compound_file(self, message: dict, xml_data: ET.Element) -> platform_message.MessageChain:
         """处理文件消息 (data_type=6)"""
         xml_data_str = ET.tostring(xml_data, encoding='unicode')
-        return platform_message.MessageChain(
-            [platform_message.WeChatForwardFile(xml_data=xml_data_str)]
-        )
+        return platform_message.MessageChain([platform_message.WeChatForwardFile(xml_data=xml_data_str)])
 
-    async def _handler_compound_link(
-        self, message: dict, xml_data: ET.Element
-    ) -> platform_message.MessageChain:
+    async def _handler_compound_link(self, message: dict, xml_data: ET.Element) -> platform_message.MessageChain:
         """处理链接消息（如公众号文章、外部网页）"""
         message_list = []
         try:
@@ -381,9 +313,7 @@ class GewechatMessageConverter(adapter.MessageConverter):
             # 转发消息
             xml_data_str = ET.tostring(xml_data, encoding='unicode')
             # print(xml_data_str)
-            message_list.append(
-                platform_message.WeChatForwardLink(xml_data=xml_data_str)
-            )
+            message_list.append(platform_message.WeChatForwardLink(xml_data=xml_data_str))
         except Exception as e:
             print(f'解析链接消息失败: {str(e)}')
         return platform_message.MessageChain(message_list)
@@ -393,21 +323,15 @@ class GewechatMessageConverter(adapter.MessageConverter):
     ) -> platform_message.MessageChain:
         """处理小程序消息（如小程序卡片、服务通知）"""
         xml_data_str = ET.tostring(xml_data, encoding='unicode')
-        return platform_message.MessageChain(
-            [platform_message.WeChatForwardMiniPrograms(xml_data=xml_data_str)]
-        )
+        return platform_message.MessageChain([platform_message.WeChatForwardMiniPrograms(xml_data=xml_data_str)])
 
-    async def _handler_default(
-        self, message: Optional[dict], content_no_preifx: str
-    ) -> platform_message.MessageChain:
+    async def _handler_default(self, message: Optional[dict], content_no_preifx: str) -> platform_message.MessageChain:
         """处理未知消息类型"""
         if message:
             msg_type = message['Data']['MsgType']
         else:
             msg_type = ''
-        return platform_message.MessageChain(
-            [platform_message.Unknown(text=f'[未知消息类型 msg_type:{msg_type}]')]
-        )
+        return platform_message.MessageChain([platform_message.Unknown(text=f'[未知消息类型 msg_type:{msg_type}]')])
 
     def _handler_compound_unsupported(
         self, message: dict, xml_data: str, text: Optional[str] = None
@@ -416,11 +340,7 @@ class GewechatMessageConverter(adapter.MessageConverter):
         if not text:
             text = f'[xml_data={xml_data}]'
         content_list = []
-        content_list.append(
-            platform_message.Unknown(
-                text=f'[处理未支持复合消息类型[msg_type=49]|{text}'
-            )
-        )
+        content_list.append(platform_message.Unknown(text=f'[处理未支持复合消息类型[msg_type=49]|{text}'))
 
         return platform_message.MessageChain(content_list)
 
@@ -448,9 +368,7 @@ class GewechatMessageConverter(adapter.MessageConverter):
                 appmsg_data = xml_data.find('.//appmsg')
                 tousername = message['Wxid']
                 if appmsg_data:  # 接收方: 所属微信的wxid
-                    quote_id = appmsg_data.find('.//refermsg').findtext(
-                        './/chatusr'
-                    )  # 引用消息的原发送者
+                    quote_id = appmsg_data.find('.//refermsg').findtext('.//chatusr')  # 引用消息的原发送者
                     ats_bot = ats_bot or (quote_id == tousername)
         except Exception as e:
             print(f'_ats_bot got except: {e}')
@@ -458,9 +376,7 @@ class GewechatMessageConverter(adapter.MessageConverter):
             return ats_bot
 
     # 提取一下content前面的sender_id, 和去掉前缀的内容
-    def _extract_content_and_sender(
-        self, raw_content: str
-    ) -> Tuple[str, Optional[str]]:
+    def _extract_content_and_sender(self, raw_content: str) -> Tuple[str, Optional[str]]:
         try:
             # 检查消息开头，如果有 wxid_sbitaz0mt65n22:\n 则删掉
             # add: 有些用户的wxid不是上述格式。换成user_name:
@@ -490,21 +406,17 @@ class GewechatEventConverter(adapter.EventConverter):
     async def yiri2target(event: platform_events.MessageEvent) -> dict:
         pass
 
-    async def target2yiri(
-        self, event: dict, bot_account_id: str
-    ) -> platform_events.MessageEvent:
+    async def target2yiri(self, event: dict, bot_account_id: str) -> platform_events.MessageEvent:
         # print(event)
         # 排除自己发消息回调回答问题
         if event['Wxid'] == event['Data']['FromUserName']['string']:
             return None
         # 排除公众号以及微信团队消息
-        if event['Data']['FromUserName']['string'].startswith('gh_') or event['Data'][
-            'FromUserName'
-        ]['string'].startswith('weixin'):
+        if event['Data']['FromUserName']['string'].startswith('gh_') or event['Data']['FromUserName'][
+            'string'
+        ].startswith('weixin'):
             return None
-        message_chain = await self.message_converter.target2yiri(
-            copy.deepcopy(event), bot_account_id
-        )
+        message_chain = await self.message_converter.target2yiri(copy.deepcopy(event), bot_account_id)
 
         if not message_chain:
             return None
@@ -589,9 +501,7 @@ class GeWeChatAdapter(adapter.MessagePlatformAdapter):
                 return 'ok'
             elif 'TypeName' in data and data['TypeName'] == 'AddMsg':
                 try:
-                    event = await self.event_converter.target2yiri(
-                        data.copy(), self.bot_account_id
-                    )
+                    event = await self.event_converter.target2yiri(data.copy(), self.bot_account_id)
                 except Exception:
                     traceback.print_exc()
 
@@ -600,9 +510,7 @@ class GeWeChatAdapter(adapter.MessagePlatformAdapter):
 
                 return 'ok'
 
-    async def _handle_message(
-        self, message: platform_message.MessageChain, target_id: str
-    ):
+    async def _handle_message(self, message: platform_message.MessageChain, target_id: str):
         """统一消息处理核心逻辑"""
         content_list = await self.message_converter.yiri2target(message)
         at_targets = [item['target'] for item in content_list if item['type'] == 'at']
@@ -611,9 +519,9 @@ class GeWeChatAdapter(adapter.MessagePlatformAdapter):
         at_targets = at_targets or []
         member_info = []
         if at_targets:
-            member_info = self.bot.get_chatroom_member_detail(
-                self.config['app_id'], target_id, at_targets[::-1]
-            )['data']
+            member_info = self.bot.get_chatroom_member_detail(self.config['app_id'], target_id, at_targets[::-1])[
+                'data'
+            ]
 
         # 处理消息组件
         for msg in content_list:
@@ -694,9 +602,7 @@ class GeWeChatAdapter(adapter.MessagePlatformAdapter):
                 self.ap.logger.warning(f'未处理的消息类型: {msg["type"]}')
                 continue
 
-    async def send_message(
-        self, target_type: str, target_id: str, message: platform_message.MessageChain
-    ):
+    async def send_message(self, target_type: str, target_id: str, message: platform_message.MessageChain):
         """主动发送消息"""
         return await self._handle_message(message, target_id)
 
@@ -708,9 +614,7 @@ class GeWeChatAdapter(adapter.MessagePlatformAdapter):
     ):
         """回复消息"""
         if message_source.source_platform_object:
-            target_id = message_source.source_platform_object['Data']['FromUserName'][
-                'string'
-            ]
+            target_id = message_source.source_platform_object['Data']['FromUserName']['string']
             return await self._handle_message(message, target_id)
 
     async def is_muted(self, group_id: int) -> bool:
@@ -719,18 +623,14 @@ class GeWeChatAdapter(adapter.MessagePlatformAdapter):
     def register_listener(
         self,
         event_type: typing.Type[platform_events.Event],
-        callback: typing.Callable[
-            [platform_events.Event, adapter.MessagePlatformAdapter], None
-        ],
+        callback: typing.Callable[[platform_events.Event, adapter.MessagePlatformAdapter], None],
     ):
         self.listeners[event_type] = callback
 
     def unregister_listener(
         self,
         event_type: typing.Type[platform_events.Event],
-        callback: typing.Callable[
-            [platform_events.Event, adapter.MessagePlatformAdapter], None
-        ],
+        callback: typing.Callable[[platform_events.Event, adapter.MessagePlatformAdapter], None],
     ):
         pass
 
@@ -742,14 +642,10 @@ class GeWeChatAdapter(adapter.MessagePlatformAdapter):
                     json={'app_id': self.config['app_id']},
                 ) as response:
                     if response.status != 200:
-                        raise Exception(
-                            f'获取gewechat token失败: {await response.text()}'
-                        )
+                        raise Exception(f'获取gewechat token失败: {await response.text()}')
                     self.config['token'] = (await response.json())['data']
 
-        self.bot = gewechat_client.GewechatClient(
-            f'{self.config["gewechat_url"]}/v2/api', self.config['token']
-        )
+        self.bot = gewechat_client.GewechatClient(f'{self.config["gewechat_url"]}/v2/api', self.config['token'])
 
         def gewechat_login_process():
             app_id, error_msg = self.bot.login(self.config['app_id'])

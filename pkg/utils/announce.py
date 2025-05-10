@@ -59,9 +59,7 @@ class AnnouncementManager:
 
     async def fetch_saved(self) -> list[Announcement]:
         if not os.path.exists('data/labels/announcement_saved.json'):
-            with open(
-                'data/labels/announcement_saved.json', 'w', encoding='utf-8'
-            ) as f:
+            with open('data/labels/announcement_saved.json', 'w', encoding='utf-8') as f:
                 f.write('[]')
 
         with open('data/labels/announcement_saved.json', 'r', encoding='utf-8') as f:
@@ -74,11 +72,7 @@ class AnnouncementManager:
 
     async def write_saved(self, content: list[Announcement]):
         with open('data/labels/announcement_saved.json', 'w', encoding='utf-8') as f:
-            f.write(
-                json.dumps(
-                    [item.to_dict() for item in content], indent=4, ensure_ascii=False
-                )
-            )
+            f.write(json.dumps([item.to_dict() for item in content], indent=4, ensure_ascii=False))
 
     async def fetch_new(self) -> list[Announcement]:
         """获取新公告"""

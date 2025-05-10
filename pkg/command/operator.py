@@ -95,9 +95,7 @@ class CommandOperator(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    async def execute(
-        self, context: entities.ExecuteContext
-    ) -> typing.AsyncGenerator[entities.CommandReturn, None]:
+    async def execute(self, context: entities.ExecuteContext) -> typing.AsyncGenerator[entities.CommandReturn, None]:
         """实现此方法以执行命令
 
         支持多次yield以返回多个结果。

@@ -83,20 +83,12 @@ class PluginManager:
 
         self.ap.logger.debug(f'优先级排序后的插件列表 {self.plugin_containers}')
 
-    async def load_plugin_settings(
-        self, plugin_containers: list[context.RuntimeContainer]
-    ):
+    async def load_plugin_settings(self, plugin_containers: list[context.RuntimeContainer]):
         for plugin_container in plugin_containers:
             result = await self.ap.persistence_mgr.execute_async(
                 sqlalchemy.select(persistence_plugin.PluginSetting)
-                .where(
-                    persistence_plugin.PluginSetting.plugin_author
-                    == plugin_container.plugin_author
-                )
-                .where(
-                    persistence_plugin.PluginSetting.plugin_name
-                    == plugin_container.plugin_name
-                )
+                .where(persistence_plugin.PluginSetting.plugin_author == plugin_container.plugin_author)
+                .where(persistence_plugin.PluginSetting.plugin_name == plugin_container.plugin_name)
             )
 
             setting = result.first()
@@ -111,9 +103,7 @@ class PluginManager:
                 }
 
                 await self.ap.persistence_mgr.execute_async(
-                    sqlalchemy.insert(persistence_plugin.PluginSetting).values(
-                        **new_setting_data
-                    )
+                    sqlalchemy.insert(persistence_plugin.PluginSetting).values(**new_setting_data)
                 )
                 continue
             else:
@@ -121,20 +111,12 @@ class PluginManager:
                 plugin_container.priority = setting.priority
                 plugin_container.plugin_config = setting.config
 
-    async def dump_plugin_container_setting(
-        self, plugin_container: context.RuntimeContainer
-    ):
+    async def dump_plugin_container_setting(self, plugin_container: context.RuntimeContainer):
         """保存单个插件容器的设置到数据库"""
         await self.ap.persistence_mgr.execute_async(
             sqlalchemy.update(persistence_plugin.PluginSetting)
-            .where(
-                persistence_plugin.PluginSetting.plugin_author
-                == plugin_container.plugin_author
-            )
-            .where(
-                persistence_plugin.PluginSetting.plugin_name
-                == plugin_container.plugin_name
-            )
+            .where(persistence_plugin.PluginSetting.plugin_author == plugin_container.plugin_author)
+            .where(persistence_plugin.PluginSetting.plugin_name == plugin_container.plugin_name)
             .values(
                 enabled=plugin_container.enabled,
                 priority=plugin_container.priority,
@@ -247,20 +229,14 @@ class PluginManager:
 
         emitted_plugins: list[context.RuntimeContainer] = []
 
-        for plugin in self.plugins(
-            enabled=True, status=context.RuntimeContainerStatus.INITIALIZED
-        ):
+        for plugin in self.plugins(enabled=True, status=context.RuntimeContainerStatus.INITIALIZED):
             if event.__class__ in plugin.event_handlers:
-                self.ap.logger.debug(
-                    f'插件 {plugin.plugin_name} 处理事件 {event.__class__.__name__}'
-                )
+                self.ap.logger.debug(f'插件 {plugin.plugin_name} 处理事件 {event.__class__.__name__}')
 
                 is_prevented_default_before_call = ctx.is_prevented_default()
 
                 try:
-                    await plugin.event_handlers[event.__class__](
-                        plugin.plugin_inst, ctx
-                    )
+                    await plugin.event_handlers[event.__class__](plugin.plugin_inst, ctx)
                 except Exception as e:
                     self.ap.logger.error(
                         f'插件 {plugin.plugin_name} 处理事件 {event.__class__.__name__} 时发生错误: {e}'
@@ -270,23 +246,17 @@ class PluginManager:
                 emitted_plugins.append(plugin)
 
                 if not is_prevented_default_before_call and ctx.is_prevented_default():
-                    self.ap.logger.debug(
-                        f'插件 {plugin.plugin_name} 阻止了默认行为执行'
-                    )
+                    self.ap.logger.debug(f'插件 {plugin.plugin_name} 阻止了默认行为执行')
 
                 if ctx.is_prevented_postorder():
-                    self.ap.logger.debug(
-                        f'插件 {plugin.plugin_name} 阻止了后序插件的执行'
-                    )
+                    self.ap.logger.debug(f'插件 {plugin.plugin_name} 阻止了后序插件的执行')
                     break
 
         for key in ctx.__return_value__.keys():
             if hasattr(ctx.event, key):
                 setattr(ctx.event, key, ctx.__return_value__[key][0])
 
-        self.ap.logger.debug(
-            f'事件 {event.__class__.__name__}({ctx.eid}) 处理完成，返回值 {ctx.__return_value__}'
-        )
+        self.ap.logger.debug(f'事件 {event.__class__.__name__}({ctx.eid}) 处理完成，返回值 {ctx.__return_value__}')
 
         # TODO statistics
 
@@ -330,9 +300,7 @@ class PluginManager:
         for plugin in self.plugin_containers:
             await self.dump_plugin_container_setting(plugin)
 
-    async def set_plugin_config(
-        self, plugin_container: context.RuntimeContainer, new_config: dict
-    ):
+    async def set_plugin_config(self, plugin_container: context.RuntimeContainer, new_config: dict):
         plugin_container.plugin_config = new_config
 
         plugin_container.plugin_inst.config = new_config

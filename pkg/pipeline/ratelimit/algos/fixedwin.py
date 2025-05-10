@@ -72,9 +72,7 @@ class FixedWindowAlgo(algo.ReteLimitAlgo):
             if count >= limitation:
                 if query.pipeline_config['safety']['rate-limit']['strategy'] == 'drop':
                     return False
-                elif (
-                    query.pipeline_config['safety']['rate-limit']['strategy'] == 'wait'
-                ):
+                elif query.pipeline_config['safety']['rate-limit']['strategy'] == 'wait':
                     # 等待下一窗口
                     await asyncio.sleep(window_size - time.time() % window_size)
 

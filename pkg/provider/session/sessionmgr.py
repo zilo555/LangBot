@@ -23,10 +23,7 @@ class SessionManager:
     async def get_session(self, query: core_entities.Query) -> core_entities.Session:
         """获取会话"""
         for session in self.session_list:
-            if (
-                query.launcher_type == session.launcher_type
-                and query.launcher_id == session.launcher_id
-            ):
+            if query.launcher_type == session.launcher_type and query.launcher_id == session.launcher_id:
                 return session
 
         session_concurrency = self.ap.instance_config.data['concurrency']['session']

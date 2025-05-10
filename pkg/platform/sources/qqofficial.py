@@ -35,13 +35,9 @@ class QQOfficialMessageConverter(adapter.MessageConverter):
     @staticmethod
     async def target2yiri(message: str, message_id: str, pic_url: str, content_type):
         yiri_msg_list = []
-        yiri_msg_list.append(
-            platform_message.Source(id=message_id, time=datetime.datetime.now())
-        )
+        yiri_msg_list.append(platform_message.Source(id=message_id, time=datetime.datetime.now()))
         if pic_url is not None:
-            base64_url = await image.get_qq_official_image_base64(
-                pic_url=pic_url, content_type=content_type
-            )
+            base64_url = await image.get_qq_official_image_base64(pic_url=pic_url, content_type=content_type)
             yiri_msg_list.append(platform_message.Image(base64=base64_url))
 
         yiri_msg_list.append(platform_message.Plain(text=message))
@@ -75,11 +71,7 @@ class QQOfficialEventConverter(adapter.EventConverter):
             return platform_events.FriendMessage(
                 sender=friend,
                 message_chain=yiri_chain,
-                time=int(
-                    datetime.datetime.strptime(
-                        event.timestamp, '%Y-%m-%dT%H:%M:%S%z'
-                    ).timestamp()
-                ),
+                time=int(datetime.datetime.strptime(event.timestamp, '%Y-%m-%dT%H:%M:%S%z').timestamp()),
                 source_platform_object=event,
             )
 
@@ -89,9 +81,7 @@ class QQOfficialEventConverter(adapter.EventConverter):
                 nickname=event.t,
                 remark='',
             )
-            return platform_events.FriendMessage(
-                sender=friend, message_chain=yiri_chain, source_platform_object=event
-            )
+            return platform_events.FriendMessage(sender=friend, message_chain=yiri_chain, source_platform_object=event)
         if event.t == 'GROUP_AT_MESSAGE_CREATE':
             yiri_chain.insert(0, platform_message.At(target='justbot'))
 
@@ -109,11 +99,7 @@ class QQOfficialEventConverter(adapter.EventConverter):
                 last_speak_timestamp=0,
                 mute_time_remaining=0,
             )
-            time = int(
-                datetime.datetime.strptime(
-                    event.timestamp, '%Y-%m-%dT%H:%M:%S%z'
-                ).timestamp()
-            )
+            time = int(datetime.datetime.strptime(event.timestamp, '%Y-%m-%dT%H:%M:%S%z').timestamp())
             return platform_events.GroupMessage(
                 sender=sender,
                 message_chain=yiri_chain,
@@ -136,11 +122,7 @@ class QQOfficialEventConverter(adapter.EventConverter):
                 last_speak_timestamp=0,
                 mute_time_remaining=0,
             )
-            time = int(
-                datetime.datetime.strptime(
-                    event.timestamp, '%Y-%m-%dT%H:%M:%S%z'
-                ).timestamp()
-            )
+            time = int(datetime.datetime.strptime(event.timestamp, '%Y-%m-%dT%H:%M:%S%z').timestamp())
             return platform_events.GroupMessage(
                 sender=sender,
                 message_chain=yiri_chain,
@@ -167,9 +149,7 @@ class QQOfficialAdapter(adapter.MessagePlatformAdapter):
         ]
         missing_keys = [key for key in required_keys if key not in config]
         if missing_keys:
-            raise ParamNotEnoughError(
-                'QQ官方机器人缺少相关配置项，请查看文档或联系管理员'
-            )
+            raise ParamNotEnoughError('QQ官方机器人缺少相关配置项，请查看文档或联系管理员')
 
         self.bot = QQOfficialClient(
             app_id=config['appid'],
@@ -229,24 +209,18 @@ class QQOfficialAdapter(adapter.MessagePlatformAdapter):
                         qq_official_event.d_id,
                     )
 
-    async def send_message(
-        self, target_type: str, target_id: str, message: platform_message.MessageChain
-    ):
+    async def send_message(self, target_type: str, target_id: str, message: platform_message.MessageChain):
         pass
 
     def register_listener(
         self,
         event_type: typing.Type[platform_events.Event],
-        callback: typing.Callable[
-            [platform_events.Event, adapter.MessagePlatformAdapter], None
-        ],
+        callback: typing.Callable[[platform_events.Event, adapter.MessagePlatformAdapter], None],
     ):
         async def on_message(event: QQOfficialEvent):
             self.bot_account_id = 'justbot'
             try:
-                return await callback(
-                    await self.event_converter.target2yiri(event), self
-                )
+                return await callback(await self.event_converter.target2yiri(event), self)
             except Exception:
                 traceback.print_exc()
 
@@ -274,8 +248,6 @@ class QQOfficialAdapter(adapter.MessagePlatformAdapter):
     def unregister_listener(
         self,
         event_type: type,
-        callback: typing.Callable[
-            [platform_events.Event, MessagePlatformAdapter], None
-        ],
+        callback: typing.Callable[[platform_events.Event, MessagePlatformAdapter], None],
     ):
         return super().unregister_listener(event_type, callback)

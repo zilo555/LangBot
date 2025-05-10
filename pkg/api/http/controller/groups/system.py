@@ -13,9 +13,7 @@ class SystemRouterGroup(group.RouterGroup):
                 data={
                     'version': constants.semantic_version,
                     'debug': constants.debug_mode,
-                    'enabled_platform_count': len(
-                        self.ap.platform_mgr.get_running_adapters()
-                    ),
+                    'enabled_platform_count': len(self.ap.platform_mgr.get_running_adapters()),
                 }
             )
 
@@ -28,9 +26,7 @@ class SystemRouterGroup(group.RouterGroup):
 
             return self.success(data=self.ap.task_mgr.get_tasks_dict(task_type))
 
-        @self.route(
-            '/tasks/<task_id>', methods=['GET'], auth_type=group.AuthType.USER_TOKEN
-        )
+        @self.route('/tasks/<task_id>', methods=['GET'], auth_type=group.AuthType.USER_TOKEN)
         async def _(task_id: str) -> str:
             task = self.ap.task_mgr.get_task_by_id(int(task_id))
 
@@ -48,9 +44,7 @@ class SystemRouterGroup(group.RouterGroup):
             await self.ap.reload(scope=scope)
             return self.success()
 
-        @self.route(
-            '/_debug/exec', methods=['POST'], auth_type=group.AuthType.USER_TOKEN
-        )
+        @self.route('/_debug/exec', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
         async def _() -> str:
             if not constants.debug_mode:
                 return self.http_status(403, 403, 'Forbidden')

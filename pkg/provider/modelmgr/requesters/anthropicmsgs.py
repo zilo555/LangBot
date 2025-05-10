@@ -73,9 +73,7 @@ class AnthropicMessages(requester.LLMAPIRequester):
         if system_role_message:
             messages.pop(i)
 
-        if isinstance(system_role_message, llm_entities.Message) and isinstance(
-            system_role_message.content, str
-        ):
+        if isinstance(system_role_message, llm_entities.Message) and isinstance(system_role_message.content, str):
             args['system'] = system_role_message.content
 
         req_messages = []
@@ -106,9 +104,7 @@ class AnthropicMessages(requester.LLMAPIRequester):
             elif isinstance(m.content, list):
                 for i, ce in enumerate(m.content):
                     if ce.type == 'image_base64':
-                        image_b64, image_format = await image.extract_b64_and_format(
-                            ce.image_base64
-                        )
+                        image_b64, image_format = await image.extract_b64_and_format(ce.image_base64)
 
                         alter_image_ele = {
                             'type': 'image',
@@ -156,9 +152,7 @@ class AnthropicMessages(requester.LLMAPIRequester):
 
             for block in resp.content:
                 if block.type == 'thinking':
-                    args['content'] = (
-                        '<think>' + block.thinking + '</think>\n' + args['content']
-                    )
+                    args['content'] = '<think>' + block.thinking + '</think>\n' + args['content']
                 elif block.type == 'text':
                     args['content'] += block.text
                 elif block.type == 'tool_use':
@@ -166,9 +160,7 @@ class AnthropicMessages(requester.LLMAPIRequester):
                     tool_call = llm_entities.ToolCall(
                         id=block.id,
                         type='function',
-                        function=llm_entities.FunctionCall(
-                            name=block.name, arguments=json.dumps(block.input)
-                        ),
+                        function=llm_entities.FunctionCall(name=block.name, arguments=json.dumps(block.input)),
                     )
                     if 'tool_calls' not in args:
                         args['tool_calls'] = []

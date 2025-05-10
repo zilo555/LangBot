@@ -17,9 +17,7 @@ class UserService:
         self.ap = ap
 
     async def is_initialized(self) -> bool:
-        result = await self.ap.persistence_mgr.execute_async(
-            sqlalchemy.select(user.User).limit(1)
-        )
+        result = await self.ap.persistence_mgr.execute_async(sqlalchemy.select(user.User).limit(1))
 
         result_list = result.all()
         return result_list is not None and len(result_list) > 0
@@ -30,9 +28,7 @@ class UserService:
         hashed_password = ph.hash(password)
 
         await self.ap.persistence_mgr.execute_async(
-            sqlalchemy.insert(user.User).values(
-                user=user_email, password=hashed_password
-            )
+            sqlalchemy.insert(user.User).values(user=user_email, password=hashed_password)
         )
 
     async def get_user_by_email(self, user_email: str) -> user.User | None:
@@ -41,9 +37,7 @@ class UserService:
         )
 
         result_list = result.all()
-        return (
-            result_list[0] if result_list is not None and len(result_list) > 0 else None
-        )
+        return result_list[0] if result_list is not None and len(result_list) > 0 else None
 
     async def authenticate(self, user_email: str, password: str) -> str | None:
         result = await self.ap.persistence_mgr.execute_async(

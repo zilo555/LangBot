@@ -61,13 +61,9 @@ class OllamaChatCompletions(requester.LLMAPIRequester):
 
                 msg['content'] = '\n'.join(text_content)
                 msg['images'] = [url.split(',')[1] for url in image_urls]
-            if (
-                'tool_calls' in msg
-            ):  # LangBot 内部以 str 存储 tool_calls 的参数，这里需要转换为 dict
+            if 'tool_calls' in msg:  # LangBot 内部以 str 存储 tool_calls 的参数，这里需要转换为 dict
                 for tool_call in msg['tool_calls']:
-                    tool_call['function']['arguments'] = json.loads(
-                        tool_call['function']['arguments']
-                    )
+                    tool_call['function']['arguments'] = json.loads(tool_call['function']['arguments'])
         args['messages'] = messages
 
         args['tools'] = []
@@ -80,9 +76,7 @@ class OllamaChatCompletions(requester.LLMAPIRequester):
         message: llm_entities.Message = await self._make_msg(resp)
         return message
 
-    async def _make_msg(
-        self, chat_completions: ollama.ChatResponse
-    ) -> llm_entities.Message:
+    async def _make_msg(self, chat_completions: ollama.ChatResponse) -> llm_entities.Message:
         message: ollama.Message = chat_completions.message
         if message is None:
             raise ValueError("chat_completions must contain a 'message' field")
@@ -122,10 +116,7 @@ class OllamaChatCompletions(requester.LLMAPIRequester):
             msg_dict: dict = m.dict(exclude_none=True)
             content: Any = msg_dict.get('content')
             if isinstance(content, list):
-                if all(
-                    isinstance(part, dict) and part.get('type') == 'text'
-                    for part in content
-                ):
+                if all(isinstance(part, dict) and part.get('type') == 'text' for part in content):
                     msg_dict['content'] = '\n'.join(part['text'] for part in content)
             req_messages.append(msg_dict)
         try:

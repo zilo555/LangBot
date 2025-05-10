@@ -5,22 +5,16 @@ import typing
 from .. import operator, entities, errors
 
 
-@operator.operator_class(
-    name='list', help='列出此会话中的所有历史对话', usage='!list\n!list <页码>'
-)
+@operator.operator_class(name='list', help='列出此会话中的所有历史对话', usage='!list\n!list <页码>')
 class ListOperator(operator.CommandOperator):
-    async def execute(
-        self, context: entities.ExecuteContext
-    ) -> typing.AsyncGenerator[entities.CommandReturn, None]:
+    async def execute(self, context: entities.ExecuteContext) -> typing.AsyncGenerator[entities.CommandReturn, None]:
         page = 0
 
         if len(context.crt_params) > 0:
             try:
                 page = int(context.crt_params[0] - 1)
             except Exception:
-                yield entities.CommandReturn(
-                    error=errors.CommandOperationError('页码应为整数')
-                )
+                yield entities.CommandReturn(error=errors.CommandOperationError('页码应为整数'))
                 return
 
         record_per_page = 10
@@ -38,7 +32,9 @@ class ListOperator(operator.CommandOperator):
                 using_conv_index = index
 
             if index >= page * record_per_page and index < (page + 1) * record_per_page:
-                content += f'{index} {time_str}: {conv.messages[0].readable_str() if len(conv.messages) > 0 else "无内容"}\n'
+                content += (
+                    f'{index} {time_str}: {conv.messages[0].readable_str() if len(conv.messages) > 0 else "无内容"}\n'
+                )
             index += 1
 
         if content == '':

@@ -13,9 +13,7 @@ Forward = platform_message.Forward
 
 @strategy_model.strategy_class('forward')
 class ForwardComponentStrategy(strategy_model.LongTextStrategy):
-    async def process(
-        self, message: str, query: core_entities.Query
-    ) -> list[platform_message.MessageComponent]:
+    async def process(self, message: str, query: core_entities.Query) -> list[platform_message.MessageComponent]:
         display = ForwardMessageDiaplay(
             title='群聊的聊天记录',
             brief='[聊天记录]',
