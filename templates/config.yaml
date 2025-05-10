@@ -18,6 +18,3 @@ system:
     jwt:
         expire: 604800
         secret: ''
-telemetry:
-    report: true
-    url: https://api.qchatgpt.rockchin.top/api/v2

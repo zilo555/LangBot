@@ -207,6 +207,21 @@ class DBMigrateV3Config(migration.DBMigration):
 
             await self.ap.persistence_mgr.execute_async(sqlalchemy.insert(persistence_bot.Bot).values(**bot_data))
 
+        # ======= 迁移系统设置 =======
+        self.ap.instance_config.data['admins'] = self.ap.system_cfg.data['admin-sessions']
+        self.ap.instance_config.data['api']['port'] = self.ap.system_cfg.data['http-api']['port']
+        self.ap.instance_config.data['command'] = {
+            'prefix': self.ap.command_cfg.data['command-prefix'],
+            'privilege': self.ap.command_cfg.data['privilege'],
+        }
+        self.ap.instance_config.data['concurrency']['pipeline'] = self.ap.system_cfg.data['pipeline-concurrency']
+        self.ap.instance_config.data['concurrency']['session'] = self.ap.system_cfg.data['session-concurrency'][
+            'default'
+        ]
+        self.ap.instance_config.data['mcp'] = self.ap.provider_cfg.data['mcp']
+        self.ap.instance_config.data['proxy'] = self.ap.system_cfg.data['network-proxies']
+        await self.ap.instance_config.dump_config()
+
         # ======= move files =======
         # 迁移 data/config 下的所有配置文件
         all_legacy_dir_name = [
