@@ -7,7 +7,3 @@ repos:
     - id: ruff
     # Run the formatter of backend.
     - id: ruff-format
-    # Run the linter of frontend.
-    - id: eslint
-    # Run the formatter of frontend.
-    - id: eslint-format
