@@ -25,7 +25,6 @@ stage_order = [
 
 
 async def make_app(loop: asyncio.AbstractEventLoop) -> app.Application:
-
     # 确定是否为调试模式
     if 'DEBUG' in os.environ and os.environ['DEBUG'] in ['true', '1']:
         constants.debug_mode = True

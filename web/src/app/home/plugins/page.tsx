@@ -44,6 +44,7 @@ export default function PluginConfigPage() {
         const taskId = resp.task_id;
 
         let alreadySuccess = false;
+        console.log('taskId:', taskId);
 
         // 每秒拉取一次任务状态
         const interval = setInterval(() => {
