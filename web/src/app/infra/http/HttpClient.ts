@@ -69,7 +69,6 @@ class HttpClient {
 
   // 兜底URL，如果使用未配置会走到这里
   private getBaseUrl(): string {
-    return 'http://localhost:5300';
     // NOT IMPLEMENT
     if (typeof window === 'undefined') {
       // 服务端环境
@@ -228,6 +227,12 @@ class HttpClient {
   }
 
   public getProviderRequesterIconURL(name: string): string {
+    if (this.instance.defaults.baseURL === '/') {
+      // 获取用户访问的URL
+      const url = window.location.href;
+      const baseURL = url.split('/').slice(0, 3).join('/');
+      return `${baseURL}/api/v1/provider/requesters/${name}/icon`;
+    }
     return (
       this.instance.defaults.baseURL +
       `/api/v1/provider/requesters/${name}/icon`
@@ -289,6 +294,12 @@ class HttpClient {
   }
 
   public getAdapterIconURL(name: string): string {
+    if (this.instance.defaults.baseURL === '/') {
+      // 获取用户访问的URL
+      const url = window.location.href;
+      const baseURL = url.split('/').slice(0, 3).join('/');
+      return `${baseURL}/api/v1/platform/adapters/${name}/icon`;
+    }
     return (
       this.instance.defaults.baseURL + `/api/v1/platform/adapters/${name}/icon`
     );
@@ -421,7 +432,7 @@ class HttpClient {
 
 // export const httpClient = new HttpClient("https://version-4.langbot.dev");
 // export const httpClient = new HttpClient('http://localhost:5300');
-export const httpClient = new HttpClient('');
+export const httpClient = new HttpClient('/');
 
 // 临时写法，未来两种Client都继承自HttpClient父类，不允许共享方法
 export const spaceClient = new HttpClient('https://space.langbot.app');
