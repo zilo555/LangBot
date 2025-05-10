@@ -118,7 +118,7 @@ export default function PluginConfigPage() {
 
       <div className={styles.pipelineListContainer}>
         <CreateCardComponent
-          width={'24rem'}
+          width={'100%'}
           height={'10rem'}
           plusSize={'90px'}
           onClick={() => {

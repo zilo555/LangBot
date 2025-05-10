@@ -106,7 +106,7 @@ export default function BotConfigPage() {
       {/* 注意：其余的返回内容需要保持在Spin组件外部 */}
       <div className={`${styles.botListContainer}`}>
         <CreateCardComponent
-          width={'24rem'}
+          width={'100%'}
           height={'10rem'}
           plusSize={'90px'}
           onClick={handleCreateBotClick}

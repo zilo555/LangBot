@@ -125,7 +125,7 @@ export default function PluginMarketComponent({
 
   return (
     <div className={`${styles.marketComponentBody}`}>
-      <div className="flex items-center justify-start mb-2 mt-2">
+      <div className="flex items-center justify-start mb-2 mt-2 pl-[0.8rem] pr-[0.8rem]">
         <Input
           style={{
             width: '300px',

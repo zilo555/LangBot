@@ -13,7 +13,7 @@ export default function PluginMarketCardComponent({
   }
 
   return (
-    <div className="w-[26rem] h-[10rem] bg-white rounded-[10px] shadow-[0px_2px_2px_0_rgba(0,0,0,0.2)] p-[1.2rem]">
+    <div className="w-[100%] h-[10rem] bg-white rounded-[10px] shadow-[0px_2px_2px_0_rgba(0,0,0,0.2)] p-[1.2rem]">
       <div className="w-full h-full flex flex-row items-start justify-start gap-[1.2rem]">
         <svg
           className="w-16 h-16 text-[#2288ee]"

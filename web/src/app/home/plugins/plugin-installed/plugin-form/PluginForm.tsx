@@ -79,6 +79,8 @@ export default function PluginForm({
       .then((res) => {
         const taskId = res.task_id;
 
+        let alreadySuccess = false;
+
         const interval = setInterval(() => {
           httpClient.getAsyncTask(taskId).then((res) => {
             if (res.runtime.done) {
@@ -87,6 +89,11 @@ export default function PluginForm({
                 setPluginRemoveError(res.runtime.exception);
                 setPluginRemoveStatus(PluginRemoveStatus.ERROR);
               } else {
+                // success
+                if (!alreadySuccess) {
+                  toast.success('插件删除成功');
+                  alreadySuccess = true;
+                }
                 setPluginRemoveStatus(PluginRemoveStatus.WAIT_INPUT);
                 setShowDeleteConfirmModal(false);
                 onFormSubmit();

@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { GithubIcon } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { httpClient } from '@/app/infra/http/HttpClient';
-
+import { toast } from 'sonner';
 enum PluginInstallStatus {
   WAIT_INPUT = 'wait_input',
   INSTALLING = 'installing',
@@ -43,6 +43,8 @@ export default function PluginConfigPage() {
       .then((resp) => {
         const taskId = resp.task_id;
 
+        let alreadySuccess = false;
+
         // 每秒拉取一次任务状态
         const interval = setInterval(() => {
           httpClient.getAsyncTask(taskId).then((resp) => {
@@ -54,6 +56,10 @@ export default function PluginConfigPage() {
                 setPluginInstallStatus(PluginInstallStatus.ERROR);
               } else {
                 // success
+                if (!alreadySuccess) {
+                  toast.success('插件安装成功');
+                  alreadySuccess = true;
+                }
                 setGithubURL('');
                 setModalOpen(false);
                 pluginInstalledRef.current?.refreshPluginList();
@@ -72,7 +78,7 @@ export default function PluginConfigPage() {
   return (
     <div className={styles.pageContainer}>
       <Tabs defaultValue="installed" className="w-full">
-        <div className="flex flex-row justify-between items-center">
+        <div className="flex flex-row justify-between items-center px-[0.8rem]">
           <TabsList className="shadow-md py-5 bg-[#f0f0f0]">
             <TabsTrigger value="installed" className="px-6 py-4 cursor-pointer">
               已安装

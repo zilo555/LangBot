@@ -98,7 +98,7 @@ export default function LLMConfigPage() {
       </Dialog>
       <div className={`${styles.modelListContainer}`}>
         <CreateCardComponent
-          width={'24rem'}
+          width={'100%'}
           height={'10rem'}
           plusSize={'90px'}
           onClick={handleCreateModelClick}
