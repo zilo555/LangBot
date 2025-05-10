@@ -1,6 +1,6 @@
 .sidebarContainer {
     box-sizing: border-box;
-    width: 200px;
+    width: 11rem;
     height: 100vh;
     background-color: #eee;
     display: flex;
@@ -59,10 +59,10 @@
 
 
 .sidebarChildContainer {
-    width: 10rem;
+    width: 9rem;
     height: 3rem;
     margin: 0.8rem 0;
-    padding-left: 2rem;
+    padding-left: 1.6rem;
     font-size: 1rem;
     border-radius: 12px;
     display: flex;
