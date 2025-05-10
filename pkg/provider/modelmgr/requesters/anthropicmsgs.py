@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import typing
 import json
-
+import platform
+import socket
 import anthropic
 import httpx
 
@@ -25,6 +26,12 @@ class AnthropicMessages(requester.LLMAPIRequester):
     }
 
     async def initialize(self):
+        # 兼容 Windows 缺失 TCP_KEEPINTVL 和 TCP_KEEPCNT 的问题
+        if platform.system() == 'Windows':
+            if not hasattr(socket, 'TCP_KEEPINTVL'):
+                socket.TCP_KEEPINTVL = 0
+            if not hasattr(socket, 'TCP_KEEPCNT'):
+                socket.TCP_KEEPCNT = 0
         httpx_client = anthropic._base_client.AsyncHttpxClientWrapper(
             base_url=self.requester_cfg['base_url'],
             # cast to a valid type because mypy doesn't understand our type narrowing
@@ -61,8 +68,10 @@ class AnthropicMessages(requester.LLMAPIRequester):
             if m.role == 'system':
                 system_role_message = m
 
-                messages.pop(i)
                 break
+
+        if system_role_message:
+            messages.pop(i)
 
         if isinstance(system_role_message, llm_entities.Message) and isinstance(
             system_role_message.content, str

@@ -26,7 +26,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
     async def initialize(self):
         self.client = openai.AsyncClient(
             api_key='',
-            base_url=self.requester_cfg['base_url'],
+            base_url=self.requester_cfg['base-url'].replace(' ', ''),
             timeout=self.requester_cfg['timeout'],
             http_client=httpx.AsyncClient(
                 trust_env=True, timeout=self.requester_cfg['timeout']
@@ -36,8 +36,9 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
     async def _req(
         self,
         args: dict,
+        extra_body: dict = {},
     ) -> chat_completion.ChatCompletion:
-        return await self.client.chat.completions.create(**args)
+        return await self.client.chat.completions.create(**args, extra_body=extra_body)
 
     async def _make_msg(
         self,
@@ -48,6 +49,21 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         # 确保 role 字段存在且不为 None
         if 'role' not in chatcmpl_message or chatcmpl_message['role'] is None:
             chatcmpl_message['role'] = 'assistant'
+
+        reasoning_content = (
+            chatcmpl_message['reasoning_content']
+            if 'reasoning_content' in chatcmpl_message
+            else None
+        )
+
+        # deepseek的reasoner模型
+        if reasoning_content is not None:
+            chatcmpl_message['content'] = (
+                '<think>\n'
+                + reasoning_content
+                + '\n</think>\n'
+                + chatcmpl_message['content']
+            )
 
         message = llm_entities.Message(**chatcmpl_message)
 
@@ -87,7 +103,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         args['messages'] = messages
 
         # 发送请求
-        resp = await self._req(args)
+        resp = await self._req(args, extra_body=self.requester_cfg['args'])
 
         # 处理请求结果
         message = await self._make_msg(resp)

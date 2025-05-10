@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import lark_oapi
-
+from lark_oapi.api.im.v1 import CreateImageRequest, CreateImageRequestBody
+import traceback
 import typing
 import asyncio
-import traceback
 import re
 import base64
 import uuid
@@ -57,12 +57,24 @@ class LarkMessageConverter(adapter.MessageConverter):
         message_chain: platform_message.MessageChain, api_client: lark_oapi.Client
     ) -> typing.Tuple[list]:
         message_elements = []
-
         pending_paragraph = []
-
         for msg in message_chain:
             if isinstance(msg, platform_message.Plain):
-                pending_paragraph.append({'tag': 'md', 'text': msg.text})
+                # Ensure text is valid UTF-8
+                try:
+                    text = msg.text.encode('utf-8').decode('utf-8')
+                    pending_paragraph.append({'tag': 'md', 'text': text})
+                except UnicodeError:
+                    # If text is not valid UTF-8, try to decode with other encodings
+                    try:
+                        text = msg.text.encode('latin1').decode('utf-8')
+                        pending_paragraph.append({'tag': 'md', 'text': text})
+                    except UnicodeError:
+                        # If still fails, replace invalid characters
+                        text = msg.text.encode('utf-8', errors='replace').decode(
+                            'utf-8'
+                        )
+                        pending_paragraph.append({'tag': 'md', 'text': text})
             elif isinstance(msg, platform_message.At):
                 pending_paragraph.append(
                     {'tag': 'at', 'user_id': msg.target, 'style': []}
@@ -73,47 +85,85 @@ class LarkMessageConverter(adapter.MessageConverter):
                 image_bytes = None
 
                 if msg.base64:
-                    image_bytes = base64.b64decode(msg.base64)
+                    try:
+                        # Remove data URL prefix if present
+                        if msg.base64.startswith('data:'):
+                            msg.base64 = msg.base64.split(',', 1)[1]
+                        image_bytes = base64.b64decode(msg.base64)
+                    except Exception:
+                        traceback.print_exc()
+                        continue
                 elif msg.url:
-                    async with aiohttp.ClientSession() as session:
-                        async with session.get(msg.url) as response:
-                            image_bytes = await response.read()
+                    try:
+                        async with aiohttp.ClientSession() as session:
+                            async with session.get(msg.url) as response:
+                                if response.status == 200:
+                                    image_bytes = await response.read()
+                                else:
+                                    traceback.print_exc()
+                                    continue
+                    except Exception:
+                        traceback.print_exc()
+                        continue
                 elif msg.path:
-                    with open(msg.path, 'rb') as f:
-                        image_bytes = f.read()
+                    try:
+                        with open(msg.path, 'rb') as f:
+                            image_bytes = f.read()
+                    except Exception:
+                        traceback.print_exc()
+                        continue
 
-                request: CreateImageRequest = (
-                    CreateImageRequest.builder()
-                    .request_body(
-                        CreateImageRequestBody.builder()
-                        .image_type('message')
-                        .image(image_bytes)
-                        .build()
-                    )
-                    .build()
-                )
+                if image_bytes is None:
+                    continue
 
-                response: CreateImageResponse = await api_client.im.v1.image.acreate(
-                    request
-                )
+                try:
+                    # Create a temporary file to store the image bytes
+                    import tempfile
 
-                if not response.success():
-                    raise Exception(
-                        f'client.im.v1.image.create failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}, resp: \n{json.dumps(json.loads(response.raw.content), indent=4, ensure_ascii=False)}'
-                    )
+                    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+                        temp_file.write(image_bytes)
+                        temp_file.flush()
 
-                image_key = response.data.image_key
+                        # Create image request using the temporary file
+                        request = (
+                            CreateImageRequest.builder()
+                            .request_body(
+                                CreateImageRequestBody.builder()
+                                .image_type('message')
+                                .image(open(temp_file.name, 'rb'))
+                                .build()
+                            )
+                            .build()
+                        )
 
-                message_elements.append(pending_paragraph)
-                message_elements.append(
-                    [
-                        {
-                            'tag': 'img',
-                            'image_key': image_key,
-                        }
-                    ]
-                )
-                pending_paragraph = []
+                        response = await api_client.im.v1.image.acreate(request)
+
+                        if not response.success():
+                            raise Exception(
+                                f'client.im.v1.image.create failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}, resp: \n{json.dumps(json.loads(response.raw.content), indent=4, ensure_ascii=False)}'
+                            )
+
+                        image_key = response.data.image_key
+
+                        message_elements.append(pending_paragraph)
+                        message_elements.append(
+                            [
+                                {
+                                    'tag': 'img',
+                                    'image_key': image_key,
+                                }
+                            ]
+                        )
+                        pending_paragraph = []
+                except Exception:
+                    traceback.print_exc()
+                    continue
+                finally:
+                    # Clean up the temporary file
+                    import os
+
+                    if 'temp_file' in locals():
+                        os.unlink(temp_file.name)
             elif isinstance(msg, platform_message.Forward):
                 for node in msg.node_list:
                     message_elements.extend(
@@ -326,6 +376,8 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
             try:
                 data = await quart.request.json
 
+                self.ap.logger.debug(f'Lark callback event: {data}')
+
                 if 'encrypt' in data:
                     cipher = AESCipher(self.config['encrypt-key'])
                     data = cipher.decrypt_string(data['encrypt'])
@@ -337,7 +389,6 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
                     type = context.header.event_type
 
                 if 'url_verification' == type:
-                    print(data.get('challenge'))
                     # todo 验证verification token
                     return {'challenge': data.get('challenge')}
                 context = EventContext(data)

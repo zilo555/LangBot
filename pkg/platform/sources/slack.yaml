@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: MessagePlatformAdapter
+metadata:
+  name: slack
+  label:
+    en_US: Slack API
+    zh_CN: Slack API
+  description:
+    en_US: Slack API
+    zh_CN: Slack API
+spec:
+  config:
+    - name: bot_token
+      label:
+        en_US: Bot Token
+        zh_CN: 机器人令牌
+      type: string
+      required: true
+      default: ""
+    - name: signing_secret
+      label:
+        en_US: signing_secret
+        zh_CN: 密钥
+      type: string
+      required: true
+      default: ""
+    - name: port
+      label:
+        en_US: Port
+        zh_CN: 监听端口
+      type: int
+      required: true
+      default: 2288
+execution:
+  python:
+    path: ./slack.py
+    attr: SlackAdapter

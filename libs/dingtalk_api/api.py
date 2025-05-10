@@ -11,7 +11,12 @@ import traceback
 
 class DingTalkClient:
     def __init__(
-        self, client_id: str, client_secret: str, robot_name: str, robot_code: str
+        self,
+        client_id: str,
+        client_secret: str,
+        robot_name: str,
+        robot_code: str,
+        markdown_card: bool,
     ):
         """初始化 WebSocket 连接并自动启动"""
         self.credential = dingtalk_stream.Credential(client_id, client_secret)
@@ -30,6 +35,7 @@ class DingTalkClient:
         self.robot_name = robot_name
         self.robot_code = robot_code
         self.access_token_expiry_time = ''
+        self.markdown_card = markdown_card
 
     async def get_access_token(self):
         url = 'https://api.dingtalk.com/v1.0/oauth2/accessToken'
@@ -114,7 +120,14 @@ class DingTalkClient:
                 await self._handle_message(event)
 
     async def send_message(self, content: str, incoming_message):
-        self.EchoTextHandler.reply_text(content, incoming_message)
+        if self.markdown_card:
+            self.EchoTextHandler.reply_markdown(
+                title=self.robot_name + '的回答',
+                text=content,
+                incoming_message=incoming_message,
+            )
+        else:
+            self.EchoTextHandler.reply_text(content, incoming_message)
 
     async def get_incoming_message(self):
         """获取收到的消息"""

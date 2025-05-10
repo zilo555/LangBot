@@ -7,7 +7,7 @@
 
 <a href="https://trendshift.io/repositories/12901" target="_blank"><img src="https://trendshift.io/api/badge/repositories/12901" alt="RockChinQ%2FLangBot | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
-<a href="https://docs.langbot.app">Home</a> ｜
+<a href="https://langbot.app">Home</a> ｜
 <a href="https://docs.langbot.app/insight/intro.html">Features</a> ｜
 <a href="https://docs.langbot.app/insight/guide.html">Deployment</a> ｜
 <a href="https://docs.langbot.app/usage/faq.html">FAQ</a> ｜
@@ -45,6 +45,7 @@
 >
 > - Before you start deploying in any way, please read the [New User Guide](https://docs.langbot.app/insight/guide.html).  
 > - All documentation is in Chinese, we will provide i18n version in the near future.
+> - Read [the auto-generated wiki on DeepWiki](https://deepwiki.com/RockChinQ/LangBot).
 
 #### Docker Compose Deployment
 
@@ -85,12 +86,13 @@ Directly use the released version to run, see the [Manual Deployment](https://do
 | Personal QQ | ✅ |  |
 | QQ Official API | ✅ |  |
 | WeCom | ✅ |  |
+| WeComCS | ✅ |  |
 | Personal WeChat | ✅ | Use [Gewechat](https://github.com/Devo919/Gewechat) to access |
 | Lark | ✅ |  |
 | DingTalk | ✅ |  |
 | Discord | ✅ |  |
 | Telegram | ✅ |  |
-| Slack | 🚧 |  |
+| Slack | ✅ |  |
 | LINE | 🚧 |  |
 | WhatsApp | 🚧 |  |
 
@@ -107,12 +109,14 @@ Directly use the released version to run, see the [Manual Deployment](https://do
 | [xAI](https://x.ai/) | ✅ |  |
 | [Zhipu AI](https://open.bigmodel.cn/) | ✅ |  |
 | [Dify](https://dify.ai) | ✅ | LLMOps platform |
+| [PPIO](https://ppinfra.com/user/register?invited_by=QJKFYD&utm_source=github_langbot) | ✅ | LLM and GPU resource platform |
 | [Ollama](https://ollama.com/) | ✅ | Local LLM running platform |
 | [LMStudio](https://lmstudio.ai/) | ✅ | Local LLM running platform |
 | [GiteeAI](https://ai.gitee.com/) | ✅ | LLM interface gateway(MaaS) |
 | [SiliconFlow](https://siliconflow.cn/) | ✅ | LLM gateway(MaaS) |
 | [Aliyun Bailian](https://bailian.console.aliyun.com/) | ✅ | LLM gateway(MaaS), LLMOps platform |
 | [Volc Engine Ark](https://console.volcengine.com/ark/region:ark+cn-beijing/model?vendor=Bytedance&view=LIST_VIEW) | ✅ | LLM gateway(MaaS), LLMOps platform |
+| [ModelScope](https://modelscope.cn/docs/model-service/API-Inference/intro) | ✅ | LLM gateway(MaaS) |
 | [MCP](https://modelcontextprotocol.io/) | ✅ | Support tool access through MCP protocol |
 
 ## 🤝 Community Contribution

@@ -131,6 +131,8 @@ class DifyServiceAPIRunner(runner.RequestRunner):
 
         inputs.update(query.variables)
 
+        chunk = None  # 初始化chunk变量，防止在没有响应时引用错误
+
         async for chunk in self.dify_client.chat_messages(
             inputs=inputs,
             query=plain_text,
@@ -163,6 +165,11 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                     )
                     basic_mode_pending_chunk = ''
 
+        if chunk is None:
+            raise errors.DifyAPIError(
+                'Dify API 没有返回任何响应，请检查网络连接和API配置'
+            )
+
         query.session.using_conversation.uuid = chunk['conversation_id']
 
     async def _agent_chat_messages(
@@ -182,11 +189,15 @@ class DifyServiceAPIRunner(runner.RequestRunner):
             for image_id in image_ids
         ]
 
-        ignored_events = ['agent_message']
+        ignored_events = []
 
         inputs = {}
 
         inputs.update(query.variables)
+
+        pending_agent_message = ''
+
+        chunk = None  # 初始化chunk变量，防止在没有响应时引用错误
 
         async for chunk in self.dify_client.chat_messages(
             inputs=inputs,
@@ -201,47 +212,63 @@ class DifyServiceAPIRunner(runner.RequestRunner):
 
             if chunk['event'] in ignored_events:
                 continue
-            if chunk['event'] == 'agent_thought':
-                if (
-                    chunk['tool'] != '' and chunk['observation'] != ''
-                ):  # 工具调用结果，跳过
-                    continue
 
-                if chunk['thought'].strip() != '':  # 文字回复内容
-                    msg = llm_entities.Message(
-                        role='assistant',
-                        content=chunk['thought'],
+            if chunk['event'] == 'agent_message':
+                pending_agent_message += chunk['answer']
+            else:
+                if pending_agent_message.strip() != '':
+                    pending_agent_message = pending_agent_message.replace(
+                        '</details>Action:', '</details>'
                     )
-                    yield msg
-
-                if chunk['tool']:
-                    msg = llm_entities.Message(
-                        role='assistant',
-                        tool_calls=[
-                            llm_entities.ToolCall(
-                                id=chunk['id'],
-                                type='function',
-                                function=llm_entities.FunctionCall(
-                                    name=chunk['tool'],
-                                    arguments=json.dumps({}),
-                                ),
-                            )
-                        ],
-                    )
-                    yield msg
-            if chunk['event'] == 'message_file':
-                if chunk['type'] == 'image' and chunk['belongs_to'] == 'assistant':
-                    base_url = self.dify_client.base_url
-
-                    if base_url.endswith('/v1'):
-                        base_url = base_url[:-3]
-
-                    image_url = base_url + chunk['url']
-
                     yield llm_entities.Message(
                         role='assistant',
-                        content=[llm_entities.ContentElement.from_image_url(image_url)],
+                        content=self._try_convert_thinking(pending_agent_message),
                     )
+                pending_agent_message = ''
+
+                if chunk['event'] == 'agent_thought':
+                    if (
+                        chunk['tool'] != '' and chunk['observation'] != ''
+                    ):  # 工具调用结果，跳过
+                        continue
+
+                    if chunk['tool']:
+                        msg = llm_entities.Message(
+                            role='assistant',
+                            tool_calls=[
+                                llm_entities.ToolCall(
+                                    id=chunk['id'],
+                                    type='function',
+                                    function=llm_entities.FunctionCall(
+                                        name=chunk['tool'],
+                                        arguments=json.dumps({}),
+                                    ),
+                                )
+                            ],
+                        )
+                        yield msg
+                if chunk['event'] == 'message_file':
+                    if chunk['type'] == 'image' and chunk['belongs_to'] == 'assistant':
+                        base_url = self.dify_client.base_url
+
+                        if base_url.endswith('/v1'):
+                            base_url = base_url[:-3]
+
+                        image_url = base_url + chunk['url']
+
+                        yield llm_entities.Message(
+                            role='assistant',
+                            content=[
+                                llm_entities.ContentElement.from_image_url(image_url)
+                            ],
+                        )
+                if chunk['event'] == 'error':
+                    raise errors.DifyAPIError('dify 服务错误: ' + chunk['message'])
+
+        if chunk is None:
+            raise errors.DifyAPIError(
+                'Dify API 没有返回任何响应，请检查网络连接和API配置'
+            )
 
         query.session.using_conversation.uuid = chunk['conversation_id']
 

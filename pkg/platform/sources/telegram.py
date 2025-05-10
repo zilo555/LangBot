@@ -4,7 +4,7 @@ import telegram
 import telegram.ext
 from telegram import Update
 from telegram.ext import ApplicationBuilder, ContextTypes, MessageHandler, filters
-
+import telegramify_markdown
 import typing
 import traceback
 import base64
@@ -74,7 +74,8 @@ class TelegramMessageConverter(adapter.MessageConverter):
             message_components.extend(parse_message_text(message_text))
 
         if message.photo:
-            message_components.extend(parse_message_text(message.caption))
+            if message.caption:
+                message_components.extend(parse_message_text(message.caption))
 
             file = await message.photo[-1].get_file()
 
@@ -117,7 +118,7 @@ class TelegramEventConverter(adapter.EventConverter):
                 time=event.message.date.timestamp(),
                 source_platform_object=event,
             )
-        elif event.effective_chat.type == 'group':
+        elif event.effective_chat.type == 'group' or 'supergroup':
             return platform_events.GroupMessage(
                 sender=platform_entities.GroupMember(
                     id=event.effective_chat.id,
@@ -196,17 +197,24 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
 
         for component in components:
             if component['type'] == 'text':
+                if self.config['markdown_card'] is True:
+                    content = telegramify_markdown.markdownify(
+                        content=component['text'],
+                    )
+                else:
+                    content = component['text']
                 args = {
                     'chat_id': message_source.source_platform_object.effective_chat.id,
-                    'text': component['text'],
+                    'text': content,
                 }
+                if self.config['markdown_card'] is True:
+                    args['parse_mode'] = 'MarkdownV2'
+        if quote_origin:
+            args['reply_to_message_id'] = (
+                message_source.source_platform_object.message.id
+            )
 
-                if quote_origin:
-                    args['reply_to_message_id'] = (
-                        message_source.source_platform_object.message.id
-                    )
-
-                await self.bot.send_message(**args)
+        await self.bot.send_message(**args)
 
     async def is_muted(self, group_id: int) -> bool:
         return False

@@ -44,7 +44,7 @@ class GiteeAIChatCompletions(chatcmpl.OpenAIChatCompletions):
 
         args['messages'] = req_messages
 
-        resp = await self._req(args)
+        resp = await self._req(args, extra_body=self.requester_cfg['args'])
 
         message = await self._make_msg(resp)
 

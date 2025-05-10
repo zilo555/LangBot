@@ -38,6 +38,7 @@ required_deps = {
     'certifi': 'certifi',
     'mcp': 'mcp',
     'sqlmodel': 'sqlmodel',
+    'telegramify_markdown': 'telegramify-markdown',
 }
 
 

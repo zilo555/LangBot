@@ -45,13 +45,13 @@ class MoonshotChatCompletions(chatcmpl.OpenAIChatCompletions):
             if 'content' in m and isinstance(m['content'], list):
                 m['content'] = ' '.join([c['text'] for c in m['content']])
 
-        # 删除空的
-        messages = [m for m in messages if m['content'].strip() != '']
+        # 删除空的，不知道干嘛的，直接删了。
+        # messages = [m for m in messages if m["content"].strip() != "" and ('tool_calls' not in m or not m['tool_calls'])]
 
         args['messages'] = messages
 
         # 发送请求
-        resp = await self._req(args)
+        resp = await self._req(args, extra_body=self.requester_cfg['args'])
 
         # 处理请求结果
         message = await self._make_msg(resp)

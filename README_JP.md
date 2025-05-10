@@ -7,7 +7,7 @@
 
 <a href="https://trendshift.io/repositories/12901" target="_blank"><img src="https://trendshift.io/api/badge/repositories/12901" alt="RockChinQ%2FLangBot | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
-<a href="https://docs.langbot.app">ホーム</a> ｜
+<a href="https://langbot.app">ホーム</a> ｜
 <a href="https://docs.langbot.app/insight/intro.html">機能</a> ｜
 <a href="https://docs.langbot.app/insight/guide.html">デプロイ</a> ｜
 <a href="https://docs.langbot.app/usage/faq.html">FAQ</a> ｜
@@ -44,6 +44,7 @@
 >
 > - どのデプロイ方法を始める前に、必ず[新規ユーザーガイド](https://docs.langbot.app/insight/guide.html)をお読みください。  
 > - すべてのドキュメントは中国語で提供されています。近い将来、i18nバージョンを提供する予定です。
+> - Read [the auto-generated wiki on DeepWiki](https://deepwiki.com/RockChinQ/LangBot)。
 
 #### Docker Compose デプロイ
 
@@ -84,12 +85,13 @@ LangBotはBTPanelにリストされています。BTPanelをインストール�
 | 個人QQ | ✅ |  |
 | QQ公式API | ✅ |  |
 | WeCom | ✅ |  |
+| WeComCS | ✅ |  |
 | 個人WeChat | ✅ | [Gewechat](https://github.com/Devo919/Gewechat)を使用して接続 |
 | Lark | ✅ |  |
 | DingTalk | ✅ |  |
 | Discord | ✅ |  |
 | Telegram | ✅ |  |
-| Slack | 🚧 |  |
+| Slack | ✅ |  |
 | LINE | 🚧 |  |
 | WhatsApp | 🚧 |  |
 
@@ -105,6 +107,7 @@ LangBotはBTPanelにリストされています。BTPanelをインストール�
 | [Anthropic](https://www.anthropic.com/) | ✅ |  |
 | [xAI](https://x.ai/) | ✅ |  |
 | [Zhipu AI](https://open.bigmodel.cn/) | ✅ |  |
+| [PPIO](https://ppinfra.com/user/register?invited_by=QJKFYD&utm_source=github_langbot) | ✅ | 大模型とGPUリソースプラットフォーム |
 | [Dify](https://dify.ai) | ✅ | LLMOpsプラットフォーム |
 | [Ollama](https://ollama.com/) | ✅ | ローカルLLM実行プラットフォーム |
 | [LMStudio](https://lmstudio.ai/) | ✅ | ローカルLLM実行プラットフォーム |
@@ -112,6 +115,7 @@ LangBotはBTPanelにリストされています。BTPanelをインストール�
 | [SiliconFlow](https://siliconflow.cn/) | ✅ | LLMゲートウェイ(MaaS) |
 | [Aliyun Bailian](https://bailian.console.aliyun.com/) | ✅ | LLMゲートウェイ(MaaS), LLMOpsプラットフォーム |
 | [Volc Engine Ark](https://console.volcengine.com/ark/region:ark+cn-beijing/model?vendor=Bytedance&view=LIST_VIEW) | ✅ | LLMゲートウェイ(MaaS), LLMOpsプラットフォーム |
+| [ModelScope](https://modelscope.cn/docs/model-service/API-Inference/intro) | ✅ | LLMゲートウェイ(MaaS) |
 | [MCP](https://modelcontextprotocol.io/) | ✅ | MCPプロトコルをサポート |
 
 ## 🤝 コミュニティ貢献

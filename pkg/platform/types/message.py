@@ -1,14 +1,13 @@
 import itertools
 import logging
+import typing
 from datetime import datetime
 from pathlib import Path
-import typing
 
 import pydantic.v1 as pydantic
 
 from . import entities as platform_entities
 from .base import PlatformBaseModel, PlatformIndexedMetaclass, PlatformIndexedModel
-
 
 logger = logging.getLogger(__name__)
 
@@ -685,6 +684,9 @@ class Unknown(MessageComponent):
     text: str
     """文本。"""
 
+    def __str__(self):
+        return f'Unknown Message: {self.text}'
+
 
 class Voice(MessageComponent):
     """语音。"""
@@ -863,3 +865,116 @@ class File(MessageComponent):
 
     def __str__(self):
         return f'[文件]{self.name}'
+
+
+# ================ 个人微信专用组件 ================
+
+
+class WeChatMiniPrograms(MessageComponent):
+    """小程序。个人微信专用组件。"""
+
+    type: str = 'WeChatMiniPrograms'
+    """小程序id"""
+    mini_app_id: str
+    """小程序归属用户id"""
+    user_name: str
+    """小程序名称"""
+    display_name: typing.Optional[str] = ''
+    """打开地址"""
+    page_path: typing.Optional[str] = ''
+    """小程序标题"""
+    title: typing.Optional[str] = ''
+    """首页图片"""
+    image_url: typing.Optional[str] = ''
+
+
+class WeChatForwardMiniPrograms(MessageComponent):
+    """转发小程序。个人微信专用组件。"""
+
+    type: str = 'WeChatForwardMiniPrograms'
+    """xml数据"""
+    xml_data: str
+    """首页图片"""
+    image_url: typing.Optional[str] = None
+
+    def __str__(self):
+        return self.xml_data
+
+
+class WeChatEmoji(MessageComponent):
+    """emoji表情。个人微信专用组件。"""
+
+    type: str = 'WeChatEmoji'
+    """emojimd5"""
+    emoji_md5: str
+    """emoji大小"""
+    emoji_size: int
+
+
+class WeChatLink(MessageComponent):
+    """发送链接。个人微信专用组件。"""
+
+    type: str = 'WeChatLink'
+    """标题"""
+    link_title: str = ''
+    """链接描述"""
+    link_desc: str = ''
+    """链接地址"""
+    link_url: str = ''
+    """链接略缩图"""
+    link_thumb_url: str = ''
+
+
+class WeChatForwardLink(MessageComponent):
+    """转发链接。个人微信专用组件。"""
+
+    type: str = 'WeChatForwardLink'
+    """xml数据"""
+    xml_data: str
+
+    def __str__(self):
+        return self.xml_data
+
+
+class WeChatForwardImage(MessageComponent):
+    """转发图片。个人微信专用组件。"""
+
+    type: str = 'WeChatForwardImage'
+    """xml数据"""
+    xml_data: str
+
+    def __str__(self):
+        return self.xml_data
+
+
+class WeChatForwardFile(MessageComponent):
+    """转发文件。个人微信专用组件。"""
+
+    type: str = 'WeChatForwardFile'
+    """xml数据"""
+    xml_data: str
+
+    def __str__(self):
+        return self.xml_data
+
+
+class WeChatAppMsg(MessageComponent):
+    """通用appmsg发送。个人微信专用组件。"""
+
+    type: str = 'WeChatAppMsg'
+    """xml数据"""
+    app_msg: str
+
+    def __str__(self):
+        return self.app_msg
+
+
+class WeChatForwardQuote(MessageComponent):
+    """转发引用消息。个人微信专用组件。"""
+
+    type: str = 'WeChatForwardQuote'
+    """xml数据"""
+    app_msg: str
+
+    def __str__(self):
+        return self.app_msg
