@@ -11,7 +11,6 @@ from ..provider.session import sessionmgr as llm_session_mgr
 from ..provider.modelmgr import modelmgr as llm_model_mgr
 from ..provider.tools import toolmgr as llm_tool_mgr
 from ..config import manager as config_mgr
-from ..audit.center import v2 as center_mgr
 from ..command import cmdmgr
 from ..plugin import manager as plugin_mgr
 from ..pipeline import pool
@@ -76,8 +75,6 @@ class Application:
     pipeline_config_meta_output: config_mgr.ConfigManager = None
 
     # =========================
-
-    ctr_mgr: center_mgr.V2CenterAPI = None
 
     plugin_mgr: plugin_mgr.PluginManager = None
 

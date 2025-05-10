@@ -2,9 +2,7 @@ from __future__ import annotations
 
 
 from .. import stage, app
-from ...utils import version, proxy, announce, platform
-from ...audit.center import v2 as center_v2
-from ...audit import identifier
+from ...utils import version, proxy, announce
 from ...pipeline import pool, controller, pipelinemgr
 from ...plugin import manager as plugin_mgr
 from ...command import cmdmgr
@@ -42,22 +40,6 @@ class BuildAppStage(stage.BootingStage):
         ver_mgr = version.VersionManager(ap)
         await ver_mgr.initialize()
         ap.ver_mgr = ver_mgr
-
-        center_v2_api = center_v2.V2CenterAPI(
-            ap,
-            backend_url=ap.instance_config.data['telemetry']['url'],
-            basic_info={
-                'host_id': identifier.identifier['host_id'],
-                'instance_id': identifier.identifier['instance_id'],
-                'semantic_version': ver_mgr.get_current_version(),
-                'platform': platform.get_platform(),
-            },
-            runtime_info={
-                'admin_id': '{}'.format(ap.instance_config.data['admins']),
-                'msg_source': str([]),
-            },
-        )
-        ap.ctr_mgr = center_v2_api
 
         # 发送公告
         ann_mgr = announce.AnnouncementManager(ap)

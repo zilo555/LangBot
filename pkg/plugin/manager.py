@@ -194,14 +194,7 @@ class PluginManager:
         """安装插件"""
         await self.installer.install_plugin(plugin_source, task_context)
 
-        await self.ap.ctr_mgr.plugin.post_install_record(
-            {
-                'name': 'unknown',
-                'remote': plugin_source,
-                'author': 'unknown',
-                'version': 'HEAD',
-            }
-        )
+        # TODO statistics
 
         task_context.trace('重载插件..', 'reload-plugin')
         await self.ap.reload(scope='plugin')
@@ -221,14 +214,7 @@ class PluginManager:
         await self.destroy_plugin(plugin_container)
         await self.installer.uninstall_plugin(plugin_name, task_context)
 
-        await self.ap.ctr_mgr.plugin.post_remove_record(
-            {
-                'name': plugin_name,
-                'remote': plugin_container.plugin_repository,
-                'author': plugin_container.plugin_author,
-                'version': plugin_container.plugin_version,
-            }
-        )
+        # TODO statistics
 
         task_context.trace('重载插件..', 'reload-plugin')
         await self.ap.reload(scope='plugin')
@@ -242,18 +228,7 @@ class PluginManager:
         """更新插件"""
         await self.installer.update_plugin(plugin_name, plugin_source, task_context)
 
-        plugin_container = self.get_plugin_by_name(plugin_name)
-
-        await self.ap.ctr_mgr.plugin.post_update_record(
-            plugin={
-                'name': plugin_name,
-                'remote': plugin_container.plugin_repository,
-                'author': plugin_container.plugin_author,
-                'version': plugin_container.plugin_version,
-            },
-            old_version=plugin_container.plugin_version,
-            new_version='HEAD',
-        )
+        # TODO statistics
 
         task_context.trace('重载插件..', 'reload-plugin')
         await self.ap.reload(scope='plugin')
@@ -313,20 +288,7 @@ class PluginManager:
             f'事件 {event.__class__.__name__}({ctx.eid}) 处理完成，返回值 {ctx.__return_value__}'
         )
 
-        if emitted_plugins:
-            plugins_info: list[dict] = [
-                {
-                    'name': plugin.plugin_name,
-                    'remote': plugin.plugin_repository,
-                    'version': plugin.plugin_version,
-                    'author': plugin.plugin_author,
-                }
-                for plugin in emitted_plugins
-            ]
-
-            await self.ap.ctr_mgr.usage.post_event_record(
-                plugins=plugins_info, event_name=event.__class__.__name__
-            )
+        # TODO statistics
 
         return ctx
 

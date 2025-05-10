@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 import typing
 import logging
-import time
 
 import requests
 
@@ -41,10 +40,8 @@ class VersionManager:
 
     async def update_all(self):
         """检查更新并下载源码"""
-        start_time = time.time()
 
         current_tag = self.get_current_version()
-        old_tag = current_tag
 
         rls_list = await self.get_release_list()
 
@@ -141,12 +138,7 @@ class VersionManager:
         with open('current_tag', 'w') as f:
             f.write(current_tag)
 
-        await self.ap.ctr_mgr.main.post_update_record(
-            spent_seconds=int(time.time() - start_time),
-            infer_reason='update',
-            old_version=old_tag,
-            new_version=current_tag,
-        )
+        # TODO statistics
 
     async def is_new_version_available(self) -> bool:
         """检查是否有新版本"""

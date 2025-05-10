@@ -5,7 +5,6 @@ import asyncio
 import os
 
 from . import app
-from ..audit import identifier
 from . import stage
 from ..utils import constants, importutil
 
@@ -26,8 +25,6 @@ stage_order = [
 
 
 async def make_app(loop: asyncio.AbstractEventLoop) -> app.Application:
-    # 生成标识符
-    identifier.init()
 
     # 确定是否为调试模式
     if 'DEBUG' in os.environ and os.environ['DEBUG'] in ['true', '1']:

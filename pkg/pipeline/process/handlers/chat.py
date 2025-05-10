@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import typing
-import time
 import traceback
 
 
@@ -64,8 +63,6 @@ class ChatMessageHandler(handler.MessageHandler):
 
             text_length = 0
 
-            start_time = time.time()
-
             try:
                 for r in runner_module.preregistered_runners:
                     if r.name == query.pipeline_config['ai']['runner']['runner']:
@@ -109,12 +106,5 @@ class ChatMessageHandler(handler.MessageHandler):
                     debug_notice=traceback.format_exc(),
                 )
             finally:
-                await self.ap.ctr_mgr.usage.post_query_record(
-                    session_type=query.session.launcher_type.value,
-                    session_id=str(query.session.launcher_id),
-                    query_ability_provider='LangBot.Chat',
-                    usage=text_length,
-                    model_name=query.use_model.name,
-                    response_seconds=int(time.time() - start_time),
-                    retry_times=-1,
-                )
+                # TODO statistics
+                pass

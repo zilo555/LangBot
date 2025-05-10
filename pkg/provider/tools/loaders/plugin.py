@@ -73,17 +73,7 @@ class PluginToolLoader(loader.ToolLoader):
                     plugin = p
                     break
 
-            if plugin is not None:
-                await self.ap.ctr_mgr.usage.post_function_record(
-                    plugin={
-                        'name': plugin.plugin_name,
-                        'remote': plugin.plugin_repository,
-                        'version': plugin.plugin_version,
-                        'author': plugin.plugin_author,
-                    },
-                    function_name=function.name,
-                    function_description=function.description,
-                )
+            # TODO statistics
 
     async def shutdown(self):
         """关闭工具"""
