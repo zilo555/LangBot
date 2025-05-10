@@ -76,8 +76,10 @@ class HTTPController:
 
         @self.quart_app.route('/<path:path>')
         async def static_file(path: str):
-            print(f'path: {path}')  
-            if not (os.path.exists(os.path.join(frontend_path, path)) and os.path.isfile(os.path.join(frontend_path, path))):
+            if not (
+                os.path.exists(os.path.join(frontend_path, path))
+                and os.path.isfile(os.path.join(frontend_path, path))
+            ):
                 if os.path.exists(os.path.join(frontend_path, path + '.html')):
                     path += '.html'
                 else:

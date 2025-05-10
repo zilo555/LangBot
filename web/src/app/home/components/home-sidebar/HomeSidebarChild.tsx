@@ -37,7 +37,9 @@ export function SidebarChild({
 }) {
   return (
     <div
-      className={`${styles.sidebarChildContainer} ${isSelected ? styles.sidebarSelected : styles.sidebarUnselected}`}
+      className={`${styles.sidebarChildContainer} ${
+        isSelected ? styles.sidebarSelected : styles.sidebarUnselected
+      }`}
       onClick={onClick}
     >
       <div className={`${styles.sidebarChildIcon}`}>{icon}</div>
