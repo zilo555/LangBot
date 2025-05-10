@@ -3,11 +3,9 @@ from __future__ import annotations
 import abc
 import uuid
 import json
-import logging
 import asyncio
 
 import aiohttp
-import requests
 
 from ...core import app, entities as core_entities
 
@@ -38,22 +36,22 @@ class APIGroup(metaclass=abc.ABCMeta):
         """
         执行请求
         """
-        self._runtime_info["account_id"] = "-1"
+        self._runtime_info['account_id'] = '-1'
 
         url = self.prefix + path
         data = json.dumps(data)
-        headers["Content-Type"] = "application/json"
+        headers['Content-Type'] = 'application/json'
 
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.request(
                     method, url, data=data, params=params, headers=headers, **kwargs
                 ) as resp:
-                    self.ap.logger.debug("data: %s", data)
-                    self.ap.logger.debug("ret: %s", await resp.text())
+                    self.ap.logger.debug('data: %s', data)
+                    self.ap.logger.debug('ret: %s', await resp.text())
 
         except Exception as e:
-            self.ap.logger.debug(f"上报失败: {e}")
+            self.ap.logger.debug(f'上报失败: {e}')
 
     async def do(
         self,
@@ -68,8 +66,8 @@ class APIGroup(metaclass=abc.ABCMeta):
 
         return self.ap.task_mgr.create_task(
             self._do(method, path, data, params, headers, **kwargs),
-            kind="telemetry-operation",
-            name=f"{method} {path}",
+            kind='telemetry-operation',
+            name=f'{method} {path}',
             scopes=[core_entities.LifecycleControlScope.APPLICATION],
         ).task
 
@@ -80,7 +78,7 @@ class APIGroup(metaclass=abc.ABCMeta):
     def basic_info(self):
         """获取基本信息"""
         basic_info = APIGroup._basic_info.copy()
-        basic_info["rid"] = self.gen_rid()
+        basic_info['rid'] = self.gen_rid()
         return basic_info
 
     def runtime_info(self):

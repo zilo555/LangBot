@@ -1,0 +1,18 @@
+.titleBarContainer {
+    width: 100%;
+    padding-top: 0.8rem;
+    height: 4rem;
+    opacity: 1;
+    font-size: 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    background-color: #fafafa;
+}
+
+.titleText {
+    margin-left: 3.2rem;
+    font-size: 1.6rem;
+    font-weight: 500;
+    color: #585858;
+}

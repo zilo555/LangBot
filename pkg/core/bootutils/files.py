@@ -2,22 +2,22 @@ from __future__ import annotations
 
 import os
 import shutil
-import sys
 
 
 required_files = {
-    "plugins/__init__.py": "templates/__init__.py",
-    "data/config.yaml": "templates/config.yaml",
+    'plugins/__init__.py': 'templates/__init__.py',
+    'data/config.yaml': 'templates/config.yaml',
 }
 
 required_paths = [
-    "temp",
-    "data",
-    "data/metadata",
-    "data/logs",
-    "data/labels",
-    "plugins"
+    'temp',
+    'data',
+    'data/metadata',
+    'data/logs',
+    'data/labels',
+    'plugins',
 ]
+
 
 async def generate_files() -> list[str]:
     global required_files, required_paths
