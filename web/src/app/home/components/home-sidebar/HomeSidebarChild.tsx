@@ -5,6 +5,7 @@ export interface ISidebarChildVO {
   icon: React.ReactNode;
   name: string;
   route: string;
+  description: string;
 }
 
 export class SidebarChildVO {
@@ -12,12 +13,14 @@ export class SidebarChildVO {
   icon: React.ReactNode;
   name: string;
   route: string;
+  description: string;
 
   constructor(props: ISidebarChildVO) {
     this.id = props.id;
     this.icon = props.icon;
     this.name = props.name;
     this.route = props.route;
+    this.description = props.description;
   }
 }
 

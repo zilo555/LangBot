@@ -16,6 +16,7 @@ export const sidebarConfigList = [
       </svg>
     ),
     route: '/home/bots',
+    description: '创建和管理机器人，这是 LangBot 与各个平台连接的入口',
   }),
   new SidebarChildVO({
     id: 'models',
@@ -31,6 +32,7 @@ export const sidebarConfigList = [
       </svg>
     ),
     route: '/home/models',
+    description: '配置和管理可在流水线中使用的模型',
   }),
   new SidebarChildVO({
     id: 'pipelines',
@@ -46,6 +48,7 @@ export const sidebarConfigList = [
       </svg>
     ),
     route: '/home/pipelines',
+    description: '流水线定义了对消息事件的处理流程，用于绑定到机器人',
   }),
   new SidebarChildVO({
     id: 'plugins',
@@ -61,5 +64,6 @@ export const sidebarConfigList = [
       </svg>
     ),
     route: '/home/plugins',
+    description: '安装和配置用于扩展 LangBot 功能的插件',
   }),
 ];

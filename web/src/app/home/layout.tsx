@@ -12,8 +12,10 @@ export default function HomeLayout({
   children: React.ReactNode;
 }>) {
   const [title, setTitle] = useState<string>('');
+  const [subtitle, setSubtitle] = useState<string>('');
   const onSelectedChangeAction = (child: SidebarChildVO) => {
     setTitle(child.name);
+    setSubtitle(child.description);
   };
 
   return (
@@ -23,7 +25,7 @@ export default function HomeLayout({
       </aside>
 
       <div className={styles.main}>
-        <HomeTitleBar title={title} />
+        <HomeTitleBar title={title} subtitle={subtitle} />
 
         <main className={styles.mainContent}>{children}</main>
       </div>
