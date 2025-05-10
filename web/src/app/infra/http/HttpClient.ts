@@ -54,6 +54,7 @@ class HttpClient {
   private disableToken: boolean = false;
   // 暂不需要SSR
   // private ssrInstance: AxiosInstance | null = null
+  public systemInfo: ApiRespSystemInfo | null = null;
 
   constructor(baseURL?: string, disableToken?: boolean) {
     this.instance = axios.create({
@@ -65,6 +66,12 @@ class HttpClient {
     });
     this.disableToken = disableToken || false;
     this.initInterceptors();
+
+    if (this.systemInfo === null) {
+      this.getSystemInfo().then((res) => {
+        this.systemInfo = res;
+      });
+    }
   }
 
   // 兜底URL，如果使用未配置会走到这里
