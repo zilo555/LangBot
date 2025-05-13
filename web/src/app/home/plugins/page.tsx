@@ -3,6 +3,7 @@ import PluginInstalledComponent, {
   PluginInstalledComponentRef,
 } from '@/app/home/plugins/plugin-installed/PluginInstalledComponent';
 import PluginMarketComponent from '@/app/home/plugins/plugin-market/PluginMarketComponent';
+import PluginSortDialog from '@/app/home/plugins/plugin-sort/PluginSortDialog';
 import styles from './plugins.module.css';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ import { GithubIcon } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { toast } from 'sonner';
+
 enum PluginInstallStatus {
   WAIT_INPUT = 'wait_input',
   INSTALLING = 'installing',
@@ -27,6 +29,7 @@ enum PluginInstallStatus {
 
 export default function PluginConfigPage() {
   const [modalOpen, setModalOpen] = useState(false);
+  const [sortModalOpen, setSortModalOpen] = useState(false);
   const [pluginInstallStatus, setPluginInstallStatus] =
     useState<PluginInstallStatus>(PluginInstallStatus.WAIT_INPUT);
   const [installError, setInstallError] = useState<string | null>(null);
@@ -90,6 +93,15 @@ export default function PluginConfigPage() {
           </TabsList>
 
           <div className="flex flex-row justify-end items-center">
+            <Button
+              variant="outline"
+              className="px-6 py-4 cursor-pointer mr-2"
+              onClick={() => {
+                setSortModalOpen(true);
+              }}
+            >
+              编排
+            </Button>
             <Button
               variant="default"
               className="px-6 py-4 cursor-pointer"
@@ -166,6 +178,14 @@ export default function PluginConfigPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <PluginSortDialog
+        open={sortModalOpen}
+        onOpenChange={setSortModalOpen}
+        onSortComplete={() => {
+          pluginInstalledRef.current?.refreshPluginList();
+        }}
+      />
     </div>
   );
 }
