@@ -23,6 +23,8 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
+import { useTranslation } from 'react-i18next';
+import { i18nObj } from '@/i18n/I18nProvider';
 
 export default function DynamicFormItemComponent({
   config,
@@ -33,6 +35,7 @@ export default function DynamicFormItemComponent({
   field: ControllerRenderProps<any, any>;
 }) {
   const [llmModels, setLlmModels] = useState<LLMModel[]>([]);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (config.type === DynamicFormItemType.LLM_MODEL_SELECTOR) {
@@ -106,7 +109,7 @@ export default function DynamicFormItemComponent({
               field.onChange([...field.value, '']);
             }}
           >
-            添加
+            {t('common.add')}
           </Button>
         </div>
       );
@@ -115,13 +118,13 @@ export default function DynamicFormItemComponent({
       return (
         <Select value={field.value} onValueChange={field.onChange}>
           <SelectTrigger>
-            <SelectValue placeholder="请选择" />
+            <SelectValue placeholder={t('common.select')} />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
               {config.options?.map((option) => (
                 <SelectItem key={option.name} value={option.name}>
-                  {option.label.zh_CN}
+                  {i18nObj(option.label)}
                 </SelectItem>
               ))}
             </SelectGroup>
@@ -133,7 +136,7 @@ export default function DynamicFormItemComponent({
       return (
         <Select value={field.value} onValueChange={field.onChange}>
           <SelectTrigger>
-            <SelectValue placeholder="请选择模型" />
+            <SelectValue placeholder={t('models.selectModel')} />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
@@ -205,9 +208,9 @@ export default function DynamicFormItemComponent({
                               )}
                               <span>
                                 {ability === 'vision'
-                                  ? '视觉能力'
+                                  ? t('models.visionAbility')
                                   : ability === 'func_call'
-                                    ? '函数调用'
+                                    ? t('models.functionCallAbility')
                                     : ability}
                               </span>
                             </div>
@@ -217,7 +220,9 @@ export default function DynamicFormItemComponent({
                       {model.extra_args &&
                         Object.keys(model.extra_args).length > 0 && (
                           <div className="text-xs">
-                            <div className="font-semibold mb-1">额外参数：</div>
+                            <div className="font-semibold mb-1">
+                              {t('models.extraParameters')}
+                            </div>
                             <div className="space-y-1">
                               {Object.entries(
                                 model.extra_args as Record<string, unknown>,
@@ -321,7 +326,7 @@ export default function DynamicFormItemComponent({
               field.onChange([...field.value, { role: 'user', content: '' }]);
             }}
           >
-            添加回合
+            {t('common.addRound')}
           </Button>
         </div>
       );
