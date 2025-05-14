@@ -21,7 +21,7 @@ stages:
         options:
           - name: local-agent
             label:
-              en_US: Embedded Agent
+              en_US: Local Agent
               zh_Hans: 内置 Agent
           - name: dify-service-api
             label:
@@ -33,7 +33,7 @@ stages:
               zh_Hans: 阿里云百炼平台 API
   - name: local-agent
     label:
-      en_US: Embedded Agent
+      en_US: Local Agent
       zh_Hans: 内置 Agent
     description:
       en_US: Configure the embedded agent of the pipeline
