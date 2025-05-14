@@ -75,7 +75,7 @@ Directly use the released version to run, see the [Manual Deployment](https://do
 
 <img alt="bots" src="https://docs.langbot.app/webui/edit-pipeline.png" width="400px"/>
 
-<img alt="bots" src="https://docs.langbot.app/webui/plugin-market.png" width="500px"/>
+<img alt="bots" src="https://docs.langbot.app/webui/plugin-market.png" width="400px"/>
 
 <img alt="Reply Effect (with Internet Plugin)" src="https://docs.langbot.app/QChatGPT-0516.png" width="500px"/>
 
