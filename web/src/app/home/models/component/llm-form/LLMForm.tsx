@@ -132,38 +132,42 @@ export default function LLMForm({
   >([]);
 
   useEffect(() => {
-    initLLMModelFormComponent();
-    if (editMode && initLLMId) {
-      getLLMConfig(initLLMId).then((val) => {
-        form.setValue('name', val.name);
-        form.setValue('model_provider', val.model_provider);
-        form.setValue('url', val.url);
-        form.setValue('api_key', val.api_key);
-        form.setValue('abilities', val.abilities as ('vision' | 'func_call')[]);
-        // 转换extra_args为新格式
-        if (val.extra_args) {
-          const args = val.extra_args.map((arg) => {
-            const [key, value] = arg.split(':');
-            let type: 'string' | 'number' | 'boolean' = 'string';
-            if (!isNaN(Number(value))) {
-              type = 'number';
-            } else if (value === 'true' || value === 'false') {
-              type = 'boolean';
-            }
-            return {
-              key,
-              type,
-              value,
-            };
-          });
-          setExtraArgs(args);
-          form.setValue('extra_args', args);
-        }
-      });
-    } else {
-      form.reset();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    initLLMModelFormComponent().then(() => {
+      if (editMode && initLLMId) {
+        getLLMConfig(initLLMId).then((val) => {
+          form.setValue('name', val.name);
+          form.setValue('model_provider', val.model_provider);
+          form.setValue('url', val.url);
+          form.setValue('api_key', val.api_key);
+          form.setValue(
+            'abilities',
+            val.abilities as ('vision' | 'func_call')[],
+          );
+          // 转换extra_args为新格式
+          if (val.extra_args) {
+            const args = val.extra_args.map((arg) => {
+              const [key, value] = arg.split(':');
+              let type: 'string' | 'number' | 'boolean' = 'string';
+              if (!isNaN(Number(value))) {
+                type = 'number';
+              } else if (value === 'true' || value === 'false') {
+                type = 'boolean';
+              }
+              return {
+                key,
+                type,
+                value,
+              };
+            });
+            setExtraArgs(args);
+            form.setValue('extra_args', args);
+          }
+        });
+      } else {
+        form.reset();
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    });
   }, []);
 
   const addExtraArg = () => {
