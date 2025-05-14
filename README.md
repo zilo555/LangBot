@@ -69,6 +69,14 @@
 
 ## 📸 效果展示
 
+<img alt="bots" src="https://docs.langbot.app/webui/bot-page.png" width="400px"/>
+
+<img alt="bots" src="https://docs.langbot.app/webui/create-model.png" width="400px"/>
+
+<img alt="bots" src="https://docs.langbot.app/webui/edit-pipeline.png" width="400px"/>
+
+<img alt="bots" src="https://docs.langbot.app/webui/plugin-market.png" width="500px"/>
+
 <img alt="回复效果（带有联网插件）" src="https://docs.langbot.app/QChatGPT-0516.png" width="500px"/>
 
 - WebUI Demo: https://demo.langbot.dev/

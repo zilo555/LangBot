@@ -68,6 +68,14 @@ LangBotはBTPanelにリストされています。BTPanelをインストール�
 
 ## 📸 デモ
 
+<img alt="bots" src="https://docs.langbot.app/webui/bot-page.png" width="400px"/>
+
+<img alt="bots" src="https://docs.langbot.app/webui/create-model.png" width="400px"/>
+
+<img alt="bots" src="https://docs.langbot.app/webui/edit-pipeline.png" width="400px"/>
+
+<img alt="bots" src="https://docs.langbot.app/webui/plugin-market.png" width="500px"/>
+
 <img alt="返信効果（インターネットプラグイン付き）" src="https://docs.langbot.app/QChatGPT-0516.png" width="500px"/>
 
 - WebUIデモ: https://demo.langbot.dev/
