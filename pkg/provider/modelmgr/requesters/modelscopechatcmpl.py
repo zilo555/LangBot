@@ -27,7 +27,7 @@ class ModelScopeChatCompletions(requester.LLMAPIRequester):
     async def initialize(self):
         self.client = openai.AsyncClient(
             api_key='',
-            base_url=self.requester_cfg['base-url'],
+            base_url=self.requester_cfg['base_url'],
             timeout=self.requester_cfg['timeout'],
             http_client=httpx.AsyncClient(trust_env=True, timeout=self.requester_cfg['timeout']),
         )
@@ -125,14 +125,14 @@ class ModelScopeChatCompletions(requester.LLMAPIRequester):
         self,
         query: core_entities.Query,
         req_messages: list[dict],
-        use_model: entities.LLMModelInfo,
+        use_model: requester.RuntimeLLMModel,
         use_funcs: list[tools_entities.LLMFunction] = None,
         extra_args: dict[str, typing.Any] = {},
     ) -> llm_entities.Message:
         self.client.api_key = use_model.token_mgr.get_token()
 
         args = {}
-        args['model'] = use_model.name if use_model.model_name is None else use_model.model_name
+        args['model'] = use_model.model_entity.name
 
         if use_funcs:
             tools = await self.ap.tool_mgr.generate_tools_for_openai(use_funcs)
