@@ -141,6 +141,7 @@ const zhHans = {
     pluginNoConfig: '插件没有配置项。',
     deleting: '删除中...',
     deletePlugin: '删除插件',
+    cancel: '取消',
     saveConfig: '保存配置',
     saving: '保存中...',
     confirmDeletePlugin: '你确定要删除插件（{{author}}/{{name}}）吗？',
