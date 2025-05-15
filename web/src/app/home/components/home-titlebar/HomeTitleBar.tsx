@@ -1,4 +1,6 @@
+import { i18nObj } from '@/i18n/I18nProvider';
 import styles from './HomeTittleBar.module.css';
+import { I18nText } from '@/app/infra/entities/api';
 
 export default function HomeTitleBar({
   title,
@@ -7,7 +9,7 @@ export default function HomeTitleBar({
 }: {
   title: string;
   subtitle: string;
-  helpLink: string;
+  helpLink: I18nText;
 }) {
   return (
     <div className={`${styles.titleBarContainer}`}>
@@ -15,7 +17,7 @@ export default function HomeTitleBar({
       <div className={`${styles.subtitleText}`}>
         {subtitle}
         <span className={`${styles.helpLink}`}>
-          <a href={helpLink} target="_blank" rel="noopener noreferrer">
+          <a href={i18nObj(helpLink)} target="_blank" rel="noopener noreferrer">
             <svg
               className="w-[1rem] h-[1rem]"
               xmlns="http://www.w3.org/2000/svg"
