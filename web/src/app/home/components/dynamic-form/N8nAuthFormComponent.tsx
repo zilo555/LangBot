@@ -25,11 +25,11 @@ export default function N8nAuthFormComponent({
 }: {
   itemConfigList: IDynamicFormItemSchema[];
   onSubmit?: (val: object) => unknown;
-  initialValues?: Record<string, any>;
+  initialValues?: Record<string, string>;
 }) {
   // 当前选择的认证类型
   const [authType, setAuthType] = useState<string>(
-    initialValues?.['auth-type'] || 'none'
+    initialValues?.['auth-type'] || 'none',
   );
 
   // 根据 itemConfigList 动态生成 zod schema
@@ -111,7 +111,7 @@ export default function N8nAuthFormComponent({
           acc[item.name] = initialValues[item.name] ?? item.default;
           return acc;
         },
-        {} as Record<string, any>,
+        {} as Record<string, string>,
       );
 
       Object.entries(mergedValues).forEach(([key, value]) => {
@@ -119,7 +119,7 @@ export default function N8nAuthFormComponent({
       });
 
       // 更新认证类型
-      setAuthType(mergedValues['auth-type'] as string || 'none');
+      setAuthType((mergedValues['auth-type'] as string) || 'none');
     }
   }, [initialValues, form, itemConfigList]);
 
@@ -138,9 +138,9 @@ export default function N8nAuthFormComponent({
           acc[item.name] = formValues[item.name] ?? item.default;
           return acc;
         },
-        {} as Record<string, any>,
+        {} as Record<string, string>,
       );
-      
+
       onSubmit?.(finalValues);
     });
     return () => subscription.unsubscribe();
@@ -149,7 +149,11 @@ export default function N8nAuthFormComponent({
   // 根据认证类型过滤表单项
   const filteredConfigList = itemConfigList.filter((config) => {
     // 始终显示webhook-url、auth-type、timeout和output-key
-    if (['webhook-url', 'auth-type', 'timeout', 'output-key'].includes(config.name)) {
+    if (
+      ['webhook-url', 'auth-type', 'timeout', 'output-key'].includes(
+        config.name,
+      )
+    ) {
       return true;
     }
 

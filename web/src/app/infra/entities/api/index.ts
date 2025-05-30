@@ -203,10 +203,10 @@ export interface MarketPluginResponse {
 }
 
 interface GetPipelineConfig {
-  ai: {};
-  output: {};
-  safety: {};
-  trigger: {};
+  ai: object;
+  output: object;
+  safety: object;
+  trigger: object;
 }
 
 interface GetPipeline {
