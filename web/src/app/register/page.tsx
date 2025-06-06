@@ -60,21 +60,38 @@ export default function Register() {
   }, []);
 
   const judgeLanguage = () => {
-    const language = navigator.language;
-    if (language) {
-      let lang = 'zh-Hans';
-      if (language === 'zh-CN') {
-        lang = 'zh-Hans';
-      } else {
-        lang = 'en-US';
-      }
+    if (i18n.language === 'zh-CN' || i18n.language === 'zh-Hans') {
+      setCurrentLanguage('zh-Hans');
+      localStorage.setItem('langbot_language', 'zh-Hans');
+    } else {
+      setCurrentLanguage('en-US');
+      localStorage.setItem('langbot_language', 'en-US');
+    }
+    // check if the language is already set
+    const lang = localStorage.getItem('langbot_language');
+    console.log('lang: ', lang);
+    if (lang) {
       i18n.changeLanguage(lang);
       setCurrentLanguage(lang);
-      localStorage.setItem('langbot_language', lang);
+    } else {
+      const language = navigator.language;
+      if (language) {
+        let lang = 'zh-Hans';
+        if (language === 'zh-CN') {
+          lang = 'zh-Hans';
+        } else {
+          lang = 'en-US';
+        }
+        console.log('language: ', lang);
+        i18n.changeLanguage(lang);
+        setCurrentLanguage(lang);
+        localStorage.setItem('langbot_language', lang);
+      }
     }
   };
 
   const handleLanguageChange = (value: string) => {
+    console.log('handleLanguageChange: ', value);
     i18n.changeLanguage(value);
     setCurrentLanguage(value);
     localStorage.setItem('langbot_language', value);
