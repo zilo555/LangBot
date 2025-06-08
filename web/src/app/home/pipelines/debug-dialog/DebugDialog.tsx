@@ -227,7 +227,7 @@ export default function DebugDialog({
 
   const renderMessageContent = (message: Message) => {
     return (
-      <span className="text-base leading-relaxed align-middle">
+      <span className="text-base leading-relaxed align-middle whitespace-pre-wrap">
         {(message.message_chain as MessageComponent[]).map(
           (component, index) => {
             if (component.type === 'At') {
