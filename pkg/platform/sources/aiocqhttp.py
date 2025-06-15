@@ -7,7 +7,6 @@ import datetime
 import aiocqhttp
 
 from .. import adapter
-from ...core import app
 from ..types import message as platform_message
 from ..types import events as platform_events
 from ..types import entities as platform_entities
@@ -273,11 +272,9 @@ class AiocqhttpAdapter(adapter.MessagePlatformAdapter):
 
     config: dict
 
-    ap: app.Application
-
     on_websocket_connection_event_cache: typing.List[typing.Callable[[aiocqhttp.Event], None]] = []
 
-    def __init__(self, config: dict, ap: app.Application, logger: EventLogger):
+    def __init__(self, config: dict, logger: EventLogger):
         self.config = config
         self.logger = logger
 
@@ -287,7 +284,6 @@ class AiocqhttpAdapter(adapter.MessagePlatformAdapter):
 
         self.config['shutdown_trigger'] = shutdown_trigger_placeholder
 
-        self.ap = ap
         self.on_websocket_connection_event_cache = []
 
         if 'access-token' in config:
