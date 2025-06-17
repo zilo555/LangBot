@@ -23,7 +23,7 @@
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/RockChinQ/LangBot)](https://github.com/RockChinQ/LangBot/releases/latest)
 <img src="https://img.shields.io/badge/python-3.10 ~ 3.13 -blue.svg" alt="python">
 
-[简体中文](README.md) / [English](README_EN.md) / [日本語](README_JP.md) / (PR for your language)
+[简体中文](README_CN.md) / [English](README.md) / [日本語](README_JP.md) / (PR for your language)
 
 </div>
 
