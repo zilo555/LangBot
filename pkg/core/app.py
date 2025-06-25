@@ -27,6 +27,10 @@ from ..storage import mgr as storagemgr
 from ..utils import logcache
 from . import taskmgr
 from . import entities as core_entities
+from ...pkg.rag.knowledge import RAG_Manager
+
+
+
 
 
 class Application:
@@ -99,6 +103,8 @@ class Application:
 
     storage_mgr: storagemgr.StorageMgr = None
 
+    knowledge_base_service: RAG_Manager = None
+
     # ========= HTTP Services =========
 
     user_service: user_service.UserService = None
@@ -110,6 +116,7 @@ class Application:
     pipeline_service: pipeline_service.PipelineService = None
 
     bot_service: bot_service.BotService = None
+
 
     def __init__(self):
         pass
