@@ -21,7 +21,6 @@ class RAG_Manager:
         self.chunker = None
         self.embedder = None
         self.retriever = None
-        self.ap = app.Application
     
     async def initialize_system(self):
         await asyncio.to_thread(create_db_and_tables)
