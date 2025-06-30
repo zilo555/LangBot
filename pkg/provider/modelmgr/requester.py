@@ -60,8 +60,9 @@ class LLMAPIRequester(metaclass=abc.ABCMeta):
         model: RuntimeLLMModel,
         messages: typing.List[llm_entities.Message],
         funcs: typing.List[tools_entities.LLMFunction] = None,
+        stream: bool = False,
         extra_args: dict[str, typing.Any] = {},
-    ) -> llm_entities.Message:
+    ) -> llm_entities.Message | typing.AsyncGenerator[llm_entities.MessageChunk, None]:
         """调用API
 
         Args:
@@ -71,6 +72,6 @@ class LLMAPIRequester(metaclass=abc.ABCMeta):
             extra_args (dict[str, typing.Any], optional): 额外的参数. Defaults to {}.
 
         Returns:
-            llm_entities.Message: 返回消息对象
+            llm_entities.Message | typing.AsyncGenerator[llm_entities.MessageChunk, None]: 返回消息对象
         """
         pass
