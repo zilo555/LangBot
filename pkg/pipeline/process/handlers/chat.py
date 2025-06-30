@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from itertools import accumulate
 import typing
 import traceback
 
@@ -59,6 +60,8 @@ class ChatMessageHandler(handler.MessageHandler):
 
             text_length = 0
 
+            is_stream = query.adapter.is_stream_output_supported()
+
             try:
                 for r in runner_module.preregistered_runners:
                     if r.name == query.pipeline_config['ai']['runner']['runner']:
@@ -67,17 +70,38 @@ class ChatMessageHandler(handler.MessageHandler):
                 else:
                     raise ValueError(f'Request runner not found: {query.pipeline_config["ai"]["runner"]["runner"]}')
 
-                async for result in runner.run(query):
-                    query.resp_messages.append(result)
+                if is_stream:
+                    accumulated_messages = []
+                    async for result in runner.run(query):
+                        accumulated_messages.append(result)
+                        query.resp_messages.append(result)
 
-                    self.ap.logger.info(f'Response({query.query_id}): {self.cut_str(result.readable_str())}')
+                        self.ap.logger.info(f'对话({query.query_id})流式响应: {self.cut_str(result.readable_str())}')
 
-                    if result.content is not None:
-                        text_length += len(result.content)
+                        if result.content is not None:
+                            text_length += len(result.content)
 
-                    yield entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
+                            # current_chain = platform_message.MessageChain([])
+                            # for msg in accumulated_messages:
+                            #     if msg.content is not None:
+                            #         current_chain.append(platform_message.Plain(msg.content))
+                            # query.resp_message_chain = [current_chain]
+
+                        yield entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
+                else:
+
+                    async for result in runner.run(query):
+                        query.resp_messages.append(result)
+
+                        self.ap.logger.info(f'对话({query.query_id})响应: {self.cut_str(result.readable_str())}')
+
+                        if result.content is not None:
+                            text_length += len(result.content)
+
+                        yield entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
 
                 query.session.using_conversation.messages.append(query.user_message)
+                
                 query.session.using_conversation.messages.extend(query.resp_messages)
             except Exception as e:
                 self.ap.logger.error(f'Request failed({query.query_id}): {type(e).__name__} {str(e)}')
