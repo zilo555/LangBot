@@ -87,4 +87,4 @@ class RuntimeConnectionHandler(handler.Handler):
             timeout=10,
         )
 
-        return result['event_context']
+        return result

@@ -199,7 +199,7 @@ class RuntimePipeline:
 
             event_ctx_result = await self.ap.plugin_connector.handler.emit_event(event_ctx_data)
 
-            event_ctx.update(**event_ctx_result)
+            event_ctx = event_context.EventContext.parse_from_dict(event_ctx_result['event_context'])
 
             if event_ctx.is_prevented_default():
                 return
