@@ -71,23 +71,18 @@ class ChatMessageHandler(handler.MessageHandler):
                     raise ValueError(f'Request runner not found: {query.pipeline_config["ai"]["runner"]["runner"]}')
 
                 if is_stream:
-                    accumulated_messages = []
-                    async for result in runner.run(query):
-                        accumulated_messages.append(result)
-                        query.resp_messages.append(result)
+                    async for results in runner.run(query):
+                        async for result in results:
 
-                        self.ap.logger.info(f'对话({query.query_id})流式响应: {self.cut_str(result.readable_str())}')
+                            query.resp_messages.append(result)
 
-                        if result.content is not None:
-                            text_length += len(result.content)
+                            self.ap.logger.info(f'对话({query.query_id})流式响应: {self.cut_str(result.readable_str())}')
 
-                            # current_chain = platform_message.MessageChain([])
-                            # for msg in accumulated_messages:
-                            #     if msg.content is not None:
-                            #         current_chain.append(platform_message.Plain(msg.content))
-                            # query.resp_message_chain = [current_chain]
+                            if result.content is not None:
+                                text_length += len(result.content)
+                        
+                            yield entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
 
-                        yield entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
                 else:
 
                     async for result in runner.run(query):

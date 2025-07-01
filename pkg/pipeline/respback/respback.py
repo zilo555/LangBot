@@ -7,6 +7,8 @@ import asyncio
 from ...platform.types import events as platform_events
 from ...platform.types import message as platform_message
 
+from ...provider import entities as llm_entities
+
 from .. import stage, entities
 from ...core import entities as core_entities
 
@@ -38,17 +40,10 @@ class SendResponseBackStage(stage.PipelineStage):
 
         has_chunks = any(isinstance(msg, llm_entities.MessageChunk) for msg in query.resp_messages)
         if has_chunks and hasattr(query.adapter,'reply_message_chunk'):
-            
-            async def message_generator():
-                for msg in query.resp_messages:
-                    if isinstance(msg, llm_entities.MessageChunk):
-                        yield msg.content
-                    else:
-                        yield msg.content
             await query.adapter.reply_message_chunk(
                 message_source=query.message_event,
-                message_id=query.message_event.message_id,
-                message_generator=message_generator(),
+                message_id=query.query_id,
+                message_generator=query.resp_message_chain[-1],
                 quote_origin=quote_origin,
             )
         else:
@@ -58,10 +53,10 @@ class SendResponseBackStage(stage.PipelineStage):
                 quote_origin=quote_origin,
             )
 
-        await query.adapter.reply_message(
-            message_source=query.message_event,
-            message=query.resp_message_chain[-1],
-            quote_origin=quote_origin,
-        )
+        # await query.adapter.reply_message(
+        #     message_source=query.message_event,
+        #     message=query.resp_message_chain[-1],
+        #     quote_origin=quote_origin,
+        # )
 
         return entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
