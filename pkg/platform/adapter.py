@@ -49,7 +49,6 @@ class MessagePlatformAdapter(metaclass=abc.ABCMeta):
     async def reply_message(
         self,
         message_source: platform_events.MessageEvent,
-        message_id: int,
         message: platform_message.MessageChain,
         quote_origin: bool = False,
     ):
@@ -57,7 +56,6 @@ class MessagePlatformAdapter(metaclass=abc.ABCMeta):
 
         Args:
             message_source (platform.types.MessageEvent): 消息源事件
-            message_id (int): 消息ID
             message (platform.types.MessageChain): 消息链
             quote_origin (bool, optional): 是否引用原消息. Defaults to False.
         """
@@ -66,12 +64,14 @@ class MessagePlatformAdapter(metaclass=abc.ABCMeta):
     async def reply_message_chunk(
         self,
         message_source: platform_events.MessageEvent, 
+        message_id: int,
         message: platform_message.MessageChain,
         quote_origin: bool = False,
         ):
         """回复消息（流式输出）
         Args:
             message_source (platform.types.MessageEvent): 消息源事件
+            message_id (int): 消息ID
             message (platform.types.MessageChain): 消息链
             quote_origin (bool, optional): 是否引用原消息. Defaults to False.
         """
