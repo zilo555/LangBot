@@ -15,6 +15,8 @@ from ..discover import engine
 
 from ..entity.persistence import bot as persistence_bot
 
+from ..entity.errors import platform as platform_errors
+
 from .logger import EventLogger
 
 # 处理 3.4 移除了 YiriMirai 之后，插件的兼容性问题
@@ -118,8 +120,10 @@ class RuntimeBot:
                 if isinstance(e, asyncio.CancelledError):
                     self.task_context.set_current_action('Exited.')
                     return
+
+                traceback_str = traceback.format_exc()
                 self.task_context.set_current_action('Exited with error.')
-                await self.logger.error(f'平台适配器运行出错:\n{e}\n{traceback.format_exc()}')
+                await self.logger.error(f'平台适配器运行出错:\n{e}\n{traceback_str}')
 
         self.task_wrapper = self.ap.task_mgr.create_task(
             exception_wrapper(),
@@ -205,7 +209,12 @@ class PlatformManager:
 
         for bot in bots:
             # load all bots here, enable or disable will be handled in runtime
-            await self.load_bot(bot)
+            try:
+                await self.load_bot(bot)
+            except platform_errors.AdapterNotFoundError as e:
+                self.ap.logger.warning(f'Adapter {e.adapter_name} not found, skipping bot {bot.uuid}')
+            except Exception as e:
+                self.ap.logger.error(f'Failed to load bot {bot.uuid}: {e}\n{traceback.format_exc()}')
 
     async def load_bot(
         self,
@@ -218,6 +227,9 @@ class PlatformManager:
             bot_entity = persistence_bot.Bot(**bot_entity)
 
         logger = EventLogger(name=f'platform-adapter-{bot_entity.name}', ap=self.ap)
+
+        if bot_entity.adapter not in self.adapter_dict:
+            raise platform_errors.AdapterNotFoundError(bot_entity.adapter)
 
         adapter_inst = self.adapter_dict[bot_entity.adapter](
             bot_entity.adapter_config,
