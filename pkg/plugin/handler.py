@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import typing
 from typing import Any
 
 import sqlalchemy
@@ -22,8 +23,13 @@ class RuntimeConnectionHandler(handler.Handler):
 
     ap: app.Application
 
-    def __init__(self, connection: Connection, ap: app.Application):
-        super().__init__(connection)
+    def __init__(
+        self,
+        connection: Connection,
+        disconnect_callback: typing.Callable[[], typing.Coroutine[typing.Any, typing.Any, bool]],
+        ap: app.Application,
+    ):
+        super().__init__(connection, disconnect_callback)
         self.ap = ap
 
         @self.action(RuntimeToLangBotAction.GET_PLUGIN_SETTINGS)

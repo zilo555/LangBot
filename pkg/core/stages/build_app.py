@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 
 from .. import stage, app
 from ...utils import version, proxy, announce
@@ -59,7 +60,11 @@ class BuildAppStage(stage.BootingStage):
         ap.persistence_mgr = persistence_mgr_inst
         await persistence_mgr_inst.initialize()
 
-        plugin_connector_inst = plugin_connector.PluginRuntimeConnector(ap)
+        async def runtime_disconnect_callback(connector: plugin_connector.PluginRuntimeConnector) -> None:
+            await asyncio.sleep(3)
+            await plugin_connector_inst.initialize()
+
+        plugin_connector_inst = plugin_connector.PluginRuntimeConnector(ap, runtime_disconnect_callback)
         await plugin_connector_inst.initialize()
         ap.plugin_connector = plugin_connector_inst
 
