@@ -108,7 +108,7 @@ class ResponseWrapper(stage.PipelineStage):
                         )
 
                         if query.pipeline_config['output']['misc']['track-function-calls']:
-                            event_ctx = await self.ap.plugin_mgr.emit_event(
+                            event_ctx = event_context.EventContext(
                                 event=events.NormalMessageResponded(
                                     launcher_type=query.launcher_type.value,
                                     launcher_id=query.launcher_id,
@@ -123,6 +123,10 @@ class ResponseWrapper(stage.PipelineStage):
                                     query=query,
                                 )
                             )
+
+                            event_ctx_result = await self.ap.plugin_connector.handler.emit_event(serialized_event_ctx)
+
+                            event_ctx = event_context.EventContext.parse_from_dict(event_ctx_result['event_context'])
 
                             if event_ctx.is_prevented_default():
                                 yield entities.StageProcessResult(
