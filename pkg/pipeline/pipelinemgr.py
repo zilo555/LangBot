@@ -90,7 +90,7 @@ class RuntimePipeline:
             # 处理str类型
 
             if isinstance(result.user_notice, str):
-                result.user_notice = platform_message.MessageChain(platform_message.Plain(result.user_notice))
+                result.user_notice = platform_message.MessageChain([platform_message.Plain(text=result.user_notice)])
             elif isinstance(result.user_notice, list):
                 result.user_notice = platform_message.MessageChain(*result.user_notice)
 

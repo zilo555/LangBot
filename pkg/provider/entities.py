@@ -96,7 +96,7 @@ class Message(pydantic.BaseModel):
         if self.content is None:
             return None
         elif isinstance(self.content, str):
-            return platform_message.MessageChain([platform_message.Plain(prefix_text + self.content)])
+            return platform_message.MessageChain([platform_message.Plain(text=(prefix_text + self.content))])
         elif isinstance(self.content, list):
             mc = []
             for ce in self.content:

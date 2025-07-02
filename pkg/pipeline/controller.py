@@ -35,9 +35,9 @@ class Controller:
                         session = await self.ap.sess_mgr.get_session(query)
                         self.ap.logger.debug(f'Checking query {query} session {session}')
 
-                        if not session.semaphore.locked():
+                        if not session._semaphore.locked():
                             selected_query = query
-                            await session.semaphore.acquire()
+                            await session._semaphore.acquire()
 
                             break
 
@@ -62,7 +62,7 @@ class Controller:
                                     await pipeline.run(selected_query)
 
                         async with self.ap.query_pool:
-                            (await self.ap.sess_mgr.get_session(selected_query)).semaphore.release()
+                            (await self.ap.sess_mgr.get_session(selected_query))._semaphore.release()
                             # 通知其他协程，有新的请求可以处理了
                             self.ap.query_pool.condition.notify_all()
 
