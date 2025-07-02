@@ -7,7 +7,6 @@ from .. import stage
 
 import langbot_plugin.api.entities.builtin.platform.message as platform_message
 import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
-import langbot_plugin.api.entities.context as event_context
 import langbot_plugin.api.entities.events as events
 
 
@@ -59,27 +58,21 @@ class ResponseWrapper(stage.PipelineStage):
                         reply_text = str(result.get_content_platform_message_chain())
 
                         # ============= 触发插件事件 ===============
-                        event_ctx = event_context.EventContext(
-                            event=events.NormalMessageResponded(
-                                launcher_type=query.launcher_type.value,
-                                launcher_id=query.launcher_id,
-                                sender_id=query.sender_id,
-                                session=session,
-                                prefix='',
-                                response_text=reply_text,
-                                finish_reason='stop',
-                                funcs_called=[fc.function.name for fc in result.tool_calls]
-                                if result.tool_calls is not None
-                                else [],
-                                query=query,
-                            )
+                        event = events.NormalMessageResponded(
+                            launcher_type=query.launcher_type.value,
+                            launcher_id=query.launcher_id,
+                            sender_id=query.sender_id,
+                            session=session,
+                            prefix='',
+                            response_text=reply_text,
+                            finish_reason='stop',
+                            funcs_called=[fc.function.name for fc in result.tool_calls]
+                            if result.tool_calls is not None
+                            else [],
+                            query=query,
                         )
 
-                        serialized_event_ctx = event_ctx.model_dump(serialize_as_any=True)
-
-                        event_ctx_result = await self.ap.plugin_connector.handler.emit_event(serialized_event_ctx)
-
-                        event_ctx = event_context.EventContext.parse_from_dict(event_ctx_result['event_context'])
+                        event_ctx = await self.ap.plugin_connector.emit_event(event)
 
                         if event_ctx.is_prevented_default():
                             yield entities.StageProcessResult(
@@ -108,25 +101,21 @@ class ResponseWrapper(stage.PipelineStage):
                         )
 
                         if query.pipeline_config['output']['misc']['track-function-calls']:
-                            event_ctx = event_context.EventContext(
-                                event=events.NormalMessageResponded(
-                                    launcher_type=query.launcher_type.value,
-                                    launcher_id=query.launcher_id,
-                                    sender_id=query.sender_id,
-                                    session=session,
-                                    prefix='',
-                                    response_text=reply_text,
-                                    finish_reason='stop',
-                                    funcs_called=[fc.function.name for fc in result.tool_calls]
-                                    if result.tool_calls is not None
-                                    else [],
-                                    query=query,
-                                )
+                            event = events.NormalMessageResponded(
+                                launcher_type=query.launcher_type.value,
+                                launcher_id=query.launcher_id,
+                                sender_id=query.sender_id,
+                                session=session,
+                                prefix='',
+                                response_text=reply_text,
+                                finish_reason='stop',
+                                funcs_called=[fc.function.name for fc in result.tool_calls]
+                                if result.tool_calls is not None
+                                else [],
+                                query=query,
                             )
 
-                            event_ctx_result = await self.ap.plugin_connector.handler.emit_event(serialized_event_ctx)
-
-                            event_ctx = event_context.EventContext.parse_from_dict(event_ctx_result['event_context'])
+                            event_ctx = await self.ap.plugin_connector.emit_event(event)
 
                             if event_ctx.is_prevented_default():
                                 yield entities.StageProcessResult(

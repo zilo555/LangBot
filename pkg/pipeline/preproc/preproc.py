@@ -7,7 +7,6 @@ from langbot_plugin.api.entities.builtin.provider import message as provider_mes
 import langbot_plugin.api.entities.events as events
 import langbot_plugin.api.entities.builtin.platform.message as platform_message
 import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
-import langbot_plugin.api.entities.context as event_context
 
 
 @stage.stage_class('PreProcessor')
@@ -109,20 +108,14 @@ class PreProcessor(stage.PipelineStage):
         query.user_message = provider_message.Message(role='user', content=content_list)
         # =========== 触发事件 PromptPreProcessing
 
-        event_ctx = event_context.EventContext(
-            event=events.PromptPreProcessing(
-                session_name=f'{query.session.launcher_type.value}_{query.session.launcher_id}',
-                default_prompt=query.prompt.messages,
-                prompt=query.messages,
-                query=query,
-            )
+        event = events.PromptPreProcessing(
+            session_name=f'{query.session.launcher_type.value}_{query.session.launcher_id}',
+            default_prompt=query.prompt.messages,
+            prompt=query.messages,
+            query=query,
         )
 
-        event_ctx_result = await self.ap.plugin_connector.handler.emit_event(
-            event_ctx.model_dump(serialize_as_any=True)
-        )
-
-        event_ctx = event_context.EventContext.parse_from_dict(event_ctx_result['event_context'])
+        event_ctx = await self.ap.plugin_connector.emit_event(event)
 
         query.prompt.messages = event_ctx.event.default_prompt
         query.messages = event_ctx.event.prompt

@@ -16,7 +16,6 @@ from ..utils import importutil
 
 import langbot_plugin.api.entities.builtin.provider.session as provider_session
 import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
-import langbot_plugin.api.entities.context as event_context
 
 from . import (
     resprule,
@@ -191,15 +190,7 @@ class RuntimePipeline:
                 message_chain=query.message_chain,
             )
 
-            event_ctx = event_context.EventContext(
-                event=event_obj,
-            )
-
-            event_ctx_data = event_ctx.model_dump(serialize_as_any=True)
-
-            event_ctx_result = await self.ap.plugin_connector.handler.emit_event(event_ctx_data)
-
-            event_ctx = event_context.EventContext.parse_from_dict(event_ctx_result['event_context'])
+            event_ctx = await self.ap.plugin_connector.emit_event(event_obj)
 
             if event_ctx.is_prevented_default():
                 return

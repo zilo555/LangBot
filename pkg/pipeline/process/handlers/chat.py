@@ -14,7 +14,6 @@ from ....utils import importutil
 from ....provider import runners
 import langbot_plugin.api.entities.builtin.provider.session as provider_session
 import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
-import langbot_plugin.api.entities.context as event_context
 
 
 importutil.import_modules_in_pkg(runners)
@@ -36,21 +35,15 @@ class ChatMessageHandler(handler.MessageHandler):
             else events.GroupNormalMessageReceived
         )
 
-        event_ctx = event_context.EventContext(
-            event=event_class(
-                launcher_type=query.launcher_type.value,
-                launcher_id=query.launcher_id,
-                sender_id=query.sender_id,
-                text_message=str(query.message_chain),
-                query=query,
-            )
+        event = event_class(
+            launcher_type=query.launcher_type.value,
+            launcher_id=query.launcher_id,
+            sender_id=query.sender_id,
+            text_message=str(query.message_chain),
+            query=query,
         )
 
-        event_ctx_result = await self.ap.plugin_connector.handler.emit_event(
-            event_ctx.model_dump(serialize_as_any=True)
-        )
-
-        event_ctx = event_context.EventContext.parse_from_dict(event_ctx_result['event_context'])
+        event_ctx = await self.ap.plugin_connector.emit_event(event)
 
         if event_ctx.is_prevented_default():
             if event_ctx.event.reply is not None:

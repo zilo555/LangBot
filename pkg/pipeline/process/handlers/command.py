@@ -8,7 +8,6 @@ import langbot_plugin.api.entities.builtin.provider.message as provider_message
 import langbot_plugin.api.entities.builtin.platform.message as platform_message
 import langbot_plugin.api.entities.builtin.provider.session as provider_session
 import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
-import langbot_plugin.api.entities.context as event_context
 import langbot_plugin.api.entities.events as events
 
 
@@ -34,24 +33,18 @@ class CommandHandler(handler.MessageHandler):
             else events.GroupCommandSent
         )
 
-        event_ctx = event_context.EventContext(
-            event=event_class(
-                launcher_type=query.launcher_type.value,
-                launcher_id=query.launcher_id,
-                sender_id=query.sender_id,
-                command=spt[0],
-                params=spt[1:] if len(spt) > 1 else [],
-                text_message=str(query.message_chain),
-                is_admin=(privilege == 2),
-                query=query,
-            )
+        event = event_class(
+            launcher_type=query.launcher_type.value,
+            launcher_id=query.launcher_id,
+            sender_id=query.sender_id,
+            command=spt[0],
+            params=spt[1:] if len(spt) > 1 else [],
+            text_message=str(query.message_chain),
+            is_admin=(privilege == 2),
+            query=query,
         )
 
-        event_ctx_result = await self.ap.plugin_connector.handler.emit_event(
-            event_ctx.model_dump(serialize_as_any=True)
-        )
-
-        event_ctx = event_context.EventContext.parse_from_dict(event_ctx_result['event_context'])
+        event_ctx = await self.ap.plugin_connector.emit_event(event)
 
         if event_ctx.is_prevented_default():
             if event_ctx.event.reply is not None:

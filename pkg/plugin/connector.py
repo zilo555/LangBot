@@ -66,4 +66,12 @@ class PluginRuntimeConnector:
         self,
         event: events.BaseEventModel,
     ) -> context.EventContext:
-        pass
+        event_ctx = context.EventContext(
+            event=event,
+        )
+
+        event_ctx_result = await self.handler.emit_event(event_ctx.model_dump(serialize_as_any=True))
+
+        event_ctx = context.EventContext.parse_from_dict(event_ctx_result['event_context'])
+
+        return event_ctx
