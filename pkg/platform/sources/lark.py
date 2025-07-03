@@ -346,6 +346,8 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
     
     message_id_to_card_id: typing.Dict[str, typing.Tuple[str, int]]
 
+    card_id_dict: dict[str, str]
+
     def __init__(self, config: dict, ap: app.Application, logger: EventLogger):
         self.config = config
         self.ap = ap
@@ -353,6 +355,7 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
         self.quart_app = quart.Quart(__name__)
         self.listeners = {}
         self.message_id_to_card_id = {}
+        self.card_id_dict = {}
 
         @self.quart_app.route('/lark/callback', methods=['POST'])
         async def lark_callback():
@@ -397,11 +400,69 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
                 await self.logger.error(f"Error in lark callback: {traceback.format_exc()}")
                 return {'code': 500, 'message': 'error'}
 
+        
+        def is_stream_output_supported() -> bool:
+            is_stream = False
+            if self.config.get("",None):
+                is_stream = True
+
+            return is_stream
+        
+        async def create_card_id():
+            try:
+                is_stream = is_stream_output_supported()
+                if is_stream:
+                    self.ap.logger.debug('飞书支持stream输出,创建卡片......')
+
+                    card_id = ''
+                    if self.card_id_dict:
+                        card_id = [k for k,v in self.card_id_dict.items() if (v+datetime.timedelta(days=14))< datetime.datetime.now()][0]
+
+                    if self.card_id_dict is None or card_id == '':
+                        # content = { 
+                        #     "type": "card_json",
+                        #     "data": {"schema":"2.0","header":{"title":{"content":"bot","tag":"plain_text"}},"body":{"elements":[{"tag":"markdown","content":""}]}}
+                        # }
+                        card_data = {"schema":"2.0","header":{"title":{"content":"bot","tag":"plain_text"}},
+                        "body":{"elements":[{"tag":"markdown","content":""}]},"config": {"streaming_mode": True,
+                         "streaming_config": {"print_strategy": "fast"}}}
+
+                        request: CreateCardRequest = (
+                                CreateCardRequest.builder()
+                                .request_body(
+                                    CreateCardRequestBody.builder()
+                                    .type("card_json")
+                                    .data(json.dumps(card_data))
+                                    .build()
+                                )
+                                )
+                        # 发起请求
+                        response: CreateCardResponse = await self.api_client.im.v1.card.create(request)
+
+
+                        # 处理失败返回
+                        if not response.success():
+                            raise Exception(
+                                f"client.cardkit.v1.card.create failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}, resp: \n{json.dumps(json.loads(response.raw.content), indent=4, ensure_ascii=False)}")
+
+                        self.ap.logger.debug(f'飞书卡片创建成功,卡片ID: {response.data.card_id}')
+                        self.card_id_dict[response.data.card_id] = datetime.datetime.now()
+
+                        card_id = response.data.card_id
+                return card_id
+                    
+            except Exception as e:
+                self.ap.logger.error(f'飞书卡片创建失败,错误信息: {e}')
+                    
+
+
+
         async def on_message(event: lark_oapi.im.v1.P2ImMessageReceiveV1):
-            if self.config['enable-card-reply'] and event.event.message.message_id not in self.message_id_to_card_id:
+            if is_stream_output_supported():
                 self.ap.logger.debug('卡片回复模式开启')
                 # 开启卡片回复模式. 这里可以实现飞书一发消息，马上创建卡片进行回复"思考中..."
-                reply_message_id = await self.create_message_card(event.event.message.message_id)
+                card_id = await create_card_id()
+                reply_message_id = await self.create_message_card(card_id, event.event.message.message_id)
                 self.message_id_to_card_id[event.event.message.message_id] = (reply_message_id, time.time())
 
                 if len(self.message_id_to_card_id) > CARD_ID_CACHE_SIZE:
@@ -430,7 +491,7 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
     async def send_message(self, target_type: str, target_id: str, message: platform_message.MessageChain):
         pass
 
-    async def create_message_card(self, message_id: str) -> str:
+    async def create_message_card(self, card_id: str, message_id: str) -> str:
         """
         创建卡片消息。
         使用卡片消息是因为普通消息更新次数有限制，而大模型流式返回结果可能很多而超过限制，而飞书卡片没有这个限制
@@ -440,7 +501,7 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
         # 发消息马上就会回复显示初始化的content信息，即思考中
         content = {
             'type': 'template',
-            'data': {'template_id': self.config['card_template_id'], 'template_variable': {'content': 'Thinking...'}},
+            'data': {'template_id': card_id, 'template_variable': {'content': 'Thinking...'}},
         }
         request: ReplyMessageRequest = (
             ReplyMessageRequest.builder()
@@ -467,12 +528,40 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
         message: platform_message.MessageChain,
         quote_origin: bool = False,
     ):
-        if self.config['enable-card-reply']:
-            await self.reply_card_message(message_source, message, quote_origin)
-        else:
-            await self.reply_normal_message(message_source, message, quote_origin)
+        # 不再需要了，因为message_id已经被包含到message_chain中
+        # lark_event = await self.event_converter.yiri2target(message_source)
+        lark_message = await self.message_converter.yiri2target(message, self.api_client)
 
-    async def reply_card_message(
+        final_content = {
+            'zh_Hans': {
+                'title': '',
+                'content': lark_message,
+            },
+        }
+
+        request: ReplyMessageRequest = (
+            ReplyMessageRequest.builder()
+            .message_id(message_source.message_chain.message_id)
+            .request_body(
+                ReplyMessageRequestBody.builder()
+                .content(json.dumps(final_content))
+                .msg_type('post')
+                .reply_in_thread(False)
+                .uuid(str(uuid.uuid4()))
+                .build()
+            )
+            .build()
+        )
+
+        response: ReplyMessageResponse = await self.api_client.im.v1.message.areply(request)
+
+        if not response.success():
+            raise Exception(
+                f'client.im.v1.message.reply failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}, resp: \n{json.dumps(json.loads(response.raw.content), indent=4, ensure_ascii=False)}'
+            )
+
+
+    async def reply_message_chunk(
         self,
         message_source: platform_events.MessageEvent,
         message: platform_message.MessageChain,
@@ -512,43 +601,12 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
             )
             return
 
-    async def reply_normal_message(
-        self,
-        message_source: platform_events.MessageEvent,
-        message: platform_message.MessageChain,
-        quote_origin: bool = False,
-    ):
-        # 不再需要了，因为message_id已经被包含到message_chain中
-        # lark_event = await self.event_converter.yiri2target(message_source)
-        lark_message = await self.message_converter.yiri2target(message, self.api_client)
 
-        final_content = {
-            'zh_Hans': {
-                'title': '',
-                'content': lark_message,
-            },
-        }
 
-        request: ReplyMessageRequest = (
-            ReplyMessageRequest.builder()
-            .message_id(message_source.message_chain.message_id)
-            .request_body(
-                ReplyMessageRequestBody.builder()
-                .content(json.dumps(final_content))
-                .msg_type('post')
-                .reply_in_thread(False)
-                .uuid(str(uuid.uuid4()))
-                .build()
-            )
-            .build()
-        )
 
-        response: ReplyMessageResponse = await self.api_client.im.v1.message.areply(request)
 
-        if not response.success():
-            raise Exception(
-                f'client.im.v1.message.reply failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}, resp: \n{json.dumps(json.loads(response.raw.content), indent=4, ensure_ascii=False)}'
-            )
+
+
 
     async def is_muted(self, group_id: int) -> bool:
         return False
