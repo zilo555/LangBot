@@ -25,6 +25,8 @@ class MessagePlatformAdapter(metaclass=abc.ABCMeta):
 
     logger: EventLogger
 
+    is_stream: bool
+
     def __init__(self, config: dict, ap: app.Application, logger: EventLogger):
         """初始化适配器
 
@@ -67,6 +69,7 @@ class MessagePlatformAdapter(metaclass=abc.ABCMeta):
         message_id: int,
         message: platform_message.MessageChain,
         quote_origin: bool = False,
+        is_final: bool = False,
         ):
         """回复消息（流式输出）
         Args:
@@ -114,6 +117,7 @@ class MessagePlatformAdapter(metaclass=abc.ABCMeta):
 
     async def is_stream_output_supported(self) -> bool:
         """是否支持流式输出"""
+        self.is_stream = False
         return False
 
     async def kill(self) -> bool:

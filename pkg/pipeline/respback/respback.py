@@ -3,6 +3,7 @@ from __future__ import annotations
 import random
 import asyncio
 
+from typing_inspection.typing_objects import is_final
 
 from ...platform.types import events as platform_events
 from ...platform.types import message as platform_message
@@ -39,12 +40,16 @@ class SendResponseBackStage(stage.PipelineStage):
         quote_origin = query.pipeline_config['output']['misc']['quote-origin']
 
         has_chunks = any(isinstance(msg, llm_entities.MessageChunk) for msg in query.resp_messages)
+        print(has_chunks)
         if has_chunks and hasattr(query.adapter,'reply_message_chunk'):
+            is_final = [msg.is_final for msg in query.resp_messages][0]
+            print(is_final)
             await query.adapter.reply_message_chunk(
                 message_source=query.message_event,
-                message_id=query.query_id,
-                message_generator=query.resp_message_chain[-1],
+                message_id=query.message_event.message_chain.message_id,
+                message=query.resp_message_chain[-1],
                 quote_origin=quote_origin,
+                is_final=is_final,
             )
         else:
             await query.adapter.reply_message(

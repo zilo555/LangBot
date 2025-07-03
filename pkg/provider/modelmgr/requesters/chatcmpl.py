@@ -38,6 +38,15 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
     ) -> chat_completion.ChatCompletion:
         return await self.client.chat.completions.create(**args, extra_body=extra_body)
 
+    async def _req_stream(
+        self,
+        args: dict,
+        extra_body: dict = {},
+    ) -> chat_completion.ChatCompletion:
+
+        async for chunk in await self.client.chat.completions.create(**args, extra_body=extra_body):
+            yield chunk
+
     async def _make_msg(
         self,
         chat_completion: chat_completion.ChatCompletion,
@@ -62,9 +71,19 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         self,
         chat_completion: chat_completion.ChatCompletion,
     ) -> llm_entities.MessageChunk:
-        choice = chat_completion.choices[0]
-        delta = choice.delta.model_dump()
+
+        # 处理流式chunk和完整响应的差异
+        # print(chat_completion.choices[0])
+        if hasattr(chat_completion, 'choices'):
+            # 完整响应模式
+            choice = chat_completion.choices[0]
+            delta = choice.delta.model_dump() if hasattr(choice, 'delta') else choice.message.model_dump()
+        else:
+            # 流式chunk模式
+            delta = chat_completion.delta.model_dump() if hasattr(chat_completion, 'delta') else {}
+
         # 确保 role 字段存在且不为 None
+        # print(delta)
         if 'role' not in delta or delta['role'] is None:
             delta['role'] = 'assistant'
 
@@ -78,8 +97,8 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         message = llm_entities.MessageChunk(**delta)
 
         return message
-    
-    async def _closure(
+
+    async def _closure_stream(
         self,
         query: core_entities.Query,
         req_messages: list[dict],
@@ -87,7 +106,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         use_funcs: list[tools_entities.LLMFunction] = None,
         stream: bool = False,
         extra_args: dict[str, typing.Any] = {},
-    ) -> llm_entities.Message:
+    ) -> llm_entities.Message | typing.AsyncGenerator[llm_entities.MessageChunk, None]:
         self.client.api_key = use_model.token_mgr.get_token()
 
         args = {}
@@ -115,36 +134,76 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
 
         if stream:
             current_content = ''
-            async for chunk in await self._req(args, extra_body=extra_args):
+            args["stream"] = True
+            async for chunk in self._req_stream(args, extra_body=extra_args):
+                # print(chunk)
 
                 # 处理流式消息
-                delta_message = await self._make_msg_chunk(
-                    chat_completion=chunk,
-                )
+                delta_message = await self._make_msg_chunk(chunk)
                 if delta_message.content:
                     current_content += delta_message.content
+                    delta_message.content = current_content
+                    print(current_content)
                     delta_message.all_content = current_content
-                
-                # 检查是否为最后一个块
-                if chunk.choices[0].finish_reason is not None:
+
+                # # 检查是否为最后一个块
+                # if chunk.finish_reason is not None:
+                #     delta_message.is_final = True
+                #
+                # yield delta_message
+                # 检查结束标志
+                chunk_choices = getattr(chunk, 'choices', None)
+                if chunk_choices and getattr(chunk_choices[0], 'finish_reason', None):
                     delta_message.is_final = True
 
-                yield delta_message  
-            return 
-        
-        else:
+                yield delta_message
+                # return
 
-            # 非流式请求
-            resp = await self._req(args, extra_body=extra_args)
-            # 处理请求结果
-            # 发送请求
-            resp = await self._req(args, extra_body=extra_args)
+    
+    async def _closure(
+        self,
+        query: core_entities.Query,
+        req_messages: list[dict],
+        use_model: requester.RuntimeLLMModel,
+        use_funcs: list[tools_entities.LLMFunction] = None,
+        stream: bool = False,
+        extra_args: dict[str, typing.Any] = {},
+    ) -> llm_entities.Message | typing.AsyncGenerator[llm_entities.MessageChunk, None]:
+        self.client.api_key = use_model.token_mgr.get_token()
 
-            # 处理请求结果
-            message = await self._make_msg(resp)
+        args = {}
+        args['model'] = use_model.model_entity.name
 
-            return message
-           
+        if use_funcs:
+            tools = await self.ap.tool_mgr.generate_tools_for_openai(use_funcs)
+
+            if tools:
+                args['tools'] = tools
+
+        # 设置此次请求中的messages
+        messages = req_messages.copy()
+
+        # 检查vision
+        for msg in messages:
+            if 'content' in msg and isinstance(msg['content'], list):
+                for me in msg['content']:
+                    if me['type'] == 'image_base64':
+                        me['image_url'] = {'url': me['image_base64']}
+                        me['type'] = 'image_url'
+                        del me['image_base64']
+
+        args['messages'] = messages
+
+
+
+        # 发送请求
+
+        resp = await self._req(args, extra_body=extra_args)
+        # 处理请求结果
+        message = await self._make_msg(resp)
+
+
+        return message
 
          
 
@@ -171,8 +230,66 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
             req_messages.append(msg_dict)
 
         try:
+
             if stream:
-                async for item in self._closure(
+                async for item in self._closure_stream(
+                    query=query,
+                    req_messages=req_messages,
+                    use_model=model,
+                    use_funcs=funcs,
+                    stream=stream,
+                    extra_args=extra_args,
+                ):
+                    return item
+            else:
+                print(req_messages)
+                msg = await self._closure(
+                    query=query,
+                    req_messages=req_messages,
+                    use_model=model,
+                    use_funcs=funcs,
+                    extra_args=extra_args,
+                )
+                return msg
+        except asyncio.TimeoutError:
+            raise errors.RequesterError('请求超时')
+        except openai.BadRequestError as e:
+            if 'context_length_exceeded' in e.message:
+                raise errors.RequesterError(f'上文过长，请重置会话: {e.message}')
+            else:
+                raise errors.RequesterError(f'请求参数错误: {e.message}')
+        except openai.AuthenticationError as e:
+            raise errors.RequesterError(f'无效的 api-key: {e.message}')
+        except openai.NotFoundError as e:
+            raise errors.RequesterError(f'请求路径错误: {e.message}')
+        except openai.RateLimitError as e:
+            raise errors.RequesterError(f'请求过于频繁或余额不足: {e.message}')
+        except openai.APIError as e:
+            raise errors.RequesterError(f'请求错误: {e.message}')
+
+    async def invoke_llm_stream(
+        self,
+        query: core_entities.Query,
+        model: requester.RuntimeLLMModel,
+        messages: typing.List[llm_entities.Message],
+        funcs: typing.List[tools_entities.LLMFunction] = None,
+        stream: bool = False,
+        extra_args: dict[str, typing.Any] = {},
+    ) ->  llm_entities.MessageChunk:
+        req_messages = []  # req_messages 仅用于类内，外部同步由 query.messages 进行
+        for m in messages:
+            msg_dict = m.dict(exclude_none=True)
+            content = msg_dict.get('content')
+            if isinstance(content, list):
+                # 检查 content 列表中是否每个部分都是文本
+                if all(isinstance(part, dict) and part.get('type') == 'text' for part in content):
+                    # 将所有文本部分合并为一个字符串
+                    msg_dict['content'] = '\n'.join(part['text'] for part in content)
+            req_messages.append(msg_dict)
+
+        try:
+            if stream:
+                async for item in self._closure_stream(
                     query=query,
                     req_messages=req_messages,
                     use_model=model,
@@ -181,15 +298,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
                     extra_args=extra_args,
                 ):
                     yield item
-                return
-            else:
-                return await self._closure(
-                    query=query,
-                    req_messages=req_messages,
-                    use_model=model,
-                    use_funcs=funcs,
-                    extra_args=extra_args,
-                )
+
         except asyncio.TimeoutError:
             raise errors.RequesterError('请求超时')
         except openai.BadRequestError as e:

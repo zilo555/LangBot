@@ -140,12 +140,12 @@ class MessageChunk(pydantic.BaseModel):
     content: typing.Optional[list[ContentElement]] | typing.Optional[str] = None
     """内容"""
 
-    # tool_calls: typing.Optional[list[ToolCall]] = None
+    tool_calls: typing.Optional[list[ToolCall]] = None
     """工具调用"""
 
     tool_call_id: typing.Optional[str] = None
 
-    tool_calls: typing.Optional[list[ToolCallChunk]] = None
+    # tool_calls: typing.Optional[list[ToolCallChunk]] = None
     
     is_final: bool = False
 
