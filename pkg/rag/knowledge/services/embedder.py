@@ -4,10 +4,10 @@ import logging
 import numpy as np
 from typing import List
 from sqlalchemy.orm import Session
-from services.base_service import BaseService
-from services.database import Chunk, SessionLocal
-from services.embedding_models import BaseEmbeddingModel, EmbeddingModelFactory
-from services.chroma_manager import ChromaIndexManager # Import the manager
+from pkg.rag.knowledge.services.base_service import BaseService
+from pkg.rag.knowledge.services.database import Chunk, SessionLocal
+from pkg.rag.knowledge.services.embedding_models import BaseEmbeddingModel, EmbeddingModelFactory
+from pkg.rag.knowledge.services.chroma_manager import ChromaIndexManager # Import the manager
 
 logger = logging.getLogger(__name__)
 

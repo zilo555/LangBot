@@ -1,4 +1,4 @@
-# services/chroma_manager.py
+
 import numpy as np
 import logging
 from chromadb import PersistentClient
@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 class ChromaIndexManager:
     def __init__(self, collection_name: str = "default_collection"):
         self.logger = logging.getLogger(self.__class__.__name__)
-        chroma_data_path = "./chroma_data"
+        chroma_data_path = os.path.abspath(os.path.join(__file__, "../../../../../../data/chroma"))
         os.makedirs(chroma_data_path, exist_ok=True)
         self.client = PersistentClient(path=chroma_data_path)
         self._collection_name = collection_name

@@ -9,6 +9,7 @@ from ...command import cmdmgr
 from ...provider.session import sessionmgr as llm_session_mgr
 from ...provider.modelmgr import modelmgr as llm_model_mgr
 from ...provider.tools import toolmgr as llm_tool_mgr
+from ...rag.knowledge.RAG_Manager import RAG_Manager as knowledge_base_mgr
 from ...platform import botmgr as im_mgr
 from ...persistence import mgr as persistencemgr
 from ...api.http.controller import main as http_controller
@@ -100,6 +101,12 @@ class BuildAppStage(stage.BootingStage):
 
         embedding_models_service_inst = model_service.EmbeddingModelsService(ap)
         ap.embedding_models_service = embedding_models_service_inst
+
+        knowledge_base_service_inst = knowledge_base_mgr(ap)
+        print("knowledge_base_service_inst1", type(knowledge_base_service_inst))
+        await knowledge_base_service_inst.initialize_rag_system()
+        ap.knowledge_base_service = knowledge_base_service_inst
+        print("knowledge_base_service_inst", type(ap.knowledge_base_service))
 
         pipeline_service_inst = pipeline_service.PipelineService(ap)
         ap.pipeline_service = pipeline_service_inst

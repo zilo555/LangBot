@@ -1,18 +1,24 @@
 # RAG_Manager class (main class, adjust imports as needed)
+from __future__ import annotations  # For type hinting in Python 3.7+
 import logging
 import os
 import asyncio
-from services.parser import FileParser
-from services.chunker import Chunker
-from services.embedder import Embedder
-from services.retriever import Retriever
-from services.database import create_db_and_tables, SessionLocal, KnowledgeBase, File, Chunk # Ensure Chunk is imported if you need to manipulate it directly
-from services.embedding_models import EmbeddingModelFactory
-from services.chroma_manager import ChromaIndexManager
-from ...core import app
+from pkg.rag.knowledge.services.parser import FileParser
+from pkg.rag.knowledge.services.chunker import Chunker
+from pkg.rag.knowledge.services.embedder import Embedder
+from pkg.rag.knowledge.services.retriever import Retriever
+from pkg.rag.knowledge.services.database import create_db_and_tables, SessionLocal, KnowledgeBase, File, Chunk # Ensure Chunk is imported if you need to manipulate it directly
+from pkg.rag.knowledge.services.embedding_models import EmbeddingModelFactory
+from pkg.rag.knowledge.services.chroma_manager import ChromaIndexManager
+from pkg.core import app  # Adjust the import path as needed
+
 
 class RAG_Manager:
-    def __init__(self, logger: logging.Logger = None):
+
+    ap: app.Application
+
+    def __init__(self, ap: app.Application,logger: logging.Logger = None):
+        self.ap = ap
         self.logger = logger or logging.getLogger(__name__)
         self.embedding_model_type = None
         self.embedding_model_name = None
@@ -21,11 +27,11 @@ class RAG_Manager:
         self.chunker = None
         self.embedder = None
         self.retriever = None
-    
-    async def initialize_system(self):
+
+    async def initialize_rag_system(self):
         await asyncio.to_thread(create_db_and_tables)
 
-    async def create_model(self, embedding_model_type: str,
+    async def create_specific_model(self, embedding_model_type: str,
                  embedding_model_name: str):
         self.embedding_model_type = embedding_model_type
         self.embedding_model_name = embedding_model_name
@@ -57,7 +63,7 @@ class RAG_Manager:
         )
 
     
-    async def create_knowledge_base(self, kb_name: str, kb_description: str):
+    async def create_knowledge_base(self, kb_name: str, kb_description: str ,):
         """
         Creates a new knowledge base with the given name and description.
         If a knowledge base with the same name already exists, it returns that one.

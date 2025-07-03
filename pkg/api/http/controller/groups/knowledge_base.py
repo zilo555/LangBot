@@ -1,5 +1,4 @@
 import quart
-from __future__ import annotations
 from .. import group
 
 @group.group_class('knowledge_base', '/api/v1/knowledge/bases')
@@ -16,13 +15,13 @@ class KnowledgeBaseRouterGroup(group.RouterGroup):
 
         
     async def initialize(self) -> None:
-        rag = self.ap.knowledge_base_service.RAG_Manager()
+
 
         @self.route('', methods=['POST', 'GET'])
         async def _() -> str:
             
             if quart.request.method == 'GET':
-                knowledge_bases = await rag.get_all_knowledge_bases()
+                knowledge_bases = await self.ap.knowledge_base_service.get_all_knowledge_bases()
                 bases_list = [
                     {
                         "uuid": kb.id,
@@ -35,17 +34,19 @@ class KnowledgeBaseRouterGroup(group.RouterGroup):
                                     msg='ok')
 
             json_data = await quart.request.json
-            knowledge_base_uuid = await rag.create_knowledge_base(
+            knowledge_base_uuid = await self.ap.knowledge_base_service.create_knowledge_base(
                 json_data.get('name'),
                 json_data.get('description')
             )
-            return self.success()
+            return self.success(code=0,
+                                data={},
+                                msg='ok')
 
 
-        @self.route('/<knowledge_base_uuid>', methods=['GET'])
+        @self.route('/<knowledge_base_uuid>', methods=['GET','DELETE'])
         async def _(knowledge_base_uuid: str) -> str:
             if quart.request.method == 'GET':
-                knowledge_base = await rag.get_knowledge_base_by_id(knowledge_base_uuid)
+                knowledge_base = await self.ap.knowledge_base_service.get_knowledge_base_by_id(knowledge_base_uuid)
 
                 if knowledge_base is None:
                     return self.http_status(404, -1, 'knowledge base not found')
@@ -59,11 +60,14 @@ class KnowledgeBaseRouterGroup(group.RouterGroup):
                     },
                     msg='ok'
                 )
+            elif quart.request.method == 'DELETE':
+                await self.ap.knowledge_base_service.delete_kb_by_id(knowledge_base_uuid)
+                return self.success(code=0, msg='ok')
 
         @self.route('/<knowledge_base_uuid>/files', methods=['GET'])
         async def _(knowledge_base_uuid: str) -> str:
             if quart.request.method == 'GET':
-                files = await rag.get_files_by_knowledge_base(knowledge_base_uuid)
+                files = await self.ap.knowledge_base_service.get_files_by_knowledge_base(knowledge_base_uuid)
                 return self.success(code=0,data=[{
                     "id": file.id,
                     "file_name": file.file_name,
@@ -73,11 +77,6 @@ class KnowledgeBaseRouterGroup(group.RouterGroup):
         # delete specific file in knowledge base
         @self.route('/<knowledge_base_uuid>/files/<file_id>', methods=['DELETE'])
         async def _(knowledge_base_uuid: str, file_id: str) -> str:
-            await rag.delete_data_by_file_id(file_id)
+            await self.ap.knowledge_base_service.delete_data_by_file_id(file_id)
             return self.success(code=0, msg='ok')
         
-        # delete specific kb
-        @self.route('/<knowledge_base_uuid>', methods=['DELETE'])
-        async def _(knowledge_base_uuid: str) -> str:
-            await rag.delete_kb_by_id(knowledge_base_uuid)
-            return self.success(code=0, msg='ok')

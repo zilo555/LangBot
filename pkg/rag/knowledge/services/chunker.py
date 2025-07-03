@@ -1,7 +1,7 @@
 # services/chunker.py
 import logging
 from typing import List
-from services.base_service import BaseService # Assuming BaseService provides _run_sync
+from pkg.rag.knowledge.services.base_service import BaseService # Assuming BaseService provides _run_sync
 
 logger = logging.getLogger(__name__)
 
