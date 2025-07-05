@@ -11,7 +11,8 @@ class KnowledgeBase(Base):
     name = Column(String, index=True)
     description = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
-
+    embedding_model = Column(String, default="")  # 默认嵌入模型
+    top_k = Column(Integer, default=5)  # 默认返回的top_k数量
     files = relationship("File", back_populates="knowledge_base")
 
 class File(Base):

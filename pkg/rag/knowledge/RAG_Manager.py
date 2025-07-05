@@ -62,8 +62,8 @@ class RAG_Manager:
             chroma_manager=self.chroma_manager # Inject dependency
         )
 
-    
-    async def create_knowledge_base(self, kb_name: str, kb_description: str ,):
+
+    async def create_knowledge_base(self, kb_name: str, kb_description: str, embedding_model: str = "", top_k: int = 5):
         """
         Creates a new knowledge base with the given name and description.
         If a knowledge base with the same name already exists, it returns that one.
@@ -82,7 +82,7 @@ class RAG_Manager:
                 def _add_kb_sync():
                     session = SessionLocal()
                     try:
-                        new_kb = KnowledgeBase(name=kb_name, description=kb_description)
+                        new_kb = KnowledgeBase(name=kb_name, description=kb_description, embedding_model=embedding_model, top_k=top_k)
                         session.add(new_kb)
                         session.commit()
                         session.refresh(new_kb)
