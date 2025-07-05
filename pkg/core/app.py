@@ -27,6 +27,7 @@ from ..storage import mgr as storagemgr
 from ..utils import logcache
 from . import taskmgr
 from . import entities as core_entities
+from pkg.rag.knowledge.RAG_Manager import RAG_Manager
 
 
 class Application:
@@ -46,6 +47,7 @@ class Application:
     sess_mgr: llm_session_mgr.SessionManager = None
 
     model_mgr: llm_model_mgr.ModelManager = None
+
 
     # TODO 移动到 pipeline 里
     tool_mgr: llm_tool_mgr.ToolManager = None
@@ -99,6 +101,7 @@ class Application:
 
     storage_mgr: storagemgr.StorageMgr = None
 
+
     # ========= HTTP Services =========
 
     user_service: user_service.UserService = None
@@ -110,6 +113,9 @@ class Application:
     pipeline_service: pipeline_service.PipelineService = None
 
     bot_service: bot_service.BotService = None
+
+    knowledge_base_service: RAG_Manager = None
+
 
     def __init__(self):
         pass
@@ -145,6 +151,7 @@ class Application:
                 name='http-api-controller',
                 scopes=[core_entities.LifecycleControlScope.APPLICATION],
             )
+
             self.task_mgr.create_task(
                 never_ending(),
                 name='never-ending-task',
