@@ -37,6 +37,7 @@ import {
   ApiRespKnowledgeBases,
   ApiRespKnowledgeBase,
   KnowledgeBase,
+  ApiRespKnowledgeBaseFiles,
 } from '@/app/infra/entities/api';
 import { GetBotLogsRequest } from '@/app/infra/http/requestParam/bots/GetBotLogsRequest';
 import { GetBotLogsResponse } from '@/app/infra/http/requestParam/bots/GetBotLogsResponse';
@@ -430,6 +431,11 @@ class HttpClient {
     return this.post(`/api/v1/platform/bots/${botId}/logs`, request);
   }
 
+  // ============ File management API ============
+  public uploadDocumentFile(file: File): Promise<{ file_id: string }> {
+    return this.post('/api/v1/files/documents', file);
+  }
+
   // ============ Knowledge Base API ============
   public getKnowledgeBases(): Promise<ApiRespKnowledgeBases> {
     return this.get('/api/v1/knowledge/bases');
@@ -441,6 +447,21 @@ class HttpClient {
 
   public createKnowledgeBase(base: KnowledgeBase): Promise<{ uuid: string }> {
     return this.post('/api/v1/knowledge/bases', base);
+  }
+
+  public uploadKnowledgeBaseFile(
+    uuid: string,
+    file_id: string,
+  ): Promise<object> {
+    return this.post(`/api/v1/knowledge/bases/${uuid}/files`, {
+      file_id,
+    });
+  }
+
+  public getKnowledgeBaseFiles(
+    uuid: string,
+  ): Promise<ApiRespKnowledgeBaseFiles> {
+    return this.get(`/api/v1/knowledge/bases/${uuid}/files`);
   }
 
   // ============ Plugins API ============

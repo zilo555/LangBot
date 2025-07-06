@@ -233,6 +233,8 @@ const enUS = {
   knowledge: {
     title: 'Knowledge',
     description: 'Configuring knowledge bases for improved LLM responses',
+    metadata: 'Metadata',
+    files: 'Files',
   },
   register: {
     title: 'Initialize LangBot 👋',

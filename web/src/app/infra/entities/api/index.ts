@@ -150,6 +150,16 @@ export interface KnowledgeBase {
   updated_at?: string;
 }
 
+export interface ApiRespKnowledgeBaseFiles {
+  files: KnowledgeBaseFile[];
+}
+
+export interface KnowledgeBaseFile {
+  file_id: string;
+  file_name: string;
+  status: string;
+}
+
 // plugins
 export interface ApiRespPlugins {
   plugins: Plugin[];
