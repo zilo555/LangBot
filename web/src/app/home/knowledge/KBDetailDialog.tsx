@@ -163,7 +163,7 @@ export default function KBDetailDialog({
               <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
                 <DialogTitle>
                   {activeMenu === 'metadata'
-                    ? t('knowledge.createKnowledgeBase')
+                    ? t('knowledge.editKnowledgeBase')
                     : t('knowledge.editDocument')}
                 </DialogTitle>
               </DialogHeader>
