@@ -8,16 +8,28 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+} from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
-import { httpClient } from '@/app/infra/http/HttpClient';
-import { KnowledgeBase } from '@/app/infra/entities/api';
+// import { httpClient } from '@/app/infra/http/HttpClient';
+// import { KnowledgeBase } from '@/app/infra/entities/api';
+import KBForm from '@/app/home/knowledge/components/kb-form/KBForm';
 
 interface KBDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   kbId?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onFormSubmit: (value: z.infer<any>) => void;
   onFormCancel: () => void;
   onKbDeleted: () => void;
@@ -36,7 +48,7 @@ export default function KBDetailDialog({
   const { t } = useTranslation();
   const [kbId, setKbId] = useState<string | undefined>(propKbId);
   const [activeMenu, setActiveMenu] = useState('metadata');
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  // const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     setKbId(propKbId);
@@ -58,8 +70,8 @@ export default function KBDetailDialog({
       ),
     },
     {
-      key: 'files',
-      label: t('knowledge.files'),
+      key: 'documents',
+      label: t('knowledge.documents'),
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -79,11 +91,121 @@ export default function KBDetailDialog({
         <DialogContent className="overflow-hidden p-0 !max-w-[40vw] max-h-[70vh] flex">
           <main className="flex flex-1 flex-col h-[70vh]">
             <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
-              <DialogTitle>{t('knowledge.newKb')}</DialogTitle>
+              <DialogTitle>{t('knowledge.createKnowledgeBase')}</DialogTitle>
             </DialogHeader>
+            <div className="flex-1 overflow-y-auto px-6 pb-6">
+              {activeMenu === 'metadata' && (
+                <KBForm
+                  initKbId={undefined}
+                  onFormSubmit={onFormSubmit}
+                  onFormCancel={onFormCancel}
+                  onKbDeleted={onKbDeleted}
+                  onNewKbCreated={onNewKbCreated}
+                />
+              )}
+              {activeMenu === 'documents' && <div>documents</div>}
+            </div>
+            {activeMenu === 'metadata' && (
+              <DialogFooter className="px-6 py-4 border-t shrink-0">
+                <div className="flex justify-end gap-2">
+                  <Button type="submit" form="kb-form">
+                    {t('common.save')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onFormCancel}
+                  >
+                    {t('common.cancel')}
+                  </Button>
+                </div>
+              </DialogFooter>
+            )}
           </main>
         </DialogContent>
       </Dialog>
     );
   }
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="overflow-hidden p-0 !max-w-[50rem] max-h-[75vh] flex">
+          <SidebarProvider className="items-start w-full flex">
+            <Sidebar
+              collapsible="none"
+              className="hidden md:flex h-[80vh] w-40 min-w-[120px] border-r bg-white"
+            >
+              <SidebarContent>
+                <SidebarGroup>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {menu.map((item) => (
+                        <SidebarMenuItem key={item.key}>
+                          <SidebarMenuButton
+                            asChild
+                            isActive={activeMenu === item.key}
+                            onClick={() => setActiveMenu(item.key)}
+                          >
+                            <a href="#">
+                              {item.icon}
+                              <span>{item.label}</span>
+                            </a>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      ))}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+              </SidebarContent>
+            </Sidebar>
+            <main className="flex flex-1 flex-col h-[75vh]">
+              <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
+                <DialogTitle>
+                  {activeMenu === 'metadata'
+                    ? t('knowledge.createKnowledgeBase')
+                    : t('knowledge.editDocument')}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="flex-1 overflow-y-auto px-6 pb-6">
+                {activeMenu === 'metadata' && (
+                  <KBForm
+                    initKbId={kbId}
+                    onFormSubmit={onFormSubmit}
+                    onFormCancel={onFormCancel}
+                    onKbDeleted={onKbDeleted}
+                    onNewKbCreated={onNewKbCreated}
+                  />
+                )}
+                {activeMenu === 'documents' && <div>documents</div>}
+              </div>
+              {activeMenu === 'metadata' && (
+                <DialogFooter className="px-6 py-4 border-t shrink-0">
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={onKbDeleted}
+                    >
+                      {t('common.delete')}
+                    </Button>
+                    <Button type="submit" form="kb-form">
+                      {t('common.save')}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={onFormCancel}
+                    >
+                      {t('common.cancel')}
+                    </Button>
+                  </div>
+                </DialogFooter>
+              )}
+            </main>
+          </SidebarProvider>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
 }

@@ -1,0 +1,172 @@
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
+import { Input } from '@/components/ui/input';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from '@/components/ui/form';
+import { IEmbeddingModelEntity } from './ChooseEntity';
+import { httpClient } from '@/app/infra/http/HttpClient';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+const getFormSchema = (t: (key: string) => string) =>
+  z.object({
+    name: z.string().min(1, { message: t('knowledge.kbNameRequired') }),
+    description: z
+      .string()
+      .min(1, { message: t('knowledge.kbDescriptionRequired') }),
+    embeddingModelUUID: z
+      .string()
+      .min(1, { message: t('knowledge.embeddingModelUUIDRequired') }),
+  });
+
+export default function KBForm({
+  initKbId,
+  onFormSubmit,
+  onFormCancel,
+  onKbDeleted,
+  onNewKbCreated,
+}: {
+  initKbId?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onFormSubmit: (value: any) => void;
+  onFormCancel: () => void;
+  onKbDeleted: () => void;
+  onNewKbCreated: (kbId: string) => void;
+}) {
+  const { t } = useTranslation();
+  const formSchema = getFormSchema(t);
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: '',
+      description: t('knowledge.defaultDescription'),
+      embeddingModelUUID: '',
+    },
+  });
+
+  const [embeddingModelNameList, setEmbeddingModelNameList] = useState<
+    IEmbeddingModelEntity[]
+  >([]);
+
+  useEffect(() => {
+    getEmbeddingModelNameList();
+  }, []);
+
+  const getEmbeddingModelNameList = async () => {
+    const resp = await httpClient.getProviderEmbeddingModels();
+    setEmbeddingModelNameList(
+      resp.models.map((item) => {
+        return {
+          label: item.name,
+          value: item.uuid,
+        };
+      }),
+    );
+  };
+
+  return (
+    <>
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onFormSubmit)}
+          id="kb-form"
+          className="space-y-8"
+        >
+          <div className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    {t('knowledge.kbName')}
+                    <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    {t('knowledge.kbDescription')}
+                    <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="embeddingModelUUID"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    {t('knowledge.embeddingModelUUID')}
+                    <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          console.log('value', value);
+                        }}
+                        value={field.value}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue
+                            placeholder={t('knowledge.selectEmbeddingModel')}
+                          />
+                        </SelectTrigger>
+                        <SelectContent className="fixed z-[1000]">
+                          <SelectGroup>
+                            {embeddingModelNameList.map((item) => (
+                              <SelectItem key={item.value} value={item.value}>
+                                {item.label}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </FormControl>
+                  <FormDescription>
+                    {t('knowledge.embeddingModelDescription')}
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </form>
+      </Form>
+    </>
+  );
+}
