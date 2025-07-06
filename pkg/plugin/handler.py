@@ -94,3 +94,26 @@ class RuntimeConnectionHandler(handler.Handler):
         )
 
         return result
+
+    async def list_tools(self) -> list[dict[str, Any]]:
+        """List tools"""
+        result = await self.call_action(
+            LangBotToRuntimeAction.LIST_TOOLS,
+            {},
+            timeout=10,
+        )
+
+        return result['tools']
+
+    async def call_tool(self, tool_name: str, parameters: dict[str, Any]) -> dict[str, Any]:
+        """Call tool"""
+        result = await self.call_action(
+            LangBotToRuntimeAction.CALL_TOOL,
+            {
+                'tool_name': tool_name,
+                'tool_parameters': parameters,
+            },
+            timeout=30,
+        )
+
+        return result['tool_response']

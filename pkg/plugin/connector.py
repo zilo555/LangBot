@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 import typing
 import os
 import sys
@@ -11,8 +12,10 @@ from . import handler
 from ..utils import platform
 from langbot_plugin.runtime.io.controllers.stdio import client as stdio_client_controller
 from langbot_plugin.runtime.io.controllers.ws import client as ws_client_controller
-from langbot_plugin.api.entities import events, context
+from langbot_plugin.api.entities import events
+from langbot_plugin.api.entities import context
 import langbot_plugin.runtime.io.connection as base_connection
+from langbot_plugin.api.definition.components.manifest import ComponentManifest
 
 
 class PluginRuntimeConnector:
@@ -91,6 +94,9 @@ class PluginRuntimeConnector:
     async def initialize_plugins(self):
         pass
 
+    async def list_plugins(self) -> list[dict[str, Any]]:
+        return await self.handler.list_plugins()
+
     async def emit_event(
         self,
         event: events.BaseEventModel,
@@ -104,3 +110,11 @@ class PluginRuntimeConnector:
         event_ctx = context.EventContext.parse_from_dict(event_ctx_result['event_context'])
 
         return event_ctx
+
+    async def list_tools(self) -> list[ComponentManifest]:
+        list_tools_data = await self.handler.list_tools()
+
+        return [ComponentManifest.model_validate(tool) for tool in list_tools_data]
+
+    async def call_tool(self, tool_name: str, parameters: dict[str, Any]) -> dict[str, Any]:
+        return await self.handler.call_tool(tool_name, parameters)

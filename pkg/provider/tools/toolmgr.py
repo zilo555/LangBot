@@ -7,7 +7,6 @@ from . import loader as tools_loader
 from ...utils import importutil
 from . import loaders
 import langbot_plugin.api.entities.builtin.resource.tool as resource_tool
-import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
 
 importutil.import_modules_in_pkg(loaders)
 
@@ -30,12 +29,12 @@ class ToolManager:
             await loader_inst.initialize()
             self.loaders.append(loader_inst)
 
-    async def get_all_functions(self, plugin_enabled: bool = None) -> list[resource_tool.LLMTool]:
+    async def get_all_tools(self) -> list[resource_tool.LLMTool]:
         """获取所有函数"""
         all_functions: list[resource_tool.LLMTool] = []
 
         for loader in self.loaders:
-            all_functions.extend(await loader.get_tools(plugin_enabled))
+            all_functions.extend(await loader.get_tools())
 
         return all_functions
 
@@ -91,12 +90,12 @@ class ToolManager:
 
         return tools
 
-    async def execute_func_call(self, query: pipeline_query.Query, name: str, parameters: dict) -> typing.Any:
+    async def execute_func_call(self, name: str, parameters: dict) -> typing.Any:
         """执行函数调用"""
 
         for loader in self.loaders:
             if await loader.has_tool(name):
-                return await loader.invoke_tool(query, name, parameters)
+                return await loader.invoke_tool(name, parameters)
         else:
             raise ValueError(f'未找到工具: {name}')
 

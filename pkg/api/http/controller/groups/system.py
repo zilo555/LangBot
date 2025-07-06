@@ -35,7 +35,7 @@ class SystemRouterGroup(group.RouterGroup):
 
             return self.success(data=task.to_dict())
 
-        @self.route('/_debug/exec', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
+        @self.route('/debug/exec', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
         async def _() -> str:
             if not constants.debug_mode:
                 return self.http_status(403, 403, 'Forbidden')
@@ -45,3 +45,14 @@ class SystemRouterGroup(group.RouterGroup):
             ap = self.ap
 
             return self.success(data=exec(py_code, {'ap': ap}))
+
+        @self.route('/debug/tools/call', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
+        async def _() -> str:
+            if not constants.debug_mode:
+                return self.http_status(403, 403, 'Forbidden')
+
+            data = await quart.request.json
+
+            return self.success(
+                data=await self.ap.tool_mgr.execute_func_call(data['tool_name'], data['tool_parameters'])
+            )

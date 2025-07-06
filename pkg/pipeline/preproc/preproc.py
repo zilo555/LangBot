@@ -60,9 +60,7 @@ class PreProcessor(stage.PipelineStage):
             query.use_funcs = []
 
             if llm_model.model_entity.abilities.__contains__('func_call'):
-                query.use_funcs = await self.ap.tool_mgr.get_all_functions(
-                    plugin_enabled=True,
-                )
+                query.use_funcs = await self.ap.tool_mgr.get_all_tools()
 
         query.variables = {
             'session_id': f'{query.session.launcher_type.value}_{query.session.launcher_id}',

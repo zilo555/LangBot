@@ -10,7 +10,6 @@ from mcp.client.sse import sse_client
 from .. import loader
 from ....core import app
 import langbot_plugin.api.entities.builtin.resource.tool as resource_tool
-import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
 
 
 class RuntimeMCPSession:
@@ -84,7 +83,7 @@ class RuntimeMCPSession:
 
         for tool in tools.tools:
 
-            async def func(query: pipeline_query.Query, *, _tool=tool, **kwargs):
+            async def func(*, _tool=tool, **kwargs):
                 result = await self.session.call_tool(_tool.name, kwargs)
                 if result.isError:
                     raise Exception(result.content[0].text)
@@ -132,7 +131,7 @@ class MCPLoader(loader.ToolLoader):
             # self.ap.event_loop.create_task(session.initialize())
             self.sessions[server_config['name']] = session
 
-    async def get_tools(self, enabled: bool = True) -> list[resource_tool.LLMTool]:
+    async def get_tools(self) -> list[resource_tool.LLMTool]:
         all_functions = []
 
         for session in self.sessions.values():
@@ -145,11 +144,11 @@ class MCPLoader(loader.ToolLoader):
     async def has_tool(self, name: str) -> bool:
         return name in [f.name for f in self._last_listed_functions]
 
-    async def invoke_tool(self, query: pipeline_query.Query, name: str, parameters: dict) -> typing.Any:
+    async def invoke_tool(self, name: str, parameters: dict) -> typing.Any:
         for server_name, session in self.sessions.items():
             for function in session.functions:
                 if function.name == name:
-                    return await function.func(query, **parameters)
+                    return await function.func(**parameters)
 
         raise ValueError(f'未找到工具: {name}')
 

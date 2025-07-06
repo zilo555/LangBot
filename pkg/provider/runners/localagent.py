@@ -43,7 +43,7 @@ class LocalAgentRunner(runner.RequestRunner):
 
                     parameters = json.loads(func.arguments)
 
-                    func_ret = await self.ap.tool_mgr.execute_func_call(query, func.name, parameters)
+                    func_ret = await self.ap.tool_mgr.execute_func_call(func.name, parameters)
 
                     msg = llm_entities.Message(
                         role='tool',

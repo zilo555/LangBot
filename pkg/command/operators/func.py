@@ -11,9 +11,7 @@ class FuncOperator(operator.CommandOperator):
 
         index = 1
 
-        all_functions = await self.ap.tool_mgr.get_all_functions(
-            plugin_enabled=True,
-        )
+        all_functions = await self.ap.tool_mgr.get_all_tools()
 
         for func in all_functions:
             reply_str += '{}. {}:\n{}\n\n'.format(
