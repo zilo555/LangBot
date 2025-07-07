@@ -80,7 +80,7 @@ classifiers = [
 [project.urls]
 Homepage = "https://langbot.app"
 Documentation = "https://docs.langbot.app"
-Repository = "https://github.com/RockChinQ/langbot"
+Repository = "https://github.com/langbot-app/LangBot"
 
 [dependency-groups]
 dev = [
