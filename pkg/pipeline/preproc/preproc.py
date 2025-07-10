@@ -11,11 +11,11 @@ from ...platform.types import message as platform_message
 
 @stage.stage_class('PreProcessor')
 class PreProcessor(stage.PipelineStage):
-    """请求预处理阶段
+    """Request pre-processing stage
 
-    签出会话、prompt、上文、模型、内容函数。
+    Check out session, prompt, context, model, and content functions.
 
-    改写：
+    Rewrite:
         - session
         - prompt
         - messages
@@ -29,12 +29,12 @@ class PreProcessor(stage.PipelineStage):
         query: core_entities.Query,
         stage_inst_name: str,
     ) -> entities.StageProcessResult:
-        """处理"""
+        """Process"""
         selected_runner = query.pipeline_config['ai']['runner']['runner']
 
         session = await self.ap.sess_mgr.get_session(query)
 
-        # 非 local-agent 时，llm_model 为 None
+        # When not local-agent, llm_model is None
         llm_model = (
             await self.ap.model_mgr.get_model_by_uuid(query.pipeline_config['ai']['local-agent']['model'])
             if selected_runner == 'local-agent'
@@ -51,7 +51,7 @@ class PreProcessor(stage.PipelineStage):
 
         conversation.use_llm_model = llm_model
 
-        # 设置query
+        # Set query
         query.session = session
         query.prompt = conversation.prompt.copy()
         query.messages = conversation.messages.copy()
@@ -109,7 +109,7 @@ class PreProcessor(stage.PipelineStage):
         query.variables['user_message_text'] = plain_text
 
         query.user_message = llm_entities.Message(role='user', content=content_list)
-        # =========== 触发事件 PromptPreProcessing
+        # =========== Trigger event PromptPreProcessing
 
         event_ctx = await self.ap.plugin_mgr.emit_event(
             event=events.PromptPreProcessing(

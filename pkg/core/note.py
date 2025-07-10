@@ -9,7 +9,7 @@ preregistered_notes: list[typing.Type[LaunchNote]] = []
 
 
 def note_class(name: str, number: int):
-    """注册一个启动信息"""
+    """Register a launch information"""
 
     def decorator(cls: typing.Type[LaunchNote]) -> typing.Type[LaunchNote]:
         cls.name = name
@@ -21,7 +21,7 @@ def note_class(name: str, number: int):
 
 
 class LaunchNote(abc.ABC):
-    """启动信息"""
+    """Launch information"""
 
     name: str
 
@@ -34,10 +34,10 @@ class LaunchNote(abc.ABC):
 
     @abc.abstractmethod
     async def need_show(self) -> bool:
-        """判断当前环境是否需要显示此启动信息"""
+        """Determine if the current environment needs to display this launch information"""
         pass
 
     @abc.abstractmethod
     async def yield_note(self) -> typing.AsyncGenerator[typing.Tuple[str, int], None]:
-        """生成启动信息"""
+        """Generate launch information"""
         pass

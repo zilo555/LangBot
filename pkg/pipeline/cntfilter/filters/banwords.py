@@ -8,7 +8,7 @@ from ....core import entities as core_entities
 
 @filter_model.filter_class('ban-word-filter')
 class BanWordFilter(filter_model.ContentFilter):
-    """根据内容过滤"""
+    """Filter content"""
 
     async def initialize(self):
         pass

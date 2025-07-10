@@ -4,7 +4,7 @@ from .base import Base
 
 
 class LLMModel(Base):
-    """LLM 模型"""
+    """LLM model"""
 
     __tablename__ = 'llm_models'
 
