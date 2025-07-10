@@ -3,10 +3,11 @@ from __future__ import annotations
 import typing
 
 from ..core import app
-from . import entities, operator, errors
+from . import operator
 from ..utils import importutil
 import langbot_plugin.api.entities.builtin.provider.session as provider_session
 import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
+from langbot_plugin.api.entities.builtin.command import context as command_context, errors as command_errors
 
 # 引入所有算子以便注册
 from . import operators
@@ -57,10 +58,10 @@ class CommandManager:
 
     async def _execute(
         self,
-        context: entities.ExecuteContext,
+        context: command_context.ExecuteContext,
         operator_list: list[operator.CommandOperator],
         operator: operator.CommandOperator = None,
-    ) -> typing.AsyncGenerator[entities.CommandReturn, None]:
+    ) -> typing.AsyncGenerator[command_context.CommandReturn, None]:
         """执行命令"""
 
         found = False
@@ -80,10 +81,10 @@ class CommandManager:
 
         if not found:  # 如果下一个参数未在此节点的子节点中找到，则执行此节点或者报错
             if operator is None:
-                yield entities.CommandReturn(error=errors.CommandNotFoundError(context.crt_params[0]))
+                yield command_context.CommandReturn(error=command_errors.CommandNotFoundError(context.crt_params[0]))
             else:
                 if operator.lowest_privilege > context.privilege:
-                    yield entities.CommandReturn(error=errors.CommandPrivilegeError(operator.name))
+                    yield command_context.CommandReturn(error=command_errors.CommandPrivilegeError(operator.name))
                 else:
                     async for ret in operator.execute(context):
                         yield ret
@@ -93,7 +94,7 @@ class CommandManager:
         command_text: str,
         query: pipeline_query.Query,
         session: provider_session.Session,
-    ) -> typing.AsyncGenerator[entities.CommandReturn, None]:
+    ) -> typing.AsyncGenerator[command_context.CommandReturn, None]:
         """执行命令"""
 
         privilege = 1
@@ -101,7 +102,7 @@ class CommandManager:
         if f'{query.launcher_type.value}_{query.launcher_id}' in self.ap.instance_config.data['admins']:
             privilege = 2
 
-        ctx = entities.ExecuteContext(
+        ctx = command_context.ExecuteContext(
             query=query,
             session=session,
             command_text=command_text,

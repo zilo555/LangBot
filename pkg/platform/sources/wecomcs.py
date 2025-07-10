@@ -12,7 +12,7 @@ from libs.wecom_customer_service_api.wecomcsevent import WecomCSEvent
 import langbot_plugin.api.entities.builtin.platform.entities as platform_entities
 import langbot_plugin.api.entities.builtin.platform.message as platform_message
 import langbot_plugin.api.entities.builtin.platform.events as platform_events
-from ...command.errors import ParamNotEnoughError
+from langbot_plugin.api.entities.builtin.command import errors as command_errors
 import langbot_plugin.api.definition.abstract.platform.event_logger as abstract_platform_logger
 
 
@@ -131,7 +131,7 @@ class WecomCSAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
         ]
         missing_keys = [key for key in required_keys if key not in config]
         if missing_keys:
-            raise ParamNotEnoughError('企业微信客服缺少相关配置项，请查看文档或联系管理员')
+            raise command_errors.ParamNotEnoughError('企业微信客服缺少相关配置项，请查看文档或联系管理员')
 
         bot = WecomCSClient(
             corpid=config['corpid'],

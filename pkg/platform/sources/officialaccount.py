@@ -11,7 +11,7 @@ from libs.official_account_api.api import OAClientForLongerResponse
 import langbot_plugin.api.entities.builtin.platform.entities as platform_entities
 import langbot_plugin.api.entities.builtin.platform.message as platform_message
 import langbot_plugin.api.entities.builtin.platform.events as platform_events
-from ...command.errors import ParamNotEnoughError
+from langbot_plugin.api.entities.builtin.command import errors as command_errors
 from ..logger import EventLogger
 
 
@@ -75,7 +75,7 @@ class OfficialAccountAdapter(abstract_platform_adapter.AbstractMessagePlatformAd
         ]
         missing_keys = [key for key in required_keys if key not in config]
         if missing_keys:
-            raise ParamNotEnoughError('微信公众号缺少相关配置项，请查看文档或联系管理员')
+            raise command_errors.ParamNotEnoughError('微信公众号缺少相关配置项，请查看文档或联系管理员')
 
         if self.config['Mode'] == 'drop':
             self.bot = OAClient(

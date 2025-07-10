@@ -9,7 +9,7 @@ import langbot_plugin.api.definition.abstract.platform.adapter as abstract_platf
 import langbot_plugin.api.entities.builtin.platform.message as platform_message
 import langbot_plugin.api.entities.builtin.platform.events as platform_events
 import langbot_plugin.api.entities.builtin.platform.entities as platform_entities
-from ...command.errors import ParamNotEnoughError
+from langbot_plugin.api.entities.builtin.command import errors as command_errors
 from libs.qq_official_api.api import QQOfficialClient
 from libs.qq_official_api.qqofficialevent import QQOfficialEvent
 from ...utils import image
@@ -148,7 +148,7 @@ class QQOfficialAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter
         ]
         missing_keys = [key for key in required_keys if key not in config]
         if missing_keys:
-            raise ParamNotEnoughError('QQ官方机器人缺少相关配置项，请查看文档或联系管理员')
+            raise command_errors.ParamNotEnoughError('QQ官方机器人缺少相关配置项，请查看文档或联系管理员')
 
         self.bot = QQOfficialClient(
             app_id=config['appid'], secret=config['secret'], token=config['token'], logger=self.logger
