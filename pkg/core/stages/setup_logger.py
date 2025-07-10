@@ -8,7 +8,7 @@ from ..bootutils import log
 
 class PersistenceHandler(logging.Handler, object):
     """
-    保存日志到数据库
+    Save logs to database
     """
 
     ap: app.Application
@@ -19,9 +19,9 @@ class PersistenceHandler(logging.Handler, object):
 
     def emit(self, record):
         """
-        emit函数为自定义handler类时必重写的函数，这里可以根据需要对日志消息做一些处理，比如发送日志到服务器
+        emit function is a required function for custom handler classes, here you can process the log messages as needed, such as sending logs to the server
 
-        发出记录(Emit a record)
+        Emit a record
         """
         try:
             msg = self.format(record)
@@ -34,10 +34,10 @@ class PersistenceHandler(logging.Handler, object):
 
 @stage.stage_class('SetupLoggerStage')
 class SetupLoggerStage(stage.BootingStage):
-    """设置日志器阶段"""
+    """Setup logger stage"""
 
     async def run(self, ap: app.Application):
-        """启动"""
+        """Setup logger"""
         persistence_handler = PersistenceHandler('LoggerHandler', ap)
 
         extra_handlers = []

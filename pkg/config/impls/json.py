@@ -6,7 +6,7 @@ from .. import model as file_model
 
 
 class JSONConfigFile(file_model.ConfigFile):
-    """JSON配置文件"""
+    """JSON config file"""
 
     def __init__(
         self,
@@ -42,7 +42,7 @@ class JSONConfigFile(file_model.ConfigFile):
             try:
                 cfg = json.load(f)
             except json.JSONDecodeError as e:
-                raise Exception(f'配置文件 {self.config_file_name} 语法错误: {e}')
+                raise Exception(f'Syntax error in config file {self.config_file_name}: {e}')
 
         if completion:
             for key in self.template_data:

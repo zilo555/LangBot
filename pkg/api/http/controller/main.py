@@ -45,7 +45,7 @@ class HTTPController:
                 try:
                     await self.quart_app.run_task(*args, **kwargs)
                 except Exception as e:
-                    self.ap.logger.error(f'启动 HTTP 服务失败： {e}')
+                    self.ap.logger.error(f'Failed to start HTTP service: {e}')
 
             self.ap.task_mgr.create_task(
                 exception_handler(

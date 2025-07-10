@@ -7,13 +7,13 @@ from .. import model as file_model
 
 
 class PythonModuleConfigFile(file_model.ConfigFile):
-    """Python模块配置文件"""
+    """Python module config file"""
 
     config_file_name: str = None
-    """配置文件名"""
+    """Config file name"""
 
     template_file_name: str = None
-    """模板文件名"""
+    """Template file name"""
 
     def __init__(self, config_file_name: str, template_file_name: str) -> None:
         self.config_file_name = config_file_name
@@ -42,7 +42,7 @@ class PythonModuleConfigFile(file_model.ConfigFile):
 
             cfg[key] = getattr(module, key)
 
-        # 从模板模块文件中进行补全
+        # complete from template module file
         if completion:
             module_name = os.path.splitext(os.path.basename(self.template_file_name))[0]
             module = importlib.import_module(module_name)
@@ -60,7 +60,7 @@ class PythonModuleConfigFile(file_model.ConfigFile):
         return cfg
 
     async def save(self, data: dict):
-        logging.warning('Python模块配置文件不支持保存')
+        logging.warning('Python module config file does not support saving')
 
     def save_sync(self, data: dict):
-        logging.warning('Python模块配置文件不支持保存')
+        logging.warning('Python module config file does not support saving')

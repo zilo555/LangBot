@@ -11,10 +11,13 @@ importutil.import_modules_in_pkg(migrations)
 
 @stage.stage_class('MigrationStage')
 class MigrationStage(stage.BootingStage):
-    """迁移阶段"""
+    """Migration stage
+
+    These migrations are legacy, only performed in version 3.x
+    """
 
     async def run(self, ap: app.Application):
-        """启动"""
+        """Run migration"""
 
         if any(
             [
@@ -29,7 +32,7 @@ class MigrationStage(stage.BootingStage):
 
         migrations = migration.preregistered_migrations
 
-        # 按照迁移号排序
+        # Sort by migration number
         migrations.sort(key=lambda x: x.number)
 
         for migration_cls in migrations:
@@ -37,4 +40,4 @@ class MigrationStage(stage.BootingStage):
 
             if await migration_instance.need_migrate():
                 await migration_instance.run()
-                print(f'已执行迁移 {migration_instance.name}')
+                print(f'Migration {migration_instance.name} executed')

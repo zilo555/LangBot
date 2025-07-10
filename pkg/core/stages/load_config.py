@@ -8,10 +8,10 @@ from ..bootutils import config
 
 @stage.stage_class('LoadConfigStage')
 class LoadConfigStage(stage.BootingStage):
-    """加载配置文件阶段"""
+    """Load config file stage"""
 
     async def run(self, ap: app.Application):
-        """启动"""
+        """Load config file"""
 
         # ======= deprecated =======
         if os.path.exists('data/config/command.json'):

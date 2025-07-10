@@ -5,27 +5,27 @@ from .impls import pymodule, json as json_file, yaml as yaml_file
 
 
 class ConfigManager:
-    """配置文件管理器"""
+    """Config file manager"""
 
     name: str = None
-    """配置管理器名"""
+    """Config manager name"""
 
     description: str = None
-    """配置管理器描述"""
+    """Config manager description"""
 
     schema: dict = None
-    """配置文件 schema
-    需要符合 JSON Schema Draft 7 规范
+    """Config file schema
+    Must conform to JSON Schema Draft 7 specification
     """
 
     file: file_model.ConfigFile = None
-    """配置文件实例"""
+    """Config file instance"""
 
     data: dict = None
-    """配置数据"""
+    """Config data"""
 
     doc_link: str = None
-    """配置文件文档链接"""
+    """Config file documentation link"""
 
     def __init__(self, cfg_file: file_model.ConfigFile) -> None:
         self.file = cfg_file
@@ -42,15 +42,15 @@ class ConfigManager:
 
 
 async def load_python_module_config(config_name: str, template_name: str, completion: bool = True) -> ConfigManager:
-    """加载Python模块配置文件
+    """Load Python module config file
 
     Args:
-        config_name (str): 配置文件名
-        template_name (str): 模板文件名
-        completion (bool): 是否自动补全内存中的配置文件
+        config_name (str): Config file name
+        template_name (str): Template file name
+        completion (bool): Whether to automatically complete the config file in memory
 
     Returns:
-        ConfigManager: 配置文件管理器
+        ConfigManager: Config file manager
     """
     cfg_inst = pymodule.PythonModuleConfigFile(config_name, template_name)
 
@@ -66,13 +66,13 @@ async def load_json_config(
     template_data: dict = None,
     completion: bool = True,
 ) -> ConfigManager:
-    """加载JSON配置文件
+    """Load JSON config file
 
     Args:
-        config_name (str): 配置文件名
-        template_name (str): 模板文件名
-        template_data (dict): 模板数据
-        completion (bool): 是否自动补全内存中的配置文件
+        config_name (str): Config file name
+        template_name (str): Template file name
+        template_data (dict): Template data
+        completion (bool): Whether to automatically complete the config file in memory
     """
     cfg_inst = json_file.JSONConfigFile(config_name, template_name, template_data)
 
@@ -88,16 +88,16 @@ async def load_yaml_config(
     template_data: dict = None,
     completion: bool = True,
 ) -> ConfigManager:
-    """加载YAML配置文件
+    """Load YAML config file
 
     Args:
-        config_name (str): 配置文件名
-        template_name (str): 模板文件名
-        template_data (dict): 模板数据
-        completion (bool): 是否自动补全内存中的配置文件
+        config_name (str): Config file name
+        template_name (str): Template file name
+        template_data (dict): Template data
+        completion (bool): Whether to automatically complete the config file in memory
 
     Returns:
-        ConfigManager: 配置文件管理器
+        ConfigManager: Config file manager
     """
     cfg_inst = yaml_file.YAMLConfigFile(config_name, template_name, template_data)
 
