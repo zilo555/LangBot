@@ -1,13 +1,9 @@
 import quart
-from .. import group
-import os # 导入 os 用于文件操作
+from ... import group
+
 
 @group.group_class('knowledge_base', '/api/v1/knowledge/bases')
 class KnowledgeBaseRouterGroup(group.RouterGroup):
-    # 定义成功方法
-    def success(self, code=0, data=None, msg: str = 'ok') -> quart.Response:
-        return quart.jsonify({'code': code, 'data': data or {}, 'msg': msg})
-
     async def initialize(self) -> None:
         @self.route('', methods=['POST', 'GET'], endpoint='handle_knowledge_bases')
         async def handle_knowledge_bases() -> str:
@@ -51,7 +47,6 @@ class KnowledgeBaseRouterGroup(group.RouterGroup):
                 await self.ap.knowledge_base_service.delete_kb_by_id(int(knowledge_base_uuid))
                 return self.success(code=0, msg='ok')
 
-
         @self.route('/<knowledge_base_uuid>/files', methods=['GET'], endpoint='get_knowledge_base_files')
         async def get_knowledge_base_files(knowledge_base_uuid: str) -> str:
             files = await self.ap.knowledge_base_service.get_files_by_knowledge_base(int(knowledge_base_uuid))
@@ -68,14 +63,13 @@ class KnowledgeBaseRouterGroup(group.RouterGroup):
                 msg='ok',
             )
 
-
         @self.route('/<knowledge_base_uuid>/files/<file_id>', methods=['DELETE'], endpoint='delete_specific_file_in_kb')
         async def delete_specific_file_in_kb(file_id: str) -> str:
             await self.ap.knowledge_base_service.delete_data_by_file_id(int(file_id))
             return self.success(code=0, msg='ok')
-        
+
         @self.route('/<knowledge_base_uuid>/files', methods=['POST'], endpoint='relate_file_with_kb')
-        async def relate_file_id_with_kb(knowledge_base_uuid:str,file_id: str) -> str:
+        async def relate_file_id_with_kb(knowledge_base_uuid: str, file_id: str) -> str:
             if 'file' not in quart.request.files:
                 return self.http_status(400, -1, 'No file part in the request')
 
@@ -83,7 +77,7 @@ class KnowledgeBaseRouterGroup(group.RouterGroup):
             file_id = json_data.get('file_id')
             if not file_id:
                 return self.http_status(400, -1, 'File ID is required')
-            
+
             # 调用服务层方法将文件与知识库关联
             await self.ap.knowledge_base_service.relate_file_id_with_kb(int(knowledge_base_uuid), int(file_id))
             return self.success(code=0, data={}, msg='ok')

@@ -27,7 +27,7 @@ from ..storage import mgr as storagemgr
 from ..utils import logcache
 from . import taskmgr
 from . import entities as core_entities
-from pkg.rag.knowledge.RAG_Manager import RAG_Manager
+from ..rag.knowledge import mgr as rag_mgr
 
 
 class Application:
@@ -47,7 +47,6 @@ class Application:
     sess_mgr: llm_session_mgr.SessionManager = None
 
     model_mgr: llm_model_mgr.ModelManager = None
-
 
     # TODO 移动到 pipeline 里
     tool_mgr: llm_tool_mgr.ToolManager = None
@@ -101,7 +100,6 @@ class Application:
 
     storage_mgr: storagemgr.StorageMgr = None
 
-
     # ========= HTTP Services =========
 
     user_service: user_service.UserService = None
@@ -114,8 +112,7 @@ class Application:
 
     bot_service: bot_service.BotService = None
 
-    knowledge_base_service: RAG_Manager = None
-
+    knowledge_base_service: rag_mgr.RAGManager = None
 
     def __init__(self):
         pass
