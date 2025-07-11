@@ -17,16 +17,20 @@ class KnowledgeBaseRouterGroup(group.RouterGroup):
                     }
                     for kb in knowledge_bases
                 ]
-                return self.success(code=0, data={'bases': bases_list}, msg='ok')
+                return self.success(data={'bases': bases_list})
 
             # POST: create a new knowledge base
             json_data = await quart.request.json
             knowledge_base_uuid = await self.ap.knowledge_base_service.create_knowledge_base(
                 json_data.get('name'), json_data.get('description')
             )
-            return self.success(code=0, data={'uuid': knowledge_base_uuid}, msg='ok')
+            return self.success(data={'uuid': knowledge_base_uuid})
 
-        @self.route('/<knowledge_base_uuid>', methods=['GET', 'DELETE'], endpoint='handle_specific_knowledge_base')
+        @self.route(
+            '/<knowledge_base_uuid>',
+            methods=['GET', 'DELETE'],
+            endpoint='handle_specific_knowledge_base',
+        )
         async def handle_specific_knowledge_base(knowledge_base_uuid: str) -> str:
             if quart.request.method == 'GET':
                 knowledge_base = await self.ap.knowledge_base_service.get_knowledge_base_by_id(int(knowledge_base_uuid))
@@ -35,40 +39,50 @@ class KnowledgeBaseRouterGroup(group.RouterGroup):
                     return self.http_status(404, -1, 'knowledge base not found')
 
                 return self.success(
-                    code=0,
                     data={
                         'name': knowledge_base.name,
                         'description': knowledge_base.description,
                         'uuid': knowledge_base.id,
                     },
-                    msg='ok',
                 )
             elif quart.request.method == 'DELETE':
                 await self.ap.knowledge_base_service.delete_kb_by_id(int(knowledge_base_uuid))
-                return self.success(code=0, msg='ok')
+                return self.success({})
 
-        @self.route('/<knowledge_base_uuid>/files', methods=['GET'], endpoint='get_knowledge_base_files')
+        @self.route(
+            '/<knowledge_base_uuid>/files',
+            methods=['GET'],
+            endpoint='get_knowledge_base_files',
+        )
         async def get_knowledge_base_files(knowledge_base_uuid: str) -> str:
             files = await self.ap.knowledge_base_service.get_files_by_knowledge_base(int(knowledge_base_uuid))
             return self.success(
-                code=0,
-                data=[
-                    {
-                        'id': file.id,
-                        'file_name': file.file_name,
-                        'status': file.status,
-                    }
-                    for file in files
-                ],
-                msg='ok',
+                data={
+                    'files': [
+                        {
+                            'id': file.id,
+                            'file_name': file.file_name,
+                            'status': file.status,
+                        }
+                        for file in files
+                    ],
+                }
             )
 
-        @self.route('/<knowledge_base_uuid>/files/<file_id>', methods=['DELETE'], endpoint='delete_specific_file_in_kb')
+        @self.route(
+            '/<knowledge_base_uuid>/files/<file_id>',
+            methods=['DELETE'],
+            endpoint='delete_specific_file_in_kb',
+        )
         async def delete_specific_file_in_kb(file_id: str) -> str:
             await self.ap.knowledge_base_service.delete_data_by_file_id(int(file_id))
-            return self.success(code=0, msg='ok')
+            return self.success({})
 
-        @self.route('/<knowledge_base_uuid>/files', methods=['POST'], endpoint='relate_file_with_kb')
+        @self.route(
+            '/<knowledge_base_uuid>/files',
+            methods=['POST'],
+            endpoint='relate_file_with_kb',
+        )
         async def relate_file_id_with_kb(knowledge_base_uuid: str, file_id: str) -> str:
             if 'file' not in quart.request.files:
                 return self.http_status(400, -1, 'No file part in the request')
@@ -80,4 +94,4 @@ class KnowledgeBaseRouterGroup(group.RouterGroup):
 
             # 调用服务层方法将文件与知识库关联
             await self.ap.knowledge_base_service.relate_file_id_with_kb(int(knowledge_base_uuid), int(file_id))
-            return self.success(code=0, data={}, msg='ok')
+            return self.success({})
