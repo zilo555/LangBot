@@ -24,6 +24,7 @@ import { z } from 'zod';
 // import { httpClient } from '@/app/infra/http/HttpClient';
 // import { KnowledgeBase } from '@/app/infra/entities/api';
 import KBForm from '@/app/home/knowledge/components/kb-form/KBForm';
+import KBDoc from '@/app/home/knowledge/components/kb-docs/KBDoc';
 
 interface KBDetailDialogProps {
   open: boolean;
@@ -48,6 +49,7 @@ export default function KBDetailDialog({
   const { t } = useTranslation();
   const [kbId, setKbId] = useState<string | undefined>(propKbId);
   const [activeMenu, setActiveMenu] = useState('metadata');
+  const [fileId, setFileId] = useState<string | undefined>(undefined);
   // const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
@@ -177,7 +179,7 @@ export default function KBDetailDialog({
                     onNewKbCreated={onNewKbCreated}
                   />
                 )}
-                {activeMenu === 'documents' && <div>documents</div>}
+                {activeMenu === 'documents' && <KBDoc kbId={kbId} />}
               </div>
               {activeMenu === 'metadata' && (
                 <DialogFooter className="px-6 py-4 border-t shrink-0">

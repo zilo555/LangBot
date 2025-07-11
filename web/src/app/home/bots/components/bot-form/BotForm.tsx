@@ -212,6 +212,7 @@ export default function BotForm({
     });
     setAdapterNameToDynamicConfigMap(adapterNameToDynamicConfigMap);
   }
+
   async function getBotConfig(
     botId: string,
   ): Promise<z.infer<typeof formSchema>> {

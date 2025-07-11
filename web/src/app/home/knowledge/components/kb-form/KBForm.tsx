@@ -67,8 +67,30 @@ export default function KBForm({
   >([]);
 
   useEffect(() => {
-    getEmbeddingModelNameList();
+    getEmbeddingModelNameList().then(() => {
+      if (initKbId) {
+        getKbConfig(initKbId).then((val) => {
+          form.setValue('name', val.name);
+          form.setValue('description', val.description);
+          form.setValue('embeddingModelUUID', val.embeddingModelUUID);
+        });
+      }
+    });
   }, []);
+
+  const getKbConfig = async (
+    kbId: string,
+  ): Promise<z.infer<typeof formSchema>> => {
+    return new Promise((resolve, reject) => {
+      httpClient.getKnowledgeBase(kbId).then((res) => {
+        resolve({
+          name: res.base.name,
+          description: res.base.description,
+          embeddingModelUUID: res.base.embedding_model_uuid,
+        });
+      });
+    });
+  };
 
   const getEmbeddingModelNameList = async () => {
     const resp = await httpClient.getProviderEmbeddingModels();
