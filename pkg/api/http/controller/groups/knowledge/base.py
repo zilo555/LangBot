@@ -48,6 +48,8 @@ class KnowledgeBaseRouterGroup(group.RouterGroup):
                             'name': knowledge_base.name,
                             'description': knowledge_base.description,
                             'uuid': knowledge_base.id,
+                            'embedding_model_uuid': knowledge_base.embedding_model_uuid,
+                            'top_k': knowledge_base.top_k,
                         },
                     }
                 )
