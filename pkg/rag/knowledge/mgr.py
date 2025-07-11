@@ -318,12 +318,12 @@ class RAGManager:
                 self.ap.logger.error(f'Knowledge Base with UUID {knowledge_base_uuid} not found.')
                 return
 
-            if not self.ap.storage_mgr.storage_provider.exists(file_id):
+            if not await self.ap.storage_mgr.storage_provider.exists(file_id):
                 self.ap.logger.error(f'File with ID {file_id} does not exist.')
                 return
             self.ap.logger.info(f'File with ID {file_id} exists, proceeding with association.')
             # add new file record
-            file_to_update = File(id=file_id, kb_id=kb.id)
+            file_to_update = File(id=file_id, kb_id=kb.id, file_name=file_id, path=os.path.join('data', 'storage', file_id), file_type=os.path.splitext(file_id)[1].lstrip('.'), status=0)
             session.add(file_to_update)
             session.commit()
             self.ap.logger.info(
