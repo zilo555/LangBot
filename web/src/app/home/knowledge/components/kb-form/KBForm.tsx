@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { KnowledgeBase } from '@/app/infra/entities/api';
 
 const getFormSchema = (t: (key: string) => string) =>
   z.object({
@@ -81,11 +82,40 @@ export default function KBForm({
     );
   };
 
+  const onSubmit = (data: z.infer<typeof formSchema>) => {
+    console.log('data', data);
+
+    if (initKbId) {
+      // update knowledge base
+      const updateKb: KnowledgeBase = {
+        name: data.name,
+        description: data.description,
+        embedding_model_uuid: data.embeddingModelUUID,
+      };
+    } else {
+      // create knowledge base
+      const newKb: KnowledgeBase = {
+        name: data.name,
+        description: data.description,
+        embedding_model_uuid: data.embeddingModelUUID,
+      };
+      httpClient
+        .createKnowledgeBase(newKb)
+        .then((res) => {
+          console.log('create knowledge base success', res);
+          onNewKbCreated(res.uuid);
+        })
+        .catch((err) => {
+          console.error('create knowledge base failed', err);
+        });
+    }
+  };
+
   return (
     <>
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit(onFormSubmit)}
+          onSubmit={form.handleSubmit(onSubmit)}
           id="kb-form"
           className="space-y-8"
         >
