@@ -2,6 +2,7 @@ from sqlalchemy import create_engine, Column, String, Text, DateTime, LargeBinar
 from sqlalchemy.orm import declarative_base, sessionmaker
 from datetime import datetime
 import os
+import uuid
 
 Base = declarative_base()
 DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///./rag_knowledge.db')
@@ -35,11 +36,11 @@ class File(Base):
     path = Column(String)
     created_at = Column(DateTime, default=datetime.utcnow)
     file_type = Column(String)
-    status = Column(String, default='0')
+    status = Column(Integer, default=0)  # 0: uploaded and processing, 1: completed, 2: failed
 
 class Chunk(Base):
     __tablename__ = 'chunks'
-    id = Column(String, primary_key=True, index=True)
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     file_id = Column(String, nullable=True)
     text = Column(Text)
 

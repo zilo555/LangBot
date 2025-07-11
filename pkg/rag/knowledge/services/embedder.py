@@ -12,7 +12,7 @@ from pkg.rag.knowledge.services.chroma_manager import ChromaIndexManager # Impor
 logger = logging.getLogger(__name__)
 
 class Embedder(BaseService):
-    def __init__(self, model_type: str, model_name_key: str, chroma_manager: ChromaIndexManager):
+    def __init__(self, model_type: str, model_name_key: str,  chroma_manager: ChromaIndexManager = None):
         super().__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
         self.model_type = model_type

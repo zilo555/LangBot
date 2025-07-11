@@ -24,33 +24,28 @@ class Chunker(BaseService):
         """
         if not text:
             return []
-
-        # Simple whitespace-based splitting for demonstration
-        # For more advanced chunking, consider libraries like LangChain's text splitters
-        words = text.split()
-        chunks = []
-        current_chunk = []
+        # words = text.split()
+        # chunks = []
+        # current_chunk = []
         
-        for word in words:
-            current_chunk.append(word)
-            if len(current_chunk) > self.chunk_size:
-                chunks.append(" ".join(current_chunk[:self.chunk_size]))
-                current_chunk = current_chunk[self.chunk_size - self.chunk_overlap:]
+        # for word in words:
+        #     current_chunk.append(word)
+        #     if len(current_chunk) > self.chunk_size:
+        #         chunks.append(" ".join(current_chunk[:self.chunk_size]))
+        #         current_chunk = current_chunk[self.chunk_size - self.chunk_overlap:]
         
-        if current_chunk:
-            chunks.append(" ".join(current_chunk))
+        # if current_chunk:
+        #     chunks.append(" ".join(current_chunk))
         
         # A more robust chunking strategy (e.g., using recursive character text splitter)
-        # from langchain.text_splitter import RecursiveCharacterTextSplitter
-        # text_splitter = RecursiveCharacterTextSplitter(
-        #     chunk_size=self.chunk_size,
-        #     chunk_overlap=self.chunk_overlap,
-        #     length_function=len,
-        #     is_separator_regex=False,
-        # )
-        # return text_splitter.split_text(text)
-        
-        return [chunk for chunk in chunks if chunk.strip()] # Filter out empty chunks
+        from langchain.text_splitter import RecursiveCharacterTextSplitter
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=self.chunk_size,
+            chunk_overlap=self.chunk_overlap,
+            length_function=len,
+            is_separator_regex=False,
+        )
+        return text_splitter.split_text(text)
 
     async def chunk(self, text: str) -> List[str]:
         """
