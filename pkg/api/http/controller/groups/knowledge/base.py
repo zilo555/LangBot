@@ -14,17 +14,19 @@ class KnowledgeBaseRouterGroup(group.RouterGroup):
                         'uuid': kb.id,
                         'name': kb.name,
                         'description': kb.description,
+                        'embedding_model_uuid': kb.embedding_model_uuid,
+                        'top_k': kb.top_k,
                     }
                     for kb in knowledge_bases
                 ]
                 return self.success(data={'bases': bases_list})
 
-            # POST: create a new knowledge base
-            json_data = await quart.request.json
-            knowledge_base_uuid = await self.ap.knowledge_base_service.create_knowledge_base(
-                json_data.get('name'), json_data.get('description')
-            )
-            return self.success(data={'uuid': knowledge_base_uuid})
+            elif quart.request.method == 'POST':
+                json_data = await quart.request.json
+                knowledge_base_uuid = await self.ap.knowledge_base_service.create_knowledge_base(
+                    json_data.get('name'), json_data.get('description'), json_data.get('embedding_model_uuid')
+                )
+                return self.success(data={'uuid': knowledge_base_uuid})
 
         @self.route(
             '/<knowledge_base_uuid>',

@@ -5,13 +5,10 @@ import os
 
 
 Base = declarative_base()
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./rag_knowledge.db")
+DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///./rag_knowledge.db')
 
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False} 
-)
+engine = create_engine(DATABASE_URL, connect_args={'check_same_thread': False})
 
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -20,7 +17,8 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 def create_db_and_tables():
     """Creates all database tables defined in the Base."""
     Base.metadata.create_all(bind=engine)
-    print("Database tables created or already exist.")
+    print('Database tables created or already exist.')
+
 
 class KnowledgeBase(Base):
     __tablename__ = 'kb'
@@ -28,7 +26,7 @@ class KnowledgeBase(Base):
     name = Column(String, index=True)
     description = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
-    embedding_model = Column(String, default='')
+    embedding_model_uuid = Column(String, default='')
     top_k = Column(Integer, default=5)
 
 
