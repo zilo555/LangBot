@@ -26,7 +26,9 @@ class RAGManager:
         """Initializes the RAG system by creating database tables."""
         await asyncio.to_thread(create_db_and_tables)
 
-    async def create_knowledge_base(self, kb_name: str, kb_description: str, embedding_model: str = '', top_k: int = 5):
+    async def create_knowledge_base(
+        self, kb_name: str, kb_description: str, embedding_model_uuid: str = '', top_k: int = 5
+    ):
         """
         Creates a new knowledge base if it doesn't already exist.
         """
@@ -43,7 +45,7 @@ class RAGManager:
                         new_kb = KnowledgeBase(
                             name=kb_name,
                             description=kb_description,
-                            embedding_model=embedding_model,
+                            embedding_model_uuid=embedding_model_uuid,
                             top_k=top_k,
                             id=id,
                         )
