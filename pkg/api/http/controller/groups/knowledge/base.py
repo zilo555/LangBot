@@ -59,23 +59,34 @@ class KnowledgeBaseRouterGroup(group.RouterGroup):
 
         @self.route(
             '/<knowledge_base_uuid>/files',
-            methods=['GET'],
+            methods=['GET', 'POST'],
             endpoint='get_knowledge_base_files',
         )
         async def get_knowledge_base_files(knowledge_base_uuid: str) -> str:
-            files = await self.ap.knowledge_base_service.get_files_by_knowledge_base(knowledge_base_uuid)
-            return self.success(
-                data={
-                    'files': [
-                        {
-                            'id': file.id,
-                            'file_name': file.file_name,
-                            'status': file.status,
-                        }
-                        for file in files
-                    ],
-                }
-            )
+            if quart.request.method == 'GET':
+                files = await self.ap.knowledge_base_service.get_files_by_knowledge_base(knowledge_base_uuid)
+                return self.success(
+                    data={
+                        'files': [
+                            {
+                                'id': file.id,
+                                'file_name': file.file_name,
+                                'status': file.status,
+                            }
+                            for file in files
+                        ],
+                    }
+                )
+
+            elif quart.request.method == 'POST':
+                json_data = await quart.request.json
+                file_id = json_data.get('file_id')
+                if not file_id:
+                    return self.http_status(400, -1, 'File ID is required')
+
+                # 调用服务层方法将文件与知识库关联
+                await self.ap.knowledge_base_service.relate_file_id_with_kb(knowledge_base_uuid, file_id)
+                return self.success({})
 
         @self.route(
             '/<knowledge_base_uuid>/files/<file_id>',
@@ -84,22 +95,4 @@ class KnowledgeBaseRouterGroup(group.RouterGroup):
         )
         async def delete_specific_file_in_kb(file_id: str) -> str:
             await self.ap.knowledge_base_service.delete_data_by_file_id(file_id)
-            return self.success({})
-
-        @self.route(
-            '/<knowledge_base_uuid>/files',
-            methods=['POST'],
-            endpoint='relate_file_with_kb',
-        )
-        async def relate_file_id_with_kb(knowledge_base_uuid: str, file_id: str) -> str:
-            if 'file' not in quart.request.files:
-                return self.http_status(400, -1, 'No file part in the request')
-
-            json_data = await quart.request.json
-            file_id = json_data.get('file_id')
-            if not file_id:
-                return self.http_status(400, -1, 'File ID is required')
-
-            # 调用服务层方法将文件与知识库关联
-            await self.ap.knowledge_base_service.relate_file_id_with_kb(knowledge_base_uuid, file_id)
             return self.success({})
