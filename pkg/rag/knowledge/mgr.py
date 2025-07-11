@@ -207,20 +207,23 @@ class RAGManager:
         self.ap.logger.info(f'Starting data deletion process for file_id: {file_id}')
         session = SessionLocal()
         try:
-            # 1. 从 ChromaDB 删除 embeddings
+            # delete vectors
             await asyncio.to_thread(self.chroma_manager.delete_by_file_id_sync, file_id)
             self.ap.logger.info(f'Deleted embeddings from ChromaDB for file_id: {file_id}')
 
-            # 2. 删除与文件关联的 chunks 记录
             chunks_to_delete = session.query(Chunk).filter_by(file_id=file_id).all()
             for chunk in chunks_to_delete:
                 session.delete(chunk)
             self.ap.logger.info(f'Deleted {len(chunks_to_delete)} chunk records for file_id: {file_id}')
 
-            # 3. 删除文件记录本身
             file_to_delete = session.query(File).filter_by(id=file_id).first()
             if file_to_delete:
                 session.delete(file_to_delete)
+                try:
+                    await self.ap.storage_mgr.storage_provider.delete(file_id)
+                except Exception as e:
+                    self.ap.logger.error(f'Error deleting file from storage for file_id {file_id}: {str(e)}', exc_info=True)
+                await self.ap.storage_mgr.storage_provider.delete(file_id)
                 self.ap.logger.info(f'Deleted file record for file_id: {file_id}')
             else:
                 self.ap.logger.warning(

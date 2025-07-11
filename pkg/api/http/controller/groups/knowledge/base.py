@@ -93,6 +93,6 @@ class KnowledgeBaseRouterGroup(group.RouterGroup):
             methods=['DELETE'],
             endpoint='delete_specific_file_in_kb',
         )
-        async def delete_specific_file_in_kb(file_id: str) -> str:
+        async def delete_specific_file_in_kb(file_id: str,knowledge_base_uuid: str) -> str:
             await self.ap.knowledge_base_service.delete_data_by_file_id(file_id)
             return self.success({})
