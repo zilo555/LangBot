@@ -60,7 +60,6 @@ class LLMAPIRequester(metaclass=abc.ABCMeta):
         model: RuntimeLLMModel,
         messages: typing.List[llm_entities.Message],
         funcs: typing.List[tools_entities.LLMFunction] = None,
-        stream: bool = False,
         extra_args: dict[str, typing.Any] = {},
     ) -> llm_entities.Message:
         """调用API

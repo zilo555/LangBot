@@ -75,7 +75,11 @@ class ChatMessageHandler(handler.MessageHandler):
                 if is_stream:
                     # async for results in runner.run(query):
                     async for result in runner.run(query):
-                        print(result)
+                        if query.resp_messages:
+                            query.resp_messages.pop()
+                        if query.resp_message_chain:
+                            query.resp_message_chain.pop()
+
                         query.resp_messages.append(result)
                         print(result)
 

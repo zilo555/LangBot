@@ -17,11 +17,14 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
     """OpenAI ChatCompletion API 请求器"""
 
     client: openai.AsyncClient
+    is_content:bool
 
     default_config: dict[str, typing.Any] = {
         'base_url': 'https://api.openai.com/v1',
         'timeout': 120,
     }
+
+
 
     async def initialize(self):
         self.client = openai.AsyncClient(
@@ -30,6 +33,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
             timeout=self.requester_cfg['timeout'],
             http_client=httpx.AsyncClient(trust_env=True, timeout=self.requester_cfg['timeout']),
         )
+        self.is_content = False
 
     async def _req(
         self,
@@ -69,6 +73,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
     
     async def _make_msg_chunk(
         self,
+        index:int,
         chat_completion: chat_completion.ChatCompletion,
     ) -> llm_entities.MessageChunk:
 
@@ -83,7 +88,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
             delta = chat_completion.delta.model_dump() if hasattr(chat_completion, 'delta') else {}
 
         # 确保 role 字段存在且不为 None
-        # print(delta)
+        # print(delta.values())
         if 'role' not in delta or delta['role'] is None:
             delta['role'] = 'assistant'
 
@@ -91,8 +96,17 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         reasoning_content = delta['reasoning_content'] if 'reasoning_content' in delta else None
 
         # deepseek的reasoner模型
-        if reasoning_content is not None:
-            delta['content'] = '<think>\n' + reasoning_content + '\n</think>\n' + delta['content']
+        if reasoning_content is not None and index == 0:
+            delta['content']  += f'<think>\n{reasoning_content}'
+        elif reasoning_content is None:
+            if self.is_content:
+                delta['content'] = delta['content']
+            else:
+                delta['content'] = f'\n<think>\n\n{delta["content"]}'
+                self.is_content = True
+        else:
+            delta['content'] += reasoning_content
+
 
         message = llm_entities.MessageChunk(**delta)
 
@@ -135,23 +149,17 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         if stream:
             current_content = ''
             args["stream"] = True
+            chunk_idx = 0
+            self.is_content = False
             async for chunk in self._req_stream(args, extra_body=extra_args):
-                # print(chunk)
-
                 # 处理流式消息
-                delta_message = await self._make_msg_chunk(chunk)
+                delta_message = await self._make_msg_chunk(chunk_idx,chunk)
+                # print(delta_message)
                 if delta_message.content:
                     current_content += delta_message.content
                     delta_message.content = current_content
-                    print(current_content)
-                    delta_message.all_content = current_content
-
-                # # 检查是否为最后一个块
-                # if chunk.finish_reason is not None:
-                #     delta_message.is_final = True
-                #
-                # yield delta_message
-                # 检查结束标志
+                    # delta_message.all_content = current_content
+                chunk_idx += 1
                 chunk_choices = getattr(chunk, 'choices', None)
                 if chunk_choices and getattr(chunk_choices[0], 'finish_reason', None):
                     delta_message.is_final = True
@@ -215,9 +223,8 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         model: requester.RuntimeLLMModel,
         messages: typing.List[llm_entities.Message],
         funcs: typing.List[tools_entities.LLMFunction] = None,
-        stream: bool = False,
         extra_args: dict[str, typing.Any] = {},
-    ) -> llm_entities.Message | typing.AsyncGenerator[llm_entities.MessageChunk, None]:
+    ) -> llm_entities.Message:
         req_messages = []  # req_messages 仅用于类内，外部同步由 query.messages 进行
         for m in messages:
             msg_dict = m.dict(exclude_none=True)
@@ -231,26 +238,14 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
 
         try:
 
-            if stream:
-                async for item in self._closure_stream(
-                    query=query,
-                    req_messages=req_messages,
-                    use_model=model,
-                    use_funcs=funcs,
-                    stream=stream,
-                    extra_args=extra_args,
-                ):
-                    return item
-            else:
-                print(req_messages)
-                msg = await self._closure(
-                    query=query,
-                    req_messages=req_messages,
-                    use_model=model,
-                    use_funcs=funcs,
-                    extra_args=extra_args,
-                )
-                return msg
+            msg = await self._closure(
+                query=query,
+                req_messages=req_messages,
+                use_model=model,
+                use_funcs=funcs,
+                extra_args=extra_args,
+            )
+            return msg
         except asyncio.TimeoutError:
             raise errors.RequesterError('请求超时')
         except openai.BadRequestError as e:
@@ -288,16 +283,16 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
             req_messages.append(msg_dict)
 
         try:
-            if stream:
-                async for item in self._closure_stream(
-                    query=query,
-                    req_messages=req_messages,
-                    use_model=model,
-                    use_funcs=funcs,
-                    stream=stream,
-                    extra_args=extra_args,
-                ):
-                    yield item
+            async for item in self._closure_stream(
+                query=query,
+                req_messages=req_messages,
+                use_model=model,
+                use_funcs=funcs,
+                stream=stream,
+                extra_args=extra_args,
+            ):
+                yield item
+                print(item)
 
         except asyncio.TimeoutError:
             raise errors.RequesterError('请求超时')
