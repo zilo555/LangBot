@@ -433,7 +433,17 @@ class HttpClient {
 
   // ============ File management API ============
   public uploadDocumentFile(file: File): Promise<{ file_id: string }> {
-    return this.post('/api/v1/files/documents', file);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.request<{ file_id: string }>({
+      method: 'post',
+      url: '/api/v1/files/documents',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
   }
 
   // ============ Knowledge Base API ============
