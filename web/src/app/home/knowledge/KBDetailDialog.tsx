@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Sidebar,
@@ -21,7 +22,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
-// import { httpClient } from '@/app/infra/http/HttpClient';
+import { httpClient } from '@/app/infra/http/HttpClient';
 // import { KnowledgeBase } from '@/app/infra/entities/api';
 import KBForm from '@/app/home/knowledge/components/kb-form/KBForm';
 import KBDoc from '@/app/home/knowledge/components/kb-docs/KBDoc';
@@ -50,7 +51,7 @@ export default function KBDetailDialog({
   const [kbId, setKbId] = useState<string | undefined>(propKbId);
   const [activeMenu, setActiveMenu] = useState('metadata');
   const [fileId, setFileId] = useState<string | undefined>(undefined);
-  // const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     setKbId(propKbId);
@@ -85,6 +86,13 @@ export default function KBDetailDialog({
       ),
     },
   ];
+
+  const confirmDelete = () => {
+    httpClient.deleteKnowledgeBase(kbId ?? '').then(() => {
+      onKbDeleted();
+    });
+    setShowDeleteConfirm(false);
+  };
 
   if (!kbId) {
     // new kb
@@ -187,7 +195,7 @@ export default function KBDetailDialog({
                     <Button
                       type="button"
                       variant="destructive"
-                      onClick={onKbDeleted}
+                      onClick={() => setShowDeleteConfirm(true)}
                     >
                       {t('common.delete')}
                     </Button>
@@ -206,6 +214,29 @@ export default function KBDetailDialog({
               )}
             </main>
           </SidebarProvider>
+        </DialogContent>
+      </Dialog>
+
+      {/* 删除确认对话框 */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('common.confirmDelete')}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {t('knowledge.deleteKnowledgeBaseConfirmation')}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirm(false)}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button variant="destructive" onClick={confirmDelete}>
+              {t('common.confirmDelete')}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>

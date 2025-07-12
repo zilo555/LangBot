@@ -256,7 +256,7 @@ const jaJP = {
     documentsTab: {
       name: '名前',
       status: 'ステータス',
-      noResults: '結果がありません',
+      noResults: 'ドキュメントがありません',
       dragAndDrop:
         'ファイルをここにドラッグ&ドロップするか、クリックしてアップロードしてください',
       uploading: 'アップロード中...',
@@ -265,7 +265,13 @@ const jaJP = {
       uploadSuccess: 'ファイルのアップロードに成功しました！',
       uploadError: 'ファイルのアップロードに失敗しました。再度お試しください',
       uploadingFile: 'ファイルをアップロード中...',
+      actions: 'アクション',
+      delete: 'ドキュメントを削除',
+      fileDeleteSuccess: 'ドキュメントの削除に成功しました',
+      fileDeleteFailed: 'ドキュメントの削除に失敗しました',
     },
+    deleteKnowledgeBaseConfirmation:
+      '本当にこの知識ベースを削除しますか？この知識ベースに紐付けられたドキュメントは削除されます。',
   },
   register: {
     title: 'LangBot を初期化 👋',

@@ -248,14 +248,20 @@ const zhHans = {
     documentsTab: {
       name: '名称',
       status: '状态',
-      noResults: '暂无结果',
+      noResults: '暂无文档',
       dragAndDrop: '拖拽文件到此处或点击上传',
       uploading: '上传中...',
       supportedFormats: '支持 PDF、Word、TXT、Markdown 等文档格式',
       uploadSuccess: '文件上传成功！',
       uploadError: '文件上传失败，请重试',
       uploadingFile: '上传文件中...',
+      actions: '操作',
+      delete: '删除文件',
+      fileDeleteSuccess: '文件删除成功',
+      fileDeleteFailed: '文件删除失败',
     },
+    deleteKnowledgeBaseConfirmation:
+      '你确定要删除这个知识库吗？此知识库下的所有文档将被删除。',
   },
   register: {
     title: '初始化 LangBot 👋',

@@ -254,7 +254,7 @@ const enUS = {
     documentsTab: {
       name: 'Name',
       status: 'Status',
-      noResults: 'No results',
+      noResults: 'No documents',
       dragAndDrop: 'Drag and drop files here or click to upload',
       uploading: 'Uploading...',
       supportedFormats:
@@ -267,6 +267,8 @@ const enUS = {
       fileDeleteSuccess: 'File deleted successfully',
       fileDeleteFailed: 'File deletion failed',
     },
+    deleteKnowledgeBaseConfirmation:
+      'Are you sure you want to delete this knowledge base? All documents in this knowledge base will be deleted.',
   },
   register: {
     title: 'Initialize LangBot 👋',
