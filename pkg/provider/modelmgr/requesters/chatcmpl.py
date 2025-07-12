@@ -144,7 +144,6 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
 
     async def invoke_embedding(
         self,
-        query: core_entities.Query,
         model: requester.RuntimeEmbeddingModel,
         input_text: str,
         extra_args: dict[str, typing.Any] = {},

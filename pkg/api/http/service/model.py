@@ -185,7 +185,6 @@ class EmbeddingModelsService:
             runtime_embedding_model = await self.ap.model_mgr.init_runtime_embedding_model(model_data)
 
         await runtime_embedding_model.requester.invoke_embedding(
-            query=None,
             model=runtime_embedding_model,
             input_text='Hello, world!',
             extra_args={},
