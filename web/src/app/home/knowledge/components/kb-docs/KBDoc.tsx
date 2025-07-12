@@ -36,7 +36,7 @@ export default function KBDoc({ kbId }: { kbId: string }) {
   };
 
   return (
-    <div className="container mx-auto py-4">
+    <div className="container mx-auto py-2">
       <FileUploadZone
         kbId={kbId}
         onUploadSuccess={handleUploadSuccess}

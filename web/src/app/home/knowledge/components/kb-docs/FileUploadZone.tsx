@@ -84,10 +84,10 @@ export default function FileUploadZone({
 
   return (
     <Card className="mb-4">
-      <CardContent className="p-6">
+      <CardContent className="p-4">
         <div
           className={`
-            relative border-2 border-dashed rounded-lg p-8 text-center transition-colors
+            relative border-2 border-dashed rounded-lg p-4 text-center transition-colors
             ${
               isDragOver
                 ? 'border-blue-500 bg-blue-50'
@@ -109,10 +109,10 @@ export default function FileUploadZone({
           />
 
           <label htmlFor="file-upload" className="cursor-pointer block">
-            <div className="space-y-4">
-              <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+            <div className="space-y-2">
+              <div className="mx-auto w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
                 <svg
-                  className="w-6 h-6 text-gray-400"
+                  className="w-5 h-5 text-gray-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -127,12 +127,12 @@ export default function FileUploadZone({
               </div>
 
               <div>
-                <p className="text-lg font-medium text-gray-900">
+                <p className="text-base font-medium text-gray-900">
                   {isUploading
                     ? t('knowledge.documentsTab.uploading')
                     : t('knowledge.documentsTab.dragAndDrop')}
                 </p>
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 mt-1">
                   {t('knowledge.documentsTab.supportedFormats')}
                 </p>
               </div>
