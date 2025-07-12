@@ -262,6 +262,10 @@ const enUS = {
       uploadSuccess: 'File uploaded successfully!',
       uploadError: 'File upload failed, please try again',
       uploadingFile: 'Uploading file...',
+      actions: 'Actions',
+      delete: 'Delete File',
+      fileDeleteSuccess: 'File deleted successfully',
+      fileDeleteFailed: 'File deletion failed',
     },
   },
   register: {

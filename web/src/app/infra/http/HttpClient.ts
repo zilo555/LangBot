@@ -463,15 +463,20 @@ class HttpClient {
     uuid: string,
     file_id: string,
   ): Promise<object> {
-    return this.post(`/api/v1/knowledge/bases/${uuid}/files`, {
-      file_id,
-    });
+    return this.delete(`/api/v1/knowledge/bases/${uuid}/files/${file_id}`);
   }
 
   public getKnowledgeBaseFiles(
     uuid: string,
   ): Promise<ApiRespKnowledgeBaseFiles> {
     return this.get(`/api/v1/knowledge/bases/${uuid}/files`);
+  }
+
+  public deleteKnowledgeBaseFile(
+    uuid: string,
+    file_id: string,
+  ): Promise<object> {
+    return this.delete(`/api/v1/knowledge/bases/${uuid}/files/${file_id}`);
   }
 
   // ============ Plugins API ============

@@ -155,7 +155,7 @@ export interface ApiRespKnowledgeBaseFiles {
 }
 
 export interface KnowledgeBaseFile {
-  file_id: string;
+  id: string;
   file_name: string;
   status: string;
 }

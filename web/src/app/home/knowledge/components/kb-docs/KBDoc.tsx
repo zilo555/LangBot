@@ -4,20 +4,31 @@ import { KnowledgeBaseFile } from '@/app/infra/entities/api';
 import { columns, DocumentFile } from './documents/columns';
 import { DataTable } from './documents/data-table';
 import FileUploadZone from './FileUploadZone';
+import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 export default function KBDoc({ kbId }: { kbId: string }) {
   const [documentsList, setDocumentsList] = useState<DocumentFile[]>([]);
+  const { t } = useTranslation();
 
   useEffect(() => {
     getDocumentsList();
-  }, []);
+
+    const intervalId = setInterval(() => {
+      getDocumentsList();
+    }, 5000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [kbId]);
 
   async function getDocumentsList() {
     const resp = await httpClient.getKnowledgeBaseFiles(kbId);
     setDocumentsList(
       resp.files.map((file: KnowledgeBaseFile) => {
         return {
-          id: file.file_id,
+          id: file.id,
           name: file.file_name,
           status: file.status,
         };
@@ -35,6 +46,19 @@ export default function KBDoc({ kbId }: { kbId: string }) {
     console.error('Upload failed:', error);
   };
 
+  const handleDelete = (id: string) => {
+    httpClient
+      .deleteKnowledgeBaseFile(kbId, id)
+      .then(() => {
+        getDocumentsList();
+        toast.success(t('knowledge.documentsTab.fileDeleteSuccess'));
+      })
+      .catch((error) => {
+        console.error('Delete failed:', error);
+        toast.error(t('knowledge.documentsTab.fileDeleteFailed'));
+      });
+  };
+
   return (
     <div className="container mx-auto py-2">
       <FileUploadZone
@@ -42,7 +66,7 @@ export default function KBDoc({ kbId }: { kbId: string }) {
         onUploadSuccess={handleUploadSuccess}
         onUploadError={handleUploadError}
       />
-      <DataTable columns={columns()} data={documentsList} />
+      <DataTable columns={columns(handleDelete)} data={documentsList} />
     </div>
   );
 }
