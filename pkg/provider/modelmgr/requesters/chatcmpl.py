@@ -8,7 +8,7 @@ import openai.types.chat.chat_completion as chat_completion
 import httpx
 
 from .. import errors, requester
-from ....core import entities as core_entities
+from ....core import entities as core_entities, app
 from ... import entities as llm_entities
 from ...tools import entities as tools_entities
 
@@ -23,7 +23,6 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         'base_url': 'https://api.openai.com/v1',
         'timeout': 120,
     }
-
 
 
     async def initialize(self):
@@ -53,6 +52,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
 
     async def _make_msg(
         self,
+        pipeline_config: dict[str, typing.Any],
         chat_completion: chat_completion.ChatCompletion,
     ) -> llm_entities.Message:
         chatcmpl_message = chat_completion.choices[0].message.model_dump()
@@ -64,8 +64,12 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         reasoning_content = chatcmpl_message['reasoning_content'] if 'reasoning_content' in chatcmpl_message else None
 
         # deepseek的reasoner模型
-        if reasoning_content is not None:
-            chatcmpl_message['content'] = '<think>\n' + reasoning_content + '\n</think>\n' + chatcmpl_message['content']
+        print(pipeline_config['trigger'].get('misc', '').get('remove_think'))
+        if pipeline_config['trigger'].get('misc', '').get('remove_think'):
+            pass
+        else:
+            if reasoning_content is not None :
+                chatcmpl_message['content'] = '<think>\n' + reasoning_content + '\n</think>\n' + chatcmpl_message['content']
 
         message = llm_entities.Message(**chatcmpl_message)
 
@@ -73,7 +77,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
     
     async def _make_msg_chunk(
         self,
-        index:int,
+        pipeline_config: dict[str, typing.Any],
         chat_completion: chat_completion.ChatCompletion,
     ) -> llm_entities.MessageChunk:
 
@@ -96,16 +100,22 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         reasoning_content = delta['reasoning_content'] if 'reasoning_content' in delta else None
 
         # deepseek的reasoner模型
-        if reasoning_content is not None and index == 0:
-            delta['content']  += f'<think>\n{reasoning_content}'
-        elif reasoning_content is None:
-            if self.is_content:
-                delta['content'] = delta['content']
+        if pipeline_config['trigger'].get('misc', '').get('remove_think'):
+            if reasoning_content is not None :
+                pass
             else:
-                delta['content'] = f'\n<think>\n\n{delta["content"]}'
-                self.is_content = True
+                delta['content'] = delta['content']
         else:
-            delta['content'] += reasoning_content
+            if reasoning_content is not None:
+                delta['content']  += f'<think>\n{reasoning_content}'
+            elif reasoning_content is None:
+                if self.is_content:
+                    delta['content'] = delta['content']
+                else:
+                    delta['content'] = f'\n<think>\n\n{delta["content"]}'
+                    self.is_content = True
+            else:
+                delta['content'] += reasoning_content
 
 
         message = llm_entities.MessageChunk(**delta)
@@ -151,20 +161,41 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
             args["stream"] = True
             chunk_idx = 0
             self.is_content = False
+            tool_calls_map: dict[str, llm_entities.ToolCall] = {}
+            pipeline_config = query.pipeline_config
             async for chunk in self._req_stream(args, extra_body=extra_args):
                 # 处理流式消息
-                delta_message = await self._make_msg_chunk(chunk_idx,chunk)
-                # print(delta_message)
+                delta_message = await self._make_msg_chunk(pipeline_config,chunk)
                 if delta_message.content:
                     current_content += delta_message.content
                     delta_message.content = current_content
+                    print(current_content)
                     # delta_message.all_content = current_content
+                if delta_message.tool_calls:
+                    for tool_call in delta_message.tool_calls:
+                        if tool_call.id not in tool_calls_map:
+                            tool_calls_map[tool_call.id] = llm_entities.ToolCall(
+                                id=tool_call.id,
+                                type=tool_call.type,
+                                function=llm_entities.FunctionCall(
+                                    name=tool_call.function.name if tool_call.function else '',
+                                    arguments=''
+                                ),
+                            )
+                        if tool_call.function and tool_call.function.arguments:
+                            # 流式处理中，工具调用参数可能分多个chunk返回，需要追加而不是覆盖
+                            tool_calls_map[tool_call.id].function.arguments += tool_call.function.arguments
+
+
                 chunk_idx += 1
                 chunk_choices = getattr(chunk, 'choices', None)
                 if chunk_choices and getattr(chunk_choices[0], 'finish_reason', None):
                     delta_message.is_final = True
+                    delta_message.content = current_content
 
-                yield delta_message
+                if chunk_idx % 64 == 0 or delta_message.is_final:
+
+                    yield delta_message
                 # return
 
     
@@ -208,7 +239,8 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
 
         resp = await self._req(args, extra_body=extra_args)
         # 处理请求结果
-        message = await self._make_msg(resp)
+        pipeline_config = query.pipeline_config
+        message = await self._make_msg(pipeline_config,resp)
 
 
         return message
