@@ -372,6 +372,18 @@ class RuntimeConnectionHandler(handler.Handler):
 
         return result['plugins']
 
+    async def get_plugin_info(self, author: str, plugin_name: str) -> dict[str, Any]:
+        """Get plugin"""
+        result = await self.call_action(
+            LangBotToRuntimeAction.GET_PLUGIN_INFO,
+            {
+                'author': author,
+                'plugin_name': plugin_name,
+            },
+            timeout=10,
+        )
+        return result['plugin']
+
     async def emit_event(
         self,
         event_context: dict[str, Any],

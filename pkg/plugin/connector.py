@@ -98,6 +98,9 @@ class PluginRuntimeConnector:
     async def list_plugins(self) -> list[dict[str, Any]]:
         return await self.handler.list_plugins()
 
+    async def get_plugin_info(self, author: str, plugin_name: str) -> dict[str, Any]:
+        return await self.handler.get_plugin_info(author, plugin_name)
+
     async def emit_event(
         self,
         event: events.BaseEventModel,

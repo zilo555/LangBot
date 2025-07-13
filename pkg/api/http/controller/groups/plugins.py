@@ -50,10 +50,10 @@ class PluginsRouterGroup(group.RouterGroup):
         )
         async def _(author: str, plugin_name: str) -> str:
             if quart.request.method == 'GET':
-                plugin = self.ap.plugin_mgr.get_plugin(author, plugin_name)
+                plugin = await self.ap.plugin_connector.get_plugin_info(author, plugin_name)
                 if plugin is None:
                     return self.http_status(404, -1, 'plugin not found')
-                return self.success(data={'plugin': plugin.model_dump()})
+                return self.success(data={'plugin': plugin})
             elif quart.request.method == 'DELETE':
                 ctx = taskmgr.TaskContext.new()
                 wrapper = self.ap.task_mgr.create_user_task(
@@ -72,11 +72,11 @@ class PluginsRouterGroup(group.RouterGroup):
             auth_type=group.AuthType.USER_TOKEN,
         )
         async def _(author: str, plugin_name: str) -> quart.Response:
-            plugin = self.ap.plugin_mgr.get_plugin(author, plugin_name)
+            plugin = await self.ap.plugin_connector.get_plugin_info(author, plugin_name)
             if plugin is None:
                 return self.http_status(404, -1, 'plugin not found')
             if quart.request.method == 'GET':
-                return self.success(data={'config': plugin.plugin_config})
+                return self.success(data={'config': plugin['plugin_config']})
             elif quart.request.method == 'PUT':
                 data = await quart.request.json
 
