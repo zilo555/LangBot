@@ -64,7 +64,6 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         reasoning_content = chatcmpl_message['reasoning_content'] if 'reasoning_content' in chatcmpl_message else None
 
         # deepseek的reasoner模型
-        print(pipeline_config['trigger'].get('misc', '').get('remove_think'))
         if pipeline_config['trigger'].get('misc', '').get('remove_think'):
             pass
         else:
@@ -79,6 +78,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         self,
         pipeline_config: dict[str, typing.Any],
         chat_completion: chat_completion.ChatCompletion,
+        idx: int,
     ) -> llm_entities.MessageChunk:
 
         # 处理流式chunk和完整响应的差异
@@ -106,7 +106,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
             else:
                 delta['content'] = delta['content']
         else:
-            if reasoning_content is not None:
+            if reasoning_content is not None and idx == 0:
                 delta['content']  += f'<think>\n{reasoning_content}'
             elif reasoning_content is None:
                 if self.is_content:
@@ -165,11 +165,10 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
             pipeline_config = query.pipeline_config
             async for chunk in self._req_stream(args, extra_body=extra_args):
                 # 处理流式消息
-                delta_message = await self._make_msg_chunk(pipeline_config,chunk)
+                delta_message = await self._make_msg_chunk(pipeline_config,chunk,chunk_idx)
                 if delta_message.content:
                     current_content += delta_message.content
                     delta_message.content = current_content
-                    print(current_content)
                     # delta_message.all_content = current_content
                 if delta_message.tool_calls:
                     for tool_call in delta_message.tool_calls:
@@ -324,7 +323,6 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
                 extra_args=extra_args,
             ):
                 yield item
-                print(item)
 
         except asyncio.TimeoutError:
             raise errors.RequesterError('请求超时')
