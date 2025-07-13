@@ -359,7 +359,7 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
         self.listeners = {}
         self.message_id_to_card_id = {}
         self.card_id_dict = {}
-        self.seq = 0
+        self.seq = 1
 
         @self.quart_app.route('/lark/callback', methods=['POST'])
         async def lark_callback():
@@ -456,7 +456,7 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
                     card_data = {"schema": "2.0", "header": {"title": {"content": "bot", "tag": "plain_text"}},
                                  "body": {"elements": [{"tag": "markdown", "content": "[思考中.....]","element_id":"markdown_1"}]},
                                  "config": {"streaming_mode": True,
-                                            "streaming_config": {"print_strategy": "fast"}}}
+                                            "streaming_config": {"print_strategy": "delay"}}}  # delay / fast
 
                     request: CreateCardRequest = CreateCardRequest.builder() \
                         .request_body(
@@ -620,7 +620,7 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
             'type': 'card_json',
             'data': {'card_id': self.card_id_dict[message_id], 'elements': {'content': text_message}},
         }
-
+        print(self.seq)
         request: ContentCardElementRequest = ContentCardElementRequest.builder() \
             .card_id(self.card_id_dict[message_id]) \
             .element_id("markdown_1") \
@@ -632,7 +632,7 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
             .build()
 
         if is_final:
-            self.seq = 0
+            self.seq = 1
         # 发起请求
         response: ContentCardElementResponse = self.api_client.cardkit.v1.card_element.content(request)
 
