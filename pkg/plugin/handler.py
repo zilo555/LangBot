@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import typing
 from typing import Any
+import base64
 
 import sqlalchemy
 
@@ -18,6 +19,7 @@ import langbot_plugin.api.entities.builtin.provider.message as provider_message
 import langbot_plugin.api.entities.builtin.resource.tool as resource_tool
 
 from ..entity.persistence import plugin as persistence_plugin
+from ..entity.persistence import bstorage as persistence_bstorage
 
 from ..core import app
 from ..utils import constants
@@ -249,6 +251,106 @@ class RuntimeConnectionHandler(handler.Handler):
             return handler.ActionResponse.success(
                 data={
                     'message': result.model_dump(),
+                },
+            )
+
+        @self.action(RuntimeToLangBotAction.SET_BINARY_STORAGE)
+        async def set_binary_storage(data: dict[str, Any]) -> handler.ActionResponse:
+            """Set binary storage"""
+            key = data['key']
+            owner_type = data['owner_type']
+            owner = data['owner']
+            value = base64.b64decode(data['value_base64'])
+
+            result = await self.ap.persistence_mgr.execute_async(
+                sqlalchemy.select(persistence_bstorage.BinaryStorage)
+                .where(persistence_bstorage.BinaryStorage.key == key)
+                .where(persistence_bstorage.BinaryStorage.owner_type == owner_type)
+                .where(persistence_bstorage.BinaryStorage.owner == owner)
+            )
+
+            if result.first() is not None:
+                await self.ap.persistence_mgr.execute_async(
+                    sqlalchemy.update(persistence_bstorage.BinaryStorage)
+                    .where(persistence_bstorage.BinaryStorage.key == key)
+                    .where(persistence_bstorage.BinaryStorage.owner_type == owner_type)
+                    .where(persistence_bstorage.BinaryStorage.owner == owner)
+                    .values(value=value)
+                )
+            else:
+                await self.ap.persistence_mgr.execute_async(
+                    sqlalchemy.insert(persistence_bstorage.BinaryStorage).values(
+                        unique_key=f'{owner_type}:{owner}:{key}',
+                        key=key,
+                        owner_type=owner_type,
+                        owner=owner,
+                        value=value,
+                    )
+                )
+
+            return handler.ActionResponse.success(
+                data={},
+            )
+
+        @self.action(RuntimeToLangBotAction.GET_BINARY_STORAGE)
+        async def get_binary_storage(data: dict[str, Any]) -> handler.ActionResponse:
+            """Get binary storage"""
+            key = data['key']
+            owner_type = data['owner_type']
+            owner = data['owner']
+
+            result = await self.ap.persistence_mgr.execute_async(
+                sqlalchemy.select(persistence_bstorage.BinaryStorage)
+                .where(persistence_bstorage.BinaryStorage.key == key)
+                .where(persistence_bstorage.BinaryStorage.owner_type == owner_type)
+                .where(persistence_bstorage.BinaryStorage.owner == owner)
+            )
+
+            storage = result.first()
+            if storage is None:
+                return handler.ActionResponse.error(
+                    message=f'Storage with key {key} not found',
+                )
+
+            return handler.ActionResponse.success(
+                data={
+                    'value_base64': base64.b64encode(storage.value).decode('utf-8'),
+                },
+            )
+
+        @self.action(RuntimeToLangBotAction.DELETE_BINARY_STORAGE)
+        async def delete_binary_storage(data: dict[str, Any]) -> handler.ActionResponse:
+            """Delete binary storage"""
+            key = data['key']
+            owner_type = data['owner_type']
+            owner = data['owner']
+
+            await self.ap.persistence_mgr.execute_async(
+                sqlalchemy.delete(persistence_bstorage.BinaryStorage)
+                .where(persistence_bstorage.BinaryStorage.key == key)
+                .where(persistence_bstorage.BinaryStorage.owner_type == owner_type)
+                .where(persistence_bstorage.BinaryStorage.owner == owner)
+            )
+
+            return handler.ActionResponse.success(
+                data={},
+            )
+
+        @self.action(RuntimeToLangBotAction.GET_BINARY_STORAGE_KEYS)
+        async def get_binary_storage_keys(data: dict[str, Any]) -> handler.ActionResponse:
+            """Get binary storage keys"""
+            owner_type = data['owner_type']
+            owner = data['owner']
+
+            result = await self.ap.persistence_mgr.execute_async(
+                sqlalchemy.select(persistence_bstorage.BinaryStorage.key)
+                .where(persistence_bstorage.BinaryStorage.owner_type == owner_type)
+                .where(persistence_bstorage.BinaryStorage.owner == owner)
+            )
+
+            return handler.ActionResponse.success(
+                data={
+                    'keys': result.scalars().all(),
                 },
             )
 
