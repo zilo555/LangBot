@@ -62,13 +62,14 @@ class PreProcessor(stage.PipelineStage):
             if llm_model.model_entity.abilities.__contains__('func_call'):
                 query.use_funcs = await self.ap.tool_mgr.get_all_tools()
 
-        query.variables = {
+        variables = {
             'session_id': f'{query.session.launcher_type.value}_{query.session.launcher_id}',
             'conversation_id': conversation.uuid,
             'msg_create_time': (
                 int(query.message_event.time) if query.message_event.time else int(datetime.datetime.now().timestamp())
             ),
         }
+        query.variables.update(variables)
 
         # Check if this model supports vision, if not, remove all images
         # TODO this checking should be performed in runner, and in this stage, the image should be reserved

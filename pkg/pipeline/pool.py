@@ -52,6 +52,7 @@ class QueryPool:
                 sender_id=sender_id,
                 message_event=message_event,
                 message_chain=message_chain,
+                variables={},
                 resp_messages=[],
                 resp_message_chain=[],
                 adapter=adapter,

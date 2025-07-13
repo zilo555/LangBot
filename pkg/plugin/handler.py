@@ -107,6 +107,62 @@ class RuntimeConnectionHandler(handler.Handler):
                 },
             )
 
+        @self.action(PluginToRuntimeAction.SET_QUERY_VAR)
+        async def set_query_var(data: dict[str, Any]) -> handler.ActionResponse:
+            """Set query var"""
+            query_id = data['query_id']
+            key = data['key']
+            value = data['value']
+
+            if query_id not in self.ap.query_pool.cached_queries:
+                return handler.ActionResponse.error(
+                    message=f'Query with query_id {query_id} not found',
+                )
+
+            query = self.ap.query_pool.cached_queries[query_id]
+
+            query.variables[key] = value
+
+            return handler.ActionResponse.success(
+                data={},
+            )
+
+        @self.action(PluginToRuntimeAction.GET_QUERY_VAR)
+        async def get_query_var(data: dict[str, Any]) -> handler.ActionResponse:
+            """Get query var"""
+            query_id = data['query_id']
+            key = data['key']
+
+            if query_id not in self.ap.query_pool.cached_queries:
+                return handler.ActionResponse.error(
+                    message=f'Query with query_id {query_id} not found',
+                )
+
+            query = self.ap.query_pool.cached_queries[query_id]
+
+            return handler.ActionResponse.success(
+                data={
+                    'value': query.variables[key],
+                },
+            )
+
+        @self.action(PluginToRuntimeAction.GET_QUERY_VARS)
+        async def get_query_vars(data: dict[str, Any]) -> handler.ActionResponse:
+            """Get query vars"""
+            query_id = data['query_id']
+            if query_id not in self.ap.query_pool.cached_queries:
+                return handler.ActionResponse.error(
+                    message=f'Query with query_id {query_id} not found',
+                )
+
+            query = self.ap.query_pool.cached_queries[query_id]
+
+            return handler.ActionResponse.success(
+                data={
+                    'vars': query.variables,
+                },
+            )
+
     async def ping(self) -> dict[str, Any]:
         """Ping the runtime"""
         return await self.call_action(
