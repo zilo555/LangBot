@@ -7,8 +7,8 @@ import aiohttp
 
 from .. import runner
 from ...core import app
-from .. import entities as llm_entities
 import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
+import langbot_plugin.api.entities.builtin.provider.message as provider_message
 
 
 class N8nAPIError(Exception):
@@ -68,7 +68,7 @@ class N8nServiceAPIRunner(runner.RequestRunner):
 
         return plain_text
 
-    async def _call_webhook(self, query: pipeline_query.Query) -> typing.AsyncGenerator[llm_entities.Message, None]:
+    async def _call_webhook(self, query: pipeline_query.Query) -> typing.AsyncGenerator[provider_message.Message, None]:
         """调用n8n webhook"""
         # 生成会话ID（如果不存在）
         if not query.session.using_conversation.uuid:
@@ -146,7 +146,7 @@ class N8nServiceAPIRunner(runner.RequestRunner):
                         output_content = json.dumps(response_data, ensure_ascii=False)
 
                     # 返回消息
-                    yield llm_entities.Message(
+                    yield provider_message.Message(
                         role='assistant',
                         content=output_content,
                     )
@@ -154,7 +154,7 @@ class N8nServiceAPIRunner(runner.RequestRunner):
             self.ap.logger.error(f'n8n webhook call exception: {str(e)}')
             raise N8nAPIError(f'n8n webhook call exception: {str(e)}')
 
-    async def run(self, query: pipeline_query.Query) -> typing.AsyncGenerator[llm_entities.Message, None]:
+    async def run(self, query: pipeline_query.Query) -> typing.AsyncGenerator[provider_message.Message, None]:
         """运行请求"""
         async for msg in self._call_webhook(query):
             yield msg

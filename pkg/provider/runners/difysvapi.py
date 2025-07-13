@@ -9,7 +9,7 @@ import base64
 
 from .. import runner
 from ...core import app
-from .. import entities as llm_entities
+import langbot_plugin.api.entities.builtin.provider.message as provider_message
 from ...utils import image
 import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
 from libs.dify_service_api.v1 import client, errors
@@ -90,7 +90,9 @@ class DifyServiceAPIRunner(runner.RequestRunner):
 
         return plain_text, image_ids
 
-    async def _chat_messages(self, query: pipeline_query.Query) -> typing.AsyncGenerator[llm_entities.Message, None]:
+    async def _chat_messages(
+        self, query: pipeline_query.Query
+    ) -> typing.AsyncGenerator[provider_message.Message, None]:
         """调用聊天助手"""
         cov_id = query.session.using_conversation.uuid or ''
         query.variables['conversation_id'] = cov_id
@@ -132,7 +134,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
             if mode == 'workflow':
                 if chunk['event'] == 'node_finished':
                     if chunk['data']['node_type'] == 'answer':
-                        yield llm_entities.Message(
+                        yield provider_message.Message(
                             role='assistant',
                             content=self._try_convert_thinking(chunk['data']['outputs']['answer']),
                         )
@@ -140,7 +142,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                 if chunk['event'] == 'message':
                     basic_mode_pending_chunk += chunk['answer']
                 elif chunk['event'] == 'message_end':
-                    yield llm_entities.Message(
+                    yield provider_message.Message(
                         role='assistant',
                         content=self._try_convert_thinking(basic_mode_pending_chunk),
                     )
@@ -153,7 +155,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
 
     async def _agent_chat_messages(
         self, query: pipeline_query.Query
-    ) -> typing.AsyncGenerator[llm_entities.Message, None]:
+    ) -> typing.AsyncGenerator[provider_message.Message, None]:
         """调用聊天助手"""
         cov_id = query.session.using_conversation.uuid or ''
         query.variables['conversation_id'] = cov_id
@@ -198,7 +200,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
             else:
                 if pending_agent_message.strip() != '':
                     pending_agent_message = pending_agent_message.replace('</details>Action:', '</details>')
-                    yield llm_entities.Message(
+                    yield provider_message.Message(
                         role='assistant',
                         content=self._try_convert_thinking(pending_agent_message),
                     )
@@ -209,13 +211,13 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                         continue
 
                     if chunk['tool']:
-                        msg = llm_entities.Message(
+                        msg = provider_message.Message(
                             role='assistant',
                             tool_calls=[
-                                llm_entities.ToolCall(
+                                provider_message.ToolCall(
                                     id=chunk['id'],
                                     type='function',
-                                    function=llm_entities.FunctionCall(
+                                    function=provider_message.FunctionCall(
                                         name=chunk['tool'],
                                         arguments=json.dumps({}),
                                     ),
@@ -232,9 +234,9 @@ class DifyServiceAPIRunner(runner.RequestRunner):
 
                         image_url = base_url + chunk['url']
 
-                        yield llm_entities.Message(
+                        yield provider_message.Message(
                             role='assistant',
-                            content=[llm_entities.ContentElement.from_image_url(image_url)],
+                            content=[provider_message.ContentElement.from_image_url(image_url)],
                         )
                 if chunk['event'] == 'error':
                     raise errors.DifyAPIError('dify 服务错误: ' + chunk['message'])
@@ -246,7 +248,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
 
     async def _workflow_messages(
         self, query: pipeline_query.Query
-    ) -> typing.AsyncGenerator[llm_entities.Message, None]:
+    ) -> typing.AsyncGenerator[provider_message.Message, None]:
         """调用工作流"""
 
         if not query.session.using_conversation.uuid:
@@ -290,14 +292,14 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                 if chunk['data']['node_type'] == 'start' or chunk['data']['node_type'] == 'end':
                     continue
 
-                msg = llm_entities.Message(
+                msg = provider_message.Message(
                     role='assistant',
                     content=None,
                     tool_calls=[
-                        llm_entities.ToolCall(
+                        provider_message.ToolCall(
                             id=chunk['data']['node_id'],
                             type='function',
-                            function=llm_entities.FunctionCall(
+                            function=provider_message.FunctionCall(
                                 name=chunk['data']['title'],
                                 arguments=json.dumps({}),
                             ),
@@ -311,14 +313,14 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                 if chunk['data']['error']:
                     raise errors.DifyAPIError(chunk['data']['error'])
 
-                msg = llm_entities.Message(
+                msg = provider_message.Message(
                     role='assistant',
                     content=chunk['data']['outputs']['summary'],
                 )
 
                 yield msg
 
-    async def run(self, query: pipeline_query.Query) -> typing.AsyncGenerator[llm_entities.Message, None]:
+    async def run(self, query: pipeline_query.Query) -> typing.AsyncGenerator[provider_message.Message, None]:
         """运行请求"""
         if self.pipeline_config['ai']['dify-service-api']['app-type'] == 'chat':
             async for msg in self._chat_messages(query):

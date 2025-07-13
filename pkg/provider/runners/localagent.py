@@ -4,15 +4,15 @@ import json
 import typing
 
 from .. import runner
-from .. import entities as llm_entities
 import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
+import langbot_plugin.api.entities.builtin.provider.message as provider_message
 
 
 @runner.runner_class('local-agent')
 class LocalAgentRunner(runner.RequestRunner):
     """本地Agent请求运行器"""
 
-    async def run(self, query: pipeline_query.Query) -> typing.AsyncGenerator[llm_entities.Message, None]:
+    async def run(self, query: pipeline_query.Query) -> typing.AsyncGenerator[provider_message.Message, None]:
         """运行请求"""
         pending_tool_calls = []
 
@@ -45,7 +45,7 @@ class LocalAgentRunner(runner.RequestRunner):
 
                     func_ret = await self.ap.tool_mgr.execute_func_call(func.name, parameters)
 
-                    msg = llm_entities.Message(
+                    msg = provider_message.Message(
                         role='tool',
                         content=json.dumps(func_ret, ensure_ascii=False),
                         tool_call_id=tool_call.id,
@@ -56,7 +56,7 @@ class LocalAgentRunner(runner.RequestRunner):
                     req_messages.append(msg)
                 except Exception as e:
                     # 工具调用出错，添加一个报错信息到 req_messages
-                    err_msg = llm_entities.Message(role='tool', content=f'err: {e}', tool_call_id=tool_call.id)
+                    err_msg = provider_message.Message(role='tool', content=f'err: {e}', tool_call_id=tool_call.id)
 
                     yield err_msg
 

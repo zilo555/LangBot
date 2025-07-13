@@ -10,9 +10,9 @@ import json
 import ollama
 
 from .. import errors, requester
-from ... import entities as llm_entities
 import langbot_plugin.api.entities.builtin.resource.tool as resource_tool
 import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
+import langbot_plugin.api.entities.builtin.provider.message as provider_message
 
 REQUESTER_NAME: str = 'ollama-chat'
 
@@ -44,7 +44,7 @@ class OllamaChatCompletions(requester.LLMAPIRequester):
         use_model: requester.RuntimeLLMModel,
         use_funcs: list[resource_tool.LLMTool] = None,
         extra_args: dict[str, typing.Any] = {},
-    ) -> llm_entities.Message:
+    ) -> provider_message.Message:
         args = extra_args.copy()
         args['model'] = use_model.model_entity.name
 
@@ -73,27 +73,27 @@ class OllamaChatCompletions(requester.LLMAPIRequester):
                 args['tools'] = tools
 
         resp = await self._req(args)
-        message: llm_entities.Message = await self._make_msg(resp)
+        message: provider_message.Message = await self._make_msg(resp)
         return message
 
-    async def _make_msg(self, chat_completions: ollama.ChatResponse) -> llm_entities.Message:
+    async def _make_msg(self, chat_completions: ollama.ChatResponse) -> provider_message.Message:
         message: ollama.Message = chat_completions.message
         if message is None:
             raise ValueError("chat_completions must contain a 'message' field")
 
-        ret_msg: llm_entities.Message = None
+        ret_msg: provider_message.Message = None
 
         if message.content is not None:
-            ret_msg = llm_entities.Message(role='assistant', content=message.content)
+            ret_msg = provider_message.Message(role='assistant', content=message.content)
         if message.tool_calls is not None and len(message.tool_calls) > 0:
-            tool_calls: list[llm_entities.ToolCall] = []
+            tool_calls: list[provider_message.ToolCall] = []
 
             for tool_call in message.tool_calls:
                 tool_calls.append(
-                    llm_entities.ToolCall(
+                    provider_message.ToolCall(
                         id=uuid.uuid4().hex,
                         type='function',
-                        function=llm_entities.FunctionCall(
+                        function=provider_message.FunctionCall(
                             name=tool_call.function.name,
                             arguments=json.dumps(tool_call.function.arguments),
                         ),
@@ -107,10 +107,10 @@ class OllamaChatCompletions(requester.LLMAPIRequester):
         self,
         query: pipeline_query.Query,
         model: requester.RuntimeLLMModel,
-        messages: typing.List[llm_entities.Message],
+        messages: typing.List[provider_message.Message],
         funcs: typing.List[resource_tool.LLMTool] = None,
         extra_args: dict[str, typing.Any] = {},
-    ) -> llm_entities.Message:
+    ) -> provider_message.Message:
         req_messages: list = []
         for m in messages:
             msg_dict: dict = m.dict(exclude_none=True)

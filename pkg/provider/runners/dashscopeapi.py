@@ -7,8 +7,8 @@ import dashscope
 
 from .. import runner
 from ...core import app
-from .. import entities as llm_entities
 import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
+import langbot_plugin.api.entities.builtin.provider.message as provider_message
 
 
 class DashscopeAPIError(Exception):
@@ -90,7 +90,9 @@ class DashScopeAPIRunner(runner.RequestRunner):
 
         return plain_text, image_ids
 
-    async def _agent_messages(self, query: pipeline_query.Query) -> typing.AsyncGenerator[llm_entities.Message, None]:
+    async def _agent_messages(
+        self, query: pipeline_query.Query
+    ) -> typing.AsyncGenerator[provider_message.Message, None]:
         """Dashscope 智能体对话请求"""
 
         # 局部变量
@@ -143,14 +145,14 @@ class DashScopeAPIRunner(runner.RequestRunner):
             # 将参考资料替换到文本中
             pending_content = self._replace_references(pending_content, references_dict)
 
-        yield llm_entities.Message(
+        yield provider_message.Message(
             role='assistant',
             content=pending_content,
         )
 
     async def _workflow_messages(
         self, query: pipeline_query.Query
-    ) -> typing.AsyncGenerator[llm_entities.Message, None]:
+    ) -> typing.AsyncGenerator[provider_message.Message, None]:
         """Dashscope 工作流对话请求"""
 
         # 局部变量
@@ -208,12 +210,12 @@ class DashScopeAPIRunner(runner.RequestRunner):
             # 将参考资料替换到文本中
             pending_content = self._replace_references(pending_content, references_dict)
 
-        yield llm_entities.Message(
+        yield provider_message.Message(
             role='assistant',
             content=pending_content,
         )
 
-    async def run(self, query: pipeline_query.Query) -> typing.AsyncGenerator[llm_entities.Message, None]:
+    async def run(self, query: pipeline_query.Query) -> typing.AsyncGenerator[provider_message.Message, None]:
         """运行"""
         if self.app_type == 'agent':
             async for msg in self._agent_messages(query):

@@ -8,9 +8,9 @@ import openai.types.chat.chat_completion as chat_completion
 import httpx
 
 from .. import errors, requester
-from ... import entities as llm_entities
 import langbot_plugin.api.entities.builtin.resource.tool as resource_tool
 import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
+import langbot_plugin.api.entities.builtin.provider.message as provider_message
 
 
 class OpenAIChatCompletions(requester.LLMAPIRequester):
@@ -41,7 +41,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
     async def _make_msg(
         self,
         chat_completion: chat_completion.ChatCompletion,
-    ) -> llm_entities.Message:
+    ) -> provider_message.Message:
         chatcmpl_message = chat_completion.choices[0].message.model_dump()
 
         # 确保 role 字段存在且不为 None
@@ -54,7 +54,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         if reasoning_content is not None:
             chatcmpl_message['content'] = '<think>\n' + reasoning_content + '\n</think>\n' + chatcmpl_message['content']
 
-        message = llm_entities.Message(**chatcmpl_message)
+        message = provider_message.Message(**chatcmpl_message)
 
         return message
 
@@ -65,7 +65,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         use_model: requester.RuntimeLLMModel,
         use_funcs: list[resource_tool.LLMTool] = None,
         extra_args: dict[str, typing.Any] = {},
-    ) -> llm_entities.Message:
+    ) -> provider_message.Message:
         self.client.api_key = use_model.token_mgr.get_token()
 
         args = {}
@@ -103,10 +103,10 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         self,
         query: pipeline_query.Query,
         model: requester.RuntimeLLMModel,
-        messages: typing.List[llm_entities.Message],
+        messages: typing.List[provider_message.Message],
         funcs: typing.List[resource_tool.LLMTool] = None,
         extra_args: dict[str, typing.Any] = {},
-    ) -> llm_entities.Message:
+    ) -> provider_message.Message:
         req_messages = []  # req_messages 仅用于类内，外部同步由 query.messages 进行
         for m in messages:
             msg_dict = m.dict(exclude_none=True)
