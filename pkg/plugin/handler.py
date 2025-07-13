@@ -280,7 +280,7 @@ class RuntimeConnectionHandler(handler.Handler):
             {
                 'event_context': event_context,
             },
-            timeout=10,
+            timeout=30,
         )
 
         return result
@@ -324,7 +324,7 @@ class RuntimeConnectionHandler(handler.Handler):
             {
                 'command_context': command_context,
             },
-            timeout=10,
+            timeout=30,
         )
 
         async for ret in gen:
