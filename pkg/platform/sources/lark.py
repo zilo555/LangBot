@@ -407,7 +407,7 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
         
         async def is_stream_output_supported() -> bool:
             is_stream = False
-            if self.config.get("enable-card-reply",None):
+            if self.config.get("enable-stream-reply",None):
                 is_stream = True
             self.is_stream = is_stream
 
@@ -603,8 +603,8 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
         """
         lark_message = await self.message_converter.yiri2target(message, self.api_client)
 
-        if not is_final:
-            self.seq += 1
+
+        self.seq += 1
 
 
 
@@ -620,7 +620,7 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
             'type': 'card_json',
             'data': {'card_id': self.card_id_dict[message_id], 'elements': {'content': text_message}},
         }
-        print(self.seq)
+
         request: ContentCardElementRequest = ContentCardElementRequest.builder() \
             .card_id(self.card_id_dict[message_id]) \
             .element_id("markdown_1") \

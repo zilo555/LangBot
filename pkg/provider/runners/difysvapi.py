@@ -115,9 +115,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
 
         stream_output_pending_chunk = ''
 
-        batch_pending_max_size = self.pipeline_config['ai']['dify-service-api'].get(
-            'output-batch-size', 0
-        )  # 积累一定量的消息更新消息一次
+        batch_pending_max_size = 64  # 积累一定量的消息更新消息一次
 
         batch_pending_index = 0
 
@@ -255,14 +253,13 @@ class DifyServiceAPIRunner(runner.RequestRunner):
 
             if chunk['event'] == 'agent_message' or chunk['event'] == 'message_end':
                 if chunk['event'] == 'message_end':
-                    print(chunk['event'])
                     # break
                     is_final = True
                 else:
                     is_final = False
                     pending_agent_message += chunk['answer']
                 if is_stream:
-                    if batch_pending_index % 64 == 0 or is_final:
+                    if batch_pending_index % 32 == 0 or is_final:
                         yield llm_entities.MessageChunk(
                             role='assistant',
                             content=self._try_convert_thinking(pending_agent_message),
@@ -276,7 +273,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                         role='assistant',
                         content=self._try_convert_thinking(pending_agent_message),
                     )
-                pending_agent_message = ''
+
 
                 if chunk['event'] == 'agent_thought':
                     if chunk['tool'] != '' and chunk['observation'] != '':  # 工具调用结果，跳过
@@ -312,7 +309,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                                 ],
                             )
                         yield msg
-                if chunk['event'] == 'message_file':
+                elif chunk['event'] == 'message_file':
                     if chunk['type'] == 'image' and chunk['belongs_to'] == 'assistant':
                         base_url = self.dify_client.base_url
 
@@ -330,8 +327,10 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                                 role='assistant',
                                 content=[llm_entities.ContentElement.from_image_url(image_url)],
                             )
-                if chunk['event'] == 'error':
+                elif chunk['event'] == 'error':
                     raise errors.DifyAPIError('dify 服务错误: ' + chunk['message'])
+                else:
+                    pending_agent_message = ''
 
         if chunk is None:
             raise errors.DifyAPIError('Dify API 没有返回任何响应，请检查网络连接和API配置')
