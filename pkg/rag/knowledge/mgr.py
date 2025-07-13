@@ -1,4 +1,4 @@
-# rag_manager.py
+
 from __future__ import annotations
 import os
 import asyncio
@@ -10,6 +10,8 @@ from pkg.core import app
 from pkg.rag.knowledge.services.embedder import Embedder
 from pkg.rag.knowledge.services.retriever import Retriever
 from pkg.rag.knowledge.services.chroma_manager import ChromaIndexManager
+from ...entity.persistence import model as persistence_model
+import sqlalchemy
 
 
 class RAGManager:
@@ -20,9 +22,8 @@ class RAGManager:
         self.chroma_manager = ChromaIndexManager()
         self.parser = FileParser()
         self.chunker = Chunker()
-        # Initialize Embedder with targeted model type and name
-        self.embedder = Embedder(model_type='third_party_api', model_name_key='bge-m3', chroma_manager=self.chroma_manager)
-        self.retriever = Retriever(model_type='third_party_api', model_name_key='bge-m3', chroma_manager=self.chroma_manager)
+        self.embedder = Embedder(ap=self.ap, chroma_manager=self.chroma_manager)
+        self.retriever = Retriever(ap=self.ap, chroma_manager=self.chroma_manager)
 
     async def initialize_rag_system(self):
         """Initializes the RAG system by creating database tables."""
@@ -55,6 +56,7 @@ class RAGManager:
                         session.commit()
                         session.refresh(new_kb)
                         self.ap.logger.info(f"Knowledge Base '{kb_name}' created.")
+                        print(embedding_model_uuid)
                         return new_kb.id
                     else:
                         self.ap.logger.info(f"Knowledge Base '{kb_name}' already exists.")
@@ -158,10 +160,9 @@ class RAGManager:
             kb = session.query(KnowledgeBase).filter_by(id=kb_id).first()
             if not kb:
                 self.ap.logger.info(f'Knowledge Base "{kb_id}" does not exist. ')
-                self.ap.logger.info(f'Created Knowledge Base with ID: {kb_id}')
-            else:
-                self.ap.logger.info(f"Knowledge Base '{kb_id}' already exists.")
-
+                return
+            # get embedding model
+            embedding_model = await self.ap.model_mgr.get_embedding_model_by_uuid(kb.embedding_model_uuid)
             file_name = os.path.basename(file_path)
             text = await self.parser.parse(file_path)
             if not text:
@@ -172,7 +173,7 @@ class RAGManager:
 
             chunks_texts = await self.chunker.chunk(text)
             self.ap.logger.info(f"Chunked file '{file_name}' into {len(chunks_texts)} chunks.")
-            await self.embedder.embed_and_store(file_id=file_id, chunks=chunks_texts)
+            await self.embedder.embed_and_store(file_id=file_id, chunks=chunks_texts, embedding_model=embedding_model)
             self.ap.logger.info(f'Data storage process completed for file: {file_path}')
 
         except Exception as e:

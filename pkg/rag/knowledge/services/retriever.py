@@ -1,39 +1,22 @@
-# services/retriever.py
+from __future__ import annotations
 import logging
 import numpy as np  # Make sure numpy is imported
 from typing import List, Dict, Any
 from sqlalchemy.orm import Session
 from pkg.rag.knowledge.services.base_service import BaseService
 from pkg.rag.knowledge.services.database import Chunk, SessionLocal
-from pkg.rag.knowledge.services.embedding_models import BaseEmbeddingModel, EmbeddingModelFactory
 from pkg.rag.knowledge.services.chroma_manager import ChromaIndexManager
+from ....core import app
 
 logger = logging.getLogger(__name__)
 
 
 class Retriever(BaseService):
-    def __init__(self, model_type: str, model_name_key: str, chroma_manager: ChromaIndexManager):
+    def __init__(self, ap:app.Application, chroma_manager: ChromaIndexManager):
         super().__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.model_type = model_type
-        self.model_name_key = model_name_key
         self.chroma_manager = chroma_manager
-
-        self.embedding_model: BaseEmbeddingModel = self._load_embedding_model()
-
-    def _load_embedding_model(self) -> BaseEmbeddingModel:
-        self.logger.info(
-            f'Loading retriever embedding model: type={self.model_type}, name_key={self.model_name_key}...'
-        )
-        try:
-            model = EmbeddingModelFactory.create_model(self.model_type, self.model_name_key)
-            self.logger.info(
-                f"Retriever embedding model '{self.model_name_key}' loaded. Output dimension: {model.embedding_dimension}"
-            )
-            return model
-        except Exception as e:
-            self.logger.error(f"Failed to load retriever embedding model '{self.model_name_key}': {e}")
-            raise
+        self.ap = ap
 
     async def retrieve(self, query: str, k: int = 5) -> List[Dict[str, Any]]:
         if not self.embedding_model:

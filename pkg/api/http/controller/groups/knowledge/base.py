@@ -27,6 +27,7 @@ class KnowledgeBaseRouterGroup(group.RouterGroup):
                     json_data.get('name'),
                     json_data.get('description'),
                     json_data.get('embedding_model_uuid'),
+                    json_data.get('top_k',5),
                 )
                 return self.success(data={'uuid': knowledge_base_uuid})
 

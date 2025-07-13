@@ -100,7 +100,6 @@ class ProviderAPIRequester(metaclass=abc.ABCMeta):
 
     async def invoke_embedding(
         self,
-        query: core_entities.Query,
         model: RuntimeEmbeddingModel,
         input_text: str,
         extra_args: dict[str, typing.Any] = {},
