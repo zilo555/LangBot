@@ -128,10 +128,13 @@ class PersistenceManager:
     def get_db_engine(self) -> sqlalchemy_asyncio.AsyncEngine:
         return self.db.get_engine()
 
-    def serialize_model(self, model: typing.Type[sqlalchemy.Base], data: sqlalchemy.Base) -> dict:
+    def serialize_model(
+        self, model: typing.Type[sqlalchemy.Base], data: sqlalchemy.Base, masked_columns: list[str] = []
+    ) -> dict:
         return {
             column.name: getattr(data, column.name)
             if not isinstance(getattr(data, column.name), (datetime.datetime))
             else getattr(data, column.name).isoformat()
             for column in model.__table__.columns
+            if column.name not in masked_columns
         }

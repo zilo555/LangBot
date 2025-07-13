@@ -17,15 +17,19 @@ class BotService:
     def __init__(self, ap: app.Application) -> None:
         self.ap = ap
 
-    async def get_bots(self) -> list[dict]:
+    async def get_bots(self, include_secret: bool = True) -> list[dict]:
         """获取所有机器人"""
         result = await self.ap.persistence_mgr.execute_async(sqlalchemy.select(persistence_bot.Bot))
 
         bots = result.all()
 
-        return [self.ap.persistence_mgr.serialize_model(persistence_bot.Bot, bot) for bot in bots]
+        masked_columns = []
+        if not include_secret:
+            masked_columns = ['adapter_config']
 
-    async def get_bot(self, bot_uuid: str) -> dict | None:
+        return [self.ap.persistence_mgr.serialize_model(persistence_bot.Bot, bot, masked_columns) for bot in bots]
+
+    async def get_bot(self, bot_uuid: str, include_secret: bool = True) -> dict | None:
         """获取机器人"""
         result = await self.ap.persistence_mgr.execute_async(
             sqlalchemy.select(persistence_bot.Bot).where(persistence_bot.Bot.uuid == bot_uuid)
@@ -36,7 +40,11 @@ class BotService:
         if bot is None:
             return None
 
-        return self.ap.persistence_mgr.serialize_model(persistence_bot.Bot, bot)
+        masked_columns = []
+        if not include_secret:
+            masked_columns = ['adapter_config']
+
+        return self.ap.persistence_mgr.serialize_model(persistence_bot.Bot, bot, masked_columns)
 
     async def create_bot(self, bot_data: dict) -> str:
         """创建机器人"""

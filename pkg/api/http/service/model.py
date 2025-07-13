@@ -16,11 +16,19 @@ class ModelsService:
     def __init__(self, ap: app.Application) -> None:
         self.ap = ap
 
-    async def get_llm_models(self) -> list[dict]:
+    async def get_llm_models(self, include_secret: bool = True) -> list[dict]:
         result = await self.ap.persistence_mgr.execute_async(sqlalchemy.select(persistence_model.LLMModel))
 
         models = result.all()
-        return [self.ap.persistence_mgr.serialize_model(persistence_model.LLMModel, model) for model in models]
+
+        masked_columns = []
+        if not include_secret:
+            masked_columns = ['api_keys']
+
+        return [
+            self.ap.persistence_mgr.serialize_model(persistence_model.LLMModel, model, masked_columns)
+            for model in models
+        ]
 
     async def create_llm_model(self, model_data: dict) -> str:
         model_data['uuid'] = str(uuid.uuid4())

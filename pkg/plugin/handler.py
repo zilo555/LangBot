@@ -14,10 +14,13 @@ from langbot_plugin.entities.io.actions.enums import (
     PluginToRuntimeAction,
 )
 import langbot_plugin.api.entities.builtin.platform.message as platform_message
+import langbot_plugin.api.entities.builtin.provider.message as provider_message
+import langbot_plugin.api.entities.builtin.resource.tool as resource_tool
 
 from ..entity.persistence import plugin as persistence_plugin
 
 from ..core import app
+from ..utils import constants
 
 
 class RuntimeConnectionHandler(handler.Handler):
@@ -160,6 +163,92 @@ class RuntimeConnectionHandler(handler.Handler):
             return handler.ActionResponse.success(
                 data={
                     'vars': query.variables,
+                },
+            )
+
+        @self.action(PluginToRuntimeAction.GET_LANGBOT_VERSION)
+        async def get_langbot_version(data: dict[str, Any]) -> handler.ActionResponse:
+            """Get langbot version"""
+            return handler.ActionResponse.success(
+                data={
+                    'version': constants.semantic_version,
+                },
+            )
+
+        @self.action(PluginToRuntimeAction.GET_BOTS)
+        async def get_bots(data: dict[str, Any]) -> handler.ActionResponse:
+            """Get bots"""
+            bots = await self.ap.bot_service.get_bots(include_secret=False)
+            return handler.ActionResponse.success(
+                data={
+                    'bots': bots,
+                },
+            )
+
+        @self.action(PluginToRuntimeAction.SEND_MESSAGE)
+        async def send_message(data: dict[str, Any]) -> handler.ActionResponse:
+            """Send message"""
+            bot_uuid = data['bot_uuid']
+            target_type = data['target_type']
+            target_id = data['target_id']
+            message_chain = data['message_chain']
+
+            message_chain_obj = platform_message.MessageChain.model_validate(message_chain)
+
+            bot = await self.ap.platform_mgr.get_bot_by_uuid(bot_uuid)
+            if bot is None:
+                return handler.ActionResponse.error(
+                    message=f'Bot with bot_uuid {bot_uuid} not found',
+                )
+
+            await bot.adapter.send_message(
+                target_type,
+                target_id,
+                message_chain_obj,
+            )
+
+            return handler.ActionResponse.success(
+                data={},
+            )
+
+        @self.action(PluginToRuntimeAction.GET_LLM_MODELS)
+        async def get_llm_models(data: dict[str, Any]) -> handler.ActionResponse:
+            """Get llm models"""
+            llm_models = await self.ap.model_service.get_llm_models(include_secret=False)
+            return handler.ActionResponse.success(
+                data={
+                    'llm_models': llm_models,
+                },
+            )
+
+        @self.action(PluginToRuntimeAction.INVOKE_LLM)
+        async def invoke_llm(data: dict[str, Any]) -> handler.ActionResponse:
+            """Invoke llm"""
+            llm_model_uuid = data['llm_model_uuid']
+            messages = data['messages']
+            funcs = data.get('funcs', [])
+            extra_args = data.get('extra_args', {})
+
+            llm_model = await self.ap.model_mgr.get_model_by_uuid(llm_model_uuid)
+            if llm_model is None:
+                return handler.ActionResponse.error(
+                    message=f'LLM model with llm_model_uuid {llm_model_uuid} not found',
+                )
+
+            messages_obj = [provider_message.Message.model_validate(message) for message in messages]
+            funcs_obj = [resource_tool.LLMTool.model_validate(func) for func in funcs]
+
+            result = await llm_model.requester.invoke_llm(
+                query=None,
+                model=llm_model,
+                messages=messages_obj,
+                funcs=funcs_obj,
+                extra_args=extra_args,
+            )
+
+            return handler.ActionResponse.success(
+                data={
+                    'message': result.model_dump(),
                 },
             )
 
