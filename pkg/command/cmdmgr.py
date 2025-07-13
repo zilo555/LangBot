@@ -86,6 +86,7 @@ class CommandManager:
             privilege = 2
 
         ctx = command_context.ExecuteContext(
+            query_id=query.query_id,
             session=session,
             command_text=command_text,
             command='',

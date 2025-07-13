@@ -19,12 +19,16 @@ class QueryPool:
 
     queries: list[pipeline_query.Query]
 
+    cached_queries: dict[int, pipeline_query.Query]
+    """Cached queries, used for plugin backward api call, will be removed after the query completely processed"""
+
     condition: asyncio.Condition
 
     def __init__(self):
         self.query_id_counter = 0
         self.pool_lock = asyncio.Lock()
         self.queries = []
+        self.cached_queries = {}
         self.condition = asyncio.Condition(self.pool_lock)
 
     async def add_query(
@@ -39,9 +43,10 @@ class QueryPool:
         pipeline_uuid: typing.Optional[str] = None,
     ) -> pipeline_query.Query:
         async with self.condition:
+            query_id = self.query_id_counter
             query = pipeline_query.Query(
                 bot_uuid=bot_uuid,
-                query_id=self.query_id_counter,
+                query_id=query_id,
                 launcher_type=launcher_type,
                 launcher_id=launcher_id,
                 sender_id=sender_id,
@@ -53,6 +58,7 @@ class QueryPool:
                 pipeline_uuid=pipeline_uuid,
             )
             self.queries.append(query)
+            self.cached_queries[query_id] = query
             self.query_id_counter += 1
             self.condition.notify_all()
 

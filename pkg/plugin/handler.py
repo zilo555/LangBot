@@ -13,7 +13,6 @@ from langbot_plugin.entities.io.actions.enums import (
     LangBotToRuntimeAction,
     PluginToRuntimeAction,
 )
-import langbot_plugin.api.entities.context as event_context_module
 import langbot_plugin.api.entities.builtin.platform.message as platform_message
 
 from ..entity.persistence import plugin as persistence_plugin
@@ -68,27 +67,44 @@ class RuntimeConnectionHandler(handler.Handler):
         @self.action(PluginToRuntimeAction.REPLY_MESSAGE)
         async def reply_message(data: dict[str, Any]) -> handler.ActionResponse:
             """Reply message"""
-            eid = data['eid']
+            query_id = data['query_id']
             message_chain = data['message_chain']
             quote_origin = data['quote_origin']
 
-            if eid not in event_context_module.cached_event_contexts:
+            if query_id not in self.ap.query_pool.cached_queries:
                 return handler.ActionResponse.error(
-                    message=f'Event context with eid {eid} not found',
+                    message=f'Query with query_id {query_id} not found',
                 )
 
-            event_context = event_context_module.cached_event_contexts[eid]
+            query = self.ap.query_pool.cached_queries[query_id]
 
             message_chain_obj = platform_message.MessageChain.model_validate(message_chain)
 
-            await event_context.event.query.adapter.reply_message(
-                event_context.event.query.message_event,
+            await query.adapter.reply_message(
+                query.message_event,
                 message_chain_obj,
                 quote_origin,
             )
 
             return handler.ActionResponse.success(
                 data={},
+            )
+
+        @self.action(PluginToRuntimeAction.GET_BOT_UUID)
+        async def get_bot_uuid(data: dict[str, Any]) -> handler.ActionResponse:
+            """Get bot uuid"""
+            query_id = data['query_id']
+            if query_id not in self.ap.query_pool.cached_queries:
+                return handler.ActionResponse.error(
+                    message=f'Query with query_id {query_id} not found',
+                )
+
+            query = self.ap.query_pool.cached_queries[query_id]
+
+            return handler.ActionResponse.success(
+                data={
+                    'bot_uuid': query.bot_uuid,
+                },
             )
 
     async def ping(self) -> dict[str, Any]:

@@ -205,6 +205,7 @@ class RuntimePipeline:
             self.ap.logger.error(f'Traceback: {traceback.format_exc()}')
         finally:
             self.ap.logger.debug(f'Query {query} processed')
+            del self.ap.query_pool.cached_queries[query.query_id]
 
 
 class PipelineManager:
