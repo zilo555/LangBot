@@ -16,6 +16,7 @@ from langbot_plugin.api.entities import events
 from langbot_plugin.api.entities import context
 import langbot_plugin.runtime.io.connection as base_connection
 from langbot_plugin.api.definition.components.manifest import ComponentManifest
+from langbot_plugin.api.entities.builtin.command import context as command_context
 
 
 class PluginRuntimeConnector:
@@ -118,3 +119,18 @@ class PluginRuntimeConnector:
 
     async def call_tool(self, tool_name: str, parameters: dict[str, Any]) -> dict[str, Any]:
         return await self.handler.call_tool(tool_name, parameters)
+
+    async def list_commands(self) -> list[ComponentManifest]:
+        list_commands_data = await self.handler.list_commands()
+
+        return [ComponentManifest.model_validate(command) for command in list_commands_data]
+
+    async def execute_command(
+        self, command_ctx: command_context.ExecuteContext
+    ) -> typing.AsyncGenerator[command_context.CommandReturn, None]:
+        gen = self.handler.execute_command(command_ctx.model_dump(serialize_as_any=True))
+
+        async for ret in gen:
+            cmd_ret = command_context.CommandReturn.model_validate(ret)
+
+            yield cmd_ret

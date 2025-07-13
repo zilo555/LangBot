@@ -117,3 +117,25 @@ class RuntimeConnectionHandler(handler.Handler):
         )
 
         return result['tool_response']
+
+    async def list_commands(self) -> list[dict[str, Any]]:
+        """List commands"""
+        result = await self.call_action(
+            LangBotToRuntimeAction.LIST_COMMANDS,
+            {},
+            timeout=10,
+        )
+        return result['commands']
+
+    async def execute_command(self, command_context: dict[str, Any]) -> typing.AsyncGenerator[dict[str, Any], None]:
+        """Execute command"""
+        gen = self.call_action_generator(
+            LangBotToRuntimeAction.EXECUTE_COMMAND,
+            {
+                'command_context': command_context,
+            },
+            timeout=10,
+        )
+
+        async for ret in gen:
+            yield ret

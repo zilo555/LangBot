@@ -16,13 +16,11 @@ importutil.import_modules_in_pkg(operators)
 
 
 class CommandManager:
-    """命令管理器"""
-
     ap: app.Application
 
     cmd_list: list[operator.CommandOperator]
     """
-    运行时命令列表，扁平存储，各个对象包含对应的子节点引用
+    Runtime command list, flat storage, each object contains a reference to the corresponding child node
     """
 
     def __init__(self, ap: app.Application):
@@ -64,30 +62,15 @@ class CommandManager:
     ) -> typing.AsyncGenerator[command_context.CommandReturn, None]:
         """执行命令"""
 
-        found = False
-        if len(context.crt_params) > 0:  # 查找下一个参数是否对应此节点的某个子节点名
-            for oper in operator_list:
-                if (context.crt_params[0] == oper.name or context.crt_params[0] in oper.alias) and (
-                    oper.parent_class is None or oper.parent_class == operator.__class__
-                ):
-                    found = True
+        command_list = await self.ap.plugin_connector.list_commands()
 
-                    context.crt_command = context.crt_params[0]
-                    context.crt_params = context.crt_params[1:]
-
-                    async for ret in self._execute(context, oper.children, oper):
-                        yield ret
-                    break
-
-        if not found:  # 如果下一个参数未在此节点的子节点中找到，则执行此节点或者报错
-            if operator is None:
-                yield command_context.CommandReturn(error=command_errors.CommandNotFoundError(context.crt_params[0]))
-            else:
-                if operator.lowest_privilege > context.privilege:
-                    yield command_context.CommandReturn(error=command_errors.CommandPrivilegeError(operator.name))
-                else:
-                    async for ret in operator.execute(context):
-                        yield ret
+        for command in command_list:
+            if command.metadata.name == context.command:
+                async for ret in self.ap.plugin_connector.execute_command(context):
+                    yield ret
+                break
+        else:
+            yield command_context.CommandReturn(error=command_errors.CommandNotFoundError(context.command))
 
     async def execute(
         self,
@@ -103,7 +86,6 @@ class CommandManager:
             privilege = 2
 
         ctx = command_context.ExecuteContext(
-            query=query,
             session=session,
             command_text=command_text,
             command='',
@@ -112,6 +94,10 @@ class CommandManager:
             crt_params=command_text.split(' '),
             privilege=privilege,
         )
+
+        ctx.command = ctx.params[0]
+
+        ctx.shift()
 
         async for ret in self._execute(ctx, self.cmd_list):
             yield ret
