@@ -251,11 +251,26 @@ class DifyServiceAPIRunner(runner.RequestRunner):
 
             if chunk['event'] in ignored_events:
                 continue
+            batch_pending_index += 1
 
-            if chunk['event'] == 'agent_message':
-                pending_agent_message += chunk['answer']
+            if chunk['event'] == 'agent_message' or chunk['event'] == 'message_end':
+                if chunk['event'] == 'message_end':
+                    print(chunk['event'])
+                    # break
+                    is_final = True
+                else:
+                    is_final = False
+                    pending_agent_message += chunk['answer']
+                if is_stream:
+                    if batch_pending_index % 64 == 0 or is_final:
+                        yield llm_entities.MessageChunk(
+                            role='assistant',
+                            content=self._try_convert_thinking(pending_agent_message),
+                            is_final=is_final,
+                        )
+
             else:
-                if pending_agent_message.strip() != '':
+                if pending_agent_message.strip() != '' and not is_stream:
                     pending_agent_message = pending_agent_message.replace('</details>Action:', '</details>')
                     yield llm_entities.Message(
                         role='assistant',
@@ -268,19 +283,34 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                         continue
 
                     if chunk['tool']:
-                        msg = llm_entities.Message(
-                            role='assistant',
-                            tool_calls=[
-                                llm_entities.ToolCall(
-                                    id=chunk['id'],
-                                    type='function',
-                                    function=llm_entities.FunctionCall(
-                                        name=chunk['tool'],
-                                        arguments=json.dumps({}),
-                                    ),
-                                )
-                            ],
-                        )
+                        if is_stream:
+                            msg = llm_entities.MessageChunk(
+                                role='assistant',
+                                tool_calls=[
+                                    llm_entities.ToolCall(
+                                        id=chunk['id'],
+                                        type='function',
+                                        function=llm_entities.FunctionCall(
+                                            name=chunk['tool'],
+                                            arguments=json.dumps({}),
+                                        ),
+                                    )
+                                ],
+                            )
+                        else:
+                            msg = llm_entities.Message(
+                                role='assistant',
+                                tool_calls=[
+                                    llm_entities.ToolCall(
+                                        id=chunk['id'],
+                                        type='function',
+                                        function=llm_entities.FunctionCall(
+                                            name=chunk['tool'],
+                                            arguments=json.dumps({}),
+                                        ),
+                                    )
+                                ],
+                            )
                         yield msg
                 if chunk['event'] == 'message_file':
                     if chunk['type'] == 'image' and chunk['belongs_to'] == 'assistant':
@@ -290,11 +320,16 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                             base_url = base_url[:-3]
 
                         image_url = base_url + chunk['url']
-
-                        yield llm_entities.Message(
-                            role='assistant',
-                            content=[llm_entities.ContentElement.from_image_url(image_url)],
-                        )
+                        if is_stream:
+                            yield llm_entities.MessageChunk(
+                                role='assistant',
+                                content=[llm_entities.ContentElement.from_image_url(image_url)],
+                            )
+                        else:
+                            yield llm_entities.Message(
+                                role='assistant',
+                                content=[llm_entities.ContentElement.from_image_url(image_url)],
+                            )
                 if chunk['event'] == 'error':
                     raise errors.DifyAPIError('dify 服务错误: ' + chunk['message'])
 
