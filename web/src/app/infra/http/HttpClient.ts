@@ -433,7 +433,17 @@ class HttpClient {
 
   // ============ File management API ============
   public uploadDocumentFile(file: File): Promise<{ file_id: string }> {
-    return this.post('/api/v1/files/documents', file);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.request<{ file_id: string }>({
+      method: 'post',
+      url: '/api/v1/files/documents',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
   }
 
   // ============ Knowledge Base API ============
@@ -462,6 +472,17 @@ class HttpClient {
     uuid: string,
   ): Promise<ApiRespKnowledgeBaseFiles> {
     return this.get(`/api/v1/knowledge/bases/${uuid}/files`);
+  }
+
+  public deleteKnowledgeBaseFile(
+    uuid: string,
+    file_id: string,
+  ): Promise<object> {
+    return this.delete(`/api/v1/knowledge/bases/${uuid}/files/${file_id}`);
+  }
+
+  public deleteKnowledgeBase(uuid: string): Promise<object> {
+    return this.delete(`/api/v1/knowledge/bases/${uuid}`);
   }
 
   // ============ Plugins API ============

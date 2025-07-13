@@ -145,9 +145,7 @@ class RAGManager:
             self.ap.logger.error(f'Error retrieving all files: {str(e)}', exc_info=True)
             return []
 
-    async def store_data(
-        self, file_path: str, kb_id: str, file_type: str, file_id: str = None
-    ):
+    async def store_data(self, file_path: str, kb_id: str, file_type: str, file_id: str = None):
         """
         Parses, chunks, embeds, and stores data from a given file into the RAG system.
         Associates the file with a knowledge base using kb_id in the File table.
@@ -166,9 +164,7 @@ class RAGManager:
             file_name = os.path.basename(file_path)
             text = await self.parser.parse(file_path)
             if not text:
-                self.ap.logger.warning(
-                    f'No text extracted from file {file_path}. '
-                )
+                self.ap.logger.warning(f'No text extracted from file {file_path}. ')
                 return
 
             chunks_texts = await self.chunker.chunk(text)
@@ -223,8 +219,9 @@ class RAGManager:
                 try:
                     await self.ap.storage_mgr.storage_provider.delete(file_id)
                 except Exception as e:
-                    self.ap.logger.error(f'Error deleting file from storage for file_id {file_id}: {str(e)}', exc_info=True)
-                await self.ap.storage_mgr.storage_provider.delete(file_id)
+                    self.ap.logger.error(
+                        f'Error deleting file from storage for file_id {file_id}: {str(e)}', exc_info=True
+                    )
                 self.ap.logger.info(f'Deleted file record for file_id: {file_id}')
             else:
                 self.ap.logger.warning(
@@ -327,7 +324,14 @@ class RAGManager:
                 return
             self.ap.logger.info(f'File with ID {file_id} exists, proceeding with association.')
             # add new file record
-            file_to_update = File(id=file_id, kb_id=kb.id, file_name=file_id, path=os.path.join('data', 'storage', file_id), file_type=os.path.splitext(file_id)[1].lstrip('.'), status=0)
+            file_to_update = File(
+                id=file_id,
+                kb_id=kb.id,
+                file_name=file_id,
+                path=os.path.join('data', 'storage', file_id),
+                file_type=os.path.splitext(file_id)[1].lstrip('.'),
+                status=0,
+            )
             session.add(file_to_update)
             session.commit()
             self.ap.logger.info(
@@ -343,12 +347,12 @@ class RAGManager:
             # 进行文件解析
             try:
                 await self.store_data(
-                    file_path = os.path.join('data', 'storage', file_id),
+                    file_path=os.path.join('data', 'storage', file_id),
                     kb_id=knowledge_base_uuid,
                     file_type=os.path.splitext(file_id)[1].lstrip('.'),
-                    file_id=file_id
+                    file_id=file_id,
                 )
-            except Exception as store_e:
+            except Exception:
                 # 如果存储数据时出错，更新文件状态为失败
                 file_obj = session.query(File).filter_by(id=file_id).first()
                 if file_obj:

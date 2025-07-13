@@ -251,6 +251,24 @@ const enUS = {
     embeddingModelDescription:
       'Used to vectorize the text, you can configure it in the Models page',
     updateTime: 'Updated ',
+    documentsTab: {
+      name: 'Name',
+      status: 'Status',
+      noResults: 'No documents',
+      dragAndDrop: 'Drag and drop files here or click to upload',
+      uploading: 'Uploading...',
+      supportedFormats:
+        'Supports PDF, Word, TXT, Markdown and other document formats',
+      uploadSuccess: 'File uploaded successfully!',
+      uploadError: 'File upload failed, please try again',
+      uploadingFile: 'Uploading file...',
+      actions: 'Actions',
+      delete: 'Delete File',
+      fileDeleteSuccess: 'File deleted successfully',
+      fileDeleteFailed: 'File deletion failed',
+    },
+    deleteKnowledgeBaseConfirmation:
+      'Are you sure you want to delete this knowledge base? All documents in this knowledge base will be deleted.',
   },
   register: {
     title: 'Initialize LangBot 👋',
