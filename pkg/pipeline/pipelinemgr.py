@@ -184,6 +184,7 @@ class RuntimePipeline:
             )
 
             event_obj = event_type(
+                query=query,
                 launcher_type=query.launcher_type.value,
                 launcher_id=query.launcher_id,
                 sender_id=query.sender_id,

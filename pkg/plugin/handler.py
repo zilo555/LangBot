@@ -11,7 +11,10 @@ from langbot_plugin.entities.io.actions.enums import (
     CommonAction,
     RuntimeToLangBotAction,
     LangBotToRuntimeAction,
+    PluginToRuntimeAction,
 )
+import langbot_plugin.api.entities.context as event_context_module
+import langbot_plugin.api.entities.builtin.platform.message as platform_message
 
 from ..entity.persistence import plugin as persistence_plugin
 
@@ -60,6 +63,32 @@ class RuntimeConnectionHandler(handler.Handler):
 
             return handler.ActionResponse.success(
                 data=data,
+            )
+
+        @self.action(PluginToRuntimeAction.REPLY_MESSAGE)
+        async def reply_message(data: dict[str, Any]) -> handler.ActionResponse:
+            """Reply message"""
+            eid = data['eid']
+            message_chain = data['message_chain']
+            quote_origin = data['quote_origin']
+
+            if eid not in event_context_module.cached_event_contexts:
+                return handler.ActionResponse.error(
+                    message=f'Event context with eid {eid} not found',
+                )
+
+            event_context = event_context_module.cached_event_contexts[eid]
+
+            message_chain_obj = platform_message.MessageChain.model_validate(message_chain)
+
+            await event_context.event.query.adapter.reply_message(
+                event_context.event.query.message_event,
+                message_chain_obj,
+                quote_origin,
+            )
+
+            return handler.ActionResponse.success(
+                data={},
             )
 
     async def ping(self) -> dict[str, Any]:
