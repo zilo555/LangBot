@@ -2,6 +2,7 @@ import { IDynamicFormItemSchema } from '@/app/infra/entities/form/dynamic';
 import { PipelineConfigTab } from '@/app/infra/entities/pipeline';
 import { I18nLabel } from '@/app/infra/entities/common';
 import { Message } from '@/app/infra/entities/message';
+import { Plugin } from '@/app/infra/entities/plugin';
 
 export interface ApiResponse<T> {
   code: number;
@@ -119,22 +120,22 @@ export interface ApiRespPlugin {
   plugin: Plugin;
 }
 
-export interface Plugin {
-  author: string;
-  name: string;
-  description: I18nLabel;
-  label: I18nLabel;
-  version: string;
-  enabled: boolean;
-  priority: number;
-  status: string;
-  tools: object[];
-  event_handlers: object;
-  main_file: string;
-  pkg_path: string;
-  repository: string;
-  config_schema: IDynamicFormItemSchema[];
-}
+// export interface Plugin {
+//   author: string;
+//   name: string;
+//   description: I18nLabel;
+//   label: I18nLabel;
+//   version: string;
+//   enabled: boolean;
+//   priority: number;
+//   status: string;
+//   tools: object[];
+//   event_handlers: object;
+//   main_file: string;
+//   pkg_path: string;
+//   repository: string;
+//   config_schema: IDynamicFormItemSchema[];
+// }
 
 export interface ApiRespPluginConfig {
   config: object;

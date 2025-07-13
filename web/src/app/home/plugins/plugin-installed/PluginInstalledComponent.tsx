@@ -43,15 +43,20 @@ const PluginInstalledComponent = forwardRef<PluginInstalledComponentRef>(
         setPluginList(
           value.plugins.map((plugin) => {
             return new PluginCardVO({
-              author: plugin.author,
-              description: i18nObj(plugin.description),
+              author: plugin.manifest.manifest.metadata.author ?? '',
+              description: i18nObj(
+                plugin.manifest.manifest.metadata.description ?? {
+                  en_US: '',
+                  zh_Hans: '',
+                },
+              ),
               enabled: plugin.enabled,
-              name: plugin.name,
-              version: plugin.version,
+              name: plugin.manifest.manifest.metadata.name,
+              version: plugin.manifest.manifest.metadata.version ?? '',
               status: plugin.status,
-              tools: plugin.tools,
-              event_handlers: plugin.event_handlers,
-              repository: plugin.repository,
+              tools: [],
+              event_handlers: {},
+              repository: plugin.manifest.manifest.metadata.repository ?? '',
               priority: plugin.priority,
             });
           }),

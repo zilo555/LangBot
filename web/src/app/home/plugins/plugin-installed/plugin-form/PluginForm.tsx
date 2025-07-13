@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { ApiRespPluginConfig, Plugin } from '@/app/infra/entities/api';
+import { ApiRespPluginConfig } from '@/app/infra/entities/api';
+import { Plugin } from '@/app/infra/entities/plugin';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import DynamicFormComponent from '@/app/home/components/dynamic-form/DynamicFormComponent';
 import { Button } from '@/components/ui/button';
@@ -183,13 +184,22 @@ export default function PluginForm({
       </Dialog>
 
       <div className="space-y-2">
-        <div className="text-lg font-medium">{pluginInfo.name}</div>
-        <div className="text-sm text-gray-500 pb-2">
-          {i18nObj(pluginInfo.description)}
+        <div className="text-lg font-medium">
+          {i18nObj(pluginInfo.manifest.manifest.metadata.label)}
         </div>
-        {pluginInfo.config_schema.length > 0 && (
+        <div className="text-sm text-gray-500 pb-2">
+          {i18nObj(
+            pluginInfo.manifest.manifest.metadata.description ?? {
+              en_US: '',
+              zh_Hans: '',
+            },
+          )}
+        </div>
+        {/* @ts-ignore */}
+        {pluginInfo.manifest.manifest.spec.config.length > 0 && (
           <DynamicFormComponent
-            itemConfigList={pluginInfo.config_schema}
+            // @ts-ignore
+            itemConfigList={pluginInfo.manifest.manifest.spec.config}
             initialValues={pluginConfig.config as Record<string, object>}
             onSubmit={(values) => {
               let config = pluginConfig.config;
@@ -203,7 +213,8 @@ export default function PluginForm({
             }}
           />
         )}
-        {pluginInfo.config_schema.length === 0 && (
+        {/* @ts-ignore */}
+        {pluginInfo.manifest.manifest.spec.config.length === 0 && (
           <div className="text-sm text-gray-500">
             {t('plugins.pluginNoConfig')}
           </div>
