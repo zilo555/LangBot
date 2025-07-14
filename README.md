@@ -6,18 +6,7 @@
 
 <div align="center">
 
-<a href="https://trendshift.io/repositories/12901" target="_blank"><img src="https://trendshift.io/api/badge/repositories/12901" alt="RockChinQ%2FLangBot | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
-
-<a href="https://langbot.app">项目主页</a> ｜
-<a href="https://docs.langbot.app/zh/insight/guide.html">部署文档</a> ｜
-<a href="https://docs.langbot.app/zh/plugin/plugin-intro.html">插件介绍</a> ｜
-<a href="https://github.com/langbot-app/LangBot/issues/new?assignees=&labels=%E7%8B%AC%E7%AB%8B%E6%8F%92%E4%BB%B6&projects=&template=submit-plugin.yml&title=%5BPlugin%5D%3A+%E8%AF%B7%E6%B1%82%E7%99%BB%E8%AE%B0%E6%96%B0%E6%8F%92%E4%BB%B6">提交插件</a>
-
-<div align="center">
-😎高稳定、🧩支持扩展、🦄多模态 - 大模型原生即时通信机器人平台🤖  
-</div>
-
-<br/>
+简体中文 / [English](README_EN.md) / [日本語](README_JP.md) / (PR for your language)
 
 [![Discord](https://img.shields.io/discord/1335141740050649118?logo=discord&labelColor=%20%235462eb&logoColor=%20%23f5f5f5&color=%20%235462eb)](https://discord.gg/wdNEHETs87)
 [![QQ Group](https://img.shields.io/badge/%E7%A4%BE%E5%8C%BAQQ%E7%BE%A4-966235608-blue)](https://qm.qq.com/q/JLi38whHum)
@@ -26,7 +15,11 @@
 <img src="https://img.shields.io/badge/python-3.10 ~ 3.13 -blue.svg" alt="python">
 [![star](https://gitcode.com/langbot-app/LangBot/star/badge.svg)](https://gitcode.com/langbot-app/LangBot)
 
-简体中文 / [English](README_EN.md) / [日本語](README_JP.md) / (PR for your language)
+<a href="https://langbot.app">项目主页</a> ｜
+<a href="https://docs.langbot.app/zh/insight/guide.html">部署文档</a> ｜
+<a href="https://docs.langbot.app/zh/plugin/plugin-intro.html">插件介绍</a> ｜
+<a href="https://github.com/langbot-app/LangBot/issues/new?assignees=&labels=%E7%8B%AC%E7%AB%8B%E6%8F%92%E4%BB%B6&projects=&template=submit-plugin.yml&title=%5BPlugin%5D%3A+%E8%AF%B7%E6%B1%82%E7%99%BB%E8%AE%B0%E6%96%B0%E6%8F%92%E4%BB%B6">提交插件</a>
+
 
 </div>
 
