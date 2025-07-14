@@ -123,15 +123,7 @@ class GiteeAIChatCompletions(chatcmpl.OpenAIChatCompletions):
             else:
                 delta['content'] = ''
         else:
-            if reasoning_content is not None and idx == 0:
-                delta['content']  += f'<think>\n{reasoning_content}'
-            elif reasoning_content is None:
-                if self.is_content:
-                    delta['content'] = delta['content']
-                else:
-                    delta['content'] = f'\n<think>\n\n{delta["content"]}'
-                    self.is_content = True
-            else:
+            if reasoning_content is not None:
                 delta['content'] += reasoning_content
 
 
