@@ -52,10 +52,11 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
 
     async def _make_msg(
         self,
-        pipeline_config: dict[str, typing.Any],
         chat_completion: chat_completion.ChatCompletion,
+        pipeline_config: dict[str, typing.Any] = {'trigger': {'misc': {'remove_think': False}}},
     ) -> llm_entities.Message:
         chatcmpl_message = chat_completion.choices[0].message.model_dump()
+        # print(chatcmpl_message.keys(),chatcmpl_message.values())
 
         # 确保 role 字段存在且不为 None
         if 'role' not in chatcmpl_message or chatcmpl_message['role'] is None:
@@ -65,6 +66,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
 
         # deepseek的reasoner模型
         if pipeline_config['trigger'].get('misc', '').get('remove_think'):
+
             pass
         else:
             if reasoning_content is not None :
@@ -92,12 +94,15 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
             delta = chat_completion.delta.model_dump() if hasattr(chat_completion, 'delta') else {}
 
         # 确保 role 字段存在且不为 None
-        # print(delta.values())
+        # print(delta.keys(),delta.values())
         if 'role' not in delta or delta['role'] is None:
             delta['role'] = 'assistant'
 
 
         reasoning_content = delta['reasoning_content'] if 'reasoning_content' in delta else None
+
+        delta['content'] = '' if delta['content'] is None else delta['content']
+        # print(reasoning_content)
 
         # deepseek的reasoner模型
         if pipeline_config['trigger'].get('misc', '').get('remove_think'):
@@ -239,7 +244,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         resp = await self._req(args, extra_body=extra_args)
         # 处理请求结果
         pipeline_config = query.pipeline_config
-        message = await self._make_msg(pipeline_config,resp)
+        message = await self._make_msg(resp,pipeline_config)
 
 
         return message

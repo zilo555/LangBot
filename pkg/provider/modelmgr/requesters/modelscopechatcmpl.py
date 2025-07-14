@@ -202,3 +202,51 @@ class ModelScopeChatCompletions(requester.LLMAPIRequester):
             raise errors.RequesterError(f'请求过于频繁或余额不足: {e.message}')
         except openai.APIError as e:
             raise errors.RequesterError(f'请求错误: {e.message}')
+
+
+    async def invoke_llm_stream(
+        self,
+        query: core_entities.Query,
+        model: requester.RuntimeLLMModel,
+        messages: typing.List[llm_entities.Message],
+        funcs: typing.List[tools_entities.LLMFunction] = None,
+        stream: bool = False,
+        extra_args: dict[str, typing.Any] = {},
+    ) ->  llm_entities.MessageChunk:
+        req_messages = []  # req_messages 仅用于类内，外部同步由 query.messages 进行
+        for m in messages:
+            msg_dict = m.dict(exclude_none=True)
+            content = msg_dict.get('content')
+            if isinstance(content, list):
+                # 检查 content 列表中是否每个部分都是文本
+                if all(isinstance(part, dict) and part.get('type') == 'text' for part in content):
+                    # 将所有文本部分合并为一个字符串
+                    msg_dict['content'] = '\n'.join(part['text'] for part in content)
+            req_messages.append(msg_dict)
+
+        try:
+            async for item in self._closure_stream(
+                query=query,
+                req_messages=req_messages,
+                use_model=model,
+                use_funcs=funcs,
+                stream=stream,
+                extra_args=extra_args,
+            ):
+                yield item
+
+        except asyncio.TimeoutError:
+            raise errors.RequesterError('请求超时')
+        except openai.BadRequestError as e:
+            if 'context_length_exceeded' in e.message:
+                raise errors.RequesterError(f'上文过长，请重置会话: {e.message}')
+            else:
+                raise errors.RequesterError(f'请求参数错误: {e.message}')
+        except openai.AuthenticationError as e:
+            raise errors.RequesterError(f'无效的 api-key: {e.message}')
+        except openai.NotFoundError as e:
+            raise errors.RequesterError(f'请求路径错误: {e.message}')
+        except openai.RateLimitError as e:
+            raise errors.RequesterError(f'请求过于频繁或余额不足: {e.message}')
+        except openai.APIError as e:
+            raise errors.RequesterError(f'请求错误: {e.message}')
