@@ -22,6 +22,7 @@ from ..api.http.service import user as user_service
 from ..api.http.service import model as model_service
 from ..api.http.service import pipeline as pipeline_service
 from ..api.http.service import bot as bot_service
+from ..api.http.service import knowledge as knowledge_service
 from ..discover import engine as discover_engine
 from ..storage import mgr as storagemgr
 from ..utils import logcache
@@ -47,6 +48,8 @@ class Application:
     sess_mgr: llm_session_mgr.SessionManager = None
 
     model_mgr: llm_model_mgr.ModelManager = None
+
+    rag_mgr: rag_mgr.RAGManager = None
 
     # TODO 移动到 pipeline 里
     tool_mgr: llm_tool_mgr.ToolManager = None
@@ -112,7 +115,7 @@ class Application:
 
     bot_service: bot_service.BotService = None
 
-    knowledge_base_service: rag_mgr.RAGManager = None
+    knowledge_service: knowledge_service.KnowledgeService = None
 
     def __init__(self):
         pass

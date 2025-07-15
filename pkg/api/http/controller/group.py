@@ -14,7 +14,7 @@ preregistered_groups: list[type[RouterGroup]] = []
 """RouterGroup 的预注册列表"""
 
 
-def group_class(name: str, path: str) -> None:
+def group_class(name: str, path: str) -> typing.Callable[[typing.Type[RouterGroup]], typing.Type[RouterGroup]]:
     """注册一个 RouterGroup"""
 
     def decorator(cls: typing.Type[RouterGroup]) -> typing.Type[RouterGroup]:
@@ -120,6 +120,6 @@ class RouterGroup(abc.ABC):
             }
         )
 
-    def http_status(self, status: int, code: int, msg: str) -> quart.Response:
+    def http_status(self, status: int, code: int, msg: str) -> typing.Tuple[quart.Response, int]:
         """返回一个指定状态码的响应"""
-        return self.fail(code, msg), status
+        return (self.fail(code, msg), status)

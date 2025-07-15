@@ -17,6 +17,7 @@ from ...api.http.service import user as user_service
 from ...api.http.service import model as model_service
 from ...api.http.service import pipeline as pipeline_service
 from ...api.http.service import bot as bot_service
+from ...api.http.service import knowledge as knowledge_service
 from ...discover import engine as discover_engine
 from ...storage import mgr as storagemgr
 from ...utils import logcache
@@ -89,6 +90,10 @@ class BuildAppStage(stage.BootingStage):
         await pipeline_mgr.initialize()
         ap.pipeline_mgr = pipeline_mgr
 
+        rag_mgr_inst = rag_mgr.RAGManager(ap)
+        await rag_mgr_inst.initialize_rag_system()
+        ap.rag_mgr = rag_mgr_inst
+
         http_ctrl = http_controller.HTTPController(ap)
         await http_ctrl.initialize()
         ap.http_ctrl = http_ctrl
@@ -102,15 +107,14 @@ class BuildAppStage(stage.BootingStage):
         embedding_models_service_inst = model_service.EmbeddingModelsService(ap)
         ap.embedding_models_service = embedding_models_service_inst
 
-        knowledge_base_service_inst = rag_mgr.RAGManager(ap)
-        await knowledge_base_service_inst.initialize_rag_system()
-        ap.knowledge_base_service = knowledge_base_service_inst
-
         pipeline_service_inst = pipeline_service.PipelineService(ap)
         ap.pipeline_service = pipeline_service_inst
 
         bot_service_inst = bot_service.BotService(ap)
         ap.bot_service = bot_service_inst
+
+        knowledge_service_inst = knowledge_service.KnowledgeService(ap)
+        ap.knowledge_service = knowledge_service_inst
 
         ctrl = controller.Controller(ap)
         ap.ctrl = ctrl
