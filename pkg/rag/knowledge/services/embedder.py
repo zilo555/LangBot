@@ -1,21 +1,17 @@
 from __future__ import annotations
 import asyncio
-import logging
 import numpy as np
 from typing import List
 from sqlalchemy.orm import Session
 from pkg.rag.knowledge.services.base_service import BaseService
 from pkg.rag.knowledge.services.database import Chunk, SessionLocal
-from pkg.rag.knowledge.services.chroma_manager import ChromaIndexManager
 from ....core import app
 from ....provider.modelmgr.requester import RuntimeEmbeddingModel
 
 
 class Embedder(BaseService):
-    def __init__(self, ap: app.Application, chroma_manager: ChromaIndexManager = None) -> None:
+    def __init__(self, ap: app.Application) -> None:
         super().__init__()
-        self.logger = logging.getLogger(self.__class__.__name__)
-        self.chroma_manager = chroma_manager
         self.ap = ap
 
     def _db_save_chunks_sync(self, session: Session, file_id: int, chunks_texts: List[str]):
@@ -24,22 +20,19 @@ class Embedder(BaseService):
         This function assumes it's called within a context where the session
         will be committed/rolled back and closed by the caller.
         """
-        self.logger.debug(f'Saving {len(chunks_texts)} chunks for file_id {file_id} to DB (sync).')
+        self.ap.logger.debug(f'Saving {len(chunks_texts)} chunks for file_id {file_id} to DB (sync).')
         chunk_objects = []
         for text in chunks_texts:
             chunk = Chunk(file_id=file_id, text=text)
             session.add(chunk)
             chunk_objects.append(chunk)
         session.flush()  # This populates the .id attribute for each new chunk object
-        self.logger.debug(f'Successfully added {len(chunk_objects)} chunk entries to DB.')
+        self.ap.logger.debug(f'Successfully added {len(chunk_objects)} chunk entries to DB.')
         return chunk_objects
 
     async def embed_and_store(
         self, file_id: int, chunks: List[str], embedding_model: RuntimeEmbeddingModel
     ) -> List[Chunk]:
-        if not embedding_model:
-            raise RuntimeError('Embedding model not loaded. Please check Embedder initialization.')
-
         session = SessionLocal()  # Start a session that will live for the whole operation
         chunk_objects = []
         try:
@@ -50,7 +43,7 @@ class Embedder(BaseService):
             session.commit()  # Commit chunks to make their IDs permanent and accessible
 
             if not chunk_objects:
-                self.logger.warning(
+                self.ap.logger.warning(
                     f'No chunk objects created for file_id {file_id}. Skipping embedding and Chroma storage.'
                 )
                 return []
@@ -67,23 +60,28 @@ class Embedder(BaseService):
 
             embeddings_np = np.array(embeddings, dtype=np.float32)
 
-            self.logger.info('Saving embeddings to Chroma...')
             chunk_ids = [c.id for c in chunk_objects]
-            file_ids_for_chroma = [file_id] * len(chunk_ids)
-
-            await self._run_sync(  # Use _run_sync for the Chroma operation, as it's a sync call
-                self.chroma_manager.add_embeddings_sync,
-                file_ids_for_chroma,
-                chunk_ids,
+            # collection名用kb_id（file对象有kb_id字段）
+            kb_id = session.query(Chunk).filter_by(id=chunk_ids[0]).first().file.kb_id if chunk_ids else None
+            if not kb_id:
+                self.ap.logger.warning('无法获取kb_id，向量存储失败')
+                return chunk_objects
+            chroma_ids = [f'{file_id}_{cid}' for cid in chunk_ids]
+            metadatas = [{'file_id': file_id, 'chunk_id': cid} for cid in chunk_ids]
+            await self._run_sync(
+                self.ap.vector_db_mgr.vector_db.add_embeddings,
+                kb_id,
+                chroma_ids,
                 embeddings_np,
-                chunks,  # Pass original chunks texts for documents
+                metadatas,
+                chunks,
             )
-            self.logger.info(f'Successfully saved {len(chunk_objects)} embeddings to Chroma.')
+            self.ap.logger.info(f'Successfully saved {len(chunk_objects)} embeddings to VectorDB.')
             return chunk_objects
 
         except Exception as e:
             session.rollback()  # Rollback on any error
-            self.logger.error(f'Failed to process and store data for file_id {file_id}: {e}', exc_info=True)
+            self.ap.logger.error(f'Failed to process and store data for file_id {file_id}: {e}', exc_info=True)
             raise  # Re-raise the exception to propagate it
         finally:
             session.close()  # Ensure the session is always closed

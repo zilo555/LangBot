@@ -5,18 +5,18 @@ from typing import List, Dict, Any
 from sqlalchemy.orm import Session
 from pkg.rag.knowledge.services.base_service import BaseService
 from pkg.rag.knowledge.services.database import Chunk, SessionLocal
-from pkg.rag.knowledge.services.chroma_manager import ChromaIndexManager
+from pkg.vector.vdb import VectorDatabase
 from ....core import app
 
 logger = logging.getLogger(__name__)
 
 
 class Retriever(BaseService):
-    def __init__(self, ap:app.Application, chroma_manager: ChromaIndexManager):
+    def __init__(self, ap: app.Application):
         super().__init__()
         self.logger = logging.getLogger(self.__class__.__name__)
-        self.chroma_manager = chroma_manager
         self.ap = ap
+        self.vector_db: VectorDatabase = ap.vector_db_mgr.vector_db
 
     async def retrieve(self, query: str, k: int = 5) -> List[Dict[str, Any]]:
         if not self.embedding_model:
@@ -27,7 +27,12 @@ class Retriever(BaseService):
         query_embedding: List[float] = await self.embedding_model.embed_query(query)
         query_embedding_np = np.array([query_embedding], dtype=np.float32)
 
-        chroma_results = await self._run_sync(self.chroma_manager.search_sync, query_embedding_np, k)
+        # collection名用kb_id（假设retriever有kb_id属性或通过ap传递）
+        kb_id = getattr(self, 'kb_id', None)
+        if not kb_id:
+            self.logger.warning('无法获取kb_id，向量检索失败')
+            return []
+        chroma_results = await self._run_sync(self.vector_db.search, kb_id, query_embedding_np, k)
 
         # 'ids' is always returned by ChromaDB, even if not explicitly in 'include'
         matched_chroma_ids = chroma_results.get('ids', [[]])[0]

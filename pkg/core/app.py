@@ -29,6 +29,7 @@ from ..utils import logcache
 from . import taskmgr
 from . import entities as core_entities
 from ..rag.knowledge import mgr as rag_mgr
+from ..vector import mgr as vectordb_mgr
 
 
 class Application:
@@ -96,6 +97,8 @@ class Application:
     logger: logging.Logger = None
 
     persistence_mgr: persistencemgr.PersistenceManager = None
+
+    vector_db_mgr: vectordb_mgr.VectorDBManager = None
 
     http_ctrl: http_controller.HTTPController = None
 

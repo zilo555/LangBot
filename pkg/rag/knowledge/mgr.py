@@ -13,18 +13,15 @@ from pkg.rag.knowledge.services.database import (
 from pkg.core import app
 from pkg.rag.knowledge.services.embedder import Embedder
 from pkg.rag.knowledge.services.retriever import Retriever
-from pkg.rag.knowledge.services.chroma_manager import ChromaIndexManager
-from pkg.core import taskmgr
-from ...entity.persistence import rag as persistence_rag
 import sqlalchemy
+from ...entity.persistence import rag as persistence_rag
+from pkg.core import taskmgr
 
 
 class RuntimeKnowledgeBase:
     ap: app.Application
 
     knowledge_base_entity: persistence_rag.KnowledgeBase
-
-    chroma_manager: ChromaIndexManager
 
     parser: FileParser
 
@@ -37,11 +34,12 @@ class RuntimeKnowledgeBase:
     def __init__(self, ap: app.Application, knowledge_base_entity: persistence_rag.KnowledgeBase):
         self.ap = ap
         self.knowledge_base_entity = knowledge_base_entity
-        self.chroma_manager = ChromaIndexManager(ap=self.ap)
         self.parser = FileParser(ap=self.ap)
         self.chunker = Chunker(ap=self.ap)
-        self.embedder = Embedder(ap=self.ap, chroma_manager=self.chroma_manager)
-        self.retriever = Retriever(ap=self.ap, chroma_manager=self.chroma_manager)
+        self.embedder = Embedder(ap=self.ap)
+        self.retriever = Retriever(ap=self.ap)
+        # 传递kb_id给retriever
+        self.retriever.kb_id = knowledge_base_entity.uuid
 
     async def initialize(self):
         pass
