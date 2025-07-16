@@ -145,9 +145,9 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
     async def invoke_embedding(
         self,
         model: requester.RuntimeEmbeddingModel,
-        input_text: str,
+        input_text: list[str],
         extra_args: dict[str, typing.Any] = {},
-    ) -> list[float]:
+    ) -> list[list[float]]:
         """调用 Embedding API"""
         self.client.api_key = model.token_mgr.get_token()
 
@@ -163,7 +163,8 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
 
         try:
             resp = await self.client.embeddings.create(**args)
-            return resp.data[0].embedding
+
+            return [d.embedding for d in resp.data]
         except asyncio.TimeoutError:
             raise errors.RequesterError('请求超时')
         except openai.BadRequestError as e:

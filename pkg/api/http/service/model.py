@@ -186,6 +186,6 @@ class EmbeddingModelsService:
 
         await runtime_embedding_model.requester.invoke_embedding(
             model=runtime_embedding_model,
-            input_text='Hello, world!',
+            input_text=['Hello, world!'],
             extra_args={},
         )

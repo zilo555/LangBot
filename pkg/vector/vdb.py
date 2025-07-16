@@ -1,6 +1,6 @@
 from __future__ import annotations
 import abc
-from typing import Any, List, Dict
+from typing import Any, Dict
 import numpy as np
 
 
@@ -9,10 +9,10 @@ class VectorDatabase(abc.ABC):
     def add_embeddings(
         self,
         collection: str,
-        ids: List[str],
-        embeddings: np.ndarray,
-        metadatas: List[Dict[str, Any]],
-        documents: List[str],
+        ids: list[str],
+        embeddings_list: list[list[float]],
+        metadatas: list[dict[str, Any]],
+        documents: list[str],
     ) -> None:
         """向指定 collection 添加向量数据。"""
         pass

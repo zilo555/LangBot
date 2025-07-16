@@ -28,7 +28,7 @@ from ..storage import mgr as storagemgr
 from ..utils import logcache
 from . import taskmgr
 from . import entities as core_entities
-from ..rag.knowledge import mgr as rag_mgr
+from ..rag.knowledge import kbmgr as rag_mgr
 from ..vector import mgr as vectordb_mgr
 
 

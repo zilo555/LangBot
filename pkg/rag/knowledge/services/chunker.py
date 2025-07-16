@@ -1,24 +1,21 @@
-# services/chunker.py
-import logging
+from __future__ import annotations
+
 from typing import List
-from pkg.rag.knowledge.services.base_service import BaseService  # Assuming BaseService provides _run_sync
+from pkg.rag.knowledge.services import base_service
 from pkg.core import app
 
-logger = logging.getLogger(__name__)
 
-
-class Chunker(BaseService):
+class Chunker(base_service.BaseService):
     """
     A class for splitting long texts into smaller, overlapping chunks.
     """
 
     def __init__(self, ap: app.Application, chunk_size: int = 500, chunk_overlap: int = 50):
-        super().__init__(ap)  # Initialize BaseService
         self.ap = ap
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         if self.chunk_overlap >= self.chunk_size:
-            self.logger.warning(
+            self.ap.logger.warning(
                 'Chunk overlap is greater than or equal to chunk size. This may lead to empty or malformed chunks.'
             )
 

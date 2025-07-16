@@ -1,6 +1,6 @@
 from __future__ import annotations
-import numpy as np
-from typing import Any, List, Dict
+import chromadb
+from typing import Any
 from chromadb import PersistentClient
 from pkg.vector.vdb import VectorDatabase
 from pkg.core import app
@@ -12,7 +12,7 @@ class ChromaVectorDatabase(VectorDatabase):
         self.client = PersistentClient(path=base_path)
         self._collections = {}
 
-    def get_or_create_collection(self, collection: str):
+    def get_or_create_collection(self, collection: str) -> chromadb.Collection:
         if collection not in self._collections:
             self._collections[collection] = self.client.get_or_create_collection(name=collection)
             self.ap.logger.info(f"Chroma collection '{collection}' accessed/created.")
@@ -21,26 +21,25 @@ class ChromaVectorDatabase(VectorDatabase):
     def add_embeddings(
         self,
         collection: str,
-        ids: List[str],
-        embeddings: np.ndarray,
-        metadatas: List[Dict[str, Any]],
-        documents: List[str],
+        ids: list[str],
+        embeddings_list: list[list[float]],
+        metadatas: list[dict[str, Any]],
     ) -> None:
         col = self.get_or_create_collection(collection)
-        col.add(embeddings=embeddings.tolist(), ids=ids, metadatas=metadatas, documents=documents)
+        col.add(embeddings=embeddings_list, ids=ids, metadatas=metadatas)
         self.ap.logger.info(f"Added {len(ids)} embeddings to Chroma collection '{collection}'.")
 
-    def search(self, collection: str, query_embedding: np.ndarray, k: int = 5) -> Dict[str, Any]:
+    def search(self, collection: str, query_embedding: list[float], k: int = 5) -> dict[str, Any]:
         col = self.get_or_create_collection(collection)
         results = col.query(
-            query_embeddings=query_embedding.tolist(),
+            query_embeddings=query_embedding,
             n_results=k,
             include=['metadatas', 'distances', 'documents'],
         )
-        self.ap.logger.debug(f"Chroma search in '{collection}' returned {len(results.get('ids', [[]])[0])} results.")
+        self.ap.logger.info(f"Chroma search in '{collection}' returned {len(results.get('ids', [[]])[0])} results.")
         return results
 
-    def delete_by_metadata(self, collection: str, where: Dict[str, Any]) -> None:
+    def delete_by_metadata(self, collection: str, where: dict[str, Any]) -> None:
         col = self.get_or_create_collection(collection)
         col.delete(where=where)
         self.ap.logger.info(f"Deleted embeddings from Chroma collection '{collection}' with filter: {where}")

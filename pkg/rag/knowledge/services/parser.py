@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import PyPDF2
 import io
 from docx import Document

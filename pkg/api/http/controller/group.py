@@ -86,10 +86,10 @@ class RouterGroup(abc.ABC):
 
                 try:
                     return await f(*args, **kwargs)
-                except Exception:  # 自动 500
+                except Exception as e:  # 自动 500
                     traceback.print_exc()
                     # return self.http_status(500, -2, str(e))
-                    return self.http_status(500, -2, 'internal server error')
+                    return self.http_status(500, -2, str(e))
 
             new_f = handler_error
             new_f.__name__ = (self.name + rule).replace('/', '__')

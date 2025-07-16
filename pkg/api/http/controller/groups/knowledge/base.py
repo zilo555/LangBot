@@ -72,3 +72,13 @@ class KnowledgeBaseRouterGroup(group.RouterGroup):
         async def delete_specific_file_in_kb(file_id: str, knowledge_base_uuid: str) -> str:
             await self.ap.knowledge_service.delete_file(knowledge_base_uuid, file_id)
             return self.success({})
+
+        @self.route(
+            '/<knowledge_base_uuid>/retrieve',
+            methods=['POST'],
+        )
+        async def retrieve_knowledge_base(knowledge_base_uuid: str) -> str:
+            json_data = await quart.request.json
+            query = json_data.get('query')
+            results = await self.ap.knowledge_service.retrieve_knowledge_base(knowledge_base_uuid, query)
+            return self.success(data={'results': results})
