@@ -245,6 +245,7 @@ const enUS = {
     today: 'Today',
     kbName: 'Knowledge Base Name',
     kbDescription: 'Knowledge Base Description',
+    topK: 'Top K',
     defaultDescription: 'A knowledge base',
     embeddingModelUUID: 'Embedding Model',
     selectEmbeddingModel: 'Select Embedding Model',

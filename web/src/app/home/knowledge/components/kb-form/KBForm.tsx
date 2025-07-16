@@ -34,6 +34,10 @@ const getFormSchema = (t: (key: string) => string) =>
     embeddingModelUUID: z
       .string()
       .min(1, { message: t('knowledge.embeddingModelUUIDRequired') }),
+    top_k: z
+      .number()
+      .min(1, { message: t('knowledge.topKRequired') })
+      .max(30, { message: t('knowledge.topKMax') }),
   });
 
 export default function KBForm({
@@ -59,6 +63,7 @@ export default function KBForm({
       name: '',
       description: t('knowledge.defaultDescription'),
       embeddingModelUUID: '',
+      top_k: 5,
     },
   });
 
@@ -73,6 +78,7 @@ export default function KBForm({
           form.setValue('name', val.name);
           form.setValue('description', val.description);
           form.setValue('embeddingModelUUID', val.embeddingModelUUID);
+          form.setValue('top_k', val.top_k || 5);
         });
       }
     });
@@ -87,6 +93,7 @@ export default function KBForm({
           name: res.base.name,
           description: res.base.description,
           embeddingModelUUID: res.base.embedding_model_uuid,
+          top_k: res.base.top_k || 5,
         });
       });
     });
@@ -113,6 +120,7 @@ export default function KBForm({
         name: data.name,
         description: data.description,
         embedding_model_uuid: data.embeddingModelUUID,
+        top_k: data.top_k,
       };
     } else {
       // create knowledge base
@@ -120,6 +128,7 @@ export default function KBForm({
         name: data.name,
         description: data.description,
         embedding_model_uuid: data.embeddingModelUUID,
+        top_k: data.top_k,
       };
       httpClient
         .createKnowledgeBase(newKb)
@@ -212,6 +221,26 @@ export default function KBForm({
                   <FormDescription>
                     {t('knowledge.embeddingModelDescription')}
                   </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="top_k"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    {t('knowledge.topK')}
+                    <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      {...field}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
