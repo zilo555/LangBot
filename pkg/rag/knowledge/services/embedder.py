@@ -40,13 +40,7 @@ class Embedder(BaseService):
         )
 
         # save embeddings to vdb
-        await self._run_sync(
-            self.ap.vector_db_mgr.vector_db.add_embeddings,
-            kb_id,
-            chunk_ids,
-            embeddings_list,
-            chunk_dicts,
-        )
+        await self.ap.vector_db_mgr.vector_db.add_embeddings(kb_id, chunk_ids, embeddings_list, chunk_dicts)
 
         self.ap.logger.info(f'Successfully saved {len(chunk_entities)} embeddings to Knowledge Base.')
 

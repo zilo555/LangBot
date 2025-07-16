@@ -14,7 +14,9 @@ class Retriever(base_service.BaseService):
     async def retrieve(
         self, kb_id: str, query: str, embedding_model: RuntimeEmbeddingModel, k: int = 5
     ) -> list[retriever_entities.RetrieveResultEntry]:
-        self.ap.logger.info(f"Retrieving for query: '{query}' with k={k} using {embedding_model.model_entity.uuid}")
+        self.ap.logger.info(
+            f"Retrieving for query: '{query[:10]}' with k={k} using {embedding_model.model_entity.uuid}"
+        )
 
         query_embedding: list[float] = await embedding_model.requester.invoke_embedding(
             model=embedding_model,
@@ -22,7 +24,7 @@ class Retriever(base_service.BaseService):
             extra_args={},  # TODO: add extra args
         )
 
-        chroma_results = await self._run_sync(self.ap.vector_db_mgr.vector_db.search, kb_id, query_embedding[0], k)
+        chroma_results = await self.ap.vector_db_mgr.vector_db.search(kb_id, query_embedding[0], k)
 
         # 'ids' is always returned by ChromaDB, even if not explicitly in 'include'
         matched_chroma_ids = chroma_results.get('ids', [[]])[0]

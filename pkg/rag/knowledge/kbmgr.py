@@ -1,5 +1,4 @@
 from __future__ import annotations
-import asyncio
 import traceback
 import uuid
 from .services import parser, chunker
@@ -130,8 +129,21 @@ class RuntimeKnowledgeBase:
         )
         return await self.retriever.retrieve(self.knowledge_base_entity.uuid, query, embedding_model)
 
+    async def delete_file(self, file_id: str):
+        # delete vector
+        await self.ap.vector_db_mgr.vector_db.delete_by_file_id(self.knowledge_base_entity.uuid, file_id)
+
+        # delete chunk
+        await self.ap.persistence_mgr.execute_async(
+            sqlalchemy.delete(persistence_rag.Chunk).where(persistence_rag.Chunk.file_id == file_id)
+        )
+
+        await self.ap.persistence_mgr.execute_async(
+            sqlalchemy.delete(persistence_rag.File).where(persistence_rag.File.uuid == file_id)
+        )
+
     async def dispose(self):
-        pass
+        await self.ap.vector_db_mgr.vector_db.delete_collection(self.knowledge_base_entity.uuid)
 
 
 class RAGManager:
@@ -192,118 +204,3 @@ class RAGManager:
                 await kb.dispose()
                 self.knowledge_bases.remove(kb)
                 return
-
-    async def delete_data_by_file_id(self, file_id: str):
-        """
-        Deletes all data associated with a specific file ID, including its chunks and vectors,
-        and the file record itself.
-        """
-        self.ap.logger.info(f'Starting data deletion process for file_id: {file_id}')
-        session = SessionLocal()
-        try:
-            # delete vectors
-            await asyncio.to_thread(self.ap.vector_db_mgr.vector_db.delete_by_file_id_sync, file_id)
-            self.ap.logger.info(f'Deleted embeddings from ChromaDB for file_id: {file_id}')
-
-            chunks_to_delete = session.query(Chunk).filter_by(file_id=file_id).all()
-            for chunk in chunks_to_delete:
-                session.delete(chunk)
-            self.ap.logger.info(f'Deleted {len(chunks_to_delete)} chunk records for file_id: {file_id}')
-
-            file_to_delete = session.query(File).filter_by(id=file_id).first()
-            if file_to_delete:
-                session.delete(file_to_delete)
-                try:
-                    await self.ap.storage_mgr.storage_provider.delete(file_id)
-                except Exception as e:
-                    self.ap.logger.error(
-                        f'Error deleting file from storage for file_id {file_id}: {str(e)}',
-                        exc_info=True,
-                    )
-                self.ap.logger.info(f'Deleted file record for file_id: {file_id}')
-            else:
-                self.ap.logger.warning(
-                    f'File with ID {file_id} not found in database. Skipping deletion of file record.'
-                )
-            session.commit()
-            self.ap.logger.info(f'Successfully completed data deletion for file_id: {file_id}')
-        except Exception as e:
-            session.rollback()
-            self.ap.logger.error(f'Error deleting data for file_id {file_id}: {str(e)}', exc_info=True)
-            raise
-        finally:
-            session.close()
-
-    async def delete_kb_by_id(self, kb_id: str):
-        """
-        Deletes a knowledge base and all associated files, chunks, and vectors.
-        This involves querying for associated files and then deleting them.
-        """
-        self.ap.logger.info(f'Starting deletion of knowledge base with ID: {kb_id}')
-        session = SessionLocal()
-
-        try:
-            kb_to_delete = session.query(KnowledgeBase).filter_by(id=kb_id).first()
-            if not kb_to_delete:
-                self.ap.logger.warning(f'Knowledge Base with ID {kb_id} not found.')
-                return
-
-            files_to_delete = session.query(File).filter_by(kb_id=kb_id).all()
-
-            session.close()
-
-            for file_obj in files_to_delete:
-                try:
-                    await self.delete_data_by_file_id(file_obj.id)
-                except Exception as file_del_e:
-                    self.ap.logger.error(f'Failed to delete file ID {file_obj.id} during KB deletion: {file_del_e}')
-
-            session = SessionLocal()
-            try:
-                kb_final_delete = session.query(KnowledgeBase).filter_by(id=kb_id).first()
-                if kb_final_delete:
-                    session.delete(kb_final_delete)
-                    session.commit()
-                    self.ap.logger.info(f'Successfully deleted knowledge base with ID: {kb_id}')
-                else:
-                    self.ap.logger.warning(
-                        f'Knowledge Base with ID {kb_id} not found after file deletion, skipping KB deletion.'
-                    )
-            except Exception as kb_del_e:
-                session.rollback()
-                self.ap.logger.error(
-                    f'Error deleting KnowledgeBase record for ID {kb_id}: {kb_del_e}',
-                    exc_info=True,
-                )
-                raise
-            finally:
-                session.close()
-
-        except Exception as e:
-            # 如果在最初获取 KB 或文件列表时出错
-            if session.is_active:
-                session.rollback()
-            self.ap.logger.error(
-                f'Error during overall knowledge base deletion for ID {kb_id}: {str(e)}',
-                exc_info=True,
-            )
-            raise
-        finally:
-            if session.is_active:
-                session.close()
-
-    # async def get_file_content_by_file_id(self, file_id: str) -> str:
-    #     file_bytes = await self.ap.storage_mgr.storage_provider.load(file_id)
-
-    #     _, ext = os.path.splitext(file_id.lower())
-    #     ext = ext.lstrip('.')
-
-    #     try:
-    #         text = file_bytes.decode('utf-8')
-    #     except UnicodeDecodeError:
-    #         return '[非文本文件或编码无法识别]'
-
-    #     if ext in ['txt', 'md', 'csv', 'log', 'py', 'html']:
-    #         return text
-    #     else:
-    #         return f'[未知类型: .{ext}]'

@@ -6,7 +6,7 @@ import numpy as np
 
 class VectorDatabase(abc.ABC):
     @abc.abstractmethod
-    def add_embeddings(
+    async def add_embeddings(
         self,
         collection: str,
         ids: list[str],
@@ -18,16 +18,20 @@ class VectorDatabase(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def search(self, collection: str, query_embedding: np.ndarray, k: int = 5) -> Dict[str, Any]:
+    async def search(self, collection: str, query_embedding: np.ndarray, k: int = 5) -> Dict[str, Any]:
         """在指定 collection 中检索最相似的向量。"""
         pass
 
     @abc.abstractmethod
-    def delete_by_metadata(self, collection: str, where: Dict[str, Any]) -> None:
-        """根据元数据删除指定 collection 中的向量。"""
+    async def delete_by_file_id(self, collection: str, file_id: str) -> None:
+        """根据 file_id 删除指定 collection 中的向量。"""
         pass
 
     @abc.abstractmethod
-    def get_or_create_collection(self, collection: str):
+    async def get_or_create_collection(self, collection: str):
         """获取或创建 collection。"""
+        pass
+
+    @abc.abstractmethod
+    async def delete_collection(self, collection: str):
         pass
