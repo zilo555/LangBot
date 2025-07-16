@@ -52,7 +52,7 @@ async def main(loop: asyncio.AbstractEventLoop):
 
         def signal_handler(sig, frame):
             print('[Signal] 程序退出.')
-            # ap.shutdown()
+            app_inst.dispose()
             os._exit(0)
 
         signal.signal(signal.SIGINT, signal_handler)

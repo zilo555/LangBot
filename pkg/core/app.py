@@ -156,6 +156,9 @@ class Application:
             self.logger.error(f'应用运行致命异常: {e}')
             self.logger.debug(f'Traceback: {traceback.format_exc()}')
 
+    def dispose(self):
+        self.plugin_connector.dispose()
+
     async def print_web_access_info(self):
         """打印访问 webui 的提示"""
 

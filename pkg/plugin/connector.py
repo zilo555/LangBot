@@ -30,6 +30,8 @@ class PluginRuntimeConnector:
 
     stdio_client_controller: stdio_client_controller.StdioClientController
 
+    ctrl: stdio_client_controller.StdioClientController | ws_client_controller.WebSocketClientController
+
     runtime_disconnect_callback: typing.Callable[
         [PluginRuntimeConnector], typing.Coroutine[typing.Any, typing.Any, None]
     ]
@@ -73,22 +75,22 @@ class PluginRuntimeConnector:
                 self.ap.logger.error('Failed to connect to plugin runtime, trying to reconnect...')
                 await self.runtime_disconnect_callback(self)
 
-            ctrl = ws_client_controller.WebSocketClientController(
+            self.ctrl = ws_client_controller.WebSocketClientController(
                 ws_url=ws_url,
                 make_connection_failed_callback=make_connection_failed_callback,
             )
-            task = ctrl.run(new_connection_callback)
+            task = self.ctrl.run(new_connection_callback)
         else:  # stdio
             self.ap.logger.info('use stdio to connect to plugin runtime')
             # cmd: lbp rt -s
             python_path = sys.executable
             env = os.environ.copy()
-            ctrl = stdio_client_controller.StdioClientController(
+            self.ctrl = stdio_client_controller.StdioClientController(
                 command=python_path,
                 args=['-m', 'langbot_plugin.cli.__init__', 'rt', '-s'],
                 env=env,
             )
-            task = ctrl.run(new_connection_callback)
+            task = self.ctrl.run(new_connection_callback)
 
         asyncio.create_task(task)
 
@@ -135,3 +137,7 @@ class PluginRuntimeConnector:
             cmd_ret = command_context.CommandReturn.model_validate(ret)
 
             yield cmd_ret
+
+    def dispose(self):
+        if isinstance(self.ctrl, stdio_client_controller.StdioClientController):
+            self.ctrl.process.terminate()
