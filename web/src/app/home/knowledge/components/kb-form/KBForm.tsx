@@ -250,9 +250,6 @@ export default function KBForm({
                       {...field}
                       onChange={(e) => field.onChange(Number(e.target.value))}
                       className="w-[180px] h-10 text-base appearance-none"
-                      min={1}
-                      max={30}
-                      defaultValue={5}
                     />
                   </FormControl>
                   <FormDescription>
