@@ -155,6 +155,7 @@ export interface KnowledgeBase {
   name: string;
   description: string;
   embedding_model_uuid: string;
+  top_k: number;
   created_at?: string;
   updated_at?: string;
 }

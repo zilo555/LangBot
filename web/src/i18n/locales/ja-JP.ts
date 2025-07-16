@@ -254,6 +254,7 @@ const jaJP = {
     today: '今日',
     kbName: '知識ベース名',
     kbDescription: '知識ベースの説明',
+    topK: '上位K件',
     defaultDescription: '知識ベース',
     embeddingModelUUID: '埋め込みモデル',
     selectEmbeddingModel: '埋め込みモデルを選択',

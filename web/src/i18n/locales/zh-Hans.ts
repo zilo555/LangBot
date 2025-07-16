@@ -247,6 +247,7 @@ const zhHans = {
     today: '今天',
     kbName: '知识库名称',
     kbDescription: '知识库描述',
+    topK: '召回数量',
     defaultDescription: '一个知识库',
     embeddingModelUUID: '嵌入模型',
     selectEmbeddingModel: '选择嵌入模型',
