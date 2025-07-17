@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import List
 from pkg.rag.knowledge.services import base_service
 from pkg.core import app
@@ -58,4 +59,5 @@ class Chunker(base_service.BaseService):
         # Run the synchronous splitting logic in a separate thread
         chunks = await self._run_sync(self._split_text_sync, text)
         self.ap.logger.info(f'Text chunked into {len(chunks)} pieces.')
+        self.ap.logger.debug(f'Chunks: {json.dumps(chunks, indent=4, ensure_ascii=False)}')
         return chunks
