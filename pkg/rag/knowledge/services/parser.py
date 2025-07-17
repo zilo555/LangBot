@@ -184,7 +184,7 @@ class FileParser:
 
         return await self._run_sync(_parse_csv_sync)
 
-    async def _parse_markdown(self, file_name: str) -> str:
+    async def _parse_md(self, file_name: str) -> str:
         """Parses a Markdown file, converting it to structured plain text."""
         self.ap.logger.info(f'Parsing Markdown file: {file_name}')
 

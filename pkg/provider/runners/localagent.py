@@ -68,6 +68,8 @@ class LocalAgentRunner(runner.RequestRunner):
             else:
                 final_user_message_text = user_message_text
 
+            self.ap.logger.debug(f'Final user message text: {final_user_message_text}')
+
             for ce in user_message.content:
                 if ce.type == 'text':
                     ce.text = final_user_message_text
