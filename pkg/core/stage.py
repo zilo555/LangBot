@@ -7,9 +7,9 @@ from . import app
 
 
 preregistered_stages: dict[str, typing.Type[BootingStage]] = {}
-"""预注册的请求处理阶段。在初始化时，所有请求处理阶段类会被注册到此字典中。
+"""Pre-registered request processing stages. All request processing stage classes are registered in this dictionary during initialization.
 
-当前阶段暂不支持扩展
+Currently not supported for extension
 """
 
 
@@ -22,11 +22,11 @@ def stage_class(name: str):
 
 
 class BootingStage(abc.ABC):
-    """启动阶段"""
+    """Booting stage"""
 
     name: str = None
 
     @abc.abstractmethod
     async def run(self, ap: app.Application):
-        """启动"""
+        """Run"""
         pass

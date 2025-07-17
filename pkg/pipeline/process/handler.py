@@ -25,7 +25,7 @@ class MessageHandler(metaclass=abc.ABCMeta):
 
     def cut_str(self, s: str) -> str:
         """
-        取字符串第一行，最多20个字符，若有多行，或超过20个字符，则加省略号
+        Take the first line of the string, up to 20 characters, if there are multiple lines, or more than 20 characters, add an ellipsis
         """
         s0 = s.split('\n')[0]
         if len(s0) > 20 or '\n' in s:

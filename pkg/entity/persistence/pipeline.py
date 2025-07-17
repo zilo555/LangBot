@@ -4,7 +4,7 @@ from .base import Base
 
 
 class LegacyPipeline(Base):
-    """旧版流水线"""
+    """Legacy pipeline"""
 
     __tablename__ = 'legacy_pipelines'
 
@@ -25,7 +25,7 @@ class LegacyPipeline(Base):
 
 
 class PipelineRunRecord(Base):
-    """流水线运行记录"""
+    """Pipeline run record"""
 
     __tablename__ = 'pipeline_run_records'
 

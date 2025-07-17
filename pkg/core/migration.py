@@ -7,11 +7,11 @@ from . import app
 
 
 preregistered_migrations: list[typing.Type[Migration]] = []
-"""当前阶段暂不支持扩展"""
+"""Currently not supported for extension"""
 
 
 def migration_class(name: str, number: int):
-    """注册一个迁移"""
+    """Register a migration"""
 
     def decorator(cls: typing.Type[Migration]) -> typing.Type[Migration]:
         cls.name = name
@@ -23,7 +23,7 @@ def migration_class(name: str, number: int):
 
 
 class Migration(abc.ABC):
-    """一个版本的迁移"""
+    """A version migration"""
 
     name: str
 
@@ -36,10 +36,10 @@ class Migration(abc.ABC):
 
     @abc.abstractmethod
     async def need_migrate(self) -> bool:
-        """判断当前环境是否需要运行此迁移"""
+        """Determine if the current environment needs to run this migration"""
         pass
 
     @abc.abstractmethod
     async def run(self):
-        """执行迁移"""
+        """Run migration"""
         pass

@@ -7,7 +7,7 @@ from .. import database
 
 @database.manager_class('sqlite')
 class SQLiteDatabaseManager(database.BaseDatabaseManager):
-    """SQLite 数据库管理类"""
+    """SQLite database manager"""
 
     async def initialize(self) -> None:
         sqlite_path = 'data/langbot.db'

@@ -15,17 +15,17 @@ Forward = platform_message.Forward
 class ForwardComponentStrategy(strategy_model.LongTextStrategy):
     async def process(self, message: str, query: core_entities.Query) -> list[platform_message.MessageComponent]:
         display = ForwardMessageDiaplay(
-            title='群聊的聊天记录',
-            brief='[聊天记录]',
-            source='聊天记录',
-            preview=['QQ用户: ' + message],
-            summary='查看1条转发消息',
+            title='Group chat history',
+            brief='[Chat history]',
+            source='Chat history',
+            preview=['User: ' + message],
+            summary='View 1 forwarded message',
         )
 
         node_list = [
             platform_message.ForwardMessageNode(
                 sender_id=query.adapter.bot_account_id,
-                sender_name='QQ用户',
+                sender_name='User',
                 message_chain=platform_message.MessageChain([message]),
             )
         ]

@@ -9,13 +9,13 @@ from . import entities as core_entities
 
 
 class TaskContext:
-    """任务跟踪上下文"""
+    """Task tracking context"""
 
     current_action: str
-    """当前正在执行的动作"""
+    """Current action being executed"""
 
     log: str
-    """记录日志"""
+    """Log"""
 
     def __init__(self):
         self.current_action = 'default'
@@ -58,40 +58,40 @@ placeholder_context: TaskContext | None = None
 
 
 class TaskWrapper:
-    """任务包装器"""
+    """Task wrapper"""
 
     _id_index: int = 0
-    """任务ID索引"""
+    """Task ID index"""
 
     id: int
-    """任务ID"""
+    """Task ID"""
 
-    task_type: str = 'system'  # 任务类型: system 或 user
-    """任务类型"""
+    task_type: str = 'system'  # Task type: system or user
+    """Task type"""
 
-    kind: str = 'system_task'  # 由发起者确定任务种类，通常同质化的任务种类相同
-    """任务种类"""
+    kind: str = 'system_task'  # Task type determined by the initiator, usually the same task type
+    """Task type"""
 
     name: str = ''
-    """任务唯一名称"""
+    """Task unique name"""
 
     label: str = ''
-    """任务显示名称"""
+    """Task display name"""
 
     task_context: TaskContext
-    """任务上下文"""
+    """Task context"""
 
     task: asyncio.Task
-    """任务"""
+    """Task"""
 
     task_stack: list = None
-    """任务堆栈"""
+    """Task stack"""
 
     ap: app.Application
-    """应用实例"""
+    """Application instance"""
 
     scopes: list[core_entities.LifecycleControlScope]
-    """任务所属生命周期控制范围"""
+    """Task scope"""
 
     def __init__(
         self,
@@ -165,13 +165,13 @@ class TaskWrapper:
 
 
 class AsyncTaskManager:
-    """保存app中的所有异步任务
-    包含系统级的和用户级（插件安装、更新等由用户直接发起的）的"""
+    """Save all asynchronous tasks in the app
+    Include system-level and user-level (plugin installation, update, etc. initiated by users directly)"""
 
     ap: app.Application
 
     tasks: list[TaskWrapper]
-    """所有任务"""
+    """All tasks"""
 
     def __init__(self, ap: app.Application):
         self.ap = ap

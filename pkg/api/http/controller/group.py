@@ -11,7 +11,7 @@ from ....core import app
 
 
 preregistered_groups: list[type[RouterGroup]] = []
-"""RouterGroup 的预注册列表"""
+"""Pre-registered list of RouterGroup"""
 
 
 def group_class(name: str, path: str) -> typing.Callable[[typing.Type[RouterGroup]], typing.Type[RouterGroup]]:
@@ -27,7 +27,7 @@ def group_class(name: str, path: str) -> typing.Callable[[typing.Type[RouterGrou
 
 
 class AuthType(enum.Enum):
-    """认证类型"""
+    """Authentication type"""
 
     NONE = 'none'
     USER_TOKEN = 'user-token'
@@ -56,7 +56,7 @@ class RouterGroup(abc.ABC):
         auth_type: AuthType = AuthType.USER_TOKEN,
         **options: typing.Any,
     ) -> typing.Callable[[RouteCallable], RouteCallable]:  # decorator
-        """注册一个路由"""
+        """Register a route"""
 
         def decorator(f: RouteCallable) -> RouteCallable:
             nonlocal rule
@@ -64,11 +64,11 @@ class RouterGroup(abc.ABC):
 
             async def handler_error(*args, **kwargs):
                 if auth_type == AuthType.USER_TOKEN:
-                    # 从Authorization头中获取token
+                    # get token from Authorization header
                     token = quart.request.headers.get('Authorization', '').replace('Bearer ', '')
 
                     if not token:
-                        return self.http_status(401, -1, '未提供有效的用户令牌')
+                        return self.http_status(401, -1, 'No valid user token provided')
 
                     try:
                         user_email = await self.ap.user_service.verify_jwt_token(token)
@@ -76,9 +76,9 @@ class RouterGroup(abc.ABC):
                         # check if this account exists
                         user = await self.ap.user_service.get_user_by_email(user_email)
                         if not user:
-                            return self.http_status(401, -1, '用户不存在')
+                            return self.http_status(401, -1, 'User not found')
 
-                        # 检查f是否接受user_email参数
+                        # check if f accepts user_email parameter
                         if 'user_email' in f.__code__.co_varnames:
                             kwargs['user_email'] = user_email
                     except Exception as e:
@@ -86,6 +86,7 @@ class RouterGroup(abc.ABC):
 
                 try:
                     return await f(*args, **kwargs)
+
                 except Exception as e:  # 自动 500
                     traceback.print_exc()
                     # return self.http_status(500, -2, str(e))
@@ -101,7 +102,7 @@ class RouterGroup(abc.ABC):
         return decorator
 
     def success(self, data: typing.Any = None) -> quart.Response:
-        """返回一个 200 响应"""
+        """Return a 200 response"""
         return quart.jsonify(
             {
                 'code': 0,
@@ -111,7 +112,7 @@ class RouterGroup(abc.ABC):
         )
 
     def fail(self, code: int, msg: str) -> quart.Response:
-        """返回一个异常响应"""
+        """Return an error response"""
 
         return quart.jsonify(
             {

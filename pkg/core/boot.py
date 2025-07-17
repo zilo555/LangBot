@@ -8,7 +8,7 @@ from . import app
 from . import stage
 from ..utils import constants, importutil
 
-# 引入启动阶段实现以便注册
+# Import startup stage implementation to register
 from . import stages
 
 importutil.import_modules_in_pkg(stages)
@@ -25,7 +25,7 @@ stage_order = [
 
 
 async def make_app(loop: asyncio.AbstractEventLoop) -> app.Application:
-    # 确定是否为调试模式
+    # Determine if it is debug mode
     if 'DEBUG' in os.environ and os.environ['DEBUG'] in ['true', '1']:
         constants.debug_mode = True
 
@@ -33,7 +33,7 @@ async def make_app(loop: asyncio.AbstractEventLoop) -> app.Application:
 
     ap.event_loop = loop
 
-    # 执行启动阶段
+    # Execute startup stage
     for stage_name in stage_order:
         stage_cls = stage.preregistered_stages[stage_name]
         stage_inst = stage_cls()
@@ -47,11 +47,11 @@ async def make_app(loop: asyncio.AbstractEventLoop) -> app.Application:
 
 async def main(loop: asyncio.AbstractEventLoop):
     try:
-        # 挂系统信号处理
+        # Hang system signal processing
         import signal
 
         def signal_handler(sig, frame):
-            print('[Signal] 程序退出.')
+            print('[Signal] Program exit.')
             # ap.shutdown()
             os._exit(0)
 

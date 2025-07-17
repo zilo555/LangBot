@@ -22,12 +22,12 @@ importutil.import_modules_in_pkg(persistence)
 
 
 class PersistenceManager:
-    """持久化模块管理器"""
+    """Persistence module manager"""
 
     ap: app.Application
 
     db: database.BaseDatabaseManager
-    """数据库管理器"""
+    """Database manager"""
 
     meta: sqlalchemy.MetaData
 
@@ -79,7 +79,7 @@ class PersistenceManager:
                 'stages': pipeline_service.default_stage_order,
                 'is_default': True,
                 'name': 'ChatPipeline',
-                'description': '默认提供的流水线，您配置的机器人、第一个模型将自动绑定到此流水线',
+                'description': 'Default pipeline provided, your new bots will be automatically bound to this pipeline | 默认提供的流水线，您配置的机器人将自动绑定到此流水线',
                 'config': pipeline_config,
             }
 

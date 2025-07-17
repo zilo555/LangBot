@@ -8,7 +8,7 @@ class WebChatDebugRouterGroup(group.RouterGroup):
     async def initialize(self) -> None:
         @self.route('/send', methods=['POST'])
         async def send_message(pipeline_uuid: str) -> str:
-            """发送调试消息到流水线"""
+            """Send a message to the pipeline for debugging"""
             try:
                 data = await quart.request.get_json()
                 session_type = data.get('session_type', 'person')
@@ -38,7 +38,7 @@ class WebChatDebugRouterGroup(group.RouterGroup):
 
         @self.route('/messages/<session_type>', methods=['GET'])
         async def get_messages(pipeline_uuid: str, session_type: str) -> str:
-            """获取调试消息历史"""
+            """Get the message history of the pipeline for debugging"""
             try:
                 if session_type not in ['person', 'group']:
                     return self.http_status(400, -1, 'session_type must be person or group')
@@ -57,7 +57,7 @@ class WebChatDebugRouterGroup(group.RouterGroup):
 
         @self.route('/reset/<session_type>', methods=['POST'])
         async def reset_session(session_type: str) -> str:
-            """重置调试会话"""
+            """Reset the debug session"""
             try:
                 if session_type not in ['person', 'group']:
                     return self.http_status(400, -1, 'session_type must be person or group')

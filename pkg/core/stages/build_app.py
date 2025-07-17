@@ -27,10 +27,10 @@ from .. import taskmgr
 
 @stage.stage_class('BuildAppStage')
 class BuildAppStage(stage.BootingStage):
-    """构建应用阶段"""
+    """Build LangBot application"""
 
     async def run(self, ap: app.Application):
-        """构建app对象的各个组件对象并初始化"""
+        """Build LangBot application"""
         ap.task_mgr = taskmgr.AsyncTaskManager(ap)
 
         discover = discover_engine.ComponentDiscoveryEngine(ap)
@@ -45,7 +45,7 @@ class BuildAppStage(stage.BootingStage):
         await ver_mgr.initialize()
         ap.ver_mgr = ver_mgr
 
-        # 发送公告
+        # Send announcement
         ann_mgr = announce.AnnouncementManager(ap)
         ap.ann_mgr = ann_mgr
 
