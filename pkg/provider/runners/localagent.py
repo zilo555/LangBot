@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import typing
-
+from ...platform.types import message as platform_entities
 from .. import runner
 from ...core import entities as core_entities
 from .. import entities as llm_entities
@@ -15,8 +15,43 @@ class LocalAgentRunner(runner.RequestRunner):
     async def run(self, query: core_entities.Query) -> typing.AsyncGenerator[llm_entities.Message, None]:
         """运行请求"""
         pending_tool_calls = []
+            
 
         req_messages = query.prompt.messages.copy() + query.messages.copy() + [query.user_message]
+
+        
+        pipeline_uuid = query.pipeline_uuid
+        pipeline = await self.ap.pipeline_mgr.get_pipeline_by_uuid(pipeline_uuid)
+
+        try:
+            if pipeline and pipeline.pipeline_entity.knowledge_base_uuid is not None:
+                kb_id = pipeline.pipeline_entity.knowledge_base_uuid
+                kb= await self.ap.rag_mgr.load_knowledge_base(kb_id)
+        except Exception as e:
+            self.ap.logger.error(f'Failed to load knowledge base {kb_id}: {e}')
+            kb_id = None
+
+        if kb:
+            message = ''
+            for msg in query.message_chain:
+                if isinstance(msg, platform_entities.Plain):
+                    message += msg.text
+            result = await kb.retrieve(message)
+
+            if result:
+                rag_context = "\n\n".join(
+                    f"[{i+1}] {entry.metadata.get('text', '')}" for i, entry in enumerate(result)
+                )
+                rag_message = llm_entities.Message(
+                    role="user",
+                    content="The following are relevant context entries retrieved from the knowledge base. "
+                            "Please use them to answer the user's question. "
+                            "Respond in the same language as the user's input.\n\n" + rag_context
+                )
+                req_messages += [rag_message]
+
+
+
 
         # 首次请求
         msg = await query.use_llm_model.requester.invoke_llm(

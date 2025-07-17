@@ -68,6 +68,13 @@ stages:
           zh_Hans: 除非您了解消息结构，否则请只使用 system 单提示词
         type: prompt-editor
         required: true
+      - name: knowledge-base
+        label:
+          en_US: Knowledge Base
+          zh_Hans: 知识库
+        type: knowledge-base-selector
+        required: false
+        default: ''
   - name: dify-service-api
     label:
       en_US: Dify Service API
@@ -298,3 +305,4 @@ stages:
         type: string
         required: false
         default: 'response'
+  
