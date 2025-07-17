@@ -47,12 +47,18 @@ class KnowledgeService:
 
     async def update_knowledge_base(self, kb_uuid: str, kb_data: dict) -> None:
         """更新知识库"""
+        if 'uuid' in kb_data:
+            del kb_data['uuid']
+
+        if 'embedding_model_uuid' in kb_data:
+            del kb_data['embedding_model_uuid']
+
         await self.ap.persistence_mgr.execute_async(
             sqlalchemy.update(persistence_rag.KnowledgeBase)
             .values(kb_data)
             .where(persistence_rag.KnowledgeBase.uuid == kb_uuid)
         )
-        await self.ap.rag_mgr.remove_knowledge_base(kb_uuid)
+        await self.ap.rag_mgr.remove_knowledge_base_from_runtime(kb_uuid)
 
         kb = await self.get_knowledge_base(kb_uuid)
 
@@ -91,7 +97,7 @@ class KnowledgeService:
 
     async def delete_knowledge_base(self, kb_uuid: str) -> None:
         """删除知识库"""
-        await self.ap.rag_mgr.remove_knowledge_base(kb_uuid)
+        await self.ap.rag_mgr.delete_knowledge_base(kb_uuid)
 
         await self.ap.persistence_mgr.execute_async(
             sqlalchemy.delete(persistence_rag.KnowledgeBase).where(persistence_rag.KnowledgeBase.uuid == kb_uuid)

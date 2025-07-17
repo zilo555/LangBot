@@ -253,6 +253,10 @@ const enUS = {
     embeddingModelDescription:
       'Used to vectorize the text, you can configure it in the Models page',
     updateTime: 'Updated ',
+    cannotChangeEmbeddingModel:
+      'Knowledge base created cannot be modified embedding model',
+    updateKnowledgeBaseSuccess: 'Knowledge base updated successfully',
+    updateKnowledgeBaseFailed: 'Knowledge base update failed',
     documentsTab: {
       name: 'Name',
       status: 'Status',

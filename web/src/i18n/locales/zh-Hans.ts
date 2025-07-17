@@ -247,6 +247,9 @@ const zhHans = {
     selectEmbeddingModel: '选择嵌入模型',
     embeddingModelDescription: '用于向量化文本，可在模型配置页面配置',
     updateTime: '更新于',
+    cannotChangeEmbeddingModel: '知识库创建后不可修改嵌入模型',
+    updateKnowledgeBaseSuccess: '知识库更新成功',
+    updateKnowledgeBaseFailed: '知识库更新失败',
     documentsTab: {
       name: '名称',
       status: '状态',

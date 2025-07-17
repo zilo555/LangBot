@@ -36,6 +36,7 @@ interface KBDetailDialogProps {
   onFormCancel: () => void;
   onKbDeleted: () => void;
   onNewKbCreated: (kbId: string) => void;
+  onKbUpdated: (kbId: string) => void;
 }
 
 export default function KBDetailDialog({
@@ -46,6 +47,7 @@ export default function KBDetailDialog({
   onFormCancel,
   onKbDeleted,
   onNewKbCreated,
+  onKbUpdated,
 }: KBDetailDialogProps) {
   const { t } = useTranslation();
   const [kbId, setKbId] = useState<string | undefined>(propKbId);
@@ -111,6 +113,7 @@ export default function KBDetailDialog({
                   onFormCancel={onFormCancel}
                   onKbDeleted={onKbDeleted}
                   onNewKbCreated={onNewKbCreated}
+                  onKbUpdated={onKbUpdated}
                 />
               )}
               {activeMenu === 'documents' && <div>documents</div>}
@@ -185,6 +188,7 @@ export default function KBDetailDialog({
                     onFormCancel={onFormCancel}
                     onKbDeleted={onKbDeleted}
                     onNewKbCreated={onNewKbCreated}
+                    onKbUpdated={onKbUpdated}
                   />
                 )}
                 {activeMenu === 'documents' && <KBDoc kbId={kbId} />}

@@ -5,6 +5,7 @@ from chromadb import PersistentClient
 from pkg.vector.vdb import VectorDatabase
 from pkg.core import app
 import chromadb
+import chromadb.errors
 
 
 class ChromaVectorDatabase(VectorDatabase):
@@ -51,5 +52,10 @@ class ChromaVectorDatabase(VectorDatabase):
     async def delete_collection(self, collection: str):
         if collection in self._collections:
             del self._collections[collection]
-        await asyncio.to_thread(self.client.delete_collection, name=collection)
+
+        try:
+            await asyncio.to_thread(self.client.delete_collection, name=collection)
+        except chromadb.errors.NotFoundError:
+            self.ap.logger.warning(f"Chroma collection '{collection}' not found.")
+            return
         self.ap.logger.info(f"Chroma collection '{collection}' deleted.")

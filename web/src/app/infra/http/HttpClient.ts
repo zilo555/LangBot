@@ -459,6 +459,13 @@ class HttpClient {
     return this.post('/api/v1/knowledge/bases', base);
   }
 
+  public updateKnowledgeBase(
+    uuid: string,
+    base: KnowledgeBase,
+  ): Promise<{ uuid: string }> {
+    return this.put(`/api/v1/knowledge/bases/${uuid}`, base);
+  }
+
   public uploadKnowledgeBaseFile(
     uuid: string,
     file_id: string,

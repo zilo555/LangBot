@@ -198,7 +198,13 @@ class RAGManager:
                 return kb
         return None
 
-    async def remove_knowledge_base(self, kb_uuid: str):
+    async def remove_knowledge_base_from_runtime(self, kb_uuid: str):
+        for kb in self.knowledge_bases:
+            if kb.knowledge_base_entity.uuid == kb_uuid:
+                self.knowledge_bases.remove(kb)
+                return
+
+    async def delete_knowledge_base(self, kb_uuid: str):
         for kb in self.knowledge_bases:
             if kb.knowledge_base_entity.uuid == kb_uuid:
                 await kb.dispose()

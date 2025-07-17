@@ -51,7 +51,7 @@ export default function DynamicFormItemComponent({
         });
     }
   }, [config.type]);
-  
+
   useEffect(() => {
     if (config.type === DynamicFormItemType.KNOWLEDGE_BASE_SELECTOR) {
       httpClient
@@ -272,28 +272,11 @@ export default function DynamicFormItemComponent({
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              {/* <SelectItem value="">{t('knowledge.empty')}</SelectItem> */}
+              <SelectItem value="__none__">{t('knowledge.empty')}</SelectItem>
               {knowledgeBases.map((base) => (
-                <HoverCard key={base.uuid} openDelay={0} closeDelay={0}>
-                  <HoverCardTrigger asChild>
-                    <SelectItem value={base.uuid ?? ''}>{base.name}</SelectItem>
-                  </HoverCardTrigger>
-                  <HoverCardContent
-                    className="w-80 data-[state=open]:animate-none data-[state=closed]:animate-none"
-                    align="end"
-                    side="right"
-                    sideOffset={10}
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-medium">{base.name}</h4>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        {base.description}
-                      </p>
-                      </div>
-                  </HoverCardContent>
-                </HoverCard>
+                <SelectItem key={base.uuid} value={base.uuid ?? ''}>
+                  {base.name}
+                </SelectItem>
               ))}
             </SelectGroup>
           </SelectContent>

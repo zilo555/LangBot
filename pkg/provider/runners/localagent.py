@@ -33,6 +33,9 @@ class LocalAgentRunner(runner.RequestRunner):
 
         kb_uuid = query.pipeline_config['ai']['local-agent']['knowledge-base']
 
+        if kb_uuid == '__none__':
+            kb_uuid = None
+
         user_message = copy.deepcopy(query.user_message)
 
         user_message_text = ''

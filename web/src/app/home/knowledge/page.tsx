@@ -81,6 +81,10 @@ export default function KnowledgePage() {
     setDetailDialogOpen(false);
   };
 
+  const handleKbUpdated = (kbId: string) => {
+    getKnowledgeBaseList();
+  };
+
   return (
     <div>
       <KBDetailDialog
@@ -91,6 +95,7 @@ export default function KnowledgePage() {
         onFormCancel={handleFormCancel}
         onKbDeleted={handleKbDeleted}
         onNewKbCreated={handleNewKbCreated}
+        onKbUpdated={handleKbUpdated}
       />
 
       <div className={styles.knowledgeListContainer}>

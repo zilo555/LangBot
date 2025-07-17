@@ -14,7 +14,7 @@ import {
 import { useTranslation } from 'react-i18next';
 
 export type DocumentFile = {
-  id: string;
+  uuid: string;
   name: string;
   status: string;
 };
@@ -52,7 +52,7 @@ export const columns = (
                 {t('knowledge.documentsTab.actions')}
               </DropdownMenuLabel>
 
-              <DropdownMenuItem onClick={() => onDelete(document.id)}>
+              <DropdownMenuItem onClick={() => onDelete(document.uuid)}>
                 {t('knowledge.documentsTab.delete')}
               </DropdownMenuItem>
             </DropdownMenuContent>

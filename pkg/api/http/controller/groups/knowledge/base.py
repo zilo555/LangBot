@@ -20,7 +20,7 @@ class KnowledgeBaseRouterGroup(group.RouterGroup):
 
         @self.route(
             '/<knowledge_base_uuid>',
-            methods=['GET', 'DELETE'],
+            methods=['GET', 'DELETE', 'PUT'],
         )
         async def handle_specific_knowledge_base(knowledge_base_uuid: str) -> quart.Response:
             if quart.request.method == 'GET':
@@ -34,6 +34,12 @@ class KnowledgeBaseRouterGroup(group.RouterGroup):
                         'base': knowledge_base,
                     }
                 )
+
+            elif quart.request.method == 'PUT':
+                json_data = await quart.request.json
+                await self.ap.knowledge_service.update_knowledge_base(knowledge_base_uuid, json_data)
+                return self.success({})
+
             elif quart.request.method == 'DELETE':
                 await self.ap.knowledge_service.delete_knowledge_base(knowledge_base_uuid)
                 return self.success({})

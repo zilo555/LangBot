@@ -255,6 +255,10 @@ const jaJP = {
     embeddingModelDescription:
       'テキストのベクトル化に使用する埋め込みモデルを管理します',
     updateTime: '更新日時',
+    cannotChangeEmbeddingModel:
+      '知識ベース作成後は埋め込みモデルを変更できません',
+    updateKnowledgeBaseSuccess: '知識ベースの更新に成功しました',
+    updateKnowledgeBaseFailed: '知識ベースの更新に失敗しました',
     documentsTab: {
       name: '名前',
       status: 'ステータス',
