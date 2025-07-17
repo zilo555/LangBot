@@ -1,11 +1,26 @@
 from __future__ import annotations
 
 import json
+import copy
 import typing
-from ...platform.types import message as platform_entities
 from .. import runner
 from ...core import entities as core_entities
 from .. import entities as llm_entities
+
+
+rag_combined_prompt_template = """
+The following are relevant context entries retrieved from the knowledge base. 
+Please use them to answer the user's message. 
+Respond in the same language as the user's input.
+
+<context>
+{rag_context}
+</context>
+
+<user_message>
+{user_message}
+</user_message>
+"""
 
 
 @runner.runner_class('local-agent')
@@ -15,43 +30,50 @@ class LocalAgentRunner(runner.RequestRunner):
     async def run(self, query: core_entities.Query) -> typing.AsyncGenerator[llm_entities.Message, None]:
         """运行请求"""
         pending_tool_calls = []
-            
 
-        req_messages = query.prompt.messages.copy() + query.messages.copy() + [query.user_message]
+        kb_uuid = query.pipeline_config['ai']['local-agent']['knowledge-base']
 
-        
-        pipeline_uuid = query.pipeline_uuid
-        pipeline = await self.ap.pipeline_mgr.get_pipeline_by_uuid(pipeline_uuid)
+        user_message = copy.deepcopy(query.user_message)
 
-        try:
-            if pipeline and pipeline.pipeline_entity.knowledge_base_uuid is not None:
-                kb_id = pipeline.pipeline_entity.knowledge_base_uuid
-                kb= await self.ap.rag_mgr.load_knowledge_base(kb_id)
-        except Exception as e:
-            self.ap.logger.error(f'Failed to load knowledge base {kb_id}: {e}')
-            kb_id = None
+        user_message_text = ''
 
-        if kb:
-            message = ''
-            for msg in query.message_chain:
-                if isinstance(msg, platform_entities.Plain):
-                    message += msg.text
-            result = await kb.retrieve(message)
+        if isinstance(user_message.content, str):
+            user_message_text = user_message.content
+        elif isinstance(user_message.content, list):
+            for ce in user_message.content:
+                if ce.type == 'text':
+                    user_message_text += ce.text
+                    break
+
+        if kb_uuid and user_message_text:
+            # only support text for now
+            kb = await self.ap.rag_mgr.get_knowledge_base_by_uuid(kb_uuid)
+
+            if not kb:
+                self.ap.logger.warning(f'Knowledge base {kb_uuid} not found')
+                raise ValueError(f'Knowledge base {kb_uuid} not found')
+
+            result = await kb.retrieve(user_message_text)
+
+            final_user_message_text = ''
 
             if result:
-                rag_context = "\n\n".join(
-                    f"[{i+1}] {entry.metadata.get('text', '')}" for i, entry in enumerate(result)
+                rag_context = '\n\n'.join(
+                    f'[{i + 1}] {entry.metadata.get("text", "")}' for i, entry in enumerate(result)
                 )
-                rag_message = llm_entities.Message(
-                    role="user",
-                    content="The following are relevant context entries retrieved from the knowledge base. "
-                            "Please use them to answer the user's question. "
-                            "Respond in the same language as the user's input.\n\n" + rag_context
+                final_user_message_text = rag_combined_prompt_template.format(
+                    rag_context=rag_context, user_message=user_message_text
                 )
-                req_messages += [rag_message]
 
+            else:
+                final_user_message_text = user_message_text
 
+            for ce in user_message.content:
+                if ce.type == 'text':
+                    ce.text = final_user_message_text
+                    break
 
+        req_messages = query.prompt.messages.copy() + query.messages.copy() + [user_message]
 
         # 首次请求
         msg = await query.use_llm_model.requester.invoke_llm(

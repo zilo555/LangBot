@@ -20,7 +20,6 @@ class LegacyPipeline(Base):
     )
     for_version = sqlalchemy.Column(sqlalchemy.String(255), nullable=False)
     is_default = sqlalchemy.Column(sqlalchemy.Boolean, nullable=False, default=False)
-    knowledge_base_uuid = sqlalchemy.Column(sqlalchemy.String(255), nullable=True)
     stages = sqlalchemy.Column(sqlalchemy.JSON, nullable=False)
     config = sqlalchemy.Column(sqlalchemy.JSON, nullable=False)
 
