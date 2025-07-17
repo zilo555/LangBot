@@ -236,6 +236,8 @@ const jaJP = {
     title: '知識ベース',
     createKnowledgeBase: '知識ベースを作成',
     editKnowledgeBase: '知識ベースを編集',
+    selectKnowledgeBase: '知識ベースを選択',
+    empty: 'なし',
     editDocument: 'ドキュメント',
     description: 'LLMの回答品質向上のための知識ベースを設定します',
     metadata: 'メタデータ',

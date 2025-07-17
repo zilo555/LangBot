@@ -14,9 +14,10 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { ControllerRenderProps } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { LLMModel } from '@/app/infra/entities/api';
+import { KnowledgeBase } from '@/app/infra/entities/api';
 import { toast } from 'sonner';
 import {
   HoverCard,
@@ -35,6 +36,7 @@ export default function DynamicFormItemComponent({
   field: ControllerRenderProps<any, any>;
 }) {
   const [llmModels, setLlmModels] = useState<LLMModel[]>([]);
+  const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([]);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -46,6 +48,19 @@ export default function DynamicFormItemComponent({
         })
         .catch((err) => {
           toast.error('获取 LLM 模型列表失败：' + err.message);
+        });
+    }
+  }, [config.type]);
+  
+  useEffect(() => {
+    if (config.type === DynamicFormItemType.KNOWLEDGE_BASE_SELECTOR) {
+      httpClient
+        .getKnowledgeBases()
+        .then((resp) => {
+          setKnowledgeBases(resp.bases);
+        })
+        .catch((err) => {
+          toast.error('获取知识库列表失败：' + err.message);
         });
     }
   }, [config.type]);
@@ -241,6 +256,42 @@ export default function DynamicFormItemComponent({
                           </div>
                         )}
                     </div>
+                  </HoverCardContent>
+                </HoverCard>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      );
+
+    case DynamicFormItemType.KNOWLEDGE_BASE_SELECTOR:
+      return (
+        <Select value={field.value} onValueChange={field.onChange}>
+          <SelectTrigger>
+            <SelectValue placeholder={t('knowledge.selectKnowledgeBase')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {/* <SelectItem value="">{t('knowledge.empty')}</SelectItem> */}
+              {knowledgeBases.map((base) => (
+                <HoverCard key={base.uuid} openDelay={0} closeDelay={0}>
+                  <HoverCardTrigger asChild>
+                    <SelectItem value={base.uuid ?? ''}>{base.name}</SelectItem>
+                  </HoverCardTrigger>
+                  <HoverCardContent
+                    className="w-80 data-[state=open]:animate-none data-[state=closed]:animate-none"
+                    align="end"
+                    side="right"
+                    sideOffset={10}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium">{base.name}</h4>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {base.description}
+                      </p>
+                      </div>
                   </HoverCardContent>
                 </HoverCard>
               ))}

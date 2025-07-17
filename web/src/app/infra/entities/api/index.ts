@@ -55,6 +55,15 @@ export interface LLMModel {
   // updated_at: string;
 }
 
+export interface KnowledgeBase {
+  uuid?: string;
+  name: string;
+  description: string;
+  embedding_model_uuid: string;
+  created_at?: string;
+  top_k?: number;
+}
+
 export interface ApiRespProviderEmbeddingModels {
   models: EmbeddingModel[];
 }

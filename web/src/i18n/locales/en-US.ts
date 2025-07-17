@@ -234,6 +234,8 @@ const enUS = {
     title: 'Knowledge',
     createKnowledgeBase: 'Create Knowledge Base',
     editKnowledgeBase: 'Edit Knowledge Base',
+    selectKnowledgeBase: 'Select Knowledge Base',
+    empty: 'Empty',
     editDocument: 'Documents',
     description: 'Configuring knowledge bases for improved LLM responses',
     metadata: 'Metadata',

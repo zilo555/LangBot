@@ -229,6 +229,8 @@ const zhHans = {
     title: '知识库',
     createKnowledgeBase: '创建知识库',
     editKnowledgeBase: '编辑知识库',
+    selectKnowledgeBase: '选择知识库',
+    empty: '无',
     editDocument: '文档',
     description: '配置可用于提升模型回复质量的知识库',
     metadata: '元数据',
