@@ -60,7 +60,6 @@ dependencies = [
     "html2text>=2024.2.26",
     "langchain>=0.2.0",
     "chromadb>=0.4.24",
-    "sentence-transformers>=2.6.1",
 ]
 keywords = [
     "bot",
