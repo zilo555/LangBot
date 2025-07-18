@@ -76,9 +76,10 @@ export default function KnowledgePage() {
     setDetailDialogOpen(false);
   };
 
-  const handleNewKbCreated = () => {
+  const handleNewKbCreated = (newKbId: string) => {
     getKnowledgeBaseList();
-    setDetailDialogOpen(false);
+    setSelectedKbId(newKbId);
+    setDetailDialogOpen(true);
   };
 
   const handleKbUpdated = (kbId: string) => {
