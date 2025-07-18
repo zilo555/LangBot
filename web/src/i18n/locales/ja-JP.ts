@@ -275,6 +275,9 @@ const jaJP = {
       delete: 'ドキュメントを削除',
       fileDeleteSuccess: 'ドキュメントの削除に成功しました',
       fileDeleteFailed: 'ドキュメントの削除に失敗しました',
+      processing: '処理中',
+      completed: '完了',
+      failed: '失敗',
     },
     deleteKnowledgeBaseConfirmation:
       '本当にこの知識ベースを削除しますか？この知識ベースに紐付けられたドキュメントは削除されます。',

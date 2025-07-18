@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useTranslation } from 'react-i18next';
+import { Badge } from '@/components/ui/badge';
 
 export type DocumentFile = {
   uuid: string;
@@ -31,6 +32,36 @@ export const columns = (
     {
       accessorKey: 'status',
       header: t('knowledge.documentsTab.status'),
+      cell: ({ row }) => {
+        const document = row.original;
+
+        switch (document.status) {
+          case 'processing':
+            return (
+              <Badge variant="secondary">
+                {t('knowledge.documentsTab.processing')}
+              </Badge>
+            );
+          case 'completed':
+            return (
+              <Badge variant="outline" className="bg-blue-500 text-white">
+                {t('knowledge.documentsTab.completed')}
+              </Badge>
+            );
+          case 'failed':
+            return (
+              <Badge variant="outline" className="bg-yellow-500 text-white">
+                {t('knowledge.documentsTab.failed')}
+              </Badge>
+            );
+          default:
+            return (
+              <Badge variant="outline" className="bg-gray-500 text-white">
+                {document.status}
+              </Badge>
+            );
+        }
+      },
     },
     {
       id: 'actions',

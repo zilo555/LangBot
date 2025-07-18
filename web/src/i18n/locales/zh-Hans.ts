@@ -264,6 +264,9 @@ const zhHans = {
       delete: '删除文件',
       fileDeleteSuccess: '文件删除成功',
       fileDeleteFailed: '文件删除失败',
+      processing: '处理中',
+      completed: '完成',
+      failed: '失败',
     },
     deleteKnowledgeBaseConfirmation:
       '你确定要删除这个知识库吗？此知识库下的所有文档将被删除。',

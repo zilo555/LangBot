@@ -272,6 +272,9 @@ const enUS = {
       delete: 'Delete File',
       fileDeleteSuccess: 'File deleted successfully',
       fileDeleteFailed: 'File deletion failed',
+      processing: 'Processing',
+      completed: 'Completed',
+      failed: 'Failed',
     },
     deleteKnowledgeBaseConfirmation:
       'Are you sure you want to delete this knowledge base? All documents in this knowledge base will be deleted.',
