@@ -66,7 +66,7 @@ export default function KBDoc({ kbId }: { kbId: string }) {
         onUploadSuccess={handleUploadSuccess}
         onUploadError={handleUploadError}
       />
-      <DataTable columns={columns(handleDelete)} data={documentsList} />
+      <DataTable columns={columns(handleDelete, t)} data={documentsList} />
     </div>
   );
 }

@@ -64,13 +64,11 @@ const getFormSchema = (t: (key: string) => string) =>
 export default function BotForm({
   initBotId,
   onFormSubmit,
-  onFormCancel,
   onBotDeleted,
   onNewBotCreated,
 }: {
   initBotId?: string;
   onFormSubmit: (value: z.infer<ReturnType<typeof getFormSchema>>) => void;
-  onFormCancel: () => void;
   onBotDeleted: () => void;
   onNewBotCreated: (botId: string) => void;
 }) {

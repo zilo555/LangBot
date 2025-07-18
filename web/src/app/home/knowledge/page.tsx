@@ -62,11 +62,6 @@ export default function KnowledgePage() {
     setDetailDialogOpen(true);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleFormSubmit = (value: any) => {
-    console.log('handleFormSubmit', value);
-  };
-
   const handleFormCancel = () => {
     setDetailDialogOpen(false);
   };
@@ -82,7 +77,7 @@ export default function KnowledgePage() {
     setDetailDialogOpen(true);
   };
 
-  const handleKbUpdated = (kbId: string) => {
+  const handleKbUpdated = () => {
     getKnowledgeBaseList();
   };
 
@@ -92,7 +87,6 @@ export default function KnowledgePage() {
         open={detailDialogOpen}
         onOpenChange={setDetailDialogOpen}
         kbId={selectedKbId || undefined}
-        onFormSubmit={handleFormSubmit}
         onFormCancel={handleFormCancel}
         onKbDeleted={handleKbDeleted}
         onNewKbCreated={handleNewKbCreated}

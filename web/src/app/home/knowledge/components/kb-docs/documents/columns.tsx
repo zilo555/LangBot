@@ -8,11 +8,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
+import { TFunction } from 'i18next';
 
 export type DocumentFile = {
   uuid: string;
@@ -22,8 +21,8 @@ export type DocumentFile = {
 
 export const columns = (
   onDelete: (id: string) => void,
+  t: TFunction,
 ): ColumnDef<DocumentFile>[] => {
-  const { t } = useTranslation();
   return [
     {
       accessorKey: 'name',

@@ -14,7 +14,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { ControllerRenderProps } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
-import { use, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { LLMModel } from '@/app/infra/entities/api';
 import { KnowledgeBase } from '@/app/infra/entities/api';

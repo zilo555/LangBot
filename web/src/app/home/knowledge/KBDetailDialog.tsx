@@ -7,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Sidebar,
@@ -21,7 +20,6 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
 import { httpClient } from '@/app/infra/http/HttpClient';
 // import { KnowledgeBase } from '@/app/infra/entities/api';
 import KBForm from '@/app/home/knowledge/components/kb-form/KBForm';
@@ -31,8 +29,6 @@ interface KBDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   kbId?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onFormSubmit: (value: z.infer<any>) => void;
   onFormCancel: () => void;
   onKbDeleted: () => void;
   onNewKbCreated: (kbId: string) => void;
@@ -43,7 +39,6 @@ export default function KBDetailDialog({
   open,
   onOpenChange,
   kbId: propKbId,
-  onFormSubmit,
   onFormCancel,
   onKbDeleted,
   onNewKbCreated,
@@ -52,7 +47,6 @@ export default function KBDetailDialog({
   const { t } = useTranslation();
   const [kbId, setKbId] = useState<string | undefined>(propKbId);
   const [activeMenu, setActiveMenu] = useState('metadata');
-  const [fileId, setFileId] = useState<string | undefined>(undefined);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
@@ -109,9 +103,6 @@ export default function KBDetailDialog({
               {activeMenu === 'metadata' && (
                 <KBForm
                   initKbId={undefined}
-                  onFormSubmit={onFormSubmit}
-                  onFormCancel={onFormCancel}
-                  onKbDeleted={onKbDeleted}
                   onNewKbCreated={onNewKbCreated}
                   onKbUpdated={onKbUpdated}
                 />
@@ -184,9 +175,6 @@ export default function KBDetailDialog({
                 {activeMenu === 'metadata' && (
                   <KBForm
                     initKbId={kbId}
-                    onFormSubmit={onFormSubmit}
-                    onFormCancel={onFormCancel}
-                    onKbDeleted={onKbDeleted}
                     onNewKbCreated={onNewKbCreated}
                     onKbUpdated={onKbUpdated}
                   />

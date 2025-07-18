@@ -39,17 +39,10 @@ const getFormSchema = (t: (key: string) => string) =>
 
 export default function KBForm({
   initKbId,
-  onFormSubmit,
-  onFormCancel,
-  onKbDeleted,
   onNewKbCreated,
   onKbUpdated,
 }: {
   initKbId?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onFormSubmit: (value: any) => void;
-  onFormCancel: () => void;
-  onKbDeleted: () => void;
   onNewKbCreated: (kbId: string) => void;
   onKbUpdated: (kbId: string) => void;
 }) {
@@ -84,7 +77,7 @@ export default function KBForm({
   const getKbConfig = async (
     kbId: string,
   ): Promise<z.infer<typeof formSchema>> => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       httpClient.getKnowledgeBase(kbId).then((res) => {
         resolve({
           name: res.base.name,

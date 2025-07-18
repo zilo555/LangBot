@@ -127,7 +127,6 @@ export default function BotDetailDialog({
                 <BotForm
                   initBotId={undefined}
                   onFormSubmit={handleFormSubmit}
-                  onFormCancel={handleFormCancel}
                   onBotDeleted={handleBotDeleted}
                   onNewBotCreated={handleNewBotCreated}
                 />
@@ -198,7 +197,6 @@ export default function BotDetailDialog({
                   <BotForm
                     initBotId={botId}
                     onFormSubmit={handleFormSubmit}
-                    onFormCancel={handleFormCancel}
                     onBotDeleted={handleBotDeleted}
                     onNewBotCreated={handleNewBotCreated}
                   />
