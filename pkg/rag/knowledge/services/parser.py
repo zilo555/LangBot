@@ -6,7 +6,6 @@ from docx import Document
 import pandas as pd
 import chardet
 from typing import Union, Callable, Any
-import logging
 import markdown
 from bs4 import BeautifulSoup
 import ebooklib
@@ -15,8 +14,7 @@ import re
 import asyncio  # Import asyncio for async operations
 from pkg.core import app
 
-# Configure logging
-logger = logging.getLogger(__name__)
+
 
 
 class FileParser:
@@ -146,43 +144,43 @@ class FileParser:
         self.ap.logger.warning(f'Direct .doc parsing is not supported for {file_name}. Please convert to .docx first.')
         raise NotImplementedError('Direct .doc parsing not supported. Please convert to .docx first.')
 
-    async def _parse_xlsx(self, file_name: str) -> str:
-        """Parses an XLSX file, returning text from all sheets."""
-        self.ap.logger.info(f'Parsing XLSX file: {file_name}')
+    # async def _parse_xlsx(self, file_name: str) -> str:
+    #     """Parses an XLSX file, returning text from all sheets."""
+    #     self.ap.logger.info(f'Parsing XLSX file: {file_name}')
 
-        xlsx_bytes = await self.ap.storage_mgr.storage_provider.load(file_name)
+    #     xlsx_bytes = await self.ap.storage_mgr.storage_provider.load(file_name)
 
-        def _parse_xlsx_sync():
-            excel_file = pd.ExcelFile(io.BytesIO(xlsx_bytes))
-            all_sheet_content = []
-            for sheet_name in excel_file.sheet_names:
-                df = pd.read_excel(io.BytesIO(xlsx_bytes), sheet_name=sheet_name)
-                sheet_text = f'--- Sheet: {sheet_name} ---\n{df.to_string(index=False)}\n'
-                all_sheet_content.append(sheet_text)
-            return '\n'.join(all_sheet_content)
+    #     def _parse_xlsx_sync():
+    #         excel_file = pd.ExcelFile(io.BytesIO(xlsx_bytes))
+    #         all_sheet_content = []
+    #         for sheet_name in excel_file.sheet_names:
+    #             df = pd.read_excel(io.BytesIO(xlsx_bytes), sheet_name=sheet_name)
+    #             sheet_text = f'--- Sheet: {sheet_name} ---\n{df.to_string(index=False)}\n'
+    #             all_sheet_content.append(sheet_text)
+    #         return '\n'.join(all_sheet_content)
 
-        return await self._run_sync(_parse_xlsx_sync)
+    #     return await self._run_sync(_parse_xlsx_sync)
 
-    async def _parse_csv(self, file_name: str) -> str:
-        """Parses a CSV file and returns its content as a string."""
-        self.ap.logger.info(f'Parsing CSV file: {file_name}')
+    # async def _parse_csv(self, file_name: str) -> str:
+    #     """Parses a CSV file and returns its content as a string."""
+    #     self.ap.logger.info(f'Parsing CSV file: {file_name}')
 
-        csv_bytes = await self.ap.storage_mgr.storage_provider.load(file_name)
+    #     csv_bytes = await self.ap.storage_mgr.storage_provider.load(file_name)
 
-        def _parse_csv_sync():
-            # pd.read_csv can often detect encoding, but explicit detection is safer
-            # raw_data = self._read_file_content(
-            #     file_name, mode='rb'
-            # )  # Note: this will need to be await outside this sync function
-            # _ = raw_data
-            # For simplicity, we'll let pandas handle encoding internally after a raw read.
-            # A more robust solution might pass encoding directly to pd.read_csv after detection.
-            detected = chardet.detect(io.BytesIO(csv_bytes))
-            encoding = detected['encoding'] or 'utf-8'
-            df = pd.read_csv(io.BytesIO(csv_bytes), encoding=encoding)
-            return df.to_string(index=False)
+    #     def _parse_csv_sync():
+    #         # pd.read_csv can often detect encoding, but explicit detection is safer
+    #         # raw_data = self._read_file_content(
+    #         #     file_name, mode='rb'
+    #         # )  # Note: this will need to be await outside this sync function
+    #         # _ = raw_data
+    #         # For simplicity, we'll let pandas handle encoding internally after a raw read.
+    #         # A more robust solution might pass encoding directly to pd.read_csv after detection.
+    #         detected = chardet.detect(io.BytesIO(csv_bytes))
+    #         encoding = detected['encoding'] or 'utf-8'
+    #         df = pd.read_csv(io.BytesIO(csv_bytes), encoding=encoding)
+    #         return df.to_string(index=False)
 
-        return await self._run_sync(_parse_csv_sync)
+    #     return await self._run_sync(_parse_csv_sync)
 
     async def _parse_md(self, file_name: str) -> str:
         """Parses a Markdown file, converting it to structured plain text."""
@@ -269,6 +267,7 @@ class FileParser:
 
         epub_bytes = await self.ap.storage_mgr.storage_provider.load(file_name)
 
+
         def _parse_epub_sync():
             book = epub.read_epub(io.BytesIO(epub_bytes))
             text_content = []
@@ -296,6 +295,7 @@ class FileParser:
                     text = re.sub(r'\n\s*\n', '\n\n', text)
                     if text:
                         text_content.append(text)
+            
             return re.sub(r'\n\s*\n', '\n\n', '\n'.join(text_content)).strip()
 
         return await self._run_sync(_parse_epub_sync)
