@@ -3,18 +3,13 @@ from __future__ import annotations
 import PyPDF2
 import io
 from docx import Document
-import pandas as pd
 import chardet
 from typing import Union, Callable, Any
 import markdown
 from bs4 import BeautifulSoup
-import ebooklib
-from ebooklib import epub
 import re
 import asyncio  # Import asyncio for async operations
 from pkg.core import app
-
-
 
 
 class FileParser:
@@ -260,45 +255,6 @@ class FileParser:
             return cleaned_text.strip()
 
         return await self._run_sync(_parse_html_sync)
-
-    async def _parse_epub(self, file_name: str) -> str:
-        """Parses an EPUB file, extracting metadata and content."""
-        self.ap.logger.info(f'Parsing EPUB file: {file_name}')
-
-        epub_bytes = await self.ap.storage_mgr.storage_provider.load(file_name)
-
-
-        def _parse_epub_sync():
-            book = epub.read_epub(io.BytesIO(epub_bytes))
-            text_content = []
-            title_meta = book.get_metadata('DC', 'title')
-            if title_meta:
-                text_content.append(f'Title: {title_meta[0][0]}')
-            creator_meta = book.get_metadata('DC', 'creator')
-            if creator_meta:
-                text_content.append(f'Author: {creator_meta[0][0]}')
-            date_meta = book.get_metadata('DC', 'date')
-            if date_meta:
-                text_content.append(f'Publish Date: {date_meta[0][0]}')
-            toc = book.get_toc()
-            if toc:
-                text_content.append('\n--- Table of Contents ---')
-                self._add_toc_items_sync(toc, text_content, level=0)  # Call sync helper
-                text_content.append('--- End of Table of Contents ---\n')
-            for item in book.get_items():
-                if item.get_type() == ebooklib.ITEM_DOCUMENT:
-                    html_content = item.get_content().decode('utf-8', errors='ignore')
-                    soup = BeautifulSoup(html_content, 'html.parser')
-                    for junk in soup(['script', 'style', 'nav', 'header', 'footer']):
-                        junk.decompose()
-                    text = soup.get_text(separator='\n', strip=True)
-                    text = re.sub(r'\n\s*\n', '\n\n', text)
-                    if text:
-                        text_content.append(text)
-            
-            return re.sub(r'\n\s*\n', '\n\n', '\n'.join(text_content)).strip()
-
-        return await self._run_sync(_parse_epub_sync)
 
     def _add_toc_items_sync(self, toc_list: list, text_content: list, level: int):
         """Recursively adds TOC items to text_content (synchronous helper)."""

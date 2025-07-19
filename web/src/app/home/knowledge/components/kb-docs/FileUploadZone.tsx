@@ -104,7 +104,7 @@ export default function FileUploadZone({
             id="file-upload"
             className="hidden"
             onChange={handleFileSelect}
-            accept=".pdf,.doc,.docx,.txt,.md,.html,.epub,.epub3"
+            accept=".pdf,.doc,.docx,.txt,.md,.html"
             disabled={isUploading}
           />
 
