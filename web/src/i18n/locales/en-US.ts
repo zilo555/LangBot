@@ -86,14 +86,13 @@ const enUS = {
     string: 'String',
     number: 'Number',
     boolean: 'Boolean',
-    extraParametersDescription:
-      'Will be attached to the request body, such as max_tokens, temperature, top_p, etc.',
     selectModelProvider: 'Select Model Provider',
     modelProviderDescription:
       'Please fill in the model name provided by the supplier',
     selectModel: 'Select Model',
     testSuccess: 'Test successful',
     testError: 'Test failed, please check your model configuration',
+    llmModels: 'LLM Models',
   },
   bots: {
     title: 'Bots',
@@ -231,6 +230,55 @@ const enUS = {
       atTips: 'Mention the bot',
     },
   },
+  knowledge: {
+    title: 'Knowledge',
+    createKnowledgeBase: 'Create Knowledge Base',
+    editKnowledgeBase: 'Edit Knowledge Base',
+    selectKnowledgeBase: 'Select Knowledge Base',
+    empty: 'Empty',
+    editDocument: 'Documents',
+    description: 'Configuring knowledge bases for improved LLM responses',
+    metadata: 'Metadata',
+    documents: 'Documents',
+    kbNameRequired: 'Knowledge base name cannot be empty',
+    kbDescriptionRequired: 'Knowledge base description cannot be empty',
+    embeddingModelUUIDRequired: 'Embedding model cannot be empty',
+    daysAgo: 'days ago',
+    today: 'Today',
+    kbName: 'Knowledge Base Name',
+    kbDescription: 'Knowledge Base Description',
+    defaultDescription: 'A knowledge base',
+    embeddingModelUUID: 'Embedding Model',
+    selectEmbeddingModel: 'Select Embedding Model',
+    embeddingModelDescription:
+      'Used to vectorize the text, you can configure it in the Models page',
+    updateTime: 'Updated ',
+    cannotChangeEmbeddingModel:
+      'Knowledge base created cannot be modified embedding model',
+    updateKnowledgeBaseSuccess: 'Knowledge base updated successfully',
+    updateKnowledgeBaseFailed: 'Knowledge base update failed',
+    documentsTab: {
+      name: 'Name',
+      status: 'Status',
+      noResults: 'No documents',
+      dragAndDrop: 'Drag and drop files here or click to upload',
+      uploading: 'Uploading...',
+      supportedFormats:
+        'Supports PDF, Word, TXT, Markdown and other document formats',
+      uploadSuccess: 'File uploaded successfully!',
+      uploadError: 'File upload failed, please try again',
+      uploadingFile: 'Uploading file...',
+      actions: 'Actions',
+      delete: 'Delete File',
+      fileDeleteSuccess: 'File deleted successfully',
+      fileDeleteFailed: 'File deletion failed',
+      processing: 'Processing',
+      completed: 'Completed',
+      failed: 'Failed',
+    },
+    deleteKnowledgeBaseConfirmation:
+      'Are you sure you want to delete this knowledge base? All documents in this knowledge base will be deleted.',
+  },
   register: {
     title: 'Initialize LangBot 👋',
     description: 'This is your first time starting LangBot',
@@ -258,6 +306,21 @@ const enUS = {
     resetFailed:
       'Password reset failed, please check your email and recovery key',
     backToLogin: 'Back to Login',
+  },
+  embedding: {
+    description: 'Manage Embedding models for text vectorization',
+    createModel: 'Create Embedding Model',
+    editModel: 'Edit Embedding Model',
+    getModelListError: 'Failed to get Embedding model list: ',
+    embeddingModels: 'Embedding',
+    extraParametersDescription:
+      'Will be attached to the request body, such as encoding_format, dimensions, etc.',
+  },
+  llm: {
+    description: 'Manage LLM models for conversation generation',
+    llmModels: 'LLM',
+    extraParametersDescription:
+      'Will be attached to the request body, such as max_tokens, temperature, top_p, etc.',
   },
 };
 

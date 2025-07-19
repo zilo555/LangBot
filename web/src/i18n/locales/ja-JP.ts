@@ -232,6 +232,56 @@ const jaJP = {
       atTips: 'ボットをメンション',
     },
   },
+  knowledge: {
+    title: '知識ベース',
+    createKnowledgeBase: '知識ベースを作成',
+    editKnowledgeBase: '知識ベースを編集',
+    selectKnowledgeBase: '知識ベースを選択',
+    empty: 'なし',
+    editDocument: 'ドキュメント',
+    description: 'LLMの回答品質向上のための知識ベースを設定します',
+    metadata: 'メタデータ',
+    documents: 'ドキュメント',
+    kbNameRequired: '知識ベース名は必須です',
+    kbDescriptionRequired: '知識ベースの説明は必須です',
+    embeddingModelUUIDRequired: '埋め込みモデルは必須です',
+    daysAgo: '日前',
+    today: '今日',
+    kbName: '知識ベース名',
+    kbDescription: '知識ベースの説明',
+    defaultDescription: '知識ベース',
+    embeddingModelUUID: '埋め込みモデル',
+    selectEmbeddingModel: '埋め込みモデルを選択',
+    embeddingModelDescription:
+      'テキストのベクトル化に使用する埋め込みモデルを管理します',
+    updateTime: '更新日時',
+    cannotChangeEmbeddingModel:
+      '知識ベース作成後は埋め込みモデルを変更できません',
+    updateKnowledgeBaseSuccess: '知識ベースの更新に成功しました',
+    updateKnowledgeBaseFailed: '知識ベースの更新に失敗しました',
+    documentsTab: {
+      name: '名前',
+      status: 'ステータス',
+      noResults: 'ドキュメントがありません',
+      dragAndDrop:
+        'ファイルをここにドラッグ&ドロップするか、クリックしてアップロードしてください',
+      uploading: 'アップロード中...',
+      supportedFormats:
+        'PDF、Word、TXT、Markdownなどのドキュメントファイルをサポートしています',
+      uploadSuccess: 'ファイルのアップロードに成功しました！',
+      uploadError: 'ファイルのアップロードに失敗しました。再度お試しください',
+      uploadingFile: 'ファイルをアップロード中...',
+      actions: 'アクション',
+      delete: 'ドキュメントを削除',
+      fileDeleteSuccess: 'ドキュメントの削除に成功しました',
+      fileDeleteFailed: 'ドキュメントの削除に失敗しました',
+      processing: '処理中',
+      completed: '完了',
+      failed: '失敗',
+    },
+    deleteKnowledgeBaseConfirmation:
+      '本当にこの知識ベースを削除しますか？この知識ベースに紐付けられたドキュメントは削除されます。',
+  },
   register: {
     title: 'LangBot を初期化 👋',
     description: 'これはLangBotの初回起動です',
@@ -259,6 +309,21 @@ const jaJP = {
     resetFailed:
       'パスワードのリセットに失敗しました。メールアドレスと復旧キーを確認してください',
     backToLogin: 'ログインに戻る',
+  },
+  embedding: {
+    description: 'テキストのベクトル化に使用する埋め込みモデルを管理します',
+    createModel: '埋め込みモデルを作成',
+    editModel: '埋め込みモデルを編集',
+    getModelListError: '埋め込みモデルリストの取得に失敗しました：',
+    embeddingModels: '埋め込みモデル',
+    extraParametersDescription:
+      'リクエストボディに追加されるパラメータ（encoding_format、dimensions など）',
+  },
+  llm: {
+    description: 'チャットメッセージの生成に使用するLLMモデルを管理します',
+    llmModels: 'LLMモデル',
+    extraParametersDescription:
+      'リクエストボディに追加されるパラメータ（max_tokens、temperature、top_p など）',
   },
 };
 

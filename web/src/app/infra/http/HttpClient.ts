@@ -10,6 +10,9 @@ import {
   ApiRespProviderLLMModels,
   ApiRespProviderLLMModel,
   LLMModel,
+  ApiRespProviderEmbeddingModels,
+  ApiRespProviderEmbeddingModel,
+  EmbeddingModel,
   ApiRespPipelines,
   Pipeline,
   ApiRespPlatformAdapters,
@@ -31,6 +34,10 @@ import {
   AsyncTask,
   ApiRespWebChatMessage,
   ApiRespWebChatMessages,
+  ApiRespKnowledgeBases,
+  ApiRespKnowledgeBase,
+  KnowledgeBase,
+  ApiRespKnowledgeBaseFiles,
 } from '@/app/infra/entities/api';
 import { GetBotLogsRequest } from '@/app/infra/http/requestParam/bots/GetBotLogsRequest';
 import { GetBotLogsResponse } from '@/app/infra/http/requestParam/bots/GetBotLogsResponse';
@@ -226,8 +233,10 @@ class HttpClient {
 
   // real api request implementation
   // ============ Provider API ============
-  public getProviderRequesters(): Promise<ApiRespProviderRequesters> {
-    return this.get('/api/v1/provider/requesters');
+  public getProviderRequesters(
+    model_type: string,
+  ): Promise<ApiRespProviderRequesters> {
+    return this.get('/api/v1/provider/requesters', { type: model_type });
   }
 
   public getProviderRequester(name: string): Promise<ApiRespProviderRequester> {
@@ -273,6 +282,39 @@ class HttpClient {
 
   public testLLMModel(uuid: string, model: LLMModel): Promise<object> {
     return this.post(`/api/v1/provider/models/llm/${uuid}/test`, model);
+  }
+
+  // ============ Provider Model Embedding ============
+  public getProviderEmbeddingModels(): Promise<ApiRespProviderEmbeddingModels> {
+    return this.get('/api/v1/provider/models/embedding');
+  }
+
+  public getProviderEmbeddingModel(
+    uuid: string,
+  ): Promise<ApiRespProviderEmbeddingModel> {
+    return this.get(`/api/v1/provider/models/embedding/${uuid}`);
+  }
+
+  public createProviderEmbeddingModel(model: EmbeddingModel): Promise<object> {
+    return this.post('/api/v1/provider/models/embedding', model);
+  }
+
+  public deleteProviderEmbeddingModel(uuid: string): Promise<object> {
+    return this.delete(`/api/v1/provider/models/embedding/${uuid}`);
+  }
+
+  public updateProviderEmbeddingModel(
+    uuid: string,
+    model: EmbeddingModel,
+  ): Promise<object> {
+    return this.put(`/api/v1/provider/models/embedding/${uuid}`, model);
+  }
+
+  public testEmbeddingModel(
+    uuid: string,
+    model: EmbeddingModel,
+  ): Promise<object> {
+    return this.post(`/api/v1/provider/models/embedding/${uuid}/test`, model);
   }
 
   // ============ Pipeline API ============
@@ -387,6 +429,67 @@ class HttpClient {
     request: GetBotLogsRequest,
   ): Promise<GetBotLogsResponse> {
     return this.post(`/api/v1/platform/bots/${botId}/logs`, request);
+  }
+
+  // ============ File management API ============
+  public uploadDocumentFile(file: File): Promise<{ file_id: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.request<{ file_id: string }>({
+      method: 'post',
+      url: '/api/v1/files/documents',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  }
+
+  // ============ Knowledge Base API ============
+  public getKnowledgeBases(): Promise<ApiRespKnowledgeBases> {
+    return this.get('/api/v1/knowledge/bases');
+  }
+
+  public getKnowledgeBase(uuid: string): Promise<ApiRespKnowledgeBase> {
+    return this.get(`/api/v1/knowledge/bases/${uuid}`);
+  }
+
+  public createKnowledgeBase(base: KnowledgeBase): Promise<{ uuid: string }> {
+    return this.post('/api/v1/knowledge/bases', base);
+  }
+
+  public updateKnowledgeBase(
+    uuid: string,
+    base: KnowledgeBase,
+  ): Promise<{ uuid: string }> {
+    return this.put(`/api/v1/knowledge/bases/${uuid}`, base);
+  }
+
+  public uploadKnowledgeBaseFile(
+    uuid: string,
+    file_id: string,
+  ): Promise<object> {
+    return this.post(`/api/v1/knowledge/bases/${uuid}/files`, {
+      file_id,
+    });
+  }
+
+  public getKnowledgeBaseFiles(
+    uuid: string,
+  ): Promise<ApiRespKnowledgeBaseFiles> {
+    return this.get(`/api/v1/knowledge/bases/${uuid}/files`);
+  }
+
+  public deleteKnowledgeBaseFile(
+    uuid: string,
+    file_id: string,
+  ): Promise<object> {
+    return this.delete(`/api/v1/knowledge/bases/${uuid}/files/${file_id}`);
+  }
+
+  public deleteKnowledgeBase(uuid: string): Promise<object> {
+    return this.delete(`/api/v1/knowledge/bases/${uuid}`);
   }
 
   // ============ Plugins API ============
