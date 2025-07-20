@@ -80,6 +80,10 @@ class MessagePlatformAdapter(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
+    async def create_message_card(self,message_id,event):
+        '''创建卡片消息'''
+        return False
+
     async def is_muted(self, group_id: int) -> bool:
         """获取账号是否在指定群被禁言"""
         raise NotImplementedError

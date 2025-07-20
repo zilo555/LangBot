@@ -23,11 +23,11 @@ class ChatMessageHandler(handler.MessageHandler):
         self,
         query: core_entities.Query,
     ) -> typing.AsyncGenerator[entities.StageProcessResult, None]:
-        """Process"""
-        # Call API
-        #   generator
+        """处理"""
+        # 调API
+        #   生成器
 
-        # Trigger plugin event
+        # 触发插件事件
         event_class = (
             events.PersonNormalMessageReceived
             if query.launcher_type == core_entities.LauncherTypes.PERSON
@@ -47,7 +47,6 @@ class ChatMessageHandler(handler.MessageHandler):
         if event_ctx.is_prevented_default():
             if event_ctx.event.reply is not None:
                 mc = platform_message.MessageChain(event_ctx.event.reply)
-
                 query.resp_messages.append(mc)
 
                 yield entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
@@ -55,15 +54,14 @@ class ChatMessageHandler(handler.MessageHandler):
                 yield entities.StageProcessResult(result_type=entities.ResultType.INTERRUPT, new_query=query)
         else:
             if event_ctx.event.alter is not None:
-                # if isinstance(event_ctx.event, str):  # Currently not considering multi-modal alter
+                # if isinstance(event_ctx.event, str):  # 现在暂时不考虑多模态alter
                 query.user_message.content = event_ctx.event.alter
 
             text_length = 0
             try:
-                is_stream = query.adapter.is_stream
+                is_stream = await query.adapter.is_stream_output_supported()
             except AttributeError:
                 is_stream = False
-            print(is_stream)
 
             try:
                 for r in runner_module.preregistered_runners:
@@ -107,7 +105,8 @@ class ChatMessageHandler(handler.MessageHandler):
 
                 query.session.using_conversation.messages.extend(query.resp_messages)
             except Exception as e:
-                self.ap.logger.error(f'Request failed({query.query_id}): {type(e).__name__} {str(e)}')
+                self.ap.logger.error(f'对话({query.query_id})请求失败: {type(e).__name__} {str(e)}')
+                traceback.print_exc()
 
                 hide_exception_info = query.pipeline_config['output']['misc']['hide-exception']
 

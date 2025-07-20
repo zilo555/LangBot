@@ -89,7 +89,9 @@ class LocalAgentRunner(runner.RequestRunner):
 
         is_stream = query.adapter.is_stream_output_supported()
         try:
-            is_stream = query.adapter.is_stream
+            # print(await query.adapter.is_stream_output_supported())
+            is_stream = await query.adapter.is_stream_output_supported()
+
         except AttributeError:
             is_stream = False
         # while True:
