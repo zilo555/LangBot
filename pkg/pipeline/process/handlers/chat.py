@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import uuid
 from itertools import accumulate
 import typing
 import traceback
@@ -47,7 +48,6 @@ class ChatMessageHandler(handler.MessageHandler):
         if event_ctx.is_prevented_default():
             if event_ctx.event.reply is not None:
                 mc = platform_message.MessageChain(event_ctx.event.reply)
-
                 query.resp_messages.append(mc)
 
                 yield entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
@@ -60,7 +60,7 @@ class ChatMessageHandler(handler.MessageHandler):
 
             text_length = 0
             try:
-                is_stream = query.adapter.is_stream
+                is_stream = await query.adapter.is_stream_output_supported()
             except AttributeError:
                 is_stream = False
             print(is_stream)
@@ -73,22 +73,26 @@ class ChatMessageHandler(handler.MessageHandler):
                 else:
                     raise ValueError(f'未找到请求运行器: {query.pipeline_config["ai"]["runner"]["runner"]}')
                 if is_stream:
-                    # async for results in runner.run(query):
-                    async for result in runner.run(query):
-                        if query.resp_messages:
-                            query.resp_messages.pop()
-                        if query.resp_message_chain:
-                            query.resp_message_chain.pop()
+                    resp_message_id = uuid.uuid4()
+                    if await query.adapter.create_message_card(resp_message_id,query.message_event.source_platform_object):
+                        async for result in runner.run(query):
+                            result.resp_message_id = resp_message_id
+                            if query.resp_messages:
+                                query.resp_messages.pop()
+                            if query.resp_message_chain:
+                                query.resp_message_chain.pop()
 
-                        query.resp_messages.append(result)
-                        print(result)
 
-                        self.ap.logger.info(f'对话({query.query_id})响应: {self.cut_str(result.readable_str())}')
+                            query.resp_messages.append(result)
+                            self.ap.logger.info(f'对话({query.query_id})流式响应: {self.cut_str(result.readable_str())}')
 
-                        if result.content is not None:
-                            text_length += len(result.content)
+                            if result.content is not None:
+                                text_length += len(result.content)
 
-                        yield entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
+                            yield entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
+                    else:
+                        yield entities.StageProcessResult(result_type=entities.ResultType.INTERRUPT,
+                                                              new_query=query)
                         # for result in results:
                         #
                         #     query.resp_messages.append(result)

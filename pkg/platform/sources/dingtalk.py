@@ -154,19 +154,15 @@ class DingTalkAdapter(adapter.MessagePlatformAdapter):
         )
         incoming_message = event.incoming_message
 
-        msg_id = incoming_message.message_id
+        # msg_id = incoming_message.message_id
 
         content, at = await DingTalkMessageConverter.yiri2target(message)
-        # is_stream = self.config['enable-stream-reply']
-        # print(content)
-        card_template_id = self.config['card_template_id']
-        if msg_id not in self.card_instance_id_dict:
-            card_instance,card_instance_id = await self.bot.create_and_card(card_template_id,incoming_message,at)
-            self.card_instance_id_dict[msg_id] = (card_instance,card_instance_id)
-        else:
-            card_instance,card_instance_id = self.card_instance_id_dict[msg_id]
+
+        card_instance,card_instance_id = self.card_instance_id_dict[message_id]
         # print(card_instance_id)
         await self.bot.send_card_message(card_instance,card_instance_id,content,is_final)
+        if is_final:
+            self.card_instance_id_dict.pop(message_id)
 
 
     async def send_message(self, target_type: str, target_id: str, message: platform_message.MessageChain):
@@ -180,15 +176,15 @@ class DingTalkAdapter(adapter.MessagePlatformAdapter):
         is_stream = False
         if self.config.get("enable-stream-reply", None):
             is_stream = True
-        self.is_stream = is_stream
-
         return is_stream
 
-    async def create_message_card(self,message_id: str, incoming_message):
+    async def create_message_card(self,message_id,event):
         card_template_id = self.config['card_template_id']
-
+        incoming_message = event.incoming_message
+        # message_id = incoming_message.message_id
         card_instance, card_instance_id = await self.bot.create_and_card(card_template_id, incoming_message)
         self.card_instance_id_dict[message_id] = (card_instance, card_instance_id)
+        return True
 
 
     def register_listener(

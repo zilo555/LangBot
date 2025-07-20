@@ -127,6 +127,8 @@ class Message(pydantic.BaseModel):
 
 class MessageChunk(pydantic.BaseModel):
     """消息"""
+    resp_message_id: typing.Optional[str] = None
+    """消息id"""
 
     role: str  # user, system, assistant, tool, command, plugin
     """消息的角色"""

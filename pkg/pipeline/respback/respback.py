@@ -46,7 +46,7 @@ class SendResponseBackStage(stage.PipelineStage):
             print(is_final)
             await query.adapter.reply_message_chunk(
                 message_source=query.message_event,
-                message_id=query.message_event.message_chain.message_id,
+                message_id=query.resp_messages[-1].resp_message_id,
                 message=query.resp_message_chain[-1],
                 quote_origin=quote_origin,
                 is_final=is_final,

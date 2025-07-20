@@ -96,7 +96,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
         query.variables['conversation_id'] = cov_id
 
         try:
-            is_stream = query.adapter.is_stream
+            is_stream = await query.adapter.is_stream_output_supported()
         except AttributeError:
             is_stream = False
 
@@ -209,7 +209,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
         query.variables['conversation_id'] = cov_id
 
         try:
-            is_stream = query.adapter.is_stream
+            is_stream = await query.adapter.is_stream_output_supported()
         except AttributeError:
             is_stream = False
 
@@ -346,7 +346,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
         query.variables['conversation_id'] = query.session.using_conversation.uuid
 
         try:
-            is_stream = query.adapter.is_stream
+            is_stream = await query.adapter.is_stream_output_supported()
         except AttributeError:
             is_stream = False
 
