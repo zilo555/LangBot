@@ -25,13 +25,7 @@
 
 </p>
 
-## ✨ 特性
-
-- 💬 大模型对话、Agent：支持多种大模型，适配群聊和私聊；具有多轮对话、工具调用、多模态能力，自带 RAG（知识库）实现，并深度适配 [Dify](https://dify.ai)。
-- 🤖 多平台支持：目前支持 QQ、QQ频道、企业微信、个人微信、飞书、Discord、Telegram 等平台。
-- 🛠️ 高稳定性、功能完备：原生支持访问控制、限速、敏感词过滤等机制；配置简单，支持多种部署方式。支持多流水线配置，不同机器人用于不同应用场景。
-- 🧩 插件扩展、活跃社区：支持事件驱动、组件扩展等插件机制；适配 Anthropic [MCP 协议](https://modelcontextprotocol.io/)；目前已有数百个插件。
-- 😻 Web 管理面板：支持通过浏览器管理 LangBot 实例，不再需要手动编写配置文件。
+LangBot 是一个开源的大语言模型原生即时通信机器人开发平台，旨在提供开箱即用的 IM 机器人开发体验，具有 Agent、RAG、MCP 等多种 LLM 应用功能，适配全球主流即时通信平台，并提供丰富的 API 接口，支持自定义开发。
 
 ## 📦 开始使用
 
@@ -65,23 +59,25 @@ docker compose up -d
 
 直接使用发行版运行，查看文档[手动部署](https://docs.langbot.app/zh/deploy/langbot/manual.html)。
 
-## 📸 效果展示
+## 😎 保持更新
 
-<img alt="bots" src="https://docs.langbot.app/webui/bot-page.png" width="450px"/>
+点击仓库右上角 Star 和 Watch 按钮，获取最新动态。
 
-<img alt="bots" src="https://docs.langbot.app/webui/create-model.png" width="450px"/>
+![star gif](https://docs.langbot.app/star.gif)
 
-<img alt="bots" src="https://docs.langbot.app/webui/edit-pipeline.png" width="450px"/>
+## ✨ 特性
 
-<img alt="bots" src="https://docs.langbot.app/webui/plugin-market.png" width="450px"/>
+- 💬 大模型对话、Agent：支持多种大模型，适配群聊和私聊；具有多轮对话、工具调用、多模态能力，自带 RAG（知识库）实现，并深度适配 [Dify](https://dify.ai)。
+- 🤖 多平台支持：目前支持 QQ、QQ频道、企业微信、个人微信、飞书、Discord、Telegram 等平台。
+- 🛠️ 高稳定性、功能完备：原生支持访问控制、限速、敏感词过滤等机制；配置简单，支持多种部署方式。支持多流水线配置，不同机器人用于不同应用场景。
+- 🧩 插件扩展、活跃社区：支持事件驱动、组件扩展等插件机制；适配 Anthropic [MCP 协议](https://modelcontextprotocol.io/)；目前已有数百个插件。
+- 😻 Web 管理面板：支持通过浏览器管理 LangBot 实例，不再需要手动编写配置文件。
 
-<img alt="回复效果（带有联网插件）" src="https://docs.langbot.app/QChatGPT-0516.png" width="500px"/>
+详细规格特性请访问[文档](https://docs.langbot.app/zh/insight/features.html)。
 
-- WebUI Demo: https://demo.langbot.dev/
-    - 登录信息：邮箱：`demo@langbot.app` 密码：`langbot123456`
-    - 注意：仅展示webui效果，公开环境，请不要在其中填入您的任何敏感信息。
-
-## 🔌 组件兼容性
+或访问 demo 环境：https://demo.langbot.dev/  
+  - 登录信息：邮箱：`demo@langbot.app` 密码：`langbot123456`
+  - 注意：仅展示 WebUI 效果，公开环境，请不要在其中填入您的任何敏感信息。
 
 ### 消息平台
 
@@ -98,10 +94,6 @@ docker compose up -d
 | Discord | ✅ |  |
 | Telegram | ✅ |  |
 | Slack | ✅ |  |
-| LINE | 🚧 |  |
-| WhatsApp | 🚧 |  |
-
-🚧: 正在开发中
 
 ### 大模型能力
 
@@ -148,9 +140,3 @@ docker compose up -d
 <a href="https://github.com/langbot-app/LangBot/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=langbot-app/LangBot" />
 </a>
-
-## 😎 保持更新
-
-点击仓库右上角 Star 和 Watch 按钮，获取最新动态。
-
-![star gif](https://docs.langbot.app/star.gif)
