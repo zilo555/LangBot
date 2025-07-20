@@ -41,6 +41,7 @@ const jaJP = {
     copySuccess: 'コピーに成功しました',
     test: 'テスト',
     forgotPassword: 'パスワードを忘れた？',
+    loading: '読み込み中...',
   },
   notFound: {
     title: 'ページが見つかりません',
@@ -285,6 +286,15 @@ const jaJP = {
     },
     deleteKnowledgeBaseConfirmation:
       '本当にこの知識ベースを削除しますか？この知識ベースに紐付けられたドキュメントは削除されます。',
+    retrieve: '検索テスト',
+    retrieveTest: '検索テスト',
+    query: '検索',
+    queryPlaceholder: '検索内容を入力...',
+    distance: '距離',
+    content: '内容',
+    fileName: 'ファイル名',
+    noResults: '検索結果がありません',
+    retrieveError: '検索に失敗しました',
   },
   register: {
     title: 'LangBot を初期化 👋',

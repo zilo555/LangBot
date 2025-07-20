@@ -40,6 +40,7 @@ const enUS = {
     copySuccess: 'Copy Successfully',
     test: 'Test',
     forgotPassword: 'Forgot Password?',
+    loading: 'Loading...',
   },
   notFound: {
     title: 'Page not found',
@@ -286,7 +287,6 @@ const enUS = {
     retrieveTest: 'Retrieve Test',
     query: 'Query',
     queryPlaceholder: 'Enter query text...',
-    retrieveResults: 'Retrieve Results',
     distance: 'Distance',
     content: 'Content',
     fileName: 'File Name',

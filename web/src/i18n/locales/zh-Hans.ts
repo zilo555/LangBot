@@ -40,6 +40,7 @@ const zhHans = {
     copySuccess: '复制成功',
     test: '测试',
     forgotPassword: '忘记密码？',
+    loading: '加载中...',
   },
   notFound: {
     title: '页面不存在',
@@ -278,7 +279,6 @@ const zhHans = {
     retrieveTest: '检索测试',
     query: '查询',
     queryPlaceholder: '输入查询内容...',
-    retrieveResults: '检索结果',
     distance: '距离',
     content: '内容',
     fileName: '文件名',

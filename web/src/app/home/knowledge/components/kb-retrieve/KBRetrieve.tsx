@@ -37,6 +37,7 @@ export default function KBRetrieve({ kbId }: KBRetrieveProps) {
 
     setLoading(true);
     try {
+      setResults([]);
       const response = await httpClient.retrieveKnowledgeBase(kbId, query);
       setResults(response.results);
     } catch (error) {
@@ -62,36 +63,36 @@ export default function KBRetrieve({ kbId }: KBRetrieveProps) {
           onKeyPress={(e) => e.key === 'Enter' && handleRetrieve()}
         />
         <Button onClick={handleRetrieve} disabled={loading || !query.trim()}>
-          {loading ? t('common.loading') : t('knowledge.query')}
+          {t('knowledge.query')}
         </Button>
       </div>
 
       <div className="space-y-3">
-        <h3 className="text-lg font-semibold">
-          {t('knowledge.retrieveResults')} ({results.length})
-        </h3>
-
         {results.length === 0 && !loading && (
           <p className="text-muted-foreground">{t('knowledge.noResults')}</p>
         )}
 
-        {results.map((result) => (
-          <Card key={result.id} className="w-full">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex justify-between items-center">
-                <span>{getFileName(result.metadata.file_id)}</span>
-                <span className="text-xs text-muted-foreground">
-                  {t('knowledge.distance')}: {result.distance.toFixed(4)}
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm whitespace-pre-wrap">
-                {result.metadata.text}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
+        {loading ? (
+          <p className="text-muted-foreground">{t('common.loading')}</p>
+        ) : (
+          results.map((result) => (
+            <Card key={result.id} className="w-full">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium flex justify-between items-center">
+                  <span>{getFileName(result.metadata.file_id)}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {t('knowledge.distance')}: {result.distance.toFixed(4)}
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm whitespace-pre-wrap">
+                  {result.metadata.text}
+                </p>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
     </div>
   );
