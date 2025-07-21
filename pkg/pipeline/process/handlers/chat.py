@@ -74,7 +74,7 @@ class ChatMessageHandler(handler.MessageHandler):
                     raise ValueError(f'未找到请求运行器: {query.pipeline_config["ai"]["runner"]["runner"]}')
                 if is_stream:
                     resp_message_id = uuid.uuid4()
-                    if await query.adapter.create_message_card(resp_message_id,query.message_event.source_platform_object):
+                    if await query.adapter.create_message_card(resp_message_id,query.message_event):
                         async for result in runner.run(query):
                             result.resp_message_id = resp_message_id
                             if query.resp_messages:
