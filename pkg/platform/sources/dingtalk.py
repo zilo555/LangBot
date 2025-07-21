@@ -180,7 +180,7 @@ class DingTalkAdapter(adapter.MessagePlatformAdapter):
 
     async def create_message_card(self,message_id,event):
         card_template_id = self.config['card_template_id']
-        incoming_message = event.incoming_message
+        incoming_message = event.source_platform_object.incoming_message
         # message_id = incoming_message.message_id
         card_instance, card_instance_id = await self.bot.create_and_card(card_template_id, incoming_message)
         self.card_instance_id_dict[message_id] = (card_instance, card_instance_id)
