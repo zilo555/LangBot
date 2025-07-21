@@ -259,7 +259,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                     is_final = False
                     pending_agent_message += chunk['answer']
                 if is_stream:
-                    if batch_pending_index % 32 == 0 or is_final:
+                    if batch_pending_index % 64 == 0 or is_final:
                         yield llm_entities.MessageChunk(
                             role='assistant',
                             content=self._try_convert_thinking(pending_agent_message),
