@@ -11,7 +11,7 @@ preregistered_managers: list[type[BaseDatabaseManager]] = []
 
 
 def manager_class(name: str) -> None:
-    """注册一个数据库管理类"""
+    """Register a database manager class"""
 
     def decorator(cls: type[BaseDatabaseManager]) -> type[BaseDatabaseManager]:
         cls.name = name
@@ -22,7 +22,7 @@ def manager_class(name: str) -> None:
 
 
 class BaseDatabaseManager(abc.ABC):
-    """基础数据库管理类"""
+    """Base database manager class"""
 
     name: str
 

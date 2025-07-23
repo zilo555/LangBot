@@ -12,9 +12,9 @@ importutil.import_modules_in_pkg(truncators)
 
 @stage.stage_class('ConversationMessageTruncator')
 class ConversationMessageTruncator(stage.PipelineStage):
-    """会话消息截断器
+    """Conversation message truncator
 
-    用于截断会话消息链，以适应平台消息长度限制。
+    Used to truncate the conversation message chain to adapt to the LLM message length limit.
     """
 
     trun: truncator.Truncator
@@ -27,10 +27,10 @@ class ConversationMessageTruncator(stage.PipelineStage):
                 self.trun = trun(self.ap)
                 break
         else:
-            raise ValueError(f'未知的截断器: {use_method}')
+            raise ValueError(f'Unknown truncator: {use_method}')
 
     async def process(self, query: core_entities.Query, stage_inst_name: str) -> entities.StageProcessResult:
-        """处理"""
+        """Process"""
         query = await self.trun.truncate(query)
 
         return entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)

@@ -4,7 +4,7 @@ from .base import Base
 
 
 class Bot(Base):
-    """机器人"""
+    """Bot"""
 
     __tablename__ = 'bots'
 

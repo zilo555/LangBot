@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { KnowledgeBase } from '@/app/infra/entities/api';
+import { toast } from 'sonner';
 
 const getFormSchema = (t: (key: string) => string) =>
   z.object({
@@ -42,17 +43,12 @@ const getFormSchema = (t: (key: string) => string) =>
 
 export default function KBForm({
   initKbId,
-  onFormSubmit,
-  onFormCancel,
-  onKbDeleted,
   onNewKbCreated,
+  onKbUpdated,
 }: {
   initKbId?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onFormSubmit: (value: any) => void;
-  onFormCancel: () => void;
-  onKbDeleted: () => void;
   onNewKbCreated: (kbId: string) => void;
+  onKbUpdated: (kbId: string) => void;
 }) {
   const { t } = useTranslation();
   const formSchema = getFormSchema(t);
@@ -87,7 +83,7 @@ export default function KBForm({
   const getKbConfig = async (
     kbId: string,
   ): Promise<z.infer<typeof formSchema>> => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       httpClient.getKnowledgeBase(kbId).then((res) => {
         resolve({
           name: res.base.name,
@@ -122,6 +118,17 @@ export default function KBForm({
         embedding_model_uuid: data.embeddingModelUUID,
         top_k: data.top_k,
       };
+      httpClient
+        .updateKnowledgeBase(initKbId, updateKb)
+        .then((res) => {
+          console.log('update knowledge base success', res);
+          onKbUpdated(res.uuid);
+          toast.success(t('knowledge.updateKnowledgeBaseSuccess'));
+        })
+        .catch((err) => {
+          console.error('update knowledge base failed', err);
+          toast.error(t('knowledge.updateKnowledgeBaseFailed'));
+        });
     } else {
       // create knowledge base
       const newKb: KnowledgeBase = {
@@ -195,6 +202,7 @@ export default function KBForm({
                   <FormControl>
                     <div className="relative">
                       <Select
+                        disabled={!!initKbId}
                         onValueChange={(value) => {
                           field.onChange(value);
                           console.log('value', value);
@@ -219,7 +227,9 @@ export default function KBForm({
                     </div>
                   </FormControl>
                   <FormDescription>
-                    {t('knowledge.embeddingModelDescription')}
+                    {initKbId
+                      ? t('knowledge.cannotChangeEmbeddingModel')
+                      : t('knowledge.embeddingModelDescription')}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

@@ -1,20 +1,15 @@
+from __future__ import annotations
+
 import PyPDF2
 import io
 from docx import Document
-import pandas as pd
 import chardet
 from typing import Union, Callable, Any
-import logging
 import markdown
 from bs4 import BeautifulSoup
-import ebooklib
-from ebooklib import epub
 import re
 import asyncio  # Import asyncio for async operations
 from pkg.core import app
-
-# Configure logging
-logger = logging.getLogger(__name__)
 
 
 class FileParser:
@@ -144,45 +139,45 @@ class FileParser:
         self.ap.logger.warning(f'Direct .doc parsing is not supported for {file_name}. Please convert to .docx first.')
         raise NotImplementedError('Direct .doc parsing not supported. Please convert to .docx first.')
 
-    async def _parse_xlsx(self, file_name: str) -> str:
-        """Parses an XLSX file, returning text from all sheets."""
-        self.ap.logger.info(f'Parsing XLSX file: {file_name}')
+    # async def _parse_xlsx(self, file_name: str) -> str:
+    #     """Parses an XLSX file, returning text from all sheets."""
+    #     self.ap.logger.info(f'Parsing XLSX file: {file_name}')
 
-        xlsx_bytes = await self.ap.storage_mgr.storage_provider.load(file_name)
+    #     xlsx_bytes = await self.ap.storage_mgr.storage_provider.load(file_name)
 
-        def _parse_xlsx_sync():
-            excel_file = pd.ExcelFile(io.BytesIO(xlsx_bytes))
-            all_sheet_content = []
-            for sheet_name in excel_file.sheet_names:
-                df = pd.read_excel(io.BytesIO(xlsx_bytes), sheet_name=sheet_name)
-                sheet_text = f'--- Sheet: {sheet_name} ---\n{df.to_string(index=False)}\n'
-                all_sheet_content.append(sheet_text)
-            return '\n'.join(all_sheet_content)
+    #     def _parse_xlsx_sync():
+    #         excel_file = pd.ExcelFile(io.BytesIO(xlsx_bytes))
+    #         all_sheet_content = []
+    #         for sheet_name in excel_file.sheet_names:
+    #             df = pd.read_excel(io.BytesIO(xlsx_bytes), sheet_name=sheet_name)
+    #             sheet_text = f'--- Sheet: {sheet_name} ---\n{df.to_string(index=False)}\n'
+    #             all_sheet_content.append(sheet_text)
+    #         return '\n'.join(all_sheet_content)
 
-        return await self._run_sync(_parse_xlsx_sync)
+    #     return await self._run_sync(_parse_xlsx_sync)
 
-    async def _parse_csv(self, file_name: str) -> str:
-        """Parses a CSV file and returns its content as a string."""
-        self.ap.logger.info(f'Parsing CSV file: {file_name}')
+    # async def _parse_csv(self, file_name: str) -> str:
+    #     """Parses a CSV file and returns its content as a string."""
+    #     self.ap.logger.info(f'Parsing CSV file: {file_name}')
 
-        csv_bytes = await self.ap.storage_mgr.storage_provider.load(file_name)
+    #     csv_bytes = await self.ap.storage_mgr.storage_provider.load(file_name)
 
-        def _parse_csv_sync():
-            # pd.read_csv can often detect encoding, but explicit detection is safer
-            # raw_data = self._read_file_content(
-            #     file_name, mode='rb'
-            # )  # Note: this will need to be await outside this sync function
-            # _ = raw_data
-            # For simplicity, we'll let pandas handle encoding internally after a raw read.
-            # A more robust solution might pass encoding directly to pd.read_csv after detection.
-            detected = chardet.detect(io.BytesIO(csv_bytes))
-            encoding = detected['encoding'] or 'utf-8'
-            df = pd.read_csv(io.BytesIO(csv_bytes), encoding=encoding)
-            return df.to_string(index=False)
+    #     def _parse_csv_sync():
+    #         # pd.read_csv can often detect encoding, but explicit detection is safer
+    #         # raw_data = self._read_file_content(
+    #         #     file_name, mode='rb'
+    #         # )  # Note: this will need to be await outside this sync function
+    #         # _ = raw_data
+    #         # For simplicity, we'll let pandas handle encoding internally after a raw read.
+    #         # A more robust solution might pass encoding directly to pd.read_csv after detection.
+    #         detected = chardet.detect(io.BytesIO(csv_bytes))
+    #         encoding = detected['encoding'] or 'utf-8'
+    #         df = pd.read_csv(io.BytesIO(csv_bytes), encoding=encoding)
+    #         return df.to_string(index=False)
 
-        return await self._run_sync(_parse_csv_sync)
+    #     return await self._run_sync(_parse_csv_sync)
 
-    async def _parse_markdown(self, file_name: str) -> str:
+    async def _parse_md(self, file_name: str) -> str:
         """Parses a Markdown file, converting it to structured plain text."""
         self.ap.logger.info(f'Parsing Markdown file: {file_name}')
 
@@ -260,43 +255,6 @@ class FileParser:
             return cleaned_text.strip()
 
         return await self._run_sync(_parse_html_sync)
-
-    async def _parse_epub(self, file_name: str) -> str:
-        """Parses an EPUB file, extracting metadata and content."""
-        self.ap.logger.info(f'Parsing EPUB file: {file_name}')
-
-        epub_bytes = await self.ap.storage_mgr.storage_provider.load(file_name)
-
-        def _parse_epub_sync():
-            book = epub.read_epub(io.BytesIO(epub_bytes))
-            text_content = []
-            title_meta = book.get_metadata('DC', 'title')
-            if title_meta:
-                text_content.append(f'Title: {title_meta[0][0]}')
-            creator_meta = book.get_metadata('DC', 'creator')
-            if creator_meta:
-                text_content.append(f'Author: {creator_meta[0][0]}')
-            date_meta = book.get_metadata('DC', 'date')
-            if date_meta:
-                text_content.append(f'Publish Date: {date_meta[0][0]}')
-            toc = book.get_toc()
-            if toc:
-                text_content.append('\n--- Table of Contents ---')
-                self._add_toc_items_sync(toc, text_content, level=0)  # Call sync helper
-                text_content.append('--- End of Table of Contents ---\n')
-            for item in book.get_items():
-                if item.get_type() == ebooklib.ITEM_DOCUMENT:
-                    html_content = item.get_content().decode('utf-8', errors='ignore')
-                    soup = BeautifulSoup(html_content, 'html.parser')
-                    for junk in soup(['script', 'style', 'nav', 'header', 'footer']):
-                        junk.decompose()
-                    text = soup.get_text(separator='\n', strip=True)
-                    text = re.sub(r'\n\s*\n', '\n\n', text)
-                    if text:
-                        text_content.append(text)
-            return re.sub(r'\n\s*\n', '\n\n', '\n'.join(text_content)).strip()
-
-        return await self._run_sync(_parse_epub_sync)
 
     def _add_toc_items_sync(self, toc_list: list, text_content: list, level: int):
         """Recursively adds TOC items to text_content (synchronous helper)."""

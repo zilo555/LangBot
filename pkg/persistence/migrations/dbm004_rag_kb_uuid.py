@@ -5,12 +5,12 @@ import sqlalchemy
 from ...entity.persistence import pipeline as persistence_pipeline
 
 
-@migration.migration_class(3)
-class DBMigrateN8nConfig(migration.DBMigration):
-    """N8n config"""
+@migration.migration_class(4)
+class DBMigrateRAGKBUUID(migration.DBMigration):
+    """RAG知识库UUID"""
 
     async def upgrade(self):
-        """Upgrade"""
+        """升级"""
         # read all pipelines
         pipelines = await self.ap.persistence_mgr.execute_async(sqlalchemy.select(persistence_pipeline.LegacyPipeline))
 
@@ -19,19 +19,8 @@ class DBMigrateN8nConfig(migration.DBMigration):
 
             config = serialized_pipeline['config']
 
-            if 'n8n-service-api' not in config['ai']:
-                config['ai']['n8n-service-api'] = {
-                    'webhook-url': 'http://your-n8n-webhook-url',
-                    'auth-type': 'none',
-                    'basic-username': '',
-                    'basic-password': '',
-                    'jwt-secret': '',
-                    'jwt-algorithm': 'HS256',
-                    'header-name': '',
-                    'header-value': '',
-                    'timeout': 120,
-                    'output-key': 'response',
-                }
+            if 'knowledge-base' not in config['ai']['local-agent']:
+                config['ai']['local-agent']['knowledge-base'] = ''
 
             await self.ap.persistence_mgr.execute_async(
                 sqlalchemy.update(persistence_pipeline.LegacyPipeline)
@@ -45,5 +34,5 @@ class DBMigrateN8nConfig(migration.DBMigration):
             )
 
     async def downgrade(self):
-        """Downgrade"""
+        """降级"""
         pass

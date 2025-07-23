@@ -1,89 +1,47 @@
 from __future__ import annotations
-import asyncio
-import logging
-import numpy as np
+import uuid
 from typing import List
-from sqlalchemy.orm import Session
 from pkg.rag.knowledge.services.base_service import BaseService
-from pkg.rag.knowledge.services.database import Chunk, SessionLocal
-from pkg.rag.knowledge.services.chroma_manager import ChromaIndexManager
+from ....entity.persistence import rag as persistence_rag
 from ....core import app
 from ....provider.modelmgr.requester import RuntimeEmbeddingModel
+import sqlalchemy
 
 
 class Embedder(BaseService):
-    def __init__(self, ap: app.Application, chroma_manager: ChromaIndexManager = None) -> None:
+    def __init__(self, ap: app.Application) -> None:
         super().__init__()
-        self.logger = logging.getLogger(self.__class__.__name__)
-        self.chroma_manager = chroma_manager
         self.ap = ap
 
-    def _db_save_chunks_sync(self, session: Session, file_id: int, chunks_texts: List[str]):
-        """
-        Saves chunks to the relational database and returns the created Chunk objects.
-        This function assumes it's called within a context where the session
-        will be committed/rolled back and closed by the caller.
-        """
-        self.logger.debug(f'Saving {len(chunks_texts)} chunks for file_id {file_id} to DB (sync).')
-        chunk_objects = []
-        for text in chunks_texts:
-            chunk = Chunk(file_id=file_id, text=text)
-            session.add(chunk)
-            chunk_objects.append(chunk)
-        session.flush()  # This populates the .id attribute for each new chunk object
-        self.logger.debug(f'Successfully added {len(chunk_objects)} chunk entries to DB.')
-        return chunk_objects
-
     async def embed_and_store(
-        self, file_id: int, chunks: List[str], embedding_model: RuntimeEmbeddingModel
-    ) -> List[Chunk]:
-        if not embedding_model:
-            raise RuntimeError('Embedding model not loaded. Please check Embedder initialization.')
+        self, kb_id: str, file_id: str, chunks: List[str], embedding_model: RuntimeEmbeddingModel
+    ) -> list[persistence_rag.Chunk]:
+        # save chunk to db
+        chunk_entities: list[persistence_rag.Chunk] = []
+        chunk_ids: list[str] = []
 
-        session = SessionLocal()  # Start a session that will live for the whole operation
-        chunk_objects = []
-        try:
-            # 1. Save chunks to the relational database first to get their IDs
-            #    We call _db_save_chunks_sync directly without _run_sync's session management
-            #    because we manage the session here across multiple async calls.
-            chunk_objects = await asyncio.to_thread(self._db_save_chunks_sync, session, file_id, chunks)
-            session.commit()  # Commit chunks to make their IDs permanent and accessible
+        for chunk_text in chunks:
+            chunk_uuid = str(uuid.uuid4())
+            chunk_ids.append(chunk_uuid)
+            chunk_entity = persistence_rag.Chunk(uuid=chunk_uuid, file_id=file_id, text=chunk_text)
+            chunk_entities.append(chunk_entity)
 
-            if not chunk_objects:
-                self.logger.warning(
-                    f'No chunk objects created for file_id {file_id}. Skipping embedding and Chroma storage.'
-                )
-                return []
+        chunk_dicts = [
+            self.ap.persistence_mgr.serialize_model(persistence_rag.Chunk, chunk) for chunk in chunk_entities
+        ]
 
-            # get the embeddings for the chunks
-            embeddings: list[list[float]] = []
+        await self.ap.persistence_mgr.execute_async(sqlalchemy.insert(persistence_rag.Chunk).values(chunk_dicts))
 
-            for chunk in chunks:
-                result = await embedding_model.requester.invoke_embedding(
-                    model=embedding_model,
-                    input_text=chunk,
-                )
-                embeddings.append(result)
+        # get embeddings
+        embeddings_list: list[list[float]] = await embedding_model.requester.invoke_embedding(
+            model=embedding_model,
+            input_text=chunks,
+            extra_args={},  # TODO: add extra args
+        )
 
-            embeddings_np = np.array(embeddings, dtype=np.float32)
+        # save embeddings to vdb
+        await self.ap.vector_db_mgr.vector_db.add_embeddings(kb_id, chunk_ids, embeddings_list, chunk_dicts)
 
-            self.logger.info('Saving embeddings to Chroma...')
-            chunk_ids = [c.id for c in chunk_objects]
-            file_ids_for_chroma = [file_id] * len(chunk_ids)
+        self.ap.logger.info(f'Successfully saved {len(chunk_entities)} embeddings to Knowledge Base.')
 
-            await self._run_sync(  # Use _run_sync for the Chroma operation, as it's a sync call
-                self.chroma_manager.add_embeddings_sync,
-                file_ids_for_chroma,
-                chunk_ids,
-                embeddings_np,
-                chunks,  # Pass original chunks texts for documents
-            )
-            self.logger.info(f'Successfully saved {len(chunk_objects)} embeddings to Chroma.')
-            return chunk_objects
-
-        except Exception as e:
-            session.rollback()  # Rollback on any error
-            self.logger.error(f'Failed to process and store data for file_id {file_id}: {e}', exc_info=True)
-            raise  # Re-raise the exception to propagate it
-        finally:
-            session.close()  # Ensure the session is always closed
+        return chunk_entities

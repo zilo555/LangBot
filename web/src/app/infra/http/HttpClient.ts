@@ -38,6 +38,7 @@ import {
   ApiRespKnowledgeBase,
   KnowledgeBase,
   ApiRespKnowledgeBaseFiles,
+  ApiRespKnowledgeBaseRetrieve,
 } from '@/app/infra/entities/api';
 import { GetBotLogsRequest } from '@/app/infra/http/requestParam/bots/GetBotLogsRequest';
 import { GetBotLogsResponse } from '@/app/infra/http/requestParam/bots/GetBotLogsResponse';
@@ -323,8 +324,15 @@ class HttpClient {
     return this.get('/api/v1/pipelines/_/metadata');
   }
 
-  public getPipelines(): Promise<ApiRespPipelines> {
-    return this.get('/api/v1/pipelines');
+  public getPipelines(
+    sortBy?: string,
+    sortOrder?: string,
+  ): Promise<ApiRespPipelines> {
+    const params = new URLSearchParams();
+    if (sortBy) params.append('sort_by', sortBy);
+    if (sortOrder) params.append('sort_order', sortOrder);
+    const queryString = params.toString();
+    return this.get(`/api/v1/pipelines${queryString ? `?${queryString}` : ''}`);
   }
 
   public getPipeline(uuid: string): Promise<GetPipelineResponseData> {
@@ -459,6 +467,13 @@ class HttpClient {
     return this.post('/api/v1/knowledge/bases', base);
   }
 
+  public updateKnowledgeBase(
+    uuid: string,
+    base: KnowledgeBase,
+  ): Promise<{ uuid: string }> {
+    return this.put(`/api/v1/knowledge/bases/${uuid}`, base);
+  }
+
   public uploadKnowledgeBaseFile(
     uuid: string,
     file_id: string,
@@ -483,6 +498,13 @@ class HttpClient {
 
   public deleteKnowledgeBase(uuid: string): Promise<object> {
     return this.delete(`/api/v1/knowledge/bases/${uuid}`);
+  }
+
+  public retrieveKnowledgeBase(
+    uuid: string,
+    query: string,
+  ): Promise<ApiRespKnowledgeBaseRetrieve> {
+    return this.post(`/api/v1/knowledge/bases/${uuid}/retrieve`, { query });
   }
 
   // ============ Plugins API ============

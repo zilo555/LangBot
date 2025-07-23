@@ -28,7 +28,7 @@ export default function KBDoc({ kbId }: { kbId: string }) {
     setDocumentsList(
       resp.files.map((file: KnowledgeBaseFile) => {
         return {
-          id: file.id,
+          uuid: file.uuid,
           name: file.file_name,
           status: file.status,
         };
@@ -66,7 +66,7 @@ export default function KBDoc({ kbId }: { kbId: string }) {
         onUploadSuccess={handleUploadSuccess}
         onUploadError={handleUploadError}
       />
-      <DataTable columns={columns(handleDelete)} data={documentsList} />
+      <DataTable columns={columns(handleDelete, t)} data={documentsList} />
     </div>
   );
 }

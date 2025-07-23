@@ -15,21 +15,21 @@ from ...entity.persistence import (
 
 @migration.migration_class(1)
 class DBMigrateV3Config(migration.DBMigration):
-    """从 v3 的配置迁移到 v4 的数据库"""
+    """Migrate v3 config to v4 database"""
 
     async def upgrade(self):
-        """升级"""
+        """Upgrade"""
         """
-        将 data/config 下的所有配置文件进行迁移。
-        迁移后，之前的配置文件都保存到 data/legacy/config 下。
-        迁移后，data/metadata/ 下的所有配置文件都保存到 data/legacy/metadata 下。
+        Migrate all config files under data/config.
+        After migration, all previous config files are saved under data/legacy/config.
+        After migration, all config files under data/metadata/ are saved under data/legacy/metadata.
         """
 
         if self.ap.provider_cfg is None:
             return
 
-        # ======= 迁移模型 =======
-        # 只迁移当前选中的模型
+        # ======= Migrate model =======
+        # Only migrate the currently selected model
         model_name = self.ap.provider_cfg.data.get('model', 'gpt-4o')
 
         model_requester = 'openai-chat-completions'
@@ -91,8 +91,8 @@ class DBMigrateV3Config(migration.DBMigration):
             sqlalchemy.insert(persistence_model.LLMModel).values(**llm_model_data)
         )
 
-        # ======= 迁移流水线配置 =======
-        # 修改到默认流水线
+        # ======= Migrate pipeline config =======
+        # Modify to default pipeline
         default_pipeline = [
             self.ap.persistence_mgr.serialize_model(persistence_pipeline.LegacyPipeline, pipeline)
             for pipeline in (
@@ -184,8 +184,8 @@ class DBMigrateV3Config(migration.DBMigration):
                 .where(persistence_pipeline.LegacyPipeline.uuid == default_pipeline['uuid'])
             )
 
-        # ======= 迁移机器人 =======
-        # 只迁移启用的机器人
+        # ======= Migrate bot =======
+        # Only migrate enabled bots
         for adapter in self.ap.platform_cfg.data.get('platform-adapters', []):
             if not adapter.get('enable'):
                 continue
@@ -207,7 +207,7 @@ class DBMigrateV3Config(migration.DBMigration):
 
             await self.ap.persistence_mgr.execute_async(sqlalchemy.insert(persistence_bot.Bot).values(**bot_data))
 
-        # ======= 迁移系统设置 =======
+        # ======= Migrate system settings =======
         self.ap.instance_config.data['admins'] = self.ap.system_cfg.data['admin-sessions']
         self.ap.instance_config.data['api']['port'] = self.ap.system_cfg.data['http-api']['port']
         self.ap.instance_config.data['command'] = {
@@ -223,7 +223,7 @@ class DBMigrateV3Config(migration.DBMigration):
         await self.ap.instance_config.dump_config()
 
         # ======= move files =======
-        # 迁移 data/config 下的所有配置文件
+        # Migrate all config files under data/config
         all_legacy_dir_name = [
             'config',
             # 'metadata',
@@ -246,4 +246,4 @@ class DBMigrateV3Config(migration.DBMigration):
             move_legacy_files(dir_name)
 
     async def downgrade(self):
-        """降级"""
+        """Downgrade"""

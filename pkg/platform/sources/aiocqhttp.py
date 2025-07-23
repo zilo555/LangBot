@@ -76,8 +76,7 @@ class AiocqhttpMessageConverter(adapter.MessageConverter):
         return msg_list, msg_id, msg_time
 
     @staticmethod
-    async def target2yiri(message: str, message_id: int = -1, bot=None):
-        print(message)
+    async def target2yiri(message: str, message_id: int = -1, bot: aiocqhttp.CQHttp = None):
         message = aiocqhttp.Message(message)
 
         def get_face_name(face_id):
@@ -271,16 +270,16 @@ class AiocqhttpMessageConverter(adapter.MessageConverter):
                 )
                 yiri_msg_list.append(reply_msg)
 
-            elif msg.type == 'file':
-                # file_name = msg.data['file']
-                file_id = msg.data['file_id']
-                file_data = await bot.get_file(file_id=file_id)
-                file_name = file_data.get('file_name')
-                file_path = file_data.get('file')
-                _ = file_path
-                file_url = file_data.get('file_url')
-                file_size = file_data.get('file_size')
-                yiri_msg_list.append(platform_message.File(id=file_id, name=file_name, url=file_url, size=file_size))
+            # 这里下载所有文件会导致下载文件过多，暂时不下载
+            # elif msg.type == 'file':
+            #     # file_name = msg.data['file']
+            #     file_id = msg.data['file_id']
+            #     file_data = await bot.get_file(file_id=file_id)
+            #     file_name = file_data.get('file_name')
+            #     file_path = file_data.get('file')
+            #     file_url = file_data.get('file_url')
+            #     file_size = file_data.get('file_size')
+            #     yiri_msg_list.append(platform_message.File(id=file_id, name=file_name,url=file_url,size=file_size))
             elif msg.type == 'face':
                 face_id = msg.data['id']
                 face_name = msg.data['raw']['faceText']

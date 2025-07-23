@@ -7,7 +7,7 @@ from .. import note
 
 @note.note_class('ClassicNotes', 1)
 class ClassicNotes(note.LaunchNote):
-    """经典启动信息"""
+    """Classic launch information"""
 
     async def need_show(self) -> bool:
         return True

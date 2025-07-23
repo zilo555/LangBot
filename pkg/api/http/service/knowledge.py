@@ -47,12 +47,18 @@ class KnowledgeService:
 
     async def update_knowledge_base(self, kb_uuid: str, kb_data: dict) -> None:
         """更新知识库"""
+        if 'uuid' in kb_data:
+            del kb_data['uuid']
+
+        if 'embedding_model_uuid' in kb_data:
+            del kb_data['embedding_model_uuid']
+
         await self.ap.persistence_mgr.execute_async(
             sqlalchemy.update(persistence_rag.KnowledgeBase)
             .values(kb_data)
             .where(persistence_rag.KnowledgeBase.uuid == kb_uuid)
         )
-        await self.ap.rag_mgr.remove_knowledge_base(kb_uuid)
+        await self.ap.rag_mgr.remove_knowledge_base_from_runtime(kb_uuid)
 
         kb = await self.get_knowledge_base(kb_uuid)
 
@@ -67,6 +73,13 @@ class KnowledgeService:
             raise Exception('Knowledge base not found')
         return await runtime_kb.store_file(file_id)
 
+    async def retrieve_knowledge_base(self, kb_uuid: str, query: str) -> list[dict]:
+        """检索知识库"""
+        runtime_kb = await self.ap.rag_mgr.get_knowledge_base_by_uuid(kb_uuid)
+        if runtime_kb is None:
+            raise Exception('Knowledge base not found')
+        return [result.model_dump() for result in await runtime_kb.retrieve(query)]
+
     async def get_files_by_knowledge_base(self, kb_uuid: str) -> list[dict]:
         """获取知识库文件"""
         result = await self.ap.persistence_mgr.execute_async(
@@ -77,14 +90,29 @@ class KnowledgeService:
 
     async def delete_file(self, kb_uuid: str, file_id: str) -> None:
         """删除文件"""
-        await self.ap.persistence_mgr.execute_async(
-            sqlalchemy.delete(persistence_rag.File).where(persistence_rag.File.uuid == file_id)
-        )
-        # TODO: remove from memory
+        runtime_kb = await self.ap.rag_mgr.get_knowledge_base_by_uuid(kb_uuid)
+        if runtime_kb is None:
+            raise Exception('Knowledge base not found')
+        await runtime_kb.delete_file(file_id)
 
     async def delete_knowledge_base(self, kb_uuid: str) -> None:
         """删除知识库"""
+        await self.ap.rag_mgr.delete_knowledge_base(kb_uuid)
+
         await self.ap.persistence_mgr.execute_async(
             sqlalchemy.delete(persistence_rag.KnowledgeBase).where(persistence_rag.KnowledgeBase.uuid == kb_uuid)
         )
-        # TODO: remove from memory
+
+        # delete files
+        files = await self.ap.persistence_mgr.execute_async(
+            sqlalchemy.select(persistence_rag.File).where(persistence_rag.File.kb_id == kb_uuid)
+        )
+        for file in files:
+            # delete chunks
+            await self.ap.persistence_mgr.execute_async(
+                sqlalchemy.delete(persistence_rag.Chunk).where(persistence_rag.Chunk.file_id == file.uuid)
+            )
+            # delete file
+            await self.ap.persistence_mgr.execute_async(
+                sqlalchemy.delete(persistence_rag.File).where(persistence_rag.File.uuid == file.uuid)
+            )

@@ -28,11 +28,12 @@ from ..storage import mgr as storagemgr
 from ..utils import logcache
 from . import taskmgr
 from . import entities as core_entities
-from ..rag.knowledge import mgr as rag_mgr
+from ..rag.knowledge import kbmgr as rag_mgr
+from ..vector import mgr as vectordb_mgr
 
 
 class Application:
-    """运行时应用对象和上下文"""
+    """Runtime application object and context"""
 
     event_loop: asyncio.AbstractEventLoop = None
 
@@ -51,10 +52,10 @@ class Application:
 
     rag_mgr: rag_mgr.RAGManager = None
 
-    # TODO 移动到 pipeline 里
+    # TODO move to pipeline
     tool_mgr: llm_tool_mgr.ToolManager = None
 
-    # ======= 配置管理器 =======
+    # ======= Config manager =======
 
     command_cfg: config_mgr.ConfigManager = None  # deprecated
 
@@ -68,7 +69,7 @@ class Application:
 
     instance_config: config_mgr.ConfigManager = None
 
-    # ======= 元数据配置管理器 =======
+    # ======= Metadata config manager =======
 
     sensitive_meta: config_mgr.ConfigManager = None
 
@@ -96,6 +97,8 @@ class Application:
     logger: logging.Logger = None
 
     persistence_mgr: persistencemgr.PersistenceManager = None
+
+    vector_db_mgr: vectordb_mgr.VectorDBManager = None
 
     http_ctrl: http_controller.HTTPController = None
 
@@ -163,11 +166,11 @@ class Application:
         except asyncio.CancelledError:
             pass
         except Exception as e:
-            self.logger.error(f'应用运行致命异常: {e}')
+            self.logger.error(f'Application runtime fatal exception: {e}')
             self.logger.debug(f'Traceback: {traceback.format_exc()}')
 
     async def print_web_access_info(self):
-        """打印访问 webui 的提示"""
+        """Print access webui tips"""
 
         if not os.path.exists(os.path.join('.', 'web/out')):
             self.logger.warning('WebUI 文件缺失，请根据文档部署：https://docs.langbot.app/zh')
@@ -199,7 +202,7 @@ class Application:
     ):
         match scope:
             case core_entities.LifecycleControlScope.PLATFORM.value:
-                self.logger.info('执行热重载 scope=' + scope)
+                self.logger.info('Hot reload scope=' + scope)
                 await self.platform_mgr.shutdown()
 
                 self.platform_mgr = im_mgr.PlatformManager(self)
@@ -215,7 +218,7 @@ class Application:
                     ],
                 )
             case core_entities.LifecycleControlScope.PLUGIN.value:
-                self.logger.info('执行热重载 scope=' + scope)
+                self.logger.info('Hot reload scope=' + scope)
                 await self.plugin_mgr.destroy_plugins()
 
                 # 删除 sys.module 中所有的 plugins/* 下的模块
@@ -231,7 +234,7 @@ class Application:
                 await self.plugin_mgr.load_plugins()
                 await self.plugin_mgr.initialize_plugins()
             case core_entities.LifecycleControlScope.PROVIDER.value:
-                self.logger.info('执行热重载 scope=' + scope)
+                self.logger.info('Hot reload scope=' + scope)
 
                 await self.tool_mgr.shutdown()
 

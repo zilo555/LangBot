@@ -101,18 +101,18 @@ class ProviderAPIRequester(metaclass=abc.ABCMeta):
     async def invoke_embedding(
         self,
         model: RuntimeEmbeddingModel,
-        input_text: str,
+        input_text: list[str],
         extra_args: dict[str, typing.Any] = {},
-    ) -> list[float]:
+    ) -> list[list[float]]:
         """调用 Embedding API
 
         Args:
             query (core_entities.Query): 请求上下文
             model (RuntimeEmbeddingModel): 使用的模型信息
-            input_text (str): 输入文本
+            input_text (list[str]): 输入文本
             extra_args (dict[str, typing.Any], optional): 额外的参数. Defaults to {}.
 
         Returns:
-            list[float]: 返回的 embedding 向量
+            list[list[float]]: 返回的 embedding 向量
         """
         pass

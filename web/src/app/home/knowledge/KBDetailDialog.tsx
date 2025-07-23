@@ -7,7 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Sidebar,
@@ -21,36 +20,34 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
-import { z } from 'zod';
 import { httpClient } from '@/app/infra/http/HttpClient';
 // import { KnowledgeBase } from '@/app/infra/entities/api';
 import KBForm from '@/app/home/knowledge/components/kb-form/KBForm';
 import KBDoc from '@/app/home/knowledge/components/kb-docs/KBDoc';
+import KBRetrieve from '@/app/home/knowledge/components/kb-retrieve/KBRetrieve';
 
 interface KBDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   kbId?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onFormSubmit: (value: z.infer<any>) => void;
   onFormCancel: () => void;
   onKbDeleted: () => void;
   onNewKbCreated: (kbId: string) => void;
+  onKbUpdated: (kbId: string) => void;
 }
 
 export default function KBDetailDialog({
   open,
   onOpenChange,
   kbId: propKbId,
-  onFormSubmit,
   onFormCancel,
   onKbDeleted,
   onNewKbCreated,
+  onKbUpdated,
 }: KBDetailDialogProps) {
   const { t } = useTranslation();
   const [kbId, setKbId] = useState<string | undefined>(propKbId);
   const [activeMenu, setActiveMenu] = useState('metadata');
-  const [fileId, setFileId] = useState<string | undefined>(undefined);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
@@ -85,6 +82,19 @@ export default function KBDetailDialog({
         </svg>
       ),
     },
+    {
+      key: 'retrieve',
+      label: t('knowledge.retrieve'),
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M18.031 16.617l4.283 4.282-1.415 1.415-4.282-4.283A8.96 8.96 0 0 1 11 20c-4.968 0-9-4.032-9-9s4.032-9 9-9 9 4.032 9 9a8.96 8.96 0 0 1-1.969 5.617zm-2.006-.742A6.977 6.977 0 0 0 18 11c0-3.868-3.133-7-7-7-3.868 0-7 3.132-7 7 0 3.867 3.132 7 7 7a6.977 6.977 0 0 0 4.875-1.975l.15-.15z"></path>
+        </svg>
+      ),
+    },
   ];
 
   const confirmDelete = () => {
@@ -107,10 +117,8 @@ export default function KBDetailDialog({
               {activeMenu === 'metadata' && (
                 <KBForm
                   initKbId={undefined}
-                  onFormSubmit={onFormSubmit}
-                  onFormCancel={onFormCancel}
-                  onKbDeleted={onKbDeleted}
                   onNewKbCreated={onNewKbCreated}
+                  onKbUpdated={onKbUpdated}
                 />
               )}
               {activeMenu === 'documents' && <div>documents</div>}
@@ -174,20 +182,21 @@ export default function KBDetailDialog({
                 <DialogTitle>
                   {activeMenu === 'metadata'
                     ? t('knowledge.editKnowledgeBase')
-                    : t('knowledge.editDocument')}
+                    : activeMenu === 'documents'
+                      ? t('knowledge.editDocument')
+                      : t('knowledge.retrieveTest')}
                 </DialogTitle>
               </DialogHeader>
               <div className="flex-1 overflow-y-auto px-6 pb-6">
                 {activeMenu === 'metadata' && (
                   <KBForm
                     initKbId={kbId}
-                    onFormSubmit={onFormSubmit}
-                    onFormCancel={onFormCancel}
-                    onKbDeleted={onKbDeleted}
                     onNewKbCreated={onNewKbCreated}
+                    onKbUpdated={onKbUpdated}
                   />
                 )}
                 {activeMenu === 'documents' && <KBDoc kbId={kbId} />}
+                {activeMenu === 'retrieve' && <KBRetrieve kbId={kbId} />}
               </div>
               {activeMenu === 'metadata' && (
                 <DialogFooter className="px-6 py-4 border-t shrink-0">

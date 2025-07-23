@@ -9,7 +9,7 @@ from ...command import cmdmgr
 from ...provider.session import sessionmgr as llm_session_mgr
 from ...provider.modelmgr import modelmgr as llm_model_mgr
 from ...provider.tools import toolmgr as llm_tool_mgr
-from ...rag.knowledge import mgr as rag_mgr
+from ...rag.knowledge import kbmgr as rag_mgr
 from ...platform import botmgr as im_mgr
 from ...persistence import mgr as persistencemgr
 from ...api.http.controller import main as http_controller
@@ -21,15 +21,16 @@ from ...api.http.service import knowledge as knowledge_service
 from ...discover import engine as discover_engine
 from ...storage import mgr as storagemgr
 from ...utils import logcache
+from ...vector import mgr as vectordb_mgr
 from .. import taskmgr
 
 
 @stage.stage_class('BuildAppStage')
 class BuildAppStage(stage.BootingStage):
-    """构建应用阶段"""
+    """Build LangBot application"""
 
     async def run(self, ap: app.Application):
-        """构建app对象的各个组件对象并初始化"""
+        """Build LangBot application"""
         ap.task_mgr = taskmgr.AsyncTaskManager(ap)
 
         discover = discover_engine.ComponentDiscoveryEngine(ap)
@@ -44,7 +45,7 @@ class BuildAppStage(stage.BootingStage):
         await ver_mgr.initialize()
         ap.ver_mgr = ver_mgr
 
-        # 发送公告
+        # Send announcement
         ann_mgr = announce.AnnouncementManager(ap)
         ap.ann_mgr = ann_mgr
 
@@ -91,8 +92,13 @@ class BuildAppStage(stage.BootingStage):
         ap.pipeline_mgr = pipeline_mgr
 
         rag_mgr_inst = rag_mgr.RAGManager(ap)
-        await rag_mgr_inst.initialize_rag_system()
+        await rag_mgr_inst.initialize()
         ap.rag_mgr = rag_mgr_inst
+
+        # 初始化向量数据库管理器
+        vectordb_mgr_inst = vectordb_mgr.VectorDBManager(ap)
+        await vectordb_mgr_inst.initialize()
+        ap.vector_db_mgr = vectordb_mgr_inst
 
         http_ctrl = http_controller.HTTPController(ap)
         await http_ctrl.initialize()

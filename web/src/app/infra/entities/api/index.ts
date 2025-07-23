@@ -55,6 +55,15 @@ export interface LLMModel {
   // updated_at: string;
 }
 
+export interface KnowledgeBase {
+  uuid?: string;
+  name: string;
+  description: string;
+  embedding_model_uuid: string;
+  created_at?: string;
+  top_k?: number;
+}
+
 export interface ApiRespProviderEmbeddingModels {
   models: EmbeddingModel[];
 }
@@ -156,7 +165,7 @@ export interface ApiRespKnowledgeBaseFiles {
 }
 
 export interface KnowledgeBaseFile {
-  id: string;
+  uuid: string;
   file_name: string;
   status: string;
 }
@@ -287,4 +296,19 @@ export interface ApiRespWebChatMessage {
 
 export interface ApiRespWebChatMessages {
   messages: Message[];
+}
+
+export interface RetrieveResult {
+  id: string;
+  metadata: {
+    file_id: string;
+    text: string;
+    uuid: string;
+    [key: string]: unknown;
+  };
+  distance: number;
+}
+
+export interface ApiRespKnowledgeBaseRetrieve {
+  results: RetrieveResult[];
 }

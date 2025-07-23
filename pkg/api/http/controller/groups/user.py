@@ -14,7 +14,7 @@ class UserRouterGroup(group.RouterGroup):
                 return self.success(data={'initialized': await self.ap.user_service.is_initialized()})
 
             if await self.ap.user_service.is_initialized():
-                return self.fail(1, '系统已初始化')
+                return self.fail(1, 'System already initialized')
 
             json_data = await quart.request.json
 
@@ -32,7 +32,7 @@ class UserRouterGroup(group.RouterGroup):
             try:
                 token = await self.ap.user_service.authenticate(json_data['user'], json_data['password'])
             except argon2.exceptions.VerifyMismatchError:
-                return self.fail(1, '用户名或密码错误')
+                return self.fail(1, 'Invalid username or password')
 
             return self.success(data={'token': token})
 
@@ -54,15 +54,15 @@ class UserRouterGroup(group.RouterGroup):
             await asyncio.sleep(3)
 
             if not await self.ap.user_service.is_initialized():
-                return self.http_status(400, -1, 'system not initialized')
+                return self.http_status(400, -1, 'System not initialized')
 
             user_obj = await self.ap.user_service.get_user_by_email(user_email)
 
             if user_obj is None:
-                return self.http_status(400, -1, 'user not found')
+                return self.http_status(400, -1, 'User not found')
 
             if recovery_key != self.ap.instance_config.data['system']['recovery_key']:
-                return self.http_status(403, -1, 'invalid recovery key')
+                return self.http_status(403, -1, 'Invalid recovery key')
 
             await self.ap.user_service.reset_password(user_email, new_password)
 
