@@ -78,7 +78,7 @@ class KnowledgeService:
         runtime_kb = await self.ap.rag_mgr.get_knowledge_base_by_uuid(kb_uuid)
         if runtime_kb is None:
             raise Exception('Knowledge base not found')
-        return [result.model_dump() for result in await runtime_kb.retrieve(query)]
+        return [result.model_dump() for result in await runtime_kb.retrieve(query,runtime_kb.knowledge_base_entity.top_k)]
 
     async def get_files_by_knowledge_base(self, kb_uuid: str) -> list[dict]:
         """获取知识库文件"""
