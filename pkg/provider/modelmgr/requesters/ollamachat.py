@@ -129,3 +129,15 @@ class OllamaChatCompletions(requester.ProviderAPIRequester):
             )
         except asyncio.TimeoutError:
             raise errors.RequesterError('请求超时')
+
+    async def invoke_embedding(
+        self,
+        model: requester.RuntimeEmbeddingModel,
+        input_text: list[str],
+        extra_args: dict[str, typing.Any] = {},
+    ) -> list[list[float]]:
+        return await self.client.embed(
+            model=model.model_entity.name,
+            input=input_text,
+            **extra_args,
+        )
