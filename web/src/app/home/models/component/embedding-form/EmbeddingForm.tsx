@@ -118,6 +118,7 @@ export default function EmbeddingForm({
     string[]
   >([]);
   const [modelTesting, setModelTesting] = useState(false);
+  const [currentModelProvider, setCurrentModelProvider] = useState('');
 
   useEffect(() => {
     initEmbeddingModelFormComponent().then(() => {
@@ -125,7 +126,7 @@ export default function EmbeddingForm({
         getEmbeddingConfig(initEmbeddingId).then((val) => {
           form.setValue('name', val.name);
           form.setValue('model_provider', val.model_provider);
-          // setCurrentModelProvider(val.model_provider);
+          setCurrentModelProvider(val.model_provider);
           form.setValue('url', val.url);
           form.setValue('api_key', val.api_key);
           if (val.extra_args) {
@@ -393,7 +394,7 @@ export default function EmbeddingForm({
                     <Select
                       onValueChange={(value) => {
                         field.onChange(value);
-                        // setCurrentModelProvider(value);
+                        setCurrentModelProvider(value);
                         const index = requesterNameList.findIndex(
                           (item) => item.value === value,
                         );
@@ -441,22 +442,24 @@ export default function EmbeddingForm({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="api_key"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t('models.apiKey')}
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {!['ollama-chat'].includes(currentModelProvider) && (
+              <FormField
+                control={form.control}
+                name="api_key"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      {t('models.apiKey')}
+                      <span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormItem>
               <FormLabel>{t('models.extraParameters')}</FormLabel>
