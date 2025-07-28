@@ -14,10 +14,10 @@
 <img src="https://img.shields.io/badge/python-3.10 ~ 3.13 -blue.svg" alt="python">
 [![star](https://gitcode.com/RockChinQ/LangBot/star/badge.svg)](https://gitcode.com/RockChinQ/LangBot)
 
-<a href="https://langbot.app">專案主頁</a> ｜
+<a href="https://langbot.app">主頁</a> ｜
 <a href="https://docs.langbot.app/zh/insight/guide.html">部署文件</a> ｜
-<a href="https://docs.langbot.app/zh/plugin/plugin-intro.html">插件介紹</a> ｜
-<a href="https://github.com/langbot-app/LangBot/issues/new?assignees=&labels=%E7%8B%AC%E7%AB%8B%E6%8F%92%E4%BB%B6&projects=&template=submit-plugin.yml&title=%5BPlugin%5D%3A+%E8%AF%B7%E6%B1%82%E7%99%BB%E8%AE%B0%E6%96%B0%E6%8F%92%E4%BB%B6">提交插件</a>
+<a href="https://docs.langbot.app/zh/plugin/plugin-intro.html">外掛介紹</a> ｜
+<a href="https://github.com/langbot-app/LangBot/issues/new?assignees=&labels=%E7%8B%AC%E7%AB%8B%E6%8F%92%E4%BB%B6&projects=&template=submit-plugin.yml&title=%5BPlugin%5D%3A+%E8%AF%B7%E6%B1%82%E7%99%BB%E8%AE%B0%E6%96%B0%E6%8F%92%E4%BB%B6">提交外掛</a>
 
 </div>
 
@@ -68,7 +68,7 @@ docker compose up -d
 - 💬 大模型對話、Agent：支援多種大模型，適配群聊和私聊；具有多輪對話、工具調用、多模態能力，自帶 RAG（知識庫）實現，並深度適配 [Dify](https://dify.ai)。
 - 🤖 多平台支援：目前支援 QQ、QQ頻道、企業微信、個人微信、飛書、Discord、Telegram 等平台。
 - 🛠️ 高穩定性、功能完備：原生支援訪問控制、限速、敏感詞過濾等機制；配置簡單，支援多種部署方式。支援多流水線配置，不同機器人用於不同應用場景。
-- 🧩 插件擴展、活躍社群：支援事件驅動、組件擴展等插件機制；適配 Anthropic [MCP 協議](https://modelcontextprotocol.io/)；目前已有數百個插件。
+- 🧩 外掛擴展、活躍社群：支援事件驅動、組件擴展等外掛機制；適配 Anthropic [MCP 協議](https://modelcontextprotocol.io/)；目前已有數百個外掛。
 - 😻 Web 管理面板：支援通過瀏覽器管理 LangBot 實例，不再需要手動編寫配置文件。
 
 詳細規格特性請訪問[文件](https://docs.langbot.app/zh/insight/features.html)。
@@ -86,8 +86,8 @@ docker compose up -d
 | 微信 | ✅ |  |
 | 企微對外客服 | ✅ |  |
 | 微信公眾號 | ✅ |  |
-| 飛書 | ✅ |  |
-| 釘釘 | ✅ |  |
+| Lark | ✅ |  |
+| DingTalk | ✅ |  |
 | Discord | ✅ |  |
 | Telegram | ✅ |  |
 | Slack | ✅ |  |
@@ -120,15 +120,15 @@ docker compose up -d
 
 | 平台/模型 | 備註 |
 | --- | --- |
-| [FishAudio](https://fish.audio/zh-CN/discovery/) | [插件](https://github.com/the-lazy-me/NewChatVoice) |
-| [海豚 AI](https://www.ttson.cn/?source=thelazy) | [插件](https://github.com/the-lazy-me/NewChatVoice) |
-| [AzureTTS](https://portal.azure.com/) | [插件](https://github.com/Ingnaryk/LangBot_AzureTTS) |
+| [FishAudio](https://fish.audio/zh-CN/discovery/) | [外掛](https://github.com/the-lazy-me/NewChatVoice) |
+| [海豚 AI](https://www.ttson.cn/?source=thelazy) | [外掛](https://github.com/the-lazy-me/NewChatVoice) |
+| [AzureTTS](https://portal.azure.com/) | [外掛](https://github.com/Ingnaryk/LangBot_AzureTTS) |
 
 ### 文生圖
 
 | 平台/模型 | 備註 |
 | --- | --- |
-| 阿里雲百煉 | [插件](https://github.com/Thetail001/LangBot_BailianTextToImagePlugin)
+| 阿里雲百煉 | [外掛](https://github.com/Thetail001/LangBot_BailianTextToImagePlugin)
 
 ## 😘 社群貢獻
 
