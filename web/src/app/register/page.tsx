@@ -63,6 +63,9 @@ export default function Register() {
     if (i18n.language === 'zh-CN' || i18n.language === 'zh-Hans') {
       setCurrentLanguage('zh-Hans');
       localStorage.setItem('langbot_language', 'zh-Hans');
+    } else if (i18n.language === 'zh-TW' || i18n.language === 'zh-Hant') {
+      setCurrentLanguage('zh-Hant');
+      localStorage.setItem('langbot_language', 'zh-Hant');
     } else if (i18n.language === 'ja' || i18n.language === 'ja-JP') {
       setCurrentLanguage('ja-JP');
       localStorage.setItem('langbot_language', 'ja-JP');
@@ -82,6 +85,8 @@ export default function Register() {
         let lang = 'zh-Hans';
         if (language === 'zh-CN') {
           lang = 'zh-Hans';
+        } else if (language === 'zh-TW') {
+          lang = 'zh-Hant';
         } else if (language === 'ja' || language === 'ja-JP') {
           lang = 'ja-JP';
         } else {
@@ -148,6 +153,7 @@ export default function Register() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="zh-Hans">简体中文</SelectItem>
+                <SelectItem value="zh-Hant">繁體中文</SelectItem>
                 <SelectItem value="en-US">English</SelectItem>
                 <SelectItem value="ja-JP">日本語</SelectItem>
               </SelectContent>
