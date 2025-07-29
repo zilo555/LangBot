@@ -55,6 +55,6 @@ class DeepseekChatCompletions(chatcmpl.OpenAIChatCompletions):
             raise errors.RequesterError('接口返回为空，请确定模型提供商服务是否正常')
         pipeline_config = query.pipeline_config
         # 处理请求结果
-        message = await self._make_msg(resp,pipeline_config)
+        message = await self._make_msg(resp, pipeline_config)
 
         return message

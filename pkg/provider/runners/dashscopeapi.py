@@ -185,8 +185,6 @@ class DashScopeAPIRunner(runner.RequestRunner):
                 # 将参考资料替换到文本中
                 pending_content = self._replace_references(pending_content, references_dict)
 
-
-
             yield llm_entities.Message(
                 role='assistant',
                 content=pending_content,
@@ -261,12 +259,10 @@ class DashScopeAPIRunner(runner.RequestRunner):
                         role='assistant',
                         content=pending_content,
                         is_final=is_final,
-
                     )
 
             # 保存当前会话的session_id用于下次对话的语境
             query.session.using_conversation.uuid = stream_output.get('session_id')
-
 
         else:
             for chunk in response:

@@ -39,11 +39,9 @@ class SendResponseBackStage(stage.PipelineStage):
 
         quote_origin = query.pipeline_config['output']['misc']['quote-origin']
 
-        has_chunks = any(isinstance(msg, llm_entities.MessageChunk) for msg in query.resp_messages)
-        print(has_chunks)
-        if has_chunks and hasattr(query.adapter,'reply_message_chunk'):
+        # has_chunks = any(isinstance(msg, llm_entities.MessageChunk) for msg in query.resp_messages)
+        if await query.adapter.is_stream_output_supported():
             is_final = [msg.is_final for msg in query.resp_messages][0]
-            print(is_final)
             await query.adapter.reply_message_chunk(
                 message_source=query.message_event,
                 message_id=query.resp_messages[-1].resp_message_id,
@@ -58,10 +56,6 @@ class SendResponseBackStage(stage.PipelineStage):
                 quote_origin=quote_origin,
             )
 
-        # await query.adapter.reply_message(
-        #     message_source=query.message_event,
-        #     message=query.resp_message_chain[-1],
-        #     quote_origin=quote_origin,
-        # )
+
 
         return entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)

@@ -148,7 +148,6 @@ class DifyServiceAPIRunner(runner.RequestRunner):
             if mode == 'workflow':
                 if chunk['event'] == 'node_finished':
                     if not is_stream:
-
                         if chunk['data']['node_type'] == 'answer':
                             yield llm_entities.Message(
                                 role='assistant',
@@ -273,7 +272,6 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                         role='assistant',
                         content=self._try_convert_thinking(pending_agent_message),
                     )
-
 
                 if chunk['event'] == 'agent_thought':
                     if chunk['tool'] != '' and chunk['observation'] != '':  # 工具调用结果，跳过
