@@ -148,7 +148,7 @@ class DingTalkAdapter(adapter.MessagePlatformAdapter):
         message: platform_message.MessageChain,
         quote_origin: bool = False,
         is_final: bool = False,
-        ):
+    ):
         event = await DingTalkEventConverter.yiri2target(
             message_source,
         )
@@ -158,12 +158,11 @@ class DingTalkAdapter(adapter.MessagePlatformAdapter):
 
         content, at = await DingTalkMessageConverter.yiri2target(message)
 
-        card_instance,card_instance_id = self.card_instance_id_dict[message_id]
+        card_instance, card_instance_id = self.card_instance_id_dict[message_id]
         # print(card_instance_id)
-        await self.bot.send_card_message(card_instance,card_instance_id,content,is_final)
+        await self.bot.send_card_message(card_instance, card_instance_id, content, is_final)
         if is_final:
             self.card_instance_id_dict.pop(message_id)
-
 
     async def send_message(self, target_type: str, target_id: str, message: platform_message.MessageChain):
         content = await DingTalkMessageConverter.yiri2target(message)
@@ -174,18 +173,17 @@ class DingTalkAdapter(adapter.MessagePlatformAdapter):
 
     async def is_stream_output_supported(self) -> bool:
         is_stream = False
-        if self.config.get("enable-stream-reply", None):
+        if self.config.get('enable-stream-reply', None):
             is_stream = True
         return is_stream
 
-    async def create_message_card(self,message_id,event):
+    async def create_message_card(self, message_id, event):
         card_template_id = self.config['card_template_id']
         incoming_message = event.source_platform_object.incoming_message
         # message_id = incoming_message.message_id
         card_instance, card_instance_id = await self.bot.create_and_card(card_template_id, incoming_message)
         self.card_instance_id_dict[message_id] = (card_instance, card_instance_id)
         return True
-
 
     def register_listener(
         self,
@@ -194,7 +192,6 @@ class DingTalkAdapter(adapter.MessagePlatformAdapter):
     ):
         async def on_message(event: DingTalkEvent):
             try:
-                await self.is_stream_output_supported()
                 return await callback(
                     await self.event_converter.target2yiri(event, self.config['robot_name']),
                     self,
@@ -208,15 +205,7 @@ class DingTalkAdapter(adapter.MessagePlatformAdapter):
             self.bot.on_message('GroupMessage')(on_message)
 
     async def run_async(self):
-        # config = self.config
-        # self.bot = DingTalkClient(
-        #     client_id=config['client_id'],
-        #     client_secret=config['client_secret'],
-        #     robot_name=config['robot_name'],
-        #     robot_code=config['robot_code'],
-        #     markdown_card=config['markdown_card'],
-        #     logger=self.logger,
-        # )
+
         await self.bot.start()
 
     async def kill(self) -> bool:

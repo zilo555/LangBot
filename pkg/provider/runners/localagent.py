@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-from ssl import ALERT_DESCRIPTION_BAD_CERTIFICATE_HASH_VALUE
 import typing
 
 from .. import runner
@@ -15,26 +14,27 @@ class LocalAgentRunner(runner.RequestRunner):
 
     class ToolCallTracker:
         """工具调用追踪器"""
+
         def __init__(self):
-            self.active_calls: dict[str,dict] = {}
+            self.active_calls: dict[str, dict] = {}
             self.completed_calls: list[llm_entities.ToolCall] = []
 
-    async def run(self, query: core_entities.Query) -> typing.AsyncGenerator[llm_entities.Message | llm_entities.MessageChunk, None]:
+    async def run(
+        self, query: core_entities.Query
+    ) -> typing.AsyncGenerator[llm_entities.Message | llm_entities.MessageChunk, None]:
         """运行请求"""
         pending_tool_calls = []
 
         req_messages = query.prompt.messages.copy() + query.messages.copy() + [query.user_message]
         try:
-            # print(await query.adapter.is_stream_output_supported())
             is_stream = await query.adapter.is_stream_output_supported()
 
         except AttributeError:
             is_stream = False
-        # while True:
-        #     pass
+
         if not is_stream:
             # 非流式输出，直接请求
-            # print(123)
+
             msg = await query.use_llm_model.requester.invoke_llm(
                 query,
                 query.use_llm_model,
@@ -44,7 +44,6 @@ class LocalAgentRunner(runner.RequestRunner):
             )
             yield msg
             final_msg = msg
-            print(final_msg)
         else:
             # 流式输出，需要处理工具调用
             tool_calls_map: dict[str, llm_entities.ToolCall] = {}
@@ -55,29 +54,28 @@ class LocalAgentRunner(runner.RequestRunner):
                 query.use_funcs,
                 stream=is_stream,
                 extra_args=query.use_llm_model.model_entity.extra_args,
-            ):  
+            ):
                 yield msg
-                # if msg.tool_calls:
-                #     for tool_call in msg.tool_calls:
-                #         if tool_call.id not in tool_calls_map:
-                #             tool_calls_map[tool_call.id] = llm_entities.ToolCall(
-                #                 id=tool_call.id,
-                #                 type=tool_call.type,
-                #                 function=llm_entities.FunctionCall(
-                #                     name=tool_call.function.name if tool_call.function else '',
-                #                     arguments=''
-                #                 ),
-                #             )
-                #         if tool_call.function and tool_call.function.arguments:
-                #             # 流式处理中，工具调用参数可能分多个chunk返回，需要追加而不是覆盖
-                #             tool_calls_map[tool_call.id].function.arguments += tool_call.function.arguments
+                if msg.tool_calls:
+                    for tool_call in msg.tool_calls:
+                        if tool_call.id not in tool_calls_map:
+                            tool_calls_map[tool_call.id] = llm_entities.ToolCall(
+                                id=tool_call.id,
+                                type=tool_call.type,
+                                function=llm_entities.FunctionCall(
+                                    name=tool_call.function.name if tool_call.function else '',
+                                    arguments=''
+                                ),
+                            )
+                        if tool_call.function and tool_call.function.arguments:
+                            # 流式处理中，工具调用参数可能分多个chunk返回，需要追加而不是覆盖
+                            tool_calls_map[tool_call.id].function.arguments += tool_call.function.arguments
             final_msg = llm_entities.Message(
                 role=msg.role,
                 content=msg.all_content,
                 tool_calls=list(tool_calls_map.values()),
             )
 
-        
         pending_tool_calls = final_msg.tool_calls
 
         req_messages.append(final_msg)
@@ -117,8 +115,8 @@ class LocalAgentRunner(runner.RequestRunner):
                     req_messages,
                     query.use_funcs,
                     stream=is_stream,
-                    extra_args=query.use_llm_model.model_entity.extra_args, 
-                ):  
+                    extra_args=query.use_llm_model.model_entity.extra_args,
+                ):
                     yield msg
                 if msg.tool_calls:
                     for tool_call in msg.tool_calls:
@@ -127,8 +125,7 @@ class LocalAgentRunner(runner.RequestRunner):
                                 id=tool_call.id,
                                 type=tool_call.type,
                                 function=llm_entities.FunctionCall(
-                                    name=tool_call.function.name if tool_call.function else '',
-                                    arguments=''
+                                    name=tool_call.function.name if tool_call.function else '', arguments=''
                                 ),
                             )
                         if tool_call.function and tool_call.function.arguments:
@@ -140,7 +137,6 @@ class LocalAgentRunner(runner.RequestRunner):
                     tool_calls=list(tool_calls_map.values()),
                 )
             else:
-                print("非流式")
                 # 处理完所有调用，再次请求
                 msg = await query.use_llm_model.requester.invoke_llm(
                     query,

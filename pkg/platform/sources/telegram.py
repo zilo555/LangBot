@@ -167,7 +167,7 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
                 await self.listeners[type(lb_event)](lb_event, self)
                 await self.is_stream_output_supported()
             except Exception as e:
-                await self.logger.error(f"Error in telegram callback: {traceback.format_exc()}")
+                await self.logger.error(f'Error in telegram callback: {traceback.format_exc()}')
 
         self.application = ApplicationBuilder().token(self.config['token']).build()
         self.bot = self.application.bot
@@ -206,7 +206,6 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
 
         await self.bot.send_message(**args)
 
-
     async def reply_message_chunk(
         self,
         message_source: platform_events.MessageEvent,
@@ -214,8 +213,7 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
         message: platform_message.MessageChain,
         quote_origin: bool = False,
         is_final: bool = False,
-        ):
-
+    ):
         assert isinstance(message_source.source_platform_object, Update)
         components = await TelegramMessageConverter.yiri2target(message, self.bot)
         args = {}
@@ -240,7 +238,6 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
                 if self.config['markdown_card'] is True:
                     args['parse_mode'] = 'MarkdownV2'
 
-
             send_msg = await self.bot.send_message(**args)
             send_msg_id = send_msg.message_id
             self.msg_stream_id[message_id] = send_msg_id
@@ -264,15 +261,11 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
         if is_final:
             self.msg_stream_id.pop(message_id)
 
-
     async def is_stream_output_supported(self) -> bool:
         is_stream = False
-        if self.config.get("enable-stream-reply", None):
+        if self.config.get('enable-stream-reply', None):
             is_stream = True
-        self.is_stream = is_stream
-
         return is_stream
-
 
     async def is_muted(self, group_id: int) -> bool:
         return False

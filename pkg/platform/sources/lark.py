@@ -344,7 +344,7 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
     config: dict
     quart_app: quart.Quart
     ap: app.Application
-    
+
     message_id_to_card_id: typing.Dict[str, typing.Tuple[str, int]]
 
     card_id_dict: dict[str, str]
@@ -395,25 +395,17 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
                     try:
                         event = await self.event_converter.target2yiri(p2v1, self.api_client)
                     except Exception as e:
-                        await self.logger.error(f"Error in lark callback: {traceback.format_exc()}")
+                        await self.logger.error(f'Error in lark callback: {traceback.format_exc()}')
 
                     if event.__class__ in self.listeners:
                         await self.listeners[event.__class__](event, self)
 
                 return {'code': 200, 'message': 'ok'}
             except Exception as e:
-                await self.logger.error(f"Error in lark callback: {traceback.format_exc()}")
+                await self.logger.error(f'Error in lark callback: {traceback.format_exc()}')
                 return {'code': 500, 'message': 'error'}
 
-        
-
-
-
-
-
-
         async def on_message(event: lark_oapi.im.v1.P2ImMessageReceiveV1):
-
             lb_event = await self.event_converter.target2yiri(event, self.api_client)
 
             await self.listeners[type(lb_event)](lb_event, self)
@@ -435,29 +427,28 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
 
     async def is_stream_output_supported(self) -> bool:
         is_stream = False
-        if self.config.get("enable-stream-reply", None):
+        if self.config.get('enable-stream-reply', None):
             is_stream = True
         return is_stream
 
-    async def create_card_id(self,message_id):
+    async def create_card_id(self, message_id):
         try:
             is_stream = await self.is_stream_output_supported()
             if is_stream:
                 self.ap.logger.debug('飞书支持stream输出,创建卡片......')
 
-                card_data = {"schema": "2.0", "header": {"title": {"content": "bot", "tag": "plain_text"}},
-                             "body": {"elements": [
-                                 {"tag": "markdown", "content": "[思考中.....]", "element_id": "markdown_1"}]},
-                             "config": {"streaming_mode": True,
-                                        "streaming_config": {"print_strategy": "delay"}}}  # delay / fast
+                card_data = {
+                    'schema': '2.0',
+                    'header': {'title': {'content': 'bot', 'tag': 'plain_text'}},
+                    'body': {'elements': [{'tag': 'markdown', 'content': '[思考中.....]', 'element_id': 'markdown_1'}]},
+                    'config': {'streaming_mode': True, 'streaming_config': {'print_strategy': 'delay'}},
+                }  # delay / fast
 
-                request: CreateCardRequest = CreateCardRequest.builder() \
-                    .request_body(
-                    CreateCardRequestBody.builder()
-                    .type("card_json")
-                    .data(json.dumps(card_data)) \
+                request: CreateCardRequest = (
+                    CreateCardRequest.builder()
+                    .request_body(CreateCardRequestBody.builder().type('card_json').data(json.dumps(card_data)).build())
                     .build()
-                ).build()
+                )
 
                 # 发起请求
                 response: CreateCardResponse = self.api_client.cardkit.v1.card.create(request)
@@ -465,7 +456,8 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
                 # 处理失败返回
                 if not response.success():
                     raise Exception(
-                        f"client.cardkit.v1.card.create failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}, resp: \n{json.dumps(json.loads(response.raw.content), indent=4, ensure_ascii=False)}")
+                        f'client.cardkit.v1.card.create failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}, resp: \n{json.dumps(json.loads(response.raw.content), indent=4, ensure_ascii=False)}'
+                    )
 
                 self.ap.logger.debug(f'飞书卡片创建成功,卡片ID: {response.data.card_id}')
                 self.card_id_dict[message_id] = response.data.card_id
@@ -476,7 +468,7 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
         except Exception as e:
             self.ap.logger.error(f'飞书卡片创建失败,错误信息: {e}')
 
-    async def create_message_card(self,message_id,event) -> str:
+    async def create_message_card(self, message_id, event) -> str:
         """
         创建卡片消息。
         使用卡片消息是因为普通消息更新次数有限制，而大模型流式返回结果可能很多而超过限制，而飞书卡片没有这个限制
@@ -545,7 +537,6 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
                 f'client.im.v1.message.reply failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}, resp: \n{json.dumps(json.loads(response.raw.content), indent=4, ensure_ascii=False)}'
             )
 
-
     async def reply_message_chunk(
         self,
         message_source: platform_events.MessageEvent,
@@ -559,10 +550,7 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
         """
         lark_message = await self.message_converter.yiri2target(message, self.api_client)
 
-
         self.seq += 1
-
-
 
         text_message = ''
         for ele in lark_message[0]:
@@ -570,22 +558,25 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
                 text_message += ele['text']
             elif ele['tag'] == 'md':
                 text_message += ele['text']
-        print(text_message)
 
         content = {
             'type': 'card_json',
             'data': {'card_id': self.card_id_dict[message_id], 'elements': {'content': text_message}},
         }
 
-        request: ContentCardElementRequest = ContentCardElementRequest.builder() \
-            .card_id(self.card_id_dict[message_id]) \
-            .element_id("markdown_1") \
-            .request_body(ContentCardElementRequestBody.builder()
-                          # .uuid("a0d69e20-1dd1-458b-k525-dfeca4015204")
-                          .content(text_message)
-                          .sequence(self.seq)
-                          .build()) \
+        request: ContentCardElementRequest = (
+            ContentCardElementRequest.builder()
+            .card_id(self.card_id_dict[message_id])
+            .element_id('markdown_1')
+            .request_body(
+                ContentCardElementRequestBody.builder()
+                # .uuid("a0d69e20-1dd1-458b-k525-dfeca4015204")
+                .content(text_message)
+                .sequence(self.seq)
+                .build()
+            )
             .build()
+        )
 
         if is_final:
             self.seq = 1
@@ -593,20 +584,12 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
         # 发起请求
         response: ContentCardElementResponse = self.api_client.cardkit.v1.card_element.content(request)
 
-
         # 处理失败返回
         if not response.success():
             raise Exception(
                 f'client.im.v1.message.patch failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}, resp: \n{json.dumps(json.loads(response.raw.content), indent=4, ensure_ascii=False)}'
             )
             return
-
-
-
-
-
-
-
 
     async def is_muted(self, group_id: int) -> bool:
         return False
