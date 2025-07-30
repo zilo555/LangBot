@@ -34,6 +34,7 @@ import {
 } from '@/app/infra/entities/api';
 import { GetBotLogsRequest } from '@/app/infra/http/requestParam/bots/GetBotLogsRequest';
 import { GetBotLogsResponse } from '@/app/infra/http/requestParam/bots/GetBotLogsResponse';
+import {boolean} from "zod";
 
 type JSONValue = string | number | boolean | JSONObject | JSONArray | null;
 interface JSONObject {
@@ -309,12 +310,14 @@ class HttpClient {
     messageChain: object[],
     pipelineId: string,
     timeout: number = 15000,
+    is_stream: boolean = false,
   ): Promise<ApiRespWebChatMessage> {
     return this.post(
       `/api/v1/pipelines/${pipelineId}/chat/send`,
       {
         session_type: sessionType,
         message: messageChain,
+        is_stream: is_stream,
       },
       {
         timeout,
