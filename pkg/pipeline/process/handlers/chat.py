@@ -73,25 +73,25 @@ class ChatMessageHandler(handler.MessageHandler):
                     raise ValueError(f'未找到请求运行器: {query.pipeline_config["ai"]["runner"]["runner"]}')
                 if is_stream:
                     resp_message_id = uuid.uuid4()
-                    if await query.adapter.create_message_card(resp_message_id, query.message_event):
-                        async for result in runner.run(query):
-                            result.resp_message_id = resp_message_id
-                            if query.resp_messages:
-                                query.resp_messages.pop()
-                            if query.resp_message_chain:
-                                query.resp_message_chain.pop()
+                    await query.adapter.create_message_card(resp_message_id, query.message_event)
+                    async for result in runner.run(query):
+                        result.resp_message_id = resp_message_id
+                        if query.resp_messages:
+                            query.resp_messages.pop()
+                        if query.resp_message_chain:
+                            query.resp_message_chain.pop()
 
-                            query.resp_messages.append(result)
-                            self.ap.logger.info(
-                                f'对话({query.query_id})流式响应: {self.cut_str(result.readable_str())}'
-                            )
+                        query.resp_messages.append(result)
+                        self.ap.logger.info(
+                            f'对话({query.query_id})流式响应: {self.cut_str(result.readable_str())}'
+                        )
 
-                            if result.content is not None:
-                                text_length += len(result.content)
+                        if result.content is not None:
+                            text_length += len(result.content)
 
-                            yield entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
-                    else:
-                        yield entities.StageProcessResult(result_type=entities.ResultType.INTERRUPT, new_query=query)
+                        yield entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
+                    # else:
+                    #     yield entities.StageProcessResult(result_type=entities.ResultType.INTERRUPT, new_query=query)
 
                 else:
                     async for result in runner.run(query):
