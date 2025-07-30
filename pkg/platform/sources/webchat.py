@@ -25,11 +25,13 @@ class WebChatSession:
     id: str
     message_lists: dict[str, list[WebChatMessage]] = {}
     resp_waiters: dict[int, asyncio.Future[WebChatMessage]]
+    resp_queues = dict[int, asyncio.Queue[WebChatMessage]]
 
     def __init__(self, id: str):
         self.id = id
         self.message_lists = {}
         self.resp_waiters = {}
+        self.resp_queues = {}
 
     def get_message_list(self, pipeline_uuid: str) -> list[WebChatMessage]:
         if pipeline_uuid not in self.message_lists:
@@ -108,6 +110,35 @@ class WebChatAdapter(msadapter.MessagePlatformAdapter):
 
         return message_data.model_dump()
 
+    async def reply_message_chunk(
+        self,
+        message_source: platform_events.MessageEvent,
+        message_id: str,
+        message: platform_message.MessageChain,
+        quote_origin: bool = False,
+        is_fianl: bool = False,
+    ) -> dict:
+        """回复消息"""
+        message_data = WebChatMessage(
+            id=-1,
+            role='assistant',
+            content=str(message),
+            message_chain=[component.__dict__ for component in message],
+            timestamp=datetime.now().isoformat(),
+        )
+
+        # notify waiter
+        if isinstance(message_source, platform_events.FriendMessage):
+            queue = self.webchat_person_session.resp_queues[message_source.message_chain.message_id]
+        elif isinstance(message_source, platform_events.GroupMessage):
+            queue = self.webchat_group_session.resp_queues[message_source.message_chain.message_id]
+
+        queue.put(message_data)
+        if is_fianl:
+            queue.put(None)
+
+        return message_data.model_dump()
+
     def register_listener(
         self,
         event_type: typing.Type[platform_events.Event],
@@ -140,7 +171,8 @@ class WebChatAdapter(msadapter.MessagePlatformAdapter):
         await self.logger.info('WebChat调试适配器正在停止')
 
     async def send_webchat_message(
-        self, pipeline_uuid: str, session_type: str, message_chain_obj: typing.List[dict]
+        self, pipeline_uuid: str, session_type: str, message_chain_obj: typing.List[dict],
+            is_stream: bool = False,
     ) -> dict:
         """发送调试消息到流水线"""
         if session_type == 'person':
@@ -188,18 +220,29 @@ class WebChatAdapter(msadapter.MessagePlatformAdapter):
         if event.__class__ in self.listeners:
             await self.listeners[event.__class__](event, self)
 
-        # set waiter
-        waiter = asyncio.Future[WebChatMessage]()
-        use_session.resp_waiters[message_id] = waiter
-        waiter.add_done_callback(lambda future: use_session.resp_waiters.pop(message_id))
+        if is_stream:
+            queue = use_session.resp_queues[message_id]
+            while True:
+                resp_message = await queue.get()
+                if resp_message is None:
+                    resp_message.id = len(use_session.get_message_list(pipeline_uuid)) + 1
+                    use_session.get_message_list(pipeline_uuid).append(resp_message)
+                    break
+                yield resp_message.model_dump()
 
-        resp_message = await waiter
+        else:
+            # set waiter
+            waiter = asyncio.Future[WebChatMessage]()
+            use_session.resp_waiters[message_id] = waiter
+            waiter.add_done_callback(lambda future: use_session.resp_waiters.pop(message_id))
 
-        resp_message.id = len(use_session.get_message_list(pipeline_uuid)) + 1
+            resp_message = await waiter
 
-        use_session.get_message_list(pipeline_uuid).append(resp_message)
+            resp_message.id = len(use_session.get_message_list(pipeline_uuid)) + 1
 
-        return resp_message.model_dump()
+            use_session.get_message_list(pipeline_uuid).append(resp_message)
+
+            yield resp_message.model_dump()
 
     def get_webchat_messages(self, pipeline_uuid: str, session_type: str) -> list[dict]:
         """获取调试消息历史"""
