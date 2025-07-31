@@ -34,7 +34,7 @@ import {
 } from '@/app/infra/entities/api';
 import { GetBotLogsRequest } from '@/app/infra/http/requestParam/bots/GetBotLogsRequest';
 import { GetBotLogsResponse } from '@/app/infra/http/requestParam/bots/GetBotLogsResponse';
-import {boolean} from "zod";
+
 
 type JSONValue = string | number | boolean | JSONObject | JSONArray | null;
 interface JSONObject {
@@ -329,13 +329,13 @@ class HttpClient {
     sessionType: string,
     messageChain: object[],
     pipelineId: string,
-    onMessage: (data: any) => void,
+    onMessage: (data: ApiRespWebChatMessage) => void,
     onComplete: () => void,
-    onError: (error: any) => void,
+    onError: (error: Error) => void,
   ): Promise<void> {
     try {
       const url = `${this.baseURL}/api/v1/pipelines/${pipelineId}/chat/send`;
-      
+
       // 使用fetch发送流式请求，因为axios在浏览器环境中不直接支持流式响应
       const response = await fetch(url, {
         method: 'POST',
@@ -365,7 +365,7 @@ class HttpClient {
       try {
         while (true) {
           const { done, value } = await reader.read();
-          
+
           if (done) {
             onComplete();
             break;
@@ -373,23 +373,23 @@ class HttpClient {
 
           // 解码数据
           buffer += decoder.decode(value, { stream: true });
-          
+
           // 处理完整的JSON对象
           const lines = buffer.split('\n\n');
           buffer = lines.pop() || '';
-          
+
           for (const line of lines) {
             if (line.startsWith('data: ')) {
               try {
                 const data = JSON.parse(line.slice(6));
-                
+
                 if (data.type === 'end') {
                   // 流传输结束
                   reader.cancel();
                   onComplete();
                   return;
                 }
-                
+
                 if (data.message) {
                   // 处理消息数据
                   onMessage(data);
@@ -404,7 +404,7 @@ class HttpClient {
         reader.releaseLock();
       }
     } catch (error) {
-      onError(error);
+      onError(error as Error);
     }
   }
 

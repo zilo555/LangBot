@@ -46,6 +46,18 @@ export default function DebugDialog({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const loadMessages = async (pipelineId: string) => {
+    try {
+      const response = await httpClient.getWebChatHistoryMessages(
+        pipelineId,
+        sessionType,
+      );
+      setMessages(response.messages);
+    } catch (error) {
+      console.error('Failed to load messages:', error);
+    }
+  };
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -61,7 +73,7 @@ export default function DebugDialog({
     if (open) {
       loadMessages(selectedPipelineId);
     }
-  }, [sessionType, selectedPipelineId]);
+  }, [sessionType, selectedPipelineId, open, loadMessages]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -85,18 +97,6 @@ export default function DebugDialog({
       setIsHovering(true);
     }
   }, [showAtPopover]);
-
-  const loadMessages = async (pipelineId: string) => {
-    try {
-      const response = await httpClient.getWebChatHistoryMessages(
-        pipelineId,
-        sessionType,
-      );
-      setMessages(response.messages);
-    } catch (error) {
-      console.error('Failed to load messages:', error);
-    }
-  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -179,12 +179,16 @@ export default function DebugDialog({
 
         // 添加用户消息和初始bot消息到状态
 
-        setMessages((prevMessages) => [...prevMessages, userMessage, botMessage]);
+        setMessages((prevMessages) => [
+          ...prevMessages,
+          userMessage,
+          botMessage,
+        ]);
         setInputValue('');
         setHasAt(false);
 
         try {
-          let botMessageId = botMessage.id;
+          const botMessageId = botMessage.id;
           let accumulatedContent = '';
 
           await httpClient.sendStreamingWebChatMessage(
@@ -200,14 +204,17 @@ export default function DebugDialog({
                 setMessages((prevMessages) => {
                   const updatedMessages = [...prevMessages];
                   const botMessageIndex = updatedMessages.findIndex(
-                    (msg) => msg.id === botMessageId && msg.role === 'assistant'
+                    (msg) =>
+                      msg.id === botMessageId && msg.role === 'assistant',
                   );
                   
                   if (botMessageIndex !== -1) {
                     const updatedBotMessage = {
                       ...updatedMessages[botMessageIndex],
                       content: accumulatedContent,
-                      message_chain: [{ type: 'Plain', text: accumulatedContent }],
+                      message_chain: [
+                        { type: 'Plain', text: accumulatedContent },
+                      ]
                     };
                     updatedMessages[botMessageIndex] = updatedBotMessage;
                   }
@@ -226,7 +233,7 @@ export default function DebugDialog({
               if (sessionType === 'person') {
                 toast.error(t('pipelines.debugDialog.sendFailed'));
               }
-            }
+            },
           );
         } catch (error) {
           console.error('Failed to send streaming message:', error);
@@ -378,7 +385,9 @@ export default function DebugDialog({
 
         <div className="p-4 pb-0 bg-white flex gap-2">
           <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">{t('pipelines.debugDialog.streaming')}</span>
+            <span className="text-sm text-gray-600">
+              {t('pipelines.debugDialog.streaming')}
+            </span>
             <Switch
               checked={isStreaming}
               onCheckedChange={setIsStreaming}
