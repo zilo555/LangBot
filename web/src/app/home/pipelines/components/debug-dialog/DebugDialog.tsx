@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { Message } from '@/app/infra/entities/message';
 import { toast } from 'sonner';
 import AtBadge from './AtBadge';
+import { Switch } from '@/components/ui/switch';
 
 interface MessageComponent {
   type: 'At' | 'Plain';
@@ -36,6 +37,7 @@ export default function DebugDialog({
   const [showAtPopover, setShowAtPopover] = useState(false);
   const [hasAt, setHasAt] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -157,27 +159,96 @@ export default function DebugDialog({
         // for showing
         text_content = '@webchatbot' + text_content;
       }
-
       const userMessage: Message = {
-        id: -1,
-        role: 'user',
-        content: text_content,
-        timestamp: new Date().toISOString(),
-        message_chain: messageChain,
-      };
+          id: -1,
+          role: 'user',
+          content: text_content,
+          timestamp: new Date().toISOString(),
+          message_chain: messageChain,
+        };
+      // 根据isStreaming状态决定使用哪种传输方式
+      if (isStreaming) {
+        // 创建初始bot消息
+        const botMessage: Message = {
+          id: -1,
+          role: 'assistant',
+          content: '',
+          timestamp: new Date().toISOString(),
+          message_chain: [{ type: 'Plain', text: '' }],
+        };
 
-      setMessages((prevMessages) => [...prevMessages, userMessage]);
-      setInputValue('');
-      setHasAt(false);
+        // 添加用户消息和初始bot消息到状态
 
-      const response = await httpClient.sendWebChatMessage(
-        sessionType,
-        messageChain,
-        selectedPipelineId,
-        120000,
-      );
+        setMessages((prevMessages) => [...prevMessages, userMessage, botMessage]);
+        setInputValue('');
+        setHasAt(false);
 
-      setMessages((prevMessages) => [...prevMessages, response.message]);
+        try {
+          let botMessageId = botMessage.id;
+          let accumulatedContent = '';
+
+          await httpClient.sendStreamingWebChatMessage(
+            sessionType,
+            messageChain,
+            selectedPipelineId,
+            (data) => {
+              // 处理流式响应数据
+              if (data.message) {
+                accumulatedContent += data.message;
+                
+                // 更新bot消息
+                setMessages((prevMessages) => {
+                  const updatedMessages = [...prevMessages];
+                  const botMessageIndex = updatedMessages.findIndex(
+                    (msg) => msg.id === botMessageId && msg.role === 'assistant'
+                  );
+                  
+                  if (botMessageIndex !== -1) {
+                    const updatedBotMessage = {
+                      ...updatedMessages[botMessageIndex],
+                      content: accumulatedContent,
+                      message_chain: [{ type: 'Plain', text: accumulatedContent }],
+                    };
+                    updatedMessages[botMessageIndex] = updatedBotMessage;
+                  }
+                  
+                  return updatedMessages;
+                });
+              }
+            },
+            () => {
+              // 流传输完成
+              console.log('Streaming completed');
+            },
+            (error) => {
+              // 处理错误
+              console.error('Streaming error:', error);
+              if (sessionType === 'person') {
+                toast.error(t('pipelines.debugDialog.sendFailed'));
+              }
+            }
+          );
+        } catch (error) {
+          console.error('Failed to send streaming message:', error);
+          if (sessionType === 'person') {
+            toast.error(t('pipelines.debugDialog.sendFailed'));
+          }
+        }
+      } else {
+
+        setMessages((prevMessages) => [...prevMessages, userMessage]);
+        setInputValue('');
+        setHasAt(false);
+
+        const response = await httpClient.sendWebChatMessage(
+          sessionType,
+          messageChain,
+          selectedPipelineId,
+          120000,
+        );
+
+        setMessages((prevMessages) => [...prevMessages, response.message]);
+      }
     } catch (
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       error: any
@@ -306,6 +377,13 @@ export default function DebugDialog({
         </ScrollArea>
 
         <div className="p-4 pb-0 bg-white flex gap-2">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">{t('pipelines.debugDialog.streaming')}</span>
+            <Switch
+              checked={isStreaming}
+              onCheckedChange={setIsStreaming}
+            />
+          </div>
           <div className="flex-1 flex items-center gap-2">
             {hasAt && (
               <AtBadge targetName="webchatbot" onRemove={handleAtRemove} />
