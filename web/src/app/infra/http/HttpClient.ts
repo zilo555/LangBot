@@ -35,7 +35,6 @@ import {
 import { GetBotLogsRequest } from '@/app/infra/http/requestParam/bots/GetBotLogsRequest';
 import { GetBotLogsResponse } from '@/app/infra/http/requestParam/bots/GetBotLogsResponse';
 
-
 type JSONValue = string | number | boolean | JSONObject | JSONArray | null;
 interface JSONObject {
   [key: string]: JSONValue;
