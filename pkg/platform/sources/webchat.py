@@ -51,6 +51,8 @@ class WebChatAdapter(msadapter.MessagePlatformAdapter):
         typing.Callable[[platform_events.Event, msadapter.MessagePlatformAdapter], None],
     ] = {}
 
+    is_stream: bool
+
     def __init__(self, config: dict, ap: app.Application, logger: EventLogger):
         self.ap = ap
         self.logger = logger
@@ -60,6 +62,8 @@ class WebChatAdapter(msadapter.MessagePlatformAdapter):
         self.webchat_group_session = WebChatSession(id='webchatgroup')
 
         self.bot_account_id = 'webchatbot'
+
+        self.is_stream = False
 
     async def send_message(
         self,
@@ -138,6 +142,9 @@ class WebChatAdapter(msadapter.MessagePlatformAdapter):
             queue.put(None)
 
         return message_data.model_dump()
+    
+    async def is_stream_output_supported(self) -> bool:
+        return self.is_stream
 
     def register_listener(
         self,
@@ -172,8 +179,9 @@ class WebChatAdapter(msadapter.MessagePlatformAdapter):
 
     async def send_webchat_message(
         self, pipeline_uuid: str, session_type: str, message_chain_obj: typing.List[dict],
-            is_stream: bool = False,
+        is_stream: bool = False,
     ) -> dict:
+        self.is_stream = is_stream
         """发送调试消息到流水线"""
         if session_type == 'person':
             use_session = self.webchat_person_session
