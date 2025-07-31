@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { DialogContent } from '@/components/ui/dialog';
@@ -46,7 +46,7 @@ export default function DebugDialog({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const loadMessages = async (pipelineId: string) => {
+  const loadMessages = useCallback(async (pipelineId: string) => {
     try {
       const response = await httpClient.getWebChatHistoryMessages(
         pipelineId,
@@ -56,7 +56,7 @@ export default function DebugDialog({
     } catch (error) {
       console.error('Failed to load messages:', error);
     }
-  };
+  }, [sessionType]);
 
   useEffect(() => {
     scrollToBottom();
@@ -160,12 +160,12 @@ export default function DebugDialog({
         text_content = '@webchatbot' + text_content;
       }
       const userMessage: Message = {
-          id: -1,
-          role: 'user',
-          content: text_content,
-          timestamp: new Date().toISOString(),
-          message_chain: messageChain,
-        };
+        id: -1,
+        role: 'user',
+        content: text_content,
+        timestamp: new Date().toISOString(),
+        message_chain: messageChain,
+      };
       // 根据isStreaming状态决定使用哪种传输方式
       if (isStreaming) {
         // 创建初始bot消息
@@ -199,7 +199,7 @@ export default function DebugDialog({
               // 处理流式响应数据
               if (data.message) {
                 accumulatedContent += data.message;
-                
+
                 // 更新bot消息
                 setMessages((prevMessages) => {
                   const updatedMessages = [...prevMessages];
@@ -207,18 +207,18 @@ export default function DebugDialog({
                     (msg) =>
                       msg.id === botMessageId && msg.role === 'assistant',
                   );
-                  
+
                   if (botMessageIndex !== -1) {
                     const updatedBotMessage = {
                       ...updatedMessages[botMessageIndex],
                       content: accumulatedContent,
                       message_chain: [
                         { type: 'Plain', text: accumulatedContent },
-                      ]
+                      ],
                     };
                     updatedMessages[botMessageIndex] = updatedBotMessage;
                   }
-                  
+
                   return updatedMessages;
                 });
               }
@@ -434,12 +434,12 @@ export default function DebugDialog({
             </div>
           </div>
           <Button
-            onClick={sendMessage}
-            disabled={!inputValue.trim() && !hasAt}
-            className="rounded-md bg-[#2288ee] hover:bg-[#2288ee] w-20 text-white px-6 py-2 text-base font-medium transition-none flex items-center gap-2 shadow-none"
-          >
-            <>{t('pipelines.debugDialog.send')}</>
-          </Button>
+          onClick={sendMessage}
+          disabled={!inputValue.trim() && !hasAt}
+          className="rounded-md bg-[#2288ee] hover:bg-[#2288ee] w-20 text-white px-6 py-2 text-base font-medium transition-none flex items-center gap-2 shadow-none"
+        >
+          <>{t('pipelines.debugDialog.send')}</>
+        </Button>
         </div>
       </div>
     </div>
