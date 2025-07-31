@@ -383,13 +383,20 @@ class HttpClient {
     onError: (error: Error) => void,
   ): Promise<void> {
     try {
-      const url = `${this.baseURL}/api/v1/pipelines/${pipelineId}/chat/send`;
+      // 构造完整的URL，处理相对路径的情况
+      let url = `${this.baseURL}/api/v1/pipelines/${pipelineId}/chat/send`;
+      if (this.baseURL === '/') {
+        // 获取用户访问的完整URL
+        const baseURL = window.location.origin;
+        url = `${baseURL}/api/v1/pipelines/${pipelineId}/chat/send`;
+      }
 
       // 使用fetch发送流式请求，因为axios在浏览器环境中不直接支持流式响应
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.getSessionSync()}`,
         },
         body: JSON.stringify({
           session_type: sessionType,

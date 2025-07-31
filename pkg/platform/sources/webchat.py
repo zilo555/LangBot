@@ -19,6 +19,7 @@ class WebChatMessage(BaseModel):
     content: str
     message_chain: list[dict]
     timestamp: str
+    is_final: bool = False
 
 
 class WebChatSession:
@@ -117,10 +118,10 @@ class WebChatAdapter(msadapter.MessagePlatformAdapter):
     async def reply_message_chunk(
         self,
         message_source: platform_events.MessageEvent,
-        message_id: str,
+        message_id: int,
         message: platform_message.MessageChain,
         quote_origin: bool = False,
-        is_fianl: bool = False,
+        is_final: bool = False,
     ) -> dict:
         """回复消息"""
         message_data = WebChatMessage(
@@ -132,14 +133,21 @@ class WebChatAdapter(msadapter.MessagePlatformAdapter):
         )
 
         # notify waiter
-        if isinstance(message_source, platform_events.FriendMessage):
-            queue = self.webchat_person_session.resp_queues[message_source.message_chain.message_id]
-        elif isinstance(message_source, platform_events.GroupMessage):
-            queue = self.webchat_group_session.resp_queues[message_source.message_chain.message_id]
+        session = (self.webchat_group_session if isinstance(message_source, platform_events.GroupMessage) else self.webchat_person_session)
+        if message_source.message_chain.message_id not in session.resp_waiters:
+            # session.resp_waiters[message_source.message_chain.message_id] = asyncio.Queue()
+            queue = session.resp_queues[message_source.message_chain.message_id]
 
-        queue.put(message_data)
-        if is_fianl:
-            queue.put(None)
+        # if isinstance(message_source, platform_events.FriendMessage):
+        #     queue = self.webchat_person_session.resp_queues[message_source.message_chain.message_id]
+        # elif isinstance(message_source, platform_events.GroupMessage):
+        #     queue = self.webchat_group_session.resp_queues[message_source.message_chain.message_id]
+        if is_final:
+            message_data.is_final = True
+        # print(message_data)
+        await queue.put(message_data)
+
+
 
         return message_data.model_dump()
     
@@ -192,6 +200,10 @@ class WebChatAdapter(msadapter.MessagePlatformAdapter):
 
         message_id = len(use_session.get_message_list(pipeline_uuid)) + 1
 
+        if is_stream:
+            use_session.resp_queues[message_id] = asyncio.Queue()
+            logger.debug(f"Initialized queue for message_id: {message_id}")
+
         use_session.get_message_list(pipeline_uuid).append(
             WebChatMessage(
                 id=message_id,
@@ -232,9 +244,11 @@ class WebChatAdapter(msadapter.MessagePlatformAdapter):
             queue = use_session.resp_queues[message_id]
             while True:
                 resp_message = await queue.get()
-                if resp_message is None:
+                print(resp_message)
+                if resp_message.is_final:
                     resp_message.id = len(use_session.get_message_list(pipeline_uuid)) + 1
                     use_session.get_message_list(pipeline_uuid).append(resp_message)
+                    yield resp_message.model_dump()
                     break
                 yield resp_message.model_dump()
 

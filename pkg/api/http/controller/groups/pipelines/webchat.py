@@ -15,7 +15,7 @@ class WebChatDebugRouterGroup(group.RouterGroup):
             async def stream_generator(generator):
                 async for message in generator:
                     yield rf"data:{json.dumps({'message': message})}\n\n"
-                yield "data:{'type': 'end'}\n\n''"
+                yield "data:{type: end}\n\n''"
             try:
                 data = await quart.request.get_json()
                 session_type = data.get('session_type', 'person')

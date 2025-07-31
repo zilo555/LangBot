@@ -46,17 +46,20 @@ export default function DebugDialog({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const loadMessages = useCallback(async (pipelineId: string) => {
-    try {
-      const response = await httpClient.getWebChatHistoryMessages(
-        pipelineId,
-        sessionType,
-      );
-      setMessages(response.messages);
-    } catch (error) {
-      console.error('Failed to load messages:', error);
-    }
-  }, [sessionType]);
+  const loadMessages = useCallback(
+    async (pipelineId: string) => {
+      try {
+        const response = await httpClient.getWebChatHistoryMessages(
+          pipelineId,
+          sessionType,
+        );
+        setMessages(response.messages);
+      } catch (error) {
+        console.error('Failed to load messages:', error);
+      }
+    },
+    [sessionType],
+  );
 
   useEffect(() => {
     scrollToBottom();
@@ -242,7 +245,6 @@ export default function DebugDialog({
           }
         }
       } else {
-
         setMessages((prevMessages) => [...prevMessages, userMessage]);
         setInputValue('');
         setHasAt(false);
@@ -388,10 +390,7 @@ export default function DebugDialog({
             <span className="text-sm text-gray-600">
               {t('pipelines.debugDialog.streaming')}
             </span>
-            <Switch
-              checked={isStreaming}
-              onCheckedChange={setIsStreaming}
-            />
+            <Switch checked={isStreaming} onCheckedChange={setIsStreaming} />
           </div>
           <div className="flex-1 flex items-center gap-2">
             {hasAt && (
@@ -434,12 +433,12 @@ export default function DebugDialog({
             </div>
           </div>
           <Button
-          onClick={sendMessage}
-          disabled={!inputValue.trim() && !hasAt}
-          className="rounded-md bg-[#2288ee] hover:bg-[#2288ee] w-20 text-white px-6 py-2 text-base font-medium transition-none flex items-center gap-2 shadow-none"
-        >
-          <>{t('pipelines.debugDialog.send')}</>
-        </Button>
+            onClick={sendMessage}
+            disabled={!inputValue.trim() && !hasAt}
+            className="rounded-md bg-[#2288ee] hover:bg-[#2288ee] w-20 text-white px-6 py-2 text-base font-medium transition-none flex items-center gap-2 shadow-none"
+          >
+            <>{t('pipelines.debugDialog.send')}</>
+          </Button>
         </div>
       </div>
     </div>
