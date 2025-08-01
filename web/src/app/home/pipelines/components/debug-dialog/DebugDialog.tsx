@@ -201,15 +201,17 @@ export default function DebugDialog({
             (data) => {
               // 处理流式响应数据
               if (data.message) {
-                accumulatedContent += data.message;
+                accumulatedContent += data.message.content;
 
                 // 更新bot消息
                 setMessages((prevMessages) => {
                   const updatedMessages = [...prevMessages];
-                  const botMessageIndex = updatedMessages.findIndex(
-                    (msg) =>
-                      msg.id === botMessageId && msg.role === 'assistant',
-                  );
+                  //                   const botMessageIndex = updatedMessages.findIndex(
+                  //                     (msg) =>
+                  //                       msg.id === botMessageId && msg.role === 'assistant',
+                  //                   );
+                  // 使用索引来更新消息，而不是id匹配
+                  const botMessageIndex = updatedMessages.length - 1;
 
                   if (botMessageIndex !== -1) {
                     const updatedBotMessage = {

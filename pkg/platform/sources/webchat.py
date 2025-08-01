@@ -242,11 +242,12 @@ class WebChatAdapter(msadapter.MessagePlatformAdapter):
 
         if is_stream:
             queue = use_session.resp_queues[message_id]
+            msg_id = len(use_session.get_message_list(pipeline_uuid)) + 1
             while True:
                 resp_message = await queue.get()
-                print(resp_message)
+                resp_message.id = msg_id
                 if resp_message.is_final:
-                    resp_message.id = len(use_session.get_message_list(pipeline_uuid)) + 1
+                    resp_message.id = msg_id
                     use_session.get_message_list(pipeline_uuid).append(resp_message)
                     yield resp_message.model_dump()
                     break

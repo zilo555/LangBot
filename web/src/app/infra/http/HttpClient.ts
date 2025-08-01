@@ -359,14 +359,12 @@ class HttpClient {
     messageChain: object[],
     pipelineId: string,
     timeout: number = 15000,
-    is_stream: boolean = false,
   ): Promise<ApiRespWebChatMessage> {
     return this.post(
       `/api/v1/pipelines/${pipelineId}/chat/send`,
       {
         session_type: sessionType,
         message: messageChain,
-        is_stream: is_stream,
       },
       {
         timeout,
@@ -432,10 +430,10 @@ class HttpClient {
 
           // 处理完整的JSON对象
           const lines = buffer.split('\n\n');
-          buffer = lines.pop() || '';
+          buffer = '';
 
           for (const line of lines) {
-            if (line.startsWith('data: ')) {
+            if (line.startsWith('data:')) {
               try {
                 const data = JSON.parse(line.slice(6));
 
