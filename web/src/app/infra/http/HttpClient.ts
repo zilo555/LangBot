@@ -430,12 +430,12 @@ class HttpClient {
 
           // 处理完整的JSON对象
           const lines = buffer.split('\n\n');
-          buffer = '';
+          buffer = lines.pop() || '';
 
           for (const line of lines) {
             if (line.startsWith('data:')) {
               try {
-                const data = JSON.parse(line.slice(6));
+                const data = JSON.parse(line.slice(5));
 
                 if (data.type === 'end') {
                   // 流传输结束

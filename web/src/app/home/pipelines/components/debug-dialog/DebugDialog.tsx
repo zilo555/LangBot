@@ -42,9 +42,24 @@ export default function DebugDialog({
   const inputRef = useRef<HTMLInputElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  //   const scrollToBottom = () => {
+  //     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  //   };
+
+  const scrollToBottom = useCallback(() => {
+    // 使用setTimeout确保在DOM更新后执行滚动
+    setTimeout(() => {
+      const scrollArea = document.querySelector('.scroll-area') as HTMLElement;
+      if (scrollArea) {
+        scrollArea.scrollTo({
+          top: scrollArea.scrollHeight,
+          behavior: 'smooth',
+        });
+      }
+      // 同时确保messagesEndRef也滚动到视图
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 0);
+  }, []);
 
   const loadMessages = useCallback(
     async (pipelineId: string) => {
@@ -60,10 +75,10 @@ export default function DebugDialog({
     },
     [sessionType],
   );
-
+  // 在useEffect中监听messages变化时滚动
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
   useEffect(() => {
     if (open) {
@@ -175,7 +190,7 @@ export default function DebugDialog({
         const botMessage: Message = {
           id: -1,
           role: 'assistant',
-          content: '',
+          content: '生成中...',
           timestamp: new Date().toISOString(),
           message_chain: [{ type: 'Plain', text: '' }],
         };
@@ -191,8 +206,9 @@ export default function DebugDialog({
         setHasAt(false);
 
         try {
-          const botMessageId = botMessage.id;
-          let accumulatedContent = '';
+          let fullContent = ''; // 保存完整内容
+          let displayContent = ''; // 当前显示内容
+          let typingInterval: NodeJS.Timeout;
 
           await httpClient.sendStreamingWebChatMessage(
             sessionType,
@@ -201,40 +217,76 @@ export default function DebugDialog({
             (data) => {
               // 处理流式响应数据
               if (data.message) {
-                accumulatedContent += data.message.content;
+                // 更新完整内容
+                fullContent = data.message.content;
 
-                // 更新bot消息
-                setMessages((prevMessages) => {
-                  const updatedMessages = [...prevMessages];
-                  //                   const botMessageIndex = updatedMessages.findIndex(
-                  //                     (msg) =>
-                  //                       msg.id === botMessageId && msg.role === 'assistant',
-                  //                   );
-                  // 使用索引来更新消息，而不是id匹配
-                  const botMessageIndex = updatedMessages.length - 1;
+                // 清除之前的打字效果
+                if (typingInterval) {
+                  clearInterval(typingInterval);
+                }
 
-                  if (botMessageIndex !== -1) {
-                    const updatedBotMessage = {
-                      ...updatedMessages[botMessageIndex],
-                      content: accumulatedContent,
-                      message_chain: [
-                        { type: 'Plain', text: accumulatedContent },
-                      ],
-                    };
-                    updatedMessages[botMessageIndex] = updatedBotMessage;
+                // 开始新的打字效果
+                let currentPos = displayContent.length;
+                const targetContent = fullContent;
+
+                typingInterval = setInterval(() => {
+                  if (currentPos < targetContent.length) {
+                    displayContent = targetContent.substring(0, currentPos + 1);
+                    currentPos++;
+
+                    // 更新bot消息
+                    setMessages((prevMessages) => {
+                      const updatedMessages = [...prevMessages];
+                      const botMessageIndex = updatedMessages.length - 1;
+
+                      if (botMessageIndex !== -1) {
+                        const updatedBotMessage = {
+                          ...updatedMessages[botMessageIndex],
+                          content: displayContent,
+                          message_chain: [
+                            { type: 'Plain', text: displayContent },
+                          ],
+                        };
+                        updatedMessages[botMessageIndex] = updatedBotMessage;
+                      }
+                      setTimeout(scrollToBottom, 0); // 确保在状态更新后滚动
+                      return updatedMessages;
+                    });
+                  } else {
+                    clearInterval(typingInterval);
                   }
-
-                  return updatedMessages;
-                });
+                }, 30); // 调整这个值可以改变打字速度
               }
             },
             () => {
               // 流传输完成
               console.log('Streaming completed');
+              if (typingInterval) {
+                clearInterval(typingInterval);
+              }
+              // 确保最终内容完全显示
+              setMessages((prevMessages) => {
+                const updatedMessages = [...prevMessages];
+                const botMessageIndex = updatedMessages.length - 1;
+
+                if (botMessageIndex !== -1) {
+                  const updatedBotMessage = {
+                    ...updatedMessages[botMessageIndex],
+                    content: fullContent,
+                    message_chain: [{ type: 'Plain', text: fullContent }],
+                  };
+                  updatedMessages[botMessageIndex] = updatedBotMessage;
+                }
+                setTimeout(scrollToBottom, 0); // 确保在状态更新后滚动
+                return updatedMessages;
+              });
             },
             (error) => {
               // 处理错误
               console.error('Streaming error:', error);
+              if (typingInterval) {
+                clearInterval(typingInterval);
+              }
               if (sessionType === 'person') {
                 toast.error(t('pipelines.debugDialog.sendFailed'));
               }
