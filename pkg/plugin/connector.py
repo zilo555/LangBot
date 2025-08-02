@@ -140,4 +140,5 @@ class PluginRuntimeConnector:
 
     def dispose(self):
         if isinstance(self.ctrl, stdio_client_controller.StdioClientController):
+            self.ap.logger.info('Terminating plugin runtime process...')
             self.ctrl.process.terminate()
