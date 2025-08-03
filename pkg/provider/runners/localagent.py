@@ -63,8 +63,7 @@ class LocalAgentRunner(runner.RequestRunner):
                                 id=tool_call.id,
                                 type=tool_call.type,
                                 function=llm_entities.FunctionCall(
-                                    name=tool_call.function.name if tool_call.function else '',
-                                    arguments=''
+                                    name=tool_call.function.name if tool_call.function else '', arguments=''
                                 ),
                             )
                         if tool_call.function and tool_call.function.arguments:

@@ -9,7 +9,6 @@ import re
 import base64
 import uuid
 import json
-import time
 import datetime
 import hashlib
 from Crypto.Cipher import AES
@@ -394,14 +393,14 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
                 if 'im.message.receive_v1' == type:
                     try:
                         event = await self.event_converter.target2yiri(p2v1, self.api_client)
-                    except Exception as e:
+                    except Exception:
                         await self.logger.error(f'Error in lark callback: {traceback.format_exc()}')
 
                     if event.__class__ in self.listeners:
                         await self.listeners[event.__class__](event, self)
 
                 return {'code': 200, 'message': 'ok'}
-            except Exception as e:
+            except Exception:
                 await self.logger.error(f'Error in lark callback: {traceback.format_exc()}')
                 return {'code': 500, 'message': 'error'}
 
@@ -559,10 +558,10 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
             elif ele['tag'] == 'md':
                 text_message += ele['text']
 
-        content = {
-            'type': 'card_json',
-            'data': {'card_id': self.card_id_dict[message_id], 'elements': {'content': text_message}},
-        }
+        # content = {
+        #     'type': 'card_json',
+        #     'data': {'card_id': self.card_id_dict[message_id], 'elements': {'content': text_message}},
+        # }
 
         request: ContentCardElementRequest = (
             ContentCardElementRequest.builder()

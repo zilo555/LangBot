@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import time
 
 import telegram
 import telegram.ext
@@ -166,7 +165,7 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
                 lb_event = await self.event_converter.target2yiri(update, self.bot, self.bot_account_id)
                 await self.listeners[type(lb_event)](lb_event, self)
                 await self.is_stream_output_supported()
-            except Exception as e:
+            except Exception:
                 await self.logger.error(f'Error in telegram callback: {traceback.format_exc()}')
 
         self.application = ApplicationBuilder().token(self.config['token']).build()

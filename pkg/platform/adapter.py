@@ -25,7 +25,6 @@ class MessagePlatformAdapter(metaclass=abc.ABCMeta):
 
     logger: EventLogger
 
-
     def __init__(self, config: dict, ap: app.Application, logger: EventLogger):
         """初始化适配器
 
@@ -80,12 +79,12 @@ class MessagePlatformAdapter(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
-    async def create_message_card(self, message_id:typing.Type[str,int], event:platform_events.MessageEvent) -> bool:
+    async def create_message_card(self, message_id: typing.Type[str, int], event: platform_events.MessageEvent) -> bool:
         """创建卡片消息
         Args:
             message_id (str): 消息ID
             event (platform_events.MessageEvent): 消息源事件
-            """
+        """
         return False
 
     async def is_muted(self, group_id: int) -> bool:
@@ -94,8 +93,8 @@ class MessagePlatformAdapter(metaclass=abc.ABCMeta):
 
     def register_listener(
         self,
-        event_type: typing.Type[platform_message.Event],
-        callback: typing.Callable[[platform_message.Event, MessagePlatformAdapter], None],
+        event_type: typing.Type[platform_events.Event],
+        callback: typing.Callable[[platform_events.Event, MessagePlatformAdapter], None],
     ):
         """注册事件监听器
 
@@ -107,8 +106,8 @@ class MessagePlatformAdapter(metaclass=abc.ABCMeta):
 
     def unregister_listener(
         self,
-        event_type: typing.Type[platform_message.Event],
-        callback: typing.Callable[[platform_message.Event, MessagePlatformAdapter], None],
+        event_type: typing.Type[platform_events.Event],
+        callback: typing.Callable[[platform_events.Event, MessagePlatformAdapter], None],
     ):
         """注销事件监听器
 
@@ -167,7 +166,7 @@ class EventConverter:
     """事件转换器基类"""
 
     @staticmethod
-    def yiri2target(event: typing.Type[platform_message.Event]):
+    def yiri2target(event: typing.Type[platform_events.Event]):
         """将源平台事件转换为目标平台事件
 
         Args:
@@ -179,7 +178,7 @@ class EventConverter:
         raise NotImplementedError
 
     @staticmethod
-    def target2yiri(event: typing.Any) -> platform_message.Event:
+    def target2yiri(event: typing.Any) -> platform_events.Event:
         """将目标平台事件的调用参数转换为源平台的事件参数对象
 
         Args:

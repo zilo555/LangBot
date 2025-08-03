@@ -127,6 +127,7 @@ class Message(pydantic.BaseModel):
 
 class MessageChunk(pydantic.BaseModel):
     """消息"""
+
     resp_message_id: typing.Optional[str] = None
     """消息id"""
 
@@ -148,7 +149,7 @@ class MessageChunk(pydantic.BaseModel):
     tool_call_id: typing.Optional[str] = None
 
     # tool_calls: typing.Optional[list[ToolCallChunk]] = None
-    
+
     is_final: bool = False
 
     def readable_str(self) -> str:
@@ -209,6 +210,7 @@ class ToolCallChunk(pydantic.BaseModel):
 
     function: FunctionCall
     """函数调用"""
+
 
 class Prompt(pydantic.BaseModel):
     """供AI使用的Prompt"""

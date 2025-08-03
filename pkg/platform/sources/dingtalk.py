@@ -149,10 +149,10 @@ class DingTalkAdapter(adapter.MessagePlatformAdapter):
         quote_origin: bool = False,
         is_final: bool = False,
     ):
-        event = await DingTalkEventConverter.yiri2target(
-            message_source,
-        )
-        incoming_message = event.incoming_message
+        # event = await DingTalkEventConverter.yiri2target(
+        #     message_source,
+        # )
+        # incoming_message = event.incoming_message
 
         # msg_id = incoming_message.message_id
 
@@ -205,7 +205,6 @@ class DingTalkAdapter(adapter.MessagePlatformAdapter):
             self.bot.on_message('GroupMessage')(on_message)
 
     async def run_async(self):
-
         await self.bot.start()
 
     async def kill(self) -> bool:

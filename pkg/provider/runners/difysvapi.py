@@ -348,7 +348,9 @@ class DifyServiceAPIRunner(runner.RequestRunner):
         except AttributeError:
             is_stream = False
 
-        batch_pending_index = 0
+        _ = is_stream
+
+        # batch_pending_index = 0
 
         plain_text, image_ids = await self._preprocess_user_message(query)
 
