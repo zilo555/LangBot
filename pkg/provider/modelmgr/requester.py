@@ -75,7 +75,6 @@ class LLMAPIRequester(metaclass=abc.ABCMeta):
         """
         pass
 
-    @abc.abstractmethod
     async def invoke_llm_stream(
         self,
         query: core_entities.Query,

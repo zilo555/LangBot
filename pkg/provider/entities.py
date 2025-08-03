@@ -148,8 +148,6 @@ class MessageChunk(pydantic.BaseModel):
 
     tool_call_id: typing.Optional[str] = None
 
-    # tool_calls: typing.Optional[list[ToolCallChunk]] = None
-
     is_final: bool = False
 
     def readable_str(self) -> str:
