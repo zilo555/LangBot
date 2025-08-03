@@ -94,19 +94,18 @@ class ProviderAPIRequester(metaclass=abc.ABCMeta):
             extra_args (dict[str, typing.Any], optional): 额外的参数. Defaults to {}.
 
         Returns:
-            llm_entities.Message | typing.AsyncGenerator[llm_entities.MessageChunk]: 返回消息对象
+            llm_entities.Message: 返回消息对象
         """
         pass
 
     @abc.abstractmethod
     async def invoke_llm_stream(
-            self,
-            query: core_entities.Query,
-            model: RuntimeLLMModel,
-            messages: typing.List[llm_entities.Message],
-            funcs: typing.List[tools_entities.LLMFunction] = None,
-            stream: bool = False,
-            extra_args: dict[str, typing.Any] = {},
+        self,
+        query: core_entities.Query,
+        model: RuntimeLLMModel,
+        messages: typing.List[llm_entities.Message],
+        funcs: typing.List[tools_entities.LLMFunction] = None,
+        extra_args: dict[str, typing.Any] = {},
     ) -> llm_entities.MessageChunk:
         """调用API
 
@@ -117,7 +116,7 @@ class ProviderAPIRequester(metaclass=abc.ABCMeta):
             extra_args (dict[str, typing.Any], optional): 额外的参数. Defaults to {}.
 
         Returns:
-            llm_entities.Message | typing.AsyncGenerator[llm_entities.MessageChunk]: 返回消息对象
+            typing.AsyncGenerator[llm_entities.MessageChunk]: 返回消息对象
         """
         pass
 

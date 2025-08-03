@@ -14,8 +14,9 @@ class WebChatDebugRouterGroup(group.RouterGroup):
 
             async def stream_generator(generator):
                 async for message in generator:
-                    yield f"data: {json.dumps({'message': message})}\n\n"
-                yield "data: {\"type\": \"end\"}\n\n"
+                    yield f'data: {json.dumps({"message": message})}\n\n'
+                yield 'data: {"type": "end"}\n\n'
+
             try:
                 data = await quart.request.get_json()
                 session_type = data.get('session_type', 'person')
@@ -34,18 +35,18 @@ class WebChatDebugRouterGroup(group.RouterGroup):
                     return self.http_status(404, -1, 'WebChat adapter not found')
 
                 if is_stream:
-
-                    generator = webchat_adapter.send_webchat_message(pipeline_uuid, session_type, message_chain_obj, is_stream)
-
-                    return quart.Response(
-                        stream_generator(generator),
-                        mimetype='text/event-stream'
+                    generator = webchat_adapter.send_webchat_message(
+                        pipeline_uuid, session_type, message_chain_obj, is_stream
                     )
+
+                    return quart.Response(stream_generator(generator), mimetype='text/event-stream')
 
                 else:
                     # result = await webchat_adapter.send_webchat_message(pipeline_uuid, session_type, message_chain_obj)
                     result = None
-                    async for message in webchat_adapter.send_webchat_message(pipeline_uuid, session_type, message_chain_obj):
+                    async for message in webchat_adapter.send_webchat_message(
+                        pipeline_uuid, session_type, message_chain_obj
+                    ):
                         result = message
                     if result is not None:
                         return self.success(
@@ -55,7 +56,6 @@ class WebChatDebugRouterGroup(group.RouterGroup):
                         )
                     else:
                         return self.http_status(400, -1, 'message is required')
-
 
             except Exception as e:
                 return self.http_status(500, -1, f'Internal server error: {str(e)}')

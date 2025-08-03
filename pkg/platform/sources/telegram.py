@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import time
 
 import telegram
 import telegram.ext

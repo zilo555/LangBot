@@ -149,10 +149,10 @@ class DingTalkAdapter(adapter.MessagePlatformAdapter):
         quote_origin: bool = False,
         is_final: bool = False,
     ):
-        event = await DingTalkEventConverter.yiri2target(
-            message_source,
-        )
-        incoming_message = event.incoming_message
+        # event = await DingTalkEventConverter.yiri2target(
+        #     message_source,
+        # )
+        # incoming_message = event.incoming_message
 
         # msg_id = incoming_message.message_id
 

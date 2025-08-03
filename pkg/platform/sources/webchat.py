@@ -133,7 +133,11 @@ class WebChatAdapter(msadapter.MessagePlatformAdapter):
         )
 
         # notify waiter
-        session = (self.webchat_group_session if isinstance(message_source, platform_events.GroupMessage) else self.webchat_person_session)
+        session = (
+            self.webchat_group_session
+            if isinstance(message_source, platform_events.GroupMessage)
+            else self.webchat_person_session
+        )
         if message_source.message_chain.message_id not in session.resp_waiters:
             # session.resp_waiters[message_source.message_chain.message_id] = asyncio.Queue()
             queue = session.resp_queues[message_source.message_chain.message_id]
@@ -147,10 +151,8 @@ class WebChatAdapter(msadapter.MessagePlatformAdapter):
         # print(message_data)
         await queue.put(message_data)
 
-
-
         return message_data.model_dump()
-    
+
     async def is_stream_output_supported(self) -> bool:
         return self.is_stream
 
@@ -186,7 +188,10 @@ class WebChatAdapter(msadapter.MessagePlatformAdapter):
         await self.logger.info('WebChat调试适配器正在停止')
 
     async def send_webchat_message(
-        self, pipeline_uuid: str, session_type: str, message_chain_obj: typing.List[dict],
+        self,
+        pipeline_uuid: str,
+        session_type: str,
+        message_chain_obj: typing.List[dict],
         is_stream: bool = False,
     ) -> dict:
         self.is_stream = is_stream
@@ -202,7 +207,7 @@ class WebChatAdapter(msadapter.MessagePlatformAdapter):
 
         if is_stream:
             use_session.resp_queues[message_id] = asyncio.Queue()
-            logger.debug(f"Initialized queue for message_id: {message_id}")
+            logger.debug(f'Initialized queue for message_id: {message_id}')
 
         use_session.get_message_list(pipeline_uuid).append(
             WebChatMessage(

@@ -8,7 +8,7 @@ import openai.types.chat.chat_completion as chat_completion
 import httpx
 
 from .. import errors, requester
-from ....core import entities as core_entities, app
+from ....core import entities as core_entities
 from ... import entities as llm_entities
 from ...tools import entities as tools_entities
 
@@ -129,11 +129,9 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
         req_messages: list[dict],
         use_model: requester.RuntimeLLMModel,
         use_funcs: list[tools_entities.LLMFunction] = None,
-        stream: bool = False,
         extra_args: dict[str, typing.Any] = {},
-    ) ->llm_entities.MessageChunk:
+    ) -> llm_entities.MessageChunk:
         self.client.api_key = use_model.token_mgr.get_token()
-
 
         args = {}
         args['model'] = use_model.model_entity.name
@@ -158,43 +156,42 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
 
         args['messages'] = messages
 
-        if stream:
-            current_content = ''
-            args['stream'] = True
-            chunk_idx = 0
-            self.is_content = False
-            tool_calls_map: dict[str, llm_entities.ToolCall] = {}
-            pipeline_config = query.pipeline_config
-            async for chunk in self._req_stream(args, extra_body=extra_args):
-                # 处理流式消息
-                delta_message = await self._make_msg_chunk(pipeline_config, chunk, chunk_idx)
-                if delta_message.content:
-                    current_content += delta_message.content
-                    delta_message.content = current_content
-                    # delta_message.all_content = current_content
-                if delta_message.tool_calls:
-                    for tool_call in delta_message.tool_calls:
-                        if tool_call.id not in tool_calls_map:
-                            tool_calls_map[tool_call.id] = llm_entities.ToolCall(
-                                id=tool_call.id,
-                                type=tool_call.type,
-                                function=llm_entities.FunctionCall(
-                                    name=tool_call.function.name if tool_call.function else '', arguments=''
-                                ),
-                            )
-                        if tool_call.function and tool_call.function.arguments:
-                            # 流式处理中，工具调用参数可能分多个chunk返回，需要追加而不是覆盖
-                            tool_calls_map[tool_call.id].function.arguments += tool_call.function.arguments
+        current_content = ''
+        args['stream'] = True
+        chunk_idx = 0
+        self.is_content = False
+        tool_calls_map: dict[str, llm_entities.ToolCall] = {}
+        pipeline_config = query.pipeline_config
+        async for chunk in self._req_stream(args, extra_body=extra_args):
+            # 处理流式消息
+            delta_message = await self._make_msg_chunk(pipeline_config, chunk, chunk_idx)
+            if delta_message.content:
+                current_content += delta_message.content
+                delta_message.content = current_content
+                # delta_message.all_content = current_content
+            if delta_message.tool_calls:
+                for tool_call in delta_message.tool_calls:
+                    if tool_call.id not in tool_calls_map:
+                        tool_calls_map[tool_call.id] = llm_entities.ToolCall(
+                            id=tool_call.id,
+                            type=tool_call.type,
+                            function=llm_entities.FunctionCall(
+                                name=tool_call.function.name if tool_call.function else '', arguments=''
+                            ),
+                        )
+                    if tool_call.function and tool_call.function.arguments:
+                        # 流式处理中，工具调用参数可能分多个chunk返回，需要追加而不是覆盖
+                        tool_calls_map[tool_call.id].function.arguments += tool_call.function.arguments
 
-                chunk_idx += 1
-                chunk_choices = getattr(chunk, 'choices', None)
-                if chunk_choices and getattr(chunk_choices[0], 'finish_reason', None):
-                    delta_message.is_final = True
-                    delta_message.content = current_content
+            chunk_idx += 1
+            chunk_choices = getattr(chunk, 'choices', None)
+            if chunk_choices and getattr(chunk_choices[0], 'finish_reason', None):
+                delta_message.is_final = True
+                delta_message.content = current_content
 
-                if chunk_idx % 64 == 0 or delta_message.is_final:
-                    yield delta_message
-                # return
+            if chunk_idx % 64 == 0 or delta_message.is_final:
+                yield delta_message
+            # return
 
     async def _closure(
         self,
@@ -202,7 +199,6 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
         req_messages: list[dict],
         use_model: requester.RuntimeLLMModel,
         use_funcs: list[tools_entities.LLMFunction] = None,
-        stream: bool = False,
         extra_args: dict[str, typing.Any] = {},
     ) -> llm_entities.Message:
         self.client.api_key = use_model.token_mgr.get_token()
@@ -317,7 +313,6 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
         model: requester.RuntimeLLMModel,
         messages: typing.List[llm_entities.Message],
         funcs: typing.List[tools_entities.LLMFunction] = None,
-        stream: bool = False,
         extra_args: dict[str, typing.Any] = {},
     ) -> llm_entities.MessageChunk:
         req_messages = []  # req_messages 仅用于类内，外部同步由 query.messages 进行
@@ -337,7 +332,6 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
                 req_messages=req_messages,
                 use_model=model,
                 use_funcs=funcs,
-                stream=stream,
                 extra_args=extra_args,
             ):
                 yield item

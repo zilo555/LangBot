@@ -3,12 +3,10 @@ from __future__ import annotations
 import random
 import asyncio
 
-from typing_inspection.typing_objects import is_final
 
 from ...platform.types import events as platform_events
 from ...platform.types import message as platform_message
 
-from ...provider import entities as llm_entities
 
 from .. import stage, entities
 from ...core import entities as core_entities
@@ -55,7 +53,5 @@ class SendResponseBackStage(stage.PipelineStage):
                 message=query.resp_message_chain[-1],
                 quote_origin=quote_origin,
             )
-
-
 
         return entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
