@@ -195,5 +195,4 @@ class GiteeAIChatCompletions(chatcmpl.OpenAIChatCompletions):
                 delta_message.is_final = True
                 delta_message.content = current_content
 
-            if chunk_idx % 64 == 0 or delta_message.is_final:
-                yield delta_message
+            yield delta_message
