@@ -111,15 +111,17 @@ class LocalAgentRunner(runner.RequestRunner):
         else:
             # 流式输出，需要处理工具调用
             tool_calls_map: dict[str, llm_entities.ToolCall] = {}
+            msg_idx = 0
             async for msg in query.use_llm_model.requester.invoke_llm_stream(
                 query,
                 query.use_llm_model,
                 req_messages,
                 query.use_funcs,
                 extra_args=query.use_llm_model.model_entity.extra_args,
-            ):  
-                assert isinstance(msg, llm_entities.MessageChunk)
-                yield msg
+            ):
+                msg_idx = msg_idx + 1
+                if msg_idx % 8 == 0 or msg.is_final:
+                    yield msg
                 if msg.tool_calls:
                     for tool_call in msg.tool_calls:
                         if tool_call.id not in tool_calls_map:
@@ -180,19 +182,19 @@ class LocalAgentRunner(runner.RequestRunner):
                     extra_args=query.use_llm_model.model_entity.extra_args, 
                 ):  
                     yield msg
-                if msg.tool_calls:
-                    for tool_call in msg.tool_calls:
-                        if tool_call.id not in tool_calls_map:
-                            tool_calls_map[tool_call.id] = llm_entities.ToolCall(
-                                id=tool_call.id,
-                                type=tool_call.type,
-                                function=llm_entities.FunctionCall(
-                                    name=tool_call.function.name if tool_call.function else '', arguments=''
-                                ),
-                            )
-                        if tool_call.function and tool_call.function.arguments:
-                            # 流式处理中，工具调用参数可能分多个chunk返回，需要追加而不是覆盖
-                            tool_calls_map[tool_call.id].function.arguments += tool_call.function.arguments
+                    if msg.tool_calls:
+                        for tool_call in msg.tool_calls:
+                            if tool_call.id not in tool_calls_map:
+                                tool_calls_map[tool_call.id] = llm_entities.ToolCall(
+                                    id=tool_call.id,
+                                    type=tool_call.type,
+                                    function=llm_entities.FunctionCall(
+                                        name=tool_call.function.name if tool_call.function else '', arguments=''
+                                    ),
+                                )
+                            if tool_call.function and tool_call.function.arguments:
+                                # 流式处理中，工具调用参数可能分多个chunk返回，需要追加而不是覆盖
+                                tool_calls_map[tool_call.id].function.arguments += tool_call.function.arguments
                 final_msg = llm_entities.Message(
                     role=msg.role,
                     content=msg.all_content,
