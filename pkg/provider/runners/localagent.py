@@ -116,7 +116,6 @@ class LocalAgentRunner(runner.RequestRunner):
                 query.use_llm_model,
                 req_messages,
                 query.use_funcs,
-                stream=is_stream,
                 extra_args=query.use_llm_model.model_entity.extra_args,
             ):  
                 assert isinstance(msg, llm_entities.MessageChunk)
@@ -178,10 +177,8 @@ class LocalAgentRunner(runner.RequestRunner):
                     query.use_llm_model,
                     req_messages,
                     query.use_funcs,
-                    stream=is_stream,
                     extra_args=query.use_llm_model.model_entity.extra_args, 
                 ):  
-                    assert isinstance(msg, llm_entities.MessageChunk)
                     yield msg
                 if msg.tool_calls:
                     for tool_call in msg.tool_calls:

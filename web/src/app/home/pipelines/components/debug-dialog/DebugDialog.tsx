@@ -190,7 +190,7 @@ export default function DebugDialog({
         const botMessage: Message = {
           id: -1,
           role: 'assistant',
-          content: '生成中...',
+          content: 'Generating...',
           timestamp: new Date().toISOString(),
           message_chain: [{ type: 'Plain', text: '' }],
         };
@@ -216,6 +216,7 @@ export default function DebugDialog({
             selectedPipelineId,
             (data) => {
               // 处理流式响应数据
+              console.log('data', data);
               if (data.message) {
                 // 更新完整内容
                 fullContent = data.message.content;
@@ -231,8 +232,11 @@ export default function DebugDialog({
 
                 typingInterval = setInterval(() => {
                   if (currentPos < targetContent.length) {
-                    displayContent = targetContent.substring(0, currentPos + 1);
-                    currentPos++;
+                    displayContent = targetContent.substring(
+                      0,
+                      currentPos + 10,
+                    );
+                    currentPos += 10;
 
                     // 更新bot消息
                     setMessages((prevMessages) => {
@@ -255,7 +259,7 @@ export default function DebugDialog({
                   } else {
                     clearInterval(typingInterval);
                   }
-                }, 30); // 调整这个值可以改变打字速度
+                }, 1); // 调整这个值可以改变打字速度
               }
             },
             () => {
