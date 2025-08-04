@@ -122,10 +122,11 @@ class LocalAgentRunner(runner.RequestRunner):
                 remove_think=remove_think,
             ):
                 msg_idx = msg_idx + 1
+                tool_msg = msg
                 if msg_idx % 8 == 0 or msg.is_final:
                     yield msg
-                if msg.tool_calls:
-                    for tool_call in msg.tool_calls:
+                if tool_msg.tool_calls:
+                    for tool_call in tool_msg.tool_calls:
                         if tool_call.id not in tool_calls_map:
                             tool_calls_map[tool_call.id] = llm_entities.ToolCall(
                                 id=tool_call.id,
@@ -137,9 +138,9 @@ class LocalAgentRunner(runner.RequestRunner):
                         if tool_call.function and tool_call.function.arguments:
                             # 流式处理中，工具调用参数可能分多个chunk返回，需要追加而不是覆盖
                             tool_calls_map[tool_call.id].function.arguments += tool_call.function.arguments
-            final_msg = llm_entities.Message(
-                role=msg.role,
-                content=msg.all_content,
+            final_msg = llm_entities.MessageChunk(
+                role="tool",
+                content='',
                 tool_calls=list(tool_calls_map.values()),
             )
 
@@ -176,6 +177,7 @@ class LocalAgentRunner(runner.RequestRunner):
 
             if is_stream:
                 tool_calls_map = {}
+                msg_idx = 0
                 async for msg in await query.use_llm_model.requester.invoke_llm_stream(
                     query,
                     query.use_llm_model,
@@ -184,9 +186,12 @@ class LocalAgentRunner(runner.RequestRunner):
                     extra_args=query.use_llm_model.model_entity.extra_args,
                     remove_think=remove_think,
                 ):
-                    yield msg
-                    if msg.tool_calls:
-                        for tool_call in msg.tool_calls:
+                    msg_idx += 1
+                    tool_msg = msg
+                    if msg_idx % 8 == 0 or msg.is_final:
+                        yield msg
+                    if tool_msg.tool_calls:
+                        for tool_call in tool_msg.tool_calls:
                             if tool_call.id not in tool_calls_map:
                                 tool_calls_map[tool_call.id] = llm_entities.ToolCall(
                                     id=tool_call.id,
@@ -198,9 +203,9 @@ class LocalAgentRunner(runner.RequestRunner):
                             if tool_call.function and tool_call.function.arguments:
                                 # 流式处理中，工具调用参数可能分多个chunk返回，需要追加而不是覆盖
                                 tool_calls_map[tool_call.id].function.arguments += tool_call.function.arguments
-                final_msg = llm_entities.Message(
-                    role=msg.role,
-                    content=msg.all_content,
+                final_msg = llm_entities.MessageChunk(
+                    role="tool",
+                    content='',
                     tool_calls=list(tool_calls_map.values()),
                 )
             else:

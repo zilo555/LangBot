@@ -19,7 +19,6 @@ class GiteeAIChatCompletions(chatcmpl.OpenAIChatCompletions):
         'base_url': 'https://ai.gitee.com/v1',
         'timeout': 120,
     }
-    is_think: bool = False
 
     async def _closure(
         self,
@@ -86,19 +85,12 @@ class GiteeAIChatCompletions(chatcmpl.OpenAIChatCompletions):
 
     async def _make_msg_chunk(
         self,
-        remove_think: bool,
-        chat_completion: chat_completion.ChatCompletion,
+        delta: dict[str, typing.Any],
         idx: int,
     ) -> llm_entities.MessageChunk:
         # 处理流式chunk和完整响应的差异
         # print(chat_completion.choices[0])
-        if hasattr(chat_completion, 'choices'):
-            # 完整响应模式
-            choice = chat_completion.choices[0]
-            delta = choice.delta.model_dump() if hasattr(choice, 'delta') else choice.message.model_dump()
-        else:
-            # 流式chunk模式
-            delta = chat_completion.delta.model_dump() if hasattr(chat_completion, 'delta') else {}
+
 
         # 确保 role 字段存在且不为 None
         if 'role' not in delta or delta['role'] is None:
@@ -110,20 +102,9 @@ class GiteeAIChatCompletions(chatcmpl.OpenAIChatCompletions):
         # print(reasoning_content)
 
         # deepseek的reasoner模型
-        if remove_think:
-            if delta['content'] == '<think>':
-                self.is_think = True
-                delta['content'] = ''
-            if delta['content'] == r'</think>':
-                self.is_think = False
-                delta['content'] = ''
-            if not self.is_think:
-                delta['content'] = delta['content']
-            else:
-                delta['content'] = ''
-        else:
-            if reasoning_content is not None:
-                delta['content'] += reasoning_content
+
+        if reasoning_content is not None:
+            delta['content'] += reasoning_content
 
         message = llm_entities.MessageChunk(**delta)
 
@@ -166,11 +147,32 @@ class GiteeAIChatCompletions(chatcmpl.OpenAIChatCompletions):
         current_content = ''
         args['stream'] = True
         chunk_idx = 0
-        self.is_content = False
+        is_think = False
         tool_calls_map: dict[str, llm_entities.ToolCall] = {}
         async for chunk in self._req_stream(args, extra_body=extra_args):
             # 处理流式消息
-            delta_message = await self._make_msg_chunk(remove_think, chunk, chunk_idx)
+            if hasattr(chunk, 'choices'):
+                # 完整响应模式
+                if chunk.choices:
+                    choice = chunk.choices[0]
+                    delta = choice.delta.model_dump() if hasattr(choice, 'delta') else choice.message.model_dump()
+                else:
+                    continue
+            else:
+                # 流式chunk模式
+                delta = chunk.delta.model_dump() if hasattr(chunk, 'delta') else {}
+            if remove_think:
+                print(delta)
+                if delta['content'] == '<think>':
+                    is_think = True
+                    continue
+                elif delta['content'] == r'</think>':
+                    is_think = False
+                    continue
+                elif is_think or delta['content'] == '\n\n':
+                    continue
+
+            delta_message = await self._make_msg_chunk(delta, chunk_idx)
             if delta_message.content:
                 current_content += delta_message.content
                 delta_message.content = current_content

@@ -17,7 +17,6 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
     """OpenAI ChatCompletion API 请求器"""
 
     client: openai.AsyncClient
-    is_content: bool
 
     default_config: dict[str, typing.Any] = {
         'base_url': 'https://api.openai.com/v1',
@@ -31,7 +30,6 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
             timeout=self.requester_cfg['timeout'],
             http_client=httpx.AsyncClient(trust_env=True, timeout=self.requester_cfg['timeout']),
         )
-        self.is_content = False
 
     async def _req(
         self,
@@ -76,22 +74,14 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
 
     async def _make_msg_chunk(
         self,
-        remove_think: bool,
-        chat_completion: chat_completion.ChatCompletion,
+        delta: dict[str, typing.Any],
         idx: int,
+        is_content: bool,
+        is_think: bool,
     ) -> llm_entities.MessageChunk:
         # 处理流式chunk和完整响应的差异
         # print(chat_completion.choices[0])
-        if hasattr(chat_completion, 'choices'):
-            # 完整响应模式
-            choice = chat_completion.choices[0]
-            delta = choice.delta.model_dump() if hasattr(choice, 'delta') else choice.message.model_dump()
-        else:
-            # 流式chunk模式
-            delta = chat_completion.delta.model_dump() if hasattr(chat_completion, 'delta') else {}
 
-        # 确保 role 字段存在且不为 None
-        # print(delta.keys(),delta.values())
         if 'role' not in delta or delta['role'] is None:
             delta['role'] = 'assistant'
 
@@ -101,26 +91,23 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
         # print(reasoning_content)
 
         # deepseek的reasoner模型
-        if remove_think:
-            if reasoning_content is not None:
-                pass
-            else:
-                delta['content'] = delta['content']
-        else:
-            if reasoning_content is not None and idx == 0:
+        if reasoning_content is not None and idx == 0:
+            if reasoning_content != '':
                 delta['content'] += f'<think>\n{reasoning_content}'
-            elif reasoning_content is None:
-                if self.is_content:
-                    delta['content'] = delta['content']
-                else:
-                    delta['content'] = f'\n<think>\n\n{delta["content"]}'
-                    self.is_content = True
-            else:
-                delta['content'] += reasoning_content
+                is_think = True
+        elif reasoning_content is None and idx != 0:
+            if is_content:
+                delta['content'] = delta['content']
+            elif is_think:
+                delta['content'] = f'\n<think>\n\n{delta["content"]}'
+                is_content = True
+                is_think = False
+        else:
+            delta['content'] = reasoning_content
 
         message = llm_entities.MessageChunk(**delta)
 
-        return message
+        return message,is_content, is_think
 
     async def _closure_stream(
         self,
@@ -159,11 +146,26 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
         current_content = ''
         args['stream'] = True
         chunk_idx = 0
-        self.is_content = False
+        is_content = False
+        is_think = False
         tool_calls_map: dict[str, llm_entities.ToolCall] = {}
         async for chunk in self._req_stream(args, extra_body=extra_args):
+            if hasattr(chunk, 'choices'):
+                # 完整响应模式
+                choice = chunk.choices[0]
+                delta = choice.delta.model_dump() if hasattr(choice, 'delta') else choice.message.model_dump()
+            else:
+                # 流式chunk模式
+                delta = chunk.delta.model_dump() if hasattr(chunk, 'delta') else {}
+            if remove_think:
+                reasoning_content = delta['reasoning_content'] if 'reasoning_content' in delta else None
+                if reasoning_content is not None:
+                    continue
             # 处理流式消息
-            delta_message = await self._make_msg_chunk(remove_think, chunk, chunk_idx)
+            delta_message,is_content,is_think = await self._make_msg_chunk(delta,
+                                                                  chunk_idx,
+                                                                  is_content,
+                                                                  is_think)
             if delta_message.content:
                 current_content += delta_message.content
                 delta_message.content = current_content
