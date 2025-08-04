@@ -55,7 +55,6 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
     ) -> llm_entities.Message:
         chatcmpl_message = chat_completion.choices[0].message.model_dump()
         # print(chatcmpl_message.keys(),chatcmpl_message.values())
-
         # 确保 role 字段存在且不为 None
         if 'role' not in chatcmpl_message or chatcmpl_message['role'] is None:
             chatcmpl_message['role'] = 'assistant'
@@ -241,6 +240,7 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
         messages: typing.List[llm_entities.Message],
         funcs: typing.List[tools_entities.LLMFunction] = None,
         extra_args: dict[str, typing.Any] = {},
+        remove_think: bool = False,
     ) -> llm_entities.Message:
         req_messages = []  # req_messages 仅用于类内，外部同步由 query.messages 进行
         for m in messages:
@@ -260,6 +260,7 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
                 use_model=model,
                 use_funcs=funcs,
                 extra_args=extra_args,
+                remove_think=remove_think,
             )
             return msg
         except asyncio.TimeoutError:

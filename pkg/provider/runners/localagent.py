@@ -89,7 +89,6 @@ class LocalAgentRunner(runner.RequestRunner):
 
         req_messages = query.prompt.messages.copy() + query.messages.copy() + [user_message]
 
-        is_stream = query.adapter.is_stream_output_supported()
         try:
             is_stream = await query.adapter.is_stream_output_supported()
         except AttributeError:
