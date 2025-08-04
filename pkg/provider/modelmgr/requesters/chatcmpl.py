@@ -313,6 +313,7 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
         messages: typing.List[llm_entities.Message],
         funcs: typing.List[tools_entities.LLMFunction] = None,
         extra_args: dict[str, typing.Any] = {},
+        remove_think: bool = False,
     ) -> llm_entities.MessageChunk:
         req_messages = []  # req_messages 仅用于类内，外部同步由 query.messages 进行
         for m in messages:
@@ -332,6 +333,7 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
                 use_model=model,
                 use_funcs=funcs,
                 extra_args=extra_args,
+                remove_think=remove_think,
             ):
                 yield item
 
