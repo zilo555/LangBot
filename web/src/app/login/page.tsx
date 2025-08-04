@@ -34,6 +34,7 @@ import langbotIcon from '@/app/assets/langbot-logo.webp';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import i18n from '@/i18n';
+import Link from 'next/link';
 
 const formSchema = (t: (key: string) => string) =>
   z.object({
@@ -64,6 +65,9 @@ export default function Login() {
     if (i18n.language === 'zh-CN' || i18n.language === 'zh-Hans') {
       setCurrentLanguage('zh-Hans');
       localStorage.setItem('langbot_language', 'zh-Hans');
+    } else if (i18n.language === 'zh-TW' || i18n.language === 'zh-Hant') {
+      setCurrentLanguage('zh-Hant');
+      localStorage.setItem('langbot_language', 'zh-Hant');
     } else if (i18n.language === 'ja' || i18n.language === 'ja-JP') {
       setCurrentLanguage('ja-JP');
       localStorage.setItem('langbot_language', 'ja-JP');
@@ -83,6 +87,8 @@ export default function Login() {
         let lang = 'zh-Hans';
         if (language === 'zh-CN') {
           lang = 'zh-Hans';
+        } else if (language === 'zh-TW') {
+          lang = 'zh-Hant';
         } else if (language === 'ja' || language === 'ja-JP') {
           lang = 'ja-JP';
         } else {
@@ -163,6 +169,7 @@ export default function Login() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="zh-Hans">简体中文</SelectItem>
+                <SelectItem value="zh-Hant">繁體中文</SelectItem>
                 <SelectItem value="en-US">English</SelectItem>
                 <SelectItem value="ja-JP">日本語</SelectItem>
               </SelectContent>
@@ -209,7 +216,16 @@ export default function Login() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('common.password')}</FormLabel>
+                    <div className="flex justify-between">
+                      <FormLabel>{t('common.password')}</FormLabel>
+                      <Link
+                        href="/reset-password"
+                        className="text-sm text-blue-500"
+                      >
+                        {t('common.forgotPassword')}
+                      </Link>
+                    </div>
+
                     <FormControl>
                       <div className="relative">
                         <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />

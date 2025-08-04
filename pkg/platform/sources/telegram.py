@@ -144,7 +144,9 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
     config: dict
     ap: app.Application
 
-    msg_stream_id: dict
+    msg_stream_id: dict  # 流式消息id字典，key为流式消息id，value为首次消息源id，用于在流式消息时判断编辑那条消息
+
+    seq: int  # 消息中识别消息顺序，直接以seq作为标识
 
     listeners: typing.Dict[
         typing.Type[platform_events.Event],
@@ -156,6 +158,7 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
         self.ap = ap
         self.logger = logger
         self.msg_stream_id = {}
+        self.seq = 1
 
         async def telegram_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if update.message.from_user.is_bot:
@@ -213,52 +216,56 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
         quote_origin: bool = False,
         is_final: bool = False,
     ):
-        assert isinstance(message_source.source_platform_object, Update)
-        components = await TelegramMessageConverter.yiri2target(message, self.bot)
-        args = {}
-        message_id = message_source.source_platform_object.message.id
-        if quote_origin:
-            args['reply_to_message_id'] = message_source.source_platform_object.message.id
+        self.seq += 1
+        if (self.seq - 1) % 8 == 0 or is_final:
 
-        component = components[0]
-        if message_id not in self.msg_stream_id:
-            # time.sleep(0.6)
-            if component['type'] == 'text':
-                if self.config['markdown_card'] is True:
-                    content = telegramify_markdown.markdownify(
-                        content=component['text'],
-                    )
-                else:
-                    content = component['text']
-                args = {
-                    'chat_id': message_source.source_platform_object.effective_chat.id,
-                    'text': content,
-                }
-                if self.config['markdown_card'] is True:
-                    args['parse_mode'] = 'MarkdownV2'
+            assert isinstance(message_source.source_platform_object, Update)
+            components = await TelegramMessageConverter.yiri2target(message, self.bot)
+            args = {}
+            message_id = message_source.source_platform_object.message.id
+            if quote_origin:
+                args['reply_to_message_id'] = message_source.source_platform_object.message.id
 
-            send_msg = await self.bot.send_message(**args)
-            send_msg_id = send_msg.message_id
-            self.msg_stream_id[message_id] = send_msg_id
-        else:
-            if component['type'] == 'text':
-                if self.config['markdown_card'] is True:
-                    content = telegramify_markdown.markdownify(
-                        content=component['text'],
-                    )
-                else:
-                    content = component['text']
-                args = {
-                    'message_id': self.msg_stream_id[message_id],
-                    'chat_id': message_source.source_platform_object.effective_chat.id,
-                    'text': content,
-                }
-                if self.config['markdown_card'] is True:
-                    args['parse_mode'] = 'MarkdownV2'
+            component = components[0]
+            if message_id not in self.msg_stream_id:  # 当消息回复第一次时，发送新消息
+                # time.sleep(0.6)
+                if component['type'] == 'text':
+                    if self.config['markdown_card'] is True:
+                        content = telegramify_markdown.markdownify(
+                            content=component['text'],
+                        )
+                    else:
+                        content = component['text']
+                    args = {
+                        'chat_id': message_source.source_platform_object.effective_chat.id,
+                        'text': content,
+                    }
+                    if self.config['markdown_card'] is True:
+                        args['parse_mode'] = 'MarkdownV2'
 
-            await self.bot.edit_message_text(**args)
-        if is_final:
-            self.msg_stream_id.pop(message_id)
+                send_msg = await self.bot.send_message(**args)
+                send_msg_id = send_msg.message_id
+                self.msg_stream_id[message_id] = send_msg_id
+            else:  # 存在消息的时候直接编辑消息1
+                if component['type'] == 'text':
+                    if self.config['markdown_card'] is True:
+                        content = telegramify_markdown.markdownify(
+                            content=component['text'],
+                        )
+                    else:
+                        content = component['text']
+                    args = {
+                        'message_id': self.msg_stream_id[message_id],
+                        'chat_id': message_source.source_platform_object.effective_chat.id,
+                        'text': content,
+                    }
+                    if self.config['markdown_card'] is True:
+                        args['parse_mode'] = 'MarkdownV2'
+
+                await self.bot.edit_message_text(**args)
+            if is_final:
+                self.seq = 1  # 消息回复结束之后重置seq
+                self.msg_stream_id.pop(message_id)  # 消息回复结束之后删除流式消息id
 
     async def is_stream_output_supported(self) -> bool:
         is_stream = False

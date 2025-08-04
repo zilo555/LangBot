@@ -144,6 +144,11 @@ export default function HomeSidebar({
                 'https://docs.langbot.app/zh/insight/guide.html',
                 '_blank',
               );
+            } else if (language === 'zh-Hant') {
+              window.open(
+                'https://docs.langbot.app/zh/insight/guide.html',
+                '_blank',
+              );
             } else {
               window.open(
                 'https://docs.langbot.app/en/insight/guide.html',

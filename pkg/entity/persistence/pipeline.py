@@ -4,7 +4,7 @@ from .base import Base
 
 
 class LegacyPipeline(Base):
-    """旧版流水线"""
+    """Legacy pipeline"""
 
     __tablename__ = 'legacy_pipelines'
 
@@ -20,13 +20,12 @@ class LegacyPipeline(Base):
     )
     for_version = sqlalchemy.Column(sqlalchemy.String(255), nullable=False)
     is_default = sqlalchemy.Column(sqlalchemy.Boolean, nullable=False, default=False)
-
     stages = sqlalchemy.Column(sqlalchemy.JSON, nullable=False)
     config = sqlalchemy.Column(sqlalchemy.JSON, nullable=False)
 
 
 class PipelineRunRecord(Base):
-    """流水线运行记录"""
+    """Pipeline run record"""
 
     __tablename__ = 'pipeline_run_records'
 
@@ -43,3 +42,4 @@ class PipelineRunRecord(Base):
     started_at = sqlalchemy.Column(sqlalchemy.DateTime, nullable=False)
     finished_at = sqlalchemy.Column(sqlalchemy.DateTime, nullable=False)
     result = sqlalchemy.Column(sqlalchemy.JSON, nullable=False)
+    knowledge_base_uuid = sqlalchemy.Column(sqlalchemy.String(255), nullable=True)

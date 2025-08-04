@@ -28,6 +28,7 @@ class GiteeAIChatCompletions(chatcmpl.OpenAIChatCompletions):
         use_model: requester.RuntimeLLMModel,
         use_funcs: list[tools_entities.LLMFunction] = None,
         extra_args: dict[str, typing.Any] = {},
+        remove_think: bool = False,
     ) -> llm_entities.Message:
         self.client.api_key = use_model.token_mgr.get_token()
 
@@ -49,16 +50,15 @@ class GiteeAIChatCompletions(chatcmpl.OpenAIChatCompletions):
 
         resp = await self._req(args, extra_body=extra_args)
 
-        pipeline_config = query.pipeline_config
 
-        message = await self._make_msg(resp, pipeline_config)
+        message = await self._make_msg(resp, remove_think)
 
         return message
 
     async def _make_msg(
         self,
         chat_completion: chat_completion.ChatCompletion,
-        pipeline_config: dict[str, typing.Any] = {'trigger': {'misc': {'remove_think': False}}},
+        remove_think: bool,
     ) -> llm_entities.Message:
         chatcmpl_message = chat_completion.choices[0].message.model_dump()
         # print(chatcmpl_message.keys(), chatcmpl_message.values())
@@ -70,7 +70,7 @@ class GiteeAIChatCompletions(chatcmpl.OpenAIChatCompletions):
         reasoning_content = chatcmpl_message['reasoning_content'] if 'reasoning_content' in chatcmpl_message else None
 
         # deepseek的reasoner模型
-        if pipeline_config['trigger'].get('misc', '').get('remove_think'):
+        if remove_think:
             chatcmpl_message['content'] = re.sub(
                 r'<think>.*?</think>', '', chatcmpl_message['content'], flags=re.DOTALL
             )
@@ -86,7 +86,7 @@ class GiteeAIChatCompletions(chatcmpl.OpenAIChatCompletions):
 
     async def _make_msg_chunk(
         self,
-        pipeline_config: dict[str, typing.Any],
+        remove_think: bool,
         chat_completion: chat_completion.ChatCompletion,
         idx: int,
     ) -> llm_entities.MessageChunk:
@@ -110,7 +110,7 @@ class GiteeAIChatCompletions(chatcmpl.OpenAIChatCompletions):
         # print(reasoning_content)
 
         # deepseek的reasoner模型
-        if pipeline_config['trigger'].get('misc', '').get('remove_think'):
+        if remove_think:
             if delta['content'] == '<think>':
                 self.is_think = True
                 delta['content'] = ''
@@ -136,6 +136,7 @@ class GiteeAIChatCompletions(chatcmpl.OpenAIChatCompletions):
         use_model: requester.RuntimeLLMModel,
         use_funcs: list[tools_entities.LLMFunction] = None,
         extra_args: dict[str, typing.Any] = {},
+        remove_think: bool = False,
     ) -> llm_entities.Message | typing.AsyncGenerator[llm_entities.MessageChunk, None]:
         self.client.api_key = use_model.token_mgr.get_token()
 
@@ -167,10 +168,9 @@ class GiteeAIChatCompletions(chatcmpl.OpenAIChatCompletions):
         chunk_idx = 0
         self.is_content = False
         tool_calls_map: dict[str, llm_entities.ToolCall] = {}
-        pipeline_config = query.pipeline_config
         async for chunk in self._req_stream(args, extra_body=extra_args):
             # 处理流式消息
-            delta_message = await self._make_msg_chunk(pipeline_config, chunk, chunk_idx)
+            delta_message = await self._make_msg_chunk(remove_think, chunk, chunk_idx)
             if delta_message.content:
                 current_content += delta_message.content
                 delta_message.content = current_content

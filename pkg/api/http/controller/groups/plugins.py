@@ -40,7 +40,7 @@ class PluginsRouterGroup(group.RouterGroup):
                 self.ap.plugin_mgr.update_plugin(plugin_name, task_context=ctx),
                 kind='plugin-operation',
                 name=f'plugin-update-{plugin_name}',
-                label=f'更新插件 {plugin_name}',
+                label=f'Updating plugin {plugin_name}',
                 context=ctx,
             )
             return self.success(data={'task_id': wrapper.id})
@@ -62,7 +62,7 @@ class PluginsRouterGroup(group.RouterGroup):
                     self.ap.plugin_mgr.uninstall_plugin(plugin_name, task_context=ctx),
                     kind='plugin-operation',
                     name=f'plugin-remove-{plugin_name}',
-                    label=f'删除插件 {plugin_name}',
+                    label=f'Removing plugin {plugin_name}',
                     context=ctx,
                 )
 
@@ -102,7 +102,7 @@ class PluginsRouterGroup(group.RouterGroup):
                 self.ap.plugin_mgr.install_plugin(data['source'], task_context=ctx),
                 kind='plugin-operation',
                 name='plugin-install-github',
-                label=f'安装插件 ...{short_source_str}',
+                label=f'Installing plugin ...{short_source_str}',
                 context=ctx,
             )
 

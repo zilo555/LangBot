@@ -87,8 +87,6 @@ class ChatMessageHandler(handler.MessageHandler):
                             text_length += len(result.content)
 
                         yield entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
-                    # else:
-                    #     yield entities.StageProcessResult(result_type=entities.ResultType.INTERRUPT, new_query=query)
 
                 else:
                     async for result in runner.run(query):

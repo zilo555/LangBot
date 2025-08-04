@@ -2,8 +2,8 @@ import pip
 import os
 from ...utils import pkgmgr
 
-# 检查依赖，防止用户未安装
-# 左边为引入名称，右边为依赖名称
+# Check dependencies to prevent users from not installing
+# Left is the import name, right is the dependency name
 required_deps = {
     'requests': 'requests',
     'openai': 'openai',
@@ -65,7 +65,7 @@ async def install_deps(deps: list[str]):
 async def precheck_plugin_deps():
     print('[Startup] Prechecking plugin dependencies...')
 
-    # 只有在plugins目录存在时才执行插件依赖安装
+    # Only execute plugin dependency installation when the plugins directory exists
     if os.path.exists('plugins'):
         for dir in os.listdir('plugins'):
             subdir = os.path.join('plugins', dir)

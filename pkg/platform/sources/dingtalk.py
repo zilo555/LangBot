@@ -1,3 +1,4 @@
+from re import S
 import traceback
 import typing
 from libs.dingtalk_api.dingtalkevent import DingTalkEvent
@@ -99,13 +100,15 @@ class DingTalkAdapter(adapter.MessagePlatformAdapter):
     message_converter: DingTalkMessageConverter = DingTalkMessageConverter()
     event_converter: DingTalkEventConverter = DingTalkEventConverter()
     config: dict
-    card_instance_id_dict: dict
+    card_instance_id_dict: dict  # 回复卡片消息字典，key为消息id，value为回复卡片实例id，用于在流式消息时判断是否发送到指定卡片
+    seq: int  # 消息顺序，直接以seq作为标识
 
     def __init__(self, config: dict, ap: app.Application, logger: EventLogger):
         self.config = config
         self.ap = ap
         self.logger = logger
         self.card_instance_id_dict = {}
+        self.seq = 1
         required_keys = [
             'client_id',
             'client_secret',
@@ -155,14 +158,16 @@ class DingTalkAdapter(adapter.MessagePlatformAdapter):
         # incoming_message = event.incoming_message
 
         # msg_id = incoming_message.message_id
+        self.seq += 1
+        if (self.seq - 1) % 8 == 0 or is_final:
+            content, at = await DingTalkMessageConverter.yiri2target(message)
 
-        content, at = await DingTalkMessageConverter.yiri2target(message)
-
-        card_instance, card_instance_id = self.card_instance_id_dict[message_id]
-        # print(card_instance_id)
-        await self.bot.send_card_message(card_instance, card_instance_id, content, is_final)
-        if is_final:
-            self.card_instance_id_dict.pop(message_id)
+            card_instance, card_instance_id = self.card_instance_id_dict[message_id]
+            # print(card_instance_id)
+            await self.bot.send_card_message(card_instance, card_instance_id, content, is_final)
+            if is_final:
+                self.seq = 1  # 消息回复结束之后重置seq
+                self.card_instance_id_dict.pop(message_id)  # 消息回复结束之后删除卡片实例id
 
     async def send_message(self, target_type: str, target_id: str, message: platform_message.MessageChain):
         content = await DingTalkMessageConverter.yiri2target(message)

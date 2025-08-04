@@ -13,7 +13,7 @@ from ... import entities as llm_entities
 from ...tools import entities as tools_entities
 
 
-class OpenAIChatCompletions(requester.LLMAPIRequester):
+class OpenAIChatCompletions(requester.ProviderAPIRequester):
     """OpenAI ChatCompletion API 请求器"""
 
     client: openai.AsyncClient
@@ -51,11 +51,10 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
     async def _make_msg(
         self,
         chat_completion: chat_completion.ChatCompletion,
-        pipeline_config: dict[str, typing.Any] = {'trigger': {'misc': {'remove_think': False}}},
+        remove_think: bool = False,
     ) -> llm_entities.Message:
         chatcmpl_message = chat_completion.choices[0].message.model_dump()
         # print(chatcmpl_message.keys(),chatcmpl_message.values())
-
         # 确保 role 字段存在且不为 None
         if 'role' not in chatcmpl_message or chatcmpl_message['role'] is None:
             chatcmpl_message['role'] = 'assistant'
@@ -63,7 +62,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         reasoning_content = chatcmpl_message['reasoning_content'] if 'reasoning_content' in chatcmpl_message else None
 
         # deepseek的reasoner模型
-        if pipeline_config['trigger'].get('misc', '').get('remove_think'):
+        if remove_think:
             pass
         else:
             if reasoning_content is not None:
@@ -77,7 +76,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
 
     async def _make_msg_chunk(
         self,
-        pipeline_config: dict[str, typing.Any],
+        remove_think: bool,
         chat_completion: chat_completion.ChatCompletion,
         idx: int,
     ) -> llm_entities.MessageChunk:
@@ -102,7 +101,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         # print(reasoning_content)
 
         # deepseek的reasoner模型
-        if pipeline_config['trigger'].get('misc', '').get('remove_think'):
+        if remove_think:
             if reasoning_content is not None:
                 pass
             else:
@@ -130,6 +129,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         use_model: requester.RuntimeLLMModel,
         use_funcs: list[tools_entities.LLMFunction] = None,
         extra_args: dict[str, typing.Any] = {},
+        remove_think: bool = False,
     ) -> llm_entities.MessageChunk:
         self.client.api_key = use_model.token_mgr.get_token()
 
@@ -161,10 +161,9 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         chunk_idx = 0
         self.is_content = False
         tool_calls_map: dict[str, llm_entities.ToolCall] = {}
-        pipeline_config = query.pipeline_config
         async for chunk in self._req_stream(args, extra_body=extra_args):
             # 处理流式消息
-            delta_message = await self._make_msg_chunk(pipeline_config, chunk, chunk_idx)
+            delta_message = await self._make_msg_chunk(remove_think, chunk, chunk_idx)
             if delta_message.content:
                 current_content += delta_message.content
                 delta_message.content = current_content
@@ -199,6 +198,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         use_model: requester.RuntimeLLMModel,
         use_funcs: list[tools_entities.LLMFunction] = None,
         extra_args: dict[str, typing.Any] = {},
+        remove_think: bool = False,
     ) -> llm_entities.Message:
         self.client.api_key = use_model.token_mgr.get_token()
 
@@ -229,8 +229,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
 
         resp = await self._req(args, extra_body=extra_args)
         # 处理请求结果
-        pipeline_config = query.pipeline_config
-        message = await self._make_msg(resp, pipeline_config)
+        message = await self._make_msg(resp, remove_think)
 
         return message
 
@@ -241,6 +240,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         messages: typing.List[llm_entities.Message],
         funcs: typing.List[tools_entities.LLMFunction] = None,
         extra_args: dict[str, typing.Any] = {},
+        remove_think: bool = False,
     ) -> llm_entities.Message:
         req_messages = []  # req_messages 仅用于类内，外部同步由 query.messages 进行
         for m in messages:
@@ -260,6 +260,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
                 use_model=model,
                 use_funcs=funcs,
                 extra_args=extra_args,
+                remove_think=remove_think,
             )
             return msg
         except asyncio.TimeoutError:
@@ -278,6 +279,34 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         except openai.APIError as e:
             raise errors.RequesterError(f'请求错误: {e.message}')
 
+    async def invoke_embedding(
+        self,
+        model: requester.RuntimeEmbeddingModel,
+        input_text: list[str],
+        extra_args: dict[str, typing.Any] = {},
+    ) -> list[list[float]]:
+        """调用 Embedding API"""
+        self.client.api_key = model.token_mgr.get_token()
+
+        args = {
+            'model': model.model_entity.name,
+            'input': input_text,
+        }
+
+        if model.model_entity.extra_args:
+            args.update(model.model_entity.extra_args)
+
+        args.update(extra_args)
+
+        try:
+            resp = await self.client.embeddings.create(**args)
+
+            return [d.embedding for d in resp.data]
+        except asyncio.TimeoutError:
+            raise errors.RequesterError('请求超时')
+        except openai.BadRequestError as e:
+            raise errors.RequesterError(f'请求参数错误: {e.message}')
+
     async def invoke_llm_stream(
         self,
         query: core_entities.Query,
@@ -285,6 +314,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
         messages: typing.List[llm_entities.Message],
         funcs: typing.List[tools_entities.LLMFunction] = None,
         extra_args: dict[str, typing.Any] = {},
+        remove_think: bool = False,
     ) -> llm_entities.MessageChunk:
         req_messages = []  # req_messages 仅用于类内，外部同步由 query.messages 进行
         for m in messages:
@@ -304,6 +334,7 @@ class OpenAIChatCompletions(requester.LLMAPIRequester):
                 use_model=model,
                 use_funcs=funcs,
                 extra_args=extra_args,
+                remove_think=remove_think,
             ):
                 yield item
 

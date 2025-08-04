@@ -4,7 +4,7 @@ from .base import Base
 
 
 class PluginSetting(Base):
-    """插件配置"""
+    """Plugin setting"""
 
     __tablename__ = 'plugin_settings'
 

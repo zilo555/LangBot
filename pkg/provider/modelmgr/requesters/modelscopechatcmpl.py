@@ -14,7 +14,7 @@ from ... import entities as llm_entities
 from ...tools import entities as tools_entities
 
 
-class ModelScopeChatCompletions(requester.LLMAPIRequester):
+class ModelScopeChatCompletions(requester.ProviderAPIRequester):
     """ModelScope ChatCompletion API 请求器"""
 
     client: openai.AsyncClient
@@ -174,7 +174,7 @@ class ModelScopeChatCompletions(requester.LLMAPIRequester):
 
     async def _make_msg_chunk(
         self,
-        pipeline_config: dict[str, typing.Any],
+        remove_think: bool,
         chat_completion: chat_completion.ChatCompletion,
         idx: int,
     ) -> llm_entities.MessageChunk:
@@ -199,7 +199,7 @@ class ModelScopeChatCompletions(requester.LLMAPIRequester):
         # print(reasoning_content)
 
         # deepseek的reasoner模型
-        if pipeline_config['trigger'].get('misc', '').get('remove_think'):
+        if remove_think:
             if reasoning_content is not None:
                 pass
             else:
@@ -227,6 +227,7 @@ class ModelScopeChatCompletions(requester.LLMAPIRequester):
         use_model: requester.RuntimeLLMModel,
         use_funcs: list[tools_entities.LLMFunction] = None,
         extra_args: dict[str, typing.Any] = {},
+        remove_think: bool = False,
     ) -> llm_entities.Message | typing.AsyncGenerator[llm_entities.MessageChunk, None]:
         self.client.api_key = use_model.token_mgr.get_token()
 
@@ -258,10 +259,9 @@ class ModelScopeChatCompletions(requester.LLMAPIRequester):
         chunk_idx = 0
         self.is_content = False
         tool_calls_map: dict[str, llm_entities.ToolCall] = {}
-        pipeline_config = query.pipeline_config
         async for chunk in self._req_stream(args, extra_body=extra_args):
             # 处理流式消息
-            delta_message = await self._make_msg_chunk(pipeline_config, chunk, chunk_idx)
+            delta_message = await self._make_msg_chunk(remove_think, chunk, chunk_idx)
             if delta_message.content:
                 current_content += delta_message.content
                 delta_message.content = current_content
@@ -296,6 +296,7 @@ class ModelScopeChatCompletions(requester.LLMAPIRequester):
         messages: typing.List[llm_entities.Message],
         funcs: typing.List[tools_entities.LLMFunction] = None,
         extra_args: dict[str, typing.Any] = {},
+        remove_think: bool = False,
     ) -> llm_entities.Message:
         req_messages = []  # req_messages 仅用于类内，外部同步由 query.messages 进行
         for m in messages:
@@ -335,6 +336,7 @@ class ModelScopeChatCompletions(requester.LLMAPIRequester):
         messages: typing.List[llm_entities.Message],
         funcs: typing.List[tools_entities.LLMFunction] = None,
         extra_args: dict[str, typing.Any] = {},
+        remove_think: bool = False,
     ) -> llm_entities.MessageChunk:
         req_messages = []  # req_messages 仅用于类内，外部同步由 query.messages 进行
         for m in messages:
@@ -354,6 +356,7 @@ class ModelScopeChatCompletions(requester.LLMAPIRequester):
                 use_model=model,
                 use_funcs=funcs,
                 extra_args=extra_args,
+                remove_think=remove_think,
             ):
                 yield item
 

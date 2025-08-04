@@ -12,7 +12,7 @@ initial_metadata = [
 
 
 class Metadata(Base):
-    """数据库元数据"""
+    """Database metadata"""
 
     __tablename__ = 'metadata'
 

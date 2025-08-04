@@ -1,48 +1,34 @@
 <p align="center">
 <a href="https://langbot.app">
-<img src="https://docs.langbot.app/social.png" alt="LangBot"/>
+<img src="https://docs.langbot.app/social_en.png" alt="LangBot"/>
 </a>
 
 <div align="center">
 
-<a href="https://trendshift.io/repositories/12901" target="_blank"><img src="https://trendshift.io/api/badge/repositories/12901" alt="RockChinQ%2FLangBot | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+English / [简体中文](README.md) / [繁體中文](README_TW.md) / [日本語](README_JP.md) / (PR for your language)
+
+[![Discord](https://img.shields.io/discord/1335141740050649118?logo=discord&labelColor=%20%235462eb&logoColor=%20%23f5f5f5&color=%20%235462eb)](https://discord.gg/wdNEHETs87)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/langbot-app/LangBot)
+[![GitHub release (latest by date)](https://img.shields.io/github/v/release/langbot-app/LangBot)](https://github.com/langbot-app/LangBot/releases/latest)
+<img src="https://img.shields.io/badge/python-3.10 ~ 3.13 -blue.svg" alt="python">
 
 <a href="https://langbot.app">Home</a> ｜
 <a href="https://docs.langbot.app/en/insight/guide.html">Deployment</a> ｜
 <a href="https://docs.langbot.app/en/plugin/plugin-intro.html">Plugin</a> ｜
-<a href="https://github.com/RockChinQ/LangBot/issues/new?assignees=&labels=%E7%8B%AC%E7%AB%8B%E6%8F%92%E4%BB%B6&projects=&template=submit-plugin.yml&title=%5BPlugin%5D%3A+%E8%AF%B7%E6%B1%82%E7%99%BB%E8%AE%B0%E6%96%B0%E6%8F%92%E4%BB%B6">Submit Plugin</a>
-
-<div align="center">
-😎High Stability, 🧩Extension Supported, 🦄Multi-modal - LLM Native Instant Messaging Bot Platform🤖  
-</div>
-
-<br/>
-
-
-[![Discord](https://img.shields.io/discord/1335141740050649118?logo=discord&labelColor=%20%235462eb&logoColor=%20%23f5f5f5&color=%20%235462eb)](https://discord.gg/wdNEHETs87)
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/RockChinQ/LangBot)
-[![GitHub release (latest by date)](https://img.shields.io/github/v/release/RockChinQ/LangBot)](https://github.com/RockChinQ/LangBot/releases/latest)
-<img src="https://img.shields.io/badge/python-3.10 ~ 3.13 -blue.svg" alt="python">
-
-[简体中文](README.md) / English / [日本語](README_JP.md) / (PR for your language)
+<a href="https://github.com/langbot-app/LangBot/issues/new?assignees=&labels=%E7%8B%AC%E7%AB%8B%E6%8F%92%E4%BB%B6&projects=&template=submit-plugin.yml&title=%5BPlugin%5D%3A+%E8%AF%B7%E6%B1%82%E7%99%BB%E8%AE%B0%E6%96%B0%E6%8F%92%E4%BB%B6">Submit Plugin</a>
 
 </div>
 
 </p>
 
-## ✨ Features
-
-- 💬 Chat with LLM / Agent: Supports multiple LLMs, adapt to group chats and private chats; Supports multi-round conversations, tool calls, and multi-modal capabilities. Deeply integrates with [Dify](https://dify.ai). Currently supports QQ, QQ Channel, WeCom, personal WeChat, Lark, DingTalk, Discord, Telegram, etc.
-- 🛠️ High Stability, Feature-rich: Native access control, rate limiting, sensitive word filtering, etc. mechanisms; Easy to use, supports multiple deployment methods. Supports multiple pipeline configurations, different bots can be used for different scenarios.
-- 🧩 Plugin Extension, Active Community: Support event-driven, component extension, etc. plugin mechanisms; Integrate Anthropic [MCP protocol](https://modelcontextprotocol.io/); Currently has hundreds of plugins.
-- 😻 [New] Web UI: Support management LangBot instance through the browser. No need to manually write configuration files.
+LangBot is an open-source LLM native instant messaging robot development platform, aiming to provide out-of-the-box IM robot development experience, with Agent, RAG, MCP and other LLM application functions, adapting to global instant messaging platforms, and providing rich API interfaces, supporting custom development.
 
 ## 📦 Getting Started
 
 #### Docker Compose Deployment
 
 ```bash
-git clone https://github.com/RockChinQ/LangBot
+git clone https://github.com/langbot-app/LangBot
 cd LangBot
 docker compose up -d
 ```
@@ -69,23 +55,25 @@ Community contributed Zeabur template.
 
 Directly use the released version to run, see the [Manual Deployment](https://docs.langbot.app/en/deploy/langbot/manual.html) documentation.
 
-## 📸 Demo
+## 😎 Stay Ahead
 
-<img alt="bots" src="https://docs.langbot.app/webui/bot-page.png" width="400px"/>
+Click the Star and Watch button in the upper right corner of the repository to get the latest updates.
 
-<img alt="bots" src="https://docs.langbot.app/webui/create-model.png" width="400px"/>
+![star gif](https://docs.langbot.app/star.gif)
 
-<img alt="bots" src="https://docs.langbot.app/webui/edit-pipeline.png" width="400px"/>
+## ✨ Features
 
-<img alt="bots" src="https://docs.langbot.app/webui/plugin-market.png" width="400px"/>
+- 💬 Chat with LLM / Agent: Supports multiple LLMs, adapt to group chats and private chats; Supports multi-round conversations, tool calls, and multi-modal capabilities. Built-in RAG (knowledge base) implementation, and deeply integrates with [Dify](https://dify.ai).
+- 🤖 Multi-platform Support: Currently supports QQ, QQ Channel, WeCom, personal WeChat, Lark, DingTalk, Discord, Telegram, etc.
+- 🛠️ High Stability, Feature-rich: Native access control, rate limiting, sensitive word filtering, etc. mechanisms; Easy to use, supports multiple deployment methods. Supports multiple pipeline configurations, different bots can be used for different scenarios.
+- 🧩 Plugin Extension, Active Community: Support event-driven, component extension, etc. plugin mechanisms; Integrate Anthropic [MCP protocol](https://modelcontextprotocol.io/); Currently has hundreds of plugins.
+- 😻 Web UI: Support management LangBot instance through the browser. No need to manually write configuration files.
 
-<img alt="Reply Effect (with Internet Plugin)" src="https://docs.langbot.app/QChatGPT-0516.png" width="500px"/>
+For more detailed specifications, please refer to the [documentation](https://docs.langbot.app/en/insight/features.html).
 
-- WebUI Demo: https://demo.langbot.dev/
-    - Login information: Email: `demo@langbot.app` Password: `langbot123456`
-    - Note: Only the WebUI effect is shown, please do not fill in any sensitive information in the public environment.
-
-## 🔌 Component Compatibility
+Or visit the demo environment: https://demo.langbot.dev/
+  - Login information: Email: `demo@langbot.app` Password: `langbot123456`
+  - Note: For WebUI demo only, please do not fill in any sensitive information in the public environment.
 
 ### Message Platform
 
@@ -101,10 +89,6 @@ Directly use the released version to run, see the [Manual Deployment](https://do
 | Discord | ✅ |  |
 | Telegram | ✅ |  |
 | Slack | ✅ |  |
-| LINE | 🚧 |  |
-| WhatsApp | 🚧 |  |
-
-🚧: In development
 
 ### LLMs
 
@@ -116,9 +100,10 @@ Directly use the released version to run, see the [Manual Deployment](https://do
 | [Anthropic](https://www.anthropic.com/) | ✅ |  |
 | [xAI](https://x.ai/) | ✅ |  |
 | [Zhipu AI](https://open.bigmodel.cn/) | ✅ |  |
+| [CompShare](https://www.compshare.cn/?ytag=GPU_YY-gh_langbot) | ✅ | LLM and GPU resource platform |
 | [Dify](https://dify.ai) | ✅ | LLMOps platform |
 | [PPIO](https://ppinfra.com/user/register?invited_by=QJKFYD&utm_source=github_langbot) | ✅ | LLM and GPU resource platform |
-| [302 AI](https://share.302.ai/SuTG99) | ✅ | LLM gateway(MaaS) |
+| [302.AI](https://share.302.ai/SuTG99) | ✅ | LLM gateway(MaaS) |
 | [Google Gemini](https://aistudio.google.com/prompts/new_chat) | ✅ | |
 | [Ollama](https://ollama.com/) | ✅ | Local LLM running platform |
 | [LMStudio](https://lmstudio.ai/) | ✅ | Local LLM running platform |
@@ -131,14 +116,8 @@ Directly use the released version to run, see the [Manual Deployment](https://do
 
 ## 🤝 Community Contribution
 
-Thank you for the following [code contributors](https://github.com/RockChinQ/LangBot/graphs/contributors) and other members in the community for their contributions to LangBot:
+Thank you for the following [code contributors](https://github.com/langbot-app/LangBot/graphs/contributors) and other members in the community for their contributions to LangBot:
 
-<a href="https://github.com/RockChinQ/LangBot/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=RockChinQ/LangBot" />
+<a href="https://github.com/langbot-app/LangBot/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=langbot-app/LangBot" />
 </a>
-
-## 😎 Stay Ahead
-
-Click the Star and Watch button in the upper right corner of the repository to get the latest updates.
-
-![star gif](https://docs.langbot.app/star.gif)

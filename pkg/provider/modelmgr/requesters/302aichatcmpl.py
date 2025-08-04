@@ -7,7 +7,7 @@ from . import chatcmpl
 
 
 class AI302ChatCompletions(chatcmpl.OpenAIChatCompletions):
-    """302 AI ChatCompletion API 请求器"""
+    """302.AI ChatCompletion API 请求器"""
 
     client: openai.AsyncClient
 

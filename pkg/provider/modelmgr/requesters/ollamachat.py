@@ -17,7 +17,7 @@ from ....core import entities as core_entities
 REQUESTER_NAME: str = 'ollama-chat'
 
 
-class OllamaChatCompletions(requester.LLMAPIRequester):
+class OllamaChatCompletions(requester.ProviderAPIRequester):
     """Ollama平台 ChatCompletion API请求器"""
 
     client: ollama.AsyncClient
@@ -110,6 +110,7 @@ class OllamaChatCompletions(requester.LLMAPIRequester):
         messages: typing.List[llm_entities.Message],
         funcs: typing.List[tools_entities.LLMFunction] = None,
         extra_args: dict[str, typing.Any] = {},
+        remove_think: bool = False,
     ) -> llm_entities.Message:
         req_messages: list = []
         for m in messages:
@@ -126,6 +127,19 @@ class OllamaChatCompletions(requester.LLMAPIRequester):
                 use_model=model,
                 use_funcs=funcs,
                 extra_args=extra_args,
+                remove_think=remove_think,
             )
         except asyncio.TimeoutError:
             raise errors.RequesterError('请求超时')
+
+    async def invoke_embedding(
+        self,
+        model: requester.RuntimeEmbeddingModel,
+        input_text: list[str],
+        extra_args: dict[str, typing.Any] = {},
+    ) -> list[list[float]]:
+        return await self.client.embed(
+            model=model.model_entity.name,
+            input=input_text,
+            **extra_args,
+        )
