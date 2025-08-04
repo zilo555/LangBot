@@ -24,6 +24,7 @@ class DeepseekChatCompletions(chatcmpl.OpenAIChatCompletions):
         use_model: requester.RuntimeLLMModel,
         use_funcs: list[tools_entities.LLMFunction] = None,
         extra_args: dict[str, typing.Any] = {},
+        remove_think: bool = False,
     ) -> llm_entities.Message:
         self.client.api_key = use_model.token_mgr.get_token()
 
@@ -53,8 +54,7 @@ class DeepseekChatCompletions(chatcmpl.OpenAIChatCompletions):
 
         if resp is None:
             raise errors.RequesterError('接口返回为空，请确定模型提供商服务是否正常')
-        pipeline_config = query.pipeline_config
         # 处理请求结果
-        message = await self._make_msg(resp, pipeline_config)
+        message = await self._make_msg(resp, remove_think)
 
         return message

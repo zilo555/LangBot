@@ -53,6 +53,7 @@ class AnthropicMessages(requester.ProviderAPIRequester):
         messages: typing.List[llm_entities.Message],
         funcs: typing.List[tools_entities.LLMFunction] = None,
         extra_args: dict[str, typing.Any] = {},
+        remove_think: bool = False,
     ) -> llm_entities.Message:
         self.client.api_key = model.token_mgr.get_token()
 
@@ -151,7 +152,7 @@ class AnthropicMessages(requester.ProviderAPIRequester):
             assert type(resp) is anthropic.types.message.Message
 
             for block in resp.content:
-                if block.type == 'thinking':
+                if not remove_think and block.type == 'thinking':
                     args['content'] = '<think>' + block.thinking + '</think>\n' + args['content']
                 elif block.type == 'text':
                     args['content'] += block.text

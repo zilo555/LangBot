@@ -92,9 +92,11 @@ class LocalAgentRunner(runner.RequestRunner):
         is_stream = query.adapter.is_stream_output_supported()
         try:
             is_stream = await query.adapter.is_stream_output_supported()
-
         except AttributeError:
             is_stream = False
+        
+        remove_think = self.pipeline_config['trigger'].get('misc', '').get('remove_think')
+
 
         if not is_stream:
             # 非流式输出，直接请求
@@ -105,6 +107,7 @@ class LocalAgentRunner(runner.RequestRunner):
                 req_messages,
                 query.use_funcs,
                 extra_args=query.use_llm_model.model_entity.extra_args,
+                remove_think=remove_think,
             )
             yield msg
             final_msg = msg
@@ -118,6 +121,7 @@ class LocalAgentRunner(runner.RequestRunner):
                 req_messages,
                 query.use_funcs,
                 extra_args=query.use_llm_model.model_entity.extra_args,
+                remove_think=remove_think,
             ):
                 msg_idx = msg_idx + 1
                 if msg_idx % 8 == 0 or msg.is_final:
