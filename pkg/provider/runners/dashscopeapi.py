@@ -148,7 +148,7 @@ class DashScopeAPIRunner(runner.RequestRunner):
                     # 将参考资料替换到文本中
                     pending_content = self._replace_references(pending_content, references_dict)
 
-                if idx_chunk % 64 == 0 or is_final:
+                if idx_chunk % 8 == 0 or is_final:
                     yield llm_entities.MessageChunk(
                         role='assistant',
                         content=pending_content,

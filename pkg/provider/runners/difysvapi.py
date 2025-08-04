@@ -115,7 +115,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
 
         stream_output_pending_chunk = ''
 
-        batch_pending_max_size = 64  # 积累一定量的消息更新消息一次
+        batch_pending_max_size = 8  # 积累一定量的消息更新消息一次
 
         batch_pending_index = 0
 

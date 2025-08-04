@@ -55,6 +55,6 @@ class MoonshotChatCompletions(chatcmpl.OpenAIChatCompletions):
         resp = await self._req(args, extra_body=extra_args)
 
         # 处理请求结果
-        message = await self._make_msg(resp,remove_think)
+        message = await self._make_msg(resp, remove_think)
 
         return message
