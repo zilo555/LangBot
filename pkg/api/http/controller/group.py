@@ -93,7 +93,10 @@ class RouterGroup(abc.ABC):
                     return self.http_status(500, -2, str(e))
 
             new_f = handler_error
-            new_f.__name__ = (self.name + rule).replace('/', '__')
+            # 为不同的HTTP方法生成不同的端点名称
+            methods = options.get('methods', ['GET'])
+            method_suffix = '_'.join(methods)
+            new_f.__name__ = (self.name + rule + '_' + method_suffix).replace('/', '__')
             new_f.__doc__ = f.__doc__
 
             self.quart_app.route(rule, **options)(new_f)
