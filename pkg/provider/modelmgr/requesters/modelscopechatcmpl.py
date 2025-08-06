@@ -184,24 +184,24 @@ class ModelScopeChatCompletions(requester.ProviderAPIRequester):
         if 'role' not in delta or delta['role'] is None:
             delta['role'] = 'assistant'
 
-        reasoning_content = delta['reasoning_content'] if 'reasoning_content' in delta else None
+        reasoning_content = delta['reasoning_content']
 
         delta['content'] = '' if delta['content'] is None else delta['content']
         # print(reasoning_content)
 
         # deepseek的reasoner模型
+
         if reasoning_content is not None and idx == 0:
-            if reasoning_content != '':
-                delta['content'] += f'<think>\n{reasoning_content}'
-                is_think = True
-        elif reasoning_content == '' and idx != 0:
+            delta['content'] += f'<think>\n{reasoning_content}'
+            is_think = True
+        elif reasoning_content is None and idx != 0:
             if is_content:
                 delta['content'] = delta['content']
             elif is_think:
                 delta['content'] = f'\n<think>\n\n{delta["content"]}'
                 is_content = True
                 is_think = False
-        else:
+        elif reasoning_content is not None:
             delta['content'] = reasoning_content
 
         message = llm_entities.MessageChunk(**delta)
@@ -256,12 +256,16 @@ class ModelScopeChatCompletions(requester.ProviderAPIRequester):
             else:
                 # 流式chunk模式
                 delta = chunk.delta.model_dump() if hasattr(chunk, 'delta') else {}
-            print(delta)
+            reasoning_content = delta['reasoning_content'] if 'reasoning_content' in delta else None
+            delta['reasoning_content'] = None if reasoning_content == '' else reasoning_content  # 直接不管有没有思考消息，构造一个，方便去除思考判断
             if remove_think:
-                reasoning_content = delta['reasoning_content'] if 'reasoning_content' in delta else None
-                if reasoning_content != '':
+                if delta['reasoning_content'] is not None:
                     continue
-                # 处理流式消息
+            if ((delta['content'] == '' or delta.get('content', None) is None) and
+                    (delta.get('reasoning_content', None) is None or delta['reasoning_content'] == '') and
+                    chunk_idx == 0):  # 此处将第一条空消息排除，大部分模型第一条消息携带的是role,但是在role直接处理为ass
+                continue
+            # 处理流式消息
             delta_message, is_content, is_think = await self._make_msg_chunk(delta,
                                                                              chunk_idx,
                                                                              is_content,
