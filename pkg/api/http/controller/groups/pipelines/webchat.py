@@ -48,8 +48,7 @@ class WebChatDebugRouterGroup(group.RouterGroup):
                     }
                     return quart.Response(stream_generator(generator), mimetype='text/event-stream',headers=headers)
 
-                else:
-                    # result = await webchat_adapter.send_webchat_message(pipeline_uuid, session_type, message_chain_obj)
+                else:  # non-stream
                     result = None
                     async for message in webchat_adapter.send_webchat_message(
                         pipeline_uuid, session_type, message_chain_obj
