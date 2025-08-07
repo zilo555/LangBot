@@ -21,7 +21,7 @@ class AnthropicMessages(requester.ProviderAPIRequester):
     client: anthropic.AsyncAnthropic
 
     default_config: dict[str, typing.Any] = {
-        'base_url': 'https://api.anthropic.com/v1',
+        'base_url': 'https://api.anthropic.com',
         'timeout': 120,
     }
 
@@ -44,6 +44,7 @@ class AnthropicMessages(requester.ProviderAPIRequester):
         self.client = anthropic.AsyncAnthropic(
             api_key='',
             http_client=httpx_client,
+            base_url=self.requester_cfg['base_url'],
         )
 
     async def invoke_llm(
@@ -141,7 +142,6 @@ class AnthropicMessages(requester.ProviderAPIRequester):
                 args['tools'] = tools
 
         try:
-            # print(json.dumps(args, indent=4, ensure_ascii=False))
             resp = await self.client.messages.create(**args)
 
             args = {

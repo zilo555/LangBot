@@ -257,7 +257,7 @@ export default function DebugDialog({
           sessionType,
           messageChain,
           selectedPipelineId,
-          120000,
+          180000,
         );
 
         setMessages((prevMessages) => [...prevMessages, response.message]);
