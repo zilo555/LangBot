@@ -113,6 +113,9 @@ class LocalAgentRunner(runner.RequestRunner):
             # 流式输出，需要处理工具调用
             tool_calls_map: dict[str, llm_entities.ToolCall] = {}
             msg_idx = 0
+            accumulated_content = ''  # 从开始累积的所有内容
+            last_role = 'assistant'
+
             async for msg in query.use_llm_model.requester.invoke_llm_stream(
                 query,
                 query.use_llm_model,
@@ -122,11 +125,18 @@ class LocalAgentRunner(runner.RequestRunner):
                 remove_think=remove_think,
             ):
                 msg_idx = msg_idx + 1
-                tool_msg = msg
-                if msg_idx % 8 == 0 or msg.is_final:
-                    yield msg
-                if tool_msg.tool_calls:
-                    for tool_call in tool_msg.tool_calls:
+
+                # 记录角色
+                if msg.role:
+                    last_role = msg.role
+
+                # 累积内容
+                if msg.content:
+                    accumulated_content += msg.content
+
+                # 处理工具调用
+                if msg.tool_calls:
+                    for tool_call in msg.tool_calls:
                         if tool_call.id not in tool_calls_map:
                             tool_calls_map[tool_call.id] = llm_entities.ToolCall(
                                 id=tool_call.id,
@@ -138,10 +148,21 @@ class LocalAgentRunner(runner.RequestRunner):
                         if tool_call.function and tool_call.function.arguments:
                             # 流式处理中，工具调用参数可能分多个chunk返回，需要追加而不是覆盖
                             tool_calls_map[tool_call.id].function.arguments += tool_call.function.arguments
+
+                # 每8个chunk或最后一个chunk时，输出所有累积的内容
+                if msg_idx % 8 == 0 or msg.is_final:
+                    yield llm_entities.MessageChunk(
+                        role=last_role,
+                        content=accumulated_content,  # 输出所有累积内容
+                        tool_calls=list(tool_calls_map.values()) if (tool_calls_map and msg.is_final) else None,
+                        is_final=msg.is_final,
+                    )
+
+            # 创建最终消息用于后续处理
             final_msg = llm_entities.MessageChunk(
-                role="tool",
-                content='',
-                tool_calls=list(tool_calls_map.values()),
+                role=last_role,
+                content=accumulated_content,
+                tool_calls=list(tool_calls_map.values()) if tool_calls_map else None,
             )
 
         pending_tool_calls = final_msg.tool_calls
@@ -178,7 +199,10 @@ class LocalAgentRunner(runner.RequestRunner):
             if is_stream:
                 tool_calls_map = {}
                 msg_idx = 0
-                async for msg in await query.use_llm_model.requester.invoke_llm_stream(
+                accumulated_content = ''  # 从开始累积的所有内容
+                last_role = 'assistant'
+
+                async for msg in query.use_llm_model.requester.invoke_llm_stream(
                     query,
                     query.use_llm_model,
                     req_messages,
@@ -187,11 +211,18 @@ class LocalAgentRunner(runner.RequestRunner):
                     remove_think=remove_think,
                 ):
                     msg_idx += 1
-                    tool_msg = msg
-                    if msg_idx % 8 == 0 or msg.is_final:
-                        yield msg
-                    if tool_msg.tool_calls:
-                        for tool_call in tool_msg.tool_calls:
+
+                    # 记录角色
+                    if msg.role:
+                        last_role = msg.role
+
+                    # 累积内容
+                    if msg.content:
+                        accumulated_content += msg.content
+
+                    # 处理工具调用
+                    if msg.tool_calls:
+                        for tool_call in msg.tool_calls:
                             if tool_call.id not in tool_calls_map:
                                 tool_calls_map[tool_call.id] = llm_entities.ToolCall(
                                     id=tool_call.id,
@@ -203,10 +234,20 @@ class LocalAgentRunner(runner.RequestRunner):
                             if tool_call.function and tool_call.function.arguments:
                                 # 流式处理中，工具调用参数可能分多个chunk返回，需要追加而不是覆盖
                                 tool_calls_map[tool_call.id].function.arguments += tool_call.function.arguments
+
+                    # 每8个chunk或最后一个chunk时，输出所有累积的内容
+                    if msg_idx % 8 == 0 or msg.is_final:
+                        yield llm_entities.MessageChunk(
+                            role=last_role,
+                            content=accumulated_content,  # 输出所有累积内容
+                            tool_calls=list(tool_calls_map.values()) if (tool_calls_map and msg.is_final) else None,
+                            is_final=msg.is_final,
+                        )
+
                 final_msg = llm_entities.MessageChunk(
-                    role="tool",
-                    content='',
-                    tool_calls=list(tool_calls_map.values()),
+                    role=last_role,
+                    content=accumulated_content,
+                    tool_calls=list(tool_calls_map.values()) if tool_calls_map else None,
                 )
             else:
                 # 处理完所有调用，再次请求
