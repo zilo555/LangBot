@@ -4,7 +4,7 @@ metadata:
   name: deepseek-chat-completions
   label:
     en_US: DeepSeek
-    zh_Hans: 深度求索
+    zh_Hans: DeepSeek
   icon: deepseek.svg
 spec:
   config:
