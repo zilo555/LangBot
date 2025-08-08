@@ -201,11 +201,11 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
                 delta_content = '\n</think>\n' + delta_content
 
             # 处理 content 中已有的 <think> 标签（如果需要移除）
-            if delta_content and remove_think and '<think>' in delta_content:
-                import re
-
-                # 移除 <think> 标签及其内容
-                delta_content = re.sub(r'<think>.*?</think>', '', delta_content, flags=re.DOTALL)
+            # if delta_content and remove_think and '<think>' in delta_content:
+            #     import re
+            #
+            #     # 移除 <think> 标签及其内容
+            #     delta_content = re.sub(r'<think>.*?</think>', '', delta_content, flags=re.DOTALL)
 
             # 处理工具调用增量
             delta_tool_calls = None
