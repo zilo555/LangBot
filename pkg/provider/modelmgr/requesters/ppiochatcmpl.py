@@ -39,19 +39,44 @@ class PPIOChatCompletions(chatcmpl.OpenAIChatCompletions):
         reasoning_content = chatcmpl_message['reasoning_content'] if 'reasoning_content' in chatcmpl_message else None
 
         # deepseek的reasoner模型
-        if remove_think:
-            chatcmpl_message['content'] = re.sub(
-                r'<think>.*?</think>', '', chatcmpl_message['content'], flags=re.DOTALL
-            )
-        else:
-            if reasoning_content is not None:
-                chatcmpl_message['content'] = (
-                    '<think>\n' + reasoning_content + '\n</think>\n' + chatcmpl_message['content']
-                )
+        chatcmpl_message["content"] = await self._process_thinking_content(
+            chatcmpl_message['content'],reasoning_content,remove_think)
+
+        # 移除 reasoning_content 字段，避免传递给 Message
+        if 'reasoning_content' in chatcmpl_message:
+            del chatcmpl_message['reasoning_content']
+
 
         message = llm_entities.Message(**chatcmpl_message)
 
         return message
+
+    async def _process_thinking_content(
+            self,
+            content: str,
+            reasoning_content: str = None,
+            remove_think: bool = False,
+    ) -> tuple[str, str]:
+        """处理思维链内容
+
+        Args:
+            content: 原始内容
+            reasoning_content: reasoning_content 字段内容
+            remove_think: 是否移除思维链
+
+        Returns:
+            处理后的内容
+        """
+        if remove_think:
+            content = re.sub(
+                r'<think>.*?</think>', '', content, flags=re.DOTALL
+            )
+        else:
+            if reasoning_content is not None:
+                content = (
+                    '<think>\n' + reasoning_content + '\n</think>\n' + content
+                )
+        return content
 
     async def _make_msg_chunk(
             self,
@@ -119,7 +144,6 @@ class PPIOChatCompletions(chatcmpl.OpenAIChatCompletions):
         thinking_started = False
         thinking_ended = False
         role = 'assistant'  # 默认角色
-        accumulated_reasoning = ''  # 仅用于判断何时结束思维链
         async for chunk in self._req_stream(args, extra_body=extra_args):
             # 解析 chunk 数据
             if hasattr(chunk, 'choices') and chunk.choices:
@@ -140,14 +164,18 @@ class PPIOChatCompletions(chatcmpl.OpenAIChatCompletions):
 
             if remove_think:
                 if delta['content'] is not None:
-                    if '<think>' in delta['content']:
-                        is_think = True
+                    if '<think>' in delta['content'] and not thinking_started and not thinking_ended:
+                        thinking_started = True
                         continue
-                    elif delta['content'] == r'</think>':
-                        is_think = False
+                    elif delta['content'] == r'</think>' and not thinking_ended:
+                        thinking_ended = True
                         continue
-                    elif is_think or delta['content'] == '\n\n':
+                    elif thinking_ended and delta['content'] == '\n\n' and thinking_started:
+                        thinking_started = False
                         continue
+                    elif thinking_started and not thinking_ended:
+                        continue
+
 
             delta_tool_calls = None
             if delta.get('tool_calls'):

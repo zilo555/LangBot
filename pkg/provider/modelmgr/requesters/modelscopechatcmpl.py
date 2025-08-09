@@ -36,6 +36,7 @@ class ModelScopeChatCompletions(requester.ProviderAPIRequester):
         self,
         args: dict,
         extra_body: dict = {},
+        remove_think:bool = False,
     ) -> chat_completion.ChatCompletion:
         args['stream'] = True
 
@@ -47,10 +48,34 @@ class ModelScopeChatCompletions(requester.ProviderAPIRequester):
 
         resp_gen: openai.AsyncStream = await self.client.chat.completions.create(**args, extra_body=extra_body)
 
+        chunk_idx = 0
+        thinking_started = False
+        thinking_ended = False
         async for chunk in resp_gen:
             # print(chunk)
             if not chunk or not chunk.id or not chunk.choices or not chunk.choices[0] or not chunk.choices[0].delta:
                 continue
+
+            reasoning_content = chunk.choices[0].delta.reasoning_content
+            # 处理 reasoning_content
+            if reasoning_content:
+                # accumulated_reasoning += reasoning_content
+                # 如果设置了 remove_think，跳过 reasoning_content
+                if remove_think:
+                    chunk_idx += 1
+                    continue
+
+                # 第一次出现 reasoning_content，添加 <think> 开始标签
+                if not thinking_started:
+                    thinking_started = True
+                    pending_content += '<think>\n' + reasoning_content
+                else:
+                    # 继续输出 reasoning_content
+                    pending_content += reasoning_content
+            elif thinking_started and not thinking_ended and chunk.choices[0].delta.content:
+                # reasoning_content 结束，normal content 开始，添加 </think> 结束标签
+                thinking_ended = True
+                pending_content += '\n</think>\n' + chunk.choices[0].delta.content
 
             if chunk.choices[0].delta.content is not None:
                 pending_content += chunk.choices[0].delta.content
@@ -130,6 +155,7 @@ class ModelScopeChatCompletions(requester.ProviderAPIRequester):
         use_model: requester.RuntimeLLMModel,
         use_funcs: list[tools_entities.LLMFunction] = None,
         extra_args: dict[str, typing.Any] = {},
+        remove_think:bool = False,
     ) -> llm_entities.Message:
         self.client.api_key = use_model.token_mgr.get_token()
 
@@ -157,7 +183,7 @@ class ModelScopeChatCompletions(requester.ProviderAPIRequester):
         args['messages'] = messages
 
         # 发送请求
-        resp = await self._req(args, extra_body=extra_args)
+        resp = await self._req(args, extra_body=extra_args, remove_think=remove_think)
 
         # 处理请求结果
         message = await self._make_msg(resp)
@@ -172,41 +198,6 @@ class ModelScopeChatCompletions(requester.ProviderAPIRequester):
         async for chunk in await self.client.chat.completions.create(**args, extra_body=extra_body):
             yield chunk
 
-    async def _make_msg_chunk(self,
-            delta: dict[str, typing.Any],
-            idx: int,
-            is_content: bool,
-            is_think: bool,
-    ) -> llm_entities.MessageChunk:
-        # 处理流式chunk和完整响应的差异
-        # print(chat_completion.choices[0])
-
-        if 'role' not in delta or delta['role'] is None:
-            delta['role'] = 'assistant'
-
-        reasoning_content = delta['reasoning_content']
-
-        delta['content'] = '' if delta['content'] is None else delta['content']
-        # print(reasoning_content)
-
-        # deepseek的reasoner模型
-
-        if reasoning_content is not None and idx == 0:
-            delta['content'] += f'<think>\n{reasoning_content}'
-            is_think = True
-        elif reasoning_content is None and idx != 0:
-            if is_content:
-                delta['content'] = delta['content']
-            elif is_think:
-                delta['content'] = f'\n<think>\n\n{delta["content"]}'
-                is_content = True
-                is_think = False
-        elif reasoning_content is not None:
-            delta['content'] = reasoning_content
-
-        message = llm_entities.MessageChunk(**delta)
-
-        return message, is_content, is_think
 
     async def _closure_stream(
         self,
@@ -250,7 +241,7 @@ class ModelScopeChatCompletions(requester.ProviderAPIRequester):
         thinking_started = False
         thinking_ended = False
         role = 'assistant'  # 默认角色
-        accumulated_reasoning = ''  # 仅用于判断何时结束思维链
+        # accumulated_reasoning = ''  # 仅用于判断何时结束思维链
 
         async for chunk in self._req_stream(args, extra_body=extra_args):
             # 解析 chunk 数据
@@ -272,7 +263,7 @@ class ModelScopeChatCompletions(requester.ProviderAPIRequester):
 
             # 处理 reasoning_content
             if reasoning_content:
-                accumulated_reasoning += reasoning_content
+                # accumulated_reasoning += reasoning_content
                 # 如果设置了 remove_think，跳过 reasoning_content
                 if remove_think:
                     chunk_idx += 1
@@ -365,7 +356,7 @@ class ModelScopeChatCompletions(requester.ProviderAPIRequester):
 
         try:
             return await self._closure(
-                query=query, req_messages=req_messages, use_model=model, use_funcs=funcs, extra_args=extra_args
+                query=query, req_messages=req_messages, use_model=model, use_funcs=funcs, extra_args=extra_args, remove_think=remove_think
             )
         except asyncio.TimeoutError:
             raise errors.RequesterError('请求超时')

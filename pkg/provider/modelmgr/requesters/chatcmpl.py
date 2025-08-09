@@ -160,7 +160,7 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
         thinking_started = False
         thinking_ended = False
         role = 'assistant'  # 默认角色
-        accumulated_reasoning = ''  # 仅用于判断何时结束思维链
+        # accumulated_reasoning = ''  # 仅用于判断何时结束思维链
 
         async for chunk in self._req_stream(args, extra_body=extra_args):
             # 解析 chunk 数据
@@ -182,7 +182,7 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
 
             # 处理 reasoning_content
             if reasoning_content:
-                accumulated_reasoning += reasoning_content
+                # accumulated_reasoning += reasoning_content
                 # 如果设置了 remove_think，跳过 reasoning_content
                 if remove_think:
                     chunk_idx += 1
@@ -289,6 +289,7 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
         # 发送请求
 
         resp = await self._req(args, extra_body=extra_args)
+        print(resp)
         # 处理请求结果
         message = await self._make_msg(resp, remove_think)
 
