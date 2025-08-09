@@ -299,12 +299,12 @@ class AnthropicMessages(requester.ProviderAPIRequester):
             async for chunk in await self.client.messages.create(**args):
                 # print(chunk)
                 if isinstance(chunk, anthropic.types.raw_content_block_start_event.RawContentBlockStartEvent):  # 记录开始
-                    if chunk.content_block.type == 'thinking' and not remove_think:
-                        think_started = True
-                        continue
-                    elif chunk.content_block.type == 'text' and not remove_think:
-                        think_ended = True
-                        continue
+                    if not remove_think:
+                        if chunk.content_block.type == 'thinking':
+                            think_started = True
+                        elif chunk.content_block.type == 'text':
+                            think_ended = True
+                    continue
                 elif isinstance(chunk, anthropic.types.raw_content_block_delta_event.RawContentBlockDeltaEvent):
                     if chunk.delta.type == "thinking_delta":
                         if think_started:
@@ -317,7 +317,7 @@ class AnthropicMessages(requester.ProviderAPIRequester):
                     elif chunk.delta.type == "text_delta":
                         if think_ended:
                             think_ended = False
-                            content = '\n<think>\n' + chunk.delta.text
+                            content = '\n</think>\n' + chunk.delta.text
                         else:
                             content = chunk.delta.text
                 elif isinstance(chunk, anthropic.types.raw_content_block_stop_event.RawContentBlockStopEvent):
