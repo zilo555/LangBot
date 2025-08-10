@@ -142,7 +142,7 @@ export default function PipelineDialog({
         <SidebarProvider className="items-start w-full flex h-full min-h-0">
           <Sidebar
             collapsible="none"
-            className="hidden md:flex h-full min-h-0 w-40 border-r bg-white"
+            className="hidden md:flex h-full min-h-0 w-40 border-r bg-white dark:bg-black"
           >
             <SidebarContent>
               <SidebarGroup>

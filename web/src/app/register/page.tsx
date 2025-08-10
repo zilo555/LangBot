@@ -34,6 +34,7 @@ import langbotIcon from '@/app/assets/langbot-logo.webp';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import i18n from '@/i18n';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 const formSchema = (t: (key: string) => string) =>
   z.object({
@@ -139,10 +140,11 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-[375px]">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-neutral-900">
+      <Card className="w-[375px] shadow-lg dark:shadow-white/10">
         <CardHeader>
-          <div className="flex justify-end mb-6">
+          <div className="flex justify-between items-center mb-6">
+            <ThemeToggle />
             <Select
               value={currentLanguage}
               onValueChange={handleLanguageChange}

@@ -34,7 +34,7 @@ export default function PluginCardComponent({
   }
   return (
     <div
-      className="w-[100%] h-[10rem] bg-white rounded-[10px] shadow-[0px_2px_2px_0_rgba(0,0,0,0.2)] p-[1.2rem] cursor-pointer"
+      className="w-[100%] h-[10rem] bg-white dark:bg-[#1a1a1e] rounded-[10px] shadow-[0px_2px_2px_0_rgba(0,0,0,0.2)] dark:shadow-[0px_2px_8px_0_rgba(255,255,255,0.1)] p-[1.2rem] cursor-pointer transition-all duration-200 hover:shadow-[0px_2px_8px_0_rgba(0,0,0,0.1)] dark:hover:shadow-[0px_4px_12px_0_rgba(255,255,255,0.15)]"
       onClick={onCardClick}
     >
       <div className="w-full h-full flex flex-row items-start justify-start gap-[1.2rem]">
@@ -50,18 +50,18 @@ export default function PluginCardComponent({
         <div className="w-full h-full flex flex-col items-start justify-between gap-[0.6rem]">
           <div className="flex flex-col items-start justify-start">
             <div className="flex flex-col items-start justify-start">
-              <div className="text-[0.7rem] text-[#666]">
+              <div className="text-[0.7rem] text-[#666] dark:text-[#a0a0a0]">
                 {cardVO.author} /{' '}
               </div>
               <div className="flex flex-row items-center justify-start gap-[0.4rem]">
-                <div className="text-[1.2rem] text-black">{cardVO.name}</div>
+                <div className="text-[1.2rem] text-black dark:text-[#f0f0f0]">{cardVO.name}</div>
                 <Badge variant="outline" className="text-[0.7rem]">
                   v{cardVO.version}
                 </Badge>
               </div>
             </div>
 
-            <div className="text-[0.8rem] text-[#666] line-clamp-2">
+            <div className="text-[0.8rem] text-[#666] dark:text-[#888888] line-clamp-2">
               {cardVO.description}
             </div>
           </div>
@@ -69,14 +69,14 @@ export default function PluginCardComponent({
           <div className="w-full flex flex-row items-start justify-start gap-[0.6rem]">
             <div className="flex h-full flex-row items-center justify-center gap-[0.4rem]">
               <svg
-                className="w-[1.2rem] h-[1.2rem] text-black"
+                className="w-[1.2rem] h-[1.2rem] text-black dark:text-[#f0f0f0]"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 fill="currentColor"
               >
                 <path d="M24 12L18.3431 17.6569L16.9289 16.2426L21.1716 12L16.9289 7.75736L18.3431 6.34315L24 12ZM2.82843 12L7.07107 16.2426L5.65685 17.6569L0 12L5.65685 6.34315L7.07107 7.75736L2.82843 12ZM9.78845 21H7.66009L14.2116 3H16.3399L9.78845 21Z"></path>
               </svg>
-              <div className="text-base text-black font-medium">
+              <div className="text-base text-black dark:text-[#f0f0f0] font-medium">
                 {t('plugins.eventCount', {
                   count: Object.keys(cardVO.event_handlers).length,
                 })}
@@ -85,14 +85,14 @@ export default function PluginCardComponent({
 
             <div className="flex h-full flex-row items-center justify-center gap-[0.4rem]">
               <svg
-                className="w-[1.2rem] h-[1.2rem] text-black"
+                className="w-[1.2rem] h-[1.2rem] text-black dark:text-[#f0f0f0]"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 fill="currentColor"
               >
                 <path d="M5.32943 3.27158C6.56252 2.8332 7.9923 3.10749 8.97927 4.09446C10.1002 5.21537 10.3019 6.90741 9.5843 8.23385L20.293 18.9437L18.8788 20.3579L8.16982 9.64875C6.84325 10.3669 5.15069 10.1654 4.02952 9.04421C3.04227 8.05696 2.7681 6.62665 3.20701 5.39332L5.44373 7.63C6.02952 8.21578 6.97927 8.21578 7.56505 7.63C8.15084 7.04421 8.15084 6.09446 7.56505 5.50868L5.32943 3.27158ZM15.6968 5.15512L18.8788 3.38736L20.293 4.80157L18.5252 7.98355L16.7574 8.3371L14.6361 10.4584L13.2219 9.04421L15.3432 6.92289L15.6968 5.15512ZM8.97927 13.2868L10.3935 14.7011L5.09018 20.0044C4.69966 20.3949 4.06649 20.3949 3.67597 20.0044C3.31334 19.6417 3.28744 19.0699 3.59826 18.6774L3.67597 18.5902L8.97927 13.2868Z"></path>
               </svg>
-              <div className="text-base text-black font-medium">
+              <div className="text-base text-black dark:text-[#f0f0f0] font-medium">
                 {t('plugins.toolCount', { count: cardVO.tools.length })}
               </div>
             </div>
@@ -115,7 +115,7 @@ export default function PluginCardComponent({
               <div className="flex items-center justify-center gap-[0.4rem]">
                 <svg
                   className={`w-[1.4rem] h-[1.4rem] cursor-pointer ${
-                    cardVO.repository ? 'text-black' : 'text-gray-400'
+                    cardVO.repository ? 'text-black dark:text-[#f0f0f0]' : 'text-gray-400 dark:text-gray-600'
                   }`}
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"

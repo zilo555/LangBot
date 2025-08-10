@@ -6,10 +6,20 @@
   box-shadow: 0px 2px 2px 0 rgba(0, 0, 0, 0.2);
   padding: 1.2rem;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+:global(.dark) .cardContainer {
+  background-color: #1a1a1e;
+  box-shadow: 0px 2px 8px 0 rgba(255, 255, 255, 0.1);
 }
 
 .cardContainer:hover {
   box-shadow: 0px 2px 8px 0 rgba(0, 0, 0, 0.1);
+}
+
+:global(.dark) .cardContainer:hover {
+  box-shadow: 0px 4px 12px 0 rgba(255, 255, 255, 0.15);
 }
 
 .iconBasicInfoContainer {
@@ -39,6 +49,11 @@
 .basicInfoText {
   font-size: 1.4rem;
   font-weight: bold;
+  color: #1a1a1a;
+}
+
+:global(.dark) .basicInfoText {
+  color: #f0f0f0;
 }
 
 .providerContainer {
@@ -56,10 +71,18 @@
   color: #626262;
 }
 
+:global(.dark) .providerIcon {
+  color: #a0a0a0;
+}
+
 .providerLabel {
   font-size: 1.2rem;
   font-weight: 600;
   color: #626262;
+}
+
+:global(.dark) .providerLabel {
+  color: #a0a0a0;
 }
 
 .baseURLContainer {
@@ -77,6 +100,10 @@
   color: #626262;
 }
 
+:global(.dark) .baseURLIcon {
+  color: #a0a0a0;
+}
+
 .baseURLText {
   font-size: 1rem;
   width: 100%;
@@ -85,6 +112,10 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
+}
+
+:global(.dark) .baseURLText {
+  color: #a0a0a0;
 }
 
 .bigText {

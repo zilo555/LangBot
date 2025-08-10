@@ -141,15 +141,15 @@ export default function PluginMarketComponent({
           value={`${sortByValue},${sortOrderValue}`}
           onValueChange={handleSortChange}
         >
-          <SelectTrigger className="w-[180px] ml-2 cursor-pointer">
+          <SelectTrigger className="w-[180px] ml-2 cursor-pointer bg-[#f0f0f0] dark:bg-[#2a2a2e]">
             <SelectValue placeholder={t('plugins.sortBy')} />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="stars,DESC">{t('plugins.mostStars')}</SelectItem>
-            <SelectItem value="created_at,DESC">
+          <SelectContent className="bg-[#f0f0f0] dark:bg-[#2a2a2e]">
+            <SelectItem value="stars,DESC" className="text-gray-900 dark:text-gray-100">{t('plugins.mostStars')}</SelectItem>
+            <SelectItem value="created_at,DESC" className="text-gray-900 dark:text-gray-100">
               {t('plugins.recentlyAdded')}
             </SelectItem>
-            <SelectItem value="pushed_at,DESC">
+            <SelectItem value="pushed_at,DESC" className="text-gray-900 dark:text-gray-100">
               {t('plugins.recentlyUpdated')}
             </SelectItem>
           </SelectContent>
@@ -198,7 +198,7 @@ export default function PluginMarketComponent({
                             isActive={pageNum === nowPage}
                             onClick={() => handlePageChange(pageNum)}
                           >
-                            <span className="text-black select-none">
+                            <span className="text-black dark:text-white select-none">
                               {pageNum}
                             </span>
                           </PaginationLink>

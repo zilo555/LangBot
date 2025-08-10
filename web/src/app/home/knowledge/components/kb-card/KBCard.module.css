@@ -10,10 +10,20 @@
   flex-direction: row;
   justify-content: space-between;
   gap: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+:global(.dark) .cardContainer {
+  background-color: #1a1a1e;
+  box-shadow: 0px 2px 8px 0 rgba(255, 255, 255, 0.1);
 }
 
 .cardContainer:hover {
   box-shadow: 0px 2px 8px 0 rgba(0, 0, 0, 0.1);
+}
+
+:global(.dark) .cardContainer:hover {
+  box-shadow: 0px 4px 12px 0 rgba(255, 255, 255, 0.15);
 }
 
 .basicInfoContainer {
@@ -35,6 +45,11 @@
 .basicInfoNameText {
   font-size: 1.4rem;
   font-weight: 500;
+  color: #1a1a1a;
+}
+
+:global(.dark) .basicInfoNameText {
+  color: #f0f0f0;
 }
 
 .basicInfoDescriptionText {
@@ -48,6 +63,10 @@
   color: #b1b1b1;
 }
 
+:global(.dark) .basicInfoDescriptionText {
+  color: #888888;
+}
+
 .basicInfoLastUpdatedTimeContainer {
   display: flex;
   flex-direction: row;
@@ -58,11 +77,21 @@
 .basicInfoUpdateTimeIcon {
   width: 1.2rem;
   height: 1.2rem;
+  color: #626262;
+}
+
+:global(.dark) .basicInfoUpdateTimeIcon {
+  color: #a0a0a0;
 }
 
 .basicInfoUpdateTimeText {
   font-size: 1rem;
   font-weight: 400;
+  color: #626262;
+}
+
+:global(.dark) .basicInfoUpdateTimeText {
+  color: #a0a0a0;
 }
 
 .operationContainer {
@@ -86,10 +115,18 @@
   color: #ffcd27;
 }
 
+:global(.dark) .operationDefaultBadgeIcon {
+  color: #fbbf24;
+}
+
 .operationDefaultBadgeText {
   font-size: 1rem;
   font-weight: 400;
   color: #ffcd27;
+}
+
+:global(.dark) .operationDefaultBadgeText {
+  color: #fbbf24;
 }
 
 .bigText {

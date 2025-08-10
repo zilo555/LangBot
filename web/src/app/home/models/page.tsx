@@ -192,7 +192,7 @@ export default function LLMConfigPage() {
       <Tabs defaultValue="llm" className="w-full">
         <div className="flex flex-row gap-0 mb-4">
           <div className="flex flex-row justify-between items-center px-[0.8rem]">
-            <TabsList className="shadow-md py-5 bg-[#f0f0f0]">
+            <TabsList className="shadow-md py-5 bg-[#f0f0f0] dark:bg-[#2a2a2e]">
               <TabsTrigger value="llm" className="px-6 py-4 cursor-pointer">
                 {t('llm.llmModels')}
               </TabsTrigger>
@@ -206,12 +206,12 @@ export default function LLMConfigPage() {
           </div>
           <TabsContent value="llm">
             <div className="flex flex-row justify-between items-center px-[0.4rem] h-full">
-              <p className="text-sm text-gray-500">{t('llm.description')}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('llm.description')}</p>
             </div>
           </TabsContent>
           <TabsContent value="embedding">
             <div className="flex flex-row justify-between items-center px-[0.4rem] h-full">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 {t('embedding.description')}
               </p>
             </div>

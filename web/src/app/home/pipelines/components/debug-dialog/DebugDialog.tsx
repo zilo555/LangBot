@@ -218,14 +218,14 @@ export default function DebugDialog({
 
   const renderContent = () => (
     <div className="flex flex-1 h-full min-h-0">
-      <div className="w-14 bg-white p-2 pl-0  flex-shrink-0 flex flex-col justify-start gap-2">
+      <div className="w-14 bg-white dark:bg-black p-2 pl-0  flex-shrink-0 flex flex-col justify-start gap-2">
         <Button
           variant="ghost"
           size="icon"
           className={`w-10 h-10 justify-center rounded-md transition-none ${
             sessionType === 'person'
               ? 'bg-[#2288ee] text-white hover:bg-[#2288ee] hover:text-white'
-              : 'bg-white text-gray-800 hover:bg-gray-100'
+              : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
           } border-0 shadow-none`}
           onClick={() => setSessionType('person')}
         >
@@ -244,7 +244,7 @@ export default function DebugDialog({
           className={`w-10 h-10 justify-center rounded-md transition-none ${
             sessionType === 'group'
               ? 'bg-[#2288ee] text-white hover:bg-[#2288ee] hover:text-white'
-              : 'bg-white text-gray-800 hover:bg-gray-100'
+              : 'bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
           } border-0 shadow-none`}
           onClick={() => setSessionType('group')}
         >
@@ -261,7 +261,7 @@ export default function DebugDialog({
       </div>
 
       <div className="flex-1 flex flex-col w-[10rem] h-full min-h-0">
-        <ScrollArea className="flex-1 p-6 overflow-y-auto min-h-0 bg-white">
+        <ScrollArea className="flex-1 p-6 overflow-y-auto min-h-0 bg-white dark:bg-black">
           <div className="space-y-6">
             {messages.length === 0 ? (
               <div className="text-center text-muted-foreground py-12 text-lg">
@@ -281,7 +281,7 @@ export default function DebugDialog({
                       'max-w-md px-5 py-3 rounded-2xl',
                       message.role === 'user'
                         ? 'bg-[#2288ee] text-white rounded-br-none'
-                        : 'bg-gray-100 text-gray-900 rounded-bl-none',
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none',
                     )}
                   >
                     {renderMessageContent(message)}
@@ -290,7 +290,7 @@ export default function DebugDialog({
                         'text-xs mt-2',
                         message.role === 'user'
                           ? 'text-white/70'
-                          : 'text-gray-500',
+                          : 'text-gray-500 dark:text-gray-400',
                       )}
                     >
                       {message.role === 'user'
@@ -305,7 +305,7 @@ export default function DebugDialog({
           </div>
         </ScrollArea>
 
-        <div className="p-4 pb-0 bg-white flex gap-2">
+        <div className="p-4 pb-0 bg-white dark:bg-black flex gap-2">
           <div className="flex-1 flex items-center gap-2">
             {hasAt && (
               <AtBadge targetName="webchatbot" onRemove={handleAtRemove} />
@@ -322,23 +322,23 @@ export default function DebugDialog({
                       ? t('pipelines.debugDialog.privateChat')
                       : t('pipelines.debugDialog.groupChat'),
                 })}
-                className="flex-1 rounded-md px-3 py-2 border border-gray-300 focus:border-[#2288ee] transition-none text-base"
+                className="flex-1 rounded-md px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100 focus:border-[#2288ee] transition-none text-base"
               />
               {showAtPopover && (
                 <div
                   ref={popoverRef}
-                  className="absolute bottom-full left-0 mb-2 w-auto rounded-md border bg-white shadow-lg"
+                  className="absolute bottom-full left-0 mb-2 w-auto rounded-md border bg-white dark:bg-gray-800 dark:border-gray-600 shadow-lg"
                 >
                   <div
                     className={cn(
                       'flex items-center gap-2 px-4 py-1.5 rounded cursor-pointer',
-                      isHovering ? 'bg-gray-100' : 'bg-white',
+                      isHovering ? 'bg-gray-100 dark:bg-gray-700' : 'bg-white dark:bg-gray-800',
                     )}
                     onClick={handleAtSelect}
                     onMouseEnter={() => setIsHovering(true)}
                     onMouseLeave={() => setIsHovering(false)}
                   >
-                    <span>
+                    <span className="text-gray-800 dark:text-gray-200">
                       @webchatbot - {t('pipelines.debugDialog.atTips')}
                     </span>
                   </div>
@@ -369,7 +369,7 @@ export default function DebugDialog({
 
   // 原有的Dialog包装
   return (
-    <DialogContent className="!max-w-[70vw] max-w-6xl h-[70vh] p-6 flex flex-col rounded-2xl shadow-2xl bg-white">
+    <DialogContent className="!max-w-[70vw] max-w-6xl h-[70vh] p-6 flex flex-col rounded-2xl shadow-2xl bg-white dark:bg-black">
       {renderContent()}
     </DialogContent>
   );

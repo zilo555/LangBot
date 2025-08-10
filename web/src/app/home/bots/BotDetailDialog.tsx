@@ -159,7 +159,7 @@ export default function BotDetailDialog({
           <SidebarProvider className="items-start w-full flex">
             <Sidebar
               collapsible="none"
-              className="hidden md:flex h-[80vh] w-40 min-w-[120px] border-r bg-white"
+              className="hidden md:flex h-[80vh] w-40 min-w-[120px] border-r bg-white dark:bg-black"
             >
               <SidebarContent>
                 <SidebarGroup>

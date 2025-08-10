@@ -16,7 +16,7 @@ export default function PluginMarketCardComponent({
   }
 
   return (
-    <div className="w-[100%] h-[10rem] bg-white rounded-[10px] shadow-[0px_2px_2px_0_rgba(0,0,0,0.2)] p-[1.2rem]">
+    <div className="w-[100%] h-[10rem] bg-white dark:bg-[#1a1a1e] rounded-[10px] shadow-[0px_2px_2px_0_rgba(0,0,0,0.2)] dark:shadow-[0px_2px_8px_0_rgba(255,255,255,0.1)] p-[1.2rem] transition-all duration-200 hover:shadow-[0px_2px_8px_0_rgba(0,0,0,0.1)] dark:hover:shadow-[0px_4px_12px_0_rgba(255,255,255,0.15)]">
       <div className="w-full h-full flex flex-row items-start justify-start gap-[1.2rem]">
         <svg
           className="w-16 h-16 text-[#2288ee]"
@@ -30,15 +30,15 @@ export default function PluginMarketCardComponent({
         <div className="w-full h-full flex flex-col items-start justify-between gap-[0.6rem]">
           <div className="flex flex-col items-start justify-start">
             <div className="flex flex-col items-start justify-start">
-              <div className="text-[0.7rem] text-[#666]">
+              <div className="text-[0.7rem] text-[#666] dark:text-[#a0a0a0]">
                 {cardVO.author} /{' '}
               </div>
               <div className="flex flex-row items-center justify-start gap-[0.4rem]">
-                <div className="text-[1.2rem] text-black">{cardVO.name}</div>
+                <div className="text-[1.2rem] text-black dark:text-[#f0f0f0]">{cardVO.name}</div>
               </div>
             </div>
 
-            <div className="text-[0.8rem] text-[#666] line-clamp-2">
+            <div className="text-[0.8rem] text-[#666] dark:text-[#888888] line-clamp-2">
               {cardVO.description}
             </div>
           </div>
@@ -46,21 +46,21 @@ export default function PluginMarketCardComponent({
           <div className="w-full flex flex-row items-start justify-between gap-[0.6rem]">
             <div className="flex h-full flex-row items-center justify-center gap-[0.4rem]">
               <svg
-                className="w-[1.2rem] h-[1.2rem] text-[#ffcd27]"
+                className="w-[1.2rem] h-[1.2rem] text-[#ffcd27] dark:text-[#fbbf24]"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 fill="currentColor"
               >
                 <path d="M12.0006 18.26L4.94715 22.2082L6.52248 14.2799L0.587891 8.7918L8.61493 7.84006L12.0006 0.5L15.3862 7.84006L23.4132 8.7918L17.4787 14.2799L19.054 22.2082L12.0006 18.26Z"></path>
               </svg>
-              <div className="text-base text-[#ffcd27] font-medium">
+              <div className="text-base text-[#ffcd27] dark:text-[#fbbf24] font-medium">
                 {t('plugins.starCount', { count: cardVO.starCount })}
               </div>
             </div>
 
             <div className="flex h-full flex-row items-center justify-center gap-[0.4rem]">
               <svg
-                className="w-[1.4rem] h-[1.4rem] text-black cursor-pointer"
+                className="w-[1.4rem] h-[1.4rem] text-black dark:text-[#f0f0f0] cursor-pointer"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 fill="currentColor"
