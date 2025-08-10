@@ -160,18 +160,21 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
         thinking_started = False
         thinking_ended = False
         role = 'assistant'  # 默认角色
+        tool_id = ""
+        tool_name = ''
         # accumulated_reasoning = ''  # 仅用于判断何时结束思维链
 
         async for chunk in self._req_stream(args, extra_body=extra_args):
             # 解析 chunk 数据
+
             if hasattr(chunk, 'choices') and chunk.choices:
                 choice = chunk.choices[0]
                 delta = choice.delta.model_dump() if hasattr(choice, 'delta') else {}
+
                 finish_reason = getattr(choice, 'finish_reason', None)
             else:
                 delta = {}
                 finish_reason = None
-
             # 从第一个 chunk 获取 role，后续使用这个 role
             if 'role' in delta and delta['role']:
                 role = delta['role']
@@ -208,41 +211,29 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
             #     delta_content = re.sub(r'<think>.*?</think>', '', delta_content, flags=re.DOTALL)
 
             # 处理工具调用增量
-            delta_tool_calls = None
+            # delta_tool_calls = None
             if delta.get('tool_calls'):
-                delta_tool_calls = []
                 for tool_call in delta['tool_calls']:
-                    tc_id = tool_call.get('id')
-                    if tc_id:
-                        if tc_id not in tool_calls_map:
-                            # 新的工具调用
-                            tool_calls_map[tc_id] = llm_entities.ToolCall(
-                                id=tc_id,
-                                type=tool_call.get('type', 'function'),
-                                function=llm_entities.FunctionCall(
-                                    name=tool_call.get('function', {}).get('name', ''),
-                                    arguments=tool_call.get('function', {}).get('arguments', ''),
-                                ),
-                            )
-                            delta_tool_calls.append(tool_calls_map[tc_id])
-                        else:
-                            # 追加函数参数
-                            func_args = tool_call.get('function', {}).get('arguments', '')
-                            if func_args:
-                                tool_calls_map[tc_id].function.arguments += func_args
-                                # 返回更新后的完整工具调用
-                                delta_tool_calls.append(tool_calls_map[tc_id])
+                    if tool_call['id'] and tool_call['function']['name']:
+                        tool_id = tool_call['id']
+                        tool_name = tool_call['function']['name']
+                    else:
+                        tool_call['id'] = tool_id
+                        tool_call['function']['name'] = tool_name
+                    if tool_call['type'] is None:
+                        tool_call['type'] = 'function'
+
+
 
             # 跳过空的第一个 chunk（只有 role 没有内容）
             if chunk_idx == 0 and not delta_content and not reasoning_content and not delta.get('tool_calls'):
                 chunk_idx += 1
                 continue
-
             # 构建 MessageChunk - 只包含增量内容
             chunk_data = {
                 'role': role,
                 'content': delta_content if delta_content else None,
-                'tool_calls': delta_tool_calls if delta_tool_calls else None,
+                'tool_calls': delta.get('tool_calls'),
                 'is_final': bool(finish_reason),
             }
 
@@ -289,7 +280,6 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
         # 发送请求
 
         resp = await self._req(args, extra_body=extra_args)
-        print(resp)
         # 处理请求结果
         message = await self._make_msg(resp, remove_think)
 

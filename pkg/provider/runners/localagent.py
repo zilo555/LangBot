@@ -148,13 +148,13 @@ class LocalAgentRunner(runner.RequestRunner):
                         if tool_call.function and tool_call.function.arguments:
                             # 流式处理中，工具调用参数可能分多个chunk返回，需要追加而不是覆盖
                             tool_calls_map[tool_call.id].function.arguments += tool_call.function.arguments
-
+                print(list(tool_calls_map.values()) if (tool_calls_map and msg.is_final) else None)
+                # continue
                 # 每8个chunk或最后一个chunk时，输出所有累积的内容
                 if msg_idx % 8 == 0 or msg.is_final:
                     yield llm_entities.MessageChunk(
                         role=last_role,
                         content=accumulated_content,  # 输出所有累积内容
-                        tool_calls=list(tool_calls_map.values()) if (tool_calls_map and msg.is_final) else None,
                         is_final=msg.is_final,
                     )
 
@@ -178,12 +178,18 @@ class LocalAgentRunner(runner.RequestRunner):
                     parameters = json.loads(func.arguments)
 
                     func_ret = await self.ap.tool_mgr.execute_func_call(query, func.name, parameters)
-
-                    msg = llm_entities.Message(
-                        role='tool',
-                        content=json.dumps(func_ret, ensure_ascii=False),
-                        tool_call_id=tool_call.id,
-                    )
+                    if is_stream:
+                        msg = llm_entities.MessageChunk(
+                            role='tool',
+                            content=json.dumps(func_ret, ensure_ascii=False),
+                            tool_call_id=tool_call.id,
+                        )
+                    else:
+                        msg = llm_entities.Message(
+                            role='tool',
+                            content=json.dumps(func_ret, ensure_ascii=False),
+                            tool_call_id=tool_call.id,
+                        )
 
                     yield msg
 

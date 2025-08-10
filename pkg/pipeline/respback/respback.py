@@ -41,6 +41,7 @@ class SendResponseBackStage(stage.PipelineStage):
         # TODO 命令与流式的兼容性问题
         if await query.adapter.is_stream_output_supported():
             is_final = [msg.is_final for msg in query.resp_messages][0]
+            print(query.resp_messages[-1])
             await query.adapter.reply_message_chunk(
                 message_source=query.message_event,
                 message_id=query.resp_messages[-1].resp_message_id,

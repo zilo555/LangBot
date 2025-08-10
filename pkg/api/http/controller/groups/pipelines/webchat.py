@@ -13,6 +13,7 @@ class WebChatDebugRouterGroup(group.RouterGroup):
             """Send a message to the pipeline for debugging"""
 
             async def stream_generator(generator):
+                yield 'data: {"type": "start"}\n\n'
                 async for message in generator:
                     yield f'data: {json.dumps({"message": message})}\n\n'
                 yield 'data: {"type": "end"}\n\n'
@@ -38,8 +39,14 @@ class WebChatDebugRouterGroup(group.RouterGroup):
                     generator = webchat_adapter.send_webchat_message(
                         pipeline_uuid, session_type, message_chain_obj, is_stream
                     )
-
-                    return quart.Response(stream_generator(generator), mimetype='text/event-stream')
+                    # 设置正确的响应头
+                    headers = {
+                        'Content-Type': 'text/event-stream',
+                        'Transfer-Encoding': 'chunked',
+                        'Cache-Control': 'no-cache',
+                        'Connection': 'keep-alive'
+                    }
+                    return quart.Response(stream_generator(generator), mimetype='text/event-stream',headers=headers)
 
                 else:
                     # result = await webchat_adapter.send_webchat_message(pipeline_uuid, session_type, message_chain_obj)

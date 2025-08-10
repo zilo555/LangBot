@@ -93,12 +93,21 @@ class RuntimePipeline:
                 query.message_event, platform_events.GroupMessage
             ):
                 result.user_notice.insert(0, platform_message.At(query.message_event.sender.id))
-
-            await query.adapter.reply_message(
-                message_source=query.message_event,
-                message=result.user_notice,
-                quote_origin=query.pipeline_config['output']['misc']['quote-origin'],
-            )
+            if await query.adapter.is_stream_output_supported():
+                print(query.resp_messages[-1])
+                await query.adapter.reply_message_chunk(
+                    message_source=query.message_event,
+                    message_id=str(query.resp_messages[-1].resp_message_id),
+                    message=result.user_notice,
+                    quote_origin=query.pipeline_config['output']['misc']['quote-origin'],
+                    is_final=[msg.is_final for msg in query.resp_messages][0]
+                )
+            else:
+                await query.adapter.reply_message(
+                    message_source=query.message_event,
+                    message=result.user_notice,
+                    quote_origin=query.pipeline_config['output']['misc']['quote-origin'],
+                )
         if result.debug_notice:
             self.ap.logger.debug(result.debug_notice)
         if result.console_notice:

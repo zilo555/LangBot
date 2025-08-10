@@ -273,13 +273,11 @@ class AnthropicMessages(requester.ProviderAPIRequester):
                 del msg_dict['tool_calls']
 
             req_messages.append(msg_dict)
-        if args["thinking"]:
+        if args.get("thinking", False):
             args['thinking'] = {
                 "type": "enabled",
                 "budget_tokens": 10000
             }
-        else:
-            args.pop('thinking')
 
         args['messages'] = req_messages
 
@@ -296,15 +294,32 @@ class AnthropicMessages(requester.ProviderAPIRequester):
             think_ended = False
             finish_reason = False
             content = ''
+            tool_name = ''
+            tool_id = ''
+            tool_calls = []
             async for chunk in await self.client.messages.create(**args):
-                # print(chunk)
+                print(chunk)
+                tool_call = {"id":None, 'function': {"name": None, "arguments": None},'type':'function'}
                 if isinstance(chunk, anthropic.types.raw_content_block_start_event.RawContentBlockStartEvent):  # 记录开始
+                    if chunk.content_block.type == 'tool_use':
+
+                        if chunk.content_block.name is not None:
+                            tool_name = chunk.content_block.name
+                        if chunk.content_block.id is not None:
+                            tool_id = chunk.content_block.id
+
+
+                        tool_call['function']['name'] = tool_name
+                        tool_call['function']['arguments'] = ''
+                        tool_call['id'] = tool_id
+
+                        print(chunk.content_block)
                     if not remove_think:
-                        if chunk.content_block.type == 'thinking':
+                        if chunk.content_block.type == 'thinking' and not remove_think:
                             think_started = True
-                        elif chunk.content_block.type == 'text':
+                        elif chunk.content_block.type == 'text' and chunk.index != 0 and not remove_think:
                             think_ended = True
-                    continue
+                        continue
                 elif isinstance(chunk, anthropic.types.raw_content_block_delta_event.RawContentBlockDeltaEvent):
                     if chunk.delta.type == "thinking_delta":
                         if think_started:
@@ -320,6 +335,10 @@ class AnthropicMessages(requester.ProviderAPIRequester):
                             content = '\n</think>\n' + chunk.delta.text
                         else:
                             content = chunk.delta.text
+                    elif chunk.delta.type == "input_json_delta":
+                        tool_call['function']["arguments"] = chunk.delta.partial_json
+                        tool_call['function']['name'] = tool_name
+                        tool_call['id'] = tool_id
                 elif isinstance(chunk, anthropic.types.raw_content_block_stop_event.RawContentBlockStopEvent):
                     continue  # 记录raw_content_block结束的
 
@@ -333,10 +352,12 @@ class AnthropicMessages(requester.ProviderAPIRequester):
                     continue
 
 
+
                 args = {
                     'content': content,
                     'role': role,
-                    "is_final": finish_reason
+                    "is_final": finish_reason,
+                    'tool_calls': None if tool_call['id'] is None else [tool_call],
                 }
                 # if chunk_idx == 0:
                 #     chunk_idx += 1

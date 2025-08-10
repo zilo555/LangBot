@@ -72,9 +72,9 @@ class ChatMessageHandler(handler.MessageHandler):
                     raise ValueError(f'未找到请求运行器: {query.pipeline_config["ai"]["runner"]["runner"]}')
                 if is_stream:
                     resp_message_id = uuid.uuid4()
-                    await query.adapter.create_message_card(resp_message_id, query.message_event)
+                    await query.adapter.create_message_card(str(resp_message_id), query.message_event)
                     async for result in runner.run(query):
-                        result.resp_message_id = resp_message_id
+                        result.resp_message_id = str(resp_message_id)
                         if query.resp_messages:
                             query.resp_messages.pop()
                         if query.resp_message_chain:
