@@ -206,7 +206,9 @@ export default function LLMConfigPage() {
           </div>
           <TabsContent value="llm">
             <div className="flex flex-row justify-between items-center px-[0.4rem] h-full">
-              <p className="text-sm text-gray-500 dark:text-gray-400">{t('llm.description')}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {t('llm.description')}
+              </p>
             </div>
           </TabsContent>
           <TabsContent value="embedding">

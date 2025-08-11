@@ -77,7 +77,10 @@ export const columns = (
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-white dark:bg-[#2a2a2e]">
+            <DropdownMenuContent
+              align="end"
+              className="bg-white dark:bg-[#2a2a2e]"
+            >
               <DropdownMenuLabel>
                 {t('knowledge.documentsTab.actions')}
               </DropdownMenuLabel>

@@ -19,10 +19,10 @@ export default function RootLayout({
     <html lang="zh" suppressHydrationWarning>
       <body className={``}>
         <ThemeProvider>
-        <I18nProvider>
-          {children}
-          <Toaster />
-        </I18nProvider>
+          <I18nProvider>
+            {children}
+            <Toaster />
+          </I18nProvider>
         </ThemeProvider>
       </body>
     </html>

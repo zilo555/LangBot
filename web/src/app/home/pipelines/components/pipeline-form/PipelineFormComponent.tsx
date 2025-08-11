@@ -342,7 +342,7 @@ export default function PipelineFormComponent({
 
   return (
     <>
-              <div className="!max-w-[70vw] max-w-6xl h-full p-0 flex flex-col bg-white dark:bg-black">
+      <div className="!max-w-[70vw] max-w-6xl h-full p-0 flex flex-col bg-white dark:bg-black">
         <Form {...form}>
           <form
             id="pipeline-form"

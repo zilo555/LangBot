@@ -332,7 +332,9 @@ export default function DebugDialog({
                   <div
                     className={cn(
                       'flex items-center gap-2 px-4 py-1.5 rounded cursor-pointer',
-                      isHovering ? 'bg-gray-100 dark:bg-gray-700' : 'bg-white dark:bg-gray-800',
+                      isHovering
+                        ? 'bg-gray-100 dark:bg-gray-700'
+                        : 'bg-white dark:bg-gray-800',
                     )}
                     onClick={handleAtSelect}
                     onMouseEnter={() => setIsHovering(true)}
