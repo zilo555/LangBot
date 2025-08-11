@@ -132,7 +132,7 @@ export default function DynamicFormItemComponent({
     case DynamicFormItemType.SELECT:
       return (
         <Select value={field.value} onValueChange={field.onChange}>
-          <SelectTrigger className="bg-[#f0f0f0] dark:bg-[#2a2a2e]">
+          <SelectTrigger className="bg-[#ffffff] dark:bg-[#2a2a2e]">
             <SelectValue placeholder={t('common.select')} />
           </SelectTrigger>
           <SelectContent>
@@ -150,7 +150,7 @@ export default function DynamicFormItemComponent({
     case DynamicFormItemType.LLM_MODEL_SELECTOR:
       return (
         <Select value={field.value} onValueChange={field.onChange}>
-          <SelectTrigger className="bg-[#f0f0f0] dark:bg-[#2a2a2e]">
+          <SelectTrigger className="bg-[#ffffff] dark:bg-[#2a2a2e]">
             <SelectValue placeholder={t('models.selectModel')} />
           </SelectTrigger>
           <SelectContent>
@@ -267,7 +267,7 @@ export default function DynamicFormItemComponent({
     case DynamicFormItemType.KNOWLEDGE_BASE_SELECTOR:
       return (
         <Select value={field.value} onValueChange={field.onChange}>
-          <SelectTrigger className="bg-[#f0f0f0] dark:bg-[#2a2a2e]">
+          <SelectTrigger className="bg-[#ffffff] dark:bg-[#2a2a2e]">
             <SelectValue placeholder={t('knowledge.selectKnowledgeBase')} />
           </SelectTrigger>
           <SelectContent>
@@ -303,7 +303,7 @@ export default function DynamicFormItemComponent({
                       field.onChange(newValue);
                     }}
                   >
-                    <SelectTrigger className="w-[120px] bg-[#f0f0f0] dark:bg-[#2a2a2e]">
+                    <SelectTrigger className="w-[120px] bg-[#ffffff] dark:bg-[#2a2a2e]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

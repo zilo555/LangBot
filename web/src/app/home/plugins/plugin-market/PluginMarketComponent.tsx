@@ -141,15 +141,26 @@ export default function PluginMarketComponent({
           value={`${sortByValue},${sortOrderValue}`}
           onValueChange={handleSortChange}
         >
-          <SelectTrigger className="w-[180px] ml-2 cursor-pointer bg-[#f0f0f0] dark:bg-[#2a2a2e]">
+          <SelectTrigger className="w-[180px] ml-2 cursor-pointer bg-[#ffffff] dark:bg-[#2a2a2e]">
             <SelectValue placeholder={t('plugins.sortBy')} />
           </SelectTrigger>
-          <SelectContent className="bg-[#f0f0f0] dark:bg-[#2a2a2e]">
-            <SelectItem value="stars,DESC" className="text-gray-900 dark:text-gray-100">{t('plugins.mostStars')}</SelectItem>
-            <SelectItem value="created_at,DESC" className="text-gray-900 dark:text-gray-100">
+          <SelectContent className="bg-[#ffffff] dark:bg-[#2a2a2e]">
+            <SelectItem
+              value="stars,DESC"
+              className="text-gray-900 dark:text-gray-100"
+            >
+              {t('plugins.mostStars')}
+            </SelectItem>
+            <SelectItem
+              value="created_at,DESC"
+              className="text-gray-900 dark:text-gray-100"
+            >
               {t('plugins.recentlyAdded')}
             </SelectItem>
-            <SelectItem value="pushed_at,DESC" className="text-gray-900 dark:text-gray-100">
+            <SelectItem
+              value="pushed_at,DESC"
+              className="text-gray-900 dark:text-gray-100"
+            >
               {t('plugins.recentlyUpdated')}
             </SelectItem>
           </SelectContent>

@@ -394,7 +394,7 @@ export default function BotForm({
                       <FormLabel>{t('bots.bindPipeline')}</FormLabel>
                       <FormControl>
                         <Select onValueChange={field.onChange} {...field}>
-                          <SelectTrigger className="bg-[#f0f0f0] dark:bg-[#2a2a2e]">
+                          <SelectTrigger className="bg-[#ffffff] dark:bg-[#2a2a2e]">
                             <SelectValue
                               placeholder={t('bots.selectPipeline')}
                             />
@@ -467,7 +467,7 @@ export default function BotForm({
                         }}
                         value={field.value}
                       >
-                        <SelectTrigger className="w-[180px] bg-[#f0f0f0] dark:bg-[#2a2a2e]">
+                        <SelectTrigger className="w-[180px] bg-[#ffffff] dark:bg-[#2a2a2e]">
                           <SelectValue placeholder={t('bots.selectAdapter')} />
                         </SelectTrigger>
                         <SelectContent className="fixed z-[1000]">

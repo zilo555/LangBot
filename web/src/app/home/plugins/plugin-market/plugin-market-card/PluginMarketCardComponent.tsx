@@ -16,7 +16,7 @@ export default function PluginMarketCardComponent({
   }
 
   return (
-    <div className="w-[100%] h-[10rem] bg-white dark:bg-[#1a1a1e] rounded-[10px] shadow-[0px_2px_2px_0_rgba(0,0,0,0.2)] dark:shadow-[0px_2px_8px_0_rgba(255,255,255,0.1)] p-[1.2rem] transition-all duration-200 hover:shadow-[0px_2px_8px_0_rgba(0,0,0,0.1)] dark:hover:shadow-[0px_4px_12px_0_rgba(255,255,255,0.15)]">
+    <div className="w-[100%] h-[10rem] bg-white dark:bg-[#1f1f22] rounded-[10px] shadow-[0px_2px_2px_0_rgba(0,0,0,0.2)] dark:shadow-[0] p-[1.2rem] transition-all duration-200 hover:shadow-[0px_2px_8px_0_rgba(0,0,0,0.1)] dark:hover:shadow-[0]">
       <div className="w-full h-full flex flex-row items-start justify-start gap-[1.2rem]">
         <svg
           className="w-16 h-16 text-[#2288ee]"
@@ -34,7 +34,9 @@ export default function PluginMarketCardComponent({
                 {cardVO.author} /{' '}
               </div>
               <div className="flex flex-row items-center justify-start gap-[0.4rem]">
-                <div className="text-[1.2rem] text-black dark:text-[#f0f0f0]">{cardVO.name}</div>
+                <div className="text-[1.2rem] text-black dark:text-[#f0f0f0]">
+                  {cardVO.name}
+                </div>
               </div>
             </div>
 

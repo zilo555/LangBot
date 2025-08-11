@@ -404,7 +404,7 @@ export default function EmbeddingForm({
                       }}
                       value={field.value}
                     >
-                      <SelectTrigger className="w-[180px] bg-[#f0f0f0] dark:bg-[#2a2a2e]">
+                      <SelectTrigger className="w-[180px] bg-[#ffffff] dark:bg-[#2a2a2e]">
                         <SelectValue
                           placeholder={t('models.selectModelProvider')}
                         />
@@ -479,7 +479,7 @@ export default function EmbeddingForm({
                         updateExtraArg(index, 'type', value)
                       }
                     >
-                      <SelectTrigger className="w-[120px] bg-[#f0f0f0] dark:bg-[#2a2a2e]">
+                      <SelectTrigger className="w-[120px] bg-[#ffffff] dark:bg-[#2a2a2e]">
                         <SelectValue placeholder={t('models.type')} />
                       </SelectTrigger>
                       <SelectContent>

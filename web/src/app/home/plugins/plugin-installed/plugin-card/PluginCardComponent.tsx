@@ -34,7 +34,7 @@ export default function PluginCardComponent({
   }
   return (
     <div
-      className="w-[100%] h-[10rem] bg-white dark:bg-[#1a1a1e] rounded-[10px] shadow-[0px_2px_2px_0_rgba(0,0,0,0.2)] dark:shadow-[0px_2px_8px_0_rgba(255,255,255,0.1)] p-[1.2rem] cursor-pointer transition-all duration-200 hover:shadow-[0px_2px_8px_0_rgba(0,0,0,0.1)] dark:hover:shadow-[0px_4px_12px_0_rgba(255,255,255,0.15)]"
+      className="w-[100%] h-[10rem] bg-white dark:bg-[#1f1f22] rounded-[10px] shadow-[0px_2px_2px_0_rgba(0,0,0,0.2)] dark:shadow-[0] p-[1.2rem] cursor-pointer transition-all duration-200 hover:shadow-[0px_2px_8px_0_rgba(0,0,0,0.1)] dark:hover:shadow-[0]"
       onClick={onCardClick}
     >
       <div className="w-full h-full flex flex-row items-start justify-start gap-[1.2rem]">
@@ -54,7 +54,9 @@ export default function PluginCardComponent({
                 {cardVO.author} /{' '}
               </div>
               <div className="flex flex-row items-center justify-start gap-[0.4rem]">
-                <div className="text-[1.2rem] text-black dark:text-[#f0f0f0]">{cardVO.name}</div>
+                <div className="text-[1.2rem] text-black dark:text-[#f0f0f0]">
+                  {cardVO.name}
+                </div>
                 <Badge variant="outline" className="text-[0.7rem]">
                   v{cardVO.version}
                 </Badge>
@@ -115,7 +117,9 @@ export default function PluginCardComponent({
               <div className="flex items-center justify-center gap-[0.4rem]">
                 <svg
                   className={`w-[1.4rem] h-[1.4rem] cursor-pointer ${
-                    cardVO.repository ? 'text-black dark:text-[#f0f0f0]' : 'text-gray-400 dark:text-gray-600'
+                    cardVO.repository
+                      ? 'text-black dark:text-[#f0f0f0]'
+                      : 'text-gray-400 dark:text-gray-600'
                   }`}
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
