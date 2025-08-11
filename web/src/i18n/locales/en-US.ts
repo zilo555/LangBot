@@ -255,7 +255,8 @@ const enUS = {
     topK: 'Top K',
     topKRequired: 'Top K cannot be empty',
     topKMax: 'Top K maximum value is 30',
-    topKdescription: 'Used to specify the number of relevant documents to retrieve, ranging from 1 to 30.',
+    topKdescription:
+      'Used to specify the number of relevant documents to retrieve, ranging from 1 to 30.',
     defaultDescription: 'A knowledge base',
     embeddingModelUUID: 'Embedding Model',
     selectEmbeddingModel: 'Select Embedding Model',

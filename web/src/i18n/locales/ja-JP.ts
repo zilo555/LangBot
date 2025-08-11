@@ -257,7 +257,8 @@ const jaJP = {
     topK: '上位K件',
     topKRequired: '上位K件は必須です',
     topKMax: '上位K件の最大値は30です',
-    topKdescription: '関連ドキュメントを取得するための上位K件の数。1〜30の範囲で設定可能です',
+    topKdescription:
+      '関連ドキュメントを取得するための上位K件の数。1〜30の範囲で設定可能です',
     defaultDescription: '知識ベース',
     embeddingModelUUID: '埋め込みモデル',
     selectEmbeddingModel: '埋め込みモデルを選択',
