@@ -91,7 +91,9 @@ class AnthropicMessages(requester.ProviderAPIRequester):
                             {
                                 'type': 'tool_result',
                                 'tool_use_id': tool_call_id,
-                                'content': m.content,
+                                'is_error':False,
+                                'content': [{"type": "text",
+                                             "text": m.content}],
                             }
                         ],
                     }
@@ -135,13 +137,11 @@ class AnthropicMessages(requester.ProviderAPIRequester):
 
         args['messages'] = req_messages
 
-        if args["thinking"]:
+        if 'thinking' in args:
             args['thinking'] = {
                 "type": "enabled",
                 "budget_tokens": 10000
             }
-        else:
-            args.pop('thinking')
 
         if funcs:
             tools = await self.ap.tool_mgr.generate_tools_for_anthropic(funcs)
@@ -156,7 +156,6 @@ class AnthropicMessages(requester.ProviderAPIRequester):
                 'content': '',
                 'role': resp.role,
             }
-            print(type(resp))
             assert type(resp) is anthropic.types.message.Message
 
             for block in resp.content:
@@ -232,7 +231,9 @@ class AnthropicMessages(requester.ProviderAPIRequester):
                             {
                                 'type': 'tool_result',
                                 'tool_use_id': tool_call_id,
-                                'content': m.content,
+                                'is_error':False,  # 暂时直接写false
+                                'content': [{"type": "text",
+                                             "text": m.content}],  # 这里要是list包裹，应该是多个返回的情况？type类型好像也可以填其他的，暂时只写text
                             }
                         ],
                     }
@@ -273,7 +274,7 @@ class AnthropicMessages(requester.ProviderAPIRequester):
                 del msg_dict['tool_calls']
 
             req_messages.append(msg_dict)
-        if args.get("thinking", False):
+        if 'thinking' in args:
             args['thinking'] = {
                 "type": "enabled",
                 "budget_tokens": 10000
@@ -298,7 +299,6 @@ class AnthropicMessages(requester.ProviderAPIRequester):
             tool_id = ''
             tool_calls = []
             async for chunk in await self.client.messages.create(**args):
-                print(chunk)
                 tool_call = {"id":None, 'function': {"name": None, "arguments": None},'type':'function'}
                 if isinstance(chunk, anthropic.types.raw_content_block_start_event.RawContentBlockStartEvent):  # 记录开始
                     if chunk.content_block.type == 'tool_use':
@@ -313,7 +313,6 @@ class AnthropicMessages(requester.ProviderAPIRequester):
                         tool_call['function']['arguments'] = ''
                         tool_call['id'] = tool_id
 
-                        print(chunk.content_block)
                     if not remove_think:
                         if chunk.content_block.type == 'thinking' and not remove_think:
                             think_started = True
