@@ -61,7 +61,7 @@ export interface KnowledgeBase {
   description: string;
   embedding_model_uuid: string;
   created_at?: string;
-  top_k?: number;
+  top_k: number;
 }
 
 export interface ApiRespProviderEmbeddingModels {
