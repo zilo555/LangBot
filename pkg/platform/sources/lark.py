@@ -543,9 +543,10 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
         """
         回复消息变成更新卡片消息
         """
-        self.seq += 1
+
 
         if (self.seq - 1) % 8 == 0 or is_final:
+            self.seq += 1
             lark_message = await self.message_converter.yiri2target(message, self.api_client)
 
 
@@ -577,7 +578,7 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
 
             if is_final:
                 self.seq = 1  # 消息回复结束之后重置seq
-                self.card_id_dict.pop(message_id)  # 清理已经使用过的卡片
+                # self.card_id_dict.pop(message_id)  # 清理已经使用过的卡片
             # 发起请求
             response: ContentCardElementResponse = self.api_client.cardkit.v1.card_element.content(request)
 
