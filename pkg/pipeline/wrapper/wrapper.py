@@ -97,7 +97,7 @@ class ResponseWrapper(stage.PipelineStage):
                         reply_text = f'调用函数 {".".join(function_names)}...'
 
                         query.resp_message_chain.append(
-                            platform_message.MessageChain([platform_message.Plain(reply_text)])
+                            platform_message.MessageChain([platform_message.Plain(text=reply_text)])
                         )
 
                         if query.pipeline_config['output']['misc']['track-function-calls']:
@@ -125,12 +125,12 @@ class ResponseWrapper(stage.PipelineStage):
                             else:
                                 if event_ctx.event.reply is not None:
                                     query.resp_message_chain.append(
-                                        platform_message.MessageChain(event_ctx.event.reply)
+                                        platform_message.MessageChain(text=event_ctx.event.reply)
                                     )
 
                                 else:
                                     query.resp_message_chain.append(
-                                        platform_message.MessageChain([platform_message.Plain(reply_text)])
+                                        platform_message.MessageChain([platform_message.Plain(text=reply_text)])
                                     )
 
                                 yield entities.StageProcessResult(
