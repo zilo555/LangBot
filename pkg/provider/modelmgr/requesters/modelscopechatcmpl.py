@@ -290,15 +290,19 @@ class ModelScopeChatCompletions(requester.ProviderAPIRequester):
 
             # 处理工具调用增量
             if delta.get('tool_calls'):
+                print(delta.get('tool_calls'))
                 for tool_call in delta['tool_calls']:
-                    if tool_call['id'] and tool_call['function']['name']:
+                    if tool_call['id'] != '':
                         tool_id = tool_call['id']
+                    if tool_call['function']['name'] is not None:
                         tool_name = tool_call['function']['name']
-                    else:
-                        tool_call['id'] = tool_id
-                        tool_call['function']['name'] = tool_name
+
                     if tool_call['type'] is None:
                         tool_call['type'] = 'function'
+                    tool_call['id'] = tool_id
+                    tool_call['function']['name'] = tool_name
+                    tool_call['function']['arguments'] = "" if tool_call['function']['arguments'] is None else tool_call['function']['arguments']
+
 
             # 跳过空的第一个 chunk（只有 role 没有内容）
             if chunk_idx == 0 and not delta_content and not reasoning_content and not delta.get('tool_calls'):
