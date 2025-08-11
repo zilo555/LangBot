@@ -132,7 +132,7 @@ export default function DynamicFormItemComponent({
     case DynamicFormItemType.SELECT:
       return (
         <Select value={field.value} onValueChange={field.onChange}>
-          <SelectTrigger>
+          <SelectTrigger className="bg-[#ffffff] dark:bg-[#2a2a2e]">
             <SelectValue placeholder={t('common.select')} />
           </SelectTrigger>
           <SelectContent>
@@ -150,7 +150,7 @@ export default function DynamicFormItemComponent({
     case DynamicFormItemType.LLM_MODEL_SELECTOR:
       return (
         <Select value={field.value} onValueChange={field.onChange}>
-          <SelectTrigger>
+          <SelectTrigger className="bg-[#ffffff] dark:bg-[#2a2a2e]">
             <SelectValue placeholder={t('models.selectModel')} />
           </SelectTrigger>
           <SelectContent>
@@ -267,7 +267,7 @@ export default function DynamicFormItemComponent({
     case DynamicFormItemType.KNOWLEDGE_BASE_SELECTOR:
       return (
         <Select value={field.value} onValueChange={field.onChange}>
-          <SelectTrigger>
+          <SelectTrigger className="bg-[#ffffff] dark:bg-[#2a2a2e]">
             <SelectValue placeholder={t('knowledge.selectKnowledgeBase')} />
           </SelectTrigger>
           <SelectContent>
@@ -291,7 +291,7 @@ export default function DynamicFormItemComponent({
               <div key={index} className="flex gap-2 items-center">
                 {/* 角色选择 */}
                 {index === 0 ? (
-                  <div className="w-[120px] px-3 py-2 border rounded bg-gray-50 text-gray-500">
+                  <div className="w-[120px] px-3 py-2 border rounded bg-gray-50 dark:bg-[#2a292e] text-gray-500 dark:text-white dark:border-gray-600">
                     system
                   </div>
                 ) : (
@@ -303,7 +303,7 @@ export default function DynamicFormItemComponent({
                       field.onChange(newValue);
                     }}
                   >
-                    <SelectTrigger className="w-[120px]">
+                    <SelectTrigger className="w-[120px] bg-[#ffffff] dark:bg-[#2a2a2e]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

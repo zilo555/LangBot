@@ -200,7 +200,7 @@ export default function KBForm({
                         }}
                         value={field.value}
                       >
-                        <SelectTrigger className="w-[180px]">
+                        <SelectTrigger className="w-[180px] bg-[#ffffff] dark:bg-[#2a2a2e]">
                           <SelectValue
                             placeholder={t('knowledge.selectEmbeddingModel')}
                           />

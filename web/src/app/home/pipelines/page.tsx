@@ -125,17 +125,26 @@ export default function PluginConfigPage() {
           value={`${sortByValue},${sortOrderValue}`}
           onValueChange={handleSortChange}
         >
-          <SelectTrigger className="w-[180px] cursor-pointer bg-white dark:bg-gray-800">
+          <SelectTrigger className="w-[180px] cursor-pointer bg-[#ffffff] dark:bg-[#2a2a2e]">
             <SelectValue placeholder={t('pipelines.sortBy')} />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="created_at,DESC">
+          <SelectContent className="bg-[#ffffff] dark:bg-[#2a2a2e]">
+            <SelectItem
+              value="created_at,DESC"
+              className="text-gray-900 dark:text-gray-100"
+            >
               {t('pipelines.newestCreated')}
             </SelectItem>
-            <SelectItem value="updated_at,DESC">
+            <SelectItem
+              value="updated_at,DESC"
+              className="text-gray-900 dark:text-gray-100"
+            >
               {t('pipelines.recentlyEdited')}
             </SelectItem>
-            <SelectItem value="updated_at,ASC">
+            <SelectItem
+              value="updated_at,ASC"
+              className="text-gray-900 dark:text-gray-100"
+            >
               {t('pipelines.earliestEdited')}
             </SelectItem>
           </SelectContent>

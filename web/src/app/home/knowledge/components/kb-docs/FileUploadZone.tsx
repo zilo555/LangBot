@@ -127,12 +127,12 @@ export default function FileUploadZone({
               </div>
 
               <div>
-                <p className="text-base font-medium text-gray-900">
+                <p className="text-base font-medium text-gray-900 dark:text-gray-100">
                   {isUploading
                     ? t('knowledge.documentsTab.uploading')
                     : t('knowledge.documentsTab.dragAndDrop')}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-500 mt-1 dark:text-gray-400">
                   {t('knowledge.documentsTab.supportedFormats')}
                 </p>
               </div>
