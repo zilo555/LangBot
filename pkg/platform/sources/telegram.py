@@ -158,7 +158,7 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
         self.ap = ap
         self.logger = logger
         self.msg_stream_id = {}
-        self.seq = 1
+        # self.seq = 1
 
         async def telegram_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if update.message.from_user.is_bot:
@@ -216,8 +216,8 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
         quote_origin: bool = False,
         is_final: bool = False,
     ):
-        self.seq += 1
-        if (self.seq - 1) % 8 == 0 or is_final:
+        msg_seq = bot_message.msg_sequence
+        if (msg_seq - 1) % 8 == 0 or is_final:
 
             assert isinstance(message_source.source_platform_object, Update)
             components = await TelegramMessageConverter.yiri2target(message, self.bot)
@@ -264,7 +264,7 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
 
                 await self.bot.edit_message_text(**args)
             if is_final and bot_message.tool_calls is None:
-                self.seq = 1  # 消息回复结束之后重置seq
+                # self.seq = 1  # 消息回复结束之后重置seq
                 self.msg_stream_id.pop(message_id)  # 消息回复结束之后删除流式消息id
 
     async def is_stream_output_supported(self) -> bool:

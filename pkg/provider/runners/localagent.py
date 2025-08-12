@@ -115,7 +115,7 @@ class LocalAgentRunner(runner.RequestRunner):
             msg_idx = 0
             accumulated_content = ''  # 从开始累积的所有内容
             last_role = 'assistant'
-
+            msg_sequence = 1
             async for msg in query.use_llm_model.requester.invoke_llm_stream(
                 query,
                 query.use_llm_model,
@@ -152,11 +152,13 @@ class LocalAgentRunner(runner.RequestRunner):
                 # continue
                 # 每8个chunk或最后一个chunk时，输出所有累积的内容
                 if msg_idx % 8 == 0 or msg.is_final:
+                    msg_sequence += 1
                     yield llm_entities.MessageChunk(
                         role=last_role,
                         content=accumulated_content,  # 输出所有累积内容
                         tool_calls=list(tool_calls_map.values()) if (tool_calls_map and msg.is_final) else None,
                         is_final=msg.is_final,
+                        msg_sequence=msg_sequence,
                     )
 
             # 创建最终消息用于后续处理
@@ -164,10 +166,12 @@ class LocalAgentRunner(runner.RequestRunner):
                 role=last_role,
                 content=accumulated_content,
                 tool_calls=list(tool_calls_map.values()) if tool_calls_map else None,
+                msg_sequence=msg_sequence,
             )
 
         pending_tool_calls = final_msg.tool_calls
         first_content = final_msg.content
+        first_end_sequence = final_msg.msg_sequence
 
         req_messages.append(final_msg)
 
@@ -209,6 +213,7 @@ class LocalAgentRunner(runner.RequestRunner):
                 msg_idx = 0
                 accumulated_content = ''  # 从开始累积的所有内容
                 last_role = 'assistant'
+                msg_sequence = first_end_sequence
 
                 async for msg in query.use_llm_model.requester.invoke_llm_stream(
                     query,
@@ -249,17 +254,21 @@ class LocalAgentRunner(runner.RequestRunner):
 
                     # 每8个chunk或最后一个chunk时，输出所有累积的内容
                     if msg_idx % 8 == 0 or msg.is_final:
+                        msg_sequence += 1
                         yield llm_entities.MessageChunk(
                             role=last_role,
                             content=accumulated_content,  # 输出所有累积内容
                             tool_calls=list(tool_calls_map.values()) if (tool_calls_map and msg.is_final) else None,
                             is_final=msg.is_final,
+                            msg_sequence=msg_sequence,
                         )
 
                 final_msg = llm_entities.MessageChunk(
                     role=last_role,
                     content=accumulated_content,
                     tool_calls=list(tool_calls_map.values()) if tool_calls_map else None,
+                    msg_sequence=msg_sequence,
+
                 )
             else:
                 # 处理完所有调用，再次请求

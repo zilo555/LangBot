@@ -439,7 +439,7 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
                          "body": {"direction": "vertical", "padding": "12px 12px 12px 12px", "elements": [{"tag": "div",
                                                                                                            "text": {
                                                                                                                "tag": "plain_text",
-                                                                                                               "content": "Langbot",
+                                                                                                               "content": "LangBot",
                                                                                                                "text_size": "normal",
                                                                                                                "text_align": "left",
                                                                                                                "text_color": "default"},
@@ -681,9 +681,10 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
         """
         回复消息变成更新卡片消息
         """
-        self.seq += 1
+        # self.seq += 1
         message_id = bot_message.resp_message_id
-        if self.seq % 8 == 0 or is_final:
+        msg_seq = bot_message.msg_sequence
+        if msg_seq % 8 == 0 or is_final:
 
             lark_message = await self.message_converter.yiri2target(message, self.api_client)
 
@@ -708,14 +709,14 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
                     ContentCardElementRequestBody.builder()
                     # .uuid("a0d69e20-1dd1-458b-k525-dfeca4015204")
                     .content(text_message)
-                    .sequence(self.seq)
+                    .sequence(msg_seq)
                     .build()
                 )
                 .build()
             )
 
             if is_final and bot_message.tool_calls is None:
-                self.seq = 1  # 消息回复结束之后重置seq
+                # self.seq = 1  # 消息回复结束之后重置seq
                 self.card_id_dict.pop(message_id)  # 清理已经使用过的卡片
             # 发起请求
             response: ContentCardElementResponse = self.api_client.cardkit.v1.card_element.content(request)

@@ -149,6 +149,10 @@ class MessageChunk(pydantic.BaseModel):
     tool_call_id: typing.Optional[str] = None
 
     is_final: bool = False
+    """是否是结束"""
+
+    msg_sequence: int = 0
+    """消息迭代次数"""
 
     def readable_str(self) -> str:
         if self.content is not None:

@@ -108,7 +108,7 @@ class DingTalkAdapter(adapter.MessagePlatformAdapter):
         self.ap = ap
         self.logger = logger
         self.card_instance_id_dict = {}
-        self.seq = 1
+        # self.seq = 1
         required_keys = [
             'client_id',
             'client_secret',
@@ -159,9 +159,9 @@ class DingTalkAdapter(adapter.MessagePlatformAdapter):
 
         # msg_id = incoming_message.message_id
         message_id = bot_message.resp_message_id
-        self.seq += 1
+        msg_seq = bot_message.msg_sequence
 
-        if (self.seq - 1) % 8 == 0 or is_final:
+        if (msg_seq - 1) % 8 == 0 or is_final:
 
             content, at = await DingTalkMessageConverter.yiri2target(message)
 
@@ -169,7 +169,7 @@ class DingTalkAdapter(adapter.MessagePlatformAdapter):
             # print(card_instance_id)
             await self.bot.send_card_message(card_instance, card_instance_id, content, is_final)
             if is_final and bot_message.tool_calls is None:
-                self.seq = 1  # 消息回复结束之后重置seq
+                # self.seq = 1  # 消息回复结束之后重置seq
                 self.card_instance_id_dict.pop(message_id)  # 消息回复结束之后删除卡片实例id
 
     async def send_message(self, target_type: str, target_id: str, message: platform_message.MessageChain):
