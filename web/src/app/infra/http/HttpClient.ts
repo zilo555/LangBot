@@ -444,8 +444,8 @@ class HttpClient {
                   return;
                 }
                 if (data.type === 'start') {
-                    console,log(data.type)
-                    }
+                  console.log(data.type);
+                }
 
                 if (data.message) {
                   // 处理消息数据
