@@ -3,6 +3,7 @@ const zhHans = {
     login: '登录',
     logout: '退出登录',
     accountOptions: '账户选项',
+    account: '账户',
     email: '邮箱',
     password: '密码',
     welcome: '欢迎回到 LangBot 👋',
@@ -42,6 +43,7 @@ const zhHans = {
     test: '测试',
     forgotPassword: '忘记密码？',
     loading: '加载中...',
+    theme: '主题',
   },
   notFound: {
     title: '页面不存在',

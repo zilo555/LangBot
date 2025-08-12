@@ -11,16 +11,17 @@ import { sidebarConfigList } from '@/app/home/components/home-sidebar/sidbarConf
 import langbotIcon from '@/app/assets/langbot-logo.webp';
 import { systemInfo } from '@/app/infra/http/HttpClient';
 import { useTranslation } from 'react-i18next';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { Moon, Sun, Monitor } from 'lucide-react';
+import { useTheme } from 'next-themes';
 
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { LanguageSelector } from '@/components/ui/language-selector';
 
 // TODO 侧边导航栏要加动画
 export default function HomeSidebar({
@@ -37,8 +38,10 @@ export default function HomeSidebar({
   }, [pathname]);
 
   const [selectedChild, setSelectedChild] = useState<SidebarChildVO>();
-
+  const { theme, setTheme } = useTheme();
   const { t } = useTranslation();
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [languageSelectorOpen, setLanguageSelectorOpen] = useState(false);
 
   useEffect(() => {
     initSelect();
@@ -178,9 +181,32 @@ export default function HomeSidebar({
           }
           name={t('common.helpDocs')}
         />
+        {/* <SidebarChild
+          onClick={() => {
+            handleLogout();
+          }}
+          isSelected={false}
+          icon={
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M4 18H6V20H18V4H6V6H4V3C4 2.44772 4.44772 2 5 2H19C19.5523 2 20 2.44772 20 3V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V18ZM6 11H13V13H6V16L1 12L6 8V11Z"></path>
+            </svg>
+          }
+          name={t('common.logout')}
+        /> */}
 
-        <DropdownMenu>
-          <DropdownMenuTrigger>
+        <Popover
+          open={popoverOpen}
+          onOpenChange={(open) => {
+            // 防止语言选择器打开时关闭popover
+            if (!open && languageSelectorOpen) return;
+            setPopoverOpen(open);
+          }}
+        >
+          <PopoverTrigger>
             <SidebarChild
               onClick={() => {}}
               isSelected={false}
@@ -195,26 +221,65 @@ export default function HomeSidebar({
               }
               name={t('common.accountOptions')}
             />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent side="right" align="end">
-            {/* <DropdownMenuLabel>My Account</DropdownMenuLabel> */}
-            <DropdownMenuItem>{/* 主题颜色切换 */}</DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                handleLogout();
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
+          </PopoverTrigger>
+          <PopoverContent
+            side="right"
+            align="end"
+            className="w-auto p-4 flex flex-col gap-4"
+          >
+            <div className="flex flex-col gap-2 w-full">
+              <span className="text-sm font-medium">{t('common.theme')}</span>
+              <ToggleGroup
+                type="single"
+                value={theme}
+                onValueChange={(value) => {
+                  if (value) setTheme(value);
+                }}
+                className="justify-start"
               >
-                <path d="M4 18H6V20H18V4H6V6H4V3C4 2.44772 4.44772 2 5 2H19C19.5523 2 20 2.44772 20 3V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V18ZM6 11H13V13H6V16L1 12L6 8V11Z"></path>
-              </svg>
-              {t('common.logout')}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+                <ToggleGroupItem value="light" size="sm">
+                  <Sun className="h-4 w-4" />
+                </ToggleGroupItem>
+                <ToggleGroupItem value="dark" size="sm">
+                  <Moon className="h-4 w-4" />
+                </ToggleGroupItem>
+                <ToggleGroupItem value="system" size="sm">
+                  <Monitor className="h-4 w-4" />
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+
+            <div className="flex flex-col gap-2 w-full">
+              <span className="text-sm font-medium">
+                {t('common.language')}
+              </span>
+              <LanguageSelector
+                triggerClassName="w-full"
+                onOpenChange={setLanguageSelectorOpen}
+              />
+            </div>
+
+            <div className="flex flex-col gap-2 w-full">
+              <span className="text-sm font-medium">{t('common.account')}</span>
+              <Button
+                variant="ghost"
+                className="w-full justify-start font-normal"
+                onClick={() => {
+                  handleLogout();
+                }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M4 18H6V20H18V4H6V6H4V3C4 2.44772 4.44772 2 5 2H19C19.5523 2 20 2.44772 20 3V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V18ZM6 11H13V13H6V16L1 12L6 8V11Z"></path>
+                </svg>
+                {t('common.logout')}
+              </Button>
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
     </div>
   );
