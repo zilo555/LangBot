@@ -64,7 +64,7 @@ class MessagePlatformAdapter(metaclass=abc.ABCMeta):
     async def reply_message_chunk(
         self,
         message_source: platform_events.MessageEvent,
-        message_id: int,
+        bot_message: dict,
         message: platform_message.MessageChain,
         quote_origin: bool = False,
         is_final: bool = False,

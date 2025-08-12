@@ -535,7 +535,7 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
     async def reply_message_chunk(
         self,
         message_source: platform_events.MessageEvent,
-        message_id: str,
+        bot_message,
         message: platform_message.MessageChain,
         quote_origin: bool = False,
         is_final: bool = False,
@@ -543,10 +543,10 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
         """
         回复消息变成更新卡片消息
         """
+        self.seq += 1
+        message_id = bot_message.resp_message_id
+        if self.seq % 8 == 0 or is_final:
 
-
-        if (self.seq - 1) % 8 == 0 or is_final:
-            self.seq += 1
             lark_message = await self.message_converter.yiri2target(message, self.api_client)
 
 
@@ -576,9 +576,9 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
                 .build()
             )
 
-            if is_final:
+            if is_final and bot_message.tool_calls is None:
                 self.seq = 1  # 消息回复结束之后重置seq
-                # self.card_id_dict.pop(message_id)  # 清理已经使用过的卡片
+                self.card_id_dict.pop(message_id)  # 清理已经使用过的卡片
             # 发起请求
             response: ContentCardElementResponse = self.api_client.cardkit.v1.card_element.content(request)
 

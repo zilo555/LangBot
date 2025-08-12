@@ -147,7 +147,7 @@ class DingTalkAdapter(adapter.MessagePlatformAdapter):
     async def reply_message_chunk(
         self,
         message_source: platform_events.MessageEvent,
-        message_id: int,
+        bot_message,
         message: platform_message.MessageChain,
         quote_origin: bool = False,
         is_final: bool = False,
@@ -158,17 +158,19 @@ class DingTalkAdapter(adapter.MessagePlatformAdapter):
         # incoming_message = event.incoming_message
 
         # msg_id = incoming_message.message_id
+        message_id = bot_message.resp_message_id
+        self.seq += 1
+
         if (self.seq - 1) % 8 == 0 or is_final:
-            self.seq += 1
 
             content, at = await DingTalkMessageConverter.yiri2target(message)
 
             card_instance, card_instance_id = self.card_instance_id_dict[message_id]
             # print(card_instance_id)
             await self.bot.send_card_message(card_instance, card_instance_id, content, is_final)
-            if is_final:
+            if is_final and bot_message.tool_calls is None:
                 self.seq = 1  # 消息回复结束之后重置seq
-                # self.card_instance_id_dict.pop(message_id)  # 消息回复结束之后删除卡片实例id
+                self.card_instance_id_dict.pop(message_id)  # 消息回复结束之后删除卡片实例id
 
     async def send_message(self, target_type: str, target_id: str, message: platform_message.MessageChain):
         content = await DingTalkMessageConverter.yiri2target(message)

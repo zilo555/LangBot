@@ -118,7 +118,7 @@ class WebChatAdapter(msadapter.MessagePlatformAdapter):
     async def reply_message_chunk(
         self,
         message_source: platform_events.MessageEvent,
-        message_id: int,
+        bot_message,
         message: platform_message.MessageChain,
         quote_origin: bool = False,
         is_final: bool = False,
@@ -146,7 +146,7 @@ class WebChatAdapter(msadapter.MessagePlatformAdapter):
         #     queue = self.webchat_person_session.resp_queues[message_source.message_chain.message_id]
         # elif isinstance(message_source, platform_events.GroupMessage):
         #     queue = self.webchat_group_session.resp_queues[message_source.message_chain.message_id]
-        if is_final:
+        if is_final and bot_message.tool_calls is None:
             message_data.is_final = True
         # print(message_data)
         await queue.put(message_data)

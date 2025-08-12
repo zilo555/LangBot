@@ -211,7 +211,7 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
     async def reply_message_chunk(
         self,
         message_source: platform_events.MessageEvent,
-        message_id: int,
+        bot_message,
         message: platform_message.MessageChain,
         quote_origin: bool = False,
         is_final: bool = False,
@@ -263,7 +263,7 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
                         args['parse_mode'] = 'MarkdownV2'
 
                 await self.bot.edit_message_text(**args)
-            if is_final:
+            if is_final and bot_message.tool_calls is None:
                 self.seq = 1  # 消息回复结束之后重置seq
                 self.msg_stream_id.pop(message_id)  # 消息回复结束之后删除流式消息id
 
