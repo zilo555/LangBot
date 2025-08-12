@@ -259,7 +259,8 @@ class AnthropicMessages(requester.ProviderAPIRequester):
                             },
                         }
                         msg_dict['content'][i] = alter_image_ele
-
+            if isinstance(msg_dict['content'], str) and msg_dict['content'] == '':
+                msg_dict['content'] = []  # 这里不知道为什么会莫名有个空导致content为字符
             if m.tool_calls:
                 for tool_call in m.tool_calls:
                     msg_dict['content'].append(
