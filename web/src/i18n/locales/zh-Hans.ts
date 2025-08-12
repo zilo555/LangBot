@@ -2,6 +2,7 @@ const zhHans = {
   common: {
     login: '登录',
     logout: '退出登录',
+    accountOptions: '账户选项',
     email: '邮箱',
     password: '密码',
     welcome: '欢迎回到 LangBot 👋',

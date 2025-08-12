@@ -2,6 +2,7 @@ const zhHant = {
   common: {
     login: '登入',
     logout: '登出',
+    accountOptions: '帳戶選項',
     email: '電子郵件',
     password: '密碼',
     welcome: '歡迎回到 LangBot 👋',

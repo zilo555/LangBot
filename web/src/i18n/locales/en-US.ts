@@ -2,6 +2,7 @@ const enUS = {
   common: {
     login: 'Login',
     logout: 'Logout',
+    accountOptions: 'Account Options',
     email: 'Email',
     password: 'Password',
     welcome: 'Welcome back to LangBot 👋',
