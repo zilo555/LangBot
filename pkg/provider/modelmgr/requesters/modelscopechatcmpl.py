@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import typing
 
 import openai
@@ -34,10 +35,11 @@ class ModelScopeChatCompletions(requester.ProviderAPIRequester):
 
     async def _req(
         self,
+        query: core_entities.Query,
         args: dict,
         extra_body: dict = {},
         remove_think: bool = False,
-    ) -> chat_completion.ChatCompletion:
+    ) -> list[dict[str, typing.Any]]:
         args['stream'] = True
 
         chunk = None
@@ -51,12 +53,15 @@ class ModelScopeChatCompletions(requester.ProviderAPIRequester):
         chunk_idx = 0
         thinking_started = False
         thinking_ended = False
+        tool_id = ''
+        tool_name = ''
+        message_delta = {}
         async for chunk in resp_gen:
-            # print(chunk)
             if not chunk or not chunk.id or not chunk.choices or not chunk.choices[0] or not chunk.choices[0].delta:
                 continue
 
-            reasoning_content = chunk.choices[0].delta.reasoning_content
+            delta = chunk.choices[0].delta.model_dump() if hasattr(chunk.choices[0], 'delta') else {}
+            reasoning_content = delta.get('reasoning_content')
             # 处理 reasoning_content
             if reasoning_content:
                 # accumulated_reasoning += reasoning_content
@@ -72,78 +77,50 @@ class ModelScopeChatCompletions(requester.ProviderAPIRequester):
                 else:
                     # 继续输出 reasoning_content
                     pending_content += reasoning_content
-            elif thinking_started and not thinking_ended and chunk.choices[0].delta.content:
+            elif thinking_started and not thinking_ended and delta.get('content'):
                 # reasoning_content 结束，normal content 开始，添加 </think> 结束标签
                 thinking_ended = True
-                pending_content += '\n</think>\n' + chunk.choices[0].delta.content
+                pending_content += '\n</think>\n' + delta.get('content')
 
-            if chunk.choices[0].delta.content is not None:
-                pending_content += chunk.choices[0].delta.content
+            if delta.get('content') is not None:
+                pending_content += delta.get('content')
 
-            if chunk.choices[0].delta.tool_calls is not None:
-                for tool_call in chunk.choices[0].delta.tool_calls:
-                    if tool_call.function.arguments is None:
+            if delta.get('tool_calls') is not None:
+                for tool_call in delta.get('tool_calls'):
+                    if tool_call['id'] != '':
+                        tool_id = tool_call['id']
+                    if tool_call['function']['name'] is not None:
+                        tool_name = tool_call['function']['name']
+                    if tool_call['function']['arguments'] is None:
                         continue
+                    tool_call['id'] = tool_id
+                    tool_call['name'] = tool_name
                     for tc in tool_calls:
-                        if tc.index == tool_call.index:
-                            tc.function.arguments += tool_call.function.arguments
+                        if tc['index'] == tool_call['index']:
+                            tc['function']['arguments'] += tool_call['function']['arguments']
                             break
                     else:
                         tool_calls.append(tool_call)
 
             if chunk.choices[0].finish_reason is not None:
                 break
+        message_delta['content'] = pending_content
+        message_delta['role'] = 'assistant'
 
-        real_tool_calls = []
-
-        for tc in tool_calls:
-            function = chat_completion_message_tool_call.Function(
-                name=tc.function.name, arguments=tc.function.arguments
-            )
-            real_tool_calls.append(
-                chat_completion_message_tool_call.ChatCompletionMessageToolCall(
-                    id=tc.id, function=function, type='function'
-                )
-            )
-
-        return (
-            chat_completion.ChatCompletion(
-                id=chunk.id,
-                object='chat.completion',
-                created=chunk.created,
-                choices=[
-                    chat_completion.Choice(
-                        index=0,
-                        message=chat_completion.ChatCompletionMessage(
-                            role='assistant',
-                            content=pending_content,
-                            tool_calls=real_tool_calls if len(real_tool_calls) > 0 else None,
-                        ),
-                        finish_reason=chunk.choices[0].finish_reason
-                        if hasattr(chunk.choices[0], 'finish_reason') and chunk.choices[0].finish_reason is not None
-                        else 'stop',
-                        logprobs=chunk.choices[0].logprobs,
-                    )
-                ],
-                model=chunk.model,
-                service_tier=chunk.service_tier if hasattr(chunk, 'service_tier') else None,
-                system_fingerprint=chunk.system_fingerprint if hasattr(chunk, 'system_fingerprint') else None,
-                usage=chunk.usage if hasattr(chunk, 'usage') else None,
-            )
-            if chunk
-            else None
-        )
+        message_delta['tool_calls'] = tool_calls if tool_calls else None
+        # print(message_delta)
+        return [message_delta]
 
     async def _make_msg(
         self,
-        chat_completion: chat_completion.ChatCompletion,
+        chat_completion: list[dict[str, typing.Any]],
     ) -> llm_entities.Message:
-        chatcmpl_message = chat_completion.choices[0].message.dict()
+        chatcmpl_message = chat_completion[0]
 
         # 确保 role 字段存在且不为 None
         if 'role' not in chatcmpl_message or chatcmpl_message['role'] is None:
             chatcmpl_message['role'] = 'assistant'
-
+        print(chatcmpl_message)
         message = llm_entities.Message(**chatcmpl_message)
 
         return message
@@ -183,7 +160,7 @@ class ModelScopeChatCompletions(requester.ProviderAPIRequester):
         args['messages'] = messages
 
         # 发送请求
-        resp = await self._req(args, extra_body=extra_args, remove_think=remove_think)
+        resp = await self._req(query, args, extra_body=extra_args, remove_think=remove_think)
 
         # 处理请求结果
         message = await self._make_msg(resp)
