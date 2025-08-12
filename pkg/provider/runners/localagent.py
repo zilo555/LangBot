@@ -171,7 +171,9 @@ class LocalAgentRunner(runner.RequestRunner):
 
         pending_tool_calls = final_msg.tool_calls
         first_content = final_msg.content
-        first_end_sequence = final_msg.msg_sequence
+        if isinstance(final_msg, llm_entities.MessageChunk):
+
+            first_end_sequence = final_msg.msg_sequence
 
         req_messages.append(final_msg)
 
