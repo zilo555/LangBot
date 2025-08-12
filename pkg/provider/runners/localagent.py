@@ -155,6 +155,7 @@ class LocalAgentRunner(runner.RequestRunner):
                     yield llm_entities.MessageChunk(
                         role=last_role,
                         content=accumulated_content,  # 输出所有累积内容
+                        tool_calls=list(tool_calls_map.values()) if (tool_calls_map and msg.is_final) else None,
                         is_final=msg.is_final,
                     )
 
@@ -166,6 +167,7 @@ class LocalAgentRunner(runner.RequestRunner):
             )
 
         pending_tool_calls = final_msg.tool_calls
+        first_content = final_msg.content
 
         req_messages.append(final_msg)
 
@@ -221,6 +223,10 @@ class LocalAgentRunner(runner.RequestRunner):
                     # 记录角色
                     if msg.role:
                         last_role = msg.role
+
+                    # 第一次请求工具调用时的内容
+                    if msg_idx == 1:
+                        accumulated_content =first_content if first_content is not None else accumulated_content
 
                     # 累积内容
                     if msg.content:

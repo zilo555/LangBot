@@ -248,6 +248,7 @@ class ModelScopeChatCompletions(requester.ProviderAPIRequester):
             if hasattr(chunk, 'choices') and chunk.choices:
                 choice = chunk.choices[0]
                 delta = choice.delta.model_dump() if hasattr(choice, 'delta') else {}
+                print(delta)
                 finish_reason = getattr(choice, 'finish_reason', None)
             else:
                 delta = {}
