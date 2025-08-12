@@ -226,7 +226,7 @@ class LocalAgentRunner(runner.RequestRunner):
 
                     # 第一次请求工具调用时的内容
                     if msg_idx == 1:
-                        accumulated_content =first_content if first_content is not None else accumulated_content
+                        accumulated_content = first_content if first_content is not None else accumulated_content
 
                     # 累积内容
                     if msg.content:

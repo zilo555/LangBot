@@ -109,9 +109,9 @@ class WebChatAdapter(msadapter.MessagePlatformAdapter):
 
         # notify waiter
         if isinstance(message_source, platform_events.FriendMessage):
-            self.webchat_person_session.resp_queues[message_source.message_chain.message_id].put(message_data)
+            await self.webchat_person_session.resp_queues[message_source.message_chain.message_id].put(message_data)
         elif isinstance(message_source, platform_events.GroupMessage):
-            self.webchat_group_session.resp_queues[message_source.message_chain.message_id].put(message_data)
+            await self.webchat_group_session.resp_queues[message_source.message_chain.message_id].put(message_data)
 
         return message_data.model_dump()
 
@@ -264,24 +264,22 @@ class WebChatAdapter(msadapter.MessagePlatformAdapter):
             # waiter = asyncio.Future[WebChatMessage]()
             # use_session.resp_waiters[message_id] = waiter
             # # waiter.add_done_callback(lambda future: use_session.resp_waiters.pop(message_id))
-
+            #
             # resp_message = await waiter
-
+            #
             # resp_message.id = len(use_session.get_message_list(pipeline_uuid)) + 1
-
+            #
             # use_session.get_message_list(pipeline_uuid).append(resp_message)
-
+            #
             # yield resp_message.model_dump()
+            msg_id = len(use_session.get_message_list(pipeline_uuid)) + 1
+
             queue = use_session.resp_queues[message_id]
-            while True:
-                resp_message = await queue.get()
-                resp_message.id = msg_id
-                if resp_message.is_final:
-                    resp_message.id = msg_id
-                    use_session.get_message_list(pipeline_uuid).append(resp_message)
-                    yield resp_message.model_dump()
-                    break
-                yield resp_message.model_dump()
+            resp_message = await queue.get()
+            resp_message.id = msg_id
+            resp_message.is_final = True
+
+            yield resp_message.model_dump()
 
     def get_webchat_messages(self, pipeline_uuid: str, session_type: str) -> list[dict]:
         """获取调试消息历史"""

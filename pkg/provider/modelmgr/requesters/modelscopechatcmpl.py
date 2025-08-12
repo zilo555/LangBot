@@ -36,7 +36,7 @@ class ModelScopeChatCompletions(requester.ProviderAPIRequester):
         self,
         args: dict,
         extra_body: dict = {},
-        remove_think:bool = False,
+        remove_think: bool = False,
     ) -> chat_completion.ChatCompletion:
         args['stream'] = True
 
@@ -291,7 +291,6 @@ class ModelScopeChatCompletions(requester.ProviderAPIRequester):
 
             # 处理工具调用增量
             if delta.get('tool_calls'):
-                print(delta.get('tool_calls'))
                 for tool_call in delta['tool_calls']:
                     if tool_call['id'] != '':
                         tool_id = tool_call['id']
