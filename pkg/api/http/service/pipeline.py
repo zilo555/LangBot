@@ -40,7 +40,7 @@ class PipelineService:
 
     async def get_pipelines(self, sort_by: str = 'created_at', sort_order: str = 'DESC') -> list[dict]:
         query = sqlalchemy.select(persistence_pipeline.LegacyPipeline)
-        
+
         if sort_by == 'created_at':
             if sort_order == 'DESC':
                 query = query.order_by(persistence_pipeline.LegacyPipeline.created_at.desc())
@@ -51,7 +51,7 @@ class PipelineService:
                 query = query.order_by(persistence_pipeline.LegacyPipeline.updated_at.desc())
             else:
                 query = query.order_by(persistence_pipeline.LegacyPipeline.updated_at.asc())
-        
+
         result = await self.ap.persistence_mgr.execute_async(query)
         pipelines = result.all()
         return [
