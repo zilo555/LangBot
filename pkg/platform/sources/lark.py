@@ -432,12 +432,150 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
         try:
             self.ap.logger.debug('飞书支持stream输出,创建卡片......')
 
-            card_data = {
-                'schema': '2.0',
-                'header': {'title': {'content': 'bot', 'tag': 'plain_text'}},
-                'body': {'elements': [{'tag': 'markdown', 'content': '[思考中.....]', 'element_id': 'markdown_1'}]},
-                'config': {'streaming_mode': True, 'streaming_config': {'print_strategy': 'delay'}},
-            }  # delay / fast 创建卡片模板，delay 延迟打印，fast 实时打印，可以自定义更好看的消息模板
+            card_data = {"schema": "2.0", "config": {"update_multi": True, "streaming_mode": True,
+                                                     "streaming_config": {"print_step": {"default": 1},
+                                                                          "print_frequency_ms": {"default": 70},
+                                                                          "print_strategy": "fast"}},
+                         "body": {"direction": "vertical", "padding": "12px 12px 12px 12px", "elements": [{"tag": "div",
+                                                                                                           "text": {
+                                                                                                               "tag": "plain_text",
+                                                                                                               "content": "Langbot",
+                                                                                                               "text_size": "normal",
+                                                                                                               "text_align": "left",
+                                                                                                               "text_color": "default"},
+                                                                                                           "icon": {
+                                                                                                               "tag": "custom_icon",
+                                                                                                               "img_key": "img_v3_02p3_05c65d5d-9bad-440a-a2fb-c89571bfd5bg"}},
+                                                                                                          {
+                                                                                                              "tag": "markdown",
+                                                                                                              "content": "",
+                                                                                                              "text_align": "left",
+                                                                                                              "text_size": "normal",
+                                                                                                              "margin": "0px 0px 0px 0px",
+                                                                                                              "element_id": "streaming_txt"},
+                                                                                                          {
+                                                                                                              "tag": "markdown",
+                                                                                                              "content": "",
+                                                                                                              "text_align": "left",
+                                                                                                              "text_size": "normal",
+                                                                                                              "margin": "0px 0px 0px 0px"},
+                                                                                                          {
+                                                                                                              "tag": "column_set",
+                                                                                                              "horizontal_spacing": "8px",
+                                                                                                              "horizontal_align": "left",
+                                                                                                              "columns": [
+                                                                                                                  {
+                                                                                                                      "tag": "column",
+                                                                                                                      "width": "weighted",
+                                                                                                                      "elements": [
+                                                                                                                          {
+                                                                                                                              "tag": "markdown",
+                                                                                                                              "content": "",
+                                                                                                                              "text_align": "left",
+                                                                                                                              "text_size": "normal",
+                                                                                                                              "margin": "0px 0px 0px 0px"},
+                                                                                                                          {
+                                                                                                                              "tag": "markdown",
+                                                                                                                              "content": "",
+                                                                                                                              "text_align": "left",
+                                                                                                                              "text_size": "normal",
+                                                                                                                              "margin": "0px 0px 0px 0px"},
+                                                                                                                          {
+                                                                                                                              "tag": "markdown",
+                                                                                                                              "content": "",
+                                                                                                                              "text_align": "left",
+                                                                                                                              "text_size": "normal",
+                                                                                                                              "margin": "0px 0px 0px 0px"}],
+                                                                                                                      "padding": "0px 0px 0px 0px",
+                                                                                                                      "direction": "vertical",
+                                                                                                                      "horizontal_spacing": "8px",
+                                                                                                                      "vertical_spacing": "2px",
+                                                                                                                      "horizontal_align": "left",
+                                                                                                                      "vertical_align": "top",
+                                                                                                                      "margin": "0px 0px 0px 0px",
+                                                                                                                      "weight": 1}],
+                                                                                                              "margin": "0px 0px 0px 0px"},
+                                                                                                          {"tag": "hr",
+                                                                                                           "margin": "0px 0px 0px 0px"},
+                                                                                                          {
+                                                                                                              "tag": "column_set",
+                                                                                                              "horizontal_spacing": "12px",
+                                                                                                              "horizontal_align": "right",
+                                                                                                              "columns": [
+                                                                                                                  {
+                                                                                                                      "tag": "column",
+                                                                                                                      "width": "weighted",
+                                                                                                                      "elements": [
+                                                                                                                          {
+                                                                                                                              "tag": "markdown",
+                                                                                                                              "content": "<font color=\"grey-600\">以上内容由 AI 生成，仅供参考。更多详细、准确信息可点击引用链接查看</font>",
+                                                                                                                              "text_align": "left",
+                                                                                                                              "text_size": "notation",
+                                                                                                                              "margin": "4px 0px 0px 0px",
+                                                                                                                              "icon": {
+                                                                                                                                  "tag": "standard_icon",
+                                                                                                                                  "token": "robot_outlined",
+                                                                                                                                  "color": "grey"}}],
+                                                                                                                      "padding": "0px 0px 0px 0px",
+                                                                                                                      "direction": "vertical",
+                                                                                                                      "horizontal_spacing": "8px",
+                                                                                                                      "vertical_spacing": "8px",
+                                                                                                                      "horizontal_align": "left",
+                                                                                                                      "vertical_align": "top",
+                                                                                                                      "margin": "0px 0px 0px 0px",
+                                                                                                                      "weight": 1},
+                                                                                                                  {
+                                                                                                                      "tag": "column",
+                                                                                                                      "width": "20px",
+                                                                                                                      "elements": [
+                                                                                                                          {
+                                                                                                                              "tag": "button",
+                                                                                                                              "text": {
+                                                                                                                                  "tag": "plain_text",
+                                                                                                                                  "content": ""},
+                                                                                                                              "type": "text",
+                                                                                                                              "width": "fill",
+                                                                                                                              "size": "medium",
+                                                                                                                              "icon": {
+                                                                                                                                  "tag": "standard_icon",
+                                                                                                                                  "token": "thumbsup_outlined"},
+                                                                                                                              "hover_tips": {
+                                                                                                                                  "tag": "plain_text",
+                                                                                                                                  "content": "有帮助"},
+                                                                                                                              "margin": "0px 0px 0px 0px"}],
+                                                                                                                      "padding": "0px 0px 0px 0px",
+                                                                                                                      "direction": "vertical",
+                                                                                                                      "horizontal_spacing": "8px",
+                                                                                                                      "vertical_spacing": "8px",
+                                                                                                                      "horizontal_align": "left",
+                                                                                                                      "vertical_align": "top",
+                                                                                                                      "margin": "0px 0px 0px 0px"},
+                                                                                                                  {
+                                                                                                                      "tag": "column",
+                                                                                                                      "width": "30px",
+                                                                                                                      "elements": [
+                                                                                                                          {
+                                                                                                                              "tag": "button",
+                                                                                                                              "text": {
+                                                                                                                                  "tag": "plain_text",
+                                                                                                                                  "content": ""},
+                                                                                                                              "type": "text",
+                                                                                                                              "width": "default",
+                                                                                                                              "size": "medium",
+                                                                                                                              "icon": {
+                                                                                                                                  "tag": "standard_icon",
+                                                                                                                                  "token": "thumbdown_outlined"},
+                                                                                                                              "hover_tips": {
+                                                                                                                                  "tag": "plain_text",
+                                                                                                                                  "content": "无帮助"},
+                                                                                                                              "margin": "0px 0px 0px 0px"}],
+                                                                                                                      "padding": "0px 0px 0px 0px",
+                                                                                                                      "vertical_spacing": "8px",
+                                                                                                                      "horizontal_align": "left",
+                                                                                                                      "vertical_align": "top",
+                                                                                                                      "margin": "0px 0px 0px 0px"}],
+                                                                                                              "margin": "0px 0px 4px 0px"}]}}
+            # delay / fast 创建卡片模板，delay 延迟打印，fast 实时打印，可以自定义更好看的消息模板
 
             request: CreateCardRequest = (
                 CreateCardRequest.builder()
@@ -565,7 +703,7 @@ class LarkAdapter(adapter.MessagePlatformAdapter):
             request: ContentCardElementRequest = (
                 ContentCardElementRequest.builder()
                 .card_id(self.card_id_dict[message_id])
-                .element_id('markdown_1')
+                .element_id('streaming_txt')
                 .request_body(
                     ContentCardElementRequestBody.builder()
                     # .uuid("a0d69e20-1dd1-458b-k525-dfeca4015204")
