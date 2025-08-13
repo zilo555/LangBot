@@ -257,6 +257,11 @@ const jaJP = {
     today: '今日',
     kbName: '知識ベース名',
     kbDescription: '知識ベースの説明',
+    topK: 'Top K',
+    topKRequired: 'Top Kは必須です',
+    topKMax: 'Top Kの最大値は30です',
+    topKdescription:
+      '取得する関連性の高い上位K件の文書の数。1～30の範囲で設定できます',
     defaultDescription: '知識ベース',
     embeddingModelUUID: '埋め込みモデル',
     selectEmbeddingModel: '埋め込みモデルを選択',
