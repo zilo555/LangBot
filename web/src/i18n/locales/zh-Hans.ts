@@ -250,7 +250,7 @@ const zhHans = {
     topK: '召回数量',
     topKRequired: '召回数量不能为空',
     topKMax: '召回数量最大值为 30',
-    topKdescription: '用于召回相关文档的数量,取值范围为 1-30',
+    topKdescription: '召回相关文档块的数量，取值范围为 1-30',
     defaultDescription: '一个知识库',
     embeddingModelUUID: '嵌入模型',
     selectEmbeddingModel: '选择嵌入模型',
