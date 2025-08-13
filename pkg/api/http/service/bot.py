@@ -44,7 +44,17 @@ class BotService:
         if not include_secret:
             masked_columns = ['adapter_config']
 
-        return self.ap.persistence_mgr.serialize_model(persistence_bot.Bot, bot, masked_columns)
+        adapter_runtime_values = {}
+
+        runtime_bot = await self.ap.platform_mgr.get_bot_by_uuid(bot_uuid)
+        if runtime_bot is not None:
+            adapter_runtime_values['bot_account_id'] = runtime_bot.adapter.bot_account_id
+
+        persistence_bot_data = self.ap.persistence_mgr.serialize_model(persistence_bot.Bot, bot, masked_columns)
+
+        persistence_bot_data['adapter_runtime_values'] = adapter_runtime_values
+
+        return persistence_bot_data
 
     async def create_bot(self, bot_data: dict) -> str:
         """创建机器人"""
