@@ -276,6 +276,7 @@ class WebChatAdapter(msadapter.MessagePlatformAdapter):
 
             queue = use_session.resp_queues[message_id]
             resp_message = await queue.get()
+            use_session.get_message_list(pipeline_uuid).append(resp_message)
             resp_message.id = msg_id
             resp_message.is_final = True
 
