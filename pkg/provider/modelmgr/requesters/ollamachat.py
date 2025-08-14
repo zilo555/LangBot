@@ -44,6 +44,7 @@ class OllamaChatCompletions(requester.ProviderAPIRequester):
         use_model: requester.RuntimeLLMModel,
         use_funcs: list[tools_entities.LLMFunction] = None,
         extra_args: dict[str, typing.Any] = {},
+        remove_think: bool = False,
     ) -> llm_entities.Message:
         args = extra_args.copy()
         args['model'] = use_model.model_entity.name
