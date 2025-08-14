@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import styles from '@/app/home/plugins/plugins.module.css';
 import { PluginMarketCardVO } from '@/app/home/plugins/plugin-market/plugin-market-card/PluginMarketCardVO';
 import PluginMarketCardComponent from '@/app/home/plugins/plugin-market/plugin-market-card/PluginMarketCardComponent';
-import { spaceClient } from '@/app/infra/http/HttpClient';
+import { getCloudServiceClientSync } from '@/app/infra/http';
 import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
 import {
@@ -41,6 +41,8 @@ export default function PluginMarketComponent({
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const pageSize = 10;
 
+  const cloudServiceClient = getCloudServiceClientSync();
+
   useEffect(() => {
     initData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -72,7 +74,7 @@ export default function PluginMarketComponent({
     sortOrder: string = sortOrderValue,
   ) {
     setLoading(true);
-    spaceClient
+    cloudServiceClient
       .getMarketPlugins(page, pageSize, keyword, sortBy, sortOrder)
       .then((res) => {
         setMarketPluginList(
