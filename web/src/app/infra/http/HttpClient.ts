@@ -53,7 +53,11 @@ export interface RequestConfig extends AxiosRequestConfig {
   retry?: number; // 重试次数
 }
 
-export let systemInfo: ApiRespSystemInfo | null = null;
+export let systemInfo: ApiRespSystemInfo = {
+  debug: false,
+  version: '',
+  cloud_service_url: '',
+};
 
 class HttpClient {
   private instance: AxiosInstance;
@@ -74,7 +78,10 @@ class HttpClient {
     this.disableToken = disableToken || false;
     this.initInterceptors();
 
-    if (systemInfo === null && baseURL != 'https://space.langbot.app') {
+    if (
+      systemInfo.cloud_service_url === '' &&
+      baseURL != 'https://space.langbot.app'
+    ) {
       this.getSystemInfo().then((res) => {
         systemInfo = res;
       });
@@ -84,12 +91,6 @@ class HttpClient {
   // 外部获取baseURL的方法
   getBaseUrl(): string {
     return this.baseURL;
-  }
-
-  // 获取Session
-  private async getSession() {
-    // NOT IMPLEMENT
-    return '';
   }
 
   // 同步获取Session
@@ -505,4 +506,4 @@ const getBaseURL = (): string => {
 export const httpClient = new HttpClient(getBaseURL());
 
 // 临时写法，未来两种Client都继承自HttpClient父类，不允许共享方法
-export const spaceClient = new HttpClient('https://space.langbot.app');
+export const spaceClient = new HttpClient(systemInfo.cloud_service_url);

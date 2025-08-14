@@ -151,6 +151,7 @@ export interface PluginReorderElement {
 export interface ApiRespSystemInfo {
   debug: boolean;
   version: string;
+  cloud_service_url: string;
 }
 
 export interface ApiRespAsyncTasks {

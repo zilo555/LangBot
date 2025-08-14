@@ -14,6 +14,11 @@ class SystemRouterGroup(group.RouterGroup):
                     'version': constants.semantic_version,
                     'debug': constants.debug_mode,
                     'enabled_platform_count': len(self.ap.platform_mgr.get_running_adapters()),
+                    'cloud_service_url': (
+                        self.ap.instance_config.data['plugin']['cloud_service_url']
+                        if 'cloud_service_url' in self.ap.instance_config.data['plugin']
+                        else 'https://space.langbot.app'
+                    ),
                 }
             )
 
@@ -57,7 +62,11 @@ class SystemRouterGroup(group.RouterGroup):
                 data=await self.ap.tool_mgr.execute_func_call(data['tool_name'], data['tool_parameters'])
             )
 
-        @self.route('/debug/plugin/action', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
+        @self.route(
+            '/debug/plugin/action',
+            methods=['POST'],
+            auth_type=group.AuthType.USER_TOKEN,
+        )
         async def _() -> str:
             if not constants.debug_mode:
                 return self.http_status(403, 403, 'Forbidden')
