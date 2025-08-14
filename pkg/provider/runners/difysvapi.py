@@ -406,7 +406,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
             if chunk['event'] == 'message':
                 message_idx += 1
                 if remove_think:
-                    if message_idx == 1:
+                    if '<think>' in chunk['answer'] and not think_start:
                         think_start = True
                         continue
                     if '</think>' in chunk['answer'] and not think_end:
