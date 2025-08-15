@@ -179,6 +179,8 @@ const enUS = {
     eventCount: 'Events: {{count}}',
     toolCount: 'Tools: {{count}}',
     starCount: 'Stars: {{count}}',
+    uploadLocal: 'Upload Local',
+    debugging: 'Debugging',
   },
   pipelines: {
     title: 'Pipelines',

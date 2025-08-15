@@ -7,7 +7,13 @@ import PluginSortDialog from '@/app/home/plugins/plugin-sort/PluginSortDialog';
 import styles from './plugins.module.css';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { PlusIcon } from 'lucide-react';
+import { PlusIcon, ChevronDownIcon, UploadIcon, StoreIcon } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Dialog,
   DialogContent,
@@ -32,6 +38,7 @@ export default function PluginConfigPage() {
   const { t } = useTranslation();
   const [modalOpen, setModalOpen] = useState(false);
   const [sortModalOpen, setSortModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('installed');
   const [pluginInstallStatus, setPluginInstallStatus] =
     useState<PluginInstallStatus>(PluginInstallStatus.WAIT_INPUT);
   const [installError, setInstallError] = useState<string | null>(null);
@@ -83,7 +90,7 @@ export default function PluginConfigPage() {
 
   return (
     <div className={styles.pageContainer}>
-      <Tabs defaultValue="installed" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex flex-row justify-between items-center px-[0.8rem]">
           <TabsList className="shadow-md py-5 bg-[#f0f0f0]">
             <TabsTrigger value="installed" className="px-6 py-4 cursor-pointer">
@@ -104,18 +111,34 @@ export default function PluginConfigPage() {
             >
               {t('plugins.arrange')}
             </Button>
-            <Button
-              variant="default"
-              className="px-6 py-4 cursor-pointer"
-              onClick={() => {
-                setModalOpen(true);
-                setPluginInstallStatus(PluginInstallStatus.WAIT_INPUT);
-                setInstallError(null);
-              }}
-            >
-              <PlusIcon className="w-4 h-4" />
-              {t('plugins.install')}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="default" className="px-6 py-4 cursor-pointer">
+                  <PlusIcon className="w-4 h-4" />
+                  {t('plugins.install')}
+                  <ChevronDownIcon className="ml-2 w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => {
+                    // TODO: 本地上传功能待实现
+                    console.log('本地上传功能待实现');
+                  }}
+                >
+                  <UploadIcon className="w-4 h-4" />
+                  {t('plugins.uploadLocal')}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setActiveTab('market');
+                  }}
+                >
+                  <StoreIcon className="w-4 h-4" />
+                  {t('plugins.marketplace')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
         <TabsContent value="installed">

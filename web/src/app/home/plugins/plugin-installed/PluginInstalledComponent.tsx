@@ -50,6 +50,7 @@ const PluginInstalledComponent = forwardRef<PluginInstalledComponentRef>(
                   zh_Hans: '',
                 },
               ),
+              debug: plugin.debug,
               enabled: plugin.enabled,
               name: plugin.manifest.manifest.metadata.name,
               version: plugin.manifest.manifest.metadata.version ?? '',

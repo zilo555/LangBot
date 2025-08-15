@@ -58,6 +58,14 @@ export default function PluginCardComponent({
                 <Badge variant="outline" className="text-[0.7rem]">
                   v{cardVO.version}
                 </Badge>
+                {cardVO.debug && (
+                  <Badge
+                    variant="outline"
+                    className="text-[0.7rem] border-orange-400 text-orange-400"
+                  >
+                    {t('plugins.debugging')}
+                  </Badge>
+                )}
               </div>
             </div>
 

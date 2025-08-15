@@ -9,6 +9,7 @@ export interface IPluginCardVO {
   tools: object[];
   event_handlers: object;
   repository: string;
+  debug: boolean;
 }
 
 export class PluginCardVO implements IPluginCardVO {
@@ -18,6 +19,7 @@ export class PluginCardVO implements IPluginCardVO {
   version: string;
   enabled: boolean;
   priority: number;
+  debug: boolean;
   status: string;
   tools: object[];
   event_handlers: object;
@@ -34,5 +36,6 @@ export class PluginCardVO implements IPluginCardVO {
     this.status = prop.status;
     this.tools = prop.tools;
     this.version = prop.version;
+    this.debug = prop.debug;
   }
 }

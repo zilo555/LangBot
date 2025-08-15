@@ -7,6 +7,7 @@ export interface Plugin {
   manifest: {
     manifest: ComponentManifest;
   };
+  debug: boolean;
   enabled: boolean;
   components: {
     component_config: object;

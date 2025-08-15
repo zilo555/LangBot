@@ -179,6 +179,8 @@ const jaJP = {
     eventCount: 'イベント：{{count}}',
     toolCount: 'ツール：{{count}}',
     starCount: 'スター：{{count}}',
+    uploadLocal: 'ローカルアップロード',
+    debugging: 'デバッグ中',
   },
   pipelines: {
     title: 'パイプライン',

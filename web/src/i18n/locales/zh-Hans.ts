@@ -175,6 +175,8 @@ const zhHans = {
     eventCount: '事件：{{count}}',
     toolCount: '工具：{{count}}',
     starCount: '星标：{{count}}',
+    uploadLocal: '本地上传',
+    debugging: '调试中',
   },
   pipelines: {
     title: '流水线',
