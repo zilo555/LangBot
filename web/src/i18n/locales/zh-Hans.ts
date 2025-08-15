@@ -177,6 +177,13 @@ const zhHans = {
     starCount: '星标：{{count}}',
     uploadLocal: '本地上传',
     debugging: '调试中',
+    uploadLocalPlugin: '上传本地插件',
+    dragToUpload: '拖拽文件到此处上传',
+    unsupportedFileType: '不支持的文件类型，仅支持 .lbpkg 和 .zip 文件',
+    uploadingPlugin: '正在上传插件...',
+    uploadSuccess: '上传成功',
+    uploadFailed: '上传失败',
+    selectFileToUpload: '选择要上传的插件文件',
   },
   pipelines: {
     title: '流水线',

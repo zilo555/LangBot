@@ -4,6 +4,9 @@ import PluginInstalledComponent, {
 } from '@/app/home/plugins/plugin-installed/PluginInstalledComponent';
 import PluginMarketComponent from '@/app/home/plugins/plugin-market/PluginMarketComponent';
 import PluginSortDialog from '@/app/home/plugins/plugin-sort/PluginSortDialog';
+import PluginUploadDialog, {
+  UploadModalStatus,
+} from '@/app/home/plugins/plugin-upload-dialog/PluginUploadDialog';
 import styles from './plugins.module.css';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -23,7 +26,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { GithubIcon } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -43,7 +46,14 @@ export default function PluginConfigPage() {
     useState<PluginInstallStatus>(PluginInstallStatus.WAIT_INPUT);
   const [installError, setInstallError] = useState<string | null>(null);
   const [githubURL, setGithubURL] = useState('');
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<UploadModalStatus>(
+    UploadModalStatus.UPLOADING,
+  );
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
   const pluginInstalledRef = useRef<PluginInstalledComponentRef>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleModalConfirm() {
     installPlugin(githubURL);
@@ -88,8 +98,93 @@ export default function PluginConfigPage() {
       });
   }
 
+  const validateFileType = (file: File): boolean => {
+    const allowedExtensions = ['.lbpkg', '.zip'];
+    const fileName = file.name.toLowerCase();
+    return allowedExtensions.some((ext) => fileName.endsWith(ext));
+  };
+
+  const uploadPluginFile = useCallback(
+    async (file: File) => {
+      if (!validateFileType(file)) {
+        toast.error(t('plugins.unsupportedFileType'));
+        return;
+      }
+
+      setUploadModalOpen(true);
+      setUploadStatus(UploadModalStatus.UPLOADING);
+      setUploadError(null);
+
+      try {
+        // 暂时直接显示成功，等后续实现进度显示
+        setTimeout(() => {
+          setUploadStatus(UploadModalStatus.SUCCESS);
+          toast.success(t('plugins.uploadSuccess'));
+          pluginInstalledRef.current?.refreshPluginList();
+        }, 1000);
+      } catch (err: unknown) {
+        setUploadError((err as Error)?.message || t('plugins.uploadFailed'));
+        setUploadStatus(UploadModalStatus.ERROR);
+      }
+    },
+    [t],
+  );
+
+  const handleFileSelect = useCallback(() => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  }, []);
+
+  const handleFileChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file) {
+        uploadPluginFile(file);
+      }
+      // 清空input值，以便可以重复选择同一个文件
+      event.target.value = '';
+    },
+    [uploadPluginFile],
+  );
+
+  const handleDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault();
+      setIsDragOver(false);
+
+      const files = Array.from(event.dataTransfer.files);
+      if (files.length > 0) {
+        uploadPluginFile(files[0]);
+      }
+    },
+    [uploadPluginFile],
+  );
+
   return (
-    <div className={styles.pageContainer}>
+    <div
+      className={`${styles.pageContainer} ${isDragOver ? 'bg-blue-50' : ''}`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".lbpkg,.zip"
+        onChange={handleFileChange}
+        style={{ display: 'none' }}
+      />
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex flex-row justify-between items-center px-[0.8rem]">
           <TabsList className="shadow-md py-5 bg-[#f0f0f0]">
@@ -120,12 +215,7 @@ export default function PluginConfigPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={() => {
-                    // TODO: 本地上传功能待实现
-                    console.log('本地上传功能待实现');
-                  }}
-                >
+                <DropdownMenuItem onClick={handleFileSelect}>
                   <UploadIcon className="w-4 h-4" />
                   {t('plugins.uploadLocal')}
                 </DropdownMenuItem>
@@ -205,6 +295,28 @@ export default function PluginConfigPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* 上传状态弹窗 */}
+      <PluginUploadDialog
+        open={uploadModalOpen}
+        onOpenChange={setUploadModalOpen}
+        status={uploadStatus}
+        error={uploadError}
+      />
+
+      {/* 拖拽提示覆盖层 */}
+      {isDragOver && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50 pointer-events-none">
+          <div className="bg-white rounded-lg p-8 shadow-lg border-2 border-dashed border-gray-500">
+            <div className="text-center">
+              <UploadIcon className="mx-auto h-12 w-12 text-gray-500 mb-4" />
+              <p className="text-lg font-medium text-gray-700">
+                {t('plugins.dragToUpload')}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <PluginSortDialog
         open={sortModalOpen}

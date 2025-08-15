@@ -253,6 +253,12 @@ export class BackendClient extends BaseHttpClient {
     return this.post('/api/v1/plugins/install/github', { source });
   }
 
+  public installPluginFromLocal(file: File): Promise<AsyncTaskCreatedResp> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.postFile('/api/v1/plugins/install/local', formData);
+  }
+
   public removePlugin(
     author: string,
     name: string,

@@ -181,6 +181,14 @@ const enUS = {
     starCount: 'Stars: {{count}}',
     uploadLocal: 'Upload Local',
     debugging: 'Debugging',
+    uploadLocalPlugin: 'Upload Local Plugin',
+    dragToUpload: 'Drag plugin file here to upload',
+    unsupportedFileType:
+      'Unsupported file type, only .lbpkg and .zip files are supported',
+    uploadingPlugin: 'Uploading plugin...',
+    uploadSuccess: 'Upload successful',
+    uploadFailed: 'Upload failed',
+    selectFileToUpload: 'Select plugin file to upload',
   },
   pipelines: {
     title: 'Pipelines',

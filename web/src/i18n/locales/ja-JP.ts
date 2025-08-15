@@ -181,6 +181,14 @@ const jaJP = {
     starCount: 'スター：{{count}}',
     uploadLocal: 'ローカルアップロード',
     debugging: 'デバッグ中',
+    uploadLocalPlugin: 'ローカルプラグインのアップロード',
+    dragToUpload: 'ファイルをここにドラッグしてアップロード',
+    unsupportedFileType:
+      'サポートされていないファイルタイプです。.lbpkg と .zip ファイルのみサポートされています',
+    uploadingPlugin: 'プラグインをアップロード中...',
+    uploadSuccess: 'アップロード成功',
+    uploadFailed: 'アップロード失敗',
+    selectFileToUpload: 'アップロードするプラグインファイルを選択',
   },
   pipelines: {
     title: 'パイプライン',

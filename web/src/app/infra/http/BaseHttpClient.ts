@@ -192,4 +192,20 @@ export abstract class BaseHttpClient {
   public delete<T = unknown>(url: string, config?: RequestConfig): Promise<T> {
     return this.request<T>({ method: 'delete', url, ...config });
   }
+
+  public postFile<T = unknown>(
+    url: string,
+    formData: FormData,
+    config?: RequestConfig,
+  ): Promise<T> {
+    return this.request<T>({
+      method: 'post',
+      url,
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      ...config,
+    });
+  }
 }
