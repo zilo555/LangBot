@@ -191,7 +191,7 @@ class RuntimeConnectionHandler(handler.Handler):
         async def get_bot_info(data: dict[str, Any]) -> handler.ActionResponse:
             """Get bot info"""
             bot_uuid = data['bot_uuid']
-            bot = await self.ap.bot_service.get_bot(bot_uuid, include_secret=False)
+            bot = await self.ap.bot_service.get_runtime_bot_info(bot_uuid, include_secret=False)
             return handler.ActionResponse.success(
                 data={
                     'bot': bot,
