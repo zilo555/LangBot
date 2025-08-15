@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-
+import base64
 import quart
 
 from .....core import taskmgr
 from .. import group
+from langbot_plugin.runtime.plugin.mgr import PluginInstallSource
 
 
 @group.group_class('plugins', '/api/v1/plugins')
@@ -100,7 +101,47 @@ class PluginsRouterGroup(group.RouterGroup):
                 self.ap.plugin_mgr.install_plugin(data['source'], task_context=ctx),
                 kind='plugin-operation',
                 name='plugin-install-github',
-                label=f'安装插件 ...{short_source_str}',
+                label=f'Installing plugin from github ...{short_source_str}',
+                context=ctx,
+            )
+
+            return self.success(data={'task_id': wrapper.id})
+
+        @self.route('/install/marketplace', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
+        async def _() -> str:
+            data = await quart.request.json
+
+            ctx = taskmgr.TaskContext.new()
+            wrapper = self.ap.task_mgr.create_user_task(
+                self.ap.plugin_connector.install_plugin(PluginInstallSource.MARKETPLACE, data, task_context=ctx),
+                kind='plugin-operation',
+                name='plugin-install-marketplace',
+                label=f'Installing plugin from marketplace ...{data}',
+                context=ctx,
+            )
+
+            return self.success(data={'task_id': wrapper.id})
+
+        @self.route('/install/local', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
+        async def _() -> str:
+            file = (await quart.request.files).get('file')
+            if file is None:
+                return self.http_status(400, -1, 'file is required')
+
+            file_bytes = file.read()
+
+            file_base64 = base64.b64encode(file_bytes).decode('utf-8')
+
+            data = {
+                'plugin_file': file_base64,
+            }
+
+            ctx = taskmgr.TaskContext.new()
+            wrapper = self.ap.task_mgr.create_user_task(
+                self.ap.plugin_connector.install_plugin(PluginInstallSource.LOCAL, data, task_context=ctx),
+                kind='plugin-operation',
+                name='plugin-install-local',
+                label=f'Installing plugin from local ...{file.filename}',
                 context=ctx,
             )
 

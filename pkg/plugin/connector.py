@@ -17,6 +17,8 @@ from langbot_plugin.api.entities import context
 import langbot_plugin.runtime.io.connection as base_connection
 from langbot_plugin.api.definition.components.manifest import ComponentManifest
 from langbot_plugin.api.entities.builtin.command import context as command_context
+from langbot_plugin.runtime.plugin.mgr import PluginInstallSource
+from ..core import taskmgr
 
 
 class PluginRuntimeConnector:
@@ -96,6 +98,14 @@ class PluginRuntimeConnector:
 
     async def initialize_plugins(self):
         pass
+
+    async def install_plugin(
+        self,
+        install_source: PluginInstallSource,
+        install_info: dict[str, Any],
+        task_context: taskmgr.TaskContext | None = None,
+    ):
+        return await self.handler.install_plugin(install_source.value, install_info)
 
     async def list_plugins(self) -> list[dict[str, Any]]:
         return await self.handler.list_plugins()

@@ -373,6 +373,17 @@ class RuntimeConnectionHandler(handler.Handler):
             timeout=10,
         )
 
+    async def install_plugin(self, install_source: str, install_info: dict[str, Any]) -> dict[str, Any]:
+        """Install plugin"""
+        return await self.call_action(
+            LangBotToRuntimeAction.INSTALL_PLUGIN,
+            {
+                'install_source': install_source,
+                'install_info': install_info,
+            },
+            timeout=10,
+        )
+
     async def list_plugins(self) -> list[dict[str, Any]]:
         """List plugins"""
         result = await self.call_action(
