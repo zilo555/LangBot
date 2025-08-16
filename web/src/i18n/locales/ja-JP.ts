@@ -142,7 +142,7 @@ const jaJP = {
     marketplace: 'プラグインマーケット',
     arrange: '並び替え',
     install: 'インストール',
-    installFromGithub: 'GitHubからプラグインをインストール',
+    installPlugin: 'プラグインをインストール',
     onlySupportGithub: '現在はGitHubからのインストールのみサポートしています',
     enterGithubLink: 'プラグインのGitHubリンクを入力してください',
     installing: 'プラグインをインストール中...',

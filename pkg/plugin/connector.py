@@ -105,7 +105,16 @@ class PluginRuntimeConnector:
         install_info: dict[str, Any],
         task_context: taskmgr.TaskContext | None = None,
     ):
-        return await self.handler.install_plugin(install_source.value, install_info)
+        async for ret in self.handler.install_plugin(install_source.value, install_info):
+            current_action = ret.get('current_action', None)
+            if current_action is not None:
+                if task_context is not None:
+                    task_context.set_current_action(current_action)
+
+            trace = ret.get('trace', None)
+            if trace is not None:
+                if task_context is not None:
+                    task_context.trace(trace)
 
     async def list_plugins(self) -> list[dict[str, Any]]:
         return await self.handler.list_plugins()

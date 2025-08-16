@@ -142,7 +142,7 @@ const enUS = {
     marketplace: 'Marketplace',
     arrange: 'Sort Plugins',
     install: 'Install',
-    installFromGithub: 'Install Plugin from GitHub',
+    installPlugin: 'Install Plugin',
     onlySupportGithub: 'Currently only supports installation from GitHub',
     enterGithubLink: 'Enter GitHub link of the plugin',
     installing: 'Installing plugin...',

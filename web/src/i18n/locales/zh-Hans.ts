@@ -139,7 +139,7 @@ const zhHans = {
     marketplace: '插件市场',
     arrange: '编排',
     install: '安装',
-    installFromGithub: '从 GitHub 安装插件',
+    installPlugin: '安装插件',
     onlySupportGithub: '目前仅支持从 GitHub 安装',
     enterGithubLink: '请输入插件的Github链接',
     installing: '正在安装插件...',

@@ -39,6 +39,43 @@ class RuntimeConnectionHandler(handler.Handler):
         super().__init__(connection, disconnect_callback)
         self.ap = ap
 
+        @self.action(RuntimeToLangBotAction.INITIALIZE_PLUGIN_SETTINGS)
+        async def initialize_plugin_settings(data: dict[str, Any]) -> handler.ActionResponse:
+            """Initialize plugin settings"""
+            # check if exists plugin setting
+            plugin_author = data['plugin_author']
+            plugin_name = data['plugin_name']
+            install_source = data['install_source']
+            install_info = data['install_info']
+
+            result = await self.ap.persistence_mgr.execute_async(
+                sqlalchemy.select(persistence_plugin.PluginSetting)
+                .where(persistence_plugin.PluginSetting.plugin_author == plugin_author)
+                .where(persistence_plugin.PluginSetting.plugin_name == plugin_name)
+            )
+
+            if result.first() is not None:
+                # delete plugin setting
+                await self.ap.persistence_mgr.execute_async(
+                    sqlalchemy.delete(persistence_plugin.PluginSetting)
+                    .where(persistence_plugin.PluginSetting.plugin_author == plugin_author)
+                    .where(persistence_plugin.PluginSetting.plugin_name == plugin_name)
+                )
+
+            # create plugin setting
+            await self.ap.persistence_mgr.execute_async(
+                sqlalchemy.insert(persistence_plugin.PluginSetting).values(
+                    plugin_author=plugin_author,
+                    plugin_name=plugin_name,
+                    install_source=install_source,
+                    install_info=install_info,
+                )
+            )
+
+            return handler.ActionResponse.success(
+                data={},
+            )
+
         @self.action(RuntimeToLangBotAction.GET_PLUGIN_SETTINGS)
         async def get_plugin_settings(data: dict[str, Any]) -> handler.ActionResponse:
             """Get plugin settings"""
@@ -56,6 +93,8 @@ class RuntimeConnectionHandler(handler.Handler):
                 'enabled': False,
                 'priority': 0,
                 'plugin_config': {},
+                'install_source': 'local',
+                'install_info': {},
             }
 
             setting = result.first()
@@ -64,6 +103,8 @@ class RuntimeConnectionHandler(handler.Handler):
                 data['enabled'] = setting.enabled
                 data['priority'] = setting.priority
                 data['plugin_config'] = setting.config
+                data['install_source'] = setting.install_source
+                data['install_info'] = setting.install_info
 
             return handler.ActionResponse.success(
                 data=data,
@@ -373,16 +414,21 @@ class RuntimeConnectionHandler(handler.Handler):
             timeout=10,
         )
 
-    async def install_plugin(self, install_source: str, install_info: dict[str, Any]) -> dict[str, Any]:
+    async def install_plugin(
+        self, install_source: str, install_info: dict[str, Any]
+    ) -> typing.AsyncGenerator[dict[str, Any], None]:
         """Install plugin"""
-        return await self.call_action(
+        gen = self.call_action_generator(
             LangBotToRuntimeAction.INSTALL_PLUGIN,
             {
                 'install_source': install_source,
                 'install_info': install_info,
             },
-            timeout=10,
+            timeout=120,
         )
+
+        async for ret in gen:
+            yield ret
 
     async def list_plugins(self) -> list[dict[str, Any]]:
         """List plugins"""

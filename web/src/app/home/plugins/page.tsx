@@ -4,13 +4,16 @@ import PluginInstalledComponent, {
 } from '@/app/home/plugins/plugin-installed/PluginInstalledComponent';
 import PluginMarketComponent from '@/app/home/plugins/plugin-market/PluginMarketComponent';
 import PluginSortDialog from '@/app/home/plugins/plugin-sort/PluginSortDialog';
-import PluginUploadDialog, {
-  UploadModalStatus,
-} from '@/app/home/plugins/plugin-upload-dialog/PluginUploadDialog';
 import styles from './plugins.module.css';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, ChevronDownIcon, UploadIcon, StoreIcon } from 'lucide-react';
+import {
+  PlusIcon,
+  ChevronDownIcon,
+  UploadIcon,
+  StoreIcon,
+  Download,
+} from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,7 +28,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { GithubIcon } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { useState, useRef, useCallback } from 'react';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { toast } from 'sonner';
@@ -33,6 +36,7 @@ import { useTranslation } from 'react-i18next';
 
 enum PluginInstallStatus {
   WAIT_INPUT = 'wait_input',
+  ASK_CONFIRM = 'ask_confirm',
   INSTALLING = 'installing',
   ERROR = 'error',
 }
@@ -46,56 +50,72 @@ export default function PluginConfigPage() {
     useState<PluginInstallStatus>(PluginInstallStatus.WAIT_INPUT);
   const [installError, setInstallError] = useState<string | null>(null);
   const [githubURL, setGithubURL] = useState('');
-  const [uploadModalOpen, setUploadModalOpen] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState<UploadModalStatus>(
-    UploadModalStatus.UPLOADING,
-  );
-  const [uploadError, setUploadError] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const pluginInstalledRef = useRef<PluginInstalledComponentRef>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  function handleModalConfirm() {
-    installPlugin(githubURL);
-  }
-  function installPlugin(url: string) {
-    setPluginInstallStatus(PluginInstallStatus.INSTALLING);
-    httpClient
-      .installPluginFromGithub(url)
-      .then((resp) => {
-        const taskId = resp.task_id;
+  function watchTask(taskId: number) {
+    let alreadySuccess = false;
+    console.log('taskId:', taskId);
 
-        let alreadySuccess = false;
-        console.log('taskId:', taskId);
-
-        // 每秒拉取一次任务状态
-        const interval = setInterval(() => {
-          httpClient.getAsyncTask(taskId).then((resp) => {
-            console.log('task status:', resp);
-            if (resp.runtime.done) {
-              clearInterval(interval);
-              if (resp.runtime.exception) {
-                setInstallError(resp.runtime.exception);
-                setPluginInstallStatus(PluginInstallStatus.ERROR);
-              } else {
-                // success
-                if (!alreadySuccess) {
-                  toast.success(t('plugins.installSuccess'));
-                  alreadySuccess = true;
-                }
-                setGithubURL('');
-                setModalOpen(false);
-                pluginInstalledRef.current?.refreshPluginList();
-              }
+    // 每秒拉取一次任务状态
+    const interval = setInterval(() => {
+      httpClient.getAsyncTask(taskId).then((resp) => {
+        console.log('task status:', resp);
+        if (resp.runtime.done) {
+          clearInterval(interval);
+          if (resp.runtime.exception) {
+            setInstallError(resp.runtime.exception);
+            setPluginInstallStatus(PluginInstallStatus.ERROR);
+          } else {
+            // success
+            if (!alreadySuccess) {
+              toast.success(t('plugins.installSuccess'));
+              alreadySuccess = true;
             }
-          });
-        }, 1000);
-      })
-      .catch((err) => {
-        console.log('error when install plugin:', err);
-        setInstallError(err.message);
-        setPluginInstallStatus(PluginInstallStatus.ERROR);
+            setGithubURL('');
+            setModalOpen(false);
+            pluginInstalledRef.current?.refreshPluginList();
+          }
+        }
       });
+    }, 1000);
+  }
+
+  function handleModalConfirm() {
+    installPlugin('github', { url: githubURL });
+  }
+
+  function installPlugin(
+    installSource: string,
+    installInfo: Record<string, any>,
+  ) {
+    setPluginInstallStatus(PluginInstallStatus.INSTALLING);
+    if (installSource === 'github') {
+      httpClient
+        .installPluginFromGithub(installInfo.url)
+        .then((resp) => {
+          const taskId = resp.task_id;
+          watchTask(taskId);
+        })
+        .catch((err) => {
+          console.log('error when install plugin:', err);
+          setInstallError(err.message);
+          setPluginInstallStatus(PluginInstallStatus.ERROR);
+        });
+    } else if (installSource === 'local') {
+      httpClient
+        .installPluginFromLocal(installInfo.file)
+        .then((resp) => {
+          const taskId = resp.task_id;
+          watchTask(taskId);
+        })
+        .catch((err) => {
+          console.log('error when install plugin:', err);
+          setInstallError(err.message);
+          setPluginInstallStatus(PluginInstallStatus.ERROR);
+        });
+    }
   }
 
   const validateFileType = (file: File): boolean => {
@@ -111,21 +131,10 @@ export default function PluginConfigPage() {
         return;
       }
 
-      setUploadModalOpen(true);
-      setUploadStatus(UploadModalStatus.UPLOADING);
-      setUploadError(null);
-
-      try {
-        // 暂时直接显示成功，等后续实现进度显示
-        setTimeout(() => {
-          setUploadStatus(UploadModalStatus.SUCCESS);
-          toast.success(t('plugins.uploadSuccess'));
-          pluginInstalledRef.current?.refreshPluginList();
-        }, 1000);
-      } catch (err: unknown) {
-        setUploadError((err as Error)?.message || t('plugins.uploadFailed'));
-        setUploadStatus(UploadModalStatus.ERROR);
-      }
+      setModalOpen(true);
+      setPluginInstallStatus(PluginInstallStatus.INSTALLING);
+      setInstallError(null);
+      installPlugin('local', { file });
     },
     [t],
   );
@@ -250,8 +259,8 @@ export default function PluginConfigPage() {
         <DialogContent className="w-[500px] p-6">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-4">
-              <GithubIcon className="size-6" />
-              <span>{t('plugins.installFromGithub')}</span>
+              <Download className="size-6" />
+              <span>{t('plugins.installPlugin')}</span>
             </DialogTitle>
           </DialogHeader>
           {pluginInstallStatus === PluginInstallStatus.WAIT_INPUT && (
@@ -277,12 +286,13 @@ export default function PluginConfigPage() {
             </div>
           )}
           <DialogFooter>
-            {pluginInstallStatus === PluginInstallStatus.WAIT_INPUT && (
+            {(pluginInstallStatus === PluginInstallStatus.WAIT_INPUT ||
+              pluginInstallStatus === PluginInstallStatus.ASK_CONFIRM) && (
               <>
                 <Button variant="outline" onClick={() => setModalOpen(false)}>
                   {t('common.cancel')}
                 </Button>
-                <Button onClick={handleModalConfirm}>
+                <Button onClick={() => handleModalConfirm()}>
                   {t('common.confirm')}
                 </Button>
               </>
@@ -295,14 +305,6 @@ export default function PluginConfigPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* 上传状态弹窗 */}
-      <PluginUploadDialog
-        open={uploadModalOpen}
-        onOpenChange={setUploadModalOpen}
-        status={uploadStatus}
-        error={uploadError}
-      />
 
       {/* 拖拽提示覆盖层 */}
       {isDragOver && (
