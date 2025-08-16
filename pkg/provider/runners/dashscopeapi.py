@@ -243,6 +243,7 @@ class DashScopeAPIRunner(runner.RequestRunner):
             incremental_output=True,  # 增量输出，使用流式输出需要开启增量输出
             session_id=query.session.using_conversation.uuid,  # 会话ID用于，多轮对话
             biz_params=biz_params,  # 工作流应用的自定义输入参数传递
+            flow_stream_mode="message_format"  # 消息模式，输出/结束节点的流式结果
             # rag_options={                                     # 主要用于文件交互，暂不支持
             #     "session_file_ids": ["FILE_ID1"],             # FILE_ID1 替换为实际的临时文件ID,逗号隔开多个
             # }
@@ -267,8 +268,10 @@ class DashScopeAPIRunner(runner.RequestRunner):
                 idx_chunk += 1
                 # 获取流式传输的output
                 stream_output = chunk.get('output', {})
-                if stream_output.get('text') is not None:
-                    pending_content += stream_output.get('text')
+                if stream_output.get('workflow_message') is not None:
+                    pending_content +=  stream_output.get('workflow_message').get('message').get('content')
+                # if stream_output.get('text') is not None:
+                #     pending_content += stream_output.get('text')
 
                 is_final = False if stream_output.get('finish_reason', False) == 'null' else True
 
@@ -283,7 +286,7 @@ class DashScopeAPIRunner(runner.RequestRunner):
 
                     # 将参考资料替换到文本中
                     pending_content = self._replace_references(pending_content, references_dict)
-                if is_final:
+                if idx_chunk % 8 == 0 or is_final:
                     yield llm_entities.MessageChunk(
                         role='assistant',
                         content=pending_content,
