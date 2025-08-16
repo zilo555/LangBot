@@ -2,7 +2,7 @@
 import PluginInstalledComponent, {
   PluginInstalledComponentRef,
 } from '@/app/home/plugins/plugin-installed/PluginInstalledComponent';
-import PluginMarketComponent from '@/app/home/plugins/plugin-market/PluginMarketComponent';
+import MarketPage from '@/app/home/plugins/plugin-market/PluginMarketComponent';
 import PluginSortDialog from '@/app/home/plugins/plugin-sort/PluginSortDialog';
 import styles from './plugins.module.css';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -28,11 +28,11 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Upload } from 'lucide-react';
 import { useState, useRef, useCallback } from 'react';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { PluginV4 } from '@/app/infra/entities/plugin';
 
 enum PluginInstallStatus {
   WAIT_INPUT = 'wait_input',
@@ -46,6 +46,8 @@ export default function PluginConfigPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [sortModalOpen, setSortModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('installed');
+  const [installSource, setInstallSource] = useState<string>('local');
+  const [installInfo, setInstallInfo] = useState<Record<string, any>>({}); // eslint-disable-line @typescript-eslint/no-explicit-any
   const [pluginInstallStatus, setPluginInstallStatus] =
     useState<PluginInstallStatus>(PluginInstallStatus.WAIT_INPUT);
   const [installError, setInstallError] = useState<string | null>(null);
@@ -83,12 +85,12 @@ export default function PluginConfigPage() {
   }
 
   function handleModalConfirm() {
-    installPlugin('github', { url: githubURL });
+    installPlugin(installSource, installInfo as Record<string, any>); // eslint-disable-line @typescript-eslint/no-explicit-any
   }
 
   function installPlugin(
     installSource: string,
-    installInfo: Record<string, any>,
+    installInfo: Record<string, any>, // eslint-disable-line @typescript-eslint/no-explicit-any
   ) {
     setPluginInstallStatus(PluginInstallStatus.INSTALLING);
     if (installSource === 'github') {
@@ -114,6 +116,17 @@ export default function PluginConfigPage() {
           console.log('error when install plugin:', err);
           setInstallError(err.message);
           setPluginInstallStatus(PluginInstallStatus.ERROR);
+        });
+    } else if (installSource === 'marketplace') {
+      httpClient
+        .installPluginFromMarketplace(
+          installInfo.plugin_author,
+          installInfo.plugin_name,
+          installInfo.plugin_version,
+        )
+        .then((resp) => {
+          const taskId = resp.task_id;
+          watchTask(taskId);
         });
     }
   }
@@ -244,12 +257,16 @@ export default function PluginConfigPage() {
           <PluginInstalledComponent ref={pluginInstalledRef} />
         </TabsContent>
         <TabsContent value="market">
-          <PluginMarketComponent
-            askInstallPlugin={(githubURL) => {
-              setGithubURL(githubURL);
+          <MarketPage
+            installPlugin={(plugin: PluginV4) => {
+              setInstallSource('marketplace');
+              setInstallInfo({
+                plugin_author: plugin.author,
+                plugin_name: plugin.name,
+                plugin_version: plugin.latest_version,
+              });
+              setPluginInstallStatus(PluginInstallStatus.ASK_CONFIRM);
               setModalOpen(true);
-              setPluginInstallStatus(PluginInstallStatus.WAIT_INPUT);
-              setInstallError(null);
             }}
           />
         </TabsContent>
@@ -272,6 +289,11 @@ export default function PluginConfigPage() {
                 onChange={(e) => setGithubURL(e.target.value)}
                 className="mb-4"
               />
+            </div>
+          )}
+          {pluginInstallStatus === PluginInstallStatus.ASK_CONFIRM && (
+            <div className="mt-4">
+              <p className="mb-2">{t('plugins.askConfirm')}</p>
             </div>
           )}
           {pluginInstallStatus === PluginInstallStatus.INSTALLING && (

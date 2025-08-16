@@ -5,10 +5,11 @@ export interface IPluginCardVO {
   version: string;
   enabled: boolean;
   priority: number;
+  install_source: string;
+  install_info: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
   status: string;
   tools: object[];
   event_handlers: object;
-  repository: string;
   debug: boolean;
 }
 
@@ -20,10 +21,11 @@ export class PluginCardVO implements IPluginCardVO {
   enabled: boolean;
   priority: number;
   debug: boolean;
+  install_source: string;
+  install_info: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
   status: string;
   tools: object[];
   event_handlers: object;
-  repository: string;
 
   constructor(prop: IPluginCardVO) {
     this.author = prop.author;
@@ -32,10 +34,11 @@ export class PluginCardVO implements IPluginCardVO {
     this.event_handlers = prop.event_handlers;
     this.name = prop.name;
     this.priority = prop.priority;
-    this.repository = prop.repository;
     this.status = prop.status;
     this.tools = prop.tools;
     this.version = prop.version;
     this.debug = prop.debug;
+    this.install_source = prop.install_source;
+    this.install_info = prop.install_info;
   }
 }

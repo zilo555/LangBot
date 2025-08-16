@@ -31,7 +31,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { i18nObj } from '@/i18n/I18nProvider';
+import { extractI18nObject } from '@/i18n/I18nProvider';
 
 export default function PipelineFormComponent({
   initValues,
@@ -220,10 +220,12 @@ export default function PipelineFormComponent({
       if (stage.name === 'runner') {
         return (
           <div key={stage.name} className="space-y-4 mb-6">
-            <div className="text-lg font-medium">{i18nObj(stage.label)}</div>
+            <div className="text-lg font-medium">
+              {extractI18nObject(stage.label)}
+            </div>
             {stage.description && (
               <div className="text-sm text-gray-500">
-                {i18nObj(stage.description)}
+                {extractI18nObject(stage.description)}
               </div>
             )}
             <DynamicFormComponent
@@ -256,10 +258,12 @@ export default function PipelineFormComponent({
       if (stage.name === 'n8n-service-api') {
         return (
           <div key={stage.name} className="space-y-4 mb-6">
-            <div className="text-lg font-medium">{i18nObj(stage.label)}</div>
+            <div className="text-lg font-medium">
+              {extractI18nObject(stage.label)}
+            </div>
             {stage.description && (
               <div className="text-sm text-gray-500">
-                {i18nObj(stage.description)}
+                {extractI18nObject(stage.description)}
               </div>
             )}
             <N8nAuthFormComponent
@@ -286,10 +290,12 @@ export default function PipelineFormComponent({
 
     return (
       <div key={stage.name} className="space-y-4 mb-6">
-        <div className="text-lg font-medium">{i18nObj(stage.label)}</div>
+        <div className="text-lg font-medium">
+          {extractI18nObject(stage.label)}
+        </div>
         {stage.description && (
           <div className="text-sm text-gray-500">
-            {i18nObj(stage.description)}
+            {extractI18nObject(stage.description)}
           </div>
         )}
         <DynamicFormComponent

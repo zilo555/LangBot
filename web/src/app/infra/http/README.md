@@ -32,7 +32,11 @@ const marketPlugins = await cloudClient.getMarketPlugins(1, 10, 'search term');
 // 使用云服务客户端（同步方式，可能使用默认 URL）
 import { cloudServiceClient } from '@/app/infra/http';
 
-const marketPlugins = await cloudServiceClient.getMarketPlugins(1, 10, 'search term');
+const marketPlugins = await cloudServiceClient.getMarketPlugins(
+  1,
+  10,
+  'search term',
+);
 ```
 
 ### 向后兼容（不推荐）

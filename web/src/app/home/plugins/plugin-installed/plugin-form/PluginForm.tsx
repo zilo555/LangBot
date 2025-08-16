@@ -13,7 +13,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { i18nObj } from '@/i18n/I18nProvider';
+import { extractI18nObject } from '@/i18n/I18nProvider';
 import { useTranslation } from 'react-i18next';
 
 enum PluginRemoveStatus {
@@ -185,20 +185,18 @@ export default function PluginForm({
 
       <div className="space-y-2">
         <div className="text-lg font-medium">
-          {i18nObj(pluginInfo.manifest.manifest.metadata.label)}
+          {extractI18nObject(pluginInfo.manifest.manifest.metadata.label)}
         </div>
         <div className="text-sm text-gray-500 pb-2">
-          {i18nObj(
+          {extractI18nObject(
             pluginInfo.manifest.manifest.metadata.description ?? {
               en_US: '',
               zh_Hans: '',
             },
           )}
         </div>
-        {/* @ts-ignore */}
         {pluginInfo.manifest.manifest.spec.config.length > 0 && (
           <DynamicFormComponent
-            // @ts-ignore
             itemConfigList={pluginInfo.manifest.manifest.spec.config}
             initialValues={pluginConfig.config as Record<string, object>}
             onSubmit={(values) => {
@@ -213,7 +211,6 @@ export default function PluginForm({
             }}
           />
         )}
-        {/* @ts-ignore */}
         {pluginInfo.manifest.manifest.spec.config.length === 0 && (
           <div className="text-sm text-gray-500">
             {t('plugins.pluginNoConfig')}

@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useTranslation } from 'react-i18next';
-import { i18nObj } from '@/i18n/I18nProvider';
+import { extractI18nObject } from '@/i18n/I18nProvider';
 
 export interface PluginInstalledComponentRef {
   refreshPluginList: () => void;
@@ -44,7 +44,7 @@ const PluginInstalledComponent = forwardRef<PluginInstalledComponentRef>(
           value.plugins.map((plugin) => {
             return new PluginCardVO({
               author: plugin.manifest.manifest.metadata.author ?? '',
-              description: i18nObj(
+              description: extractI18nObject(
                 plugin.manifest.manifest.metadata.description ?? {
                   en_US: '',
                   zh_Hans: '',
@@ -57,8 +57,9 @@ const PluginInstalledComponent = forwardRef<PluginInstalledComponentRef>(
               status: plugin.status,
               tools: [],
               event_handlers: {},
-              repository: plugin.manifest.manifest.metadata.repository ?? '',
               priority: plugin.priority,
+              install_source: plugin.install_source,
+              install_info: plugin.install_info,
             });
           }),
         );

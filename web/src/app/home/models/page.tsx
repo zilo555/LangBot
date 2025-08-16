@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { i18nObj } from '@/i18n/I18nProvider';
+import { extractI18nObject } from '@/i18n/I18nProvider';
 
 export default function LLMConfigPage() {
   const { t } = useTranslation();
@@ -33,7 +33,7 @@ export default function LLMConfigPage() {
     const requesterNameListResp = await httpClient.getProviderRequesters();
     const requesterNameList = requesterNameListResp.requesters.map((item) => {
       return {
-        label: i18nObj(item.label),
+        label: extractI18nObject(item.label),
         value: item.name,
       };
     });

@@ -1,4 +1,4 @@
-export interface I18nLabel {
+export interface I18nObject {
   en_US: string;
   zh_Hans: string;
   ja_JP?: string;
@@ -9,12 +9,12 @@ export interface ComponentManifest {
   kind: string;
   metadata: {
     name: string;
-    label: I18nLabel;
-    description?: I18nLabel;
+    label: I18nObject;
+    description?: I18nObject;
     icon?: string;
     repository?: string;
     version?: string;
     author?: string;
   };
-  spec: object;
+  spec: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 }

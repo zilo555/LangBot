@@ -259,6 +259,18 @@ export class BackendClient extends BaseHttpClient {
     return this.postFile('/api/v1/plugins/install/local', formData);
   }
 
+  public installPluginFromMarketplace(
+    author: string,
+    name: string,
+    version: string,
+  ): Promise<AsyncTaskCreatedResp> {
+    return this.post('/api/v1/plugins/install/marketplace', {
+      plugin_author: author,
+      plugin_name: name,
+      plugin_version: version,
+    });
+  }
+
   public removePlugin(
     author: string,
     name: string,

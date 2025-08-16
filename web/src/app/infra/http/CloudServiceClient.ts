@@ -1,5 +1,8 @@
 import { BaseHttpClient } from './BaseHttpClient';
-import { MarketPluginResponse } from '@/app/infra/entities/api';
+import {
+  ApiRespMarketplacePluginDetail,
+  ApiRespMarketplacePlugins,
+} from '@/app/infra/entities/api';
 
 /**
  * 云服务客户端
@@ -11,29 +14,59 @@ export class CloudServiceClient extends BaseHttpClient {
     super(baseURL, true);
   }
 
-  /**
-   * 获取插件市场插件列表
-   * @param page 页码
-   * @param page_size 每页大小
-   * @param query 搜索关键词
-   * @param sort_by 排序字段
-   * @param sort_order 排序顺序
-   */
-  public getMarketPlugins(
+  public getMarketplacePlugins(
     page: number,
     page_size: number,
-    query: string,
-    sort_by: string = 'stars',
-    sort_order: string = 'DESC',
-  ): Promise<MarketPluginResponse> {
-    return this.post(`/api/v1/market/plugins`, {
-      page,
-      page_size,
-      query,
-      sort_by,
-      sort_order,
+    sort_by?: string,
+    sort_order?: string,
+  ): Promise<ApiRespMarketplacePlugins> {
+    return this.get<ApiRespMarketplacePlugins>('/api/v1/marketplace/plugins', {
+      params: { page, page_size, sort_by, sort_order },
     });
   }
 
-  // 未来可以在这里添加更多 cloud service 相关的方法
+  public searchMarketplacePlugins(
+    query: string,
+    page: number,
+    page_size: number,
+    sort_by?: string,
+    sort_order?: string,
+  ): Promise<ApiRespMarketplacePlugins> {
+    return this.post<ApiRespMarketplacePlugins>(
+      '/api/v1/marketplace/plugins/search',
+      {
+        query,
+        page,
+        page_size,
+        sort_by,
+        sort_order,
+      },
+    );
+  }
+
+  public getPluginDetail(
+    author: string,
+    pluginName: string,
+  ): Promise<ApiRespMarketplacePluginDetail> {
+    return this.get<ApiRespMarketplacePluginDetail>(
+      `/api/v1/marketplace/plugins/${author}/${pluginName}`,
+    );
+  }
+
+  public getPluginREADME(
+    author: string,
+    pluginName: string,
+  ): Promise<{ readme: string }> {
+    return this.get<{ readme: string }>(
+      `/api/v1/marketplace/plugins/${author}/${pluginName}/resources/README`,
+    );
+  }
+
+  public getPluginIconURL(author: string, name: string): string {
+    return `${this.baseURL}/api/v1/marketplace/plugins/${author}/${name}/resources/icon`;
+  }
+
+  public getPluginMarketplaceURL(author: string, name: string): string {
+    return `${this.baseURL}/market?author=${author}&plugin=${name}`;
+  }
 }
