@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { ExternalLink } from 'lucide-react';
+import { BugIcon, ExternalLink } from 'lucide-react';
 import { getCloudServiceClientSync } from '@/app/infra/http';
 
 export default function PluginCardComponent({
@@ -65,48 +65,53 @@ export default function PluginCardComponent({
                     variant="outline"
                     className="text-[0.7rem] border-orange-400 text-orange-400"
                   >
+                    <BugIcon className="w-4 h-4" />
                     {t('plugins.debugging')}
                   </Badge>
                 )}
-                {cardVO.install_source === 'github' && (
-                  <Badge
-                    variant="outline"
-                    className="text-[0.7rem] border-blue-400 text-blue-400"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      window.open(cardVO.install_info.github_url, '_blank');
-                    }}
-                  >
-                    {t('plugins.fromGithub')}
-                    <ExternalLink className="w-4 h-4" />
-                  </Badge>
-                )}
-                {cardVO.install_source === 'local' && (
-                  <Badge
-                    variant="outline"
-                    className="text-[0.7rem] border-green-400 text-green-400"
-                  >
-                    {t('plugins.fromLocal')}
-                  </Badge>
-                )}
-                {cardVO.install_source === 'marketplace' && (
-                  <Badge
-                    variant="outline"
-                    className="text-[0.7rem] border-purple-400 text-purple-400"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      window.open(
-                        getCloudServiceClientSync().getPluginMarketplaceURL(
-                          cardVO.author,
-                          cardVO.name,
-                        ),
-                        '_blank',
-                      );
-                    }}
-                  >
-                    {t('plugins.fromMarketplace')}
-                    <ExternalLink className="w-4 h-4" />
-                  </Badge>
+                {!cardVO.debug && (
+                  <>
+                    {cardVO.install_source === 'github' && (
+                      <Badge
+                        variant="outline"
+                        className="text-[0.7rem] border-blue-400 text-blue-400"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(cardVO.install_info.github_url, '_blank');
+                        }}
+                      >
+                        {t('plugins.fromGithub')}
+                        <ExternalLink className="w-4 h-4" />
+                      </Badge>
+                    )}
+                    {cardVO.install_source === 'local' && (
+                      <Badge
+                        variant="outline"
+                        className="text-[0.7rem] border-green-400 text-green-400"
+                      >
+                        {t('plugins.fromLocal')}
+                      </Badge>
+                    )}
+                    {cardVO.install_source === 'marketplace' && (
+                      <Badge
+                        variant="outline"
+                        className="text-[0.7rem] border-purple-400 text-purple-400"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(
+                            getCloudServiceClientSync().getPluginMarketplaceURL(
+                              cardVO.author,
+                              cardVO.name,
+                            ),
+                            '_blank',
+                          );
+                        }}
+                      >
+                        {t('plugins.fromMarketplace')}
+                        <ExternalLink className="w-4 h-4" />
+                      </Badge>
+                    )}
+                  </>
                 )}
               </div>
             </div>

@@ -293,7 +293,12 @@ export default function PluginConfigPage() {
           )}
           {pluginInstallStatus === PluginInstallStatus.ASK_CONFIRM && (
             <div className="mt-4">
-              <p className="mb-2">{t('plugins.askConfirm')}</p>
+              <p className="mb-2">
+                {t('plugins.askConfirm', {
+                  name: installInfo.plugin_name,
+                  version: installInfo.plugin_version,
+                })}
+              </p>
             </div>
           )}
           {pluginInstallStatus === PluginInstallStatus.INSTALLING && (

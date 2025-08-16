@@ -21,7 +21,10 @@ export class CloudServiceClient extends BaseHttpClient {
     sort_order?: string,
   ): Promise<ApiRespMarketplacePlugins> {
     return this.get<ApiRespMarketplacePlugins>('/api/v1/marketplace/plugins', {
-      params: { page, page_size, sort_by, sort_order },
+      page,
+      page_size,
+      sort_by,
+      sort_order,
     });
   }
 

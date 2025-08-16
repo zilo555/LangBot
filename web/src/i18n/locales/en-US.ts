@@ -189,6 +189,7 @@ const enUS = {
     uploadSuccess: 'Upload successful',
     uploadFailed: 'Upload failed',
     selectFileToUpload: 'Select plugin file to upload',
+    askConfirm: 'Are you sure to install plugin "{{name}}" ({{version}})?',
     fromGithub: 'From GitHub',
     fromLocal: 'From Local',
     fromMarketplace: 'From Marketplace',

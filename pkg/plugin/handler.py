@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing
 from typing import Any
 import base64
+import traceback
 
 import sqlalchemy
 
@@ -48,33 +49,39 @@ class RuntimeConnectionHandler(handler.Handler):
             install_source = data['install_source']
             install_info = data['install_info']
 
-            result = await self.ap.persistence_mgr.execute_async(
-                sqlalchemy.select(persistence_plugin.PluginSetting)
-                .where(persistence_plugin.PluginSetting.plugin_author == plugin_author)
-                .where(persistence_plugin.PluginSetting.plugin_name == plugin_name)
-            )
-
-            if result.first() is not None:
-                # delete plugin setting
-                await self.ap.persistence_mgr.execute_async(
-                    sqlalchemy.delete(persistence_plugin.PluginSetting)
+            try:
+                result = await self.ap.persistence_mgr.execute_async(
+                    sqlalchemy.select(persistence_plugin.PluginSetting)
                     .where(persistence_plugin.PluginSetting.plugin_author == plugin_author)
                     .where(persistence_plugin.PluginSetting.plugin_name == plugin_name)
                 )
 
-            # create plugin setting
-            await self.ap.persistence_mgr.execute_async(
-                sqlalchemy.insert(persistence_plugin.PluginSetting).values(
-                    plugin_author=plugin_author,
-                    plugin_name=plugin_name,
-                    install_source=install_source,
-                    install_info=install_info,
-                )
-            )
+                if result.first() is not None:
+                    # delete plugin setting
+                    await self.ap.persistence_mgr.execute_async(
+                        sqlalchemy.delete(persistence_plugin.PluginSetting)
+                        .where(persistence_plugin.PluginSetting.plugin_author == plugin_author)
+                        .where(persistence_plugin.PluginSetting.plugin_name == plugin_name)
+                    )
 
-            return handler.ActionResponse.success(
-                data={},
-            )
+                # create plugin setting
+                await self.ap.persistence_mgr.execute_async(
+                    sqlalchemy.insert(persistence_plugin.PluginSetting).values(
+                        plugin_author=plugin_author,
+                        plugin_name=plugin_name,
+                        install_source=install_source,
+                        install_info=install_info,
+                    )
+                )
+
+                return handler.ActionResponse.success(
+                    data={},
+                )
+            except Exception as e:
+                traceback.print_exc()
+                return handler.ActionResponse.error(
+                    message=f'Failed to initialize plugin settings: {e}',
+                )
 
         @self.action(RuntimeToLangBotAction.GET_PLUGIN_SETTINGS)
         async def get_plugin_settings(data: dict[str, Any]) -> handler.ActionResponse:

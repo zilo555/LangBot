@@ -189,6 +189,7 @@ const jaJP = {
     uploadSuccess: 'アップロード成功',
     uploadFailed: 'アップロード失敗',
     selectFileToUpload: 'アップロードするプラグインファイルを選択',
+    askConfirm: 'プラグイン "{{name}}" ({{version}}) をインストールしますか？',
     fromGithub: 'GitHubから',
     fromLocal: 'ローカルから',
     fromMarketplace: 'プラグインマーケットから',
