@@ -22,6 +22,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { LanguageSelector } from '@/components/ui/language-selector';
+import PasswordChangeDialog from '@/app/home/components/password-change-dialog/PasswordChangeDialog';
 
 // TODO 侧边导航栏要加动画
 export default function HomeSidebar({
@@ -41,6 +42,7 @@ export default function HomeSidebar({
   const { theme, setTheme } = useTheme();
   const { t } = useTranslation();
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [passwordChangeOpen, setPasswordChangeOpen] = useState(false);
   const [languageSelectorOpen, setLanguageSelectorOpen] = useState(false);
 
   useEffect(() => {
@@ -249,6 +251,24 @@ export default function HomeSidebar({
                 variant="ghost"
                 className="w-full justify-start font-normal"
                 onClick={() => {
+                  setPasswordChangeOpen(true);
+                  setPopoverOpen(false);
+                }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="w-4 h-4 mr-2"
+                >
+                  <path d="M6 8V7C6 3.68629 8.68629 1 12 1C15.3137 1 18 3.68629 18 7V8H20C20.5523 8 21 8.44772 21 9V21C21 21.5523 20.5523 22 20 22H4C3.44772 22 3 21.5523 3 21V9C3 8.44772 3.44772 8 4 8H6ZM19 10H5V20H19V10ZM11 15.7324C10.4022 15.3866 10 14.7403 10 14C10 12.8954 10.8954 12 12 12C13.1046 12 14 12.8954 14 14C14 14.7403 13.5978 15.3866 13 15.7324V18H11V15.7324ZM8 8H16V7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7V8Z"></path>
+                </svg>
+                {t('common.changePassword')}
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start font-normal"
+                onClick={() => {
                   handleLogout();
                 }}
               >
@@ -256,6 +276,7 @@ export default function HomeSidebar({
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
                   fill="currentColor"
+                  className="w-4 h-4 mr-2"
                 >
                   <path d="M4 18H6V20H18V4H6V6H4V3C4 2.44772 4.44772 2 5 2H19C19.5523 2 20 2.44772 20 3V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V18ZM6 11H13V13H6V16L1 12L6 8V11Z"></path>
                 </svg>
@@ -265,6 +286,10 @@ export default function HomeSidebar({
           </PopoverContent>
         </Popover>
       </div>
+      <PasswordChangeDialog
+        open={passwordChangeOpen}
+        onOpenChange={setPasswordChangeOpen}
+      />
     </div>
   );
 }
