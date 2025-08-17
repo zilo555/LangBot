@@ -29,17 +29,17 @@ class PluginsRouterGroup(group.RouterGroup):
             return self.success()
 
         @self.route(
-            '/<author>/<plugin_name>/update',
+            '/<author>/<plugin_name>/upgrade',
             methods=['POST'],
             auth_type=group.AuthType.USER_TOKEN,
         )
         async def _(author: str, plugin_name: str) -> str:
             ctx = taskmgr.TaskContext.new()
             wrapper = self.ap.task_mgr.create_user_task(
-                self.ap.plugin_mgr.update_plugin(plugin_name, task_context=ctx),
+                self.ap.plugin_connector.upgrade_plugin(author, plugin_name, task_context=ctx),
                 kind='plugin-operation',
-                name=f'plugin-update-{plugin_name}',
-                label=f'更新插件 {plugin_name}',
+                name=f'plugin-upgrade-{plugin_name}',
+                label=f'Upgrading plugin {plugin_name}',
                 context=ctx,
             )
             return self.success(data={'task_id': wrapper.id})
@@ -58,10 +58,10 @@ class PluginsRouterGroup(group.RouterGroup):
             elif quart.request.method == 'DELETE':
                 ctx = taskmgr.TaskContext.new()
                 wrapper = self.ap.task_mgr.create_user_task(
-                    self.ap.plugin_mgr.uninstall_plugin(plugin_name, task_context=ctx),
+                    self.ap.plugin_connector.delete_plugin(author, plugin_name, task_context=ctx),
                     kind='plugin-operation',
                     name=f'plugin-remove-{plugin_name}',
-                    label=f'删除插件 {plugin_name}',
+                    label=f'Removing plugin {plugin_name}',
                     context=ctx,
                 )
 

@@ -116,6 +116,34 @@ class PluginRuntimeConnector:
                 if task_context is not None:
                     task_context.trace(trace)
 
+    async def upgrade_plugin(
+        self, plugin_author: str, plugin_name: str, task_context: taskmgr.TaskContext | None = None
+    ) -> dict[str, Any]:
+        async for ret in self.handler.upgrade_plugin(plugin_author, plugin_name):
+            current_action = ret.get('current_action', None)
+            if current_action is not None:
+                if task_context is not None:
+                    task_context.set_current_action(current_action)
+
+            trace = ret.get('trace', None)
+            if trace is not None:
+                if task_context is not None:
+                    task_context.trace(trace)
+
+    async def delete_plugin(
+        self, plugin_author: str, plugin_name: str, task_context: taskmgr.TaskContext | None = None
+    ) -> dict[str, Any]:
+        async for ret in self.handler.delete_plugin(plugin_author, plugin_name):
+            current_action = ret.get('current_action', None)
+            if current_action is not None:
+                if task_context is not None:
+                    task_context.set_current_action(current_action)
+
+            trace = ret.get('trace', None)
+            if trace is not None:
+                if task_context is not None:
+                    task_context.trace(trace)
+
     async def list_plugins(self) -> list[dict[str, Any]]:
         return await self.handler.list_plugins()
 

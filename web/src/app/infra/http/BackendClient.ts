@@ -240,13 +240,6 @@ export class BackendClient extends BaseHttpClient {
     return this.put('/api/v1/plugins/reorder', { plugins });
   }
 
-  public updatePlugin(
-    author: string,
-    name: string,
-  ): Promise<AsyncTaskCreatedResp> {
-    return this.post(`/api/v1/plugins/${author}/${name}/update`);
-  }
-
   public installPluginFromGithub(
     source: string,
   ): Promise<AsyncTaskCreatedResp> {
@@ -276,6 +269,13 @@ export class BackendClient extends BaseHttpClient {
     name: string,
   ): Promise<AsyncTaskCreatedResp> {
     return this.delete(`/api/v1/plugins/${author}/${name}`);
+  }
+
+  public upgradePlugin(
+    author: string,
+    name: string,
+  ): Promise<AsyncTaskCreatedResp> {
+    return this.post(`/api/v1/plugins/${author}/${name}/upgrade`);
   }
 
   // ============ System API ============

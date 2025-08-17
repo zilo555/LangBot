@@ -4,14 +4,6 @@ import { Plugin } from '@/app/infra/entities/plugin';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import DynamicFormComponent from '@/app/home/components/dynamic-form/DynamicFormComponent';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { extractI18nObject } from '@/i18n/I18nProvider';
 import { useTranslation } from 'react-i18next';
@@ -60,7 +52,11 @@ export default function PluginForm({
   };
 
   if (!pluginInfo || !pluginConfig) {
-    return <div>{t('plugins.loading')}</div>;
+    return (
+      <div className="flex items-center justify-center h-full mb-[2rem]">
+        {t('plugins.loading')}
+      </div>
+    );
   }
 
   return (

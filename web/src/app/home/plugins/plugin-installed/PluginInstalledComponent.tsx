@@ -18,15 +18,15 @@ import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { extractI18nObject } from '@/i18n/I18nProvider';
 import { toast } from 'sonner';
+import { useAsyncTask, AsyncTaskStatus } from '@/hooks/useAsyncTask';
 
 export interface PluginInstalledComponentRef {
   refreshPluginList: () => void;
 }
 
-enum PluginRemoveStatus {
-  WAIT_INPUT = 'WAIT_INPUT',
-  REMOVING = 'REMOVING',
-  ERROR = 'ERROR',
+enum PluginOperationType {
+  DELETE = 'DELETE',
+  UPDATE = 'UPDATE',
 }
 
 // eslint-disable-next-line react/display-name
@@ -38,15 +38,26 @@ const PluginInstalledComponent = forwardRef<PluginInstalledComponentRef>(
     const [selectedPlugin, setSelectedPlugin] = useState<PluginCardVO | null>(
       null,
     );
-    const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
-    const [pluginRemoveStatus, setPluginRemoveStatus] =
-      useState<PluginRemoveStatus>(PluginRemoveStatus.WAIT_INPUT);
-    const [pluginRemoveError, setPluginRemoveError] = useState<string | null>(
-      null,
+    const [showOperationModal, setShowOperationModal] = useState(false);
+    const [operationType, setOperationType] = useState<PluginOperationType>(
+      PluginOperationType.DELETE,
     );
-    const [pluginToDelete, setPluginToDelete] = useState<PluginCardVO | null>(
-      null,
-    );
+    const [targetPlugin, setTargetPlugin] = useState<PluginCardVO | null>(null);
+
+    const asyncTask = useAsyncTask({
+      onSuccess: () => {
+        const successMessage =
+          operationType === PluginOperationType.DELETE
+            ? t('plugins.deleteSuccess')
+            : t('plugins.updateSuccess');
+        toast.success(successMessage);
+        setShowOperationModal(false);
+        getPluginList();
+      },
+      onError: () => {
+        // Error is already handled in the hook state
+      },
+    });
 
     useEffect(() => {
       initData();
@@ -94,115 +105,139 @@ const PluginInstalledComponent = forwardRef<PluginInstalledComponentRef>(
     }
 
     function handlePluginDelete(plugin: PluginCardVO) {
-      setPluginToDelete(plugin);
-      setShowDeleteConfirmModal(true);
-      setPluginRemoveStatus(PluginRemoveStatus.WAIT_INPUT);
+      setTargetPlugin(plugin);
+      setOperationType(PluginOperationType.DELETE);
+      setShowOperationModal(true);
+      asyncTask.reset();
     }
 
-    function deletePlugin() {
-      setPluginRemoveStatus(PluginRemoveStatus.REMOVING);
-      httpClient
-        .removePlugin(pluginToDelete!.author, pluginToDelete!.name)
+    function handlePluginUpdate(plugin: PluginCardVO) {
+      setTargetPlugin(plugin);
+      setOperationType(PluginOperationType.UPDATE);
+      setShowOperationModal(true);
+      asyncTask.reset();
+    }
+
+    function executeOperation() {
+      if (!targetPlugin) return;
+
+      const apiCall =
+        operationType === PluginOperationType.DELETE
+          ? httpClient.removePlugin(targetPlugin.author, targetPlugin.name)
+          : httpClient.upgradePlugin(targetPlugin.author, targetPlugin.name);
+
+      apiCall
         .then((res) => {
-          const taskId = res.task_id;
-
-          let alreadySuccess = false;
-
-          const interval = setInterval(() => {
-            httpClient.getAsyncTask(taskId).then((res) => {
-              if (res.runtime.done) {
-                clearInterval(interval);
-                if (res.runtime.exception) {
-                  setPluginRemoveError(res.runtime.exception);
-                  setPluginRemoveStatus(PluginRemoveStatus.ERROR);
-                } else {
-                  // success
-                  if (!alreadySuccess) {
-                    toast.success('插件删除成功');
-                    alreadySuccess = true;
-                  }
-                  setPluginRemoveStatus(PluginRemoveStatus.WAIT_INPUT);
-                  setShowDeleteConfirmModal(false);
-                }
-              }
-            });
-          }, 1000);
+          asyncTask.startTask(res.task_id);
         })
         .catch((error) => {
-          setPluginRemoveError(error.message);
-          setPluginRemoveStatus(PluginRemoveStatus.ERROR);
+          const errorMessage =
+            operationType === PluginOperationType.DELETE
+              ? t('plugins.deleteError') + error.message
+              : t('plugins.updateError') + error.message;
+          toast.error(errorMessage);
         });
     }
 
     return (
       <>
         <Dialog
-          open={showDeleteConfirmModal}
+          open={showOperationModal}
           onOpenChange={(open) => {
             if (!open) {
-              setShowDeleteConfirmModal(false);
-              setPluginRemoveStatus(PluginRemoveStatus.WAIT_INPUT);
-              setPluginToDelete(null);
+              setShowOperationModal(false);
+              setTargetPlugin(null);
+              asyncTask.reset();
             }
           }}
         >
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{t('plugins.deleteConfirm')}</DialogTitle>
+              <DialogTitle>
+                {operationType === PluginOperationType.DELETE
+                  ? t('plugins.deleteConfirm')
+                  : t('plugins.updateConfirm')}
+              </DialogTitle>
             </DialogHeader>
             <DialogDescription>
-              {pluginRemoveStatus === PluginRemoveStatus.WAIT_INPUT && (
+              {asyncTask.status === AsyncTaskStatus.WAIT_INPUT && (
                 <div>
-                  {t('plugins.confirmDeletePlugin', {
-                    author: pluginToDelete?.author ?? '',
-                    name: pluginToDelete?.name ?? '',
-                  })}
+                  {operationType === PluginOperationType.DELETE
+                    ? t('plugins.confirmDeletePlugin', {
+                        author: targetPlugin?.author ?? '',
+                        name: targetPlugin?.name ?? '',
+                      })
+                    : t('plugins.confirmUpdatePlugin', {
+                        author: targetPlugin?.author ?? '',
+                        name: targetPlugin?.name ?? '',
+                      })}
                 </div>
               )}
-              {pluginRemoveStatus === PluginRemoveStatus.REMOVING && (
-                <div>{t('plugins.deleting')}</div>
-              )}
-              {pluginRemoveStatus === PluginRemoveStatus.ERROR && (
+              {asyncTask.status === AsyncTaskStatus.RUNNING && (
                 <div>
-                  {t('plugins.deleteError')}
-                  <div className="text-red-500">{pluginRemoveError}</div>
+                  {operationType === PluginOperationType.DELETE
+                    ? t('plugins.deleting')
+                    : t('plugins.updating')}
+                </div>
+              )}
+              {asyncTask.status === AsyncTaskStatus.ERROR && (
+                <div>
+                  {operationType === PluginOperationType.DELETE
+                    ? t('plugins.deleteError')
+                    : t('plugins.updateError')}
+                  <div className="text-red-500">{asyncTask.error}</div>
                 </div>
               )}
             </DialogDescription>
             <DialogFooter>
-              {pluginRemoveStatus === PluginRemoveStatus.WAIT_INPUT && (
+              {asyncTask.status === AsyncTaskStatus.WAIT_INPUT && (
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setShowDeleteConfirmModal(false);
-                    setPluginRemoveStatus(PluginRemoveStatus.WAIT_INPUT);
-                    setPluginToDelete(null);
+                    setShowOperationModal(false);
+                    setTargetPlugin(null);
+                    asyncTask.reset();
                   }}
                 >
                   {t('plugins.cancel')}
                 </Button>
               )}
-              {pluginRemoveStatus === PluginRemoveStatus.WAIT_INPUT && (
+              {asyncTask.status === AsyncTaskStatus.WAIT_INPUT && (
                 <Button
-                  variant="destructive"
+                  variant={
+                    operationType === PluginOperationType.DELETE
+                      ? 'destructive'
+                      : 'default'
+                  }
                   onClick={() => {
-                    deletePlugin();
+                    executeOperation();
                   }}
                 >
-                  {t('plugins.confirmDelete')}
+                  {operationType === PluginOperationType.DELETE
+                    ? t('plugins.confirmDelete')
+                    : t('plugins.confirmUpdate')}
                 </Button>
               )}
-              {pluginRemoveStatus === PluginRemoveStatus.REMOVING && (
-                <Button variant="destructive" disabled>
-                  {t('plugins.deleting')}
+              {asyncTask.status === AsyncTaskStatus.RUNNING && (
+                <Button
+                  variant={
+                    operationType === PluginOperationType.DELETE
+                      ? 'destructive'
+                      : 'default'
+                  }
+                  disabled
+                >
+                  {operationType === PluginOperationType.DELETE
+                    ? t('plugins.deleting')
+                    : t('plugins.updating')}
                 </Button>
               )}
-              {pluginRemoveStatus === PluginRemoveStatus.ERROR && (
+              {asyncTask.status === AsyncTaskStatus.ERROR && (
                 <Button
                   variant="default"
                   onClick={() => {
-                    setShowDeleteConfirmModal(false);
-                    setPluginRemoveStatus(PluginRemoveStatus.WAIT_INPUT);
+                    setShowOperationModal(false);
+                    asyncTask.reset();
                   }}
                 >
                   {t('plugins.close')}
@@ -256,6 +291,7 @@ const PluginInstalledComponent = forwardRef<PluginInstalledComponentRef>(
                     cardVO={vo}
                     onCardClick={() => handlePluginClick(vo)}
                     onDeleteClick={() => handlePluginDelete(vo)}
+                    onUpgradeClick={() => handlePluginUpdate(vo)}
                   />
                 </div>
               );

@@ -14,6 +14,7 @@ import {
   ExternalLink,
   Ellipsis,
   Trash,
+  ArrowUp,
 } from 'lucide-react';
 import { getCloudServiceClientSync } from '@/app/infra/http';
 import { PluginComponent } from '@/app/infra/entities/plugin';
@@ -22,16 +23,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
-enum PluginRemoveStatus {
-  WAIT_INPUT = 'WAIT_INPUT',
-  REMOVING = 'REMOVING',
-  ERROR = 'ERROR',
-}
 
 function getComponentList(components: PluginComponent[], t: TFunction) {
   const componentKindCount: Record<string, number> = {};
@@ -80,14 +73,17 @@ export default function PluginCardComponent({
   cardVO,
   onCardClick,
   onDeleteClick,
+  onUpgradeClick,
 }: {
   cardVO: PluginCardVO;
   onCardClick: () => void;
   onDeleteClick: (cardVO: PluginCardVO) => void;
+  onUpgradeClick: (cardVO: PluginCardVO) => void;
 }) {
   const { t } = useTranslation();
   const [enabled, setEnabled] = useState(cardVO.enabled);
   const [switchEnable, setSwitchEnable] = useState(true);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   function handleEnable(e: React.MouseEvent) {
     e.stopPropagation(); // 阻止事件冒泡
@@ -212,18 +208,33 @@ export default function PluginCardComponent({
             </div>
 
             <div className="flex items-center justify-center">
-              <DropdownMenu>
+              <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost">
                     <Ellipsis className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
+                  {/**upgrade */}
+                  {cardVO.install_source === 'marketplace' && (
+                    <DropdownMenuItem
+                      className="flex flex-row items-center justify-start gap-[0.4rem] cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onUpgradeClick(cardVO);
+                        setDropdownOpen(false);
+                      }}
+                    >
+                      <ArrowUp className="w-4 h-4" />
+                      <span>{t('plugins.update')}</span>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem
                     className="flex flex-row items-center justify-start gap-[0.4rem] cursor-pointer"
                     onClick={(e) => {
-                      onDeleteClick(cardVO);
                       e.stopPropagation();
+                      onDeleteClick(cardVO);
+                      setDropdownOpen(false);
                     }}
                   >
                     <Trash className="w-4 h-4" />

@@ -437,6 +437,33 @@ class RuntimeConnectionHandler(handler.Handler):
         async for ret in gen:
             yield ret
 
+    async def upgrade_plugin(self, plugin_author: str, plugin_name: str) -> typing.AsyncGenerator[dict[str, Any], None]:
+        """Upgrade plugin"""
+        gen = self.call_action_generator(
+            LangBotToRuntimeAction.UPGRADE_PLUGIN,
+            {
+                'plugin_author': plugin_author,
+                'plugin_name': plugin_name,
+            },
+            timeout=120,
+        )
+
+        async for ret in gen:
+            yield ret
+
+    async def delete_plugin(self, plugin_author: str, plugin_name: str) -> typing.AsyncGenerator[dict[str, Any], None]:
+        """Delete plugin"""
+        gen = self.call_action_generator(
+            LangBotToRuntimeAction.DELETE_PLUGIN,
+            {
+                'plugin_author': plugin_author,
+                'plugin_name': plugin_name,
+            },
+        )
+
+        async for ret in gen:
+            yield ret
+
     async def list_plugins(self) -> list[dict[str, Any]]:
         """List plugins"""
         result = await self.call_action(
