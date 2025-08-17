@@ -218,7 +218,6 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
     ):
         msg_seq = bot_message.msg_sequence
         if (msg_seq - 1) % 8 == 0 or is_final:
-
             assert isinstance(message_source.source_platform_object, Update)
             components = await TelegramMessageConverter.yiri2target(message, self.bot)
             args = {}
@@ -295,8 +294,12 @@ class TelegramAdapter(adapter.MessagePlatformAdapter):
         self.bot_account_id = (await self.bot.get_me()).username
         await self.application.updater.start_polling(allowed_updates=Update.ALL_TYPES)
         await self.application.start()
+        await self.logger.info('Telegram adapter running')
 
     async def kill(self) -> bool:
         if self.application.running:
             await self.application.stop()
+            if self.application.updater:
+                await self.application.updater.stop()
+            await self.logger.info('Telegram adapter stopped')
         return True
