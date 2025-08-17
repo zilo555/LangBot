@@ -46,6 +46,7 @@ export default function KnowledgePage() {
           name: kb.name,
           description: kb.description,
           embeddingModelUUID: kb.embedding_model_uuid,
+          top_k: kb.top_k ?? 5,
           lastUpdatedTimeAgo: lastUpdatedTimeAgoText,
         });
       }),

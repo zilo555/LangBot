@@ -65,7 +65,7 @@ class LocalAgentRunner(runner.RequestRunner):
                 self.ap.logger.warning(f'Knowledge base {kb_uuid} not found')
                 raise ValueError(f'Knowledge base {kb_uuid} not found')
 
-            result = await kb.retrieve(user_message_text)
+            result = await kb.retrieve(user_message_text, kb.knowledge_base_entity.top_k)
 
             final_user_message_text = ''
 

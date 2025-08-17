@@ -6,6 +6,8 @@
 
 <div align="center">
 
+<a href="https://hellogithub.com/repository/langbot-app/LangBot" target="_blank"><img src="https://abroad.hellogithub.com/v1/widgets/recommend.svg?rid=5ce8ae2aa4f74316bf393b57b952433c&claim_uid=gtmc6YWjMZkT21R" alt="Featured｜HelloGitHub" style="width: 250px; height: 54px;" width="250" height="54" /></a>
+
 [English](README_EN.md) / 简体中文 / [繁體中文](README_TW.md) / [日本語](README_JP.md) / (PR for your language)
 
 [![Discord](https://img.shields.io/discord/1335141740050649118?logo=discord&labelColor=%20%235462eb&logoColor=%20%23f5f5f5&color=%20%235462eb)](https://discord.gg/wdNEHETs87)
@@ -85,8 +87,9 @@ docker compose up -d
 | --- | --- | --- |
 | QQ 个人号 | ✅ | QQ 个人号私聊、群聊 |
 | QQ 官方机器人 | ✅ | QQ 官方机器人，支持频道、私聊、群聊 |
-| 微信 | ✅ |  |
+| 企业微信 | ✅ |  |
 | 企微对外客服 | ✅ |  |
+| 个人微信 | ✅ |  |
 | 微信公众号 | ✅ |  |
 | 飞书 | ✅ |  |
 | 钉钉 | ✅ |  |

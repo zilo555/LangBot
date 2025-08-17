@@ -342,7 +342,7 @@ export default function PipelineFormComponent({
 
   return (
     <>
-      <div className="!max-w-[70vw] max-w-6xl h-full p-0 flex flex-col bg-white">
+      <div className="!max-w-[70vw] max-w-6xl h-full p-0 flex flex-col bg-white dark:bg-black">
         <Form {...form}>
           <form
             id="pipeline-form"
@@ -456,7 +456,7 @@ export default function PipelineFormComponent({
           </form>
           {/* 按钮栏移到 Tabs 外部，始终固定底部 */}
           {showButtons && (
-            <div className="flex justify-end gap-2 pt-4 border-t mb-0 bg-white sticky bottom-0 z-10">
+            <div className="flex justify-end gap-2 pt-4 border-t mb-0 bg-white dark:bg-black sticky bottom-0 z-10">
               {isEditMode && !isDefaultPipeline && (
                 <Button
                   type="button"

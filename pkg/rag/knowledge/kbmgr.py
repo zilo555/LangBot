@@ -123,11 +123,11 @@ class RuntimeKnowledgeBase:
         )
         return wrapper.id
 
-    async def retrieve(self, query: str) -> list[retriever_entities.RetrieveResultEntry]:
+    async def retrieve(self, query: str, top_k: int) -> list[retriever_entities.RetrieveResultEntry]:
         embedding_model = await self.ap.model_mgr.get_embedding_model_by_uuid(
             self.knowledge_base_entity.embedding_model_uuid
         )
-        return await self.retriever.retrieve(self.knowledge_base_entity.uuid, query, embedding_model)
+        return await self.retriever.retrieve(self.knowledge_base_entity.uuid, query, embedding_model, top_k)
 
     async def delete_file(self, file_id: str):
         # delete vector

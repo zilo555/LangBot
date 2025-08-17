@@ -67,3 +67,19 @@ class UserRouterGroup(group.RouterGroup):
             await self.ap.user_service.reset_password(user_email, new_password)
 
             return self.success(data={'user': user_email})
+
+        @self.route('/change-password', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
+        async def _(user_email: str) -> str:
+            json_data = await quart.request.json
+            
+            current_password = json_data['current_password']
+            new_password = json_data['new_password']
+            
+            try:
+                await self.ap.user_service.change_password(user_email, current_password, new_password)
+            except argon2.exceptions.VerifyMismatchError:
+                return self.http_status(400, -1, 'Current password is incorrect')
+            except ValueError as e:
+                return self.http_status(400, -1, str(e))
+            
+            return self.success(data={'user': user_email})
