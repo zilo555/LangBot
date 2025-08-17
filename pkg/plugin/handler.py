@@ -486,6 +486,29 @@ class RuntimeConnectionHandler(handler.Handler):
         )
         return result['plugin']
 
+    async def set_plugin_config(self, plugin_author: str, plugin_name: str, config: dict[str, Any]) -> dict[str, Any]:
+        """Set plugin config"""
+        # update plugin setting
+        await self.ap.persistence_mgr.execute_async(
+            sqlalchemy.update(persistence_plugin.PluginSetting)
+            .where(persistence_plugin.PluginSetting.plugin_author == plugin_author)
+            .where(persistence_plugin.PluginSetting.plugin_name == plugin_name)
+            .values(config=config)
+        )
+
+        # restart plugin
+        gen = self.call_action_generator(
+            LangBotToRuntimeAction.RESTART_PLUGIN,
+            {
+                'plugin_author': plugin_author,
+                'plugin_name': plugin_name,
+            },
+        )
+        async for ret in gen:
+            pass
+
+        return {}
+
     async def emit_event(
         self,
         event_context: dict[str, Any],

@@ -170,7 +170,7 @@ const jaJP = {
     saveConfig: '設定を保存',
     saving: '保存中...',
     confirmDeletePlugin:
-      'プラグイン「{{author}}/{{name}}」を削除してもよろしいですか？',
+      'プラグイン「{{author}}/{{name}}」を削除してもよろしいですか？この操作により、プラグインの設定も削除されます。',
     confirmDelete: '削除を確認',
     deleteError: '削除に失敗しました：',
     close: '閉じる',
@@ -205,6 +205,10 @@ const jaJP = {
     updating: '更新中...',
     updateSuccess: 'プラグインの更新に成功しました',
     updateError: '更新に失敗しました：',
+    saveConfigSuccessNormal: '設定を保存しました',
+    saveConfigSuccessDebugPlugin:
+      '設定を保存しました。手動でプラグインを再起動してください',
+    saveConfigError: '設定の保存に失敗しました：',
   },
   market: {
     searchPlaceholder: 'プラグインを検索...',

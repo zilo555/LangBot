@@ -170,7 +170,7 @@ const enUS = {
     saveConfig: 'Save Config',
     saving: 'Saving...',
     confirmDeletePlugin:
-      'Are you sure you want to delete the plugin ({{author}}/{{name}})?',
+      'Are you sure you want to delete the plugin ({{author}}/{{name}})? This will also delete the plugin configuration.',
     confirmDelete: 'Confirm Delete',
     deleteError: 'Delete failed: ',
     close: 'Close',
@@ -205,6 +205,10 @@ const enUS = {
     updating: 'Updating...',
     updateSuccess: 'Plugin updated successfully',
     updateError: 'Update failed: ',
+    saveConfigSuccessNormal: 'Configuration saved successfully',
+    saveConfigSuccessDebugPlugin:
+      'Configuration saved successfully, please manually restart the plugin',
+    saveConfigError: 'Configuration save failed: ',
   },
   market: {
     searchPlaceholder: 'Search plugins...',

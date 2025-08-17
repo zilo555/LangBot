@@ -15,7 +15,6 @@ import {
   ApiRespPlugins,
   ApiRespPlugin,
   ApiRespPluginConfig,
-  PluginReorderElement,
   AsyncTaskCreatedResp,
   ApiRespSystemInfo,
   ApiRespAsyncTasks,
@@ -224,20 +223,6 @@ export class BackendClient extends BaseHttpClient {
     config: object,
   ): Promise<object> {
     return this.put(`/api/v1/plugins/${author}/${name}/config`, config);
-  }
-
-  public togglePlugin(
-    author: string,
-    name: string,
-    target_enabled: boolean,
-  ): Promise<object> {
-    return this.put(`/api/v1/plugins/${author}/${name}/toggle`, {
-      target_enabled,
-    });
-  }
-
-  public reorderPlugins(plugins: PluginReorderElement[]): Promise<object> {
-    return this.put('/api/v1/plugins/reorder', { plugins });
   }
 
   public installPluginFromGithub(

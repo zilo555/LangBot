@@ -166,7 +166,8 @@ const zhHans = {
     cancel: '取消',
     saveConfig: '保存配置',
     saving: '保存中...',
-    confirmDeletePlugin: '你确定要删除插件（{{author}}/{{name}}）吗？',
+    confirmDeletePlugin:
+      '你确定要删除插件（{{author}}/{{name}}）吗？这将同时删除插件的配置。',
     confirmDelete: '确认删除',
     deleteError: '删除失败：',
     close: '关闭',
@@ -199,6 +200,9 @@ const zhHans = {
     updating: '更新中...',
     updateSuccess: '插件更新成功',
     updateError: '更新失败：',
+    saveConfigSuccessNormal: '保存配置成功',
+    saveConfigSuccessDebugPlugin: '保存配置成功，请手动重启插件',
+    saveConfigError: '保存配置失败：',
   },
   market: {
     searchPlaceholder: '搜索插件...',

@@ -18,17 +18,6 @@ class PluginsRouterGroup(group.RouterGroup):
             return self.success(data={'plugins': plugins})
 
         @self.route(
-            '/<author>/<plugin_name>/toggle',
-            methods=['PUT'],
-            auth_type=group.AuthType.USER_TOKEN,
-        )
-        async def _(author: str, plugin_name: str) -> str:
-            data = await quart.request.json
-            target_enabled = data.get('target_enabled')
-            await self.ap.plugin_mgr.update_plugin_switch(plugin_name, target_enabled)
-            return self.success()
-
-        @self.route(
             '/<author>/<plugin_name>/upgrade',
             methods=['POST'],
             auth_type=group.AuthType.USER_TOKEN,
@@ -76,20 +65,15 @@ class PluginsRouterGroup(group.RouterGroup):
             plugin = await self.ap.plugin_connector.get_plugin_info(author, plugin_name)
             if plugin is None:
                 return self.http_status(404, -1, 'plugin not found')
+
             if quart.request.method == 'GET':
                 return self.success(data={'config': plugin['plugin_config']})
             elif quart.request.method == 'PUT':
                 data = await quart.request.json
 
-                await self.ap.plugin_mgr.set_plugin_config(plugin, data)
+                await self.ap.plugin_connector.set_plugin_config(author, plugin_name, data)
 
                 return self.success(data={})
-
-        @self.route('/reorder', methods=['PUT'], auth_type=group.AuthType.USER_TOKEN)
-        async def _() -> str:
-            data = await quart.request.json
-            await self.ap.plugin_mgr.reorder_plugins(data.get('plugins'))
-            return self.success()
 
         @self.route('/install/github', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
         async def _() -> str:

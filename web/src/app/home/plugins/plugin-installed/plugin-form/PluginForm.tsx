@@ -16,7 +16,7 @@ export default function PluginForm({
 }: {
   pluginAuthor: string;
   pluginName: string;
-  onFormSubmit: () => void;
+  onFormSubmit: (timeout?: number) => void;
   onFormCancel: () => void;
 }) {
   const { t } = useTranslation();
@@ -37,14 +37,19 @@ export default function PluginForm({
 
   const handleSubmit = async (values: object) => {
     setIsLoading(true);
+    const isDebugPlugin = pluginInfo?.debug;
     httpClient
       .updatePluginConfig(pluginAuthor, pluginName, values)
       .then(() => {
-        onFormSubmit();
-        toast.success('保存成功');
+        toast.success(
+          isDebugPlugin
+            ? t('plugins.saveConfigSuccessDebugPlugin')
+            : t('plugins.saveConfigSuccessNormal'),
+        );
+        onFormSubmit(1000);
       })
       .catch((error) => {
-        toast.error('保存失败：' + error.message);
+        toast.error(t('plugins.saveConfigError') + error.message);
       })
       .finally(() => {
         setIsLoading(false);

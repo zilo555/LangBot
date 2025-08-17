@@ -1,9 +1,6 @@
 import { PluginCardVO } from '@/app/home/plugins/plugin-installed/PluginCardVO';
 import { useState } from 'react';
-import { httpClient } from '@/app/infra/http/HttpClient';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
 import {
@@ -81,25 +78,7 @@ export default function PluginCardComponent({
   onUpgradeClick: (cardVO: PluginCardVO) => void;
 }) {
   const { t } = useTranslation();
-  const [enabled, setEnabled] = useState(cardVO.enabled);
-  const [switchEnable, setSwitchEnable] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-
-  function handleEnable(e: React.MouseEvent) {
-    e.stopPropagation(); // 阻止事件冒泡
-    setSwitchEnable(false);
-    httpClient
-      .togglePlugin(cardVO.author, cardVO.name, !enabled)
-      .then(() => {
-        setEnabled(!enabled);
-      })
-      .catch((err) => {
-        toast.error(t('plugins.modifyFailed') + err.message);
-      })
-      .finally(() => {
-        setSwitchEnable(true);
-      });
-  }
 
   return (
     <>
@@ -198,14 +177,7 @@ export default function PluginCardComponent({
           </div>
 
           <div className="flex flex-col items-center justify-between h-full">
-            <div className="flex items-center justify-center">
-              <Switch
-                className="cursor-pointer"
-                checked={enabled}
-                onClick={(e) => handleEnable(e)}
-                disabled={!switchEnable}
-              />
-            </div>
+            <div className="flex items-center justify-center"></div>
 
             <div className="flex items-center justify-center">
               <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>

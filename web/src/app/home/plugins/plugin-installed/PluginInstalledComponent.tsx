@@ -271,9 +271,15 @@ const PluginInstalledComponent = forwardRef<PluginInstalledComponentRef>(
                     <PluginForm
                       pluginAuthor={selectedPlugin.author}
                       pluginName={selectedPlugin.name}
-                      onFormSubmit={() => {
+                      onFormSubmit={(timeout?: number) => {
                         setModalOpen(false);
-                        getPluginList();
+                        if (timeout) {
+                          setTimeout(() => {
+                            getPluginList();
+                          }, timeout);
+                        } else {
+                          getPluginList();
+                        }
                       }}
                       onFormCancel={() => {
                         setModalOpen(false);
