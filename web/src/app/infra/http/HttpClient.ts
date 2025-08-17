@@ -622,6 +622,16 @@ class HttpClient {
       new_password: newPassword,
     });
   }
+
+  public changePassword(
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<{ user: string }> {
+    return this.post('/api/v1/user/change-password', {
+      current_password: currentPassword,
+      new_password: newPassword,
+    });
+  }
 }
 
 const getBaseURL = (): string => {
