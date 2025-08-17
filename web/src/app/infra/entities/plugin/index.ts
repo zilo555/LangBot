@@ -11,11 +11,13 @@ export interface Plugin {
   enabled: boolean;
   install_source: string;
   install_info: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
-  components: {
-    component_config: object;
-    manifest: {
-      manifest: ComponentManifest;
-    };
+  components: PluginComponent[];
+}
+
+export interface PluginComponent {
+  component_config: object;
+  manifest: {
+    manifest: ComponentManifest;
   };
 }
 

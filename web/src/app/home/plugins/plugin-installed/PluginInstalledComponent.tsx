@@ -11,12 +11,22 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { extractI18nObject } from '@/i18n/I18nProvider';
+import { toast } from 'sonner';
 
 export interface PluginInstalledComponentRef {
   refreshPluginList: () => void;
+}
+
+enum PluginRemoveStatus {
+  WAIT_INPUT = 'WAIT_INPUT',
+  REMOVING = 'REMOVING',
+  ERROR = 'ERROR',
 }
 
 // eslint-disable-next-line react/display-name
@@ -26,6 +36,15 @@ const PluginInstalledComponent = forwardRef<PluginInstalledComponentRef>(
     const [pluginList, setPluginList] = useState<PluginCardVO[]>([]);
     const [modalOpen, setModalOpen] = useState<boolean>(false);
     const [selectedPlugin, setSelectedPlugin] = useState<PluginCardVO | null>(
+      null,
+    );
+    const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+    const [pluginRemoveStatus, setPluginRemoveStatus] =
+      useState<PluginRemoveStatus>(PluginRemoveStatus.WAIT_INPUT);
+    const [pluginRemoveError, setPluginRemoveError] = useState<string | null>(
+      null,
+    );
+    const [pluginToDelete, setPluginToDelete] = useState<PluginCardVO | null>(
       null,
     );
 
@@ -55,8 +74,7 @@ const PluginInstalledComponent = forwardRef<PluginInstalledComponentRef>(
               name: plugin.manifest.manifest.metadata.name,
               version: plugin.manifest.manifest.metadata.version ?? '',
               status: plugin.status,
-              tools: [],
-              event_handlers: {},
+              components: plugin.components,
               priority: plugin.priority,
               install_source: plugin.install_source,
               install_info: plugin.install_info,
@@ -75,8 +93,125 @@ const PluginInstalledComponent = forwardRef<PluginInstalledComponentRef>(
       setModalOpen(true);
     }
 
+    function handlePluginDelete(plugin: PluginCardVO) {
+      setPluginToDelete(plugin);
+      setShowDeleteConfirmModal(true);
+      setPluginRemoveStatus(PluginRemoveStatus.WAIT_INPUT);
+    }
+
+    function deletePlugin() {
+      setPluginRemoveStatus(PluginRemoveStatus.REMOVING);
+      httpClient
+        .removePlugin(pluginToDelete!.author, pluginToDelete!.name)
+        .then((res) => {
+          const taskId = res.task_id;
+
+          let alreadySuccess = false;
+
+          const interval = setInterval(() => {
+            httpClient.getAsyncTask(taskId).then((res) => {
+              if (res.runtime.done) {
+                clearInterval(interval);
+                if (res.runtime.exception) {
+                  setPluginRemoveError(res.runtime.exception);
+                  setPluginRemoveStatus(PluginRemoveStatus.ERROR);
+                } else {
+                  // success
+                  if (!alreadySuccess) {
+                    toast.success('插件删除成功');
+                    alreadySuccess = true;
+                  }
+                  setPluginRemoveStatus(PluginRemoveStatus.WAIT_INPUT);
+                  setShowDeleteConfirmModal(false);
+                }
+              }
+            });
+          }, 1000);
+        })
+        .catch((error) => {
+          setPluginRemoveError(error.message);
+          setPluginRemoveStatus(PluginRemoveStatus.ERROR);
+        });
+    }
+
     return (
       <>
+        <Dialog
+          open={showDeleteConfirmModal}
+          onOpenChange={(open) => {
+            if (!open) {
+              setShowDeleteConfirmModal(false);
+              setPluginRemoveStatus(PluginRemoveStatus.WAIT_INPUT);
+              setPluginToDelete(null);
+            }
+          }}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t('plugins.deleteConfirm')}</DialogTitle>
+            </DialogHeader>
+            <DialogDescription>
+              {pluginRemoveStatus === PluginRemoveStatus.WAIT_INPUT && (
+                <div>
+                  {t('plugins.confirmDeletePlugin', {
+                    author: pluginToDelete?.author ?? '',
+                    name: pluginToDelete?.name ?? '',
+                  })}
+                </div>
+              )}
+              {pluginRemoveStatus === PluginRemoveStatus.REMOVING && (
+                <div>{t('plugins.deleting')}</div>
+              )}
+              {pluginRemoveStatus === PluginRemoveStatus.ERROR && (
+                <div>
+                  {t('plugins.deleteError')}
+                  <div className="text-red-500">{pluginRemoveError}</div>
+                </div>
+              )}
+            </DialogDescription>
+            <DialogFooter>
+              {pluginRemoveStatus === PluginRemoveStatus.WAIT_INPUT && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowDeleteConfirmModal(false);
+                    setPluginRemoveStatus(PluginRemoveStatus.WAIT_INPUT);
+                    setPluginToDelete(null);
+                  }}
+                >
+                  {t('plugins.cancel')}
+                </Button>
+              )}
+              {pluginRemoveStatus === PluginRemoveStatus.WAIT_INPUT && (
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    deletePlugin();
+                  }}
+                >
+                  {t('plugins.confirmDelete')}
+                </Button>
+              )}
+              {pluginRemoveStatus === PluginRemoveStatus.REMOVING && (
+                <Button variant="destructive" disabled>
+                  {t('plugins.deleting')}
+                </Button>
+              )}
+              {pluginRemoveStatus === PluginRemoveStatus.ERROR && (
+                <Button
+                  variant="default"
+                  onClick={() => {
+                    setShowDeleteConfirmModal(false);
+                    setPluginRemoveStatus(PluginRemoveStatus.WAIT_INPUT);
+                  }}
+                >
+                  {t('plugins.close')}
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {pluginList.length === 0 ? (
           <div className="flex flex-col items-center justify-center text-gray-500 h-[calc(100vh-16rem)] w-full gap-2">
             <svg
@@ -120,6 +255,7 @@ const PluginInstalledComponent = forwardRef<PluginInstalledComponentRef>(
                   <PluginCardComponent
                     cardVO={vo}
                     onCardClick={() => handlePluginClick(vo)}
+                    onDeleteClick={() => handlePluginDelete(vo)}
                   />
                 </div>
               );

@@ -186,8 +186,11 @@ const zhHans = {
     selectFileToUpload: '选择要上传的插件文件',
     askConfirm: '确定要安装插件 "{{name}}" ({{version}}) 吗？',
     fromGithub: '来自 GitHub',
-    fromLocal: '来自本地',
+    fromLocal: '本地安装',
     fromMarketplace: '来自市场',
+    componentsList: '组件: ',
+    noComponents: '无组件',
+    delete: '删除',
   },
   market: {
     searchPlaceholder: '搜索插件...',
