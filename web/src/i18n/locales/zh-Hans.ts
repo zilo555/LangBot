@@ -56,8 +56,7 @@ const zhHans = {
     confirmPasswordRequired: '确认密码不能为空',
     passwordsDoNotMatch: '两次输入的密码不一致',
     changePasswordSuccess: '密码修改成功',
-    changePasswordFailed: '密码修改失败',
-    currentPasswordIncorrect: '当前密码不正确',
+    changePasswordFailed: '密码修改失败，请检查当前密码是否正确',
   },
   notFound: {
     title: '页面不存在',

@@ -56,8 +56,8 @@ const enUS = {
     confirmPasswordRequired: 'Confirm password is required',
     passwordsDoNotMatch: 'Passwords do not match',
     changePasswordSuccess: 'Password changed successfully',
-    changePasswordFailed: 'Failed to change password',
-    currentPasswordIncorrect: 'Current password is incorrect',
+    changePasswordFailed:
+      'Failed to change password, please check your current password',
   },
   notFound: {
     title: 'Page not found',
