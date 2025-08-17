@@ -250,6 +250,7 @@ const enUS = {
       loadMessagesFailed: 'Failed to load messages',
       loadPipelinesFailed: 'Failed to load pipelines',
       atTips: 'Mention the bot',
+      streaming: 'Streaming',
     },
   },
   knowledge: {

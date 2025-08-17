@@ -252,6 +252,7 @@ const jaJP = {
       loadMessagesFailed: 'メッセージの読み込みに失敗しました',
       loadPipelinesFailed: 'パイプラインの読み込みに失敗しました',
       atTips: 'ボットをメンション',
+      streaming: 'ストリーミング',
     },
   },
   knowledge: {
