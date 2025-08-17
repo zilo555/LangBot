@@ -91,9 +91,8 @@ class AnthropicMessages(requester.ProviderAPIRequester):
                             {
                                 'type': 'tool_result',
                                 'tool_use_id': tool_call_id,
-                                'is_error':False,
-                                'content': [{"type": "text",
-                                             "text": m.content}],
+                                'is_error': False,
+                                'content': [{'type': 'text', 'text': m.content}],
                             }
                         ],
                     }
@@ -138,10 +137,7 @@ class AnthropicMessages(requester.ProviderAPIRequester):
         args['messages'] = req_messages
 
         if 'thinking' in args:
-            args['thinking'] = {
-                "type": "enabled",
-                "budget_tokens": 10000
-            }
+            args['thinking'] = {'type': 'enabled', 'budget_tokens': 10000}
 
         if funcs:
             tools = await self.ap.tool_mgr.generate_tools_for_anthropic(funcs)
@@ -185,21 +181,20 @@ class AnthropicMessages(requester.ProviderAPIRequester):
             else:
                 raise errors.RequesterError(f'请求地址无效: {e.message}')
 
-
     async def invoke_llm_stream(
-            self,
-            query: core_entities.Query,
-            model: requester.RuntimeLLMModel,
-            messages: typing.List[llm_entities.Message],
-            funcs: typing.List[tools_entities.LLMFunction] = None,
-            extra_args: dict[str, typing.Any] = {},
-            remove_think: bool = False,
+        self,
+        query: core_entities.Query,
+        model: requester.RuntimeLLMModel,
+        messages: typing.List[llm_entities.Message],
+        funcs: typing.List[tools_entities.LLMFunction] = None,
+        extra_args: dict[str, typing.Any] = {},
+        remove_think: bool = False,
     ) -> llm_entities.Message:
         self.client.api_key = model.token_mgr.get_token()
 
         args = extra_args.copy()
         args['model'] = model.model_entity.name
-        args['stream']  = True
+        args['stream'] = True
 
         # 处理消息
 
@@ -231,9 +226,10 @@ class AnthropicMessages(requester.ProviderAPIRequester):
                             {
                                 'type': 'tool_result',
                                 'tool_use_id': tool_call_id,
-                                'is_error':False,  # 暂时直接写false
-                                'content': [{"type": "text",
-                                             "text": m.content}],  # 这里要是list包裹，应该是多个返回的情况？type类型好像也可以填其他的，暂时只写text
+                                'is_error': False,  # 暂时直接写false
+                                'content': [
+                                    {'type': 'text', 'text': m.content}
+                                ],  # 这里要是list包裹，应该是多个返回的情况？type类型好像也可以填其他的，暂时只写text
                             }
                         ],
                     }
@@ -276,10 +272,7 @@ class AnthropicMessages(requester.ProviderAPIRequester):
 
             req_messages.append(msg_dict)
         if 'thinking' in args:
-            args['thinking'] = {
-                "type": "enabled",
-                "budget_tokens": 10000
-            }
+            args['thinking'] = {'type': 'enabled', 'budget_tokens': 10000}
 
         args['messages'] = req_messages
 
@@ -298,17 +291,16 @@ class AnthropicMessages(requester.ProviderAPIRequester):
             content = ''
             tool_name = ''
             tool_id = ''
-            tool_calls = []
             async for chunk in await self.client.messages.create(**args):
-                tool_call = {"id":None, 'function': {"name": None, "arguments": None},'type':'function'}
-                if isinstance(chunk, anthropic.types.raw_content_block_start_event.RawContentBlockStartEvent):  # 记录开始
+                tool_call = {'id': None, 'function': {'name': None, 'arguments': None}, 'type': 'function'}
+                if isinstance(
+                    chunk, anthropic.types.raw_content_block_start_event.RawContentBlockStartEvent
+                ):  # 记录开始
                     if chunk.content_block.type == 'tool_use':
-
                         if chunk.content_block.name is not None:
                             tool_name = chunk.content_block.name
                         if chunk.content_block.id is not None:
                             tool_id = chunk.content_block.id
-
 
                         tool_call['function']['name'] = tool_name
                         tool_call['function']['arguments'] = ''
@@ -321,7 +313,7 @@ class AnthropicMessages(requester.ProviderAPIRequester):
                             think_ended = True
                         continue
                 elif isinstance(chunk, anthropic.types.raw_content_block_delta_event.RawContentBlockDeltaEvent):
-                    if chunk.delta.type == "thinking_delta":
+                    if chunk.delta.type == 'thinking_delta':
                         if think_started:
                             think_started = False
                             content = '<think>\n' + chunk.delta.thinking
@@ -329,34 +321,33 @@ class AnthropicMessages(requester.ProviderAPIRequester):
                             continue
                         else:
                             content = chunk.delta.thinking
-                    elif chunk.delta.type == "text_delta":
+                    elif chunk.delta.type == 'text_delta':
                         if think_ended:
                             think_ended = False
                             content = '\n</think>\n' + chunk.delta.text
                         else:
                             content = chunk.delta.text
-                    elif chunk.delta.type == "input_json_delta":
-                        tool_call['function']["arguments"] = chunk.delta.partial_json
+                    elif chunk.delta.type == 'input_json_delta':
+                        tool_call['function']['arguments'] = chunk.delta.partial_json
                         tool_call['function']['name'] = tool_name
                         tool_call['id'] = tool_id
                 elif isinstance(chunk, anthropic.types.raw_content_block_stop_event.RawContentBlockStopEvent):
                     continue  # 记录raw_content_block结束的
 
                 elif isinstance(chunk, anthropic.types.raw_message_delta_event.RawMessageDeltaEvent):
-                    if chunk.delta.stop_reason == "end_turn":
+                    if chunk.delta.stop_reason == 'end_turn':
                         finish_reason = True
                 elif isinstance(chunk, anthropic.types.raw_message_stop_event.RawMessageStopEvent):
-                    continue # 这个好像是完全结束
+                    continue  # 这个好像是完全结束
                 else:
-                    print(chunk)
+                    # print(chunk)
+                    self.ap.logger.debug(f'anthropic chunk: {chunk}')
                     continue
-
-
 
                 args = {
                     'content': content,
                     'role': role,
-                    "is_final": finish_reason,
+                    'is_final': finish_reason,
                     'tool_calls': None if tool_call['id'] is None else [tool_call],
                 }
                 # if chunk_idx == 0:
@@ -364,7 +355,6 @@ class AnthropicMessages(requester.ProviderAPIRequester):
                 #     continue
 
                 # assert type(chunk) is anthropic.types.message.Chunk
-
 
                 yield llm_entities.MessageChunk(**args)
 
