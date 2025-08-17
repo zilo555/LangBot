@@ -108,7 +108,6 @@ class ModelScopeChatCompletions(requester.ProviderAPIRequester):
         message_delta['role'] = 'assistant'
 
         message_delta['tool_calls'] = tool_calls if tool_calls else None
-        # print(message_delta)
         return [message_delta]
 
     async def _make_msg(
@@ -120,7 +119,6 @@ class ModelScopeChatCompletions(requester.ProviderAPIRequester):
         # 确保 role 字段存在且不为 None
         if 'role' not in chatcmpl_message or chatcmpl_message['role'] is None:
             chatcmpl_message['role'] = 'assistant'
-        print(chatcmpl_message)
         message = llm_entities.Message(**chatcmpl_message)
 
         return message
