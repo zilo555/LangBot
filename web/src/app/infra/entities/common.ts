@@ -1,6 +1,7 @@
 export interface I18nObject {
   en_US: string;
   zh_Hans: string;
+  zh_Hant?: string;
   ja_JP?: string;
 }
 
