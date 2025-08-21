@@ -3,7 +3,7 @@ kind: LLMAPIRequester
 metadata:
   name: shengsuanyun-chat-completions
   label:
-    en_US: ShengSuanYun
+    en_US: modelspot.ai
     zh_Hans: 胜算云
   icon: shengsuanyun.svg
 spec:

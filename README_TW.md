@@ -105,6 +105,7 @@ docker compose up -d
 | [優雲智算](https://www.compshare.cn/?ytag=GPU_YY-gh_langbot) | ✅ | 大模型和 GPU 資源平台 |
 | [PPIO](https://ppinfra.com/user/register?invited_by=QJKFYD&utm_source=github_langbot) | ✅ | 大模型和 GPU 資源平台 |
 | [302.AI](https://share.302.ai/SuTG99) | ✅ | 大模型聚合平台 |
+| [胜算云](https://www.shengsuanyun.com/login?code=7DS2QLH5) | ✅ | 大模型和 GPU 資源平台 |
 | [Google Gemini](https://aistudio.google.com/prompts/new_chat) | ✅ | |
 | [Dify](https://dify.ai) | ✅ | LLMOps 平台 |
 | [Ollama](https://ollama.com/) | ✅ | 本地大模型運行平台 |

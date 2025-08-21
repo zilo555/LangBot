@@ -8,7 +8,7 @@ import openai.types.chat.chat_completion as chat_completion
 
 
 class ShengSuanYunChatCompletions(chatcmpl.OpenAIChatCompletions):
-    """胜算云 ChatCompletion API 请求器"""
+    """胜算云(ModelSpot.AI) ChatCompletion API 请求器"""
 
     client: openai.AsyncClient
 
