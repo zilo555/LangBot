@@ -20,7 +20,7 @@ class DBMigratePipelineRemoveCotConfig(migration.DBMigration):
             config = serialized_pipeline['config']
 
             if 'remove-think' not in config['output']['misc']:
-                config['output']['misc']['remove-think'] = True
+                config['output']['misc']['remove-think'] = False
 
             await self.ap.persistence_mgr.execute_async(
                 sqlalchemy.update(persistence_pipeline.LegacyPipeline)

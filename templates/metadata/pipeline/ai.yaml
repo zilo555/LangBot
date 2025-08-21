@@ -118,28 +118,6 @@ stages:
           zh_Hans: API 密钥
         type: string
         required: true
-      - name: thinking-convert
-        label:
-          en_US: CoT Convert
-          zh_Hans: 思维链转换策略
-        type: select
-        required: true
-        default: plain
-        options:
-          - name: plain
-            label:
-              en_US: Convert to <think>...</think>
-              zh_Hans: 转换成 <think>...</think>
-          - name: original
-            label:
-              en_US: Original
-              zh_Hans: 原始
-          - name: remove
-            label:
-              en_US: Remove
-              zh_Hans: 移除
-
-
   - name: dashscope-app-api
     label:
       en_US: Aliyun Dashscope App API

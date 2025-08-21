@@ -110,8 +110,8 @@ stages:
           en_US: Remove CoT
           zh_Hans: 删除思维链
         description:
-          en_US: If enabled, LangBot will remove the LLM thought content in response
-          zh_Hans: 如果启用，将自动删除大模型回复中的模型思考内容
+          en_US: 'If enabled, LangBot will remove the LLM thought content in response. Note: When using streaming response, removing CoT may cause the first token to wait for a long time.'
+          zh_Hans: '如果启用，将自动删除大模型回复中的模型思考内容。注意：当您使用流式响应时，删除思维链可能会导致首个 Token 的等待时间过长'
         type: boolean
         required: true
-        default: true
+        default: false

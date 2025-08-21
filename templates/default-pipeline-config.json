@@ -51,7 +51,6 @@
             "base-url": "https://api.dify.ai/v1",
             "app-type": "chat",
             "api-key": "your-api-key",
-            "thinking-convert": "plain",
             "timeout": 30
         },
         "dashscope-app-api": {
@@ -88,7 +87,7 @@
             "at-sender": true,
             "quote-origin": true,
             "track-function-calls": false,
-            "remove-think": true
+            "remove-think": false
         }
     }
 }

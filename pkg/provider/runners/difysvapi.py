@@ -3,7 +3,6 @@ from __future__ import annotations
 import typing
 import json
 import uuid
-import re
 import base64
 
 
@@ -38,33 +37,9 @@ class DifyServiceAPIRunner(runner.RequestRunner):
             base_url=self.pipeline_config['ai']['dify-service-api']['base-url'],
         )
 
-    def _try_convert_thinking(self, resp_text: str) -> str:
-        """尝试转换 Dify 的思考提示"""
-        if not resp_text.startswith(
-            '<details style="color:gray;background-color: #f8f8f8;padding: 8px;border-radius: 4px;" open> <summary> Thinking... </summary>'
-        ):
-            return resp_text
-
-        if self.pipeline_config['ai']['dify-service-api']['thinking-convert'] == 'original':
-            return resp_text
-
-        if self.pipeline_config['ai']['dify-service-api']['thinking-convert'] == 'remove':
-            return re.sub(
-                r'<details style="color:gray;background-color: #f8f8f8;padding: 8px;border-radius: 4px;" open> <summary> Thinking... </summary>.*?</details>',
-                '',
-                resp_text,
-                flags=re.DOTALL,
-            )
-
-        if self.pipeline_config['ai']['dify-service-api']['thinking-convert'] == 'plain':
-            pattern = r'<details style="color:gray;background-color: #f8f8f8;padding: 8px;border-radius: 4px;" open> <summary> Thinking... </summary>(.*?)</details>'
-            thinking_text = re.search(pattern, resp_text, flags=re.DOTALL)
-            content_text = re.sub(pattern, '', resp_text, flags=re.DOTALL)
-            return f'<think>{thinking_text.group(1)}</think>\n{content_text}'
-
     def _process_thinking_content(
-            self,
-            content: str,
+        self,
+        content: str,
     ) -> tuple[str, str]:
         """处理思维链内容
 
@@ -354,8 +329,9 @@ class DifyServiceAPIRunner(runner.RequestRunner):
 
                 yield msg
 
-
-    async def _chat_messages_chunk(self, query: core_entities.Query) -> typing.AsyncGenerator[llm_entities.MessageChunk, None]:
+    async def _chat_messages_chunk(
+        self, query: core_entities.Query
+    ) -> typing.AsyncGenerator[llm_entities.MessageChunk, None]:
         """调用聊天助手"""
         cov_id = query.session.using_conversation.uuid or ''
         query.variables['conversation_id'] = cov_id
@@ -370,8 +346,6 @@ class DifyServiceAPIRunner(runner.RequestRunner):
             }
             for image_id in image_ids
         ]
-
-        mode = 'basic'  # 标记是基础编排还是工作流编排
 
         basic_mode_pending_chunk = ''
 
@@ -411,6 +385,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                         continue
                     if '</think>' in chunk['answer'] and not think_end:
                         import re
+
                         content = re.sub(r'^\n</think>', '', chunk['answer'])
                         basic_mode_pending_chunk += content
                         think_end = True
@@ -433,12 +408,10 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                     is_final=is_final,
                 )
 
-
         if chunk is None:
             raise errors.DifyAPIError('Dify API 没有返回任何响应，请检查网络连接和API配置')
 
         query.session.using_conversation.uuid = chunk['conversation_id']
-
 
     async def _agent_chat_messages_chunk(
         self, query: core_entities.Query
@@ -496,6 +469,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                         continue
                     if '</think>' in chunk['answer'] and not think_end:
                         import re
+
                         content = re.sub(r'^\n</think>', '', chunk['answer'])
                         pending_agent_message += content
                         think_end = True
@@ -509,7 +483,6 @@ class DifyServiceAPIRunner(runner.RequestRunner):
             elif chunk['event'] == 'message_end':
                 is_final = True
             else:
-
                 if chunk['event'] == 'agent_thought':
                     if chunk['tool'] != '' and chunk['observation'] != '':  # 工具调用结果，跳过
                         continue
@@ -543,7 +516,6 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                             role='assistant',
                             content=[llm_entities.ContentElement.from_image_url(image_url)],
                             is_final=is_final,
-
                         )
 
                 if chunk['event'] == 'error':
@@ -560,7 +532,9 @@ class DifyServiceAPIRunner(runner.RequestRunner):
 
         query.session.using_conversation.uuid = chunk['conversation_id']
 
-    async def _workflow_messages_chunk(self, query: core_entities.Query) -> typing.AsyncGenerator[llm_entities.MessageChunk, None]:
+    async def _workflow_messages_chunk(
+        self, query: core_entities.Query
+    ) -> typing.AsyncGenerator[llm_entities.MessageChunk, None]:
         """调用工作流"""
 
         if not query.session.using_conversation.uuid:
@@ -618,6 +592,7 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                         continue
                     if '</think>' in chunk['data']['text'] and not think_end:
                         import re
+
                         content = re.sub(r'^\n</think>', '', chunk['data']['text'])
                         workflow_contents += content
                         think_end = True
@@ -649,7 +624,6 @@ class DifyServiceAPIRunner(runner.RequestRunner):
                 )
 
                 yield msg
-
 
             if messsage_idx % 8 == 0 or is_final:
                 yield llm_entities.MessageChunk(
