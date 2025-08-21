@@ -3,7 +3,7 @@ import PluginInstalledComponent, {
   PluginInstalledComponentRef,
 } from '@/app/home/plugins/plugin-installed/PluginInstalledComponent';
 import MarketPage from '@/app/home/plugins/plugin-market/PluginMarketComponent';
-import PluginSortDialog from '@/app/home/plugins/plugin-sort/PluginSortDialog';
+// import PluginSortDialog from '@/app/home/plugins/plugin-sort/PluginSortDialog';
 import styles from './plugins.module.css';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -44,7 +44,7 @@ enum PluginInstallStatus {
 export default function PluginConfigPage() {
   const { t } = useTranslation();
   const [modalOpen, setModalOpen] = useState(false);
-  const [sortModalOpen, setSortModalOpen] = useState(false);
+  // const [sortModalOpen, setSortModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('installed');
   const [installSource, setInstallSource] = useState<string>('local');
   const [installInfo, setInstallInfo] = useState<Record<string, any>>({}); // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -219,15 +219,15 @@ export default function PluginConfigPage() {
           </TabsList>
 
           <div className="flex flex-row justify-end items-center">
-            <Button
+            {/* <Button
               variant="outline"
               className="px-6 py-4 cursor-pointer mr-2"
               onClick={() => {
-                setSortModalOpen(true);
+                // setSortModalOpen(true);
               }}
             >
               {t('plugins.arrange')}
-            </Button>
+            </Button> */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="default" className="px-6 py-4 cursor-pointer">
@@ -347,13 +347,13 @@ export default function PluginConfigPage() {
         </div>
       )}
 
-      <PluginSortDialog
+      {/* <PluginSortDialog
         open={sortModalOpen}
         onOpenChange={setSortModalOpen}
         onSortComplete={() => {
           pluginInstalledRef.current?.refreshPluginList();
         }}
-      />
+      /> */}
     </div>
   );
 }
