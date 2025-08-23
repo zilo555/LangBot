@@ -8,17 +8,24 @@ class DBMigratePluginInstallSource(migration.DBMigration):
 
     async def upgrade(self):
         """升级"""
-        # add new column install_source, use default value 'github', via alter table
-        await self.ap.persistence_mgr.execute_async(
-            sqlalchemy.text(
-                "ALTER TABLE plugin_settings ADD COLUMN install_source VARCHAR(255) NOT NULL DEFAULT 'github'"
-            )
-        )
+        # 查询表结构获取所有列名（异步执行 SQL）
+        result = await self.ap.persistence_mgr.execute_async(sqlalchemy.text('PRAGMA table_info(plugin_settings);'))
+        # fetchall() 是同步方法，无需 await
+        columns = [row[1] for row in result.fetchall()]
 
-        # add new column install_info, use default value {}, via alter table
-        await self.ap.persistence_mgr.execute_async(
-            sqlalchemy.text("ALTER TABLE plugin_settings ADD COLUMN install_info JSON NOT NULL DEFAULT '{}'")
-        )
+        # 检查并添加 install_source 列
+        if 'install_source' not in columns:
+            await self.ap.persistence_mgr.execute_async(
+                sqlalchemy.text(
+                    "ALTER TABLE plugin_settings ADD COLUMN install_source VARCHAR(255) NOT NULL DEFAULT 'github'"
+                )
+            )
+
+        # 检查并添加 install_info 列
+        if 'install_info' not in columns:
+            await self.ap.persistence_mgr.execute_async(
+                sqlalchemy.text("ALTER TABLE plugin_settings ADD COLUMN install_info JSON NOT NULL DEFAULT '{}'")
+            )
 
     async def downgrade(self):
         """降级"""
