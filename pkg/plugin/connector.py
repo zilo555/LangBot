@@ -51,7 +51,7 @@ class PluginRuntimeConnector:
     async def initialize(self):
         async def new_connection_callback(connection: base_connection.Connection):
             async def disconnect_callback(rchandler: handler.RuntimeConnectionHandler) -> bool:
-                if platform.get_platform() == 'docker':
+                if platform.get_platform() == 'docker' or platform.use_websocket_to_connect_plugin_runtime():
                     self.ap.logger.error('Disconnected from plugin runtime, trying to reconnect...')
                     await self.runtime_disconnect_callback(self)
                     return False
@@ -69,7 +69,7 @@ class PluginRuntimeConnector:
 
         task: asyncio.Task | None = None
 
-        if platform.get_platform() == 'docker':  # use websocket
+        if platform.get_platform() == 'docker' or platform.use_websocket_to_connect_plugin_runtime():  # use websocket
             self.ap.logger.info('use websocket to connect to plugin runtime')
             ws_url = self.ap.instance_config.data['plugin']['runtime_ws_url']
 
