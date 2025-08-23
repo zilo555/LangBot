@@ -1,6 +1,8 @@
 from __future__ import annotations
 import traceback
 import uuid
+import zipfile
+import io
 from .services import parser, chunker
 from pkg.core import app
 from pkg.rag.knowledge.services.embedder import Embedder
@@ -89,16 +91,23 @@ class RuntimeKnowledgeBase:
             )
 
             raise
+        finally:
+            # delete file from storage
+            await self.ap.storage_mgr.storage_provider.delete(file.file_name)
 
     async def store_file(self, file_id: str) -> str:
         # pre checking
         if not await self.ap.storage_mgr.storage_provider.exists(file_id):
             raise Exception(f'File {file_id} not found')
 
+        file_name = file_id
+        extension = file_name.split('.')[-1].lower()
+
+        if extension == 'zip':
+            return await self._store_zip_file(file_id)
+
         file_uuid = str(uuid.uuid4())
         kb_id = self.knowledge_base_entity.uuid
-        file_name = file_id
-        extension = file_name.split('.')[-1]
 
         file_obj_data = {
             'uuid': file_uuid,
@@ -122,6 +131,61 @@ class RuntimeKnowledgeBase:
             context=ctx,
         )
         return wrapper.id
+
+    async def _store_zip_file(self, zip_file_id: str) -> str:
+        """Handle ZIP file by extracting each document and storing them separately."""
+        self.ap.logger.info(f'Processing ZIP file: {zip_file_id}')
+
+        zip_bytes = await self.ap.storage_mgr.storage_provider.load(zip_file_id)
+
+        supported_extensions = {'txt', 'pdf', 'docx', 'md', 'html'}
+        stored_file_tasks = []
+
+        # use utf-8 encoding
+        with zipfile.ZipFile(io.BytesIO(zip_bytes), 'r', metadata_encoding='utf-8') as zip_ref:
+            for file_info in zip_ref.filelist:
+                # skip directories and hidden files
+                if file_info.is_dir() or file_info.filename.startswith('.'):
+                    continue
+
+                file_extension = file_info.filename.split('.')[-1].lower()
+                if file_extension not in supported_extensions:
+                    self.ap.logger.debug(f'Skipping unsupported file in ZIP: {file_info.filename}')
+                    continue
+
+                try:
+                    file_content = zip_ref.read(file_info.filename)
+
+                    base_name = file_info.filename.replace('/', '_').replace('\\', '_')
+                    extension = base_name.split('.')[-1]
+                    file_name = base_name.split('.')[0]
+
+                    if file_name.startswith('__MACOSX'):
+                        continue
+
+                    extracted_file_id = file_name + '_' + str(uuid.uuid4())[:8] + '.' + extension
+                    # save file to storage
+
+                    await self.ap.storage_mgr.storage_provider.save(extracted_file_id, file_content)
+
+                    task_id = await self.store_file(extracted_file_id)
+                    stored_file_tasks.append(task_id)
+
+                    self.ap.logger.info(
+                        f'Extracted and stored file from ZIP: {file_info.filename} -> {extracted_file_id}'
+                    )
+
+                except Exception as e:
+                    self.ap.logger.warning(f'Failed to extract file {file_info.filename} from ZIP: {e}')
+                    continue
+
+        if not stored_file_tasks:
+            raise Exception('No supported files found in ZIP archive')
+
+        self.ap.logger.info(f'Successfully processed ZIP file {zip_file_id}, extracted {len(stored_file_tasks)} files')
+        await self.ap.storage_mgr.storage_provider.delete(zip_file_id)
+
+        return stored_file_tasks[0] if stored_file_tasks else ''
 
     async def retrieve(self, query: str, top_k: int) -> list[retriever_entities.RetrieveResultEntry]:
         embedding_model = await self.ap.model_mgr.get_embedding_model_by_uuid(
