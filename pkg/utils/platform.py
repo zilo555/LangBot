@@ -14,7 +14,9 @@ def get_platform() -> str:
     return sys.platform
 
 
+standalone_runtime = False
+
+
 def use_websocket_to_connect_plugin_runtime() -> bool:
     """是否使用 websocket 连接插件运行时"""
-    STANDALONE_RUNTIME = os.environ.get('STANDALONE_RUNTIME', 'false')
-    return STANDALONE_RUNTIME == 'true'
+    return standalone_runtime
