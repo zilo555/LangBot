@@ -209,7 +209,7 @@ export default function PluginConfigPage() {
       />
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="flex flex-row justify-between items-center px-[0.8rem]">
-          <TabsList className="shadow-md py-5 bg-[#f0f0f0]">
+          <TabsList className="shadow-md py-5 bg-[#f0f0f0] dark:bg-[#2a2a2e]">
             <TabsTrigger value="installed" className="px-6 py-4 cursor-pointer">
               {t('plugins.installed')}
             </TabsTrigger>
@@ -273,7 +273,7 @@ export default function PluginConfigPage() {
       </Tabs>
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="w-[500px] p-6">
+        <DialogContent className="w-[500px] p-6 bg-white dark:bg-[#1a1a1e]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-4">
               <Download className="size-6" />

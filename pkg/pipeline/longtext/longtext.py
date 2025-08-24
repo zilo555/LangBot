@@ -15,9 +15,9 @@ importutil.import_modules_in_pkg(strategies)
 
 @stage.stage_class('LongTextProcessStage')
 class LongTextProcessStage(stage.PipelineStage):
-    """长消息处理阶段
+    """Long message processing stage
 
-    改写：
+    Rewrite:
         - resp_message_chain
     """
 
@@ -35,22 +35,22 @@ class LongTextProcessStage(stage.PipelineStage):
                         use_font = 'C:/Windows/Fonts/msyh.ttc'
                         if not os.path.exists(use_font):
                             self.ap.logger.warn(
-                                '未找到字体文件，且无法使用Windows自带字体，更换为转发消息组件以发送长消息，您可以在配置文件中调整相关设置。'
+                                'Font file not found, and Windows system font cannot be used, switch to forward message component to send long messages, you can adjust the related settings in the configuration file.'
                             )
                             config['blob_message_strategy'] = 'forward'
                         else:
-                            self.ap.logger.info('使用Windows自带字体：' + use_font)
+                            self.ap.logger.info('Using Windows system font: ' + use_font)
                             config['font-path'] = use_font
                     else:
                         self.ap.logger.warn(
-                            '未找到字体文件，且无法使用系统自带字体，更换为转发消息组件以发送长消息，您可以在配置文件中调整相关设置。'
+                            'Font file not found, and system font cannot be used, switch to forward message component to send long messages, you can adjust the related settings in the configuration file.'
                         )
 
                         pipeline_config['output']['long-text-processing']['strategy'] = 'forward'
             except Exception:
                 traceback.print_exc()
                 self.ap.logger.error(
-                    '加载字体文件失败({})，更换为转发消息组件以发送长消息，您可以在配置文件中调整相关设置。'.format(
+                    'Failed to load font file ({}), switch to forward message component to send long messages, you can adjust the related settings in the configuration file.'.format(
                         use_font
                     )
                 )
@@ -62,7 +62,7 @@ class LongTextProcessStage(stage.PipelineStage):
                 self.strategy_impl = strategy_cls(self.ap)
                 break
         else:
-            raise ValueError(f'未找到名为 {config["strategy"]} 的长消息处理策略')
+            raise ValueError(f'Long message processing strategy not found: {config["strategy"]}')
 
         await self.strategy_impl.initialize()
 
@@ -76,7 +76,7 @@ class LongTextProcessStage(stage.PipelineStage):
                 break
 
         if contains_non_plain:
-            self.ap.logger.debug('消息中包含非 Plain 组件，跳过长消息处理。')
+            self.ap.logger.debug('Message contains non-Plain components, skip long message processing.')
         elif (
             len(str(query.resp_message_chain[-1]))
             > query.pipeline_config['output']['long-text-processing']['threshold']

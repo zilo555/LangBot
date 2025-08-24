@@ -10,7 +10,7 @@ from ....entity.persistence import pipeline as persistence_pipeline
 
 
 class BotService:
-    """机器人服务"""
+    """Bot service"""
 
     ap: app.Application
 
@@ -63,7 +63,7 @@ class BotService:
         return persistence_bot
 
     async def create_bot(self, bot_data: dict) -> str:
-        """创建机器人"""
+        """Create bot"""
         # TODO: 检查配置信息格式
         bot_data['uuid'] = str(uuid.uuid4())
 
@@ -87,7 +87,7 @@ class BotService:
         return bot_data['uuid']
 
     async def update_bot(self, bot_uuid: str, bot_data: dict) -> None:
-        """更新机器人"""
+        """Update bot"""
         if 'uuid' in bot_data:
             del bot_data['uuid']
 
@@ -123,7 +123,7 @@ class BotService:
                 session.using_conversation = None
 
     async def delete_bot(self, bot_uuid: str) -> None:
-        """删除机器人"""
+        """Delete bot"""
         await self.ap.platform_mgr.remove_bot(bot_uuid)
         await self.ap.persistence_mgr.execute_async(
             sqlalchemy.delete(persistence_bot.Bot).where(persistence_bot.Bot.uuid == bot_uuid)

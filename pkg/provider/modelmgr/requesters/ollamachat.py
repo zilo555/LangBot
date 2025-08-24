@@ -17,7 +17,7 @@ import langbot_plugin.api.entities.builtin.provider.message as provider_message
 REQUESTER_NAME: str = 'ollama-chat'
 
 
-class OllamaChatCompletions(requester.LLMAPIRequester):
+class OllamaChatCompletions(requester.ProviderAPIRequester):
     """Ollama平台 ChatCompletion API请求器"""
 
     client: ollama.AsyncClient
@@ -44,6 +44,7 @@ class OllamaChatCompletions(requester.LLMAPIRequester):
         use_model: requester.RuntimeLLMModel,
         use_funcs: list[resource_tool.LLMTool] = None,
         extra_args: dict[str, typing.Any] = {},
+        remove_think: bool = False,
     ) -> provider_message.Message:
         args = extra_args.copy()
         args['model'] = use_model.model_entity.name
@@ -110,6 +111,7 @@ class OllamaChatCompletions(requester.LLMAPIRequester):
         messages: typing.List[provider_message.Message],
         funcs: typing.List[resource_tool.LLMTool] = None,
         extra_args: dict[str, typing.Any] = {},
+        remove_think: bool = False,
     ) -> provider_message.Message:
         req_messages: list = []
         for m in messages:
@@ -126,6 +128,21 @@ class OllamaChatCompletions(requester.LLMAPIRequester):
                 use_model=model,
                 use_funcs=funcs,
                 extra_args=extra_args,
+                remove_think=remove_think,
             )
         except asyncio.TimeoutError:
             raise errors.RequesterError('请求超时')
+
+    async def invoke_embedding(
+        self,
+        model: requester.RuntimeEmbeddingModel,
+        input_text: list[str],
+        extra_args: dict[str, typing.Any] = {},
+    ) -> list[list[float]]:
+        return (
+            await self.client.embed(
+                model=model.model_entity.name,
+                input=input_text,
+                **extra_args,
+            )
+        ).embeddings

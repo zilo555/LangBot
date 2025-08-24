@@ -13,13 +13,13 @@ preregistered_filters: list[typing.Type[ContentFilter]] = []
 def filter_class(
     name: str,
 ) -> typing.Callable[[typing.Type[ContentFilter]], typing.Type[ContentFilter]]:
-    """内容过滤器类装饰器
+    """Content filter class decorator
 
     Args:
-        name (str): 过滤器名称
+        name (str): Filter name
 
     Returns:
-        typing.Callable[[typing.Type[ContentFilter]], typing.Type[ContentFilter]]: 装饰器
+        typing.Callable[[typing.Type[ContentFilter]], typing.Type[ContentFilter]]: Decorator
     """
 
     def decorator(cls: typing.Type[ContentFilter]) -> typing.Type[ContentFilter]:
@@ -35,7 +35,7 @@ def filter_class(
 
 
 class ContentFilter(metaclass=abc.ABCMeta):
-    """内容过滤器抽象类"""
+    """Content filter abstract class"""
 
     name: str
 
@@ -46,31 +46,31 @@ class ContentFilter(metaclass=abc.ABCMeta):
 
     @property
     def enable_stages(self):
-        """启用的阶段
+        """Enabled stages
 
-        默认为消息请求AI前后的两个阶段。
+        Default is the two stages before and after the message request to AI.
 
-        entity.EnableStage.PRE: 消息请求AI前，此时需要检查的内容是用户的输入消息。
-        entity.EnableStage.POST: 消息请求AI后，此时需要检查的内容是AI的回复消息。
+        entity.EnableStage.PRE: Before message request to AI, the content to check is the user's input message.
+        entity.EnableStage.POST: After message request to AI, the content to check is the AI's reply message.
         """
         return [entities.EnableStage.PRE, entities.EnableStage.POST]
 
     async def initialize(self):
-        """初始化过滤器"""
+        """Initialize filter"""
         pass
 
     @abc.abstractmethod
     async def process(self, query: pipeline_query.Query, message: str = None, image_url=None) -> entities.FilterResult:
         """处理消息
 
-        分为前后阶段，具体取决于 enable_stages 的值。
-        对于内容过滤器来说，不需要考虑消息所处的阶段，只需要检查消息内容即可。
+        It is divided into two stages, depending on the value of enable_stages.
+        For content filters, you do not need to consider the stage of the message, you only need to check the message content.
 
         Args:
-            message (str): 需要检查的内容
-            image_url (str): 要检查的图片的 URL
+            message (str): Content to check
+            image_url (str): URL of the image to check
 
         Returns:
-            entities.FilterResult: 过滤结果，具体内容请查看 entities.FilterResult 类的文档
+            entities.FilterResult: Filter result, please refer to the documentation of entities.FilterResult class
         """
         raise NotImplementedError

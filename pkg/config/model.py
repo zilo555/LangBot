@@ -2,16 +2,16 @@ import abc
 
 
 class ConfigFile(metaclass=abc.ABCMeta):
-    """配置文件抽象类"""
+    """Config file abstract class"""
 
     config_file_name: str = None
-    """配置文件名"""
+    """Config file name"""
 
     template_file_name: str = None
-    """模板文件名"""
+    """Template file name"""
 
     template_data: dict = None
-    """模板数据"""
+    """Template data"""
 
     @abc.abstractmethod
     def exists(self) -> bool:

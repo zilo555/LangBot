@@ -16,7 +16,7 @@ class CommandHandler(handler.MessageHandler):
         self,
         query: pipeline_query.Query,
     ) -> typing.AsyncGenerator[entities.StageProcessResult, None]:
-        """处理"""
+        """Process"""
 
         command_text = str(query.message_chain).strip()[1:]
 
@@ -71,7 +71,7 @@ class CommandHandler(handler.MessageHandler):
                         )
                     )
 
-                    self.ap.logger.info(f'命令({query.query_id})报错: {self.cut_str(str(ret.error))}')
+                    self.ap.logger.info(f'Command({query.query_id}) error: {self.cut_str(str(ret.error))}')
 
                     yield entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
                 elif ret.text is not None or ret.image_url is not None:
@@ -90,7 +90,7 @@ class CommandHandler(handler.MessageHandler):
                         )
                     )
 
-                    self.ap.logger.info(f'命令返回: {self.cut_str(str(content[0]))}')
+                    self.ap.logger.info(f'Command returned: {self.cut_str(str(content[0]))}')
 
                     yield entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
                 else:

@@ -31,7 +31,7 @@ export default function PluginMarketCardComponent({
               </div>
             </div>
 
-            <div className="text-[0.8rem] text-[#666] line-clamp-2">
+            <div className="text-[0.8rem] text-[#666] dark:text-[#888888] line-clamp-2">
               {cardVO.description}
             </div>
           </div>

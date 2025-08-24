@@ -24,6 +24,14 @@ import {
   AsyncTask,
   ApiRespWebChatMessage,
   ApiRespWebChatMessages,
+  ApiRespKnowledgeBases,
+  ApiRespKnowledgeBase,
+  KnowledgeBase,
+  ApiRespKnowledgeBaseFiles,
+  ApiRespKnowledgeBaseRetrieve,
+  ApiRespProviderEmbeddingModels,
+  ApiRespProviderEmbeddingModel,
+  EmbeddingModel,
 } from '@/app/infra/entities/api';
 import { GetBotLogsRequest } from '@/app/infra/http/requestParam/bots/GetBotLogsRequest';
 import { GetBotLogsResponse } from '@/app/infra/http/requestParam/bots/GetBotLogsResponse';
@@ -38,8 +46,10 @@ export class BackendClient extends BaseHttpClient {
   }
 
   // ============ Provider API ============
-  public getProviderRequesters(): Promise<ApiRespProviderRequesters> {
-    return this.get('/api/v1/provider/requesters');
+  public getProviderRequesters(
+    model_type: string,
+  ): Promise<ApiRespProviderRequesters> {
+    return this.get('/api/v1/provider/requesters', { type: model_type });
   }
 
   public getProviderRequester(name: string): Promise<ApiRespProviderRequester> {
@@ -87,6 +97,39 @@ export class BackendClient extends BaseHttpClient {
     return this.post(`/api/v1/provider/models/llm/${uuid}/test`, model);
   }
 
+  // ============ Provider Model Embedding ============
+  public getProviderEmbeddingModels(): Promise<ApiRespProviderEmbeddingModels> {
+    return this.get('/api/v1/provider/models/embedding');
+  }
+
+  public getProviderEmbeddingModel(
+    uuid: string,
+  ): Promise<ApiRespProviderEmbeddingModel> {
+    return this.get(`/api/v1/provider/models/embedding/${uuid}`);
+  }
+
+  public createProviderEmbeddingModel(model: EmbeddingModel): Promise<object> {
+    return this.post('/api/v1/provider/models/embedding', model);
+  }
+
+  public deleteProviderEmbeddingModel(uuid: string): Promise<object> {
+    return this.delete(`/api/v1/provider/models/embedding/${uuid}`);
+  }
+
+  public updateProviderEmbeddingModel(
+    uuid: string,
+    model: EmbeddingModel,
+  ): Promise<object> {
+    return this.put(`/api/v1/provider/models/embedding/${uuid}`, model);
+  }
+
+  public testEmbeddingModel(
+    uuid: string,
+    model: EmbeddingModel,
+  ): Promise<object> {
+    return this.post(`/api/v1/provider/models/embedding/${uuid}/test`, model);
+  }
+
   // ============ Pipeline API ============
   public getGeneralPipelineMetadata(): Promise<GetPipelineMetadataResponseData> {
     // as designed, this method will be deprecated, and only for developer to check the prefered config schema
@@ -116,6 +159,8 @@ export class BackendClient extends BaseHttpClient {
   }
 
   // ============ Debug WebChat API ============
+
+  // ============ Debug WebChat API ============
   public sendWebChatMessage(
     sessionType: string,
     messageChain: object[],
@@ -132,6 +177,99 @@ export class BackendClient extends BaseHttpClient {
         timeout,
       },
     );
+  }
+
+  public async sendStreamingWebChatMessage(
+    sessionType: string,
+    messageChain: object[],
+    pipelineId: string,
+    onMessage: (data: ApiRespWebChatMessage) => void,
+    onComplete: () => void,
+    onError: (error: Error) => void,
+  ): Promise<void> {
+    try {
+      // 构造完整的URL，处理相对路径的情况
+      let url = `${this.baseURL}/api/v1/pipelines/${pipelineId}/chat/send`;
+      if (this.baseURL === '/') {
+        // 获取用户访问的完整URL
+        const baseURL = window.location.origin;
+        url = `${baseURL}/api/v1/pipelines/${pipelineId}/chat/send`;
+      }
+
+      // 使用fetch发送流式请求，因为axios在浏览器环境中不直接支持流式响应
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.getSessionSync()}`,
+        },
+        body: JSON.stringify({
+          session_type: sessionType,
+          message: messageChain,
+          is_stream: true,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      if (!response.body) {
+        throw new Error('ReadableStream not supported');
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      // 读取流式响应
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+
+          if (done) {
+            onComplete();
+            break;
+          }
+
+          // 解码数据
+          buffer += decoder.decode(value, { stream: true });
+
+          // 处理完整的JSON对象
+          const lines = buffer.split('\n\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('data:')) {
+              try {
+                const data = JSON.parse(line.slice(5));
+
+                if (data.type === 'end') {
+                  // 流传输结束
+                  reader.cancel();
+                  onComplete();
+                  return;
+                }
+                if (data.type === 'start') {
+                  console.log(data.type);
+                }
+
+                if (data.message) {
+                  // 处理消息数据
+                  onMessage(data);
+                }
+              } catch (error) {
+                console.error('Error parsing streaming data:', error);
+              }
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+    } catch (error) {
+      onError(error as Error);
+    }
   }
 
   public getWebChatHistoryMessages(
@@ -199,6 +337,74 @@ export class BackendClient extends BaseHttpClient {
     request: GetBotLogsRequest,
   ): Promise<GetBotLogsResponse> {
     return this.post(`/api/v1/platform/bots/${botId}/logs`, request);
+  }
+
+  // ============ File management API ============
+  public uploadDocumentFile(file: File): Promise<{ file_id: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.request<{ file_id: string }>({
+      method: 'post',
+      url: '/api/v1/files/documents',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  }
+
+  // ============ Knowledge Base API ============
+  public getKnowledgeBases(): Promise<ApiRespKnowledgeBases> {
+    return this.get('/api/v1/knowledge/bases');
+  }
+
+  public getKnowledgeBase(uuid: string): Promise<ApiRespKnowledgeBase> {
+    return this.get(`/api/v1/knowledge/bases/${uuid}`);
+  }
+
+  public createKnowledgeBase(base: KnowledgeBase): Promise<{ uuid: string }> {
+    return this.post('/api/v1/knowledge/bases', base);
+  }
+
+  public updateKnowledgeBase(
+    uuid: string,
+    base: KnowledgeBase,
+  ): Promise<{ uuid: string }> {
+    return this.put(`/api/v1/knowledge/bases/${uuid}`, base);
+  }
+
+  public uploadKnowledgeBaseFile(
+    uuid: string,
+    file_id: string,
+  ): Promise<object> {
+    return this.post(`/api/v1/knowledge/bases/${uuid}/files`, {
+      file_id,
+    });
+  }
+
+  public getKnowledgeBaseFiles(
+    uuid: string,
+  ): Promise<ApiRespKnowledgeBaseFiles> {
+    return this.get(`/api/v1/knowledge/bases/${uuid}/files`);
+  }
+
+  public deleteKnowledgeBaseFile(
+    uuid: string,
+    file_id: string,
+  ): Promise<object> {
+    return this.delete(`/api/v1/knowledge/bases/${uuid}/files/${file_id}`);
+  }
+
+  public deleteKnowledgeBase(uuid: string): Promise<object> {
+    return this.delete(`/api/v1/knowledge/bases/${uuid}`);
+  }
+
+  public retrieveKnowledgeBase(
+    uuid: string,
+    query: string,
+  ): Promise<ApiRespKnowledgeBaseRetrieve> {
+    return this.post(`/api/v1/knowledge/bases/${uuid}/retrieve`, { query });
   }
 
   // ============ Plugins API ============
@@ -291,5 +497,27 @@ export class BackendClient extends BaseHttpClient {
 
   public checkUserToken(): Promise<ApiRespUserToken> {
     return this.get('/api/v1/user/check-token');
+  }
+
+  public resetPassword(
+    user: string,
+    recoveryKey: string,
+    newPassword: string,
+  ): Promise<{ user: string }> {
+    return this.post('/api/v1/user/reset-password', {
+      user,
+      recovery_key: recoveryKey,
+      new_password: newPassword,
+    });
+  }
+
+  public changePassword(
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<{ user: string }> {
+    return this.post('/api/v1/user/change-password', {
+      current_password: currentPassword,
+      new_password: newPassword,
+    });
   }
 }

@@ -11,13 +11,11 @@ import asyncio
 import traceback
 import re
 import base64
-import os
 import copy
 import threading
 
 import quart
 
-from ...core import app
 from ..logger import EventLogger
 import xml.etree.ElementTree as ET
 from typing import Optional, Tuple
@@ -27,21 +25,23 @@ import langbot_plugin.api.entities.builtin.platform.message as platform_message
 import langbot_plugin.api.entities.builtin.platform.events as platform_events
 import langbot_plugin.api.entities.builtin.platform.entities as platform_entities
 import langbot_plugin.api.definition.abstract.platform.adapter as abstract_platform_adapter
+import langbot_plugin.api.definition.abstract.platform.event_logger as abstract_platform_logger
 
 
 class WeChatPadMessageConverter(abstract_platform_adapter.AbstractMessageConverter):
-    def __init__(self, config: dict):
+    def __init__(self, config: dict, logger: abstract_platform_logger.AbstractEventLogger):
         self.config = config
         self.bot = WeChatPadClient(self.config['wechatpad_url'], self.config['token'])
-        self.logger = logging.getLogger('WeChatPadMessageConverter')
+        self.logger = logger
 
     @staticmethod
     async def yiri2target(message_chain: platform_message.MessageChain) -> list[dict]:
         content_list = []
-        _ = os.path.abspath(__file__)
 
         for component in message_chain:
-            if isinstance(component, platform_message.At):
+            if isinstance(component, platform_message.AtAll):
+                content_list.append({'type': 'at', 'target': 'all'})
+            elif isinstance(component, platform_message.At):
                 content_list.append({'type': 'at', 'target': component.target})
             elif isinstance(component, platform_message.Plain):
                 content_list.append({'type': 'text', 'content': component.text})
@@ -75,20 +75,34 @@ class WeChatPadMessageConverter(abstract_platform_adapter.AbstractMessageConvert
 
         return content_list
 
-    async def target2yiri(self, message: dict, bot_account_id: str) -> platform_message.MessageChain:
+    async def target2yiri(
+        self,
+        message: dict,
+        bot_account_id: str,
+    ) -> platform_message.MessageChain:
         """外部消息转平台消息"""
         # 数据预处理
         message_list = []
+        bot_wxid = self.config['wxid']
         ats_bot = False  # 是否被@
         content = message['content']['str']
         content_no_preifx = content  # 群消息则去掉前缀
         is_group_message = self._is_group_message(message)
         if is_group_message:
             ats_bot = self._ats_bot(message, bot_account_id)
+
+            self.logger.info(f'ats_bot: {ats_bot}; bot_account_id: {bot_account_id}; bot_wxid: {bot_wxid}')
             if '@所有人' in content:
                 message_list.append(platform_message.AtAll())
-            elif ats_bot:
+            if ats_bot:
                 message_list.append(platform_message.At(target=bot_account_id))
+
+            # 解析@信息并生成At组件
+            at_targets = self._extract_at_targets(message)
+            for target_id in at_targets:
+                if target_id != bot_wxid:  # 避免重复添加机器人的At
+                    message_list.append(platform_message.At(target=target_id))
+
             content_no_preifx, _ = self._extract_content_and_sender(content)
 
         msg_type = message['msg_type']
@@ -226,8 +240,8 @@ class WeChatPadMessageConverter(abstract_platform_adapter.AbstractMessageConvert
         #         self.logger.info("_handler_compound_quote", ET.tostring(xml_data, encoding='unicode'))
         appmsg_data = xml_data.find('.//appmsg')
         quote_data = ''  # 引用原文
-        quote_id = None  # 引用消息的原发送者
-        tousername = None  # 接收方: 所属微信的wxid
+        # quote_id = None  # 引用消息的原发送者
+        # tousername = None  # 接收方: 所属微信的wxid
         user_data = ''  # 用户消息
         sender_id = xml_data.findtext('.//fromusername')  # 发送方：单聊用户/群member
 
@@ -235,13 +249,10 @@ class WeChatPadMessageConverter(abstract_platform_adapter.AbstractMessageConvert
         if appmsg_data:
             user_data = appmsg_data.findtext('.//title') or ''
             quote_data = appmsg_data.find('.//refermsg').findtext('.//content')
-            quote_id = appmsg_data.find('.//refermsg').findtext('.//chatusr')
+            # quote_id = appmsg_data.find('.//refermsg').findtext('.//chatusr')
             message_list.append(platform_message.WeChatAppMsg(app_msg=ET.tostring(appmsg_data, encoding='unicode')))
-        if message:
-            tousername = message['to_user_name']['str']
-
-        _ = tousername
-        _ = quote_id
+        # if message:
+        #     tousername = message['to_user_name']['str']
 
         if quote_data:
             quote_data_message_list = platform_message.MessageChain()
@@ -397,6 +408,23 @@ class WeChatPadMessageConverter(abstract_platform_adapter.AbstractMessageConvert
         finally:
             return ats_bot
 
+    # 提取一下at的wxid列表
+    def _extract_at_targets(self, message: dict) -> list[str]:
+        """从消息中提取被@用户的ID列表"""
+        at_targets = []
+        try:
+            # 从msg_source中解析atuserlist
+            msg_source = message.get('msg_source', '') or ''
+            if len(msg_source) > 0:
+                msg_source_data = ET.fromstring(msg_source)
+                at_user_list = msg_source_data.findtext('atuserlist') or ''
+                if at_user_list:
+                    # atuserlist格式通常是逗号分隔的用户ID列表
+                    at_targets = [user_id.strip() for user_id in at_user_list.split(',') if user_id.strip()]
+        except Exception as e:
+            self.logger.error(f'_extract_at_targets got except: {e}')
+        return at_targets
+
     # 提取一下content前面的sender_id, 和去掉前缀的内容
     def _extract_content_and_sender(self, raw_content: str) -> Tuple[str, Optional[str]]:
         try:
@@ -420,16 +448,20 @@ class WeChatPadMessageConverter(abstract_platform_adapter.AbstractMessageConvert
 
 
 class WeChatPadEventConverter(abstract_platform_adapter.AbstractEventConverter):
-    def __init__(self, config: dict):
+    def __init__(self, config: dict, logger: logging.Logger):
         self.config = config
-        self.message_converter = WeChatPadMessageConverter(config)
-        self.logger = logging.getLogger('WeChatPadEventConverter')
+        self.message_converter = WeChatPadMessageConverter(config, logger)
+        self.logger = logger
 
     @staticmethod
     async def yiri2target(event: platform_events.MessageEvent) -> dict:
         pass
 
-    async def target2yiri(self, event: dict, bot_account_id: str) -> platform_events.MessageEvent:
+    async def target2yiri(
+        self,
+        event: dict,
+        bot_account_id: str,
+    ) -> platform_events.MessageEvent:
         # 排除公众号以及微信团队消息
         if (
             event['from_user_name']['str'].startswith('gh_')
@@ -489,8 +521,6 @@ class WeChatPadAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter)
 
     config: dict
 
-    ap: app.Application
-
     logger: EventLogger
 
     message_converter: WeChatPadMessageConverter
@@ -501,14 +531,13 @@ class WeChatPadAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter)
         typing.Callable[[platform_events.Event, abstract_platform_adapter.AbstractMessagePlatformAdapter], None],
     ] = {}
 
-    def __init__(self, config: dict, ap: app.Application, logger: EventLogger):
+    def __init__(self, config: dict, logger: EventLogger):
         self.config = config
-        self.ap = ap
         self.logger = logger
         self.quart_app = quart.Quart(__name__)
 
-        self.message_converter = WeChatPadMessageConverter(config)
-        self.event_converter = WeChatPadEventConverter(config)
+        self.message_converter = WeChatPadMessageConverter(config, logger)
+        self.event_converter = WeChatPadEventConverter(config, logger)
 
     async def ws_message(self, data):
         """处理接收到的消息"""
@@ -541,19 +570,22 @@ class WeChatPadAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter)
         for msg in content_list:
             # 文本消息处理@
             if msg['type'] == 'text' and at_targets:
-                at_nick_name_list = []
-                for member in member_info:
-                    if member['user_name'] in at_targets:
-                        at_nick_name_list.append(f'@{member["nick_name"]}')
-                msg['content'] = f'{" ".join(at_nick_name_list)} {msg["content"]}'
+                if 'all' in at_targets:
+                    msg['content'] = f'@所有人 {msg["content"]}'
+                else:
+                    at_nick_name_list = []
+                    for member in member_info:
+                        if member['user_name'] in at_targets:
+                            at_nick_name_list.append(f'@{member["nick_name"]}')
+                    msg['content'] = f'{" ".join(at_nick_name_list)} {msg["content"]}'
 
             # 统一消息派发
             handler_map = {
                 'text': lambda msg: self.bot.send_text_message(
-                    to_wxid=target_id, message=msg['content'], ats=at_targets
+                    to_wxid=target_id, message=msg['content'], ats=['notify@all'] if 'all' in at_targets else at_targets
                 ),
                 'image': lambda msg: self.bot.send_image_message(
-                    to_wxid=target_id, img_url=msg['image'], ats=at_targets
+                    to_wxid=target_id, img_url=msg['image'], ats=['notify@all'] if 'all' in at_targets else at_targets
                 ),
                 'WeChatEmoji': lambda msg: self.bot.send_emoji_message(
                     to_wxid=target_id, emoji_md5=msg['emoji_md5'], emoji_size=msg['emoji_size']
@@ -575,7 +607,7 @@ class WeChatPadAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter)
             if handler := handler_map.get(msg['type']):
                 handler(msg)
             else:
-                print(f'未处理的消息类型: {msg["type"]}')
+                self.logger.warning(f'未处理的消息类型: {msg["type"]}')
                 continue
 
     async def send_message(self, target_type: str, target_id: str, message: platform_message.MessageChain):
@@ -650,7 +682,7 @@ class WeChatPadAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter)
             # url = login_data['Data']["QrCodeUrl"]
 
             profile = self.bot.get_profile()
-            self.logger.info(profile)
+            # self.logger.info(profile)
 
             self.bot_account_id = profile['Data']['userInfo']['nickName']['str']
             self.config['wxid'] = profile['Data']['userInfo']['userName']['str']
@@ -670,18 +702,18 @@ class WeChatPadAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter)
                     # 这里需要确保ws_message是同步的，或者使用asyncio.run调用异步方法
                     asyncio.run(self.ws_message(data))
                 except json.JSONDecodeError:
-                    print(f'Non-JSON message: {message[:100]}...')
+                    self.logger.error(f'Non-JSON message: {message[:100]}...')
 
             def on_error(ws, error):
-                print(f'WebSocket error: {str(error)[:200]}')
+                self.logger.error(f'WebSocket error: {str(error)[:200]}')
 
             def on_close(ws, close_status_code, close_msg):
-                print('WebSocket closed, reconnecting...')
+                self.logger.info('WebSocket closed, reconnecting...')
                 time.sleep(5)
                 connect_websocket_sync()  # 自动重连
 
             def on_open(ws):
-                print('WebSocket connected successfully!')
+                self.logger.info('WebSocket connected successfully!')
 
             ws = websocket.WebSocketApp(
                 uri, on_message=on_message, on_error=on_error, on_close=on_close, on_open=on_open

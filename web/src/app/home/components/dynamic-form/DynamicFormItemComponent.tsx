@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { LLMModel } from '@/app/infra/entities/api';
+import { KnowledgeBase } from '@/app/infra/entities/api';
 import { toast } from 'sonner';
 import {
   HoverCard,
@@ -25,6 +26,7 @@ import {
 } from '@/components/ui/hover-card';
 import { useTranslation } from 'react-i18next';
 import { extractI18nObject } from '@/i18n/I18nProvider';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function DynamicFormItemComponent({
   config,
@@ -35,6 +37,7 @@ export default function DynamicFormItemComponent({
   field: ControllerRenderProps<any, any>;
 }) {
   const [llmModels, setLlmModels] = useState<LLMModel[]>([]);
+  const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([]);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -46,6 +49,19 @@ export default function DynamicFormItemComponent({
         })
         .catch((err) => {
           toast.error('获取 LLM 模型列表失败：' + err.message);
+        });
+    }
+  }, [config.type]);
+
+  useEffect(() => {
+    if (config.type === DynamicFormItemType.KNOWLEDGE_BASE_SELECTOR) {
+      httpClient
+        .getKnowledgeBases()
+        .then((resp) => {
+          setKnowledgeBases(resp.bases);
+        })
+        .catch((err) => {
+          toast.error('获取知识库列表失败：' + err.message);
         });
     }
   }, [config.type]);
@@ -117,7 +133,7 @@ export default function DynamicFormItemComponent({
     case DynamicFormItemType.SELECT:
       return (
         <Select value={field.value} onValueChange={field.onChange}>
-          <SelectTrigger>
+          <SelectTrigger className="bg-[#ffffff] dark:bg-[#2a2a2e]">
             <SelectValue placeholder={t('common.select')} />
           </SelectTrigger>
           <SelectContent>
@@ -135,7 +151,7 @@ export default function DynamicFormItemComponent({
     case DynamicFormItemType.LLM_MODEL_SELECTOR:
       return (
         <Select value={field.value} onValueChange={field.onChange}>
-          <SelectTrigger>
+          <SelectTrigger className="bg-[#ffffff] dark:bg-[#2a2a2e]">
             <SelectValue placeholder={t('models.selectModel')} />
           </SelectTrigger>
           <SelectContent>
@@ -249,6 +265,25 @@ export default function DynamicFormItemComponent({
         </Select>
       );
 
+    case DynamicFormItemType.KNOWLEDGE_BASE_SELECTOR:
+      return (
+        <Select value={field.value} onValueChange={field.onChange}>
+          <SelectTrigger className="bg-[#ffffff] dark:bg-[#2a2a2e]">
+            <SelectValue placeholder={t('knowledge.selectKnowledgeBase')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectItem value="__none__">{t('knowledge.empty')}</SelectItem>
+              {knowledgeBases.map((base) => (
+                <SelectItem key={base.uuid} value={base.uuid ?? ''}>
+                  {base.name}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      );
+
     case DynamicFormItemType.PROMPT_EDITOR:
       return (
         <div className="space-y-2">
@@ -257,7 +292,7 @@ export default function DynamicFormItemComponent({
               <div key={index} className="flex gap-2 items-center">
                 {/* 角色选择 */}
                 {index === 0 ? (
-                  <div className="w-[120px] px-3 py-2 border rounded bg-gray-50 text-gray-500">
+                  <div className="w-[120px] px-3 py-2 border rounded bg-gray-50 dark:bg-[#2a292e] text-gray-500 dark:text-white dark:border-gray-600">
                     system
                   </div>
                 ) : (
@@ -269,7 +304,7 @@ export default function DynamicFormItemComponent({
                       field.onChange(newValue);
                     }}
                   >
-                    <SelectTrigger className="w-[120px]">
+                    <SelectTrigger className="w-[120px] bg-[#ffffff] dark:bg-[#2a2a2e]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -281,7 +316,7 @@ export default function DynamicFormItemComponent({
                   </Select>
                 )}
                 {/* 内容输入 */}
-                <Input
+                <Textarea
                   className="w-[300px]"
                   value={item.content}
                   onChange={(e) => {

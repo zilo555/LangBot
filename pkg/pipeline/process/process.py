@@ -33,11 +33,11 @@ class Processor(stage.PipelineStage):
         query: pipeline_query.Query,
         stage_inst_name: str,
     ) -> entities.StageProcessResult:
-        """处理"""
+        """Process"""
         message_text = str(query.message_chain).strip()
 
         self.ap.logger.info(
-            f'处理 {query.launcher_type.value}_{query.launcher_id} 的请求({query.query_id}): {message_text}'
+            f'Processing request from {query.launcher_type.value}_{query.launcher_id} ({query.query_id}): {message_text}'
         )
 
         async def generator():

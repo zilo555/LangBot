@@ -1,6 +1,6 @@
-import { ICreateLLMField } from '@/app/home/models/ICreateLLMField';
+import { ICreateLLMField } from '@/app/home/models/component/ICreateLLMField';
 import { useEffect, useState } from 'react';
-import { IChooseRequesterEntity } from '@/app/home/models/component/llm-form/ChooseRequesterEntity';
+import { IChooseRequesterEntity } from '@/app/home/models/component/ChooseRequesterEntity';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { LLMModel } from '@/app/infra/entities/api';
 import { UUID } from 'uuidjs';
@@ -197,7 +197,7 @@ export default function LLMForm({
   };
 
   async function initLLMModelFormComponent() {
-    const requesterNameList = await httpClient.getProviderRequesters();
+    const requesterNameList = await httpClient.getProviderRequesters('llm');
     setRequesterNameList(
       requesterNameList.requesters.map((item) => {
         return {
@@ -312,6 +312,18 @@ export default function LLMForm({
 
   function testLLMModelInForm() {
     setModelTesting(true);
+    const extraArgsObj: Record<string, string | number | boolean> = {};
+    form
+      .getValues('extra_args')
+      ?.forEach((arg: { key: string; type: string; value: string }) => {
+        if (arg.type === 'number') {
+          extraArgsObj[arg.key] = Number(arg.value);
+        } else if (arg.type === 'boolean') {
+          extraArgsObj[arg.key] = arg.value === 'true';
+        } else {
+          extraArgsObj[arg.key] = arg.value;
+        }
+      });
     httpClient
       .testLLMModel('_', {
         uuid: '',
@@ -324,7 +336,7 @@ export default function LLMForm({
         },
         api_keys: [form.getValues('api_key')],
         abilities: form.getValues('abilities'),
-        extra_args: form.getValues('extra_args'),
+        extra_args: extraArgsObj,
       })
       .then((res) => {
         console.log(res);
@@ -420,7 +432,7 @@ export default function LLMForm({
                       }}
                       value={field.value}
                     >
-                      <SelectTrigger className="w-[180px]">
+                      <SelectTrigger className="w-[180px] bg-[#ffffff] dark:bg-[#2a2a2e]">
                         <SelectValue
                           placeholder={t('models.selectModelProvider')}
                         />
@@ -553,7 +565,7 @@ export default function LLMForm({
                         updateExtraArg(index, 'type', value)
                       }
                     >
-                      <SelectTrigger className="w-[120px]">
+                      <SelectTrigger className="w-[120px] bg-[#ffffff] dark:bg-[#2a2a2e]">
                         <SelectValue placeholder={t('models.type')} />
                       </SelectTrigger>
                       <SelectContent>
@@ -596,7 +608,7 @@ export default function LLMForm({
                 </Button>
               </div>
               <FormDescription>
-                {t('models.extraParametersDescription')}
+                {t('llm.extraParametersDescription')}
               </FormDescription>
               <FormMessage />
             </FormItem>

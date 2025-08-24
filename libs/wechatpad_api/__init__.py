@@ -1,4 +1,1 @@
-from .client import WeChatPadClient
-
-
-__all__ = ['WeChatPadClient']
+from .client import WeChatPadClient as WeChatPadClient

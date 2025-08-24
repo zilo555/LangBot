@@ -21,15 +21,18 @@ from ..api.http.service import user as user_service
 from ..api.http.service import model as model_service
 from ..api.http.service import pipeline as pipeline_service
 from ..api.http.service import bot as bot_service
+from ..api.http.service import knowledge as knowledge_service
 from ..discover import engine as discover_engine
 from ..storage import mgr as storagemgr
 from ..utils import logcache
 from . import taskmgr
 from . import entities as core_entities
+from ..rag.knowledge import kbmgr as rag_mgr
+from ..vector import mgr as vectordb_mgr
 
 
 class Application:
-    """运行时应用对象和上下文"""
+    """Runtime application object and context"""
 
     event_loop: asyncio.AbstractEventLoop = None
 
@@ -46,10 +49,12 @@ class Application:
 
     model_mgr: llm_model_mgr.ModelManager = None
 
-    # TODO 移动到 pipeline 里
+    rag_mgr: rag_mgr.RAGManager = None
+
+    # TODO move to pipeline
     tool_mgr: llm_tool_mgr.ToolManager = None
 
-    # ======= 配置管理器 =======
+    # ======= Config manager =======
 
     command_cfg: config_mgr.ConfigManager = None  # deprecated
 
@@ -63,7 +68,7 @@ class Application:
 
     instance_config: config_mgr.ConfigManager = None
 
-    # ======= 元数据配置管理器 =======
+    # ======= Metadata config manager =======
 
     sensitive_meta: config_mgr.ConfigManager = None
 
@@ -92,6 +97,8 @@ class Application:
 
     persistence_mgr: persistencemgr.PersistenceManager = None
 
+    vector_db_mgr: vectordb_mgr.VectorDBManager = None
+
     http_ctrl: http_controller.HTTPController = None
 
     log_cache: logcache.LogCache = None
@@ -102,11 +109,15 @@ class Application:
 
     user_service: user_service.UserService = None
 
-    model_service: model_service.ModelsService = None
+    llm_model_service: model_service.LLMModelsService = None
+
+    embedding_models_service: model_service.EmbeddingModelsService = None
 
     pipeline_service: pipeline_service.PipelineService = None
 
     bot_service: bot_service.BotService = None
+
+    knowledge_service: knowledge_service.KnowledgeService = None
 
     def __init__(self):
         pass
@@ -142,6 +153,7 @@ class Application:
                 name='http-api-controller',
                 scopes=[core_entities.LifecycleControlScope.APPLICATION],
             )
+
             self.task_mgr.create_task(
                 never_ending(),
                 name='never-ending-task',
@@ -153,14 +165,14 @@ class Application:
         except asyncio.CancelledError:
             pass
         except Exception as e:
-            self.logger.error(f'应用运行致命异常: {e}')
+            self.logger.error(f'Application runtime fatal exception: {e}')
             self.logger.debug(f'Traceback: {traceback.format_exc()}')
 
     def dispose(self):
         self.plugin_connector.dispose()
 
     async def print_web_access_info(self):
-        """打印访问 webui 的提示"""
+        """Print access webui tips"""
 
         if not os.path.exists(os.path.join('.', 'web/out')):
             self.logger.warning('WebUI 文件缺失，请根据文档部署：https://docs.langbot.app/zh')

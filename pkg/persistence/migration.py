@@ -10,7 +10,7 @@ preregistered_db_migrations: list[typing.Type[DBMigration]] = []
 
 
 def migration_class(number: int):
-    """迁移类装饰器"""
+    """Migration class decorator"""
 
     def wrapper(cls: typing.Type[DBMigration]) -> typing.Type[DBMigration]:
         cls.number = number
@@ -21,20 +21,20 @@ def migration_class(number: int):
 
 
 class DBMigration(abc.ABC):
-    """数据库迁移"""
+    """Database migration"""
 
     number: int
-    """迁移号"""
+    """Migration number"""
 
     def __init__(self, ap: app.Application):
         self.ap = ap
 
     @abc.abstractmethod
     async def upgrade(self):
-        """升级"""
+        """Upgrade"""
         pass
 
     @abc.abstractmethod
     async def downgrade(self):
-        """降级"""
+        """Downgrade"""
         pass

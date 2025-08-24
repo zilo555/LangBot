@@ -8,7 +8,7 @@ import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
 
 @filter_model.filter_class('content-ignore')
 class ContentIgnore(filter_model.ContentFilter):
-    """根据内容忽略消息"""
+    """Ignore message according to content"""
 
     @property
     def enable_stages(self):
@@ -24,7 +24,7 @@ class ContentIgnore(filter_model.ContentFilter):
                         level=entities.ResultLevel.BLOCK,
                         replacement='',
                         user_notice='',
-                        console_notice='根据 ignore_rules 中的 prefix 规则，忽略消息',
+                        console_notice='Ignore message according to prefix rule in ignore_rules',
                     )
 
         if 'regexp' in query.pipeline_config['trigger']['ignore-rules']:
@@ -34,7 +34,7 @@ class ContentIgnore(filter_model.ContentFilter):
                         level=entities.ResultLevel.BLOCK,
                         replacement='',
                         user_notice='',
-                        console_notice='根据 ignore_rules 中的 regexp 规则，忽略消息',
+                        console_notice='Ignore message according to regexp rule in ignore_rules',
                     )
 
         return entities.FilterResult(

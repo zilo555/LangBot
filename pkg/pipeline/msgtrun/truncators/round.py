@@ -6,7 +6,7 @@ import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
 
 @truncator.truncator_class('round')
 class RoundTruncator(truncator.Truncator):
-    """前文回合数阶段器"""
+    """Truncate the conversation message chain to adapt to the LLM message length limit."""
 
     async def truncate(self, query: pipeline_query.Query) -> pipeline_query.Query:
         """截断"""
@@ -16,7 +16,7 @@ class RoundTruncator(truncator.Truncator):
 
         current_round = 0
 
-        # 从后往前遍历
+        # Traverse from back to front
         for msg in query.messages[::-1]:
             if current_round < max_round:
                 temp_messages.append(msg)

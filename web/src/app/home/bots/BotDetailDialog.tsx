@@ -127,10 +127,8 @@ export default function BotDetailDialog({
                 <BotForm
                   initBotId={undefined}
                   onFormSubmit={handleFormSubmit}
-                  onFormCancel={handleFormCancel}
                   onBotDeleted={handleBotDeleted}
                   onNewBotCreated={handleNewBotCreated}
-                  hideButtons={true}
                 />
               </div>
               <DialogFooter className="px-6 py-4 border-t shrink-0">
@@ -161,7 +159,7 @@ export default function BotDetailDialog({
           <SidebarProvider className="items-start w-full flex">
             <Sidebar
               collapsible="none"
-              className="hidden md:flex h-[80vh] w-40 min-w-[120px] border-r bg-white"
+              className="hidden md:flex h-[80vh] w-40 min-w-[120px] border-r bg-white dark:bg-black"
             >
               <SidebarContent>
                 <SidebarGroup>
@@ -199,10 +197,8 @@ export default function BotDetailDialog({
                   <BotForm
                     initBotId={botId}
                     onFormSubmit={handleFormSubmit}
-                    onFormCancel={handleFormCancel}
                     onBotDeleted={handleBotDeleted}
                     onNewBotCreated={handleNewBotCreated}
-                    hideButtons={true}
                   />
                 )}
                 {activeMenu === 'logs' && botId && (

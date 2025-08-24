@@ -18,7 +18,6 @@ import {
 } from '@/components/ui/sidebar';
 import PipelineFormComponent from './components/pipeline-form/PipelineFormComponent';
 import DebugDialog from './components/debug-dialog/DebugDialog';
-import { PipelineFormEntity } from '@/app/infra/entities/pipeline';
 
 interface PipelineDialogProps {
   open: boolean;
@@ -26,7 +25,6 @@ interface PipelineDialogProps {
   pipelineId?: string;
   isEditMode?: boolean;
   isDefaultPipeline?: boolean;
-  initValues?: PipelineFormEntity;
   onFinish: () => void;
   onNewPipelineCreated?: (pipelineId: string) => void;
   onDeletePipeline: () => void;
@@ -41,7 +39,6 @@ export default function PipelineDialog({
   pipelineId: propPipelineId,
   isEditMode = false,
   isDefaultPipeline = false,
-  initValues,
   onFinish,
   onNewPipelineCreated,
   onDeletePipeline,
@@ -119,7 +116,6 @@ export default function PipelineDialog({
             </DialogHeader>
             <div className="flex-1 overflow-y-auto px-6 pb-6">
               <PipelineFormComponent
-                initValues={initValues}
                 isDefaultPipeline={isDefaultPipeline}
                 onFinish={handleFinish}
                 onNewPipelineCreated={handleNewPipelineCreated}
@@ -146,7 +142,7 @@ export default function PipelineDialog({
         <SidebarProvider className="items-start w-full flex h-full min-h-0">
           <Sidebar
             collapsible="none"
-            className="hidden md:flex h-full min-h-0 w-40 border-r bg-white"
+            className="hidden md:flex h-full min-h-0 w-40 border-r bg-white dark:bg-black"
           >
             <SidebarContent>
               <SidebarGroup>
@@ -184,7 +180,6 @@ export default function PipelineDialog({
             >
               {currentMode === 'config' && (
                 <PipelineFormComponent
-                  initValues={initValues}
                   isDefaultPipeline={isDefaultPipeline}
                   onFinish={handleFinish}
                   onNewPipelineCreated={handleNewPipelineCreated}

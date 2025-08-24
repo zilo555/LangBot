@@ -14,7 +14,7 @@ spec:
         zh_Hans: 基础 URL
       type: string
       required: true
-      default: "https://api.moonshot.com/v1"
+      default: "https://api.moonshot.ai/v1"
     - name: timeout
       label:
         en_US: Timeout
@@ -22,6 +22,8 @@ spec:
       type: integer
       required: true
       default: 120
+  support_type:
+    - llm
 execution:
   python:
     path: ./moonshotchatcmpl.py

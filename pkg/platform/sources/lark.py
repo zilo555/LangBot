@@ -18,6 +18,7 @@ import lark_oapi.ws.exception
 import quart
 from lark_oapi.api.im.v1 import *
 import pydantic
+from lark_oapi.api.cardkit.v1 import *
 
 import langbot_plugin.api.definition.abstract.platform.adapter as abstract_platform_adapter
 import langbot_plugin.api.entities.builtin.platform.message as platform_message
@@ -320,9 +321,16 @@ class LarkEventConverter(abstract_platform_adapter.AbstractEventConverter):
             )
 
 
+CARD_ID_CACHE_SIZE = 500
+CARD_ID_CACHE_MAX_LIFETIME = 20 * 60  # 20分钟
+
+
 class LarkAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
     bot: lark_oapi.ws.Client = pydantic.Field(exclude=True)
     api_client: lark_oapi.Client = pydantic.Field(exclude=True)
+
+    bot_account_id: str  # 用于在流水线中识别at是否是本bot，直接以bot_name作为标识
+    lark_tenant_key: str = pydantic.Field(exclude=True, default='')  # 飞书企业key
 
     message_converter: LarkMessageConverter = LarkMessageConverter()
     event_converter: LarkEventConverter = LarkEventConverter()
@@ -334,7 +342,11 @@ class LarkAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
 
     quart_app: quart.Quart = pydantic.Field(exclude=True)
 
-    def __init__(self, config: dict, logger: abstract_platform_logger.AbstractEventLogger):
+    card_id_dict: dict[str, str]  # 消息id到卡片id的映射，便于创建卡片后的发送消息到指定卡片
+
+    seq: int  # 用于在发送卡片消息中识别消息顺序，直接以seq作为标识
+
+    def __init__(self, config: dict, logger: abstract_platform_logger.AbstractEventLogger, **kwargs):
         quart_app = quart.Quart(__name__)
 
         @quart_app.route('/lark/callback', methods=['POST'])
@@ -343,7 +355,7 @@ class LarkAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
                 data = await quart.request.json
 
                 if 'encrypt' in data:
-                    cipher = AESCipher(self.config['encrypt-key'])
+                    cipher = AESCipher(config['encrypt-key'])
                     data = cipher.decrypt_string(data['encrypt'])
                     data = json.loads(data)
 
@@ -398,15 +410,255 @@ class LarkAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
         super().__init__(
             config=config,
             logger=logger,
+            lark_tenant_key=config.get('lark_tenant_key', ''),
+            card_id_dict={},
+            seq=1,
             listeners={},
             quart_app=quart_app,
             bot=bot,
             api_client=api_client,
             bot_account_id=bot_account_id,
+            **kwargs,
         )
 
     async def send_message(self, target_type: str, target_id: str, message: platform_message.MessageChain):
         pass
+
+    async def is_stream_output_supported(self) -> bool:
+        is_stream = False
+        if self.config.get('enable-stream-reply', None):
+            is_stream = True
+        return is_stream
+
+    async def create_card_id(self, message_id):
+        try:
+            # self.logger.debug('飞书支持stream输出,创建卡片......')
+
+            card_data = {
+                'schema': '2.0',
+                'config': {
+                    'update_multi': True,
+                    'streaming_mode': True,
+                    'streaming_config': {
+                        'print_step': {'default': 1},
+                        'print_frequency_ms': {'default': 70},
+                        'print_strategy': 'fast',
+                    },
+                },
+                'body': {
+                    'direction': 'vertical',
+                    'padding': '12px 12px 12px 12px',
+                    'elements': [
+                        {
+                            'tag': 'div',
+                            'text': {
+                                'tag': 'plain_text',
+                                'content': 'LangBot',
+                                'text_size': 'normal',
+                                'text_align': 'left',
+                                'text_color': 'default',
+                            },
+                            'icon': {
+                                'tag': 'custom_icon',
+                                'img_key': 'img_v3_02p3_05c65d5d-9bad-440a-a2fb-c89571bfd5bg',
+                            },
+                        },
+                        {
+                            'tag': 'markdown',
+                            'content': '',
+                            'text_align': 'left',
+                            'text_size': 'normal',
+                            'margin': '0px 0px 0px 0px',
+                            'element_id': 'streaming_txt',
+                        },
+                        {
+                            'tag': 'markdown',
+                            'content': '',
+                            'text_align': 'left',
+                            'text_size': 'normal',
+                            'margin': '0px 0px 0px 0px',
+                        },
+                        {
+                            'tag': 'column_set',
+                            'horizontal_spacing': '8px',
+                            'horizontal_align': 'left',
+                            'columns': [
+                                {
+                                    'tag': 'column',
+                                    'width': 'weighted',
+                                    'elements': [
+                                        {
+                                            'tag': 'markdown',
+                                            'content': '',
+                                            'text_align': 'left',
+                                            'text_size': 'normal',
+                                            'margin': '0px 0px 0px 0px',
+                                        },
+                                        {
+                                            'tag': 'markdown',
+                                            'content': '',
+                                            'text_align': 'left',
+                                            'text_size': 'normal',
+                                            'margin': '0px 0px 0px 0px',
+                                        },
+                                        {
+                                            'tag': 'markdown',
+                                            'content': '',
+                                            'text_align': 'left',
+                                            'text_size': 'normal',
+                                            'margin': '0px 0px 0px 0px',
+                                        },
+                                    ],
+                                    'padding': '0px 0px 0px 0px',
+                                    'direction': 'vertical',
+                                    'horizontal_spacing': '8px',
+                                    'vertical_spacing': '2px',
+                                    'horizontal_align': 'left',
+                                    'vertical_align': 'top',
+                                    'margin': '0px 0px 0px 0px',
+                                    'weight': 1,
+                                }
+                            ],
+                            'margin': '0px 0px 0px 0px',
+                        },
+                        {'tag': 'hr', 'margin': '0px 0px 0px 0px'},
+                        {
+                            'tag': 'column_set',
+                            'horizontal_spacing': '12px',
+                            'horizontal_align': 'right',
+                            'columns': [
+                                {
+                                    'tag': 'column',
+                                    'width': 'weighted',
+                                    'elements': [
+                                        {
+                                            'tag': 'markdown',
+                                            'content': '<font color="grey-600">以上内容由 AI 生成，仅供参考。更多详细、准确信息可点击引用链接查看</font>',
+                                            'text_align': 'left',
+                                            'text_size': 'notation',
+                                            'margin': '4px 0px 0px 0px',
+                                            'icon': {
+                                                'tag': 'standard_icon',
+                                                'token': 'robot_outlined',
+                                                'color': 'grey',
+                                            },
+                                        }
+                                    ],
+                                    'padding': '0px 0px 0px 0px',
+                                    'direction': 'vertical',
+                                    'horizontal_spacing': '8px',
+                                    'vertical_spacing': '8px',
+                                    'horizontal_align': 'left',
+                                    'vertical_align': 'top',
+                                    'margin': '0px 0px 0px 0px',
+                                    'weight': 1,
+                                },
+                                {
+                                    'tag': 'column',
+                                    'width': '20px',
+                                    'elements': [
+                                        {
+                                            'tag': 'button',
+                                            'text': {'tag': 'plain_text', 'content': ''},
+                                            'type': 'text',
+                                            'width': 'fill',
+                                            'size': 'medium',
+                                            'icon': {'tag': 'standard_icon', 'token': 'thumbsup_outlined'},
+                                            'hover_tips': {'tag': 'plain_text', 'content': '有帮助'},
+                                            'margin': '0px 0px 0px 0px',
+                                        }
+                                    ],
+                                    'padding': '0px 0px 0px 0px',
+                                    'direction': 'vertical',
+                                    'horizontal_spacing': '8px',
+                                    'vertical_spacing': '8px',
+                                    'horizontal_align': 'left',
+                                    'vertical_align': 'top',
+                                    'margin': '0px 0px 0px 0px',
+                                },
+                                {
+                                    'tag': 'column',
+                                    'width': '30px',
+                                    'elements': [
+                                        {
+                                            'tag': 'button',
+                                            'text': {'tag': 'plain_text', 'content': ''},
+                                            'type': 'text',
+                                            'width': 'default',
+                                            'size': 'medium',
+                                            'icon': {'tag': 'standard_icon', 'token': 'thumbdown_outlined'},
+                                            'hover_tips': {'tag': 'plain_text', 'content': '无帮助'},
+                                            'margin': '0px 0px 0px 0px',
+                                        }
+                                    ],
+                                    'padding': '0px 0px 0px 0px',
+                                    'vertical_spacing': '8px',
+                                    'horizontal_align': 'left',
+                                    'vertical_align': 'top',
+                                    'margin': '0px 0px 0px 0px',
+                                },
+                            ],
+                            'margin': '0px 0px 4px 0px',
+                        },
+                    ],
+                },
+            }
+            # delay / fast 创建卡片模板，delay 延迟打印，fast 实时打印，可以自定义更好看的消息模板
+
+            request: CreateCardRequest = (
+                CreateCardRequest.builder()
+                .request_body(CreateCardRequestBody.builder().type('card_json').data(json.dumps(card_data)).build())
+                .build()
+            )
+
+            # 发起请求
+            response: CreateCardResponse = self.api_client.cardkit.v1.card.create(request)
+
+            # 处理失败返回
+            if not response.success():
+                raise Exception(
+                    f'client.cardkit.v1.card.create failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}, resp: \n{json.dumps(json.loads(response.raw.content), indent=4, ensure_ascii=False)}'
+                )
+
+            self.ap.logger.debug(f'飞书卡片创建成功,卡片ID: {response.data.card_id}')
+            self.card_id_dict[message_id] = response.data.card_id
+
+            card_id = response.data.card_id
+            return card_id
+
+        except Exception as e:
+            self.ap.logger.error(f'飞书卡片创建失败,错误信息: {e}')
+
+    async def create_message_card(self, message_id, event) -> str:
+        """
+        创建卡片消息。
+        使用卡片消息是因为普通消息更新次数有限制，而大模型流式返回结果可能很多而超过限制，而飞书卡片没有这个限制（api免费次数有限）
+        """
+        # message_id = event.message_chain.message_id
+
+        card_id = await self.create_card_id(message_id)
+        content = {
+            'type': 'card',
+            'data': {'card_id': card_id, 'template_variable': {'content': 'Thinking...'}},
+        }  # 当收到消息时发送消息模板，可添加模板变量，详情查看飞书中接口文档
+        request: ReplyMessageRequest = (
+            ReplyMessageRequest.builder()
+            .message_id(event.message_chain.message_id)
+            .request_body(
+                ReplyMessageRequestBody.builder().content(json.dumps(content)).msg_type('interactive').build()
+            )
+            .build()
+        )
+
+        # 发起请求
+        response: ReplyMessageResponse = await self.api_client.im.v1.message.areply(request)
+
+        # 处理失败返回
+        if not response.success():
+            raise Exception(
+                f'client.im.v1.message.reply failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}, resp: \n{json.dumps(json.loads(response.raw.content), indent=4, ensure_ascii=False)}'
+            )
+        return True
 
     async def reply_message(
         self,
@@ -445,6 +697,62 @@ class LarkAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
             raise Exception(
                 f'client.im.v1.message.reply failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}, resp: \n{json.dumps(json.loads(response.raw.content), indent=4, ensure_ascii=False)}'
             )
+
+    async def reply_message_chunk(
+        self,
+        message_source: platform_events.MessageEvent,
+        bot_message,
+        message: platform_message.MessageChain,
+        quote_origin: bool = False,
+        is_final: bool = False,
+    ):
+        """
+        回复消息变成更新卡片消息
+        """
+        # self.seq += 1
+        message_id = bot_message.resp_message_id
+        msg_seq = bot_message.msg_sequence
+        if msg_seq % 8 == 0 or is_final:
+            lark_message = await self.message_converter.yiri2target(message, self.api_client)
+
+            text_message = ''
+            for ele in lark_message[0]:
+                if ele['tag'] == 'text':
+                    text_message += ele['text']
+                elif ele['tag'] == 'md':
+                    text_message += ele['text']
+
+            # content = {
+            #     'type': 'card_json',
+            #     'data': {'card_id': self.card_id_dict[message_id], 'elements': {'content': text_message}},
+            # }
+
+            request: ContentCardElementRequest = (
+                ContentCardElementRequest.builder()
+                .card_id(self.card_id_dict[message_id])
+                .element_id('streaming_txt')
+                .request_body(
+                    ContentCardElementRequestBody.builder()
+                    # .uuid("a0d69e20-1dd1-458b-k525-dfeca4015204")
+                    .content(text_message)
+                    .sequence(msg_seq)
+                    .build()
+                )
+                .build()
+            )
+
+            if is_final and bot_message.tool_calls is None:
+                # self.seq = 1  # 消息回复结束之后重置seq
+                self.card_id_dict.pop(message_id)  # 清理已经使用过的卡片
+            # 发起请求
+            response: ContentCardElementResponse = self.api_client.cardkit.v1.card_element.content(request)
+
+            # 处理失败返回
+            if not response.success():
+                raise Exception(
+                    f'client.im.v1.message.patch failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}, resp: \n{json.dumps(json.loads(response.raw.content), indent=4, ensure_ascii=False)}'
+                )
+                return
 
     async def is_muted(self, group_id: int) -> bool:
         return False
@@ -495,4 +803,9 @@ class LarkAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
             )
 
     async def kill(self) -> bool:
+        # 需要断开连接，不然旧的连接会继续运行，导致飞书消息来时会随机选择一个连接
+        # 断开时lark.ws.Client的_receive_message_loop会打印error日志: receive message loop exit。然后进行重连，
+        # 所以要设置_auto_reconnect=False,让其不重连。
+        self.bot._auto_reconnect = False
+        await self.bot._disconnect()
         return False

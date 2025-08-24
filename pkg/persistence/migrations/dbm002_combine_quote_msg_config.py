@@ -7,10 +7,10 @@ from ...entity.persistence import pipeline as persistence_pipeline
 
 @migration.migration_class(2)
 class DBMigrateCombineQuoteMsgConfig(migration.DBMigration):
-    """引用消息合并配置"""
+    """Combine quote message config"""
 
     async def upgrade(self):
-        """升级"""
+        """Upgrade"""
         # read all pipelines
         pipelines = await self.ap.persistence_mgr.execute_async(sqlalchemy.select(persistence_pipeline.LegacyPipeline))
 
@@ -37,5 +37,5 @@ class DBMigrateCombineQuoteMsgConfig(migration.DBMigration):
             )
 
     async def downgrade(self):
-        """降级"""
+        """Downgrade"""
         pass

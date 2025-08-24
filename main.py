@@ -11,7 +11,7 @@ asciiart = r"""
 |____\__,_|_||_\__, |___/\___/\__|
                |___/              
 
-⭐️ Open Source 开源地址: https://github.com/RockChinQ/LangBot
+⭐️ Open Source 开源地址: https://github.com/langbot-app/LangBot
 📖 Documentation 文档地址: https://docs.langbot.app
 """
 

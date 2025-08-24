@@ -144,9 +144,9 @@ class WecomCSAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
         super().__init__(
             config=config,
             logger=logger,
-            bot=bot,
             bot_account_id='',
             listeners={},
+            bot=bot,
         )
 
     async def reply_message(

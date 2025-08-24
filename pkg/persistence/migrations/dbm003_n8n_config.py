@@ -7,10 +7,10 @@ from ...entity.persistence import pipeline as persistence_pipeline
 
 @migration.migration_class(3)
 class DBMigrateN8nConfig(migration.DBMigration):
-    """N8n配置"""
+    """N8n config"""
 
     async def upgrade(self):
-        """升级"""
+        """Upgrade"""
         # read all pipelines
         pipelines = await self.ap.persistence_mgr.execute_async(sqlalchemy.select(persistence_pipeline.LegacyPipeline))
 
@@ -45,5 +45,5 @@ class DBMigrateN8nConfig(migration.DBMigration):
             )
 
     async def downgrade(self):
-        """降级"""
+        """Downgrade"""
         pass

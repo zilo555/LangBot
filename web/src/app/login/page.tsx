@@ -8,13 +8,7 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { LanguageSelector } from '@/components/ui/language-selector';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -26,14 +20,15 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, Globe } from 'lucide-react';
+import { Mail, Lock } from 'lucide-react';
 import langbotIcon from '@/app/assets/langbot-logo.webp';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import i18n from '@/i18n';
+import Link from 'next/link';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 const formSchema = (t: (key: string) => string) =>
   z.object({
@@ -44,7 +39,6 @@ const formSchema = (t: (key: string) => string) =>
 export default function Login() {
   const router = useRouter();
   const { t } = useTranslation();
-  const [currentLanguage, setCurrentLanguage] = useState<string>(i18n.language);
 
   const form = useForm<z.infer<ReturnType<typeof formSchema>>>({
     resolver: zodResolver(formSchema(t)),
@@ -55,51 +49,9 @@ export default function Login() {
   });
 
   useEffect(() => {
-    judgeLanguage();
     getIsInitialized();
     checkIfAlreadyLoggedIn();
   }, []);
-
-  const judgeLanguage = () => {
-    if (i18n.language === 'zh-CN' || i18n.language === 'zh-Hans') {
-      setCurrentLanguage('zh-Hans');
-      localStorage.setItem('langbot_language', 'zh-Hans');
-    } else if (i18n.language === 'ja' || i18n.language === 'ja-JP') {
-      setCurrentLanguage('ja-JP');
-      localStorage.setItem('langbot_language', 'ja-JP');
-    } else {
-      setCurrentLanguage('en-US');
-      localStorage.setItem('langbot_language', 'en-US');
-    }
-    // check if the language is already set
-    const lang = localStorage.getItem('langbot_language');
-    if (lang) {
-      i18n.changeLanguage(lang);
-      setCurrentLanguage(lang);
-      return;
-    } else {
-      const language = navigator.language;
-      if (language) {
-        let lang = 'zh-Hans';
-        if (language === 'zh-CN') {
-          lang = 'zh-Hans';
-        } else if (language === 'ja' || language === 'ja-JP') {
-          lang = 'ja-JP';
-        } else {
-          lang = 'en-US';
-        }
-        i18n.changeLanguage(lang);
-        setCurrentLanguage(lang);
-        localStorage.setItem('langbot_language', lang);
-      }
-    }
-  };
-
-  const handleLanguageChange = (value: string) => {
-    i18n.changeLanguage(value);
-    setCurrentLanguage(value);
-    localStorage.setItem('langbot_language', value);
-  };
 
   function getIsInitialized() {
     httpClient
@@ -149,24 +101,12 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-[375px]">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:dark:bg-neutral-900">
+      <Card className="w-[375px] shadow-lg dark:shadow-white/10">
         <CardHeader>
-          <div className="flex justify-end mb-6">
-            <Select
-              value={currentLanguage}
-              onValueChange={handleLanguageChange}
-            >
-              <SelectTrigger className="w-[140px]">
-                <Globe className="h-4 w-4 mr-2" />
-                <SelectValue placeholder={t('common.language')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="zh-Hans">简体中文</SelectItem>
-                <SelectItem value="en-US">English</SelectItem>
-                <SelectItem value="ja-JP">日本語</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex justify-between items-center mb-6">
+            <ThemeToggle />
+            <LanguageSelector />
           </div>
           <img
             src={langbotIcon.src}
@@ -209,7 +149,16 @@ export default function Login() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('common.password')}</FormLabel>
+                    <div className="flex justify-between">
+                      <FormLabel>{t('common.password')}</FormLabel>
+                      <Link
+                        href="/reset-password"
+                        className="text-sm text-blue-500"
+                      >
+                        {t('common.forgotPassword')}
+                      </Link>
+                    </div>
+
                     <FormControl>
                       <div className="relative">
                         <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />

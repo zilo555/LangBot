@@ -11,11 +11,11 @@ import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
 
 @stage.stage_class('PreProcessor')
 class PreProcessor(stage.PipelineStage):
-    """请求预处理阶段
+    """Request pre-processing stage
 
-    签出会话、prompt、上文、模型、内容函数。
+    Check out session, prompt, context, model, and content functions.
 
-    改写：
+    Rewrite:
         - session
         - prompt
         - messages
@@ -29,12 +29,12 @@ class PreProcessor(stage.PipelineStage):
         query: pipeline_query.Query,
         stage_inst_name: str,
     ) -> entities.StageProcessResult:
-        """处理"""
+        """Process"""
         selected_runner = query.pipeline_config['ai']['runner']['runner']
 
         session = await self.ap.sess_mgr.get_session(query)
 
-        # 非 local-agent 时，llm_model 为 None
+        # When not local-agent, llm_model is None
         llm_model = (
             await self.ap.model_mgr.get_model_by_uuid(query.pipeline_config['ai']['local-agent']['model'])
             if selected_runner == 'local-agent'
@@ -80,7 +80,7 @@ class PreProcessor(stage.PipelineStage):
                         if me.type == 'image_url':
                             msg.content.remove(me)
 
-        content_list = []
+        content_list: list[provider_message.ContentElement] = []
 
         plain_text = ''
         qoute_msg = query.pipeline_config['trigger'].get('misc', '').get('combine-quote-message')

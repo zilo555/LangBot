@@ -29,6 +29,9 @@ spec:
       type: int
       required: true
       default: 120
+  support_type:
+    - llm
+    - text-embedding
 execution:
   python:
     path: ./ppiochatcmpl.py

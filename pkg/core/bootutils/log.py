@@ -17,7 +17,7 @@ log_colors_config = {
 
 
 async def init_logging(extra_handlers: list[logging.Handler] = None) -> logging.Logger:
-    # 删除所有现有的logger
+    # Remove all existing loggers
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)
 
@@ -54,13 +54,13 @@ async def init_logging(extra_handlers: list[logging.Handler] = None) -> logging.
         handler.setFormatter(color_formatter)
         qcg_logger.addHandler(handler)
 
-    qcg_logger.debug('日志初始化完成，日志级别：%s' % level)
+    qcg_logger.debug('Logging initialized, log level: %s' % level)
     logging.basicConfig(
-        level=logging.CRITICAL,  # 设置日志输出格式
+        level=logging.CRITICAL,  # Set log output format
         format='[DEPR][%(asctime)s.%(msecs)03d] %(pathname)s (%(lineno)d) - [%(levelname)s] :\n%(message)s',
-        # 日志输出的格式
-        # -8表示占位符，让输出左对齐，输出长度都为8位
-        datefmt='%Y-%m-%d %H:%M:%S',  # 时间输出的格式
+        # Log output format
+        # -8 is a placeholder, left-align the output, and output length is 8
+        datefmt='%Y-%m-%d %H:%M:%S',  # Time output format
         handlers=[logging.NullHandler()],
     )
 

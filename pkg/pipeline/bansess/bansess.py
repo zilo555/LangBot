@@ -6,9 +6,9 @@ import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
 
 @stage.stage_class('BanSessionCheckStage')
 class BanSessionCheckStage(stage.PipelineStage):
-    """访问控制处理阶段
+    """Access control processing stage
 
-    仅检查query中群号或个人号是否在访问控制列表中。
+    Only check if the group or personal number in the query is in the access control list.
     """
 
     async def initialize(self, pipeline_config: dict):
@@ -41,5 +41,7 @@ class BanSessionCheckStage(stage.PipelineStage):
         return entities.StageProcessResult(
             result_type=entities.ResultType.CONTINUE if ctn else entities.ResultType.INTERRUPT,
             new_query=query,
-            console_notice=f'根据访问控制忽略消息: {query.launcher_type.value}_{query.launcher_id}' if not ctn else '',
+            console_notice=f'Ignore message according to access control: {query.launcher_type.value}_{query.launcher_id}'
+            if not ctn
+            else '',
         )

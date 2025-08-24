@@ -14,11 +14,13 @@ from . import group
 from .groups import provider as groups_provider
 from .groups import platform as groups_platform
 from .groups import pipelines as groups_pipelines
+from .groups import knowledge as groups_knowledge
 
 importutil.import_modules_in_pkg(groups)
 importutil.import_modules_in_pkg(groups_provider)
 importutil.import_modules_in_pkg(groups_platform)
 importutil.import_modules_in_pkg(groups_pipelines)
+importutil.import_modules_in_pkg(groups_knowledge)
 
 
 class HTTPController:
@@ -45,7 +47,7 @@ class HTTPController:
                 try:
                     await self.quart_app.run_task(*args, **kwargs)
                 except Exception as e:
-                    self.ap.logger.error(f'启动 HTTP 服务失败： {e}')
+                    self.ap.logger.error(f'Failed to start HTTP service: {e}')
 
             self.ap.task_mgr.create_task(
                 exception_handler(
