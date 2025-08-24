@@ -136,8 +136,15 @@ export class BackendClient extends BaseHttpClient {
     return this.get('/api/v1/pipelines/_/metadata');
   }
 
-  public getPipelines(): Promise<ApiRespPipelines> {
-    return this.get('/api/v1/pipelines');
+  public getPipelines(
+    sortBy?: string,
+    sortOrder?: string,
+  ): Promise<ApiRespPipelines> {
+    const params = new URLSearchParams();
+    if (sortBy) params.append('sort_by', sortBy);
+    if (sortOrder) params.append('sort_order', sortOrder);
+    const queryString = params.toString();
+    return this.get(`/api/v1/pipelines${queryString ? `?${queryString}` : ''}`);
   }
 
   public getPipeline(uuid: string): Promise<GetPipelineResponseData> {
