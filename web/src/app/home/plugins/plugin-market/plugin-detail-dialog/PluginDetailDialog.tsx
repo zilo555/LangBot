@@ -241,11 +241,20 @@ export default function PluginDetailDialog({
                         li: ({ children }) => (
                           <li className="text-gray-700">{children}</li>
                         ),
-                        code: ({ children }) => (
-                          <code className="block bg-gray-200 p-3 rounded-md text-sm font-mono whitespace-pre-wrap border">
-                            {children}
-                          </code>
-                        ),
+                        code: ({ children, node }) => {
+                          const isInline =
+                            node?.children?.length === 1 &&
+                            node?.children[0]?.type === 'text';
+                          return isInline ? (
+                            <code className="bg-gray-200 p-1 rounded-md text-sm font-mono whitespace-pre-wrap border">
+                              {children}
+                            </code>
+                          ) : (
+                            <code className="block bg-gray-200 p-3 rounded-md text-sm font-mono whitespace-pre-wrap border">
+                              {children}
+                            </code>
+                          );
+                        },
                         blockquote: ({ children }) => (
                           <blockquote className="border-l-4 border-blue-300 pl-4 py-2 mb-4 italic bg-blue-50 text-gray-700 rounded-r-md">
                             {children}
