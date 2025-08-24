@@ -2,7 +2,7 @@ import sqlalchemy
 from .. import migration
 
 
-@migration.migration_class(5)
+@migration.migration_class(6)
 class DBMigratePluginInstallSource(migration.DBMigration):
     """插件安装来源"""
 
