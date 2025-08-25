@@ -97,7 +97,7 @@ class RuntimeConnectionHandler(handler.Handler):
             )
 
             data = {
-                'enabled': False,
+                'enabled': True,
                 'priority': 0,
                 'plugin_config': {},
                 'install_source': 'local',
