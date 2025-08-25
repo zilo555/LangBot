@@ -1034,7 +1034,14 @@ class DiscordAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
         if quote_origin:
             args['reference'] = message_source.source_platform_object
 
-        if message.has(platform_message.At):
+        has_at = False
+
+        for component in message.root:
+            if isinstance(component, platform_message.At):
+                has_at = True
+                break
+
+        if has_at:
             args['mention_author'] = True
 
         await message_source.source_platform_object.channel.send(**args)
