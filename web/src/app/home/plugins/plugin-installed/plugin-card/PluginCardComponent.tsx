@@ -83,7 +83,7 @@ export default function PluginCardComponent({
   return (
     <>
       <div
-        className="w-[100%] h-[10rem] bg-white rounded-[10px] shadow-[0px_2px_2px_0_rgba(0,0,0,0.2)] p-[1.2rem] cursor-pointer"
+        className="w-[100%] h-[10rem] bg-white rounded-[10px] shadow-[0px_2px_2px_0_rgba(0,0,0,0.2)] p-[1.2rem] cursor-pointer dark:bg-[#1f1f22]"
         onClick={onCardClick}
       >
         <div className="w-full h-full flex flex-row items-start justify-start gap-[1.2rem]">
@@ -99,11 +99,13 @@ export default function PluginCardComponent({
           <div className="w-full h-full flex flex-col items-start justify-between gap-[0.6rem]">
             <div className="flex flex-col items-start justify-start">
               <div className="flex flex-col items-start justify-start">
-                <div className="text-[0.7rem] text-[#666]">
-                  {cardVO.author} /{' '}
+                <div className="text-[0.7rem] text-[#666] dark:text-[#999]">
+                  {cardVO.author} / {cardVO.name}
                 </div>
                 <div className="flex flex-row items-center justify-start gap-[0.4rem]">
-                  <div className="text-[1.2rem] text-black">{cardVO.name}</div>
+                  <div className="text-[1.2rem] text-black dark:text-[#f0f0f0]">
+                    {cardVO.label}
+                  </div>
                   <Badge variant="outline" className="text-[0.7rem]">
                     v{cardVO.version}
                   </Badge>
@@ -166,7 +168,7 @@ export default function PluginCardComponent({
                 </div>
               </div>
 
-              <div className="text-[0.8rem] text-[#666] line-clamp-2">
+              <div className="text-[0.8rem] text-[#666] line-clamp-2 dark:text-[#999]">
                 {cardVO.description}
               </div>
             </div>

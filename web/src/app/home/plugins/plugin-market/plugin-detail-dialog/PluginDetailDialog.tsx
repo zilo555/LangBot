@@ -79,11 +79,11 @@ export default function PluginDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!min-w-[65vw] !min-h-[65vh] max-h-[85vh] overflow-hidden p-0">
+      <DialogContent className="!min-w-[65vw] !min-h-[65vh] max-h-[85vh] overflow-hidden p-0 dark:bg-[#1f1f22]">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin" />
-            <span className="ml-2">{t('cloud.loading')}</span>
+            <span className="ml-2">{t('market.loading')}</span>
           </div>
         ) : plugin ? (
           <div className="flex h-full">
@@ -97,20 +97,20 @@ export default function PluginDetailDialog({
                     pluginName!,
                   )}
                   alt={plugin.name}
-                  className="w-16 h-16 rounded-xl border bg-gray-50 object-cover flex-shrink-0"
+                  className="w-16 h-16 rounded-xl border bg-gray-50 object-cover flex-shrink-0 dark:bg-[#1f1f22]"
                 />
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2 dark:text-[#f0f0f0]">
                     {extractI18nObject(plugin.label) || plugin.name}
                   </h2>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-2 dark:text-[#999]">
                     <Users className="w-4 h-4" />
                     <span>
                       {plugin.author} / {plugin.name}
                     </span>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 mb-2">
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 mb-2 dark:text-[#999]">
                     <Badge variant="outline" className="text-sm">
                       v{plugin.latest_version}
                     </Badge>
@@ -128,7 +128,7 @@ export default function PluginDetailDialog({
 
                     {plugin.repository && (
                       <svg
-                        className="w-[1.2rem] h-[1.2rem] text-black cursor-pointer hover:text-gray-600"
+                        className="w-[1.2rem] h-[1.2rem] text-black cursor-pointer hover:text-gray-600 dark:text-[#f0f0f0]"
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
                         fill="currentColor"
@@ -146,10 +146,10 @@ export default function PluginDetailDialog({
 
               {/* 插件描述 */}
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                <h3 className="text-lg font-semibold text-gray-900 mb-3 dark:text-[#f0f0f0]">
                   {t('market.description')}
                 </h3>
-                <p className="text-gray-700 leading-relaxed">
+                <p className="text-gray-700 leading-relaxed dark:text-[#999]">
                   {extractI18nObject(plugin.description) ||
                     t('market.noDescription')}
                 </p>
@@ -158,12 +158,16 @@ export default function PluginDetailDialog({
               {/* 标签 */}
               {plugin.tags && plugin.tags.length > 0 && (
                 <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 dark:text-[#f0f0f0]">
                     {t('market.tags')}
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {plugin.tags.map((tag) => (
-                      <Badge key={tag} variant="secondary" className="text-sm">
+                      <Badge
+                        key={tag}
+                        variant="secondary"
+                        className="text-sm dark:bg-[#1f1f22]"
+                      >
                         {tag}
                       </Badge>
                     ))}
@@ -200,7 +204,7 @@ export default function PluginDetailDialog({
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="h-8 w-8 animate-spin" />
                     <span className="ml-3 text-gray-600">
-                      {t('cloud.loading')}
+                      {t('market.loading')}
                     </span>
                   </div>
                 ) : (
@@ -209,54 +213,56 @@ export default function PluginDetailDialog({
                       components={{
                         // 自定义样式
                         h1: ({ children }) => (
-                          <h1 className="text-xl font-bold mb-4 text-gray-900 border-b border-gray-200 pb-2">
+                          <h1 className="text-xl font-bold mb-4 text-gray-900 border-b border-gray-200 pb-2 dark:text-[#f0f0f0]">
                             {children}
                           </h1>
                         ),
                         h2: ({ children }) => (
-                          <h2 className="text-lg font-semibold mb-3 text-gray-900 mt-6">
+                          <h2 className="text-lg font-semibold mb-3 text-gray-900 mt-6 dark:text-[#f0f0f0]">
                             {children}
                           </h2>
                         ),
                         h3: ({ children }) => (
-                          <h3 className="text-base font-medium mb-2 text-gray-900 mt-4">
+                          <h3 className="text-base font-medium mb-2 text-gray-900 mt-4 dark:text-[#f0f0f0]">
                             {children}
                           </h3>
                         ),
                         p: ({ children }) => (
-                          <p className="mb-4 leading-relaxed text-gray-700">
+                          <p className="mb-4 leading-relaxed text-gray-700 dark:text-[#999]">
                             {children}
                           </p>
                         ),
                         ul: ({ children }) => (
-                          <ul className="mb-4 pl-6 list-disc space-y-1">
+                          <ul className="mb-4 pl-6 list-disc space-y-1 dark:text-[#999]">
                             {children}
                           </ul>
                         ),
                         ol: ({ children }) => (
-                          <ol className="mb-4 pl-6 list-decimal space-y-1">
+                          <ol className="mb-4 pl-6 list-decimal space-y-1 dark:text-[#999]">
                             {children}
                           </ol>
                         ),
                         li: ({ children }) => (
-                          <li className="text-gray-700">{children}</li>
+                          <li className="text-gray-700 dark:text-[#999]">
+                            {children}
+                          </li>
                         ),
                         code: ({ children, node }) => {
                           const isInline =
                             node?.children?.length === 1 &&
                             node?.children[0]?.type === 'text';
                           return isInline ? (
-                            <code className="bg-gray-200 p-1 rounded-md text-sm font-mono whitespace-pre-wrap border">
+                            <code className="bg-gray-200 p-1 rounded-md text-sm font-mono whitespace-pre-wrap border dark:bg-[#1f1f22]">
                               {children}
                             </code>
                           ) : (
-                            <code className="block bg-gray-200 p-3 rounded-md text-sm font-mono whitespace-pre-wrap border">
+                            <code className="block bg-gray-200 p-3 rounded-md text-sm font-mono whitespace-pre-wrap border dark:bg-[#1f1f22]">
                               {children}
                             </code>
                           );
                         },
                         blockquote: ({ children }) => (
-                          <blockquote className="border-l-4 border-blue-300 pl-4 py-2 mb-4 italic bg-blue-50 text-gray-700 rounded-r-md">
+                          <blockquote className="border-l-4 border-blue-300 pl-4 py-2 mb-4 italic bg-blue-50 text-gray-700 rounded-r-md dark:bg-[#1f1f22]">
                             {children}
                           </blockquote>
                         ),
@@ -265,7 +271,7 @@ export default function PluginDetailDialog({
                             href={href}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800 underline"
+                            className="text-blue-600 hover:text-blue-800 underline dark:text-[#29f]"
                           >
                             {children}
                           </a>

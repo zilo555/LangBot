@@ -15,7 +15,7 @@ export default function PluginMarketCardComponent({
 
   return (
     <div
-      className="w-[100%] h-[9rem] bg-white rounded-[10px] shadow-[0px_0px_4px_0_rgba(0,0,0,0.2)] p-[1rem] cursor-pointer hover:shadow-[0px_2px_8px_0_rgba(0,0,0,0.15)] transition-shadow duration-200"
+      className="w-[100%] h-[9rem] bg-white rounded-[10px] shadow-[0px_0px_4px_0_rgba(0,0,0,0.2)] p-[1rem] cursor-pointer hover:shadow-[0px_2px_8px_0_rgba(0,0,0,0.15)] transition-shadow duration-200 dark:bg-[#1f1f22]"
       onClick={handleCardClick}
     >
       <div className="w-full h-full flex flex-col justify-between">
@@ -25,13 +25,17 @@ export default function PluginMarketCardComponent({
 
           <div className="flex-1 flex flex-col items-start justify-start gap-[0.6rem]">
             <div className="flex flex-col items-start justify-start">
-              <div className="text-[0.7rem] text-[#666]">{cardVO.pluginId}</div>
+              <div className="text-[0.7rem] text-[#666] dark:text-[#999]">
+                {cardVO.pluginId}
+              </div>
               <div className="flex flex-row items-center justify-start gap-[0.4rem]">
-                <div className="text-[1.2rem] text-black">{cardVO.label}</div>
+                <div className="text-[1.2rem] text-black dark:text-[#f0f0f0]">
+                  {cardVO.label}
+                </div>
               </div>
             </div>
 
-            <div className="text-[0.8rem] text-[#666] dark:text-[#888888] line-clamp-2">
+            <div className="text-[0.8rem] text-[#666] dark:text-[#999] line-clamp-2">
               {cardVO.description}
             </div>
           </div>
@@ -39,7 +43,7 @@ export default function PluginMarketCardComponent({
           <div className="flex h-full flex-row items-start justify-center gap-[0.4rem]">
             {cardVO.githubURL && (
               <svg
-                className="w-[1.4rem] h-[1.4rem] text-black cursor-pointer hover:text-gray-600"
+                className="w-[1.4rem] h-[1.4rem] text-black cursor-pointer hover:text-gray-600 dark:text-[#f0f0f0]"
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 fill="currentColor"

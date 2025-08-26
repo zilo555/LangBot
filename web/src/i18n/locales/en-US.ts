@@ -235,6 +235,7 @@ const enUS = {
     noPlugins: 'No plugins available',
     noResults: 'No relevant plugins found',
     loadingMore: 'Loading more...',
+    loading: 'Loading...',
     allLoaded: 'All plugins displayed',
     install: 'Install',
     installConfirm:

@@ -74,6 +74,7 @@ const PluginInstalledComponent = forwardRef<PluginInstalledComponentRef>(
           value.plugins.map((plugin) => {
             return new PluginCardVO({
               author: plugin.manifest.manifest.metadata.author ?? '',
+              label: extractI18nObject(plugin.manifest.manifest.metadata.label),
               description: extractI18nObject(
                 plugin.manifest.manifest.metadata.description ?? {
                   en_US: '',

@@ -236,6 +236,7 @@ const jaJP = {
     noPlugins: '利用可能なプラグインがありません',
     noResults: '関連するプラグインが見つかりません',
     loadingMore: 'さらに読み込み中...',
+    loading: '読み込み中...',
     allLoaded: 'すべてのプラグインが表示されました',
     install: 'インストール',
     installConfirm:

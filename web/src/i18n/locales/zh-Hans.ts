@@ -228,6 +228,7 @@ const zhHans = {
     noPlugins: '暂无插件',
     noResults: '未找到相关插件',
     loadingMore: '加载更多...',
+    loading: '加载中...',
     allLoaded: '已显示全部插件',
     install: '安装',
     installConfirm: '确定要安装插件 "{{name}}" ({{version}}) 吗？',

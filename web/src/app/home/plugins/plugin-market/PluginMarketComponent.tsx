@@ -341,7 +341,7 @@ function MarketPageContent({
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin" />
-          <span className="ml-2">{t('cloud.loading')}</span>
+          <span className="ml-2">{t('market.loading')}</span>
         </div>
       ) : plugins.length === 0 ? (
         <div className="flex items-center justify-center py-12">

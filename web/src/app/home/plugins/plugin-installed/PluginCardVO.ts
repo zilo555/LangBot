@@ -2,6 +2,7 @@ import { PluginComponent } from '@/app/infra/entities/plugin';
 
 export interface IPluginCardVO {
   author: string;
+  label: string;
   name: string;
   description: string;
   version: string;
@@ -16,6 +17,7 @@ export interface IPluginCardVO {
 
 export class PluginCardVO implements IPluginCardVO {
   author: string;
+  label: string;
   name: string;
   description: string;
   version: string;
@@ -29,6 +31,7 @@ export class PluginCardVO implements IPluginCardVO {
 
   constructor(prop: IPluginCardVO) {
     this.author = prop.author;
+    this.label = prop.label;
     this.description = prop.description;
     this.enabled = prop.enabled;
     this.components = prop.components;
