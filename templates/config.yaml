@@ -21,4 +21,5 @@ system:
         secret: ''
 plugin:
     runtime_ws_url: 'ws://langbot_plugin_runtime:5400/control/ws'
+    enable_marketplace: true
     cloud_service_url: 'https://space.langbot.app'

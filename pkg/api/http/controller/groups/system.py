@@ -14,6 +14,7 @@ class SystemRouterGroup(group.RouterGroup):
                     'version': constants.semantic_version,
                     'debug': constants.debug_mode,
                     'enabled_platform_count': len(self.ap.platform_mgr.get_running_adapters()),
+                    'enable_marketplace': self.ap.instance_config.data['plugin'].get('enable_marketplace', True),
                     'cloud_service_url': (
                         self.ap.instance_config.data['plugin']['cloud_service_url']
                         if 'cloud_service_url' in self.ap.instance_config.data['plugin']

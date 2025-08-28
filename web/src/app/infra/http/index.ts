@@ -6,6 +6,7 @@ import { ApiRespSystemInfo } from '@/app/infra/entities/api';
 export let systemInfo: ApiRespSystemInfo = {
   debug: false,
   version: '',
+  enable_marketplace: true,
   cloud_service_url: '',
 };
 

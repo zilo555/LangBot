@@ -33,6 +33,7 @@ import { httpClient } from '@/app/infra/http/HttpClient';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { PluginV4 } from '@/app/infra/entities/plugin';
+import { systemInfo } from '@/app/infra/http/HttpClient';
 
 enum PluginInstallStatus {
   WAIT_INPUT = 'wait_input',
@@ -213,9 +214,11 @@ export default function PluginConfigPage() {
             <TabsTrigger value="installed" className="px-6 py-4 cursor-pointer">
               {t('plugins.installed')}
             </TabsTrigger>
-            <TabsTrigger value="market" className="px-6 py-4 cursor-pointer">
-              {t('plugins.marketplace')}
-            </TabsTrigger>
+            {systemInfo.enable_marketplace && (
+              <TabsTrigger value="market" className="px-6 py-4 cursor-pointer">
+                {t('plugins.marketplace')}
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <div className="flex flex-row justify-end items-center">
@@ -241,14 +244,16 @@ export default function PluginConfigPage() {
                   <UploadIcon className="w-4 h-4" />
                   {t('plugins.uploadLocal')}
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    setActiveTab('market');
-                  }}
-                >
-                  <StoreIcon className="w-4 h-4" />
-                  {t('plugins.marketplace')}
-                </DropdownMenuItem>
+                {systemInfo.enable_marketplace && (
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setActiveTab('market');
+                    }}
+                  >
+                    <StoreIcon className="w-4 h-4" />
+                    {t('plugins.marketplace')}
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
