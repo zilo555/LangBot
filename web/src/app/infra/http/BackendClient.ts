@@ -438,6 +438,17 @@ export class BackendClient extends BaseHttpClient {
     return this.put(`/api/v1/plugins/${author}/${name}/config`, config);
   }
 
+  public getPluginIconURL(author: string, name: string): string {
+    if (this.instance.defaults.baseURL === '/') {
+      const url = window.location.href;
+      const baseURL = url.split('/').slice(0, 3).join('/');
+      return `${baseURL}/api/v1/plugins/${author}/${name}/icon`;
+    }
+    return (
+      this.instance.defaults.baseURL + `/api/v1/plugins/${author}/${name}/icon`
+    );
+  }
+
   public installPluginFromGithub(
     source: string,
   ): Promise<AsyncTaskCreatedResp> {

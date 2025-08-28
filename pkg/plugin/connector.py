@@ -7,6 +7,8 @@ import typing
 import os
 import sys
 
+from async_lru import alru_cache
+
 from ..core import app
 from . import handler
 from ..utils import platform
@@ -152,6 +154,10 @@ class PluginRuntimeConnector:
 
     async def set_plugin_config(self, plugin_author: str, plugin_name: str, config: dict[str, Any]) -> dict[str, Any]:
         return await self.handler.set_plugin_config(plugin_author, plugin_name, config)
+
+    @alru_cache(ttl=5 * 60)  # 5 minutes
+    async def get_plugin_icon(self, plugin_author: str, plugin_name: str) -> dict[str, Any]:
+        return await self.handler.get_plugin_icon(plugin_author, plugin_name)
 
     async def emit_event(
         self,

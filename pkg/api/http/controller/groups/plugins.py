@@ -75,6 +75,20 @@ class PluginsRouterGroup(group.RouterGroup):
 
                 return self.success(data={})
 
+        @self.route(
+            '/<author>/<plugin_name>/icon',
+            methods=['GET'],
+            auth_type=group.AuthType.NONE,
+        )
+        async def _(author: str, plugin_name: str) -> quart.Response:
+            icon_data = await self.ap.plugin_connector.get_plugin_icon(author, plugin_name)
+            icon_base64 = icon_data['plugin_icon_base64']
+            mime_type = icon_data['mime_type']
+
+            icon_data = base64.b64decode(icon_base64)
+
+            return quart.Response(icon_data, mimetype=mime_type)
+
         @self.route('/install/github', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
         async def _() -> str:
             data = await quart.request.json

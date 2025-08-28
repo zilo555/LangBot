@@ -534,6 +534,17 @@ class RuntimeConnectionHandler(handler.Handler):
 
         return result['tools']
 
+    async def get_plugin_icon(self, plugin_author: str, plugin_name: str) -> dict[str, Any]:
+        """Get plugin icon"""
+        result = await self.call_action(
+            LangBotToRuntimeAction.GET_PLUGIN_ICON,
+            {
+                'plugin_author': plugin_author,
+                'plugin_name': plugin_name,
+            },
+        )
+        return result
+
     async def call_tool(self, tool_name: str, parameters: dict[str, Any]) -> dict[str, Any]:
         """Call tool"""
         result = await self.call_action(
