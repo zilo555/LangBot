@@ -235,7 +235,7 @@ class WebChatAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
         message_chain.insert(0, platform_message.Source(id=message_id, time=datetime.now().timestamp()))
 
         if session_type == 'person':
-            sender = platform_entities.Friend(id='webchatperson', nickname='User')
+            sender = platform_entities.Friend(id='webchatperson', nickname='User', remark='User')
             event = platform_events.FriendMessage(
                 sender=sender, message_chain=message_chain, time=datetime.now().timestamp()
             )
