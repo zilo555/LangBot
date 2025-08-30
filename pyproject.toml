@@ -61,7 +61,7 @@ dependencies = [
     "html2text>=2024.2.26",
     "langchain>=0.2.0",
     "chromadb>=0.4.24",
-    "langbot-plugin==0.1.1b5",
+    "langbot-plugin==0.1.1b6",
 ]
 keywords = [
     "bot",
