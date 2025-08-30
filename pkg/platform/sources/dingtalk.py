@@ -20,6 +20,9 @@ class DingTalkMessageConverter(abstract_platform_adapter.AbstractMessageConverte
                 at = True
             if type(msg) is platform_message.Plain:
                 content += msg.text
+            if type(msg) is platform_message.Forward:
+                for node in msg.node_list:
+                    content += (await DingTalkMessageConverter.yiri2target(node.message_chain))[0]
         return content, at
 
     @staticmethod
@@ -58,7 +61,7 @@ class DingTalkEventConverter(abstract_platform_adapter.AbstractEventConverter):
         if event.conversation == 'FriendMessage':
             return platform_events.FriendMessage(
                 sender=platform_entities.Friend(
-                    id=event.incoming_message.sender_id,
+                    id=event.incoming_message.sender_staff_id,
                     nickname=event.incoming_message.sender_nick,
                     remark='',
                 ),
@@ -68,7 +71,7 @@ class DingTalkEventConverter(abstract_platform_adapter.AbstractEventConverter):
             )
         elif event.conversation == 'GroupMessage':
             sender = platform_entities.GroupMember(
-                id=event.incoming_message.sender_id,
+                id=event.incoming_message.sender_staff_id,
                 member_name=event.incoming_message.sender_nick,
                 permission='MEMBER',
                 group=platform_entities.Group(
@@ -162,8 +165,11 @@ class DingTalkAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
             content, at = await DingTalkMessageConverter.yiri2target(message)
 
             card_instance, card_instance_id = self.card_instance_id_dict[message_id]
+            if not content and bot_message.content:
+                content = bot_message.content  # 兼容直接传入content的情况
             # print(card_instance_id)
-            await self.bot.send_card_message(card_instance, card_instance_id, content, is_final)
+            if content:
+                await self.bot.send_card_message(card_instance, card_instance_id, content, is_final)
             if is_final and bot_message.tool_calls is None:
                 # self.seq = 1  # 消息回复结束之后重置seq
                 self.card_instance_id_dict.pop(message_id)  # 消息回复结束之后删除卡片实例id
