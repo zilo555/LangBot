@@ -9,7 +9,8 @@ import {
 import { useRouter, usePathname } from 'next/navigation';
 import { sidebarConfigList } from '@/app/home/components/home-sidebar/sidbarConfigList';
 import langbotIcon from '@/app/assets/langbot-logo.webp';
-import { systemInfo, spaceClient } from '@/app/infra/http/HttpClient';
+import { systemInfo } from '@/app/infra/http/HttpClient';
+import { getCloudServiceClientSync } from '@/app/infra/http';
 import { useTranslation } from 'react-i18next';
 import { Moon, Sun, Monitor } from 'lucide-react';
 import { useTheme } from 'next-themes';
@@ -54,7 +55,7 @@ export default function HomeSidebar({
       localStorage.setItem('userEmail', 'test@example.com');
     }
 
-    spaceClient
+    getCloudServiceClientSync()
       .get('/api/v1/dist/info/repo')
       .then((response) => {
         const data = response as { repo: { stargazers_count: number } };
