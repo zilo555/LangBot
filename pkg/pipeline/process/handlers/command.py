@@ -74,7 +74,7 @@ class CommandHandler(handler.MessageHandler):
                     self.ap.logger.info(f'Command({query.query_id}) error: {self.cut_str(str(ret.error))}')
 
                     yield entities.StageProcessResult(result_type=entities.ResultType.CONTINUE, new_query=query)
-                elif ret.text is not None or ret.image_url is not None:
+                elif ret.text is not None or ret.image_url is not None or ret.image_base64 is not None:
                     content: list[provider_message.ContentElement] = []
 
                     if ret.text is not None:
@@ -82,6 +82,9 @@ class CommandHandler(handler.MessageHandler):
 
                     if ret.image_url is not None:
                         content.append(provider_message.ContentElement.from_image_url(ret.image_url))
+
+                    if ret.image_base64 is not None:
+                        content.append(provider_message.ContentElement.from_image_base64(ret.image_base64))
 
                     query.resp_messages.append(
                         provider_message.Message(
