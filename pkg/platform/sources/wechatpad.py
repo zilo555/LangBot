@@ -30,9 +30,15 @@ import langbot_plugin.api.definition.abstract.platform.event_logger as abstract_
 
 class WeChatPadMessageConverter(abstract_platform_adapter.AbstractMessageConverter):
     def __init__(self, config: dict, logger: abstract_platform_logger.AbstractEventLogger):
+        self.bot = WeChatPadClient(config['wechatpad_url'], config['token'])
         self.config = config
-        self.bot = WeChatPadClient(self.config['wechatpad_url'], self.config['token'])
         self.logger = logger
+
+        # super().__init__(
+        #     config = config,
+        #     bot = bot,
+        #     logger = logger,
+        # )
 
     @staticmethod
     async def yiri2target(message_chain: platform_message.MessageChain) -> list[dict]:
@@ -450,8 +456,13 @@ class WeChatPadMessageConverter(abstract_platform_adapter.AbstractMessageConvert
 class WeChatPadEventConverter(abstract_platform_adapter.AbstractEventConverter):
     def __init__(self, config: dict, logger: logging.Logger):
         self.config = config
-        self.message_converter = WeChatPadMessageConverter(config, logger)
         self.logger = logger
+        self.message_converter = WeChatPadMessageConverter(self.config, self.logger)
+        # super().__init__(
+        #     config=config,
+        #     message_converter=message_converter,
+        #     logger = logger,
+        # )
 
     @staticmethod
     async def yiri2target(event: platform_events.MessageEvent) -> dict:
@@ -532,12 +543,24 @@ class WeChatPadAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter)
     ] = {}
 
     def __init__(self, config: dict, logger: EventLogger):
-        self.config = config
-        self.logger = logger
-        self.quart_app = quart.Quart(__name__)
 
-        self.message_converter = WeChatPadMessageConverter(config, logger)
-        self.event_converter = WeChatPadEventConverter(config, logger)
+        quart_app = quart.Quart(__name__)
+
+        message_converter = WeChatPadMessageConverter(config, logger)
+        event_converter = WeChatPadEventConverter(config, logger)
+        bot = WeChatPadClient(config['wechatpad_url'], config['token'])
+        super().__init__(
+            config=config,
+            logger = logger,
+            quart_app = quart_app,
+            message_converter =message_converter,
+            event_converter = event_converter,
+            listeners={},
+            bot_account_id ='',
+            name="WeChatPad",
+            bot=bot,
+
+        )
 
     async def ws_message(self, data):
         """处理接收到的消息"""
