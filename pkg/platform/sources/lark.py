@@ -620,15 +620,13 @@ class LarkAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
                     f'client.cardkit.v1.card.create failed, code: {response.code}, msg: {response.msg}, log_id: {response.get_log_id()}, resp: \n{json.dumps(json.loads(response.raw.content), indent=4, ensure_ascii=False)}'
                 )
 
-            self.ap.logger.debug(f'飞书卡片创建成功,卡片ID: {response.data.card_id}')
             self.card_id_dict[message_id] = response.data.card_id
 
             card_id = response.data.card_id
             return card_id
 
         except Exception as e:
-            self.ap.logger.error(f'飞书卡片创建失败,错误信息: {e}')
-
+            raise e
     async def create_message_card(self, message_id, event) -> str:
         """
         创建卡片消息。
