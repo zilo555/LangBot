@@ -102,13 +102,9 @@ class DingTalkAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
     card_instance_id_dict: (
         dict  # 回复卡片消息字典，key为消息id，value为回复卡片实例id，用于在流式消息时判断是否发送到指定卡片
     )
-    seq: int  # 消息顺序，直接以seq作为标识
 
     def __init__(self, config: dict, logger: EventLogger):
-        self.config = config
-        self.logger = logger
-        self.card_instance_id_dict = {}
-        # self.seq = 1
+
         required_keys = [
             'client_id',
             'client_secret',
@@ -118,16 +114,23 @@ class DingTalkAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
         missing_keys = [key for key in required_keys if key not in config]
         if missing_keys:
             raise Exception('钉钉缺少相关配置项，请查看文档或联系管理员')
+        bot = DingTalkClient(
+                client_id=config['client_id'],
+                client_secret=config['client_secret'],
+                robot_name=config['robot_name'],
+                robot_code=config['robot_code'],
+                markdown_card=config['markdown_card'],
+                logger=logger,
+            )
+        bot_account_id = config['robot_name']
+        super().__init__(
+            config=config,
+            logger=logger,
+            card_instance_id_dict={},
+            bot_account_id=bot_account_id,
+            bot=bot,
+            listeners={},
 
-        self.bot_account_id = self.config['robot_name']
-
-        self.bot = DingTalkClient(
-            client_id=config['client_id'],
-            client_secret=config['client_secret'],
-            robot_name=config['robot_name'],
-            robot_code=config['robot_code'],
-            markdown_card=config['markdown_card'],
-            logger=self.logger,
         )
 
     async def reply_message(
@@ -220,6 +223,9 @@ class DingTalkAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
         await self.bot.start()
 
     async def kill(self) -> bool:
+        return False
+
+    async def is_muted(self) -> bool:
         return False
 
     async def unregister_listener(
