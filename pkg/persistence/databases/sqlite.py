@@ -10,5 +10,5 @@ class SQLiteDatabaseManager(database.BaseDatabaseManager):
     """SQLite database manager"""
 
     async def initialize(self) -> None:
-        sqlite_path = 'data/langbot.db'
-        self.engine = sqlalchemy_asyncio.create_async_engine(f'sqlite+aiosqlite:///{sqlite_path}')
+        engine_url = self.ap.instance_config.data['system'].get('database', {}).get('engine_url', 'sqlite+aiosqlite:///data/langbot.db')
+        self.engine = sqlalchemy_asyncio.create_async_engine(engine_url)

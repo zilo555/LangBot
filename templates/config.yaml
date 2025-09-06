@@ -20,6 +20,9 @@ system:
     jwt:
         expire: 604800
         secret: ''
+database:
+    type: sqlite
+    engine_url: 'sqlite+aiosqlite:///data/langbot.db'
 vdb:
     use: chroma
     qdrant:

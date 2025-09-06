@@ -38,9 +38,12 @@ class PersistenceManager:
     async def initialize(self):
         self.ap.logger.info('Initializing database...')
 
+        database_type = self.ap.instance_config.data['system'].get('database', {}).get('type', 'sqlite')
         for manager in database.preregistered_managers:
-            self.db = manager(self.ap)
-            await self.db.initialize()
+            if manager.name == database_type:
+                self.db = manager(self.ap)
+                await self.db.initialize()
+                break
 
         await self.create_tables()
 
