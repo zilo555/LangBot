@@ -71,7 +71,7 @@ class WecomBotClient:
                 nonce         = unquote(request.args.get("nonce", ""))
 
                 try:
-                    timeout = 3.2
+                    timeout = 3
                     interval = 0.1
                     start_time = time.monotonic()
                     encrypted_json  = await request.get_json()
@@ -155,7 +155,7 @@ class WecomBotClient:
                         await asyncio.sleep(interval)
 
                     if self.msg_id_map.get(message_data['msgid'], 1) == 3:
-                        print('请求失效：暂不支持智能机器人超过10秒的请求，如有需求，请联系 LangBot 团队。')
+                        print('请求失效：暂不支持智能机器人超过7秒的请求，如有需求，请联系 LangBot 团队。')
                         return ''
 
                 except Exception as e:

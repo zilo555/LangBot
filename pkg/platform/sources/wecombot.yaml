@@ -54,7 +54,7 @@ spec:
         en_US: BotId
         zh_Hans: 机器人ID
       type: string
-      required: true
+      required: false
       default: ""
 execution:
   python:

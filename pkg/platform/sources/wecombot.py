@@ -98,14 +98,14 @@ class WecomBotAdapter(adapter.MessagePlatformAdapter):
         missing_keys = [key for key in required_keys if key not in config]
         if missing_keys:
             raise ParamNotEnoughError('缺少相关配置项，请查看文档或联系管理员')
-        self.bot_account_id = self.config['BotId']
         self.bot = WecomBotClient(
             Token=self.config['Token'],
             EnCodingAESKey=self.config['EncodingAESKey'],
             Corpid=self.config['Corpid'],
-            logger=self.logger
+            logger=self.logger,
         )
-    
+        self.bot_account_id = self.config['BotId']
+
     async def reply_message(self, message_source:platform_events.MessageEvent, message:platform_message.MessageChain,quote_origin: bool = False):
 
         content = await self.message_converter.yiri2target(message)
