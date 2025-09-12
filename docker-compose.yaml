@@ -1,3 +1,4 @@
+# This file is deprecated, and will be replaced by docker/docker-compose.yaml in next version.
 version: "3"
 
 services:
