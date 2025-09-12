@@ -20,3 +20,10 @@ system:
     jwt:
         expire: 604800
         secret: ''
+vdb:
+    use: chroma
+    qdrant:
+        url: ''
+        host: localhost
+        port: 6333
+        api_key: ''
