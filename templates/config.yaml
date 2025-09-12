@@ -20,6 +20,13 @@ system:
     jwt:
         expire: 604800
         secret: ''
+vdb:
+    use: chroma
+    qdrant:
+        url: ''
+        host: localhost
+        port: 6333
+        api_key: ''
 plugin:
     runtime_ws_url: 'ws://langbot_plugin_runtime:5400/control/ws'
     enable_marketplace: true
