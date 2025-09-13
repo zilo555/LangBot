@@ -9,9 +9,21 @@ class DBMigratePluginInstallSource(migration.DBMigration):
     async def upgrade(self):
         """升级"""
         # 查询表结构获取所有列名（异步执行 SQL）
-        result = await self.ap.persistence_mgr.execute_async(sqlalchemy.text('PRAGMA table_info(plugin_settings);'))
-        # fetchall() 是同步方法，无需 await
-        columns = [row[1] for row in result.fetchall()]
+
+        columns = []
+
+        if self.ap.persistence_mgr.db.name == 'postgresql':
+            result = await self.ap.persistence_mgr.execute_async(
+                sqlalchemy.text(
+                    "SELECT column_name FROM information_schema.columns WHERE table_name = 'plugin_settings';"
+                )
+            )
+            all_result = result.fetchall()
+            columns = [row[0] for row in all_result]
+        else:
+            result = await self.ap.persistence_mgr.execute_async(sqlalchemy.text('PRAGMA table_info(plugin_settings);'))
+            all_result = result.fetchall()
+            columns = [row[1] for row in all_result]
 
         # 检查并添加 install_source 列
         if 'install_source' not in columns:

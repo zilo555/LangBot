@@ -21,8 +21,15 @@ system:
         expire: 604800
         secret: ''
 database:
-    type: sqlite
-    engine_url: 'sqlite+aiosqlite:///data/langbot.db'
+    use: sqlite
+    sqlite:
+        path: 'data/langbot.db'
+    postgresql:
+        host: '127.0.0.1'
+        port: 5432
+        user: 'postgres'
+        password: 'postgres'
+        database: 'postgres'
 vdb:
     use: chroma
     qdrant:
