@@ -40,6 +40,7 @@ required_deps = {
     'sqlmodel': 'sqlmodel',
     'telegramify_markdown': 'telegramify-markdown',
     'slack_sdk': 'slack_sdk',
+    'asyncpg': 'asyncpg',
 }
 
 
