@@ -3,8 +3,9 @@ from __future__ import annotations
 import abc
 import typing
 
-from ..core import app, entities as core_entities
-from . import entities as llm_entities
+from ..core import app
+import langbot_plugin.api.entities.builtin.provider.message as provider_message
+import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
 
 
 preregistered_runners: list[typing.Type[RequestRunner]] = []

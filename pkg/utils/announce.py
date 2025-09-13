@@ -6,7 +6,7 @@ import os
 import base64
 import logging
 
-import pydantic.v1 as pydantic
+import pydantic
 import requests
 
 from ..core import app
@@ -59,7 +59,7 @@ class AnnouncementManager:
 
             return [Announcement(**item) for item in json.loads(content)]
         except (requests.RequestException, json.JSONDecodeError, KeyError) as e:
-            self.ap.logger.warning(f"获取公告失败: {e}")
+            self.ap.logger.warning(f'获取公告失败: {e}')
             pass
         return []  # 请求失败时返回空列表
 
