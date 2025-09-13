@@ -184,12 +184,6 @@ class DingTalkAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
         if target_type == 'group':
             await self.bot.send_proactive_message_to_group(target_id, content)
 
-    async def send_card(self, target_type: str, target_id: str, card_template_id: str, card_data: dict,
-                        at_sender: bool = False,
-                        at_all: bool = False):
-        self.ap.logger.info(f'card_data: {card_data}')
-        await self.bot.send_card(target_type, target_id, card_template_id, card_data, at_sender, at_all)
-
     async def is_stream_output_supported(self) -> bool:
         is_stream = False
         if self.config.get('enable-stream-reply', None):

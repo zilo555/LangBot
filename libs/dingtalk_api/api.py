@@ -253,59 +253,6 @@ class DingTalkClient:
             await self.logger.error(f'failed to send proactive massage to group: {traceback.format_exc()}')
             raise Exception(f'failed to send proactive massage to group: {traceback.format_exc()}')
 
-    async def send_card(self, target_type: str, target_id: str, card_template_id: str, card_data: dict,
-                        at_sender: bool = False,
-                        at_all: bool = False) -> None:
-
-        # 构造 incoming_message
-        if target_type == 'group':
-            conversation_type = "2"
-            sender_staff_id = ""
-            conversation_id = target_id
-        else:
-            conversation_type = "1"
-            sender_staff_id = target_id
-            conversation_id = target_id
-
-        create_at = int(time.time() * 1000)  # 毫秒时间戳
-        # 计算 sessionWebhookExpiredTime，假设是 createAt 之后的 1 小时
-        session_webhook_expired_time = create_at + 3600 * 1000  # 3600 秒 = 1 小时，转换为毫秒
-
-        incoming_message = dingtalk_stream.ChatbotMessage.from_dict(
-        {
-            "conversationId": conversation_id,
-            "openThreadId": conversation_id,
-            "senderNick": sender_staff_id,
-            "isAdmin": True,
-            "senderStaffId": sender_staff_id,
-            "sessionWebhookExpiredTime": session_webhook_expired_time,
-            "createAt": create_at,
-            "conversationType": str(conversation_type),
-            "senderId": "",
-            "robotCode": self.credential.client_id,
-        }
-        )
-
-        card_replier = dingtalk_stream.CardReplier(self.client, incoming_message)
-        try:
-            # 发送卡片
-            card_instance_id = await card_replier.async_create_and_send_card(
-                card_template_id=card_template_id,
-                card_data=card_data,
-                callback_type="STREAM",
-                callback_route_key="",
-                at_sender=at_sender,
-                at_all=at_all,
-                recipients=[target_id] if target_type == 'person' else None,
-                support_forward=True,
-            )
-            if card_instance_id:
-                await self.logger.info(f'Card sent successfully, card_instance_id: {card_instance_id}')
-                return
-        except Exception:
-            await self.logger.error(f'failed to send card: {traceback.format_exc()}')
-            raise Exception(f'failed to send card: {traceback.format_exc()}')
-
     async def create_and_card(
         self, temp_card_id: str, incoming_message: dingtalk_stream.ChatbotMessage, quote_origin: bool = False
     ):
