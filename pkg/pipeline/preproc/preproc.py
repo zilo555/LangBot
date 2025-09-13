@@ -54,10 +54,9 @@ class PreProcessor(stage.PipelineStage):
         query.prompt = conversation.prompt.copy()
         query.messages = conversation.messages.copy()
 
-        query.use_llm_model_uuid = llm_model.model_entity.uuid
-
         if selected_runner == 'local-agent':
             query.use_funcs = []
+            query.use_llm_model_uuid = llm_model.model_entity.uuid
 
             if llm_model.model_entity.abilities.__contains__('func_call'):
                 query.use_funcs = await self.ap.tool_mgr.get_all_tools()

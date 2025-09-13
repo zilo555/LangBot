@@ -7,8 +7,9 @@ import uuid
 import traceback
 
 from .. import runner
-from ...core import app, entities as core_entities
-from .. import entities as llm_entities
+from ...core import app
+import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
+import langbot_plugin.api.entities.builtin.provider.message as provider_message
 
 
 @runner.runner_class('langflow-api')
@@ -19,7 +20,7 @@ class LangflowAPIRunner(runner.RequestRunner):
         self.ap = ap
         self.pipeline_config = pipeline_config
 
-    async def _build_request_payload(self, query: core_entities.Query) -> dict:
+    async def _build_request_payload(self, query: pipeline_query.Query) -> dict:
         """构建请求负载
 
         Args:
@@ -57,8 +58,8 @@ class LangflowAPIRunner(runner.RequestRunner):
         return payload
 
     async def run(
-        self, query: core_entities.Query
-    ) -> typing.AsyncGenerator[llm_entities.Message | llm_entities.MessageChunk, None]:
+        self, query: pipeline_query.Query
+    ) -> typing.AsyncGenerator[provider_message.Message | provider_message.MessageChunk, None]:
         """运行请求
 
         Args:
@@ -132,7 +133,7 @@ class LangflowAPIRunner(runner.RequestRunner):
 
                                 # 每8条消息或有新内容时生成一个chunk
                                 if message_count % 8 == 0 or len(message_text) > 0:
-                                    yield llm_entities.MessageChunk(
+                                    yield provider_message.MessageChunk(
                                         role='assistant', content=accumulated_content, is_final=False
                                     )
                         except json.JSONDecodeError:
@@ -141,7 +142,7 @@ class LangflowAPIRunner(runner.RequestRunner):
                             continue
 
                     # 发送最终消息
-                    yield llm_entities.MessageChunk(role='assistant', content=accumulated_content, is_final=True)
+                    yield provider_message.MessageChunk(role='assistant', content=accumulated_content, is_final=True)
             else:
                 # 非流式请求
                 response = await client.post(url, json=payload, headers=headers, timeout=120.0)
@@ -174,7 +175,7 @@ class LangflowAPIRunner(runner.RequestRunner):
 
                 # 生成回复消息
                 if is_stream:
-                    yield llm_entities.MessageChunk(role='assistant', content=message_text, is_final=True)
+                    yield provider_message.MessageChunk(role='assistant', content=message_text, is_final=True)
                 else:
-                    reply_message = llm_entities.Message(role='assistant', content=message_text)
+                    reply_message = provider_message.Message(role='assistant', content=message_text)
                     yield reply_message
