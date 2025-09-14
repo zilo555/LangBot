@@ -75,6 +75,7 @@ class CommandManager:
     async def execute(
         self,
         command_text: str,
+        full_command_text: str,
         query: pipeline_query.Query,
         session: provider_session.Session,
     ) -> typing.AsyncGenerator[command_context.CommandReturn, None]:
@@ -89,6 +90,7 @@ class CommandManager:
             query_id=query.query_id,
             session=session,
             command_text=command_text,
+            full_command_text=full_command_text,
             command='',
             crt_command='',
             params=command_text.split(' '),

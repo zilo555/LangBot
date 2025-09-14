@@ -18,7 +18,9 @@ class CommandHandler(handler.MessageHandler):
     ) -> typing.AsyncGenerator[entities.StageProcessResult, None]:
         """Process"""
 
-        command_text = str(query.message_chain).strip()[1:]
+        full_command_text = str(query.message_chain).strip()
+
+        command_text = full_command_text[1:]
 
         privilege = 1
 
@@ -39,7 +41,7 @@ class CommandHandler(handler.MessageHandler):
             sender_id=query.sender_id,
             command=spt[0],
             params=spt[1:] if len(spt) > 1 else [],
-            text_message=str(query.message_chain),
+            text_message=full_command_text,
             is_admin=(privilege == 2),
             query=query,
         )
@@ -62,7 +64,9 @@ class CommandHandler(handler.MessageHandler):
 
             session = await self.ap.sess_mgr.get_session(query)
 
-            async for ret in self.ap.cmd_mgr.execute(command_text=command_text, query=query, session=session):
+            async for ret in self.ap.cmd_mgr.execute(
+                command_text=command_text, full_command_text=full_command_text, query=query, session=session
+            ):
                 if ret.error is not None:
                     query.resp_messages.append(
                         provider_message.Message(
