@@ -9,16 +9,18 @@ import traceback
 import httpx
 from libs.wecom_ai_bot_api.WXBizMsgCrypt3 import WXBizMsgCrypt
 from quart import Quart, request, Response, jsonify
-from pkg.platform.types import message as platform_message
+import langbot_plugin.api.entities.builtin.platform.message as platform_message
 import asyncio
 from libs.wecom_ai_bot_api import wecombotevent
 from typing import Callable
 import base64
 from Crypto.Cipher import AES
+from pkg.platform.logger import EventLogger
+
 
 
 class WecomBotClient:
-    def __init__(self,Token:str,EnCodingAESKey:str,Corpid:str,logger:None):
+    def __init__(self,Token:str,EnCodingAESKey:str,Corpid:str,logger:EventLogger):
         self.Token=Token
         self.EnCodingAESKey=EnCodingAESKey
         self.Corpid=Corpid
@@ -139,7 +141,8 @@ class WecomBotClient:
                             reply_timestamp = str(int(time.time()))
                             ret, encrypt_text = self.wxcpt.EncryptMsg(reply_plain_str, nonce, reply_timestamp)
                             if ret != 0:
-                                await self.logger.error("加密失败")
+                                
+                                await self.logger.error("加密失败"+str(ret))
                             
 
                             root = ET.fromstring(encrypt_text)
@@ -155,7 +158,7 @@ class WecomBotClient:
                         await asyncio.sleep(interval)
 
                     if self.msg_id_map.get(message_data['msgid'], 1) == 3:
-                        print('请求失效：暂不支持智能机器人超过7秒的请求，如有需求，请联系 LangBot 团队。')
+                        await self.logger.error('请求失效：暂不支持智能机器人超过7秒的请求，如有需求，请联系 LangBot 团队。')
                         return ''
 
                 except Exception as e:

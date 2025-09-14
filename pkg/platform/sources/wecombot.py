@@ -4,17 +4,17 @@ import asyncio
 import traceback
 
 import datetime
-from pkg.platform.adapter import MessagePlatformAdapter
-from pkg.platform.types import events as platform_events, message as platform_message
+import langbot_plugin.api.definition.abstract.platform.adapter as abstract_platform_adapter
+import langbot_plugin.api.entities.builtin.platform.message as platform_message
+import langbot_plugin.api.entities.builtin.platform.events as platform_events
+import langbot_plugin.api.entities.builtin.platform.entities as platform_entities
+import pydantic
+from ..logger import  EventLogger
 from libs.wecom_ai_bot_api.wecombotevent import WecomBotEvent
 from libs.wecom_ai_bot_api.api import WecomBotClient
-from .. import adapter
 from ...core import app
-from ..types import entities as platform_entities
-from ...command.errors import ParamNotEnoughError
-from ..logger import EventLogger
 
-class WecomBotMessageConverter(adapter.MessageConverter):
+class WecomBotMessageConverter(abstract_platform_adapter.AbstractMessageConverter):
     @staticmethod
     async def yiri2target(message_chain: platform_message.MessageChain):
         content = ''
@@ -36,7 +36,7 @@ class WecomBotMessageConverter(adapter.MessageConverter):
 
         return chain
 
-class WecomBotEventConverter(adapter.EventConverter):
+class WecomBotEventConverter(abstract_platform_adapter.AbstractEventConverter):
 
     @staticmethod
     async def yiri2target(event:platform_events.MessageEvent):
@@ -82,29 +82,35 @@ class WecomBotEventConverter(adapter.EventConverter):
             except Exception:
                 print(traceback.format_exc())
 
-class WecomBotAdapter(adapter.MessagePlatformAdapter):
-    bot : WecomBotClient
-    app: app.Application
-    message_converter = WecomBotMessageConverter()
-    event_converter = WecomBotEventConverter()
-    config:dict
-    bot_account_id:str
+class WecomBotAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
+    bot: WecomBotClient
+    bot_account_id: str
+    message_converter: WecomBotMessageConverter = WecomBotMessageConverter()
+    event_converter: WecomBotEventConverter = WecomBotEventConverter()
+    config: dict
 
-    def __init__(self, config:dict, ap:app.Application, logger:EventLogger):
-        self.config = config
-        self.app = ap
-        self.logger = logger
-        required_keys = ['Token', 'EncodingAESKey', 'Corpid']
+    def __init__(self, config: dict, logger: EventLogger):
+        required_keys = ['Token', 'EncodingAESKey', 'Corpid', 'BotId', 'port']
         missing_keys = [key for key in required_keys if key not in config]
         if missing_keys:
-            raise ParamNotEnoughError('缺少相关配置项，请查看文档或联系管理员')
-        self.bot = WecomBotClient(
-            Token=self.config['Token'],
-            EnCodingAESKey=self.config['EncodingAESKey'],
-            Corpid=self.config['Corpid'],
-            logger=self.logger,
+            raise Exception(f'WecomBot 缺少配置项: {missing_keys}')
+
+        # 创建运行时 bot 对象
+        bot = WecomBotClient(
+            Token=config['Token'],
+            EnCodingAESKey=config['EncodingAESKey'],
+            Corpid=config['Corpid'],
+            logger=logger,
         )
-        self.bot_account_id = self.config['BotId']
+        bot_account_id = config['BotId']
+
+        super().__init__(
+            config=config,
+            logger=logger,
+            bot=bot,
+            bot_account_id=bot_account_id,
+        )
+
 
     async def reply_message(self, message_source:platform_events.MessageEvent, message:platform_message.MessageChain,quote_origin: bool = False):
 
@@ -117,7 +123,7 @@ class WecomBotAdapter(adapter.MessagePlatformAdapter):
     def register_listener(
         self,
         event_type: typing.Type[platform_events.Event],
-        callback: typing.Callable[[platform_events.Event, MessagePlatformAdapter], None],
+        callback: typing.Callable[[platform_events.Event, abstract_platform_adapter.AbstractMessagePlatformAdapter], None],
     ):
         async def on_message(event: WecomBotEvent):
             try:
@@ -151,8 +157,11 @@ class WecomBotAdapter(adapter.MessagePlatformAdapter):
     async def unregister_listener(
         self,
         event_type: type,
-        callback: typing.Callable[[platform_events.Event, MessagePlatformAdapter], None],
+        callback: typing.Callable[[platform_events.Event, abstract_platform_adapter.AbstractMessagePlatformAdapter], None],
     ):
         return super().unregister_listener(event_type, callback)
+    
+    async def is_muted(self, group_id: int) -> bool:
+        pass
 
     
