@@ -81,16 +81,18 @@ docker compose up -d
 
 | 平台 | 狀態 | 備註 |
 | --- | --- | --- |
+| Discord | ✅ |  |
+| Telegram | ✅ |  |
+| Slack | ✅ |  |
+| LINE | ✅ |  |
 | QQ 個人號 | ✅ | QQ 個人號私聊、群聊 |
 | QQ 官方機器人 | ✅ | QQ 官方機器人，支援頻道、私聊、群聊 |
 | 微信 | ✅ |  |
 | 企微對外客服 | ✅ |  |
+| 企微智能機器人 | ✅ |  |
 | 微信公眾號 | ✅ |  |
 | Lark | ✅ |  |
 | DingTalk | ✅ |  |
-| Discord | ✅ |  |
-| Telegram | ✅ |  |
-| Slack | ✅ |  |
 
 ### 大模型能力
 

@@ -79,16 +79,18 @@ Or visit the demo environment: https://demo.langbot.dev/
 
 | Platform | Status | Remarks |
 | --- | --- | --- |
+| Discord | ✅ |  |
+| Telegram | ✅ |  |
+| Slack | ✅ |  |
+| LINE | ✅ |  |
 | Personal QQ | ✅ |  |
 | QQ Official API | ✅ |  |
 | WeCom | ✅ |  |
 | WeComCS | ✅ |  |
+| WeCom AI Bot | ✅ |  |
 | Personal WeChat | ✅ |  |
 | Lark | ✅ |  |
 | DingTalk | ✅ |  |
-| Discord | ✅ |  |
-| Telegram | ✅ |  |
-| Slack | ✅ |  |
 
 ### LLMs
 

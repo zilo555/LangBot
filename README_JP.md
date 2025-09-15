@@ -79,16 +79,18 @@ LangBotはBTPanelにリストされています。BTPanelをインストール�
 
 | プラットフォーム | ステータス | 備考 |
 | --- | --- | --- |
+| Discord | ✅ |  |
+| Telegram | ✅ |  |
+| Slack | ✅ |  |
+| LINE | ✅ |  |
 | 個人QQ | ✅ |  |
 | QQ公式API | ✅ |  |
 | WeCom | ✅ |  |
 | WeComCS | ✅ |  |
+| WeCom AI Bot | ✅ |  |
 | 個人WeChat | ✅ | |
 | Lark | ✅ |  |
 | DingTalk | ✅ |  |
-| Discord | ✅ |  |
-| Telegram | ✅ |  |
-| Slack | ✅ |  |
 
 ### LLMs
 
