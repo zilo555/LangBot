@@ -39,9 +39,9 @@ class CommandManager:
                 set_path(cls, [])
 
         # 应用命令权限配置
-        for cls in operator.preregistered_operators:
-            if cls.path in self.ap.instance_config.data['command']['privilege']:
-                cls.lowest_privilege = self.ap.instance_config.data['command']['privilege'][cls.path]
+        # for cls in operator.preregistered_operators:
+        #     if cls.path in self.ap.instance_config.data['command']['privilege']:
+        #         cls.lowest_privilege = self.ap.instance_config.data['command']['privilege'][cls.path]
 
         # 实例化所有类
         self.cmd_list = [cls(self.ap) for cls in operator.preregistered_operators]

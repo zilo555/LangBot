@@ -216,6 +216,23 @@ class RuntimeConnectionHandler(handler.Handler):
                 },
             )
 
+        @self.action(PluginToRuntimeAction.CREATE_NEW_CONVERSATION)
+        async def create_new_conversation(data: dict[str, Any]) -> handler.ActionResponse:
+            """Create new conversation"""
+            query_id = data['query_id']
+            if query_id not in self.ap.query_pool.cached_queries:
+                return handler.ActionResponse.error(
+                    message=f'Query with query_id {query_id} not found',
+                )
+
+            query = self.ap.query_pool.cached_queries[query_id]
+
+            query.session.using_conversation = None
+
+            return handler.ActionResponse.success(
+                data={},
+            )
+
         @self.action(PluginToRuntimeAction.GET_LANGBOT_VERSION)
         async def get_langbot_version(data: dict[str, Any]) -> handler.ActionResponse:
             """Get langbot version"""
