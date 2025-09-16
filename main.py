@@ -18,7 +18,6 @@ asciiart = r"""
 
 async def main_entry(loop: asyncio.AbstractEventLoop):
     parser = argparse.ArgumentParser(description='LangBot')
-    parser.add_argument('--skip-plugin-deps-check', action='store_true', help='跳过插件依赖项检查', default=False)
     parser.add_argument('--standalone-runtime', action='store_true', help='使用独立插件运行时', default=False)
     args = parser.parse_args()
 
@@ -48,10 +47,6 @@ async def main_entry(loop: asyncio.AbstractEventLoop):
         print('已自动安装缺失的依赖包，请重启程序。')
         print('The missing dependencies have been installed automatically, please restart the program.')
         sys.exit(0)
-
-    # check plugin deps
-    if not args.skip_plugin_deps_check:
-        await deps.precheck_plugin_deps()
 
     # # 检查pydantic版本，如果没有 pydantic.v1，则把 pydantic 映射为 v1
     # import pydantic.version
