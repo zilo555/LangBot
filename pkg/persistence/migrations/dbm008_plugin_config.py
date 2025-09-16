@@ -1,7 +1,7 @@
 from .. import migration
 
 
-@migration.migration_class(4)
+@migration.migration_class(8)
 class DBMigratePluginConfig(migration.DBMigration):
     """插件配置"""
 

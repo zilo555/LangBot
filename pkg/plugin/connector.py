@@ -73,7 +73,9 @@ class PluginRuntimeConnector:
 
         if platform.get_platform() == 'docker' or platform.use_websocket_to_connect_plugin_runtime():  # use websocket
             self.ap.logger.info('use websocket to connect to plugin runtime')
-            ws_url = self.ap.instance_config.data['plugin']['runtime_ws_url']
+            ws_url = self.ap.instance_config.data.get('plugin', {}).get(
+                'runtime_ws_url', 'ws://langbot_plugin_runtime:5400/control/ws'
+            )
 
             async def make_connection_failed_callback(ctrl: ws_client_controller.WebSocketClientController) -> None:
                 self.ap.logger.error('Failed to connect to plugin runtime, trying to reconnect...')
