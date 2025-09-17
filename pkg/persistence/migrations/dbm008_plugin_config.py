@@ -10,7 +10,9 @@ class DBMigratePluginConfig(migration.DBMigration):
 
         if 'plugin' not in self.ap.instance_config.data:
             self.ap.instance_config.data['plugin'] = {
-                'runtime_ws_url': 'ws://localhost:5400/control/ws',
+                'runtime_ws_url': 'ws://langbot_plugin_runtime:5400/control/ws',
+                'enable_marketplace': True,
+                'cloud_service_url': 'https://space.langbot.app',
             }
 
             await self.ap.instance_config.dump_config()
