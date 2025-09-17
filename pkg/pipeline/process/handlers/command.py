@@ -60,7 +60,9 @@ class CommandHandler(handler.MessageHandler):
 
         else:
             if event_ctx.event.alter is not None:
-                query.message_chain = platform_message.MessageChain([platform_message.Plain(event_ctx.event.alter)])
+                query.message_chain = platform_message.MessageChain(
+                    [platform_message.Plain(text=event_ctx.event.alter)]
+                )
 
             session = await self.ap.sess_mgr.get_session(query)
 
