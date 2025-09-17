@@ -102,7 +102,7 @@ class TelegramEventConverter(abstract_platform_adapter.AbstractEventConverter):
                 sender=platform_entities.Friend(
                     id=event.effective_chat.id,
                     nickname=event.effective_chat.first_name,
-                    remark=event.effective_chat.id,
+                    remark=str(event.effective_chat.id),
                 ),
                 message_chain=lb_message,
                 time=event.message.date.timestamp(),
