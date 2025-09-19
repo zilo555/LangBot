@@ -128,10 +128,8 @@ class PluginsRouterGroup(group.RouterGroup):
 
             file_bytes = file.read()
 
-            file_base64 = base64.b64encode(file_bytes).decode('utf-8')
-
             data = {
-                'plugin_file': file_base64,
+                'plugin_file': file_bytes,
             }
 
             ctx = taskmgr.TaskContext.new()

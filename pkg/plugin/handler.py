@@ -560,7 +560,18 @@ class RuntimeConnectionHandler(handler.Handler):
                 'plugin_name': plugin_name,
             },
         )
-        return result
+
+        plugin_icon_file_key = result['plugin_icon_file_key']
+        mime_type = result['mime_type']
+
+        plugin_icon_bytes = await self.read_local_file(plugin_icon_file_key)
+
+        await self.delete_local_file(plugin_icon_file_key)
+
+        return {
+            'plugin_icon_base64': base64.b64encode(plugin_icon_bytes).decode('utf-8'),
+            'mime_type': mime_type,
+        }
 
     async def call_tool(self, tool_name: str, parameters: dict[str, Any]) -> dict[str, Any]:
         """Call tool"""

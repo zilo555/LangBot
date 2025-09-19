@@ -109,6 +109,14 @@ class PluginRuntimeConnector:
         install_info: dict[str, Any],
         task_context: taskmgr.TaskContext | None = None,
     ):
+        if install_source == PluginInstallSource.LOCAL:
+            # transfer file before install
+            file_bytes = install_info['plugin_file']
+            file_key = await self.handler.send_file(file_bytes, 'lbpkg')
+            install_info['plugin_file_key'] = file_key
+            del install_info['plugin_file']
+            self.ap.logger.info(f'Transfered file {file_key} to plugin runtime')
+
         async for ret in self.handler.install_plugin(install_source.value, install_info):
             current_action = ret.get('current_action', None)
             if current_action is not None:
