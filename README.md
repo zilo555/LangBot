@@ -35,7 +35,7 @@ LangBot 是一个开源的大语言模型原生即时通信机器人开发平台
 
 ```bash
 git clone https://github.com/langbot-app/LangBot
-cd LangBot
+cd LangBot/docker
 docker compose up -d
 ```
 

@@ -29,7 +29,7 @@ LangBot は、エージェント、RAG、MCP などの LLM アプリケーショ
 
 ```bash
 git clone https://github.com/langbot-app/LangBot
-cd LangBot
+cd LangBot/docker
 docker compose up -d
 ```
 
