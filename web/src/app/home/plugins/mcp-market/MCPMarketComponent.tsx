@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import styles from '@/app/home/plugins/plugins.module.css';
 import { MCPMarketCardVO } from '@/app/home/plugins/mcp-market/mcp-market-card/MCPMarketCardVO';
 import MCPMarketCardComponent from '@/app/home/plugins/mcp-market/mcp-market-card/MCPMarketCardComponent';
-import { spaceClient } from '@/app/infra/http/HttpClient';
+// import { spaceClient } from '@/app/infra/http/HttpClient';
 import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
 import {
@@ -72,44 +72,44 @@ export default function MCPMarketComponent({
     sortOrder: string = sortOrderValue,
   ) {
     setLoading(true);
-    spaceClient
-      .getMCPMarketServers(page, pageSize, keyword, sortBy, sortOrder)
-      .then((res) => {
-        setMarketServerList(
-          res.servers.map((marketServer) => {
-            let repository = marketServer.repository;
-            if (repository.startsWith('https://github.com/')) {
-              repository = repository.replace('https://github.com/', '');
-            }
+    // spaceClient
+    //   .getMCPMarketServers(page, pageSize, keyword, sortBy, sortOrder)
+    //   .then((res) => {
+    //     setMarketServerList(
+    //       res.servers.map((marketServer) => {
+    //         let repository = marketServer.repository;
+    //         if (repository.startsWith('https://github.com/')) {
+    //           repository = repository.replace('https://github.com/', '');
+    //         }
 
-            if (repository.startsWith('github.com/')) {
-              repository = repository.replace('github.com/', '');
-            }
+    //         if (repository.startsWith('github.com/')) {
+    //           repository = repository.replace('github.com/', '');
+    //         }
 
-            const author = repository.split('/')[0];
-            const name = repository.split('/')[1];
-            return new MCPMarketCardVO({
-              author: author,
-              description: marketServer.description,
-              githubURL: `https://github.com/${repository}`,
-              name: name,
-              serverId: String(marketServer.ID),
-              starCount: marketServer.stars,
-              version:
-                'version' in marketServer
-                  ? String(marketServer.version)
-                  : '1.0.0', // 如果没有提供版本，则默认为1.0.0
-            });
-          }),
-        );
-        setTotalCount(res.total);
-        setLoading(false);
-        console.log('market servers:', res);
-      })
-      .catch((error) => {
-        console.error(t('mcp.getServerListError'), error);
-        setLoading(false);
-      });
+    //         const author = repository.split('/')[0];
+    //         const name = repository.split('/')[1];
+    //         return new MCPMarketCardVO({
+    //           author: author,
+    //           description: marketServer.description,
+    //           githubURL: `https://github.com/${repository}`,
+    //           name: name,
+    //           serverId: String(marketServer.ID),
+    //           starCount: marketServer.stars,
+    //           version:
+    //             'version' in marketServer
+    //               ? String(marketServer.version)
+    //               : '1.0.0', // 如果没有提供版本，则默认为1.0.0
+    //         });
+    //       }),
+    //     );
+    //     setTotalCount(res.total);
+    //     setLoading(false);
+    //     console.log('market servers:', res);
+    //   })
+    //   .catch((error) => {
+    //     console.error(t('mcp.getServerListError'), error);
+    //     setLoading(false);
+    //   });
   }
 
   function handlePageChange(page: number) {

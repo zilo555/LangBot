@@ -375,8 +375,8 @@ export default function PluginConfigPage() {
               </TabsTrigger>
             )}
             <TabsTrigger value="mcp" className="px-6 py-4 cursor-pointer">
-            MCP
-          </TabsTrigger>
+              MCP
+            </TabsTrigger>
           </TabsList>
 
           <div className="flex flex-row justify-end items-center">
