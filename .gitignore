@@ -22,7 +22,7 @@ tips.py
 venv*
 bin/
 .vscode
-test_*
+/test_*
 venv/
 hugchat.json
 qcapi
@@ -45,3 +45,5 @@ test.py
 uv.lock
 /test
 plugins.bak
+coverage.xml
+.coverage
