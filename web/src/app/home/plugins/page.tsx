@@ -1,9 +1,8 @@
 'use client';
 import PluginInstalledComponent, {
   PluginInstalledComponentRef,
-} from '@/app/home/plugins/plugin-installed/PluginInstalledComponent';
-import MarketPage from '@/app/home/plugins/plugin-market/PluginMarketComponent';
-
+} from '@/app/home/plugins/components/plugin-installed/PluginInstalledComponent';
+import MarketPage from '@/app/home/plugins/components/plugin-market/PluginMarketComponent';
 import MCPServerComponent from '@/app/home/plugins/mcp-server/MCPServerComponent';
 import MCPFormDialog from '@/app/home/plugins/mcp-server/mcp-form/MCPFormDialog';
 import MCPDeleteConfirmDialog from '@/app/home/plugins/mcp-server/mcp-form/MCPDeleteConfirmDialog';
