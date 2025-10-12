@@ -363,6 +363,7 @@ const zhHans = {
     defaultBadge: '默认',
     sortBy: '排序方式',
     newestCreated: '最新创建',
+    earliestCreated: '最早创建',
     recentlyEdited: '最近编辑',
     earliestEdited: '最早编辑',
     basicInfo: '基础信息',

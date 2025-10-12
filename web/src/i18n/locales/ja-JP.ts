@@ -379,6 +379,7 @@ const jaJP = {
     defaultBadge: 'デフォルト',
     sortBy: '並び順',
     newestCreated: '最新作成',
+    earliestCreated: '最古作成',
     recentlyEdited: '最近編集',
     earliestEdited: '最古編集',
     basicInfo: '基本情報',

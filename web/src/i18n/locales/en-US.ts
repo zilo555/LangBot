@@ -377,6 +377,7 @@ const enUS = {
     defaultBadge: 'Default',
     sortBy: 'Sort by',
     newestCreated: 'Newest Created',
+    earliestCreated: 'Earliest Created',
     recentlyEdited: 'Recently Edited',
     earliestEdited: 'Earliest Edited',
     basicInfo: 'Basic',

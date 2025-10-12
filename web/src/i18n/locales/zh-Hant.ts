@@ -361,6 +361,7 @@ const zhHant = {
     defaultBadge: '預設',
     sortBy: '排序方式',
     newestCreated: '最新建立',
+    earliestCreated: '最早建立',
     recentlyEdited: '最近編輯',
     earliestEdited: '最早編輯',
     basicInfo: '基本資訊',
