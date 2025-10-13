@@ -333,6 +333,8 @@ const zhHans = {
     installFromGithub: '从Github安装MCP服务器',
     onlySupportGithub: '目前仅支持从Github安装MCP服务器',
     enterGithubLink: '输入Github仓库链接',
+    add: '添加',
+    name:'名称',
   },
   pipelines: {
     title: '流水线',
