@@ -41,6 +41,9 @@ import { useTranslation } from 'react-i18next';
 import { PluginV4 } from '@/app/infra/entities/plugin';
 import { systemInfo } from '@/app/infra/http/HttpClient';
 import { ApiRespPluginSystemStatus } from '@/app/infra/entities/api';
+import { set } from 'lodash';
+import { passiveEventSupported } from '@tanstack/react-table';
+import { config } from 'process';
 
 enum PluginInstallStatus {
   WAIT_INPUT = 'wait_input',
@@ -69,7 +72,7 @@ export default function PluginConfigPage() {
   );
   const [mcpSSEHeaders,setMcpSSEHeaders] = useState('')
   const [mcpName,setMcpName] = useState('')
-  const [mcpTimeout,setMcpTimeout] = useState('')
+  const [mcpTimeout,setMcpTimeout] = useState(60)
   const [installError, setInstallError] = useState<string | null>(null);
   const [mcpInstallError, setMcpInstallError] = useState<string | null>(null);
   const [githubURL, setGithubURL] = useState('');
@@ -125,6 +128,7 @@ export default function PluginConfigPage() {
   }
   const [mcpGithubURL, setMcpGithubURL] = useState('');
   const [mcpSSEURL, setMcpSSEURL] = useState('');
+  const [mcpSSEConfig, setMcpSSEConfig] = useState<Record<string, any> | null>(null);
   const [mcpInstallConfig, setMcpInstallConfig] = useState<Record<string, any> | null>(null);
   const pluginInstalledRef = useRef<PluginInstalledComponentRef>(null);
   const mcpComponentRef = useRef<MCPComponentRef>(null);
@@ -134,7 +138,7 @@ export default function PluginConfigPage() {
   }
 
   function handleMcpModalConfirm() {
-    installMcpServer(mcpGithubURL);
+    installMcpServerFromSSE(mcpSSEConfig ?? {});
   }
   function installPlugin(
     installSource: string,
@@ -316,18 +320,14 @@ export default function PluginConfigPage() {
     return renderPluginConnectionErrorState();
   }
 
-  function installMcpServer(url: string, config?: Record<string, any>) {
+  function installMcpServerFromSSE(config?: Record<string, any>) {
     setMcpInstallStatus(PluginInstallStatus.INSTALLING);
-    // NOTE: backend currently only accepts url. If backend accepts config in future,
-    // replace this call with: httpClient.installMCPServerFromGithub(url, config)
-    console.log('installing mcp server with config:', config);
-    httpClient.installMCPServerFromGithub(url)
+    console.log('installing mcp server from sse with config:', config);
+    httpClient.installMCPServerFromSSE(config ?? {})
       .then((resp) => {
         const taskId = resp.task_id;
-
         let alreadySuccess = false;
         console.log('taskId:', taskId);
-
         // 每秒拉取一次任务状态
         const interval = setInterval(() => {
           httpClient.getAsyncTask(taskId).then((resp) => {
@@ -343,8 +343,12 @@ export default function PluginConfigPage() {
                   toast.success(t('mcp.installSuccess'));
                   alreadySuccess = true;
                 }
-                setMcpGithubURL('');
-                setMcpMarketInstallModalOpen(false);
+              setMcpSSEInstallModalOpen(false);
+                setMcpName('');
+                setMcpDescription('');
+                setMcpSSEURL('');
+                setMcpSSEHeaders('');
+                setMcpTimeout(60);
                 mcpComponentRef.current?.refreshServerList();
               }
             }
@@ -357,6 +361,48 @@ export default function PluginConfigPage() {
         setMcpInstallStatus(PluginInstallStatus.ERROR);
       });
   }
+
+  // function installMcpServer(url: string, config?: Record<string, any>) {
+  //   setMcpInstallStatus(PluginInstallStatus.INSTALLING);
+  //   // NOTE: backend currently only accepts url. If backend accepts config in future,
+  //   // replace this call with: httpClient.installMCPServerFromGithub(url, config)
+  //   console.log('installing mcp server with config:', config);
+  //   httpClient.installMCPServerFromGithub(url)
+  //     .then((resp) => {
+  //       const taskId = resp.task_id;
+
+  //       let alreadySuccess = false;
+  //       console.log('taskId:', taskId);
+
+  //       // 每秒拉取一次任务状态
+  //       const interval = setInterval(() => {
+  //         httpClient.getAsyncTask(taskId).then((resp) => {
+  //           console.log('task status:', resp);
+  //           if (resp.runtime.done) {
+  //             clearInterval(interval);
+  //             if (resp.runtime.exception) {
+  //               setMcpInstallError(resp.runtime.exception);
+  //               setMcpInstallStatus(PluginInstallStatus.ERROR);
+  //             } else {
+  //               // success
+  //               if (!alreadySuccess) {
+  //                 toast.success(t('mcp.installSuccess'));
+  //                 alreadySuccess = true;
+  //               }
+  //               setMcpGithubURL('');
+  //               setMcpMarketInstallModalOpen(false);
+  //               mcpComponentRef.current?.refreshServerList();
+  //             }
+  //           }
+  //         });
+  //       }, 1000);
+  //     })
+  //     .catch((err) => {
+  //       console.log('error when install mcp server:', err);
+  //       setMcpInstallError(err.message);
+  //       setMcpInstallStatus(PluginInstallStatus.ERROR);
+  //     });
+  // }
 
   return (
     <div
@@ -424,7 +470,9 @@ export default function PluginConfigPage() {
                     <DropdownMenuItem 
                       onClick={() => {
                         setActiveTab('mcp-market');
-                        // setMcpMarketInstallModalOpen(true);
+                        setMcpSSEInstallModalOpen(true);
+                        setMcpInstallStatus(PluginInstallStatus.WAIT_INPUT);
+                        setMcpInstallError(null);
                       }}
                     >
                       <PlusIcon className="w-4 h-4" />
@@ -586,8 +634,8 @@ export default function PluginConfigPage() {
               <label className='text-sm text-muted-foreground block mb-1'>
                 {t('mcp.name')}
               </label>
-              <Input 
-                placeholder='mcp.nameExplained'
+              <Input
+                placeholder={t('mcp.nameExplained')}
                 value={mcpName}
                 onChange={(e) => setMcpName(e.target.value)}
                 className='mb-1'
@@ -598,10 +646,10 @@ export default function PluginConfigPage() {
           <div>
             <div>
               <label className="text-sm text-muted-foreground block mb-1">
-                {t('mcp.description')}
+                {t('mcp.mcpDescription')}
               </label>
               <Input
-                placeholder={t('mcp.descriptionExplain')}
+                placeholder={t('mcp.descriptionExplained')}
                 value={mcpDescription}
                 onChange={(e) => setMcpDescription(e.target.value)}
                 className='mb-1'
@@ -613,7 +661,7 @@ export default function PluginConfigPage() {
           <div className="mt-4 space-y-3">
             <div>
               <label className="text-sm text-muted-foreground block mb-1">
-                {t('mcp.sseUrl')}
+                {t('mcp.sseURL')}
               </label>
               <Input
                 placeholder={t('mcp.enterSSELink')}
@@ -630,7 +678,7 @@ export default function PluginConfigPage() {
                 {t('mcp.headers')}
               </label>
               <Input
-                placeholder={t('mcp.headers')}
+                placeholder={t('mcp.headersExample')}
                 value={mcpSSEHeaders}
                 onChange={(e) => setMcpSSEHeaders(e.target.value)}
                 className="mb-1"
@@ -645,8 +693,8 @@ export default function PluginConfigPage() {
               </label>
               <Input
                 placeholder={t('mcp.enterTimeout')}
-                value={mcpTimeout || '60'}
-                onChange={(e) => setMcpTimeout(e.target.value)}
+                value={mcpTimeout || 60}
+                onChange={(e) => setMcpTimeout(Number(e.target.value))}
                 className="mb-1"
               />
             </div>
@@ -676,6 +724,10 @@ export default function PluginConfigPage() {
                     setMcpInstallError(null);
                     setMcpInstallConfig(null);
                     setMcpSSEURL('')
+                    setMcpName('')
+                    setMcpTimeout(60)
+                    setMcpDescription('')
+                    setMcpSSEHeaders('')
                   }}
                 >
                   {t('common.cancel')}
@@ -687,19 +739,23 @@ export default function PluginConfigPage() {
                       toast.error(t('mcp.urlRequired'));
                       return;
                     }
-                    if (!mcpName) (
-                      toast.error(t(''))
-                    )
-
-      
-
+                    if (!mcpName) {
+                      toast.error(t('mcp.nameRequired'));
+                    }
+                    if (!mcpTimeout) {
+                      toast.error(t('mcp.timeoutRequired'));
+                    }
                     const configToSend = {
-                      
+                      name: mcpSSEConfig?.name,
+                      description: mcpSSEConfig?.description,
+                      sse_url: mcpSSEConfig?.sse_url,
+                      sse_headers: mcpSSEConfig?.sse_headers,
+                      timeout: Number(mcpSSEConfig?.timeout) || 60,
                     };
 
                     handleMcpModalConfirm();
                     // call installer (for now installMcpServer will log config and call backend with url only)
-                    installMcpServer(mcpGithubURL, configToSend);
+                    installMcpServerFromSSE(configToSend);
                   }}
                 >
                   {t('common.confirm')}
@@ -865,7 +921,7 @@ export default function PluginConfigPage() {
 
                     handleMcpModalConfirm();
                     // call installer (for now installMcpServer will log config and call backend with url only)
-                    installMcpServer(mcpGithubURL, configToSend);
+                    // installMcpServer(mcpGithubURL, configToSend);
                   }}
                 >
                   {t('common.confirm')}
