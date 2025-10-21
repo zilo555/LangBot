@@ -555,7 +555,7 @@ export class BackendClient extends BaseHttpClient {
   public installMCPServerFromSSE(
     source: {},
   ): Promise<AsyncTaskCreatedResp> {
-    return this.post('/api/v1/mcp/install/sse', { source });
+    return this.post('/api/v1/mcp/servers', { source });
   }
 
   // ============ System API ============

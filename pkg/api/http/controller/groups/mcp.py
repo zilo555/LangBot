@@ -1,5 +1,6 @@
 from __future__ import annotations
 import time
+import traceback
 import uuid
 
 import quart
@@ -48,31 +49,37 @@ class MCPRouterGroup(group.RouterGroup):
             
             elif quart.request.method == 'POST':
                 data = await quart.request.json
-
+                data = data['source']
+                try:
                 # 检查服务器名称是否重复
-                result = await self.ap.persistence_mgr.execute_async(
-                    sqlalchemy.select(MCPServer).where(MCPServer.name == data['name'])
-                )
-                if result.first() is not None:
-                    return self.http_status(400, -1, 'Server name already exists')
-                
-                # 创建新服务器配置
-                new_server = {
-                    'uuid': str(uuid.uuid4()),
-                    'name': data['name'],
-                    'mode': data['mode'],
-                    'enable': data.get('enable', False),
-                    'description': data.get('description',''),
-                    'extra_args': {
-                        'url':data.get('url',''),
-                        'headers':data.get('headers',{}),
-                        'timeout':data.get('timeout',60),
-                    },
-                }
+                    result = await self.ap.persistence_mgr.execute_async(
+                        sqlalchemy.select(MCPServer).where(MCPServer.name == data['name'])
+                    )
+                    if result.first() is not None:
+                        return self.http_status(400, -1, 'Server name already exists')
+                    
+                    # 创建新服务器配置
+                    new_server = {
+                        'uuid': str(uuid.uuid4()),
+                        'name': data['name'],
+                        'mode': 'sse',
+                        'enable': data.get('enable', False),
+                        'description': data.get('description',''),
+                        'extra_args': {
+                            'url':data.get('url',''),
+                            'headers':data.get('headers',{}),
+                            'timeout':data.get('timeout',60),
+                        },
+                    }
 
-                await self.ap.persistence_mgr.execute_async(
-                    sqlalchemy.insert(MCPServer).values(new_server)
-                )
+                    await self.ap.persistence_mgr.execute_async(
+                        sqlalchemy.insert(MCPServer).values(new_server)
+                    )
+
+                    return self.success()
+                
+                except Exception as e:
+                    print(traceback.format_exc())
 
         @self.route('/servers/<server_name>', methods=['GET', 'PUT', 'DELETE'], auth_type=group.AuthType.USER_TOKEN)
         async def _(server_name: str) -> str:

@@ -43,7 +43,7 @@ import { systemInfo } from '@/app/infra/http/HttpClient';
 import { ApiRespPluginSystemStatus } from '@/app/infra/entities/api';
 import { set } from 'lodash';
 import { passiveEventSupported } from '@tanstack/react-table';
-import { config } from 'process';
+
 
 enum PluginInstallStatus {
   WAIT_INPUT = 'wait_input',
@@ -324,36 +324,21 @@ export default function PluginConfigPage() {
     setMcpInstallStatus(PluginInstallStatus.INSTALLING);
     console.log('installing mcp server from sse with config:', config);
     httpClient.installMCPServerFromSSE(config ?? {})
-      .then((resp) => {
-        const taskId = resp.task_id;
-        let alreadySuccess = false;
-        console.log('taskId:', taskId);
-        // 每秒拉取一次任务状态
-        const interval = setInterval(() => {
-          httpClient.getAsyncTask(taskId).then((resp) => {
-            console.log('task status:', resp);
-            if (resp.runtime.done) {
-              clearInterval(interval);
-              if (resp.runtime.exception) {
-                setMcpInstallError(resp.runtime.exception);
-                setMcpInstallStatus(PluginInstallStatus.ERROR);
-              } else {
-                // success
-                if (!alreadySuccess) {
-                  toast.success(t('mcp.installSuccess'));
-                  alreadySuccess = true;
-                }
-              setMcpSSEInstallModalOpen(false);
-                setMcpName('');
-                setMcpDescription('');
-                setMcpSSEURL('');
-                setMcpSSEHeaders('');
-                setMcpTimeout(60);
-                mcpComponentRef.current?.refreshServerList();
-              }
-            }
-          });
-        }, 1000);
+      .then((resp:any) => {
+        if (resp && resp.status === 'success') {
+            console.log('MCP server installed successfully');
+            toast.success(t('mcp.installSuccess'));
+            setMcpSSEURL('');
+            setMcpName('');
+            setMcpDescription('');
+            setMcpSSEHeaders('');
+            setMcpTimeout(60);
+            setMcpSSEInstallModalOpen(false);
+            mcpComponentRef.current?.refreshServerList();
+          } else {
+            setMcpInstallError(t('mcp.installFailed'));
+            setMcpInstallStatus(PluginInstallStatus.ERROR);
+        }
       })
       .catch((err) => {
         console.log('error when install mcp server:', err);
@@ -672,19 +657,7 @@ export default function PluginConfigPage() {
             </div>
           </div>
 
-          <div className="mt-4">
-            <div>
-              <label className="text-sm text-muted-foreground block mb-1">
-                {t('mcp.headers')}
-              </label>
-              <Input
-                placeholder={t('mcp.headersExample')}
-                value={mcpSSEHeaders}
-                onChange={(e) => setMcpSSEHeaders(e.target.value)}
-                className="mb-1"
-              />
-            </div>
-          </div>
+          
 
           <div className='mt-4'>
             <div>
@@ -746,14 +719,13 @@ export default function PluginConfigPage() {
                       toast.error(t('mcp.timeoutRequired'));
                     }
                     const configToSend = {
-                      name: mcpSSEConfig?.name,
-                      description: mcpSSEConfig?.description,
-                      sse_url: mcpSSEConfig?.sse_url,
-                      sse_headers: mcpSSEConfig?.sse_headers,
-                      timeout: Number(mcpSSEConfig?.timeout) || 60,
+                      name: mcpName,
+                      description: mcpDescription,
+                      sse_url: mcpSSEURL,
+                      sse_headers: mcpSSEHeaders,
+                      timeout: Number(mcpTimeout) || 60,
                     };
-
-                    handleMcpModalConfirm();
+                    // handleMcpModalConfirm();
                     // call installer (for now installMcpServer will log config and call backend with url only)
                     installMcpServerFromSSE(configToSend);
                   }}
