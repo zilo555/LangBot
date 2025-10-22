@@ -503,7 +503,7 @@ export class BackendClient extends BaseHttpClient {
   public createMCPServer(
     server: MCPServerConfig,
   ): Promise<AsyncTaskCreatedResp> {
-    return this.post('/api/v1/mcp/servers', server);
+    return this.post('/api/v1/mcp/servers', { source: server });
   }
 
   public updateMCPServer(

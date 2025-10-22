@@ -68,19 +68,19 @@ enum PluginInstallStatus {
 
 export default function PluginConfigPage(
   {
-    editMode,
+    editMode = false,
     initMCPId,
     onFormSubmit,
     onFormCancel,
     onMcpDeleted,
   }:
   {
-  editMode: boolean;
+  editMode?: boolean;
     initMCPId?: string;
-    onFormSubmit: () => void;
-    onFormCancel: () => void;
-    onMcpDeleted: () => void;
-  }
+    onFormSubmit?: () => void;
+    onFormCancel?: () => void;
+    onMcpDeleted?: () => void;
+  } = {}
 ) {
   
   const { t } = useTranslation();
@@ -227,6 +227,93 @@ export default function PluginConfigPage(
   const mcpComponentRef = useRef<MCPComponentRef>(null);
   const [mcpTesting, setMcpTesting] = useState(false);
 
+  // 强制清理 body 样式以修复 Dialog 关闭后点击失效的问题
+  useEffect(() => {
+    console.log('[Dialog Debug] States:', { mcpSSEModalOpen, modalOpen, showDeleteConfirmModal });
+
+    if (!mcpSSEModalOpen && !modalOpen && !showDeleteConfirmModal) {
+      console.log('[Dialog Debug] All dialogs closed, cleaning up body styles...');
+      console.log('[Dialog Debug] Before cleanup - body.style.pointerEvents:', document.body.style.pointerEvents);
+      console.log('[Dialog Debug] Before cleanup - body.style.overflow:', document.body.style.overflow);
+
+      const cleanup = () => {
+        // 强制移除 body 上可能残留的样式
+        document.body.style.removeProperty('pointer-events');
+        document.body.style.removeProperty('overflow');
+
+        // 如果 removeProperty 不起作用，强制设置为空字符串
+        if (document.body.style.pointerEvents === 'none') {
+          document.body.style.pointerEvents = '';
+        }
+        if (document.body.style.overflow === 'hidden') {
+          document.body.style.overflow = '';
+        }
+
+        console.log('[Dialog Debug] After cleanup - body.style.pointerEvents:', document.body.style.pointerEvents);
+        console.log('[Dialog Debug] After cleanup - body.style.overflow:', document.body.style.overflow);
+
+        // 检查计算后的样式
+        const computedStyle = window.getComputedStyle(document.body);
+        console.log('[Dialog Debug] Computed pointerEvents:', computedStyle.pointerEvents);
+      };
+
+      // 多次清理以确保覆盖 Radix 的设置
+      cleanup();
+      const timer1 = setTimeout(cleanup, 0);
+      const timer2 = setTimeout(cleanup, 50);
+      const timer3 = setTimeout(cleanup, 100);
+      const timer4 = setTimeout(cleanup, 200);
+      const timer5 = setTimeout(cleanup, 300);
+
+      return () => {
+        clearTimeout(timer1);
+        clearTimeout(timer2);
+        clearTimeout(timer3);
+        clearTimeout(timer4);
+        clearTimeout(timer5);
+      };
+    }
+  }, [mcpSSEModalOpen, modalOpen, showDeleteConfirmModal]);
+
+  // 额外的全局清理：定期检查并清理
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!mcpSSEModalOpen && !modalOpen && !showDeleteConfirmModal) {
+        if (document.body.style.pointerEvents === 'none') {
+          console.log('[Global Cleanup] Found stale pointer-events, cleaning...');
+          document.body.style.removeProperty('pointer-events');
+          document.body.style.pointerEvents = '';
+        }
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [mcpSSEModalOpen, modalOpen, showDeleteConfirmModal]);
+
+  // MutationObserver：监视 body 的 style 变化
+  useEffect(() => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+          if (!mcpSSEModalOpen && !modalOpen && !showDeleteConfirmModal) {
+            if (document.body.style.pointerEvents === 'none') {
+              console.log('[MutationObserver] Detected pointer-events being set to none, reverting...');
+              document.body.style.removeProperty('pointer-events');
+              document.body.style.pointerEvents = '';
+            }
+          }
+        }
+      });
+    });
+
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['style'],
+    });
+
+    return () => observer.disconnect();
+  }, [mcpSSEModalOpen, modalOpen, showDeleteConfirmModal]);
+
   function handleModalConfirm() {
     installPlugin(installSource, installInfo as Record<string, any>); // eslint-disable-line @typescript-eslint/no-explicit-any
   }
@@ -277,7 +364,7 @@ export default function PluginConfigPage(
     
   }
 
-  function handleFormSubmit(value: z.infer<typeof formSchema>) {
+  async function handleFormSubmit(value: z.infer<typeof formSchema>) {
     const extraArgsObj: Record<string, string | number | boolean> = {};
     value.extra_args?.forEach(
       (arg: { key: string; type: string; value: string }) => {
@@ -290,6 +377,35 @@ export default function PluginConfigPage(
         }
       },
     );
+
+    try {
+      // 构造符合 MCPServerConfig 类型的数据
+      const serverConfig = {
+        name: value.name,
+        mode: 'sse' as const,
+        enable: true,
+        url: value.url,
+        headers: extraArgsObj as Record<string, string>,
+        timeout: value.timeout,
+      };
+
+      await httpClient.createMCPServer(serverConfig);
+
+      toast.success(t('mcp.createSuccess'));
+
+      // 只有在异步操作成功后才关闭对话框
+      setMcpSSEModalOpen(false);
+
+      // 重置表单
+      form.reset();
+      setExtraArgs([]);
+
+      // 调用回调通知父组件刷新
+      onFormSubmit?.();
+    } catch (error) {
+      console.error('Failed to create MCP server:', error);
+      toast.error(t('mcp.createFailed'));
+    }
   }
 
   function testMcp() {
@@ -872,7 +988,12 @@ export default function PluginConfigPage(
             <Button
               type="button"
               variant="outline"
-              onClick={() => onFormCancel()}
+              onClick={() => {
+                setMcpSSEModalOpen(false);
+                form.reset();
+                setExtraArgs([]);
+                onFormCancel?.();
+              }}
             >
               {t('common.cancel')}
             </Button>
