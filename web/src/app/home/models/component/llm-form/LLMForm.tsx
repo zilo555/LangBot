@@ -304,7 +304,7 @@ export default function LLMForm({
           onLLMDeleted();
           toast.success(t('models.deleteSuccess'));
         })
-        .catch((err) => {
+        .catch ((err) => {
           toast.error(t('models.deleteError') + err.message);
         });
     }

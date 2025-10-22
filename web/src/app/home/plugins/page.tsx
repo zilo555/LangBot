@@ -43,6 +43,20 @@ import { systemInfo } from '@/app/infra/http/HttpClient';
 import { ApiRespPluginSystemStatus } from '@/app/infra/entities/api';
 import { set } from 'lodash';
 import { passiveEventSupported } from '@tanstack/react-table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@radix-ui/react-select';
+import {  useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { number, z } from 'zod';
+import { DialogDescription } from '@radix-ui/react-dialog';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 
 
 enum PluginInstallStatus {
@@ -52,7 +66,23 @@ enum PluginInstallStatus {
   ERROR = 'error',
 }
 
-export default function PluginConfigPage() {
+export default function PluginConfigPage(
+  {
+    editMode,
+    initMCPId,
+    onFormSubmit,
+    onFormCancel,
+    onMcpDeleted,
+  }:
+  {
+  editMode: boolean;
+    initMCPId?: string;
+    onFormSubmit: () => void;
+    onFormCancel: () => void;
+    onMcpDeleted: () => void;
+  }
+) {
+  
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('installed');
   const [modalOpen, setModalOpen] = useState(false);
@@ -63,16 +93,9 @@ export default function PluginConfigPage() {
   // const [mcpModalOpen, setMcpModalOpen] = useState(false);
   const [mcpMarketInstallModalOpen, setMcpMarketInstallModalOpen] =
     useState(false);
-  const [mcpSSEInstallModalOpen, setMcpSSEInstallModalOpen] = useState(false);
-  const [mcpDescription,setMcpDescription] = useState('');
+  const [mcpSSEModalOpen, setMcpSSEModalOpen] = useState(false);
   const [pluginInstallStatus, setPluginInstallStatus] =
     useState<PluginInstallStatus>(PluginInstallStatus.WAIT_INPUT);
-  const [mcpInstallStatus, setMcpInstallStatus] = useState<PluginInstallStatus>(
-    PluginInstallStatus.WAIT_INPUT,
-  );
-  const [mcpSSEHeaders,setMcpSSEHeaders] = useState('')
-  const [mcpName,setMcpName] = useState('')
-  const [mcpTimeout,setMcpTimeout] = useState(60)
   const [installError, setInstallError] = useState<string | null>(null);
   const [mcpInstallError, setMcpInstallError] = useState<string | null>(null);
   const [githubURL, setGithubURL] = useState('');
@@ -81,7 +104,77 @@ export default function PluginConfigPage() {
     useState<ApiRespPluginSystemStatus | null>(null);
   const [statusLoading, setStatusLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
+  const addExtraArg = () => {
+    setExtraArgs([...extraArgs, { key: '', type: 'string', value: '' }]);
+  };
+  const getExtraArgSchema = (t: (key: string) => string) =>
+    z
+      .object({
+        key: z.string().min(1, { message: t('models.keyNameRequired') }),
+        type: z.enum(['string', 'number', 'boolean']),
+        value: z.string(),
+      })
+      .superRefine((data, ctx) => {
+        if (data.type === 'number' && isNaN(Number(data.value))) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: t('models.mustBeValidNumber'),
+            path: ['value'],
+          });
+        }
+        if (
+          data.type === 'boolean' &&
+          data.value !== 'true' &&
+          data.value !== 'false'
+        ) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: t('models.mustBeTrueOrFalse'),
+            path: ['value'],
+          });
+        }
+      });
+    const removeExtraArg = (index: number) => {
+    const newArgs = extraArgs.filter((_, i) => i !== index);
+    setExtraArgs(newArgs);
+    form.setValue('extra_args', newArgs);
+  };
+  const getFormSchema = (t: (key: string) => string) =>
+    z.object({
+      name: z.string().min(1, { message: t('mcp.nameRequired') }),
+      timeout: z.number().min(30, { message: t('mcp.timeoutMin30') }),
+      ssereadtimeout: z.number().min(300, { message: t('mcp.sseTimeoutMin300') }),
+      url: z.string().min(1, { message: t('mcp.requestURLRequired') }),
+      extra_args: z.array(getExtraArgSchema(t)).optional(),
+    });
+  const formSchema = getFormSchema(t);
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: '',
+      url: '',
+      timeout: 30,
+      ssereadtimeout: 300,
+      extra_args: [],
+    },
+  });
+  const [extraArgs, setExtraArgs] = useState<
+    { key: string; type: 'string' | 'number' | 'boolean'; value: string }[]
+  >([]);
+  const updateExtraArg = (
+    index: number,
+    field: 'key' | 'type' | 'value',
+    value: string,
+  ) => {
+    const newArgs = [...extraArgs];
+    newArgs[index] = {
+      ...newArgs[index],
+      [field]: value,
+    };
+    setExtraArgs(newArgs);
+    form.setValue('extra_args', newArgs);
+  };
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
   useEffect(() => {
     const fetchPluginSystemStatus = async () => {
       try {
@@ -132,13 +225,10 @@ export default function PluginConfigPage() {
   const [mcpInstallConfig, setMcpInstallConfig] = useState<Record<string, any> | null>(null);
   const pluginInstalledRef = useRef<PluginInstalledComponentRef>(null);
   const mcpComponentRef = useRef<MCPComponentRef>(null);
+  const [mcpTesting, setMcpTesting] = useState(false);
 
   function handleModalConfirm() {
     installPlugin(installSource, installInfo as Record<string, any>); // eslint-disable-line @typescript-eslint/no-explicit-any
-  }
-
-  function handleMcpModalConfirm() {
-    installMcpServerFromSSE(mcpSSEConfig ?? {});
   }
   function installPlugin(
     installSource: string,
@@ -181,6 +271,53 @@ export default function PluginConfigPage() {
           watchTask(taskId);
         });
     }
+  }
+
+  function deleteMCPServer() {
+    
+  }
+
+  function handleFormSubmit(value: z.infer<typeof formSchema>) {
+    const extraArgsObj: Record<string, string | number | boolean> = {};
+    value.extra_args?.forEach(
+      (arg: { key: string; type: string; value: string }) => {
+        if (arg.type === 'number') {
+          extraArgsObj[arg.key] = Number(arg.value);
+        } else if (arg.type === 'boolean') {
+          extraArgsObj[arg.key] = arg.value === 'true';
+        } else {
+          extraArgsObj[arg.key] = arg.value;
+        }
+      },
+    );
+  }
+
+  function testMcp() {
+    setMcpTesting(true);
+    const extraArgsObj: Record<string, string | number | boolean> = {};
+    form
+      .getValues('extra_args')
+      ?.forEach((arg: { key: string; type: string; value: string }) => {
+        if (arg.type === 'number') {
+          extraArgsObj[arg.key] = Number(arg.value);
+        } else if (arg.type === 'boolean') {
+          extraArgsObj[arg.key] = arg.value === 'true';
+        } else {
+          extraArgsObj[arg.key] = arg.value;
+        }
+      });
+      httpClient.testMCPServer(
+        form.getValues('name'),
+      ).then((res) => {
+        console.log(res);
+        toast.success(t('models.testSuccess'));
+      })
+      .catch(() => {
+        toast.error(t('models.testError'));
+      })
+      .finally(() => {
+        setMcpTesting(false);
+      });
   }
 
   const validateFileType = (file: File): boolean => {
@@ -320,74 +457,6 @@ export default function PluginConfigPage() {
     return renderPluginConnectionErrorState();
   }
 
-  function installMcpServerFromSSE(config?: Record<string, any>) {
-    setMcpInstallStatus(PluginInstallStatus.INSTALLING);
-    console.log('installing mcp server from sse with config:', config);
-    httpClient.installMCPServerFromSSE(config ?? {})
-      .then((resp:any) => {
-        if (resp && resp.status === 'success') {
-            console.log('MCP server installed successfully');
-            toast.success(t('mcp.installSuccess'));
-            setMcpSSEURL('');
-            setMcpName('');
-            setMcpDescription('');
-            setMcpSSEHeaders('');
-            setMcpTimeout(60);
-            setMcpSSEInstallModalOpen(false);
-            mcpComponentRef.current?.refreshServerList();
-          } else {
-            setMcpInstallError(t('mcp.installFailed'));
-            setMcpInstallStatus(PluginInstallStatus.ERROR);
-        }
-      })
-      .catch((err) => {
-        console.log('error when install mcp server:', err);
-        setMcpInstallError(err.message);
-        setMcpInstallStatus(PluginInstallStatus.ERROR);
-      });
-  }
-
-  // function installMcpServer(url: string, config?: Record<string, any>) {
-  //   setMcpInstallStatus(PluginInstallStatus.INSTALLING);
-  //   // NOTE: backend currently only accepts url. If backend accepts config in future,
-  //   // replace this call with: httpClient.installMCPServerFromGithub(url, config)
-  //   console.log('installing mcp server with config:', config);
-  //   httpClient.installMCPServerFromGithub(url)
-  //     .then((resp) => {
-  //       const taskId = resp.task_id;
-
-  //       let alreadySuccess = false;
-  //       console.log('taskId:', taskId);
-
-  //       // 每秒拉取一次任务状态
-  //       const interval = setInterval(() => {
-  //         httpClient.getAsyncTask(taskId).then((resp) => {
-  //           console.log('task status:', resp);
-  //           if (resp.runtime.done) {
-  //             clearInterval(interval);
-  //             if (resp.runtime.exception) {
-  //               setMcpInstallError(resp.runtime.exception);
-  //               setMcpInstallStatus(PluginInstallStatus.ERROR);
-  //             } else {
-  //               // success
-  //               if (!alreadySuccess) {
-  //                 toast.success(t('mcp.installSuccess'));
-  //                 alreadySuccess = true;
-  //               }
-  //               setMcpGithubURL('');
-  //               setMcpMarketInstallModalOpen(false);
-  //               mcpComponentRef.current?.refreshServerList();
-  //             }
-  //           }
-  //         });
-  //       }, 1000);
-  //     })
-  //     .catch((err) => {
-  //       console.log('error when install mcp server:', err);
-  //       setMcpInstallError(err.message);
-  //       setMcpInstallStatus(PluginInstallStatus.ERROR);
-  //     });
-  // }
 
   return (
     <div
@@ -455,9 +524,7 @@ export default function PluginConfigPage() {
                     <DropdownMenuItem 
                       onClick={() => {
                         setActiveTab('mcp-market');
-                        setMcpSSEInstallModalOpen(true);
-                        setMcpInstallStatus(PluginInstallStatus.WAIT_INPUT);
-                        setMcpInstallError(null);
+                        setMcpSSEModalOpen(true);
                       }}
                     >
                       <PlusIcon className="w-4 h-4" />
@@ -511,7 +578,7 @@ export default function PluginConfigPage() {
             askInstallServer={(githubURL) => {
               setMcpGithubURL(githubURL);
               setMcpMarketInstallModalOpen(true);
-              setMcpInstallStatus(PluginInstallStatus.WAIT_INPUT);
+              // setMcpInstallStatus(PluginInstallStatus.WAIT_INPUT);
               setMcpInstallError(null);
             }}
           />
@@ -593,316 +660,229 @@ export default function PluginConfigPage() {
         </div>
       )}
 
-      {/* <PluginSortDialog
-        open={sortModalOpen}
-        onOpenChange={setSortModalOpen}
-        onSortComplete={() => {
-          pluginInstalledRef.current?.refreshPluginList();
-        }}
-      /> */}
-      
-      {/* 通过sse安装MCP服务器 */}
-      <Dialog
-        open={mcpSSEInstallModalOpen}
-        onOpenChange={setMcpSSEInstallModalOpen}
-      >
-        <DialogContent className="w-[520px] p-6 bg-white dark:bg-[#1a1a1e]">
+      <div>
+        <Dialog
+          open={showDeleteConfirmModal}
+          onOpenChange={setShowDeleteConfirmModal}
+        >
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-4">
-              <Download className="size-6" />
-              <span>{t('mcp.installFromSSE')}</span>
-            </DialogTitle>
+            <DialogTitle>{t('plugins.confirmDeleteTitle')}</DialogTitle>
           </DialogHeader>
-
-          <div>
-            <div>
-              <label className='text-sm text-muted-foreground block mb-1'>
-                {t('mcp.name')}
-              </label>
-              <Input
-                placeholder={t('mcp.nameExplained')}
-                value={mcpName}
-                onChange={(e) => setMcpName(e.target.value)}
-                className='mb-1'
-                />
-            </div>
-          </div>
-
-          <div>
-            <div>
-              <label className="text-sm text-muted-foreground block mb-1">
-                {t('mcp.mcpDescription')}
-              </label>
-              <Input
-                placeholder={t('mcp.descriptionExplained')}
-                value={mcpDescription}
-                onChange={(e) => setMcpDescription(e.target.value)}
-                className='mb-1'
-              />
-            </div>
-          </div>
-
-          {/* form fields */}
-          <div className="mt-4 space-y-3">
-            <div>
-              <label className="text-sm text-muted-foreground block mb-1">
-                {t('mcp.sseURL')}
-              </label>
-              <Input
-                placeholder={t('mcp.enterSSELink')}
-                value={mcpSSEURL}
-                onChange={(e) => setMcpSSEURL(e.target.value)}
-                className="mb-1"
-              />
-            </div>
-          </div>
-
-          
-
-          <div className='mt-4'>
-            <div>
-              <label className='text-sm text-muted-foreground block mb-1'>
-                {t('mcp.timeout')}
-              </label>
-              <Input
-                placeholder={t('mcp.enterTimeout')}
-                value={mcpTimeout || 60}
-                onChange={(e) => setMcpTimeout(Number(e.target.value))}
-                className="mb-1"
-              />
-            </div>
-          </div>
-
-          {mcpInstallStatus === PluginInstallStatus.INSTALLING && (
-            <div className="mt-4">
-              <p className="mb-2">{t('mcp.installing')}</p>
-            </div>
-          )}
-          {mcpInstallStatus === PluginInstallStatus.ERROR && (
-            <div className="mt-4">
-              <p className="mb-2">{t('mcp.installFailed')}</p>
-              <p className="mb-2 text-red-500">{mcpInstallError}</p>
-            </div>
-          )}
-
+          <DialogDescription>
+            {t('plugins.deleteConfirmation')}
+          </DialogDescription>
           <DialogFooter>
-            {(mcpInstallStatus === PluginInstallStatus.WAIT_INPUT ||
-              mcpInstallStatus === PluginInstallStatus.ERROR) && (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setMcpSSEInstallModalOpen(false)
-                    setMcpInstallStatus(PluginInstallStatus.WAIT_INPUT);
-                    setMcpInstallError(null);
-                    setMcpInstallConfig(null);
-                    setMcpSSEURL('')
-                    setMcpName('')
-                    setMcpTimeout(60)
-                    setMcpDescription('')
-                    setMcpSSEHeaders('')
-                  }}
-                >
-                  {t('common.cancel')}
-                </Button>
-                <Button
-                  onClick={() => {
-                    // basic validation
-                    if (!mcpSSEURL) {
-                      toast.error(t('mcp.urlRequired'));
-                      return;
-                    }
-                    if (!mcpName) {
-                      toast.error(t('mcp.nameRequired'));
-                    }
-                    if (!mcpTimeout) {
-                      toast.error(t('mcp.timeoutRequired'));
-                    }
-                    const configToSend = {
-                      name: mcpName,
-                      description: mcpDescription,
-                      sse_url: mcpSSEURL,
-                      sse_headers: mcpSSEHeaders,
-                      timeout: Number(mcpTimeout) || 60,
-                    };
-                    // handleMcpModalConfirm();
-                    // call installer (for now installMcpServer will log config and call backend with url only)
-                    installMcpServerFromSSE(configToSend);
-                  }}
-                >
-                  {t('common.confirm')}
-                </Button>
-              </>
-            )}
+            <Button
+              variant='destructive'
+              onClick={() => {
+                deleteMCPServer();
+                setShowDeleteConfirmModal(false);
+              }}
+            >
+              {t('common.confirm')}
+            </Button>
           </DialogFooter>
         </DialogContent>
-      </Dialog>
-
-      {/* MCP Server 从github安装对话框（表单） */}
-      <Dialog
-        open={mcpMarketInstallModalOpen}
-        onOpenChange={setMcpMarketInstallModalOpen}
-      >
-        <DialogContent className="w-[520px] p-6 bg-white dark:bg-[#1a1a1e]">
+        </Dialog>
+        
+        <Dialog
+          open={mcpSSEModalOpen}
+          onOpenChange={setMcpSSEModalOpen}
+        >
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-4">
-              <Download className="size-6" />
-              <span>{t('mcp.installFromGithub')}</span>
+            <DialogTitle>
+              {t('mcp.createServer')}
             </DialogTitle>
           </DialogHeader>
-
-          {/* form fields */}
-          <div className="mt-4 space-y-3">
-            <div>
-              <label className="text-sm text-muted-foreground block mb-1">
-                {t('mcp.githubUrl')}
-              </label>
-              <Input
-                placeholder={t('mcp.enterGithubLink')}
-                value={mcpGithubURL}
-                onChange={(e) => setMcpGithubURL(e.target.value)}
-                className="mb-1"
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleFormSubmit)}
+            className='space-y-4'
+          >
+            <div className='space-y-4'>
+              <FormField
+                control={form.control}
+                name='name'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('mcp.name')}</FormLabel>
+                    <FormControl>
+                      <Input
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage/>
+                  </FormItem>
+                )}
               />
-            </div>
-
-            <div>
-              <label className="text-sm text-muted-foreground block mb-1">
-                {t('mcp.displayName', 'Display Name')}
-              </label>
-              <Input
-                placeholder={t('mcp.displayNamePlaceholder', 'My MCP Server')}
-                value={(mcpInstallConfig as any)?.displayName || ''}
-                onChange={(e) =>
-                  setMcpInstallConfig((c) => ({ ...(c || {}), displayName: e.target.value }))
-                }
-                className="mb-1"
-              />
-            </div>
-
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <label className="text-sm text-muted-foreground block mb-1">
-                  {t('mcp.port', 'Port')}
-                </label>
-                <Input
-                  placeholder="8080"
-                  value={(mcpInstallConfig as any)?.port || ''}
-                  onChange={(e) =>
-                    setMcpInstallConfig((c) => ({ ...(c || {}), port: e.target.value }))
-                  }
+              
+              <FormField
+                control = {form.control}
+                name = 'url'
+                render={
+                  ({field}) => (
+                    <FormItem>
+                      <FormLabel>
+                        {t('mcp.url')}
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage/>
+                    </FormItem>
+                  )}
                 />
-              </div>
-              <div className="flex-1">
-                <label className="text-sm text-muted-foreground block mb-1">
-                  {t('mcp.env', 'Environment')}
-                </label>
-                <Input
-                  placeholder="production"
-                  value={(mcpInstallConfig as any)?.env || ''}
-                  onChange={(e) =>
-                    setMcpInstallConfig((c) => ({ ...(c || {}), env: e.target.value }))
-                  }
+
+              <FormField
+                control={form.control}
+                name='timeout'
+                render = {
+                  ({field}) => (
+                    <FormItem>
+                      <FormLabel>
+                      {t('mcp.timeout')}  
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage/>
+                    </FormItem>
+                  )
+                }
                 />
-              </div>
-            </div>
 
-            <div>
-              <label className="text-sm text-muted-foreground block mb-1">
-                {t('mcp.adminToken', 'Admin Token')}
-              </label>
-              <Input
-                placeholder={t('mcp.adminTokenPlaceholder', 'secret-token')}
-                value={(mcpInstallConfig as any)?.adminToken || ''}
-                onChange={(e) =>
-                  setMcpInstallConfig((c) => ({ ...(c || {}), adminToken: e.target.value }))
-                }
-              />
-            </div>
+                <FormField
+                  control={form.control}
+                  name='ssereadtimeout'
+                  render = {
+                    (field) =>
+                    (
+                      <FormItem>
+                        <FormLabel>
+                          {t('mcp.ssereadtimeout')}
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder={t('mcp.sseTimeout')}
+                            {...field}
+                            />
+                        </FormControl>
+                        <FormMessage/>
+                      </FormItem>
+                    )
+                  }
+                  />
 
-            <div>
-              <label className="text-sm text-muted-foreground block mb-1">
-                {t('mcp.extraConfig', 'Extra JSON Config')}
-              </label>
-              <Input
-                placeholder='{"key":"value"}'
-                value={(mcpInstallConfig as any)?.extraConfig || ''}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setMcpInstallConfig((c) => ({ ...(c || {}), extraConfig: e.target.value }))
-                }
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                {t('mcp.extraConfigHint', 'Optional JSON string for advanced config')}
-              </p>
-            </div>
-          </div>
-
-          {mcpInstallStatus === PluginInstallStatus.INSTALLING && (
-            <div className="mt-4">
-              <p className="mb-2">{t('mcp.installing')}</p>
-            </div>
-          )}
-          {mcpInstallStatus === PluginInstallStatus.ERROR && (
-            <div className="mt-4">
-              <p className="mb-2">{t('mcp.installFailed')}</p>
-              <p className="mb-2 text-red-500">{mcpInstallError}</p>
-            </div>
-          )}
-
-          <DialogFooter>
-            {(mcpInstallStatus === PluginInstallStatus.WAIT_INPUT ||
-              mcpInstallStatus === PluginInstallStatus.ERROR) && (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setMcpMarketInstallModalOpen(false);
-                    setMcpInstallStatus(PluginInstallStatus.WAIT_INPUT);
-                    setMcpInstallError(null);
-                    setMcpInstallConfig(null);
-                    setMcpGithubURL('');
-                  }}
-                >
-                  {t('common.cancel')}
-                </Button>
-                <Button
-                  onClick={() => {
-                    // basic validation
-                    if (!mcpGithubURL) {
-                      toast.error(t('mcp.urlRequired'));
-                      return;
-                    }
-
-                    // try parse extraConfig JSON
-                    let parsedExtra: any = undefined;
-                    try {
-                      if (mcpInstallConfig?.extraConfig) {
-                        parsedExtra = JSON.parse(mcpInstallConfig.extraConfig);
+                <FormItem>
+              <FormLabel>{t('models.extraParameters')}</FormLabel>
+              <div className="space-y-2">
+                {extraArgs.map((arg, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      placeholder={t('models.keyName')}
+                      value={arg.key}
+                      onChange={(e) =>
+                        updateExtraArg(index, 'key', e.target.value)
                       }
-                    } catch (err) {
-                      toast.error(t('mcp.extraConfigInvalid'));
-                      return;
-                    }
-
-                    const configToSend = {
-                      displayName: mcpInstallConfig?.displayName,
-                      port: mcpInstallConfig?.port,
-                      env: mcpInstallConfig?.env,
-                      adminToken: mcpInstallConfig?.adminToken,
-                      extraConfig: parsedExtra,
-                    };
-
-                    handleMcpModalConfirm();
-                    // call installer (for now installMcpServer will log config and call backend with url only)
-                    // installMcpServer(mcpGithubURL, configToSend);
-                  }}
-                >
-                  {t('common.confirm')}
+                    />
+                    <Select
+                      value={arg.type}
+                      onValueChange={(value) =>
+                        updateExtraArg(index, 'type', value)
+                      }
+                    >
+                      <SelectTrigger className="w-[120px] bg-[#ffffff] dark:bg-[#2a2a2e]">
+                        <SelectValue placeholder={t('models.type')} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="string">
+                          {t('models.string')}
+                        </SelectItem>
+                        <SelectItem value="number">
+                          {t('models.number')}
+                        </SelectItem>
+                        <SelectItem value="boolean">
+                          {t('models.boolean')}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      placeholder={t('models.value')}
+                      value={arg.value}
+                      onChange={(e) =>
+                        updateExtraArg(index, 'value', e.target.value)
+                      }
+                    />
+                    <button
+                      type="button"
+                      className="p-2 hover:bg-gray-100 rounded"
+                      onClick={() => removeExtraArg(index)}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="w-5 h-5 text-red-500"
+                      >
+                        <path d="M7 4V2H17V4H22V6H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V6H2V4H7ZM6 6V20H18V6H6ZM9 9H11V17H9V9ZM13 9H15V17H13V9Z"></path>
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+                <Button type="button" variant="outline" onClick={addExtraArg}>
+                  {t('models.addParameter')}
                 </Button>
-              </>
+              </div>
+              <FormDescription>
+                {t('llm.extraParametersDescription')}
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+
+            <DialogFooter>
+            {editMode && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => setShowDeleteConfirmModal(true)}
+              >
+                {t('common.delete')}
+              </Button>
             )}
+
+            <Button type="submit">
+              {editMode ? t('common.save') : t('common.submit')}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => testMcp()}
+              disabled={mcpTesting}
+            >
+              {t('common.test')}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onFormCancel()}
+            >
+              {t('common.cancel')}
+            </Button>
           </DialogFooter>
+            </div>
+          </form>
+        </Form> 
         </DialogContent>
-      </Dialog>
-    </div>
+        </Dialog>
+      </div> 
+  </div>
   );
 }

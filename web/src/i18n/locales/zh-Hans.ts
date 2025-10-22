@@ -348,6 +348,7 @@ const zhHans = {
     headersExample:'示例: Authorization: Bearer token123',
     enterTimeout:'输入超时时间，单位为毫秒',
     installFromSSE:'从SSE安装',
+    sseTimeout:'SSE超时时间'
   },
   pipelines: {
     title: '流水线',
