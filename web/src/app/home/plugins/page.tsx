@@ -599,8 +599,8 @@ export default function PluginConfigPage(
                 {t('plugins.marketplace')}
               </TabsTrigger>
             )}
-                <TabsTrigger value="mcp-market" className="px-6 py-4 cursor-pointer">
-                  {t('mcp.marketplace')}
+                <TabsTrigger value="mcp-servers" className="px-6 py-4 cursor-pointer">
+                  {t('mcp.title')}
                 </TabsTrigger>
           </TabsList>
 
@@ -618,12 +618,12 @@ export default function PluginConfigPage(
               <DropdownMenuTrigger asChild>
                 <Button variant="default" className="px-6 py-4 cursor-pointer">
                   <PlusIcon className="w-4 h-4" />
-                  {activeTab === 'mcp-market' ? t('mcp.add') : t('plugins.install')}
+                  {activeTab === 'mcp-servers' ? t('mcp.add') : t('plugins.install')}
                   <ChevronDownIcon className="ml-2 w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                {activeTab === 'mcp-market' ? (
+                {activeTab === 'mcp-servers' ? (
                   <>
                     {/* <DropdownMenuItem
                       onClick={() => {
@@ -639,7 +639,7 @@ export default function PluginConfigPage(
                     </DropdownMenuItem> */}
                     <DropdownMenuItem 
                       onClick={() => {
-                        setActiveTab('mcp-market');
+                        setActiveTab('mcp-servers');
                         setMcpSSEModalOpen(true);
                       }}
                     >
@@ -689,7 +689,7 @@ export default function PluginConfigPage(
         <TabsContent value="mcp">
           <MCPComponent ref={mcpComponentRef} />
         </TabsContent>
-        <TabsContent value="mcp-market">
+        <TabsContent value="mcp-servers">
           <MCPMarketComponent
             askInstallServer={(githubURL) => {
               setMcpGithubURL(githubURL);

@@ -23,6 +23,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+import { httpClient, HttpClient } from '@/app/infra/http/HttpClient';
+
 export default function MCPMarketComponent({
   askInstallServer,
 }: {
@@ -71,7 +73,15 @@ export default function MCPMarketComponent({
     sortBy: string = sortByValue,
     sortOrder: string = sortOrderValue,
   ) {
-    setLoading(true);
+    // setLoading(true);
+
+  // 获取后端的 MCP Market 服务器列表
+    httpClient.getMCPServers().then(
+    );
+      
+          
+
+      
     // spaceClient
     //   .getMCPMarketServers(page, pageSize, keyword, sortBy, sortOrder)
     //   .then((res) => {
