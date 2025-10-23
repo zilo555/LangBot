@@ -11,32 +11,35 @@ function Dialog({
   open,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {
-  const handleOpenChange = React.useCallback((isOpen: boolean) => {
-    onOpenChange?.(isOpen);
+  const handleOpenChange = React.useCallback(
+    (isOpen: boolean) => {
+      onOpenChange?.(isOpen);
 
-    // 当对话框关闭时，确保清理 body 样式
-    if (!isOpen) {
-      // 立即清理
-      document.body.style.removeProperty('pointer-events');
-      document.body.style.removeProperty('overflow');
-
-      // 延迟再次清理，确保覆盖 Radix 的设置
-      setTimeout(() => {
+      // 当对话框关闭时，确保清理 body 样式
+      if (!isOpen) {
+        // 立即清理
         document.body.style.removeProperty('pointer-events');
         document.body.style.removeProperty('overflow');
-      }, 0);
 
-      setTimeout(() => {
-        document.body.style.removeProperty('pointer-events');
-        document.body.style.removeProperty('overflow');
-      }, 50);
+        // 延迟再次清理，确保覆盖 Radix 的设置
+        setTimeout(() => {
+          document.body.style.removeProperty('pointer-events');
+          document.body.style.removeProperty('overflow');
+        }, 0);
 
-      setTimeout(() => {
-        document.body.style.removeProperty('pointer-events');
-        document.body.style.removeProperty('overflow');
-      }, 150);
-    }
-  }, [onOpenChange]);
+        setTimeout(() => {
+          document.body.style.removeProperty('pointer-events');
+          document.body.style.removeProperty('overflow');
+        }, 50);
+
+        setTimeout(() => {
+          document.body.style.removeProperty('pointer-events');
+          document.body.style.removeProperty('overflow');
+        }, 150);
+      }
+    },
+    [onOpenChange],
+  );
 
   // 使用 effect 监控 open 状态变化
   React.useEffect(() => {
@@ -61,7 +64,14 @@ function Dialog({
     }
   }, [open]);
 
-  return <DialogPrimitive.Root data-slot="dialog" open={open} {...props} onOpenChange={handleOpenChange} />;
+  return (
+    <DialogPrimitive.Root
+      data-slot="dialog"
+      open={open}
+      {...props}
+      onOpenChange={handleOpenChange}
+    />
+  );
 }
 
 function DialogTrigger({

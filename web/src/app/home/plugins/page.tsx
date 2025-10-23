@@ -4,7 +4,6 @@ import PluginInstalledComponent, {
 } from '@/app/home/plugins/plugin-installed/PluginInstalledComponent';
 import MarketPage from '@/app/home/plugins/plugin-market/PluginMarketComponent';
 // import PluginSortDialog from '@/app/home/plugins/plugin-sort/PluginSortDialog';
-import PluginMarketComponent from '@/app/home/plugins/plugin-market/PluginMarketComponent';
 import MCPComponent, {
   MCPComponentRef,
 } from '@/app/home/plugins/mcp/MCPComponent';
@@ -34,19 +33,23 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import React, { useState, useRef, useCallback, useEffect, use } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { PluginV4 } from '@/app/infra/entities/plugin';
 import { systemInfo } from '@/app/infra/http/HttpClient';
 import { ApiRespPluginSystemStatus } from '@/app/infra/entities/api';
-import { set } from 'lodash';
-import { passiveEventSupported } from '@tanstack/react-table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@radix-ui/react-select';
-import {  useForm } from 'react-hook-form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@radix-ui/react-select';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { number, z } from 'zod';
+import { z } from 'zod';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import {
   Form,
@@ -58,7 +61,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 
-
 enum PluginInstallStatus {
   WAIT_INPUT = 'wait_input',
   ASK_CONFIRM = 'ask_confirm',
@@ -66,38 +68,16 @@ enum PluginInstallStatus {
   ERROR = 'error',
 }
 
-export default function PluginConfigPage(
-  {
-    editMode = false,
-    initMCPId,
-    onFormSubmit,
-    onFormCancel,
-    onMcpDeleted,
-  }:
-  {
-  editMode?: boolean;
-    initMCPId?: string;
-    onFormSubmit?: () => void;
-    onFormCancel?: () => void;
-    onMcpDeleted?: () => void;
-  } = {}
-) {
-  
+export default function PluginConfigPage() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('installed');
   const [modalOpen, setModalOpen] = useState(false);
-  // const [sortModalOpen, setSortModalOpen] = useState(false);
   const [installSource, setInstallSource] = useState<string>('local');
   const [installInfo, setInstallInfo] = useState<Record<string, any>>({}); // eslint-disable-line @typescript-eslint/no-explicit-any
-  const [sortModalOpen, setSortModalOpen] = useState(false);
-  // const [mcpModalOpen, setMcpModalOpen] = useState(false);
-  const [mcpMarketInstallModalOpen, setMcpMarketInstallModalOpen] =
-    useState(false);
   const [mcpSSEModalOpen, setMcpSSEModalOpen] = useState(false);
   const [pluginInstallStatus, setPluginInstallStatus] =
     useState<PluginInstallStatus>(PluginInstallStatus.WAIT_INPUT);
   const [installError, setInstallError] = useState<string | null>(null);
-  const [mcpInstallError, setMcpInstallError] = useState<string | null>(null);
   const [githubURL, setGithubURL] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
   const [pluginSystemStatus, setPluginSystemStatus] =
@@ -134,7 +114,7 @@ export default function PluginConfigPage(
           });
         }
       });
-    const removeExtraArg = (index: number) => {
+  const removeExtraArg = (index: number) => {
     const newArgs = extraArgs.filter((_, i) => i !== index);
     setExtraArgs(newArgs);
     form.setValue('extra_args', newArgs);
@@ -143,7 +123,9 @@ export default function PluginConfigPage(
     z.object({
       name: z.string().min(1, { message: t('mcp.nameRequired') }),
       timeout: z.number().min(30, { message: t('mcp.timeoutMin30') }),
-      ssereadtimeout: z.number().min(300, { message: t('mcp.sseTimeoutMin300') }),
+      ssereadtimeout: z
+        .number()
+        .min(300, { message: t('mcp.sseTimeoutMin300') }),
       url: z.string().min(1, { message: t('mcp.requestURLRequired') }),
       extra_args: z.array(getExtraArgSchema(t)).optional(),
     });
@@ -219,22 +201,35 @@ export default function PluginConfigPage(
       });
     }, 1000);
   }
-  const [mcpGithubURL, setMcpGithubURL] = useState('');
-  const [mcpSSEURL, setMcpSSEURL] = useState('');
-  const [mcpSSEConfig, setMcpSSEConfig] = useState<Record<string, any> | null>(null);
-  const [mcpInstallConfig, setMcpInstallConfig] = useState<Record<string, any> | null>(null);
   const pluginInstalledRef = useRef<PluginInstalledComponentRef>(null);
   const mcpComponentRef = useRef<MCPComponentRef>(null);
   const [mcpTesting, setMcpTesting] = useState(false);
+  const [editingServerName, setEditingServerName] = useState<string | null>(
+    null,
+  );
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // 强制清理 body 样式以修复 Dialog 关闭后点击失效的问题
   useEffect(() => {
-    console.log('[Dialog Debug] States:', { mcpSSEModalOpen, modalOpen, showDeleteConfirmModal });
+    console.log('[Dialog Debug] States:', {
+      mcpSSEModalOpen,
+      modalOpen,
+      showDeleteConfirmModal,
+    });
 
     if (!mcpSSEModalOpen && !modalOpen && !showDeleteConfirmModal) {
-      console.log('[Dialog Debug] All dialogs closed, cleaning up body styles...');
-      console.log('[Dialog Debug] Before cleanup - body.style.pointerEvents:', document.body.style.pointerEvents);
-      console.log('[Dialog Debug] Before cleanup - body.style.overflow:', document.body.style.overflow);
+      console.log(
+        '[Dialog Debug] All dialogs closed, cleaning up body styles...',
+      );
+      console.log(
+        '[Dialog Debug] Before cleanup - body.style.pointerEvents:',
+        document.body.style.pointerEvents,
+      );
+      console.log(
+        '[Dialog Debug] Before cleanup - body.style.overflow:',
+        document.body.style.overflow,
+      );
 
       const cleanup = () => {
         // 强制移除 body 上可能残留的样式
@@ -249,12 +244,21 @@ export default function PluginConfigPage(
           document.body.style.overflow = '';
         }
 
-        console.log('[Dialog Debug] After cleanup - body.style.pointerEvents:', document.body.style.pointerEvents);
-        console.log('[Dialog Debug] After cleanup - body.style.overflow:', document.body.style.overflow);
+        console.log(
+          '[Dialog Debug] After cleanup - body.style.pointerEvents:',
+          document.body.style.pointerEvents,
+        );
+        console.log(
+          '[Dialog Debug] After cleanup - body.style.overflow:',
+          document.body.style.overflow,
+        );
 
         // 检查计算后的样式
         const computedStyle = window.getComputedStyle(document.body);
-        console.log('[Dialog Debug] Computed pointerEvents:', computedStyle.pointerEvents);
+        console.log(
+          '[Dialog Debug] Computed pointerEvents:',
+          computedStyle.pointerEvents,
+        );
       };
 
       // 多次清理以确保覆盖 Radix 的设置
@@ -280,7 +284,9 @@ export default function PluginConfigPage(
     const interval = setInterval(() => {
       if (!mcpSSEModalOpen && !modalOpen && !showDeleteConfirmModal) {
         if (document.body.style.pointerEvents === 'none') {
-          console.log('[Global Cleanup] Found stale pointer-events, cleaning...');
+          console.log(
+            '[Global Cleanup] Found stale pointer-events, cleaning...',
+          );
           document.body.style.removeProperty('pointer-events');
           document.body.style.pointerEvents = '';
         }
@@ -294,10 +300,15 @@ export default function PluginConfigPage(
   useEffect(() => {
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
-        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+        if (
+          mutation.type === 'attributes' &&
+          mutation.attributeName === 'style'
+        ) {
           if (!mcpSSEModalOpen && !modalOpen && !showDeleteConfirmModal) {
             if (document.body.style.pointerEvents === 'none') {
-              console.log('[MutationObserver] Detected pointer-events being set to none, reverting...');
+              console.log(
+                '[MutationObserver] Detected pointer-events being set to none, reverting...',
+              );
               document.body.style.removeProperty('pointer-events');
               document.body.style.pointerEvents = '';
             }
@@ -360,8 +371,63 @@ export default function PluginConfigPage(
     }
   }
 
-  function deleteMCPServer() {
-    
+  async function deleteMCPServer() {
+    if (!editingServerName) return;
+
+    try {
+      await httpClient.deleteMCPServer(editingServerName);
+      toast.success(t('mcp.deleteSuccess'));
+
+      // 关闭所有对话框
+      setShowDeleteConfirmModal(false);
+      setMcpSSEModalOpen(false);
+
+      // 重置状态
+      form.reset();
+      setExtraArgs([]);
+      setEditingServerName(null);
+      setIsEditMode(false);
+
+      // 刷新服务器列表
+      setRefreshKey((prev) => prev + 1);
+    } catch (error) {
+      console.error('Failed to delete server:', error);
+      toast.error(t('mcp.deleteFailed'));
+    }
+  }
+
+  // 加载服务器数据用于编辑
+  async function loadServerForEdit(serverName: string) {
+    try {
+      const resp = await httpClient.getMCPServer(serverName);
+      const server = resp.server;
+
+      // 填充表单数据
+      form.setValue('name', server.name);
+      form.setValue('url', server.config.url || '');
+      form.setValue('timeout', server.config.timeout || 30);
+      form.setValue('ssereadtimeout', 300); // 默认值，如果后端有返回则使用后端的
+
+      // 填充 headers 作为 extra_args
+      if (server.config.headers) {
+        const headers = Object.entries(server.config.headers).map(
+          ([key, value]) => ({
+            key,
+            type: 'string' as const,
+            value: String(value),
+          }),
+        );
+        setExtraArgs(headers);
+        form.setValue('extra_args', headers);
+      }
+
+      setEditingServerName(serverName);
+      setIsEditMode(true);
+      setMcpSSEModalOpen(true);
+    } catch (error) {
+      console.error('Failed to load server:', error);
+      toast.error(t('mcp.loadFailed'));
+    }
   }
 
   async function handleFormSubmit(value: z.infer<typeof formSchema>) {
@@ -389,22 +455,30 @@ export default function PluginConfigPage(
         timeout: value.timeout,
       };
 
-      await httpClient.createMCPServer(serverConfig);
-
-      toast.success(t('mcp.createSuccess'));
+      if (isEditMode && editingServerName) {
+        // 编辑模式：更新服务器
+        await httpClient.updateMCPServer(editingServerName, serverConfig);
+        toast.success(t('mcp.updateSuccess'));
+      } else {
+        // 创建模式：新建服务器
+        await httpClient.createMCPServer(serverConfig);
+        toast.success(t('mcp.createSuccess'));
+      }
 
       // 只有在异步操作成功后才关闭对话框
       setMcpSSEModalOpen(false);
 
-      // 重置表单
+      // 重置表单和状态
       form.reset();
       setExtraArgs([]);
+      setEditingServerName(null);
+      setIsEditMode(false);
 
-      // 调用回调通知父组件刷新
-      onFormSubmit?.();
+      // 刷新服务器列表
+      setRefreshKey((prev) => prev + 1);
     } catch (error) {
-      console.error('Failed to create MCP server:', error);
-      toast.error(t('mcp.createFailed'));
+      console.error('Failed to save MCP server:', error);
+      toast.error(isEditMode ? t('mcp.updateFailed') : t('mcp.createFailed'));
     }
   }
 
@@ -422,9 +496,9 @@ export default function PluginConfigPage(
           extraArgsObj[arg.key] = arg.value;
         }
       });
-      httpClient.testMCPServer(
-        form.getValues('name'),
-      ).then((res) => {
+    httpClient
+      .testMCPServer(form.getValues('name'))
+      .then((res) => {
         console.log(res);
         toast.success(t('models.testSuccess'));
       })
@@ -573,7 +647,6 @@ export default function PluginConfigPage(
     return renderPluginConnectionErrorState();
   }
 
-
   return (
     <div
       className={`${styles.pageContainer} ${isDragOver ? 'bg-blue-50' : ''}`}
@@ -599,9 +672,12 @@ export default function PluginConfigPage(
                 {t('plugins.marketplace')}
               </TabsTrigger>
             )}
-                <TabsTrigger value="mcp-servers" className="px-6 py-4 cursor-pointer">
-                  {t('mcp.title')}
-                </TabsTrigger>
+            <TabsTrigger
+              value="mcp-servers"
+              className="px-6 py-4 cursor-pointer"
+            >
+              {t('mcp.title')}
+            </TabsTrigger>
           </TabsList>
 
           <div className="flex flex-row justify-end items-center">
@@ -618,7 +694,9 @@ export default function PluginConfigPage(
               <DropdownMenuTrigger asChild>
                 <Button variant="default" className="px-6 py-4 cursor-pointer">
                   <PlusIcon className="w-4 h-4" />
-                  {activeTab === 'mcp-servers' ? t('mcp.add') : t('plugins.install')}
+                  {activeTab === 'mcp-servers'
+                    ? t('mcp.add')
+                    : t('plugins.install')}
                   <ChevronDownIcon className="ml-2 w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -637,9 +715,13 @@ export default function PluginConfigPage(
                       <PlusIcon className="w-4 h-4" />
                       {t('mcp.installFromGithub')}
                     </DropdownMenuItem> */}
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       onClick={() => {
                         setActiveTab('mcp-servers');
+                        setIsEditMode(false);
+                        setEditingServerName(null);
+                        form.reset();
+                        setExtraArgs([]);
                         setMcpSSEModalOpen(true);
                       }}
                     >
@@ -691,11 +773,9 @@ export default function PluginConfigPage(
         </TabsContent>
         <TabsContent value="mcp-servers">
           <MCPMarketComponent
-            askInstallServer={(githubURL) => {
-              setMcpGithubURL(githubURL);
-              setMcpMarketInstallModalOpen(true);
-              // setMcpInstallStatus(PluginInstallStatus.WAIT_INPUT);
-              setMcpInstallError(null);
+            key={refreshKey}
+            onEditServer={(serverName) => {
+              loadServerForEdit(serverName);
             }}
           />
         </TabsContent>
@@ -781,229 +861,222 @@ export default function PluginConfigPage(
           open={showDeleteConfirmModal}
           onOpenChange={setShowDeleteConfirmModal}
         >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('plugins.confirmDeleteTitle')}</DialogTitle>
-          </DialogHeader>
-          <DialogDescription>
-            {t('plugins.deleteConfirmation')}
-          </DialogDescription>
-          <DialogFooter>
-            <Button
-              variant='destructive'
-              onClick={() => {
-                deleteMCPServer();
-                setShowDeleteConfirmModal(false);
-              }}
-            >
-              {t('common.confirm')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{t('plugins.confirmDeleteTitle')}</DialogTitle>
+            </DialogHeader>
+            <DialogDescription>
+              {t('plugins.deleteConfirmation')}
+            </DialogDescription>
+            <DialogFooter>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  deleteMCPServer();
+                  setShowDeleteConfirmModal(false);
+                }}
+              >
+                {t('common.confirm')}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
         </Dialog>
-        
+
         <Dialog
           open={mcpSSEModalOpen}
-          onOpenChange={setMcpSSEModalOpen}
+          onOpenChange={(open) => {
+            setMcpSSEModalOpen(open);
+            if (!open) {
+              // 关闭对话框时重置编辑状态
+              setIsEditMode(false);
+              setEditingServerName(null);
+              form.reset();
+              setExtraArgs([]);
+            }
+          }}
         >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {t('mcp.createServer')}
-            </DialogTitle>
-          </DialogHeader>
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(handleFormSubmit)}
-            className='space-y-4'
-          >
-            <div className='space-y-4'>
-              <FormField
-                control={form.control}
-                name='name'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('mcp.name')}</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage/>
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control = {form.control}
-                name = 'url'
-                render={
-                  ({field}) => (
-                    <FormItem>
-                      <FormLabel>
-                        {t('mcp.url')}
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage/>
-                    </FormItem>
-                  )}
-                />
-
-              <FormField
-                control={form.control}
-                name='timeout'
-                render = {
-                  ({field}) => (
-                    <FormItem>
-                      <FormLabel>
-                      {t('mcp.timeout')}  
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage/>
-                    </FormItem>
-                  )
-                }
-                />
-
-                <FormField
-                  control={form.control}
-                  name='ssereadtimeout'
-                  render = {
-                    (field) =>
-                    (
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {isEditMode ? t('mcp.editServer') : t('mcp.createServer')}
+              </DialogTitle>
+            </DialogHeader>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(handleFormSubmit)}
+                className="space-y-4"
+              >
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
-                          {t('mcp.ssereadtimeout')}
-                        </FormLabel>
+                        <FormLabel>{t('mcp.name')}</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder={t('mcp.sseTimeout')}
-                            {...field}
-                            />
+                          <Input {...field} />
                         </FormControl>
-                        <FormMessage/>
+                        <FormMessage />
                       </FormItem>
-                    )
-                  }
+                    )}
                   />
 
-                <FormItem>
-              <FormLabel>{t('models.extraParameters')}</FormLabel>
-              <div className="space-y-2">
-                {extraArgs.map((arg, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Input
-                      placeholder={t('models.keyName')}
-                      value={arg.key}
-                      onChange={(e) =>
-                        updateExtraArg(index, 'key', e.target.value)
-                      }
-                    />
-                    <Select
-                      value={arg.type}
-                      onValueChange={(value) =>
-                        updateExtraArg(index, 'type', value)
-                      }
-                    >
-                      <SelectTrigger className="w-[120px] bg-[#ffffff] dark:bg-[#2a2a2e]">
-                        <SelectValue placeholder={t('models.type')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="string">
-                          {t('models.string')}
-                        </SelectItem>
-                        <SelectItem value="number">
-                          {t('models.number')}
-                        </SelectItem>
-                        <SelectItem value="boolean">
-                          {t('models.boolean')}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      placeholder={t('models.value')}
-                      value={arg.value}
-                      onChange={(e) =>
-                        updateExtraArg(index, 'value', e.target.value)
-                      }
-                    />
-                    <button
-                      type="button"
-                      className="p-2 hover:bg-gray-100 rounded"
-                      onClick={() => removeExtraArg(index)}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        className="w-5 h-5 text-red-500"
+                  <FormField
+                    control={form.control}
+                    name="url"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('mcp.url')}</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="timeout"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t('mcp.timeout')}</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="ssereadtimeout"
+                    render={(field) => (
+                      <FormItem>
+                        <FormLabel>{t('mcp.ssereadtimeout')}</FormLabel>
+                        <FormControl>
+                          <Input placeholder={t('mcp.sseTimeout')} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormItem>
+                    <FormLabel>{t('models.extraParameters')}</FormLabel>
+                    <div className="space-y-2">
+                      {extraArgs.map((arg, index) => (
+                        <div key={index} className="flex gap-2">
+                          <Input
+                            placeholder={t('models.keyName')}
+                            value={arg.key}
+                            onChange={(e) =>
+                              updateExtraArg(index, 'key', e.target.value)
+                            }
+                          />
+                          <Select
+                            value={arg.type}
+                            onValueChange={(value) =>
+                              updateExtraArg(index, 'type', value)
+                            }
+                          >
+                            <SelectTrigger className="w-[120px] bg-[#ffffff] dark:bg-[#2a2a2e]">
+                              <SelectValue placeholder={t('models.type')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="string">
+                                {t('models.string')}
+                              </SelectItem>
+                              <SelectItem value="number">
+                                {t('models.number')}
+                              </SelectItem>
+                              <SelectItem value="boolean">
+                                {t('models.boolean')}
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            placeholder={t('models.value')}
+                            value={arg.value}
+                            onChange={(e) =>
+                              updateExtraArg(index, 'value', e.target.value)
+                            }
+                          />
+                          <button
+                            type="button"
+                            className="p-2 hover:bg-gray-100 rounded"
+                            onClick={() => removeExtraArg(index)}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              fill="currentColor"
+                              className="w-5 h-5 text-red-500"
+                            >
+                              <path d="M7 4V2H17V4H22V6H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V6H2V4H7ZM6 6V20H18V6H6ZM9 9H11V17H9V9ZM13 9H15V17H13V9Z"></path>
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={addExtraArg}
                       >
-                        <path d="M7 4V2H17V4H22V6H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V6H2V4H7ZM6 6V20H18V6H6ZM9 9H11V17H9V9ZM13 9H15V17H13V9Z"></path>
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-                <Button type="button" variant="outline" onClick={addExtraArg}>
-                  {t('models.addParameter')}
-                </Button>
-              </div>
-              <FormDescription>
-                {t('llm.extraParametersDescription')}
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
+                        {t('models.addParameter')}
+                      </Button>
+                    </div>
+                    <FormDescription>
+                      {t('llm.extraParametersDescription')}
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
 
-            <DialogFooter>
-            {editMode && (
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={() => setShowDeleteConfirmModal(true)}
-              >
-                {t('common.delete')}
-              </Button>
-            )}
+                  <DialogFooter>
+                    {isEditMode && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={() => setShowDeleteConfirmModal(true)}
+                      >
+                        {t('common.delete')}
+                      </Button>
+                    )}
 
-            <Button type="submit">
-              {editMode ? t('common.save') : t('common.submit')}
-            </Button>
+                    <Button type="submit">
+                      {isEditMode ? t('common.save') : t('common.submit')}
+                    </Button>
 
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => testMcp()}
-              disabled={mcpTesting}
-            >
-              {t('common.test')}
-            </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => testMcp()}
+                      disabled={mcpTesting}
+                    >
+                      {t('common.test')}
+                    </Button>
 
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setMcpSSEModalOpen(false);
-                form.reset();
-                setExtraArgs([]);
-                onFormCancel?.();
-              }}
-            >
-              {t('common.cancel')}
-            </Button>
-          </DialogFooter>
-            </div>
-          </form>
-        </Form> 
-        </DialogContent>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setMcpSSEModalOpen(false);
+                        form.reset();
+                        setExtraArgs([]);
+                        setIsEditMode(false);
+                        setEditingServerName(null);
+                      }}
+                    >
+                      {t('common.cancel')}
+                    </Button>
+                  </DialogFooter>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
         </Dialog>
-      </div> 
-  </div>
+      </div>
+    </div>
   );
 }

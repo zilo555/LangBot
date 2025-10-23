@@ -25,23 +25,42 @@ class MCPRouterGroup(group.RouterGroup):
                 result = await self.ap.persistence_mgr.execute_async(
                     sqlalchemy.select(MCPServer).order_by(MCPServer.created_at.desc())
                 )
-                servers = [self.ap.persistence_mgr.serialize_model(MCPServer, row) for row in result.scalars().all()]
-                
+                raw_results = result.all()
+                servers = [self.ap.persistence_mgr.serialize_model(MCPServer, row) for row in raw_results]
+
                 servers_with_status = []
                 for server in servers:
-                    if servers['enable']:
+                    # 设置状态
+                    if server['enable']:
                         status = 'enabled'
                     else:
                         status = 'disabled'
 
-                    #   这里先写成开关状态，先不写连接状态
+                    # 构建 config 对象 (前端期望的格式)
+                    extra_args = server.get('extra_args', {})
+                    config = {
+                        'name': server['name'],
+                        'mode': server['mode'],
+                        'enable': server['enable'],
+                    }
+
+                    # 根据模式添加相应的配置
+                    if server['mode'] == 'sse':
+                        config['url'] = extra_args.get('url', '')
+                        config['headers'] = extra_args.get('headers', {})
+                        config['timeout'] = extra_args.get('timeout', 60)
+                    elif server['mode'] == 'stdio':
+                        config['command'] = extra_args.get('command', '')
+                        config['args'] = extra_args.get('args', [])
+                        config['env'] = extra_args.get('env', {})
+
                     server_info = {
                         'name': server['name'],
                         'mode': server['mode'],
                         'enable': server['enable'],
-                        'description': server.get('description',''),
-                        'extra_args': server.get('extra_args',{}),
                         'status': status,
+                        'tools': [],  # 暂时返回空数组，需要连接到MCP服务器才能获取工具列表
+                        'config': config,
                     }
                     servers_with_status.append(server_info)
 

@@ -553,7 +553,7 @@ export class BackendClient extends BaseHttpClient {
   }
 
   public installMCPServerFromSSE(
-    source: {},
+    source: object,
   ): Promise<AsyncTaskCreatedResp> {
     return this.post('/api/v1/mcp/servers', { source });
   }
