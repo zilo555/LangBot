@@ -14,7 +14,8 @@ export class MCPCardVO {
     this.mode = data.mode;
     this.enable = data.enable;
     this.status = data.status;
-    this.tools = data.tools.length;
+    // tools可能是数组或数字
+    this.tools = Array.isArray(data.tools) ? data.tools.length : (data.tools || 0);
     this.error = data.error;
     this.config = data.config;
   }

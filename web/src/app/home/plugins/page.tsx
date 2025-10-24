@@ -42,11 +42,12 @@ import { systemInfo } from '@/app/infra/http/HttpClient';
 import { ApiRespPluginSystemStatus } from '@/app/infra/entities/api';
 import {
   Select,
-  SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@radix-ui/react-select';
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select"
+
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -173,7 +174,7 @@ export default function PluginConfigPage() {
 
     fetchPluginSystemStatus();
   }, [t]);
-
+  //这个是旧版本的测试github url，下面重写了一个新版本的watchTask函数，用来检测Mcp
   function watchTask(taskId: number) {
     let alreadySuccess = false;
     console.log('taskId:', taskId);
@@ -200,7 +201,53 @@ export default function PluginConfigPage() {
         }
       });
     }, 1000);
+
   }
+
+  function watchTestMCPTask(taskId: number) {
+  let alreadyHandled = false;
+  console.log('Watching MCP test task:', taskId);
+
+  const interval = setInterval(() => {
+    httpClient.getAsyncTask(taskId).then((resp) => {
+      console.log('task status:', resp);
+
+      // 若任务已完成
+      if (resp.runtime && resp.runtime.done) {
+        clearInterval(interval);
+
+        if (resp.runtime.exception) {
+          // 任务失败
+          toast.error(`测试失败: ${resp.runtime.exception}`);
+        } else if (resp.runtime.result) {
+          // 任务成功
+          const result = resp.runtime.result as {
+              status?: string;
+              tools_count?: number;
+              tools_names_lists?: string[];
+              error?: string;
+            };
+        const names = result.tools_names_lists || [];
+
+          if (!alreadyHandled) {
+            alreadyHandled = true;
+            const names = result.tools_names_lists || [];
+            toast.success(`连接成功，找到 ${names.length} 个工具`);
+            console.log('工具列表:', names);
+          }
+        } else {
+          // 没结果但标记为完成
+          toast.error('测试任务完成但未返回结果');
+        }
+      }
+    }).catch((err) => {
+      console.error('任务状态获取失败:', err);
+      toast.error('获取任务状态失败');
+      clearInterval(interval);
+    });
+  }, 1000);
+}
+
   const pluginInstalledRef = useRef<PluginInstalledComponentRef>(null);
   const mcpComponentRef = useRef<MCPComponentRef>(null);
   const [mcpTesting, setMcpTesting] = useState(false);
@@ -209,6 +256,14 @@ export default function PluginConfigPage() {
   );
   const [isEditMode, setIsEditMode] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // MCP测试结果状态
+  const [mcpTestStatus, setMcpTestStatus] = useState<'idle' | 'testing' | 'success' | 'failed'>('idle');
+  const [mcpToolNames, setMcpToolNames] = useState<string[]>([]);
+  const [mcpTestError, setMcpTestError] = useState<string>('');
+
+  // 缓存每个服务器测试后的工具数量
+  const [serverToolsCache, setServerToolsCache] = useState<Record<string, number>>({});
 
   // 强制清理 body 样式以修复 Dialog 关闭后点击失效的问题
   useEffect(() => {
@@ -397,43 +452,140 @@ export default function PluginConfigPage() {
   }
 
   async function loadServerForEdit(serverName: string) {
-  try {
-    const resp = await httpClient.getMCPServer(serverName);
-    const server = resp.server ?? resp; // 有的接口包了一层，有的直接返回对象
+    try {
+      const resp = await httpClient.getMCPServer(serverName);
+      const server = resp.server ?? resp; // 有的接口包了一层，有的直接返回对象
+      console.log('Loaded server for edit:', server);
 
-    console.log('Loaded server for edit:', server);
+      // 填充表单数据
+      form.setValue('name', server.name);
+      form.setValue('url', server.extra_args?.url || '');
+      form.setValue('timeout', server.extra_args?.timeout || 30);
+      form.setValue('ssereadtimeout', server.extra_args?.ssereadtimeout || 300);
 
-    // 填充表单数据
-    form.setValue('name', server.name);
-    form.setValue('url', server.extra_args?.url || '');
-    form.setValue('timeout', server.extra_args?.timeout || 30);
-    form.setValue('ssereadtimeout', 300);
+      // 填充 headers
+      if (server.extra_args?.headers) {
+        const headers = Object.entries(server.extra_args.headers).map(
+          ([key, value]) => ({
+            key,
+            type: 'string' as const,
+            value: String(value),
+          }),
+        );
+        setExtraArgs(headers);
+        form.setValue('extra_args', headers);
+      }
 
-    // 填充 headers
-    if (server.extra_args?.headers) {
-      const headers = Object.entries(server.extra_args.headers).map(
-        ([key, value]) => ({
-          key,
-          type: 'string' as const,
-          value: String(value),
-        }),
-      );
-      setExtraArgs(headers);
-      form.setValue('extra_args', headers);
+      // 重置测试状态
+      setMcpTestStatus('testing');
+      setMcpToolNames([]);
+      setMcpTestError('');
+
+      // 打开对话框
+      setEditingServerName(serverName);
+      setIsEditMode(true);
+      setMcpSSEModalOpen(true);
+
+      // 在这里测试工具连接状态
+      try {
+        const res = await httpClient.testMCPServer(server.name);
+        if (res.task_id) {
+          const taskId = res.task_id;
+
+          // 监听任务完成
+          const interval = setInterval(() => {
+            httpClient.getAsyncTask(taskId).then((taskResp) => {
+              console.log('Task response:', taskResp);
+
+              if (taskResp.runtime && taskResp.runtime.done) {
+                clearInterval(interval);
+
+                console.log('Task completed. Runtime:', taskResp.runtime);
+                console.log('Result:', taskResp.runtime.result);
+                console.log('Exception:', taskResp.runtime.exception);
+
+                if (taskResp.runtime.exception) {
+                  // 测试失败
+                  console.log('Test failed with exception');
+                  setMcpTestStatus('failed');
+                  setMcpToolNames([]);
+                  setMcpTestError(taskResp.runtime.exception || '未知错误');
+                } else if (taskResp.runtime.result) {
+                  // 测试成功 - 后端可能返回字符串或对象
+                  try {
+                    let result: {
+                      status?: string;
+                      tools_count?: number;
+                      tools_names_lists?: string[];
+                      error?: string;
+                    };
+
+                    // 如果result是字符串，需要先解析
+                    const rawResult: any = taskResp.runtime.result;
+                    if (typeof rawResult === 'string') {
+                      console.log('Result is string, parsing...');
+                      result = JSON.parse(rawResult.replace(/'/g, '"'));
+                    } else {
+                      result = rawResult as typeof result;
+                    }
+
+                    console.log('Parsed result:', result);
+                    console.log('tools_names_lists:', result.tools_names_lists);
+                    console.log('tools_names_lists length:', result.tools_names_lists?.length);
+
+                    if (result.tools_names_lists && result.tools_names_lists.length > 0) {
+                      console.log('Test success with', result.tools_names_lists.length, 'tools');
+                      setMcpTestStatus('success');
+                      setMcpToolNames(result.tools_names_lists);
+                      // 保存工具数量到缓存
+                      setServerToolsCache(prev => ({
+                        ...prev,
+                        [server.name]: result.tools_names_lists!.length
+                      }));
+                    } else {
+                      console.log('Test failed: no tools found');
+                      setMcpTestStatus('failed');
+                      setMcpToolNames([]);
+                      setMcpTestError('未找到任何工具');
+                    }
+                  } catch (parseError) {
+                    console.error('Failed to parse result:', parseError);
+                    setMcpTestStatus('failed');
+                    setMcpToolNames([]);
+                    setMcpTestError('解析测试结果失败');
+                  }
+                } else {
+                  // 没结果
+                  console.log('Test failed: no result');
+                  setMcpTestStatus('failed');
+                  setMcpToolNames([]);
+                  setMcpTestError('测试未返回结果');
+                }
+              }
+            }).catch((err) => {
+              console.error('获取任务状态失败:', err);
+              clearInterval(interval);
+              setMcpTestStatus('failed');
+              setMcpToolNames([]);
+              setMcpTestError(err.message || '获取任务状态失败');
+            });
+          }, 1000);
+        } else {
+          setMcpTestStatus('failed');
+          setMcpToolNames([]);
+          setMcpTestError('未获取到任务ID');
+        }
+      } catch (error) {
+        console.error('Failed to test server:', error);
+        setMcpTestStatus('failed');
+        setMcpToolNames([]);
+        setMcpTestError((error as Error).message || '测试连接时发生错误');
+      }
+    } catch (error) {
+      console.error('Failed to load server:', error);
+      toast.error(t('mcp.loadFailed'));
     }
-
-    //在这里返回mcp里的tools
-    const tools = await httpClient.getMCPTools(server.name);
-
-    setEditingServerName(serverName);
-    setIsEditMode(true);
-    setMcpSSEModalOpen(true);
-  } catch (error) {
-    console.error('Failed to load server:', error);
-    toast.error(t('mcp.loadFailed'));
   }
-}
-
 
   async function handleFormSubmit(value: z.infer<typeof formSchema>) {
     const extraArgsObj: Record<string, string | number | boolean> = {};
@@ -458,6 +610,7 @@ export default function PluginConfigPage() {
         url: value.url,
         headers: extraArgsObj as Record<string, string>,
         timeout: value.timeout,
+        ssereadtimeout: value.ssereadtimeout,
       };
 
       if (isEditMode && editingServerName) {
@@ -782,6 +935,7 @@ export default function PluginConfigPage() {
             onEditServer={(serverName) => {
               loadServerForEdit(serverName);
             }}
+            toolsCountCache={serverToolsCache}
           />
         </TabsContent>
       </Tabs>
@@ -868,10 +1022,10 @@ export default function PluginConfigPage() {
         >
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{t('plugins.confirmDeleteTitle')}</DialogTitle>
+              <DialogTitle>{t('mcp.confirmDeleteTitle')}</DialogTitle>
             </DialogHeader>
             <DialogDescription>
-              {t('plugins.deleteConfirmation')}
+              {t('mcp.confirmDeleteServer')}
             </DialogDescription>
             <DialogFooter>
               <Button
@@ -907,6 +1061,99 @@ export default function PluginConfigPage() {
                 {isEditMode ? t('mcp.editServer') : t('mcp.createServer')}
               </DialogTitle>
             </DialogHeader>
+
+            {/* 测试结果显示区域 - 仅在编辑模式显示 */}
+            {isEditMode && (
+              <div className="mb-4 p-3 rounded-lg border">
+                {mcpTestStatus === 'testing' && (
+                  <div className="flex items-center gap-2 text-blue-600">
+                    <svg
+                      className="w-5 h-5 animate-spin"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    <span className="font-medium">{t('mcp.testing')}</span>
+                  </div>
+                )}
+
+                {mcpTestStatus === 'success' && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-green-600">
+                      <svg
+                        className="w-5 h-5"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <span className="font-medium">
+                        {t('mcp.connectionSuccess')} - {mcpToolNames.length} {t('mcp.toolsFound')}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {mcpToolNames.map((toolName, index) => (
+                        <span
+                          key={index}
+                          className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md"
+                        >
+                          {toolName}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {mcpTestStatus === 'failed' && (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-red-600">
+                      <svg
+                        className="w-5 h-5"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <span className="font-medium">{t('mcp.connectionFailed')}</span>
+                    </div>
+                    {mcpTestError && (
+                      <div className="text-sm text-red-500 pl-7">
+                        {mcpTestError}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(handleFormSubmit)}
@@ -958,11 +1205,16 @@ export default function PluginConfigPage() {
                   <FormField
                     control={form.control}
                     name="ssereadtimeout"
-                    render={(field) => (
+                    render={({ field }) => (
                       <FormItem>
-                        <FormLabel>{t('mcp.ssereadtimeout')}</FormLabel>
+                        <FormLabel>{t('mcp.sseTimeout')}</FormLabel>
                         <FormControl>
-                          <Input placeholder={t('mcp.sseTimeout')} {...field} />
+                          <Input
+                            type="number"
+                            placeholder={t('mcp.sseTimeoutDescription')}
+                            {...field}
+                            onChange={(e) => field.onChange(Number(e.target.value))}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -990,7 +1242,7 @@ export default function PluginConfigPage() {
                             <SelectTrigger className="w-[120px] bg-[#ffffff] dark:bg-[#2a2a2e]">
                               <SelectValue placeholder={t('models.type')} />
                             </SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="bg-[#ffffff] dark:bg-[#2a2a2e]">
                               <SelectItem value="string">
                                 {t('models.string')}
                               </SelectItem>
@@ -1034,7 +1286,7 @@ export default function PluginConfigPage() {
                       </Button>
                     </div>
                     <FormDescription>
-                      {t('llm.extraParametersDescription')}
+                      {t('mcp.extraParametersDescription')}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

@@ -29,6 +29,13 @@ class MCPRouterGroup(group.RouterGroup):
                 servers = [self.ap.persistence_mgr.serialize_model(MCPServer, row) for row in raw_results]
 
                 servers_with_status = []
+                # 获取MCP工具加载器
+                mcp_loader = None
+                for loader in self.ap.tool_mgr.loaders:
+                    if loader.__class__.__name__ == 'MCPLoader':
+                        mcp_loader = loader
+                        break
+
                 for server in servers:
                     # 设置状态
                     if server['enable']:
@@ -54,12 +61,18 @@ class MCPRouterGroup(group.RouterGroup):
                         config['args'] = extra_args.get('args', [])
                         config['env'] = extra_args.get('env', {})
 
+                    # 从运行中的会话获取工具数量
+                    tools_count = 0
+                    if mcp_loader and hasattr(mcp_loader, 'sessions') and server['name'] in mcp_loader.sessions:
+                        session = mcp_loader.sessions[server['name']]
+                        tools_count = len(session.functions)
+
                     server_info = {
                         'name': server['name'],
                         'mode': server['mode'],
                         'enable': server['enable'],
                         'status': status,
-                        'tools': [],  # 暂时返回空数组，需要连接到MCP服务器才能获取工具列表
+                        'tools': tools_count,  # 从运行中的会话获取工具数量
                         'config': config,
                     }
                     servers_with_status.append(server_info)
@@ -87,6 +100,7 @@ class MCPRouterGroup(group.RouterGroup):
                             'url':data.get('url',''),
                             'headers':data.get('headers',{}),
                             'timeout':data.get('timeout',60),
+                            'ssereadtimeout':data.get('ssereadtimeout',300),
                         },
                     }
 
@@ -96,7 +110,7 @@ class MCPRouterGroup(group.RouterGroup):
 
                     return self.success()
                 
-                except Exception as e:
+                except Exception:
                     print(traceback.format_exc())
 
         @self.route('/servers/<server_name>', methods=['GET', 'PUT', 'DELETE'], auth_type=group.AuthType.USER_TOKEN)
@@ -125,6 +139,7 @@ class MCPRouterGroup(group.RouterGroup):
                         'url': data.get('url', extra_args.get('url','')),
                         'headers': data.get('headers', extra_args.get('headers',{})),
                         'timeout': data.get('timeout', extra_args.get('timeout',60)),
+                        'ssereadtimeout': data.get('ssereadtimeout', extra_args.get('ssereadtimeout',300)),
                     })
                 update_data['extra_args'] = extra_args
 
@@ -167,26 +182,33 @@ class MCPRouterGroup(group.RouterGroup):
             from .....provider.tools.loaders.mcp import RuntimeMCPSession
 
             ctx.current_action = f'Testing connection to {server.name}'
-
+            print(server)
             # 创建临时会话进行测试
             session = RuntimeMCPSession(server.name, {
-                'name': server.name,
-                'mode': server.mode,
-                'enable': server.enable,
-                'extra_args': server.extra_args or {},
-            }, self.ap)
-            await session.initialize()
+            'name': server.name,
+            'mode': server.mode,
+            'enable': server.enable,
+            'url': server.extra_args.get('url',''),
+            'headers': server.extra_args.get('headers',{}),
+            'timeout': server.extra_args.get('timeout',60),
+            },enable=True, ap=self.ap)
+            await session.start()
 
             # 获取工具列表作为测试
             tools_count = len(session.functions)
+
+            tool_name_list = []
+            for function in session.functions:
+                tool_name_list.append(function.name)
             ctx.current_action = f'Successfully connected. Found {tools_count} tools.'
 
             # 关闭测试会话
             await session.shutdown()
 
-            return {'status': 'success', 'tools_count': tools_count}
+            return {'status': 'success', 'tools_count': tools_count,'tools_names_lists':tool_name_list}
 
         except Exception as e:
+            print(traceback.format_exc())
             ctx.current_action = f'Connection test failed: {str(e)}'
             raise e
         

@@ -29,9 +29,11 @@ import { httpClient } from '@/app/infra/http/HttpClient';
 
 export default function MCPMarketComponent({
   onEditServer,
+  toolsCountCache = {},
 }: {
   askInstallServer?: (githubURL: string) => void;
   onEditServer?: (serverName: string) => void;
+  toolsCountCache?: Record<string, number>;
 }) {
   const { t } = useTranslation();
   // const [marketServerList, setMarketServerList] = useState<MCPMarketCardVO[]>(
@@ -52,6 +54,12 @@ export default function MCPMarketComponent({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 当工具数量缓存变化时，重新获取服务器列表
+  useEffect(() => {
+    fetchInstalledServers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toolsCountCache]);
+
   function initData() {
     fetchInstalledServers();
     // getServerList(); // GitHub 市场功能暂时注释
@@ -62,7 +70,14 @@ export default function MCPMarketComponent({
     httpClient
       .getMCPServers()
       .then((resp) => {
-        const servers = resp.servers.map((server) => new MCPCardVO(server));
+        const servers = resp.servers.map((server) => {
+          const vo = new MCPCardVO(server);
+          // 如果缓存中有工具数量，使用缓存值覆盖
+          if (toolsCountCache[server.name] !== undefined) {
+            vo.tools = toolsCountCache[server.name];
+          }
+          return vo;
+        });
         setInstalledServers(servers);
         setLoading(false);
       })
@@ -147,7 +162,7 @@ export default function MCPMarketComponent({
       {/* 已安装的服务器列表 */}
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-4 pl-[0.8rem] pt-4">
-          {t('mcp.installedServers')}
+          {t('mcp.title')}
         </h2>
         <div className={`${styles.pluginListContainer}`}>
           {loading ? (

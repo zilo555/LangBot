@@ -521,8 +521,8 @@ export class BackendClient extends BaseHttpClient {
     serverName: string,
     target_enabled: boolean,
   ): Promise<AsyncTaskCreatedResp> {
-    return this.put(`/api/v1/mcp/servers/${serverName}/toggle`, {
-      target_enabled,
+    return this.put(`/api/v1/mcp/servers/${serverName}`, {
+      enable: target_enabled,
     });
   }
 
