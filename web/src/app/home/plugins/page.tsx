@@ -396,39 +396,44 @@ export default function PluginConfigPage() {
     }
   }
 
-  // 加载服务器数据用于编辑
   async function loadServerForEdit(serverName: string) {
-    try {
-      const resp = await httpClient.getMCPServer(serverName);
-      const server = resp.server;
+  try {
+    const resp = await httpClient.getMCPServer(serverName);
+    const server = resp.server ?? resp; // 有的接口包了一层，有的直接返回对象
 
-      // 填充表单数据
-      form.setValue('name', server.name);
-      form.setValue('url', server.config.url || '');
-      form.setValue('timeout', server.config.timeout || 30);
-      form.setValue('ssereadtimeout', 300); // 默认值，如果后端有返回则使用后端的
+    console.log('Loaded server for edit:', server);
 
-      // 填充 headers 作为 extra_args
-      if (server.config.headers) {
-        const headers = Object.entries(server.config.headers).map(
-          ([key, value]) => ({
-            key,
-            type: 'string' as const,
-            value: String(value),
-          }),
-        );
-        setExtraArgs(headers);
-        form.setValue('extra_args', headers);
-      }
+    // 填充表单数据
+    form.setValue('name', server.name);
+    form.setValue('url', server.extra_args?.url || '');
+    form.setValue('timeout', server.extra_args?.timeout || 30);
+    form.setValue('ssereadtimeout', 300);
 
-      setEditingServerName(serverName);
-      setIsEditMode(true);
-      setMcpSSEModalOpen(true);
-    } catch (error) {
-      console.error('Failed to load server:', error);
-      toast.error(t('mcp.loadFailed'));
+    // 填充 headers
+    if (server.extra_args?.headers) {
+      const headers = Object.entries(server.extra_args.headers).map(
+        ([key, value]) => ({
+          key,
+          type: 'string' as const,
+          value: String(value),
+        }),
+      );
+      setExtraArgs(headers);
+      form.setValue('extra_args', headers);
     }
+
+    //在这里返回mcp里的tools
+    const tools = await httpClient.getMCPTools(server.name);
+
+    setEditingServerName(serverName);
+    setIsEditMode(true);
+    setMcpSSEModalOpen(true);
+  } catch (error) {
+    console.error('Failed to load server:', error);
+    toast.error(t('mcp.loadFailed'));
   }
+}
+
 
   async function handleFormSubmit(value: z.infer<typeof formSchema>) {
     const extraArgsObj: Record<string, string | number | boolean> = {};
@@ -895,6 +900,7 @@ export default function PluginConfigPage() {
             }
           }}
         >
+          
           <DialogContent>
             <DialogHeader>
               <DialogTitle>

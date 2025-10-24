@@ -83,7 +83,6 @@ class MCPRouterGroup(group.RouterGroup):
                         'name': data['name'],
                         'mode': 'sse',
                         'enable': data.get('enable', False),
-                        'description': data.get('description',''),
                         'extra_args': {
                             'url':data.get('url',''),
                             'headers':data.get('headers',{}),
@@ -118,7 +117,6 @@ class MCPRouterGroup(group.RouterGroup):
                 data = await quart.request.json
                 update_data = {
                     'enable': data.get('enable', server.enable),
-                    'description': data.get('description', server.description),
                 }
 
                 extra_args = server.extra_args or {}
@@ -175,7 +173,6 @@ class MCPRouterGroup(group.RouterGroup):
                 'name': server.name,
                 'mode': server.mode,
                 'enable': server.enable,
-                'description': server.description,
                 'extra_args': server.extra_args or {},
             }, self.ap)
             await session.initialize()
