@@ -1,5 +1,5 @@
 import { MCPCardVO } from '@/app/home/plugins/mcp/MCPCardVO';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
@@ -21,6 +21,51 @@ export default function MCPCardComponent({
   const [switchEnable, setSwitchEnable] = useState(true);
   const [testing, setTesting] = useState(false);
   const [toolsCount, setToolsCount] = useState(cardVO.tools);
+  const [status, setStatus] = useState(cardVO.status);
+  const [error, setError] = useState(cardVO.error);
+
+  // 响应cardVO的变化，更新本地状态
+  useEffect(() => {
+    console.log(`[MCPCard ${cardVO.name}] Status updated:`, {
+      status: cardVO.status,
+      tools: cardVO.tools,
+      error: cardVO.error,
+    });
+    setStatus(cardVO.status);
+    setError(cardVO.error);
+    setToolsCount(cardVO.tools);
+    setEnabled(cardVO.enable);
+  }, [cardVO.name, cardVO.status, cardVO.error, cardVO.tools, cardVO.enable]);
+
+  function getStatusColor(): string {
+    switch (status) {
+      case 'connected':
+        return 'text-green-600';
+      case 'disconnected':
+        return 'text-gray-500';
+      case 'error':
+        return 'text-red-600';
+      case 'disabled':
+        return 'text-gray-400';
+      default:
+        return 'text-gray-500';
+    }
+  }
+
+  function getStatusIcon(): string {
+    switch (status) {
+      case 'connected':
+        return 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z';
+      case 'disconnected':
+        return 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z';
+      case 'error':
+        return 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z';
+      case 'disabled':
+        return 'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636';
+      default:
+        return 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z';
+    }
+  }
 
   function handleEnable(checked: boolean) {
     setSwitchEnable(false);
@@ -55,23 +100,39 @@ export default function MCPCardComponent({
               } else {
                 // 解析测试结果获取工具数量
                 try {
-                  let result: {
-                    status?: string;
-                    tools_count?: number;
-                    tools_names_lists?: string[];
-                    error?: string;
-                  };
+                  const rawResult = taskResp.runtime.result as
+                    | string
+                    | {
+                        status?: string;
+                        tools_count?: number;
+                        tools_names_lists?: string[];
+                        error?: string;
+                      }
+                    | undefined;
 
-                  const rawResult: any = taskResp.runtime.result;
-                  if (typeof rawResult === 'string') {
-                    result = JSON.parse(rawResult.replace(/'/g, '"'));
-                  } else {
-                    result = rawResult as typeof result;
-                  }
+                  if (rawResult) {
+                    let result: {
+                      status?: string;
+                      tools_count?: number;
+                      tools_names_lists?: string[];
+                      error?: string;
+                    };
 
-                  if (result.tools_count !== undefined) {
-                    setToolsCount(result.tools_count);
-                    toast.success(t('mcp.testSuccess') + ` - ${result.tools_count} ${t('mcp.toolsFound')}`);
+                    if (typeof rawResult === 'string') {
+                      result = JSON.parse(rawResult.replace(/'/g, '"'));
+                    } else {
+                      result = rawResult;
+                    }
+
+                    if (result.tools_count !== undefined) {
+                      setToolsCount(result.tools_count);
+                      toast.success(
+                        t('mcp.testSuccess') +
+                          ` - ${result.tools_count} ${t('mcp.toolsFound')}`,
+                      );
+                    } else {
+                      toast.success(t('mcp.testSuccess'));
+                    }
                   } else {
                     toast.success(t('mcp.testSuccess'));
                   }
@@ -120,7 +181,7 @@ export default function MCPCardComponent({
 
             <div className="flex flex-row items-center justify-start gap-[0.4rem] mt-1">
               <svg
-                className={`w-4 h-4 ${cardVO.getStatusColor()}`}
+                className={`w-4 h-4 ${getStatusColor()}`}
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -130,20 +191,20 @@ export default function MCPCardComponent({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d={cardVO.getStatusIcon()}
+                  d={getStatusIcon()}
                 />
               </svg>
-              <div className={`text-[0.8rem] ${cardVO.getStatusColor()}`}>
-                {cardVO.status === 'connected' && t('mcp.statusConnected')}
-                {cardVO.status === 'disconnected' &&
-                  t('mcp.statusDisconnected')}
-                {cardVO.status === 'error' && t('mcp.statusError')}
+              <div className={`text-[0.8rem] ${getStatusColor()}`}>
+                {status === 'connected' && t('mcp.statusConnected')}
+                {status === 'disconnected' && t('mcp.statusDisconnected')}
+                {status === 'error' && t('mcp.statusError')}
+                {status === 'disabled' && t('mcp.statusDisabled')}
               </div>
             </div>
 
-            {cardVO.error && (
+            {error && (
               <div className="text-[0.7rem] text-red-500 line-clamp-2 mt-1">
-                {cardVO.error}
+                {error}
               </div>
             )}
           </div>

@@ -31,7 +31,7 @@ export interface MCPComponentRef {
 }
 
 // eslint-disable-next-line react/display-name
-const MCPComponent = forwardRef<MCPComponentRef>((props, ref) => {
+const MCPComponent = forwardRef<MCPComponentRef>((_props, ref) => {
   const { t } = useTranslation();
   const [serverList, setServerList] = useState<MCPCardVO[]>([]);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
@@ -39,6 +39,9 @@ const MCPComponent = forwardRef<MCPComponentRef>((props, ref) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [serverToDelete, setServerToDelete] = useState<MCPCardVO | null>(null);
   const [deleting, setDeleting] = useState<boolean>(false);
+  const [autoTestTriggered, setAutoTestTriggered] = useState<boolean>(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [testingServers, setTestingServers] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     initData();
@@ -46,22 +49,130 @@ const MCPComponent = forwardRef<MCPComponentRef>((props, ref) => {
   }, []);
 
   function initData() {
-    getServerList();
+    getServerList(true);
   }
 
-  function getServerList() {
+  function getServerList(shouldAutoTest: boolean = false) {
+    console.log('[MCP] Fetching server list...');
     httpClient
       .getMCPServers()
       .then((value) => {
-        setServerList(value.servers.map((server) => new MCPCardVO(server)));
+        const servers = value.servers.map((server) => new MCPCardVO(server));
+        console.log(
+          '[MCP] Server list updated:',
+          servers.map((s) => ({
+            name: s.name,
+            status: s.status,
+            tools: s.tools,
+          })),
+        );
+        setServerList(servers);
+
+        // 自动测试：仅在初始加载且还未触发过自动测试时执行
+        if (shouldAutoTest && !autoTestTriggered && servers.length > 0) {
+          setAutoTestTriggered(true);
+          testAllServers(servers);
+        }
       })
       .catch((error) => {
         toast.error(t('mcp.getServerListError') + error.message);
       });
   }
 
+  async function testAllServers(servers: MCPCardVO[]) {
+    // 为每个服务器启动测试
+    console.log('[MCP] Starting tests for all servers:', servers.length);
+    const testPromises = servers.map((server) => testServer(server.name));
+
+    // 等待所有测试完成
+    try {
+      await Promise.all(testPromises);
+      console.log('[MCP] All tests completed, refreshing server list...');
+      // 所有测试完成后，延迟1秒再刷新，确保后端状态已更新
+      setTimeout(() => {
+        console.log('[MCP] Refreshing server list after tests');
+        getServerList(false);
+      }, 1000);
+    } catch (err) {
+      console.error('[MCP] Some tests failed:', err);
+      // 即使有失败，也要刷新列表
+      setTimeout(() => {
+        console.log('[MCP] Refreshing server list after test failures');
+        getServerList(false);
+      }, 1000);
+    }
+  }
+
+  function testServer(serverName: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      // 标记为正在测试
+      console.log(`[MCP] Starting test for server: ${serverName}`);
+      setTestingServers((prev) => new Set(prev).add(serverName));
+
+      httpClient
+        .testMCPServer(serverName)
+        .then((resp) => {
+          const taskId = resp.task_id;
+          console.log(
+            `[MCP] Test task created for ${serverName}, task_id: ${taskId}`,
+          );
+          // 监控任务状态
+          const interval = setInterval(() => {
+            httpClient
+              .getAsyncTask(taskId)
+              .then((taskResp) => {
+                if (taskResp.runtime.done) {
+                  clearInterval(interval);
+                  // 标记测试完成
+                  setTestingServers((prev) => {
+                    const newSet = new Set(prev);
+                    newSet.delete(serverName);
+                    return newSet;
+                  });
+
+                  if (taskResp.runtime.exception) {
+                    console.error(
+                      `[MCP] Test failed for ${serverName}:`,
+                      taskResp.runtime.exception,
+                    );
+                    reject(new Error(taskResp.runtime.exception));
+                  } else {
+                    console.log(
+                      `[MCP] Test completed successfully for ${serverName}`,
+                    );
+                    resolve();
+                  }
+                }
+              })
+              .catch((err) => {
+                clearInterval(interval);
+                setTestingServers((prev) => {
+                  const newSet = new Set(prev);
+                  newSet.delete(serverName);
+                  return newSet;
+                });
+                console.error(
+                  `[MCP] Error monitoring task for ${serverName}:`,
+                  err,
+                );
+                reject(err);
+              });
+          }, 1000);
+        })
+        .catch((err) => {
+          console.error(`[MCP] Failed to start test for ${serverName}:`, err);
+          setTestingServers((prev) => {
+            const newSet = new Set(prev);
+            newSet.delete(serverName);
+            return newSet;
+          });
+          reject(err);
+        });
+    });
+  }
+
   useImperativeHandle(ref, () => ({
-    refreshServerList: getServerList,
+    refreshServerList: () => getServerList(false),
     createServer: () => {
       setSelectedServer(null);
       setModalOpen(true);
@@ -99,7 +210,7 @@ const MCPComponent = forwardRef<MCPComponentRef>((props, ref) => {
               toast.error(t('mcp.deleteError') + taskResp.runtime.exception);
             } else {
               toast.success(t('mcp.deleteSuccess'));
-              getServerList();
+              getServerList(false);
             }
           }
         });
@@ -128,13 +239,13 @@ const MCPComponent = forwardRef<MCPComponentRef>((props, ref) => {
         </div>
       ) : (
         <div className={`${styles.pluginListContainer}`}>
-          {serverList.map((vo, index) => {
+          {serverList.map((vo) => {
             return (
-              <div key={index} className="relative group">
+              <div key={vo.name} className="relative group">
                 <MCPCardComponent
                   cardVO={vo}
                   onCardClick={() => handleServerClick(vo)}
-                  onRefresh={getServerList}
+                  onRefresh={() => getServerList(false)}
                 />
 
                 {/* 删除按钮 */}
@@ -177,7 +288,7 @@ const MCPComponent = forwardRef<MCPComponentRef>((props, ref) => {
               isEdit={!!selectedServer}
               onFormSubmit={() => {
                 setModalOpen(false);
-                getServerList();
+                getServerList(false);
               }}
               onFormCancel={() => {
                 setModalOpen(false);

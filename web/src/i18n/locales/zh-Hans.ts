@@ -320,6 +320,7 @@ const zhHans = {
     statusConnected: '已连接',
     statusDisconnected: '未连接',
     statusError: '连接错误',
+    statusDisabled: '已禁用',
     serverStatus: '服务器状态',
     marketplace: 'MCP商店',
     searchServer: '搜索MCP服务器',

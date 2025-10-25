@@ -324,7 +324,7 @@ export interface MCPServer {
   mode: 'stdio' | 'sse';
   enable: boolean;
   config: MCPServerConfig;
-  status: 'connected' | 'disconnected' | 'error';
+  status: 'connected' | 'disconnected' | 'error' | 'disabled';
   tools: MCPTool[];
   error?: string;
 }
