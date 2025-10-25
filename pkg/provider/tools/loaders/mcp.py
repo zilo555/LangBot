@@ -172,6 +172,7 @@ class MCPLoader(loader.ToolLoader):
         server_entity: persistence_mcp.MCPServer | sqlalchemy.Row[persistence_mcp.MCPServer] | dict,
     ):
         session = await self.init_runtime_mcp_session(server_entity)
+        await session.start()
         self.sessions[server_entity.name] = session
 
     async def get_tools(self) -> list[resource_tool.LLMTool]:
@@ -188,7 +189,7 @@ class MCPLoader(loader.ToolLoader):
         return name in [f.name for f in self._last_listed_functions]
 
     async def invoke_tool(self, name: str, parameters: dict) -> typing.Any:
-        for server_name, session in self.sessions.items():
+        for session in self.sessions.values():
             for function in session.functions:
                 if function.name == name:
                     return await function.func(**parameters)
