@@ -161,9 +161,6 @@ export default function MCPMarketComponent({
     <div className={`${styles.marketComponentBody}`}>
       {/* 已安装的服务器列表 */}
       <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-4 pl-[0.8rem] pt-4">
-          {t('mcp.title')}
-        </h2>
         <div className={`${styles.pluginListContainer}`}>
           {loading ? (
             <div style={{ textAlign: 'center', padding: '20px' }}>
