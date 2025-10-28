@@ -13,11 +13,9 @@ export class MCPCardVO {
     this.name = data.name;
     this.mode = data.mode;
     this.enable = data.enable;
-    // 将后端返回的 "enabled" 状态映射为 "connected"
-    this.status = (data.status as string) === 'enabled'
-      ? 'connected'
-      : data.status;
-    // tools可能是数组或数字
+    
+    this.status =
+      (data.status as string) === 'enabled' ? 'connected' : data.status;
     this.tools = Array.isArray(data.tools)
       ? data.tools.length
       : data.tools || 0;

@@ -30,7 +30,6 @@ export interface MCPComponentRef {
   createServer: () => void;
 }
 
-// eslint-disable-next-line react/display-name
 const MCPComponent = forwardRef<MCPComponentRef>((_props, ref) => {
   const { t } = useTranslation();
   const [serverList, setServerList] = useState<MCPCardVO[]>([]);
@@ -40,12 +39,10 @@ const MCPComponent = forwardRef<MCPComponentRef>((_props, ref) => {
   const [serverToDelete, setServerToDelete] = useState<MCPCardVO | null>(null);
   const [deleting, setDeleting] = useState<boolean>(false);
   const [autoTestTriggered, setAutoTestTriggered] = useState<boolean>(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [testingServers, setTestingServers] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     initData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function initData() {
@@ -274,7 +271,6 @@ const MCPComponent = forwardRef<MCPComponentRef>((_props, ref) => {
         </div>
       )}
 
-      {/* 编辑配置对话框 */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="w-[700px] max-h-[80vh] p-0 flex flex-col">
           <DialogHeader className="px-6 pt-6 pb-2">
@@ -298,7 +294,7 @@ const MCPComponent = forwardRef<MCPComponentRef>((_props, ref) => {
         </DialogContent>
       </Dialog>
 
-      {/* 删除确认对话框 */}
+
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

@@ -43,7 +43,6 @@ export default function MCPForm({
     if (isEdit && serverName) {
       loadServerConfig();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEdit, serverName]);
 
   async function loadServerConfig() {

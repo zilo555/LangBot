@@ -319,7 +319,7 @@ export interface ApiRespMCPServer {
 }
 
 export interface MCPServer {
-  extra_args: any;
+  extra_args: Record<string, unknown>;
   name: string;
   mode: 'stdio' | 'sse';
   enable: boolean;

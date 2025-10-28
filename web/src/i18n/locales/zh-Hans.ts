@@ -353,7 +353,7 @@ const zhHans = {
     sseTimeout: 'SSE超时时间',
     sseTimeoutDescription: '用于建立SSE连接的超时时间',
     extraParametersDescription: '额外参数，用于配置MCP服务器的特定行为',
-    updateSuccess:'更新成功',
+    updateSuccess: '更新成功',
   },
   pipelines: {
     title: '流水线',

@@ -24,7 +24,6 @@ export default function MCPCardComponent({
   const [status, setStatus] = useState(cardVO.status);
   const [error, setError] = useState(cardVO.error);
 
-  // 响应cardVO的变化，更新本地状态
   useEffect(() => {
     console.log(`[MCPCard ${cardVO.name}] Status updated:`, {
       status: cardVO.status,

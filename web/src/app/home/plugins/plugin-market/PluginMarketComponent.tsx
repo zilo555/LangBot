@@ -172,7 +172,6 @@ function MarketPageContent({
   // 初始加载
   useEffect(() => {
     fetchPlugins(1, false, true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 搜索功能

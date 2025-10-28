@@ -46,7 +46,7 @@ import {
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@/components/ui/select"
+} from '@/components/ui/select';
 
 import { Resolver, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -88,80 +88,51 @@ export default function PluginConfigPage() {
   const addExtraArg = () => {
     setExtraArgs([...extraArgs, { key: '', type: 'string', value: '' }]);
   };
-  const getExtraArgSchema = (t: (key: string) => string) =>
-    z
-      .object({
-        key: z.string().min(1, { message: t('models.keyNameRequired') }),
-        type: z.enum(['string', 'number', 'boolean']),
-        value: z.string(),
-      })
-      .superRefine((data, ctx) => {
-        if (data.type === 'number' && isNaN(Number(data.value))) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: t('models.mustBeValidNumber'),
-            path: ['value'],
-          });
-        }
-        if (
-          data.type === 'boolean' &&
-          data.value !== 'true' &&
-          data.value !== 'false'
-        ) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: t('models.mustBeTrueOrFalse'),
-            path: ['value'],
-          });
-        }
-      });
   const removeExtraArg = (index: number) => {
     const newArgs = extraArgs.filter((_, i) => i !== index);
     setExtraArgs(newArgs);
     form.setValue('extra_args', newArgs);
   };
   const getFormSchema = (t: (key: string) => string) =>
-  z.object({
-    name: z.string({ required_error: t('mcp.nameRequired') }),
-    timeout: z
-      .number({ invalid_type_error: t('mcp.timeoutMustBeNumber') })
-      .nonnegative({ message: t('mcp.timeoutNonNegative') })
-      .default(30),
-    ssereadtimeout: z
-      .number({ invalid_type_error: t('mcp.sseTimeoutMustBeNumber') })
-      .nonnegative({ message: t('mcp.sseTimeoutNonNegative') })
-      .default(300),
-    url: z.string({ required_error: t('models.requestURLRequired') }),
-    extra_args: z
-      .array(
-        z.object({
-          key: z.string(),
-          type: z.enum(['string', 'number', 'boolean']),
-          value: z.string(),
-        })
-      )
-      .optional(),
+    z.object({
+      name: z.string({ required_error: t('mcp.nameRequired') }),
+      timeout: z
+        .number({ invalid_type_error: t('mcp.timeoutMustBeNumber') })
+        .nonnegative({ message: t('mcp.timeoutNonNegative') })
+        .default(30),
+      ssereadtimeout: z
+        .number({ invalid_type_error: t('mcp.sseTimeoutMustBeNumber') })
+        .nonnegative({ message: t('mcp.sseTimeoutNonNegative') })
+        .default(300),
+      url: z.string({ required_error: t('models.requestURLRequired') }),
+      extra_args: z
+        .array(
+          z.object({
+            key: z.string(),
+            type: z.enum(['string', 'number', 'boolean']),
+            value: z.string(),
+          }),
+        )
+        .optional(),
+    });
+
+  const formSchema = getFormSchema(t);
+
+  type FormValues = z.infer<typeof formSchema> & {
+    timeout: number;
+    ssereadtimeout: number;
+  };
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema) as unknown as Resolver<FormValues>,
+    defaultValues: {
+      name: '',
+      url: '',
+      timeout: 30,
+      ssereadtimeout: 300,
+      extra_args: [],
+    },
   });
-
-const formSchema = getFormSchema(t);
-
-
-type FormValues = z.infer<typeof formSchema> & {
-  timeout: number;
-  ssereadtimeout: number;
-};
-
-const form = useForm<FormValues>({
-  resolver: zodResolver(formSchema) as unknown as Resolver<FormValues>,
-  defaultValues: {
-    name: '',
-    url: '',
-    timeout: 30,
-    ssereadtimeout: 300,
-    extra_args: [],
-  },
-});
-
 
   const [extraArgs, setExtraArgs] = useState<
     { key: string; type: 'string' | 'number' | 'boolean'; value: string }[]
@@ -223,52 +194,8 @@ const form = useForm<FormValues>({
         }
       });
     }, 1000);
-
   }
 
-  function watchTestMCPTask(taskId: number) {
-  let alreadyHandled = false;
-  console.log('Watching MCP test task:', taskId);
-
-  const interval = setInterval(() => {
-    httpClient.getAsyncTask(taskId).then((resp) => {
-      console.log('task status:', resp);
-
-      // 若任务已完成
-      if (resp.runtime && resp.runtime.done) {
-        clearInterval(interval);
-
-        if (resp.runtime.exception) {
-          // 任务失败
-          toast.error(`测试失败: ${resp.runtime.exception}`);
-        } else if (resp.runtime.result) {
-          // 任务成功
-          const result = resp.runtime.result as {
-              status?: string;
-              tools_count?: number;
-              tools_names_lists?: string[];
-              error?: string;
-            };
-        const names = result.tools_names_lists || [];
-
-          if (!alreadyHandled) {
-            alreadyHandled = true;
-            const names = result.tools_names_lists || [];
-            toast.success(`连接成功，找到 ${names.length} 个工具`);
-            console.log('工具列表:', names);
-          }
-        } else {
-          // 没结果但标记为完成
-          toast.error('测试任务完成但未返回结果');
-        }
-      }
-    }).catch((err) => {
-      console.error('任务状态获取失败:', err);
-      toast.error('获取任务状态失败');
-      clearInterval(interval);
-    });
-  }, 1000);
-}
 
   const pluginInstalledRef = useRef<PluginInstalledComponentRef>(null);
   const mcpComponentRef = useRef<MCPComponentRef>(null);
@@ -280,12 +207,16 @@ const form = useForm<FormValues>({
   const [refreshKey, setRefreshKey] = useState(0);
 
   // MCP测试结果状态
-  const [mcpTestStatus, setMcpTestStatus] = useState<'idle' | 'testing' | 'success' | 'failed'>('idle');
+  const [mcpTestStatus, setMcpTestStatus] = useState<
+    'idle' | 'testing' | 'success' | 'failed'
+  >('idle');
   const [mcpToolNames, setMcpToolNames] = useState<string[]>([]);
   const [mcpTestError, setMcpTestError] = useState<string>('');
 
   // 缓存每个服务器测试后的工具数量
-  const [serverToolsCache, setServerToolsCache] = useState<Record<string, number>>({});
+  const [serverToolsCache, setServerToolsCache] = useState<
+    Record<string, number>
+  >({});
 
   // 强制清理 body 样式以修复 Dialog 关闭后点击失效的问题
   useEffect(() => {
@@ -297,11 +228,9 @@ const form = useForm<FormValues>({
 
     if (!mcpSSEModalOpen && !modalOpen && !showDeleteConfirmModal) {
       const cleanup = () => {
-        
         document.body.style.removeProperty('pointer-events');
         document.body.style.removeProperty('overflow');
 
-        
         if (document.body.style.pointerEvents === 'none') {
           document.body.style.pointerEvents = '';
         }
@@ -344,7 +273,6 @@ const form = useForm<FormValues>({
     }
   }, [mcpSSEModalOpen, modalOpen, showDeleteConfirmModal]);
 
-  
   useEffect(() => {
     const interval = setInterval(() => {
       if (!mcpSSEModalOpen && !modalOpen && !showDeleteConfirmModal) {
@@ -391,50 +319,51 @@ const form = useForm<FormValues>({
   }, [mcpSSEModalOpen, modalOpen, showDeleteConfirmModal]);
 
   function handleModalConfirm() {
-    installPlugin(installSource, installInfo as Record<string, any>); // eslint-disable-line @typescript-eslint/no-explicit-any
+    installPlugin(installSource, installInfo as Record<string, unknown>);
   }
-  function installPlugin(
-    installSource: string,
-    installInfo: Record<string, any>, // eslint-disable-line @typescript-eslint/no-explicit-any
-  ) {
-    setPluginInstallStatus(PluginInstallStatus.INSTALLING);
-    if (installSource === 'github') {
-      httpClient
-        .installPluginFromGithub(installInfo.url)
-        .then((resp) => {
-          const taskId = resp.task_id;
-          watchTask(taskId);
-        })
-        .catch((err) => {
-          console.log('error when install plugin:', err);
-          setInstallError(err.message);
-          setPluginInstallStatus(PluginInstallStatus.ERROR);
-        });
-    } else if (installSource === 'local') {
-      httpClient
-        .installPluginFromLocal(installInfo.file)
-        .then((resp) => {
-          const taskId = resp.task_id;
-          watchTask(taskId);
-        })
-        .catch((err) => {
-          console.log('error when install plugin:', err);
-          setInstallError(err.message);
-          setPluginInstallStatus(PluginInstallStatus.ERROR);
-        });
-    } else if (installSource === 'marketplace') {
-      httpClient
-        .installPluginFromMarketplace(
-          installInfo.plugin_author,
-          installInfo.plugin_name,
-          installInfo.plugin_version,
-        )
-        .then((resp) => {
-          const taskId = resp.task_id;
-          watchTask(taskId);
-        });
-    }
-  }
+
+  const installPlugin = useCallback(
+    (installSource: string, installInfo: Record<string, unknown>) => {
+      setPluginInstallStatus(PluginInstallStatus.INSTALLING);
+      if (installSource === 'github') {
+        httpClient
+          .installPluginFromGithub((installInfo as { url: string }).url)
+          .then((resp) => {
+            const taskId = resp.task_id;
+            watchTask(taskId);
+          })
+          .catch((err) => {
+            console.log('error when install plugin:', err);
+            setInstallError(err.message);
+            setPluginInstallStatus(PluginInstallStatus.ERROR);
+          });
+      } else if (installSource === 'local') {
+        httpClient
+          .installPluginFromLocal((installInfo as { file: File }).file)
+          .then((resp) => {
+            const taskId = resp.task_id;
+            watchTask(taskId);
+          })
+          .catch((err) => {
+            console.log('error when install plugin:', err);
+            setInstallError(err.message);
+            setPluginInstallStatus(PluginInstallStatus.ERROR);
+          });
+      } else if (installSource === 'marketplace') {
+        httpClient
+          .installPluginFromMarketplace(
+            (installInfo as { plugin_author: string }).plugin_author,
+            (installInfo as { plugin_name: string }).plugin_name,
+            (installInfo as { plugin_version: string }).plugin_version,
+          )
+          .then((resp) => {
+            const taskId = resp.task_id;
+            watchTask(taskId);
+          });
+      }
+    },
+    [watchTask],
+  );
 
   async function deleteMCPServer() {
     if (!editingServerName) return;
@@ -464,121 +393,134 @@ const form = useForm<FormValues>({
   async function loadServerForEdit(serverName: string) {
     try {
       const resp = await httpClient.getMCPServer(serverName);
-      const server = resp.server ?? resp; 
+      const server = resp.server ?? resp;
       console.log('Loaded server for edit:', server);
 
-      
+      const extraArgs = server.extra_args as
+        | Record<string, unknown>
+        | undefined;
       form.setValue('name', server.name);
-      form.setValue('url', server.extra_args?.url || '');
-      form.setValue('timeout', server.extra_args?.timeout || 30);
-      form.setValue('ssereadtimeout', server.extra_args?.ssereadtimeout || 300);
+      form.setValue('url', (extraArgs?.url as string) || '');
+      form.setValue('timeout', (extraArgs?.timeout as number) || 30);
+      form.setValue(
+        'ssereadtimeout',
+        (extraArgs?.ssereadtimeout as number) || 300,
+      );
 
-      
-      if (server.extra_args?.headers) {
-        const headers = Object.entries(server.extra_args.headers).map(
-          ([key, value]) => ({
-            key,
-            type: 'string' as const,
-            value: String(value),
-          }),
-        );
+      if (extraArgs?.headers) {
+        const headers = Object.entries(
+          extraArgs.headers as Record<string, unknown>,
+        ).map(([key, value]) => ({
+          key,
+          type: 'string' as const,
+          value: String(value),
+        }));
         setExtraArgs(headers);
         form.setValue('extra_args', headers);
       }
 
-      
       setMcpTestStatus('testing');
       setMcpToolNames([]);
       setMcpTestError('');
 
-      
       setEditingServerName(serverName);
       setIsEditMode(true);
       setMcpSSEModalOpen(true);
 
-      
       try {
         const res = await httpClient.testMCPServer(server.name);
         if (res.task_id) {
           const taskId = res.task_id;
 
-          
           const interval = setInterval(() => {
-            httpClient.getAsyncTask(taskId).then((taskResp) => {
-              console.log('Task response:', taskResp);
+            httpClient
+              .getAsyncTask(taskId)
+              .then((taskResp) => {
+                console.log('Task response:', taskResp);
 
-              if (taskResp.runtime && taskResp.runtime.done) {
-                clearInterval(interval);
+                if (taskResp.runtime && taskResp.runtime.done) {
+                  clearInterval(interval);
 
-                console.log('Task completed. Runtime:', taskResp.runtime);
-                console.log('Result:', taskResp.runtime.result);
-                console.log('Exception:', taskResp.runtime.exception);
+                  console.log('Task completed. Runtime:', taskResp.runtime);
+                  console.log('Result:', taskResp.runtime.result);
+                  console.log('Exception:', taskResp.runtime.exception);
 
-                if (taskResp.runtime.exception) {
-                  
-                  console.log('Test failed with exception');
-                  setMcpTestStatus('failed');
-                  setMcpToolNames([]);
-                  setMcpTestError(taskResp.runtime.exception || '未知错误');
-                } else if (taskResp.runtime.result) {
-                  
-                  try {
-                    let result: {
-                      status?: string;
-                      tools_count?: number;
-                      tools_names_lists?: string[];
-                      error?: string;
-                    };
-
-                    
-                    const rawResult: any = taskResp.runtime.result;
-                    if (typeof rawResult === 'string') {
-                      console.log('Result is string, parsing...');
-                      result = JSON.parse(rawResult.replace(/'/g, '"'));
-                    } else {
-                      result = rawResult as typeof result;
-                    }
-
-                    console.log('Parsed result:', result);
-                    console.log('tools_names_lists:', result.tools_names_lists);
-                    console.log('tools_names_lists length:', result.tools_names_lists?.length);
-
-                    if (result.tools_names_lists && result.tools_names_lists.length > 0) {
-                      console.log('Test success with', result.tools_names_lists.length, 'tools');
-                      setMcpTestStatus('success');
-                      setMcpToolNames(result.tools_names_lists);
-                      // 保存工具数量到缓存
-                      setServerToolsCache(prev => ({
-                        ...prev,
-                        [server.name]: result.tools_names_lists!.length
-                      }));
-                    } else {
-                      console.log('Test failed: no tools found');
-                      setMcpTestStatus('failed');
-                      setMcpToolNames([]);
-                      setMcpTestError('未找到任何工具');
-                    }
-                  } catch (parseError) {
-                    console.error('Failed to parse result:', parseError);
+                  if (taskResp.runtime.exception) {
+                    console.log('Test failed with exception');
                     setMcpTestStatus('failed');
                     setMcpToolNames([]);
-                    setMcpTestError('解析测试结果失败');
+                    setMcpTestError(taskResp.runtime.exception || '未知错误');
+                  } else if (taskResp.runtime.result) {
+                    try {
+                      let result: {
+                        status?: string;
+                        tools_count?: number;
+                        tools_names_lists?: string[];
+                        error?: string;
+                      };
+
+                      const rawResult: unknown = taskResp.runtime.result;
+                      if (typeof rawResult === 'string') {
+                        console.log('Result is string, parsing...');
+                        result = JSON.parse(rawResult.replace(/'/g, '"'));
+                      } else {
+                        result = rawResult as typeof result;
+                      }
+
+                      console.log('Parsed result:', result);
+                      console.log(
+                        'tools_names_lists:',
+                        result.tools_names_lists,
+                      );
+                      console.log(
+                        'tools_names_lists length:',
+                        result.tools_names_lists?.length,
+                      );
+
+                      if (
+                        result.tools_names_lists &&
+                        result.tools_names_lists.length > 0
+                      ) {
+                        console.log(
+                          'Test success with',
+                          result.tools_names_lists.length,
+                          'tools',
+                        );
+                        setMcpTestStatus('success');
+                        setMcpToolNames(result.tools_names_lists);
+                        // 保存工具数量到缓存
+                        setServerToolsCache((prev) => ({
+                          ...prev,
+                          [server.name]: result.tools_names_lists!.length,
+                        }));
+                      } else {
+                        console.log('Test failed: no tools found');
+                        setMcpTestStatus('failed');
+                        setMcpToolNames([]);
+                        setMcpTestError('未找到任何工具');
+                      }
+                    } catch (parseError) {
+                      console.error('Failed to parse result:', parseError);
+                      setMcpTestStatus('failed');
+                      setMcpToolNames([]);
+                      setMcpTestError('解析测试结果失败');
+                    }
+                  } else {
+                    // 没结果
+                    console.log('Test failed: no result');
+                    setMcpTestStatus('failed');
+                    setMcpToolNames([]);
+                    setMcpTestError('测试未返回结果');
                   }
-                } else {
-                  // 没结果
-                  console.log('Test failed: no result');
-                  setMcpTestStatus('failed');
-                  setMcpToolNames([]);
-                  setMcpTestError('测试未返回结果');
                 }
-              }
-            }).catch((err) => {
-              console.error('获取任务状态失败:', err);
-              clearInterval(interval);
-              setMcpTestStatus('failed');
-              setMcpToolNames([]);
-              setMcpTestError(err.message || '获取任务状态失败');
-            });
+              })
+              .catch((err) => {
+                console.error('获取任务状态失败:', err);
+                clearInterval(interval);
+                setMcpTestStatus('failed');
+                setMcpToolNames([]);
+                setMcpTestError(err.message || '获取任务状态失败');
+              });
           }, 1000);
         } else {
           setMcpTestStatus('failed');
@@ -624,7 +566,6 @@ const form = useForm<FormValues>({
       };
 
       if (isEditMode && editingServerName) {
-        
         await httpClient.updateMCPServer(editingServerName, serverConfig);
         toast.success(t('mcp.updateSuccess'));
       } else {
@@ -697,7 +638,7 @@ const form = useForm<FormValues>({
       setInstallError(null);
       installPlugin('local', { file });
     },
-    [t, pluginSystemStatus],
+    [t, pluginSystemStatus, installPlugin],
   );
 
   const handleFileSelect = useCallback(() => {
@@ -712,7 +653,7 @@ const form = useForm<FormValues>({
       if (file) {
         uploadPluginFile(file);
       }
-      
+
       event.target.value = '';
     },
     [uploadPluginFile],
@@ -754,7 +695,6 @@ const form = useForm<FormValues>({
     [uploadPluginFile, isPluginSystemReady, t],
   );
 
-  
   const renderPluginDisabledState = () => (
     <div className="flex flex-col items-center justify-center h-[60vh] text-center pt-[10vh]">
       <Power className="w-16 h-16 text-gray-400 mb-4" />
@@ -767,7 +707,6 @@ const form = useForm<FormValues>({
     </div>
   );
 
-  
   const renderPluginConnectionErrorState = () => (
     <div className="flex flex-col items-center justify-center h-[60vh] text-center pt-[10vh]">
       <svg
@@ -1058,7 +997,6 @@ const form = useForm<FormValues>({
             }
           }}
         >
-          
           <DialogContent>
             <DialogHeader>
               <DialogTitle>
@@ -1113,7 +1051,8 @@ const form = useForm<FormValues>({
                         />
                       </svg>
                       <span className="font-medium">
-                        {t('mcp.connectionSuccess')} - {mcpToolNames.length} {t('mcp.toolsFound')}
+                        {t('mcp.connectionSuccess')} - {mcpToolNames.length}{' '}
+                        {t('mcp.toolsFound')}
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-1 mt-2">
@@ -1146,7 +1085,9 @@ const form = useForm<FormValues>({
                           d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      <span className="font-medium">{t('mcp.connectionFailed')}</span>
+                      <span className="font-medium">
+                        {t('mcp.connectionFailed')}
+                      </span>
                     </div>
                     {mcpTestError && (
                       <div className="text-sm text-red-500 pl-7">
@@ -1217,14 +1158,15 @@ const form = useForm<FormValues>({
                             type="number"
                             placeholder={t('mcp.sseTimeoutDescription')}
                             {...field}
-                            onChange={(e) => field.onChange(Number(e.target.value))}
+                            onChange={(e) =>
+                              field.onChange(Number(e.target.value))
+                            }
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-
 
                   <FormItem>
                     <FormLabel>{t('models.extraParameters')}</FormLabel>
