@@ -1,4 +1,4 @@
-import { MCPMarketCardVO } from '@/app/home/plugins/mcp-market/mcp-market-card/MCPMarketCardVO';
+import { MCPMarketCardVO } from '@/app/home/plugins/mcp-server/mcp-market-card/MCPServerCardVO';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 

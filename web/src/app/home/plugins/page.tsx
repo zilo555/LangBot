@@ -7,7 +7,7 @@ import MarketPage from '@/app/home/plugins/plugin-market/PluginMarketComponent';
 import MCPComponent, {
   MCPComponentRef,
 } from '@/app/home/plugins/mcp/MCPComponent';
-import MCPMarketComponent from '@/app/home/plugins/mcp-market/MCPMarketComponent';
+import MCPServerComponent from '@/app/home/plugins/mcp-server/MCPServerComponent';
 import styles from './plugins.module.css';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -48,7 +48,7 @@ import {
   SelectItem,
 } from "@/components/ui/select"
 
-import { useForm } from 'react-hook-form';
+import { Resolver, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { DialogDescription } from '@radix-ui/react-dialog';
@@ -121,26 +121,48 @@ export default function PluginConfigPage() {
     form.setValue('extra_args', newArgs);
   };
   const getFormSchema = (t: (key: string) => string) =>
-    z.object({
-      name: z.string().min(1, { message: t('mcp.nameRequired') }),
-      timeout: z.number().min(30, { message: t('mcp.timeoutMin30') }),
-      ssereadtimeout: z
-        .number()
-        .min(300, { message: t('mcp.sseTimeoutMin300') }),
-      url: z.string().min(1, { message: t('mcp.requestURLRequired') }),
-      extra_args: z.array(getExtraArgSchema(t)).optional(),
-    });
-  const formSchema = getFormSchema(t);
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: '',
-      url: '',
-      timeout: 30,
-      ssereadtimeout: 300,
-      extra_args: [],
-    },
+  z.object({
+    name: z.string({ required_error: t('mcp.nameRequired') }),
+    timeout: z
+      .number({ invalid_type_error: t('mcp.timeoutMustBeNumber') })
+      .nonnegative({ message: t('mcp.timeoutNonNegative') })
+      .default(30),
+    ssereadtimeout: z
+      .number({ invalid_type_error: t('mcp.sseTimeoutMustBeNumber') })
+      .nonnegative({ message: t('mcp.sseTimeoutNonNegative') })
+      .default(300),
+    url: z.string({ required_error: t('models.requestURLRequired') }),
+    extra_args: z
+      .array(
+        z.object({
+          key: z.string(),
+          type: z.enum(['string', 'number', 'boolean']),
+          value: z.string(),
+        })
+      )
+      .optional(),
   });
+
+const formSchema = getFormSchema(t);
+
+
+type FormValues = z.infer<typeof formSchema> & {
+  timeout: number;
+  ssereadtimeout: number;
+};
+
+const form = useForm<FormValues>({
+  resolver: zodResolver(formSchema) as unknown as Resolver<FormValues>,
+  defaultValues: {
+    name: '',
+    url: '',
+    timeout: 30,
+    ssereadtimeout: 300,
+    extra_args: [],
+  },
+});
+
+
   const [extraArgs, setExtraArgs] = useState<
     { key: string; type: 'string' | 'number' | 'boolean'; value: string }[]
   >([]);
@@ -274,24 +296,12 @@ export default function PluginConfigPage() {
     });
 
     if (!mcpSSEModalOpen && !modalOpen && !showDeleteConfirmModal) {
-      console.log(
-        '[Dialog Debug] All dialogs closed, cleaning up body styles...',
-      );
-      console.log(
-        '[Dialog Debug] Before cleanup - body.style.pointerEvents:',
-        document.body.style.pointerEvents,
-      );
-      console.log(
-        '[Dialog Debug] Before cleanup - body.style.overflow:',
-        document.body.style.overflow,
-      );
-
       const cleanup = () => {
-        // 强制移除 body 上可能残留的样式
+        
         document.body.style.removeProperty('pointer-events');
         document.body.style.removeProperty('overflow');
 
-        // 如果 removeProperty 不起作用，强制设置为空字符串
+        
         if (document.body.style.pointerEvents === 'none') {
           document.body.style.pointerEvents = '';
         }
@@ -334,7 +344,7 @@ export default function PluginConfigPage() {
     }
   }, [mcpSSEModalOpen, modalOpen, showDeleteConfirmModal]);
 
-  // 额外的全局清理：定期检查并清理
+  
   useEffect(() => {
     const interval = setInterval(() => {
       if (!mcpSSEModalOpen && !modalOpen && !showDeleteConfirmModal) {
@@ -454,16 +464,16 @@ export default function PluginConfigPage() {
   async function loadServerForEdit(serverName: string) {
     try {
       const resp = await httpClient.getMCPServer(serverName);
-      const server = resp.server ?? resp; // 有的接口包了一层，有的直接返回对象
+      const server = resp.server ?? resp; 
       console.log('Loaded server for edit:', server);
 
-      // 填充表单数据
+      
       form.setValue('name', server.name);
       form.setValue('url', server.extra_args?.url || '');
       form.setValue('timeout', server.extra_args?.timeout || 30);
       form.setValue('ssereadtimeout', server.extra_args?.ssereadtimeout || 300);
 
-      // 填充 headers
+      
       if (server.extra_args?.headers) {
         const headers = Object.entries(server.extra_args.headers).map(
           ([key, value]) => ({
@@ -476,23 +486,23 @@ export default function PluginConfigPage() {
         form.setValue('extra_args', headers);
       }
 
-      // 重置测试状态
+      
       setMcpTestStatus('testing');
       setMcpToolNames([]);
       setMcpTestError('');
 
-      // 打开对话框
+      
       setEditingServerName(serverName);
       setIsEditMode(true);
       setMcpSSEModalOpen(true);
 
-      // 在这里测试工具连接状态
+      
       try {
         const res = await httpClient.testMCPServer(server.name);
         if (res.task_id) {
           const taskId = res.task_id;
 
-          // 监听任务完成
+          
           const interval = setInterval(() => {
             httpClient.getAsyncTask(taskId).then((taskResp) => {
               console.log('Task response:', taskResp);
@@ -505,13 +515,13 @@ export default function PluginConfigPage() {
                 console.log('Exception:', taskResp.runtime.exception);
 
                 if (taskResp.runtime.exception) {
-                  // 测试失败
+                  
                   console.log('Test failed with exception');
                   setMcpTestStatus('failed');
                   setMcpToolNames([]);
                   setMcpTestError(taskResp.runtime.exception || '未知错误');
                 } else if (taskResp.runtime.result) {
-                  // 测试成功 - 后端可能返回字符串或对象
+                  
                   try {
                     let result: {
                       status?: string;
@@ -520,7 +530,7 @@ export default function PluginConfigPage() {
                       error?: string;
                     };
 
-                    // 如果result是字符串，需要先解析
+                    
                     const rawResult: any = taskResp.runtime.result;
                     if (typeof rawResult === 'string') {
                       console.log('Result is string, parsing...');
@@ -614,25 +624,21 @@ export default function PluginConfigPage() {
       };
 
       if (isEditMode && editingServerName) {
-        // 编辑模式：更新服务器
+        
         await httpClient.updateMCPServer(editingServerName, serverConfig);
         toast.success(t('mcp.updateSuccess'));
       } else {
-        // 创建模式：新建服务器
         await httpClient.createMCPServer(serverConfig);
         toast.success(t('mcp.createSuccess'));
       }
 
-      // 只有在异步操作成功后才关闭对话框
       setMcpSSEModalOpen(false);
 
-      // 重置表单和状态
       form.reset();
       setExtraArgs([]);
       setEditingServerName(null);
       setIsEditMode(false);
 
-      // 刷新服务器列表
       setRefreshKey((prev) => prev + 1);
     } catch (error) {
       console.error('Failed to save MCP server:', error);
@@ -706,7 +712,7 @@ export default function PluginConfigPage() {
       if (file) {
         uploadPluginFile(file);
       }
-      // 清空input值，以便可以重复选择同一个文件
+      
       event.target.value = '';
     },
     [uploadPluginFile],
@@ -748,7 +754,7 @@ export default function PluginConfigPage() {
     [uploadPluginFile, isPluginSystemReady, t],
   );
 
-  // 插件系统未启用的状态显示
+  
   const renderPluginDisabledState = () => (
     <div className="flex flex-col items-center justify-center h-[60vh] text-center pt-[10vh]">
       <Power className="w-16 h-16 text-gray-400 mb-4" />
@@ -761,7 +767,7 @@ export default function PluginConfigPage() {
     </div>
   );
 
-  // 插件系统连接异常的状态显示
+  
   const renderPluginConnectionErrorState = () => (
     <div className="flex flex-col items-center justify-center h-[60vh] text-center pt-[10vh]">
       <svg
@@ -783,7 +789,6 @@ export default function PluginConfigPage() {
     </div>
   );
 
-  // 加载状态显示
   const renderLoadingState = () => (
     <div className="flex flex-col items-center justify-center h-[60vh] pt-[10vh]">
       <p className="text-gray-500 dark:text-gray-400">
@@ -792,7 +797,6 @@ export default function PluginConfigPage() {
     </div>
   );
 
-  // 根据状态返回不同的内容
   if (statusLoading) {
     return renderLoadingState();
   }
@@ -930,7 +934,7 @@ export default function PluginConfigPage() {
           <MCPComponent ref={mcpComponentRef} />
         </TabsContent>
         <TabsContent value="mcp-servers">
-          <MCPMarketComponent
+          <MCPServerComponent
             key={refreshKey}
             onEditServer={(serverName) => {
               loadServerForEdit(serverName);
@@ -1220,6 +1224,7 @@ export default function PluginConfigPage() {
                       </FormItem>
                     )}
                   />
+
 
                   <FormItem>
                     <FormLabel>{t('models.extraParameters')}</FormLabel>

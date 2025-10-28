@@ -168,7 +168,7 @@ export default function MCPMarketComponent({
             </div>
           ) : installedServers.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '20px' }}>
-              {t('mcp.noInstalledServers')}
+              {t('mcp.noServerInstalled')}
             </div>
           ) : (
             installedServers.map((server, index) => (
