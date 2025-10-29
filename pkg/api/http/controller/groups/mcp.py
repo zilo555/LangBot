@@ -182,7 +182,6 @@ class MCPRouterGroup(group.RouterGroup):
             from .....provider.tools.loaders.mcp import RuntimeMCPSession
 
             ctx.current_action = f'Testing connection to {server.name}'
-            print(server)
             # 创建临时会话进行测试
             session = RuntimeMCPSession(server.name, {
             'name': server.name,
