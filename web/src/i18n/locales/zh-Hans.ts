@@ -306,6 +306,7 @@ const zhHans = {
     testing: '测试中...',
     testSuccess: '连接测试成功',
     testFailed: '连接测试失败：',
+    testError: '连接测试出错',
     connectionSuccess: '连接成功',
     connectionFailed: '连接失败',
     toolsFound: '个工具',

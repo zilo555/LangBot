@@ -352,6 +352,7 @@ const zhHant = {
     sseTimeoutDescription: '用於建立SSE連接的逾時時間',
     extraParametersDescription: '額外參數，用於設定MCP伺服器的特定行為',
     updateSuccess: '更新成功',
+    testError: '連接測試出錯'
   },
   pipelines: {
     title: '流程線',

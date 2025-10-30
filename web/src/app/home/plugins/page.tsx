@@ -608,7 +608,7 @@ export default function PluginConfigPage() {
         toast.success(t('models.testSuccess'));
       })
       .catch(() => {
-        toast.error(t('models.testError'));
+        toast.error(t('mcp.testError'));
       })
       .finally(() => {
         setMcpTesting(false);

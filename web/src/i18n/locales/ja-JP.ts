@@ -368,6 +368,7 @@ const jaJP = {
     sseTimeoutDescription: 'SSE接続を確立するためのタイムアウト',
     extraParametersDescription: 'MCPサーバーの特定の動作を設定するための追加パラメータ',
     updateSuccess: '更新に成功しました',
+    testError: '接続テスト出錯',
   },
   pipelines: {
     title: 'パイプライン',

@@ -366,6 +366,7 @@ const enUS = {
     sseTimeoutDescription: 'Timeout for establishing SSE connection',
     extraParametersDescription: 'Additional parameters for configuring specific MCP server behavior',
     updateSuccess: 'Updated successfully',
+    testError: 'Connection test error',
   },
   pipelines: {
     title: 'Pipelines',
