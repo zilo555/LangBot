@@ -605,13 +605,80 @@ export default function PluginConfigPage() {
       .testMCPServer(form.getValues('name'))
       .then((res) => {
         console.log(res);
-        toast.success(t('models.testSuccess'));
+        if (res.task_id) {
+          const taskId = res.task_id;
+
+          const interval = setInterval(() => {
+            httpClient
+              .getAsyncTask(taskId)
+              .then((taskResp) => {
+                console.log('Test task response:', taskResp);
+
+                if (taskResp.runtime && taskResp.runtime.done) {
+                  clearInterval(interval);
+                  setMcpTesting(false);
+
+                  if (taskResp.runtime.exception) {
+                    toast.error(
+                      t('mcp.testError') +
+                        ': ' +
+                        (taskResp.runtime.exception || t('mcp.unknownError')),
+                    );
+                  } else if (taskResp.runtime.result) {
+                    try {
+                      let result: {
+                        status?: string;
+                        tools_count?: number;
+                        tools_names_lists?: string[];
+                        error?: string;
+                      };
+
+                      const rawResult: unknown = taskResp.runtime.result;
+                      if (typeof rawResult === 'string') {
+                        result = JSON.parse(rawResult.replace(/'/g, '"'));
+                      } else {
+                        result = rawResult as typeof result;
+                      }
+
+                      if (
+                        result.tools_names_lists &&
+                        result.tools_names_lists.length > 0
+                      ) {
+                        toast.success(
+                          t('mcp.testSuccess') +
+                            ' - ' +
+                            result.tools_names_lists.length +
+                            ' ' +
+                            t('mcp.toolsFound'),
+                        );
+                      } else {
+                        toast.error(t('mcp.testError') + ': ' + t('mcp.noToolsFound'));
+                      }
+                    } catch (parseError) {
+                      console.error('Failed to parse test result:', parseError);
+                      toast.error(t('mcp.testError') + ': ' + t('mcp.parseResultFailed'));
+                    }
+                  } else {
+                    toast.error(t('mcp.testError') + ': ' + t('mcp.noResultReturned'));
+                  }
+                }
+              })
+              .catch((err) => {
+                console.error('获取测试任务状态失败:', err);
+                clearInterval(interval);
+                setMcpTesting(false);
+                toast.error(t('mcp.testError') + ': ' + (err.message || t('mcp.getTaskFailed')));
+              });
+          }, 1000);
+        } else {
+          setMcpTesting(false);
+          toast.error(t('mcp.testError') + ': ' + t('mcp.noTaskId'));
+        }
       })
-      .catch(() => {
-        toast.error(t('mcp.testError'));
-      })
-      .finally(() => {
+      .catch((err) => {
+        console.error('启动测试失败:', err);
         setMcpTesting(false);
+        toast.error(t('mcp.testError') + ': ' + (err.message || t('mcp.unknownError')));
       });
   }
 
