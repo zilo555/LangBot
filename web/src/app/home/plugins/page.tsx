@@ -95,16 +95,20 @@ export default function PluginConfigPage() {
   };
   const getFormSchema = (t: (key: string) => string) =>
     z.object({
-      name: z.string({ required_error: t('mcp.nameRequired') }),
+      name: z
+        .string({ required_error: t('mcp.nameRequired') })
+        .min(1, { message: t('mcp.nameRequired') }),
       timeout: z
         .number({ invalid_type_error: t('mcp.timeoutMustBeNumber') })
-        .nonnegative({ message: t('mcp.timeoutNonNegative') })
+        .positive({ message: t('mcp.timeoutMustBePositive') })
         .default(30),
       ssereadtimeout: z
         .number({ invalid_type_error: t('mcp.sseTimeoutMustBeNumber') })
-        .nonnegative({ message: t('mcp.sseTimeoutNonNegative') })
+        .positive({ message: t('mcp.timeoutMustBePositive') })
         .default(300),
-      url: z.string({ required_error: t('models.requestURLRequired') }),
+      url: z
+        .string({ required_error: t('mcp.urlRequired') })
+        .min(1, { message: t('mcp.urlRequired') }),
       extra_args: z
         .array(
           z.object({
@@ -1207,7 +1211,14 @@ export default function PluginConfigPage() {
                       <FormItem>
                         <FormLabel>{t('mcp.timeout')}</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input
+                            type="number"
+                            placeholder={t('mcp.timeout')}
+                            {...field}
+                            onChange={(e) =>
+                              field.onChange(Number(e.target.value))
+                            }
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
