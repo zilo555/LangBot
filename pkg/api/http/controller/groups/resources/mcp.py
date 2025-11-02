@@ -39,9 +39,11 @@ class MCPRouterGroup(group.RouterGroup):
                 data = await quart.request.json
                 data = data['source']
 
-                uuid = await self.ap.mcp_service.create_mcp_server(data)
-
-                return self.success(data={'uuid': uuid})
+                try:
+                    uuid = await self.ap.mcp_service.create_mcp_server(data)
+                    return self.success(data={'uuid': uuid})
+                except Exception as e:
+                    return self.http_status(500, -1, f'Failed to create MCP server: {str(e)}')
 
         @self.route('/servers/<server_name>', methods=['GET', 'PUT', 'DELETE'], auth_type=group.AuthType.USER_TOKEN)
         async def _(server_name: str) -> str:
@@ -56,12 +58,18 @@ class MCPRouterGroup(group.RouterGroup):
 
             elif quart.request.method == 'PUT':
                 data = await quart.request.json
-                await self.ap.mcp_service.update_mcp_server(server_data['uuid'], data)
-                return self.success()
+                try:
+                    await self.ap.mcp_service.update_mcp_server(server_data['uuid'], data)
+                    return self.success()
+                except Exception as e:
+                    return self.http_status(500, -1, f'Failed to update MCP server: {str(e)}')
 
             elif quart.request.method == 'DELETE':
-                await self.ap.mcp_service.delete_mcp_server(server_data['uuid'])
-                return self.success()
+                try:
+                    await self.ap.mcp_service.delete_mcp_server(server_data['uuid'])
+                    return self.success()
+                except Exception as e:
+                    return self.http_status(500, -1, f'Failed to delete MCP server: {str(e)}')
 
         @self.route('/servers/<server_name>/test', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
         async def _(server_name: str) -> str:
@@ -71,49 +79,6 @@ class MCPRouterGroup(group.RouterGroup):
             if server_data is None:
                 return self.http_status(404, -1, 'Server not found')
 
-
-# TODO 这里移到service去
-# # 创建测试任务
-# ctx = taskmgr.TaskContext.new()
-# wrapper = self.ap.task_mgr.create_user_task(
-#     self._test_mcp_server(server, ctx),
-#     kind='mcp-operation',
-#     name=f'mcp-test-{server_name}',
-#     label=f'Testing MCP server {server_name}',
-#     context=ctx,
-# )
-# return self.success(data={'task_id': wrapper.id})
-
-# async def _test_mcp_server(self, server: persistence_mcp.MCPServer, ctx: taskmgr.TaskContext):
-#     """测试MCP服务器连接"""
-#     try:
-
-#         ctx.current_action = f'Testing connection to {server.name}'
-#         # 创建临时会话进行测试
-#         session = RuntimeMCPSession(server.name, {
-#         'name': server.name,
-#         'mode': server.mode,
-#         'enable': server.enable,
-#         'url': server.extra_args.get('url',''),
-#         'headers': server.extra_args.get('headers',{}),
-#         'timeout': server.extra_args.get('timeout',60),
-#         },enable=True, ap=self.ap)
-#         await session.start()
-
-#         # 获取工具列表作为测试
-#         tools_count = len(session.functions)
-
-#         tool_name_list = []
-#         for function in session.functions:
-#             tool_name_list.append(function.name)
-#         ctx.current_action = f'Successfully connected. Found {tools_count} tools.'
-
-#         # 关闭测试会话
-#         await session.shutdown()
-
-#         return {'status': 'success', 'tools_count': tools_count,'tools_names_lists':tool_name_list}
-
-#     except Exception as e:
-#         print(traceback.format_exc())
-#         ctx.current_action = f'Connection test failed: {str(e)}'
-#         raise e
+            
+            task_id = await self.ap.mcp_service.test_mcp_server(server_data['uuid'])
+            return self.success(data={'task_id': task_id})
