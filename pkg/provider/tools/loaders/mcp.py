@@ -3,6 +3,8 @@ from __future__ import annotations
 import typing
 from contextlib import AsyncExitStack
 import traceback
+import sqlalchemy
+import asyncio
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
@@ -11,6 +13,7 @@ from mcp.client.sse import sse_client
 from .. import loader
 from ....core import app
 import langbot_plugin.api.entities.builtin.resource.tool as resource_tool
+from ....entity.persistence import mcp as persistence_mcp
 
 
 class RuntimeMCPSession:
@@ -77,8 +80,6 @@ class RuntimeMCPSession:
         if not self.enable:
             return
 
-        self.ap.logger.debug(f'初始化 MCP 会话: {self.server_name} {self.server_config}')
-
         if self.server_config['mode'] == 'stdio':
             await self._init_stdio_python_server()
         elif self.server_config['mode'] == 'sse':
@@ -110,6 +111,9 @@ class RuntimeMCPSession:
                 )
             )
 
+    def get_tools(self) -> list[resource_tool.LLMTool]:
+        return self.functions
+
     async def shutdown(self):
         """关闭会话并清理资源"""
         try:
@@ -128,20 +132,59 @@ class MCPLoader(loader.ToolLoader):
     在此加载器中管理所有与 MCP Server 的连接。
     """
 
-    sessions: dict[str, RuntimeMCPSession] = {}
+    sessions: dict[str, RuntimeMCPSession]
 
-    _last_listed_functions: list[resource_tool.LLMTool] = []
+    _last_listed_functions: list[resource_tool.LLMTool]
+
+    _startup_load_tasks: list[asyncio.Task]
 
     def __init__(self, ap: app.Application):
         super().__init__(ap)
         self.sessions = {}
         self._last_listed_functions = []
+        self._startup_load_tasks = []
 
     async def initialize(self):
-        pass
+        await self.load_mcp_servers_from_db()
 
-    async def init_runtime_mcp_session(self, server_config: dict):
-        """从服务器配置创建运行时会话
+    async def load_mcp_servers_from_db(self):
+        self.ap.logger.info('Loading MCP servers from db...')
+
+        self.sessions = {}
+
+        result = await self.ap.persistence_mgr.execute_async(sqlalchemy.select(persistence_mcp.MCPServer))
+        servers = result.all()
+
+        for server in servers:
+            server_config = self.ap.persistence_mgr.serialize_model(persistence_mcp.MCPServer, server)
+
+            async def load_mcp_server_task():
+                self.ap.logger.debug(f'Loading MCP server {server_config}')
+                try:
+                    session = await self.load_mcp_server(server_config)
+                    self.sessions[server_config['name']] = session
+                except Exception as e:
+                    self.ap.logger.error(
+                        f'Failed to load MCP server from db: {server_config["name"]}({server_config["uuid"]}): {e}\n{traceback.format_exc()}'
+                    )
+                    return
+
+                self.ap.logger.debug(f'Starting MCP server {server_config["name"]}({server_config["uuid"]})')
+                try:
+                    await session.start()
+                except Exception as e:
+                    self.ap.logger.error(
+                        f'Failed to start MCP server {server_config["name"]}({server_config["uuid"]}): {e}\n{traceback.format_exc()}'
+                    )
+                    return
+
+                self.ap.logger.debug(f'Started MCP server {server_config["name"]}({server_config["uuid"]})')
+
+            task = asyncio.create_task(load_mcp_server_task())
+            self._startup_load_tasks.append(task)
+
+    async def load_mcp_server(self, server_config: dict) -> RuntimeMCPSession:
+        """加载 MCP 服务器到运行时
 
         Args:
             server_config: 服务器配置字典，必须包含:
@@ -150,6 +193,7 @@ class MCPLoader(loader.ToolLoader):
                 - enable: 是否启用
                 - extra_args: 额外的配置参数 (可选)
         """
+
         name = server_config['name']
         mode = server_config['mode']
         enable = server_config['enable']
@@ -167,25 +211,11 @@ class MCPLoader(loader.ToolLoader):
 
         return session
 
-    async def load_mcp_server(self, server_config: dict):
-        """加载 MCP 服务器到运行时
-
-        Args:
-            server_config: 服务器配置字典，必须包含:
-                - name: 服务器名称
-                - mode: 连接模式 (stdio/sse)
-                - enable: 是否启用
-                - extra_args: 额外的配置参数 (可选)
-        """
-        session = await self.init_runtime_mcp_session(server_config)
-        await session.start()
-        self.sessions[server_config['name']] = session
-
     async def get_tools(self) -> list[resource_tool.LLMTool]:
         all_functions = []
 
         for session in self.sessions.values():
-            all_functions.extend(session.functions)
+            all_functions.extend(session.get_tools())
 
         self._last_listed_functions = all_functions
 
@@ -194,7 +224,7 @@ class MCPLoader(loader.ToolLoader):
     async def has_tool(self, name: str) -> bool:
         """检查工具是否存在"""
         for session in self.sessions.values():
-            for function in session.functions:
+            for function in session.get_tools():
                 if function.name == name:
                     return True
         return False
@@ -202,7 +232,7 @@ class MCPLoader(loader.ToolLoader):
     async def invoke_tool(self, name: str, parameters: dict) -> typing.Any:
         """执行工具调用"""
         for session in self.sessions.values():
-            for function in session.functions:
+            for function in session.get_tools():
                 if function.name == name:
                     self.ap.logger.debug(f'Invoking MCP tool: {name} with parameters: {parameters}')
                     try:
@@ -254,7 +284,7 @@ class MCPLoader(loader.ToolLoader):
     def get_server_tool_count(self, server_name: str) -> int:
         """获取指定服务器的工具数量"""
         session = self.get_session(server_name)
-        return len(session.functions) if session else 0
+        return len(session.get_tools()) if session else 0
 
     def get_all_servers_info(self) -> dict[str, dict]:
         """获取所有服务器的信息"""
@@ -264,8 +294,8 @@ class MCPLoader(loader.ToolLoader):
                 'name': server_name,
                 'mode': session.server_config.get('mode'),
                 'enable': session.enable,
-                'tools_count': len(session.functions),
-                'tool_names': [f.name for f in session.functions],
+                'tools_count': len(session.get_tools()),
+                'tool_names': [f.name for f in session.get_tools()],
             }
         return info
 

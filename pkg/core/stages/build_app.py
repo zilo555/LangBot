@@ -129,7 +129,6 @@ class BuildAppStage(stage.BootingStage):
 
         mcp_service_inst = mcp_service.MCPService(ap)
         ap.mcp_service = mcp_service_inst
-        await mcp_service_inst.initialize()
 
         ctrl = controller.Controller(ap)
         ap.ctrl = ctrl
