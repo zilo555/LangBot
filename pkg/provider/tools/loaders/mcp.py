@@ -121,7 +121,7 @@ class RuntimeMCPSession:
             self.ap.logger.error(f'Error shutting down MCP session {self.server_name}: {e}\n{traceback.format_exc()}')
 
 
-@loader.loader_class('mcp')
+# @loader.loader_class('mcp')
 class MCPLoader(loader.ToolLoader):
     """MCP 工具加载器。
 

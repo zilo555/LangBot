@@ -79,6 +79,5 @@ class MCPRouterGroup(group.RouterGroup):
             if server_data is None:
                 return self.http_status(404, -1, 'Server not found')
 
-            
             task_id = await self.ap.mcp_service.test_mcp_server(server_data['uuid'])
             return self.success(data={'task_id': task_id})
