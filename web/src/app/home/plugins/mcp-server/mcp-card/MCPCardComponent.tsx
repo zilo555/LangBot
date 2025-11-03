@@ -1,4 +1,4 @@
-import { MCPCardVO } from '@/app/home/plugins/mcp/MCPCardVO';
+import { MCPCardVO } from '@/app/home/plugins/mcp-server/MCPCardVO';
 import { useState, useEffect } from 'react';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { Badge } from '@/components/ui/badge';

@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import styles from '@/app/home/plugins/plugins.module.css';
-import MCPCardComponent from '@/app/home/plugins/mcp/mcp-card/MCPCardComponent';
-import { MCPCardVO } from '@/app/home/plugins/mcp/MCPCardVO';
+import MCPCardComponent from '@/app/home/plugins/mcp-server/mcp-card/MCPCardComponent';
+import { MCPCardVO } from '@/app/home/plugins/mcp-server/MCPCardVO';
 import { useTranslation } from 'react-i18next';
 
 import { httpClient } from '@/app/infra/http/HttpClient';
 
-export default function MCPMarketComponent({
+export default function MCPComponent({
   onEditServer,
   toolsCountCache = {},
 }: {
@@ -19,7 +19,6 @@ export default function MCPMarketComponent({
   const { t } = useTranslation();
   const [installedServers, setInstalledServers] = useState<MCPCardVO[]>([]);
   const [loading, setLoading] = useState(false);
-
 
   useEffect(() => {
     initData();
@@ -40,7 +39,7 @@ export default function MCPMarketComponent({
       .then((resp) => {
         const servers = resp.servers.map((server) => {
           const vo = new MCPCardVO(server);
-          
+
           if (toolsCountCache[server.name] !== undefined) {
             vo.tools = toolsCountCache[server.name];
           }
@@ -54,8 +53,6 @@ export default function MCPMarketComponent({
         setLoading(false);
       });
   }
-
-  
 
   return (
     <div className={`${styles.marketComponentBody}`}>

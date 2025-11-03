@@ -4,9 +4,7 @@ import PluginInstalledComponent, {
 } from '@/app/home/plugins/plugin-installed/PluginInstalledComponent';
 import MarketPage from '@/app/home/plugins/plugin-market/PluginMarketComponent';
 // import PluginSortDialog from '@/app/home/plugins/plugin-sort/PluginSortDialog';
-import MCPComponent, {
-  MCPComponentRef,
-} from '@/app/home/plugins/mcp/MCPComponent';
+
 import MCPServerComponent from '@/app/home/plugins/mcp-server/MCPServerComponent';
 import styles from './plugins.module.css';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -200,9 +198,7 @@ export default function PluginConfigPage() {
     }, 1000);
   }
 
-
   const pluginInstalledRef = useRef<PluginInstalledComponentRef>(null);
-  const mcpComponentRef = useRef<MCPComponentRef>(null);
   const [mcpTesting, setMcpTesting] = useState(false);
   const [editingServerName, setEditingServerName] = useState<string | null>(
     null,
@@ -656,14 +652,20 @@ export default function PluginConfigPage() {
                             t('mcp.toolsFound'),
                         );
                       } else {
-                        toast.error(t('mcp.testError') + ': ' + t('mcp.noToolsFound'));
+                        toast.error(
+                          t('mcp.testError') + ': ' + t('mcp.noToolsFound'),
+                        );
                       }
                     } catch (parseError) {
                       console.error('Failed to parse test result:', parseError);
-                      toast.error(t('mcp.testError') + ': ' + t('mcp.parseResultFailed'));
+                      toast.error(
+                        t('mcp.testError') + ': ' + t('mcp.parseResultFailed'),
+                      );
                     }
                   } else {
-                    toast.error(t('mcp.testError') + ': ' + t('mcp.noResultReturned'));
+                    toast.error(
+                      t('mcp.testError') + ': ' + t('mcp.noResultReturned'),
+                    );
                   }
                 }
               })
@@ -671,7 +673,11 @@ export default function PluginConfigPage() {
                 console.error('获取测试任务状态失败:', err);
                 clearInterval(interval);
                 setMcpTesting(false);
-                toast.error(t('mcp.testError') + ': ' + (err.message || t('mcp.getTaskFailed')));
+                toast.error(
+                  t('mcp.testError') +
+                    ': ' +
+                    (err.message || t('mcp.getTaskFailed')),
+                );
               });
           }, 1000);
         } else {
@@ -682,7 +688,9 @@ export default function PluginConfigPage() {
       .catch((err) => {
         console.error('启动测试失败:', err);
         setMcpTesting(false);
-        toast.error(t('mcp.testError') + ': ' + (err.message || t('mcp.unknownError')));
+        toast.error(
+          t('mcp.testError') + ': ' + (err.message || t('mcp.unknownError')),
+        );
       });
   }
 
@@ -853,15 +861,6 @@ export default function PluginConfigPage() {
           </TabsList>
 
           <div className="flex flex-row justify-end items-center">
-            {/* <Button
-              variant="outline"
-              className="px-6 py-4 cursor-pointer mr-2"
-              onClick={() => {
-                // setSortModalOpen(true);
-              }}
-            >
-              {t('plugins.arrange')}
-            </Button> */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="default" className="px-6 py-4 cursor-pointer">
@@ -875,18 +874,6 @@ export default function PluginConfigPage() {
               <DropdownMenuContent align="end">
                 {activeTab === 'mcp-servers' ? (
                   <>
-                    {/* <DropdownMenuItem
-                      onClick={() => {
-                        setActiveTab('mcp-market');
-                        setMcpMarketInstallModalOpen(true);
-                        setMcpInstallStatus(PluginInstallStatus.WAIT_INPUT);
-                        setMcpInstallError(null);
-                        setMcpGithubURL('');
-                      }}
-                    >
-                      <PlusIcon className="w-4 h-4" />
-                      {t('mcp.installFromGithub')}
-                    </DropdownMenuItem> */}
                     <DropdownMenuItem
                       onClick={() => {
                         setActiveTab('mcp-servers');
@@ -940,9 +927,9 @@ export default function PluginConfigPage() {
             }}
           />
         </TabsContent>
-        <TabsContent value="mcp">
+        {/* <TabsContent value="mcp">
           <MCPComponent ref={mcpComponentRef} />
-        </TabsContent>
+        </TabsContent> */}
         <TabsContent value="mcp-servers">
           <MCPServerComponent
             key={refreshKey}

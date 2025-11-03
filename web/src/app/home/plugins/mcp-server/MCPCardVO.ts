@@ -13,7 +13,7 @@ export class MCPCardVO {
     this.name = data.name;
     this.mode = data.mode;
     this.enable = data.enable;
-    
+
     this.status =
       (data.status as string) === 'enabled' ? 'connected' : data.status;
     this.tools = Array.isArray(data.tools)

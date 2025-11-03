@@ -530,22 +530,6 @@ export class BackendClient extends BaseHttpClient {
     return this.post(`/api/v1/mcp/servers/${serverName}/test`);
   }
 
-  // public getMCPMarketServers(
-  //   page: number,
-  //   page_size: number,
-  //   query: string,
-  //   sort_by: string = 'stars',
-  //   sort_order: string = 'DESC',
-  // ): Promise<MCPMarketResponse> {
-  //   return this.post(`/api/v1/market/mcp`, {
-  //     page,
-  //     page_size,
-  //     query,
-  //     sort_by,
-  //     sort_order,
-  //   });
-  // }
-
   public installMCPServerFromGithub(
     source: string,
   ): Promise<AsyncTaskCreatedResp> {

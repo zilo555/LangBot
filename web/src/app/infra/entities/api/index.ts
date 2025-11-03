@@ -348,27 +348,3 @@ export interface MCPTool {
   description: string;
   parameters: object;
 }
-
-// MCP Market
-export interface MCPMarketResponse {
-  servers: MCPMarketServer[];
-  total: number;
-}
-
-export interface MCPMarketServer {
-  ID: number;
-  CreatedAt: string; // ISO 8601 格式日期
-  UpdatedAt: string;
-  DeletedAt: string | null;
-  name: string;
-  author: string;
-  description: string;
-  repository: string; // GitHub 仓库路径
-  artifacts_path: string;
-  stars: number;
-  downloads: number;
-  status: 'initialized' | 'mounted';
-  synced_at: string;
-  pushed_at: string; // 最后一次代码推送时间
-  version?: string;
-}
