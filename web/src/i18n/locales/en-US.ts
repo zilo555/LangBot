@@ -311,6 +311,7 @@ const enUS = {
     keyName: 'Key Name',
     value: 'Value',
     testing: 'Testing...',
+    connecting: 'Connecting...',
     testSuccess: 'Connection test successful',
     testFailed: 'Connection test failed: ',
     testError: 'Connection test error',

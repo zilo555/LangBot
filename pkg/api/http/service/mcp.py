@@ -3,6 +3,7 @@ from __future__ import annotations
 import sqlalchemy
 import uuid
 import traceback
+import asyncio
 
 from ....core import app
 from ....entity.persistence import mcp as persistence_mcp
@@ -124,7 +125,6 @@ class MCPService:
 
     async def create_mcp_server(self, server_data: dict) -> str:
         server_data['uuid'] = str(uuid.uuid4())
-        print('server_data:', server_data)
         await self.ap.persistence_mgr.execute_async(sqlalchemy.insert(persistence_mcp.MCPServer).values(server_data))
 
         result = await self.ap.persistence_mgr.execute_async(
@@ -134,7 +134,8 @@ class MCPService:
         if server_entity:
             server_config = self.ap.persistence_mgr.serialize_model(persistence_mcp.MCPServer, server_entity)
             if self.ap.tool_mgr.mcp_tool_loader:
-                await self.ap.tool_mgr.mcp_tool_loader.load_mcp_server(server_config)
+                task = asyncio.create_task(self.ap.tool_mgr.mcp_tool_loader.host_mcp_server(server_config))
+                self.ap.tool_mgr.mcp_tool_loader._hosted_mcp_tasks.append(task)
 
         return server_data['uuid']
 
@@ -175,7 +176,9 @@ class MCPService:
             if updated_server:
                 # convert entity to config dict
                 server_config = self.ap.persistence_mgr.serialize_model(persistence_mcp.MCPServer, updated_server)
-                await self.ap.tool_mgr.mcp_tool_loader.load_mcp_server(server_config)
+                # await self.ap.tool_mgr.mcp_tool_loader.host_mcp_server(server_config)
+                task = asyncio.create_task(self.ap.tool_mgr.mcp_tool_loader.host_mcp_server(server_config))
+                self.ap.tool_mgr.mcp_tool_loader._hosted_mcp_tasks.append(task)
 
     async def delete_mcp_server(self, server_uuid: str) -> None:
         result = await self.ap.persistence_mgr.execute_async(

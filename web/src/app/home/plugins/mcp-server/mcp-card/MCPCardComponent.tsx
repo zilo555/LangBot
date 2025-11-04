@@ -5,7 +5,8 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { RefreshCcw, Wrench, Ban, AlertCircle } from 'lucide-react';
+import { RefreshCcw, Wrench, Ban, AlertCircle, Loader2 } from 'lucide-react';
+import { MCPSessionStatus } from '@/app/infra/entities/api';
 
 export default function MCPCardComponent({
   cardVO,
@@ -110,12 +111,20 @@ export default function MCPCardComponent({
                   {t('mcp.statusDisabled')}
                 </div>
               </div>
-            ) : status === 'connected' ? (
+            ) : status === MCPSessionStatus.CONNECTED ? (
               // 连接成功 - 显示工具数量
               <div className="flex h-full flex-row items-center justify-center gap-[0.4rem]">
                 <Wrench className="w-5 h-5" />
                 <div className="text-base text-black dark:text-[#f0f0f0] font-medium">
                   {t('mcp.toolCount', { count: toolsCount })}
+                </div>
+              </div>
+            ) : status === MCPSessionStatus.CONNECTING ? (
+              // 连接中 - 蓝色加载
+              <div className="flex flex-row items-center gap-[0.4rem]">
+                <Loader2 className="w-4 h-4 text-blue-500 dark:text-blue-400 animate-spin" />
+                <div className="text-sm text-blue-500 dark:text-blue-400 font-medium">
+                  {t('mcp.connecting')}
                 </div>
               </div>
             ) : (

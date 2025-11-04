@@ -325,8 +325,14 @@ export interface MCPServerExtraArgsSSE {
   ssereadtimeout: number;
 }
 
+export enum MCPSessionStatus {
+  CONNECTING = 'connecting',
+  CONNECTED = 'connected',
+  ERROR = 'error',
+}
+
 export interface MCPServerRuntimeInfo {
-  connected: boolean;
+  status: MCPSessionStatus;
   error_message: string;
   tool_count: number;
   tools: MCPTool[];

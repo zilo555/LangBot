@@ -299,6 +299,7 @@ const zhHans = {
     keyName: '键名',
     value: '值',
     testing: '测试中...',
+    connecting: '连接中...',
     testSuccess: '连接测试成功',
     testFailed: '连接测试失败：',
     testError: '连接测试出错',

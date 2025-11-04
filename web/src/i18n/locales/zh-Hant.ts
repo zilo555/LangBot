@@ -297,6 +297,7 @@ const zhHant = {
     keyName: '鍵名',
     value: '值',
     testing: '測試中...',
+    connecting: '連接中...',
     testSuccess: '連接測試成功',
     testFailed: '連接測試失敗：',
     testError: '連接測試出錯',

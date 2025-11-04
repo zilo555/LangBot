@@ -313,6 +313,7 @@ const jaJP = {
     keyName: 'キー名',
     value: '値',
     testing: 'テスト中...',
+    connecting: '接続中...',
     testSuccess: '接続テストに成功しました',
     testFailed: '接続テストに失敗しました：',
     testError: '接続テストエラー',

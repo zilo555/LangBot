@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import MCPCardComponent from '@/app/home/plugins/mcp-server/mcp-card/MCPCardComponent';
 import { MCPCardVO } from '@/app/home/plugins/mcp-server/MCPCardVO';
 import { useTranslation } from 'react-i18next';
+import { MCPSessionStatus } from '@/app/infra/entities/api';
 
 import { httpClient } from '@/app/infra/http/HttpClient';
 
@@ -16,10 +17,43 @@ export default function MCPComponent({
   const { t } = useTranslation();
   const [installedServers, setInstalledServers] = useState<MCPCardVO[]>([]);
   const [loading, setLoading] = useState(false);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     fetchInstalledServers();
+
+    return () => {
+      // Cleanup: clear polling interval when component unmounts
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
   }, []);
+
+  // Check if any server is connecting and start/stop polling accordingly
+  useEffect(() => {
+    const hasConnecting = installedServers.some(
+      (server) => server.status === MCPSessionStatus.CONNECTING,
+    );
+
+    if (hasConnecting && !pollingIntervalRef.current) {
+      // Start polling every 3 seconds
+      pollingIntervalRef.current = setInterval(() => {
+        fetchInstalledServers();
+      }, 3000);
+    } else if (!hasConnecting && pollingIntervalRef.current) {
+      // Stop polling when no server is connecting
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
+  }, [installedServers]);
 
   function fetchInstalledServers() {
     setLoading(true);

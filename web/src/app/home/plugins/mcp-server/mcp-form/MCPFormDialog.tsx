@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Resolver, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -42,9 +42,10 @@ import {
   MCPServerRuntimeInfo,
   MCPTool,
   MCPServer,
+  MCPSessionStatus,
 } from '@/app/infra/entities/api';
 
-// Status Display Component - 只在测试中或连接失败时使用
+// Status Display Component - 在测试中、连接中或连接失败时使用
 function StatusDisplay({
   testing,
   runtimeInfo,
@@ -78,6 +79,35 @@ function StatusDisplay({
           />
         </svg>
         <span className="font-medium">{t('mcp.testing')}</span>
+      </div>
+    );
+  }
+
+  // 连接中
+  if (runtimeInfo.status === MCPSessionStatus.CONNECTING) {
+    return (
+      <div className="flex items-center gap-2 text-blue-600">
+        <svg
+          className="w-5 h-5 animate-spin"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          />
+        </svg>
+        <span className="font-medium">{t('mcp.connecting')}</span>
       </div>
     );
   }
@@ -201,6 +231,7 @@ export default function MCPFormDialog({
   const [runtimeInfo, setRuntimeInfo] = useState<MCPServerRuntimeInfo | null>(
     null,
   );
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load server data when editing
   useEffect(() => {
@@ -212,7 +243,47 @@ export default function MCPFormDialog({
       setExtraArgs([]);
       setRuntimeInfo(null);
     }
+
+    // Cleanup polling interval when dialog closes
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
   }, [open, isEditMode, serverName]);
+
+  // Poll for updates when runtime_info status is CONNECTING
+  useEffect(() => {
+    if (
+      !open ||
+      !isEditMode ||
+      !serverName ||
+      !runtimeInfo ||
+      runtimeInfo.status !== MCPSessionStatus.CONNECTING
+    ) {
+      // Stop polling if conditions are not met
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+      return;
+    }
+
+    // Start polling if not already running
+    if (!pollingIntervalRef.current) {
+      pollingIntervalRef.current = setInterval(() => {
+        loadServerForEdit(serverName);
+      }, 3000);
+    }
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
+  }, [open, isEditMode, serverName, runtimeInfo?.status]);
 
   async function loadServerForEdit(serverName: string) {
     try {
@@ -312,7 +383,7 @@ export default function MCPFormDialog({
                 taskResp.runtime.exception || t('mcp.unknownError');
               toast.error(`${t('mcp.testError')}: ${errorMsg}`);
               setRuntimeInfo({
-                connected: false,
+                status: MCPSessionStatus.ERROR,
                 error_message: errorMsg,
                 tool_count: 0,
                 tools: [],
@@ -387,7 +458,8 @@ export default function MCPFormDialog({
         {isEditMode && runtimeInfo && (
           <div className="mb-4 space-y-3">
             {/* 测试中或连接失败时显示状态 */}
-            {(mcpTesting || !runtimeInfo.connected) && (
+            {(mcpTesting ||
+              runtimeInfo.status !== MCPSessionStatus.CONNECTED) && (
               <div className="p-3 rounded-lg border">
                 <StatusDisplay
                   testing={mcpTesting}
@@ -399,7 +471,7 @@ export default function MCPFormDialog({
 
             {/* 连接成功时只显示工具列表 */}
             {!mcpTesting &&
-              runtimeInfo.connected &&
+              runtimeInfo.status === MCPSessionStatus.CONNECTED &&
               runtimeInfo.tools?.length > 0 && (
                 <ToolsList tools={runtimeInfo.tools} />
               )}
