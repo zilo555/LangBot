@@ -153,7 +153,7 @@ const jaJP = {
     logs: 'ログ',
   },
   plugins: {
-    title: 'プラグイン',
+    title: '拡張機能',
     description: 'LangBotの機能を拡張するプラグインをインストール・設定',
     createPlugin: 'プラグインを作成',
     editPlugin: 'プラグインを編集',

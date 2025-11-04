@@ -151,7 +151,7 @@ const enUS = {
     logs: 'Logs',
   },
   plugins: {
-    title: 'Plugins',
+    title: 'Extensions',
     description:
       'Install and configure plugins to extend LangBot functionality',
     createPlugin: 'Create Plugin',
