@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import quart
+import traceback
 
 
 from ... import group
@@ -13,36 +14,18 @@ class MCPRouterGroup(group.RouterGroup):
         async def _() -> str:
             """获取MCP服务器列表"""
             if quart.request.method == 'GET':
-                servers = await self.ap.mcp_service.get_mcp_servers()
+                servers = await self.ap.mcp_service.get_mcp_servers(contain_runtime_info=True)
 
-                servers_with_status = []
-                # 获取MCP工具加载器
-                mcp_loader = self.ap.tool_mgr.mcp_tool_loader
-
-                for server in servers:
-                    # 从运行中的会话获取工具数量
-                    tools_count = 0
-                    if mcp_loader:
-                        session = mcp_loader.sessions.get(server['name'])
-                        if session:
-                            tools_count = len(session.functions)
-
-                    server_info = {
-                        **server,
-                        'tools': tools_count,
-                    }
-                    servers_with_status.append(server_info)
-
-                return self.success(data={'servers': servers_with_status})
+                return self.success(data={'servers': servers})
 
             elif quart.request.method == 'POST':
                 data = await quart.request.json
-                data = data['source']
 
                 try:
                     uuid = await self.ap.mcp_service.create_mcp_server(data)
                     return self.success(data={'uuid': uuid})
                 except Exception as e:
+                    traceback.print_exc()
                     return self.http_status(500, -1, f'Failed to create MCP server: {str(e)}')
 
         @self.route('/servers/<server_name>', methods=['GET', 'PUT', 'DELETE'], auth_type=group.AuthType.USER_TOKEN)

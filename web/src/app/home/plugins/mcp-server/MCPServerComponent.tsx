@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import styles from '@/app/home/plugins/plugins.module.css';
 import MCPCardComponent from '@/app/home/plugins/mcp-server/mcp-card/MCPCardComponent';
 import { MCPCardVO } from '@/app/home/plugins/mcp-server/MCPCardVO';
 import { useTranslation } from 'react-i18next';
@@ -55,16 +54,14 @@ export default function MCPComponent({
   }
 
   return (
-    <div className={`${styles.marketComponentBody}`}>
+    <div className="w-full h-full">
       {/* 已安装的服务器列表 */}
-      <div className="mb-6">
-        <div className={`${styles.pluginListContainer}`}>
+      <div className="mb-[2rem]">
+        <div className="w-full px-[0.8rem] pt-[2rem] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {loading ? (
-            <div style={{ textAlign: 'center', padding: '20px' }}>
-              {t('mcp.loading')}
-            </div>
+            <div className="text-center p-[2rem]">{t('mcp.loading')}</div>
           ) : installedServers.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '20px' }}>
+            <div className="text-center p-[2rem]">
               {t('mcp.noServerInstalled')}
             </div>
           ) : (

@@ -33,6 +33,10 @@ class RuntimeMCPSession:
 
     enable: bool
 
+    connected: bool
+
+    last_test_error_message: str
+
     def __init__(self, server_name: str, server_config: dict, enable: bool, ap: app.Application):
         self.server_name = server_name
         self.server_config = server_config
@@ -42,6 +46,9 @@ class RuntimeMCPSession:
 
         self.exit_stack = AsyncExitStack()
         self.functions = []
+
+        self.connected = False
+        self.last_test_error_message = ''
 
     async def _init_stdio_python_server(self):
         server_params = StdioServerParameters(
@@ -64,6 +71,7 @@ class RuntimeMCPSession:
                 self.server_config['url'],
                 headers=self.server_config.get('headers', {}),
                 timeout=self.server_config.get('timeout', 10),
+                sse_read_timeout=self.server_config.get('ssereadtimeout', 30),
             )
         )
 
@@ -73,46 +81,65 @@ class RuntimeMCPSession:
 
         await self.session.initialize()
 
-    async def initialize(self):
-        pass
-
     async def start(self):
         if not self.enable:
             return
 
-        if self.server_config['mode'] == 'stdio':
-            await self._init_stdio_python_server()
-        elif self.server_config['mode'] == 'sse':
-            await self._init_sse_server()
-        else:
-            raise ValueError(f'无法识别 MCP 服务器类型: {self.server_name}: {self.server_config}')
+        try:
+            if self.server_config['mode'] == 'stdio':
+                await self._init_stdio_python_server()
+            elif self.server_config['mode'] == 'sse':
+                await self._init_sse_server()
+            else:
+                raise ValueError(f'无法识别 MCP 服务器类型: {self.server_name}: {self.server_config}')
 
-        tools = await self.session.list_tools()
+            tools = await self.session.list_tools()
 
-        self.ap.logger.debug(f'获取 MCP 工具: {tools}')
+            self.ap.logger.debug(f'获取 MCP 工具: {tools}')
 
-        for tool in tools.tools:
+            for tool in tools.tools:
 
-            async def func(*, _tool=tool, **kwargs):
-                result = await self.session.call_tool(_tool.name, kwargs)
-                if result.isError:
-                    raise Exception(result.content[0].text)
-                return result.content[0].text
+                async def func(*, _tool=tool, **kwargs):
+                    result = await self.session.call_tool(_tool.name, kwargs)
+                    if result.isError:
+                        raise Exception(result.content[0].text)
+                    return result.content[0].text
 
-            func.__name__ = tool.name
+                func.__name__ = tool.name
 
-            self.functions.append(
-                resource_tool.LLMTool(
-                    name=tool.name,
-                    human_desc=tool.description,
-                    description=tool.description,
-                    parameters=tool.inputSchema,
-                    func=func,
+                self.functions.append(
+                    resource_tool.LLMTool(
+                        name=tool.name,
+                        human_desc=tool.description,
+                        description=tool.description,
+                        parameters=tool.inputSchema,
+                        func=func,
+                    )
                 )
-            )
+
+            self.connected = True
+            self.last_test_error_message = ''
+        except Exception as e:
+            self.connected = False
+            self.last_test_error_message = str(e)
+            raise e
 
     def get_tools(self) -> list[resource_tool.LLMTool]:
         return self.functions
+
+    def get_runtime_info_dict(self) -> dict:
+        return {
+            'connected': self.connected,
+            'error_message': self.last_test_error_message,
+            'tool_count': len(self.get_tools()),
+            'tools': [
+                {
+                    'name': tool.name,
+                    'description': tool.description,
+                }
+                for tool in self.get_tools()
+            ],
+        }
 
     async def shutdown(self):
         """关闭会话并清理资源"""
@@ -156,9 +183,9 @@ class MCPLoader(loader.ToolLoader):
         servers = result.all()
 
         for server in servers:
-            server_config = self.ap.persistence_mgr.serialize_model(persistence_mcp.MCPServer, server)
+            config = self.ap.persistence_mgr.serialize_model(persistence_mcp.MCPServer, server)
 
-            async def load_mcp_server_task():
+            async def load_mcp_server_task(server_config: dict):
                 self.ap.logger.debug(f'Loading MCP server {server_config}')
                 try:
                     session = await self.load_mcp_server(server_config)
@@ -180,7 +207,7 @@ class MCPLoader(loader.ToolLoader):
 
                 self.ap.logger.debug(f'Started MCP server {server_config["name"]}({server_config["uuid"]})')
 
-            task = asyncio.create_task(load_mcp_server_task())
+            task = asyncio.create_task(load_mcp_server_task(config))
             self._startup_load_tasks.append(task)
 
     async def load_mcp_server(self, server_config: dict) -> RuntimeMCPSession:
@@ -207,7 +234,6 @@ class MCPLoader(loader.ToolLoader):
         }
 
         session = RuntimeMCPSession(name, mixed_config, enable, self.ap)
-        await session.initialize()
 
         return session
 

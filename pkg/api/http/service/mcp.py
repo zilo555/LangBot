@@ -40,7 +40,6 @@ class RuntimeMCPServer:
         self.session = RuntimeMCPSession(
             self.mcp_server_entity.name, mixed_config, self.mcp_server_entity.enable, self.ap
         )
-        await self.session.initialize()
         await self.session.start()
 
     async def _test_mcp_server_task(self, task_context: taskmgr.TaskContext):
@@ -102,14 +101,29 @@ class MCPService:
     def __init__(self, ap: app.Application) -> None:
         self.ap = ap
 
-    async def get_mcp_servers(self) -> list[dict]:
+    async def get_mcp_servers(self, contain_runtime_info: bool = False) -> list[dict]:
         result = await self.ap.persistence_mgr.execute_async(sqlalchemy.select(persistence_mcp.MCPServer))
 
         servers = result.all()
-        return [self.ap.persistence_mgr.serialize_model(persistence_mcp.MCPServer, server) for server in servers]
+        serialized_servers = [
+            self.ap.persistence_mgr.serialize_model(persistence_mcp.MCPServer, server) for server in servers
+        ]
+        if contain_runtime_info:
+            for server in serialized_servers:
+                session = self.ap.tool_mgr.mcp_tool_loader.get_session(server['name'])
+
+                runtime_info = None
+
+                if session:
+                    runtime_info = session.get_runtime_info_dict()
+
+                server['runtime_info'] = runtime_info if runtime_info else None
+
+        return serialized_servers
 
     async def create_mcp_server(self, server_data: dict) -> str:
         server_data['uuid'] = str(uuid.uuid4())
+        print('server_data:', server_data)
         await self.ap.persistence_mgr.execute_async(sqlalchemy.insert(persistence_mcp.MCPServer).values(server_data))
 
         result = await self.ap.persistence_mgr.execute_async(

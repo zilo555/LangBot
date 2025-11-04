@@ -284,7 +284,7 @@ const enUS = {
   },
   mcp: {
     title: 'MCP Management',
-    createServer: 'Create MCP Server',
+    createServer: 'Add MCP Server',
     editServer: 'Edit MCP Server',
     deleteServer: 'Delete MCP Server',
     confirmDeleteServer: 'Are you sure you want to delete this MCP server?',
@@ -347,7 +347,8 @@ const enUS = {
     nameRequired: 'Name cannot be empty',
     sseTimeout: 'SSE Timeout',
     sseTimeoutDescription: 'Timeout for establishing SSE connection',
-    extraParametersDescription: 'Additional parameters for configuring specific MCP server behavior',
+    extraParametersDescription:
+      'Additional parameters for configuring specific MCP server behavior',
     timeoutMustBeNumber: 'Timeout must be a number',
     timeoutNonNegative: 'Timeout cannot be negative',
     sseTimeoutMustBeNumber: 'SSE timeout must be a number',

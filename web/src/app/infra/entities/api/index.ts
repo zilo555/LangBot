@@ -318,29 +318,28 @@ export interface ApiRespMCPServer {
   server: MCPServer;
 }
 
-export interface MCPServer {
-  extra_args: Record<string, unknown>;
-  name: string;
-  mode: 'stdio' | 'sse';
-  enable: boolean;
-  config: MCPServerConfig;
-  status: 'connected' | 'disconnected' | 'error' | 'disabled';
-  tools: MCPTool[];
-  error?: string;
+export interface MCPServerExtraArgsSSE {
+  url: string;
+  headers: Record<string, string>;
+  timeout: number;
+  ssereadtimeout: number;
 }
 
-export interface MCPServerConfig {
+export interface MCPServerRuntimeInfo {
+  connected: boolean;
+  error_message: string;
+  tool_count: number;
+}
+
+export interface MCPServer {
+  uuid?: string;
   name: string;
   mode: 'stdio' | 'sse';
   enable: boolean;
-  // stdio mode
-  command?: string;
-  args?: string[];
-  env?: Record<string, string>;
-  // sse mode
-  url?: string;
-  headers?: Record<string, string>;
-  timeout?: number;
+  extra_args: MCPServerExtraArgsSSE;
+  runtime_info?: MCPServerRuntimeInfo;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface MCPTool {

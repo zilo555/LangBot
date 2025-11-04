@@ -35,7 +35,7 @@ import {
   ApiRespPluginSystemStatus,
   ApiRespMCPServers,
   ApiRespMCPServer,
-  MCPServerConfig,
+  MCPServer,
 } from '@/app/infra/entities/api';
 import { GetBotLogsRequest } from '@/app/infra/http/requestParam/bots/GetBotLogsRequest';
 import { GetBotLogsResponse } from '@/app/infra/http/requestParam/bots/GetBotLogsResponse';
@@ -500,15 +500,13 @@ export class BackendClient extends BaseHttpClient {
     return this.get(`/api/v1/mcp/servers/${serverName}`);
   }
 
-  public createMCPServer(
-    server: MCPServerConfig,
-  ): Promise<AsyncTaskCreatedResp> {
-    return this.post('/api/v1/mcp/servers', { source: server });
+  public createMCPServer(server: MCPServer): Promise<AsyncTaskCreatedResp> {
+    return this.post('/api/v1/mcp/servers', server);
   }
 
   public updateMCPServer(
     serverName: string,
-    server: Partial<MCPServerConfig>,
+    server: Partial<MCPServer>,
   ): Promise<AsyncTaskCreatedResp> {
     return this.put(`/api/v1/mcp/servers/${serverName}`, server);
   }

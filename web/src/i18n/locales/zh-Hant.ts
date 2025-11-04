@@ -270,7 +270,7 @@ const zhHant = {
   },
   mcp: {
     title: 'MCP管理',
-    createServer: '建立MCP伺服器',
+    createServer: '新增MCP伺服器',
     editServer: '編輯MCP伺服器',
     deleteServer: '刪除MCP伺服器',
     confirmDeleteServer: '您確定要刪除此MCP伺服器嗎？',

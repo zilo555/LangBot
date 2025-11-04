@@ -396,25 +396,20 @@ export default function PluginConfigPage() {
       const server = resp.server ?? resp;
       console.log('Loaded server for edit:', server);
 
-      const extraArgs = server.extra_args as
-        | Record<string, unknown>
-        | undefined;
+      const extraArgs = server.extra_args;
       form.setValue('name', server.name);
-      form.setValue('url', (extraArgs?.url as string) || '');
-      form.setValue('timeout', (extraArgs?.timeout as number) || 30);
-      form.setValue(
-        'ssereadtimeout',
-        (extraArgs?.ssereadtimeout as number) || 300,
-      );
+      form.setValue('url', extraArgs.url);
+      form.setValue('timeout', extraArgs.timeout);
+      form.setValue('ssereadtimeout', extraArgs.ssereadtimeout);
 
-      if (extraArgs?.headers) {
-        const headers = Object.entries(
-          extraArgs.headers as Record<string, unknown>,
-        ).map(([key, value]) => ({
-          key,
-          type: 'string' as const,
-          value: String(value),
-        }));
+      if (extraArgs.headers) {
+        const headers = Object.entries(extraArgs.headers).map(
+          ([key, value]) => ({
+            key,
+            type: 'string' as const,
+            value: String(value),
+          }),
+        );
         setExtraArgs(headers);
         form.setValue('extra_args', headers);
       }
@@ -569,7 +564,17 @@ export default function PluginConfigPage() {
         await httpClient.updateMCPServer(editingServerName, serverConfig);
         toast.success(t('mcp.updateSuccess'));
       } else {
-        await httpClient.createMCPServer(serverConfig);
+        await httpClient.createMCPServer({
+          extra_args: {
+            url: value.url,
+            headers: extraArgsObj as Record<string, string>,
+            timeout: value.timeout,
+            ssereadtimeout: value.ssereadtimeout,
+          },
+          name: value.name,
+          mode: 'sse' as const,
+          enable: true,
+        });
         toast.success(t('mcp.createSuccess'));
       }
 
@@ -927,9 +932,6 @@ export default function PluginConfigPage() {
             }}
           />
         </TabsContent>
-        {/* <TabsContent value="mcp">
-          <MCPComponent ref={mcpComponentRef} />
-        </TabsContent> */}
         <TabsContent value="mcp-servers">
           <MCPServerComponent
             key={refreshKey}

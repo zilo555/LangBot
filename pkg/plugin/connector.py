@@ -58,7 +58,7 @@ class PluginRuntimeConnector:
 
     async def heartbeat_loop(self):
         while True:
-            await asyncio.sleep(10)
+            await asyncio.sleep(20)
             try:
                 await self.ping_plugin_runtime()
                 self.ap.logger.debug('Heartbeat to plugin runtime success.')

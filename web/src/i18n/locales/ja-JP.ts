@@ -286,7 +286,7 @@ const jaJP = {
   },
   mcp: {
     title: 'MCP管理',
-    createServer: 'MCPサーバーを作成',
+    createServer: 'MCPサーバーを追加',
     editServer: 'MCPサーバーを編集',
     deleteServer: 'MCPサーバーを削除',
     confirmDeleteServer: 'このMCPサーバーを削除してもよろしいですか？',
@@ -349,7 +349,8 @@ const jaJP = {
     nameRequired: '名前は必須です',
     sseTimeout: 'SSEタイムアウト',
     sseTimeoutDescription: 'SSE接続を確立するためのタイムアウト',
-    extraParametersDescription: 'MCPサーバーの特定の動作を設定するための追加パラメータ',
+    extraParametersDescription:
+      'MCPサーバーの特定の動作を設定するための追加パラメータ',
     timeoutMustBeNumber: 'タイムアウトは数値である必要があります',
     timeoutNonNegative: 'タイムアウトは負の数にできません',
     sseTimeoutMustBeNumber: 'SSEタイムアウトは数値である必要があります',
