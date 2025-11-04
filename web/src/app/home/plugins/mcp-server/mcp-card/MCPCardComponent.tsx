@@ -51,7 +51,7 @@ export default function MCPCardComponent({
     setTesting(true);
 
     httpClient
-      .testMCPServer(cardVO.name)
+      .testMCPServer(cardVO.name, {})
       .then((resp) => {
         const taskId = resp.task_id;
 
@@ -62,9 +62,11 @@ export default function MCPCardComponent({
               setTesting(false);
 
               if (taskResp.runtime.exception) {
-                toast.error(t('mcp.testFailed') + taskResp.runtime.exception);
+                toast.error(
+                  t('mcp.refreshFailed') + taskResp.runtime.exception,
+                );
               } else {
-                toast.success(t('mcp.testSuccess'));
+                toast.success(t('mcp.refreshSuccess'));
               }
 
               // Refresh to get updated runtime_info
@@ -74,7 +76,7 @@ export default function MCPCardComponent({
         }, 1000);
       })
       .catch((err) => {
-        toast.error(t('mcp.testFailed') + err.message);
+        toast.error(t('mcp.refreshFailed') + err.message);
         setTesting(false);
       });
   }

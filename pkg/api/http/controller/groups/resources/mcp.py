@@ -57,10 +57,6 @@ class MCPRouterGroup(group.RouterGroup):
         @self.route('/servers/<server_name>/test', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
         async def _(server_name: str) -> str:
             """测试MCP服务器连接"""
-
-            server_data = await self.ap.mcp_service.get_mcp_server_by_name(server_name)
-            if server_data is None:
-                return self.http_status(404, -1, 'Server not found')
-
-            task_id = await self.ap.mcp_service.test_mcp_server(server_data['uuid'])
+            server_data = await quart.request.json
+            task_id = await self.ap.mcp_service.test_mcp_server(server_name=server_name, server_data=server_data)
             return self.success(data={'task_id': task_id})

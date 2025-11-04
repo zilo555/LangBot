@@ -361,11 +361,22 @@ export default function MCPFormDialog({
   }
 
   async function testMcp() {
-    const serverName = form.getValues('name');
     setMcpTesting(true);
 
     try {
-      const { task_id } = await httpClient.testMCPServer(serverName);
+      const { task_id } = await httpClient.testMCPServer('_', {
+        name: form.getValues('name'),
+        mode: 'sse',
+        enable: true,
+        extra_args: {
+          url: form.getValues('url'),
+          timeout: form.getValues('timeout'),
+          ssereadtimeout: form.getValues('ssereadtimeout'),
+          headers: Object.fromEntries(
+            extraArgs.map((arg) => [arg.key, arg.value]),
+          ),
+        },
+      });
       if (!task_id) {
         throw new Error(t('mcp.noTaskId'));
       }
@@ -388,13 +399,11 @@ export default function MCPFormDialog({
                 tool_count: 0,
                 tools: [],
               });
-            } else if (taskResp.runtime.result) {
-              await loadServerForEdit(serverName);
-              toast.success(t('mcp.testSuccess'));
             } else {
-              toast.error(
-                `${t('mcp.testError')}: ${t('mcp.noResultReturned')}`,
-              );
+              if (isEditMode) {
+                await loadServerForEdit(form.getValues('name'));
+              }
+              toast.success(t('mcp.testSuccess'));
             }
           }
         } catch (err) {

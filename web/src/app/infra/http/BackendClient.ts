@@ -524,8 +524,11 @@ export class BackendClient extends BaseHttpClient {
     });
   }
 
-  public testMCPServer(serverName: string): Promise<AsyncTaskCreatedResp> {
-    return this.post(`/api/v1/mcp/servers/${serverName}/test`);
+  public testMCPServer(
+    serverName: string,
+    serverData: object,
+  ): Promise<AsyncTaskCreatedResp> {
+    return this.post(`/api/v1/mcp/servers/${serverName}/test`, serverData);
   }
 
   public installMCPServerFromGithub(

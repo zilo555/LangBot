@@ -101,29 +101,7 @@ class RuntimeMCPSession:
             else:
                 raise ValueError(f'无法识别 MCP 服务器类型: {self.server_name}: {self.server_config}')
 
-            tools = await self.session.list_tools()
-
-            self.ap.logger.debug(f'获取 MCP 工具: {tools}')
-
-            for tool in tools.tools:
-
-                async def func(*, _tool=tool, **kwargs):
-                    result = await self.session.call_tool(_tool.name, kwargs)
-                    if result.isError:
-                        raise Exception(result.content[0].text)
-                    return result.content[0].text
-
-                func.__name__ = tool.name
-
-                self.functions.append(
-                    resource_tool.LLMTool(
-                        name=tool.name,
-                        human_desc=tool.description,
-                        description=tool.description,
-                        parameters=tool.inputSchema,
-                        func=func,
-                    )
-                )
+            await self.refresh()
 
             self.status = MCPSessionStatus.CONNECTED
             self.last_test_error_message = ''
@@ -131,6 +109,33 @@ class RuntimeMCPSession:
             self.status = MCPSessionStatus.ERROR
             self.last_test_error_message = str(e)
             raise e
+
+    async def refresh(self):
+        self.functions.clear()
+
+        tools = await self.session.list_tools()
+
+        self.ap.logger.debug(f'Refresh MCP tools: {tools}')
+
+        for tool in tools.tools:
+
+            async def func(*, _tool=tool, **kwargs):
+                result = await self.session.call_tool(_tool.name, kwargs)
+                if result.isError:
+                    raise Exception(result.content[0].text)
+                return result.content[0].text
+
+            func.__name__ = tool.name
+
+            self.functions.append(
+                resource_tool.LLMTool(
+                    name=tool.name,
+                    human_desc=tool.description,
+                    description=tool.description,
+                    parameters=tool.inputSchema,
+                    func=func,
+                )
+            )
 
     def get_tools(self) -> list[resource_tool.LLMTool]:
         return self.functions
