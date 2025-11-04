@@ -3,7 +3,9 @@ import PluginInstalledComponent, {
   PluginInstalledComponentRef,
 } from '@/app/home/plugins/components/plugin-installed/PluginInstalledComponent';
 import MarketPage from '@/app/home/plugins/components/plugin-market/PluginMarketComponent';
-// import PluginSortDialog from '@/app/home/plugins/plugin-sort/PluginSortDialog';
+import MCPServerComponent from '@/app/home/plugins/mcp-server/MCPServerComponent';
+import MCPFormDialog from '@/app/home/plugins/mcp-server/mcp-form/MCPFormDialog';
+import MCPDeleteConfirmDialog from '@/app/home/plugins/mcp-server/mcp-form/MCPDeleteConfirmDialog';
 import styles from './plugins.module.css';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -29,7 +31,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -46,11 +48,11 @@ enum PluginInstallStatus {
 
 export default function PluginConfigPage() {
   const { t } = useTranslation();
-  const [modalOpen, setModalOpen] = useState(false);
-  // const [sortModalOpen, setSortModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('installed');
+  const [modalOpen, setModalOpen] = useState(false);
   const [installSource, setInstallSource] = useState<string>('local');
   const [installInfo, setInstallInfo] = useState<Record<string, any>>({}); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const [mcpSSEModalOpen, setMcpSSEModalOpen] = useState(false);
   const [pluginInstallStatus, setPluginInstallStatus] =
     useState<PluginInstallStatus>(PluginInstallStatus.WAIT_INPUT);
   const [installError, setInstallError] = useState<string | null>(null);
@@ -59,8 +61,13 @@ export default function PluginConfigPage() {
   const [pluginSystemStatus, setPluginSystemStatus] =
     useState<ApiRespPluginSystemStatus | null>(null);
   const [statusLoading, setStatusLoading] = useState(true);
-  const pluginInstalledRef = useRef<PluginInstalledComponentRef>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [editingServerName, setEditingServerName] = useState<string | null>(
+    null,
+  );
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const fetchPluginSystemStatus = async () => {
@@ -81,19 +88,15 @@ export default function PluginConfigPage() {
 
   function watchTask(taskId: number) {
     let alreadySuccess = false;
-    console.log('taskId:', taskId);
 
-    // 每秒拉取一次任务状态
     const interval = setInterval(() => {
       httpClient.getAsyncTask(taskId).then((resp) => {
-        console.log('task status:', resp);
         if (resp.runtime.done) {
           clearInterval(interval);
           if (resp.runtime.exception) {
             setInstallError(resp.runtime.exception);
             setPluginInstallStatus(PluginInstallStatus.ERROR);
           } else {
-            // success
             if (!alreadySuccess) {
               toast.success(t('plugins.installSuccess'));
               alreadySuccess = true;
@@ -107,52 +110,54 @@ export default function PluginConfigPage() {
     }, 1000);
   }
 
+  const pluginInstalledRef = useRef<PluginInstalledComponentRef>(null);
+
   function handleModalConfirm() {
-    installPlugin(installSource, installInfo as Record<string, any>); // eslint-disable-line @typescript-eslint/no-explicit-any
+    installPlugin(installSource, installInfo as Record<string, unknown>);
   }
 
-  function installPlugin(
-    installSource: string,
-    installInfo: Record<string, any>, // eslint-disable-line @typescript-eslint/no-explicit-any
-  ) {
-    setPluginInstallStatus(PluginInstallStatus.INSTALLING);
-    if (installSource === 'github') {
-      httpClient
-        .installPluginFromGithub(installInfo.url)
-        .then((resp) => {
-          const taskId = resp.task_id;
-          watchTask(taskId);
-        })
-        .catch((err) => {
-          console.log('error when install plugin:', err);
-          setInstallError(err.message);
-          setPluginInstallStatus(PluginInstallStatus.ERROR);
-        });
-    } else if (installSource === 'local') {
-      httpClient
-        .installPluginFromLocal(installInfo.file)
-        .then((resp) => {
-          const taskId = resp.task_id;
-          watchTask(taskId);
-        })
-        .catch((err) => {
-          console.log('error when install plugin:', err);
-          setInstallError(err.message);
-          setPluginInstallStatus(PluginInstallStatus.ERROR);
-        });
-    } else if (installSource === 'marketplace') {
-      httpClient
-        .installPluginFromMarketplace(
-          installInfo.plugin_author,
-          installInfo.plugin_name,
-          installInfo.plugin_version,
-        )
-        .then((resp) => {
-          const taskId = resp.task_id;
-          watchTask(taskId);
-        });
-    }
-  }
+  const installPlugin = useCallback(
+    (installSource: string, installInfo: Record<string, unknown>) => {
+      setPluginInstallStatus(PluginInstallStatus.INSTALLING);
+      if (installSource === 'github') {
+        httpClient
+          .installPluginFromGithub((installInfo as { url: string }).url)
+          .then((resp) => {
+            const taskId = resp.task_id;
+            watchTask(taskId);
+          })
+          .catch((err) => {
+            console.log('error when install plugin:', err);
+            setInstallError(err.message);
+            setPluginInstallStatus(PluginInstallStatus.ERROR);
+          });
+      } else if (installSource === 'local') {
+        httpClient
+          .installPluginFromLocal((installInfo as { file: File }).file)
+          .then((resp) => {
+            const taskId = resp.task_id;
+            watchTask(taskId);
+          })
+          .catch((err) => {
+            console.log('error when install plugin:', err);
+            setInstallError(err.message);
+            setPluginInstallStatus(PluginInstallStatus.ERROR);
+          });
+      } else if (installSource === 'marketplace') {
+        httpClient
+          .installPluginFromMarketplace(
+            (installInfo as { plugin_author: string }).plugin_author,
+            (installInfo as { plugin_name: string }).plugin_name,
+            (installInfo as { plugin_version: string }).plugin_version,
+          )
+          .then((resp) => {
+            const taskId = resp.task_id;
+            watchTask(taskId);
+          });
+      }
+    },
+    [watchTask],
+  );
 
   const validateFileType = (file: File): boolean => {
     const allowedExtensions = ['.lbpkg', '.zip'];
@@ -177,7 +182,7 @@ export default function PluginConfigPage() {
       setInstallError(null);
       installPlugin('local', { file });
     },
-    [t, pluginSystemStatus],
+    [t, pluginSystemStatus, installPlugin],
   );
 
   const handleFileSelect = useCallback(() => {
@@ -192,7 +197,7 @@ export default function PluginConfigPage() {
       if (file) {
         uploadPluginFile(file);
       }
-      // 清空input值，以便可以重复选择同一个文件
+
       event.target.value = '';
     },
     [uploadPluginFile],
@@ -234,7 +239,6 @@ export default function PluginConfigPage() {
     [uploadPluginFile, isPluginSystemReady, t],
   );
 
-  // 插件系统未启用的状态显示
   const renderPluginDisabledState = () => (
     <div className="flex flex-col items-center justify-center h-[60vh] text-center pt-[10vh]">
       <Power className="w-16 h-16 text-gray-400 mb-4" />
@@ -247,7 +251,6 @@ export default function PluginConfigPage() {
     </div>
   );
 
-  // 插件系统连接异常的状态显示
   const renderPluginConnectionErrorState = () => (
     <div className="flex flex-col items-center justify-center h-[60vh] text-center pt-[10vh]">
       <svg
@@ -269,7 +272,6 @@ export default function PluginConfigPage() {
     </div>
   );
 
-  // 加载状态显示
   const renderLoadingState = () => (
     <div className="flex flex-col items-center justify-center h-[60vh] pt-[10vh]">
       <p className="text-gray-500 dark:text-gray-400">
@@ -278,7 +280,6 @@ export default function PluginConfigPage() {
     </div>
   );
 
-  // 根据状态返回不同的内容
   if (statusLoading) {
     return renderLoadingState();
   }
@@ -316,40 +317,57 @@ export default function PluginConfigPage() {
                 {t('plugins.marketplace')}
               </TabsTrigger>
             )}
+            <TabsTrigger
+              value="mcp-servers"
+              className="px-6 py-4 cursor-pointer"
+            >
+              {t('mcp.title')}
+            </TabsTrigger>
           </TabsList>
 
           <div className="flex flex-row justify-end items-center">
-            {/* <Button
-              variant="outline"
-              className="px-6 py-4 cursor-pointer mr-2"
-              onClick={() => {
-                // setSortModalOpen(true);
-              }}
-            >
-              {t('plugins.arrange')}
-            </Button> */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="default" className="px-6 py-4 cursor-pointer">
                   <PlusIcon className="w-4 h-4" />
-                  {t('plugins.install')}
+                  {activeTab === 'mcp-servers'
+                    ? t('mcp.add')
+                    : t('plugins.install')}
                   <ChevronDownIcon className="ml-2 w-4 h-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleFileSelect}>
-                  <UploadIcon className="w-4 h-4" />
-                  {t('plugins.uploadLocal')}
-                </DropdownMenuItem>
-                {systemInfo.enable_marketplace && (
-                  <DropdownMenuItem
-                    onClick={() => {
-                      setActiveTab('market');
-                    }}
-                  >
-                    <StoreIcon className="w-4 h-4" />
-                    {t('plugins.marketplace')}
-                  </DropdownMenuItem>
+                {activeTab === 'mcp-servers' ? (
+                  <>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setActiveTab('mcp-servers');
+                        setIsEditMode(false);
+                        setEditingServerName(null);
+                        setMcpSSEModalOpen(true);
+                      }}
+                    >
+                      <PlusIcon className="w-4 h-4" />
+                      {t('mcp.createServer')}
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <>
+                    <DropdownMenuItem onClick={handleFileSelect}>
+                      <UploadIcon className="w-4 h-4" />
+                      {t('plugins.uploadLocal')}
+                    </DropdownMenuItem>
+                    {systemInfo.enable_marketplace && (
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setActiveTab('market');
+                        }}
+                      >
+                        <StoreIcon className="w-4 h-4" />
+                        {t('plugins.marketplace')}
+                      </DropdownMenuItem>
+                    )}
+                  </>
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
@@ -369,6 +387,16 @@ export default function PluginConfigPage() {
               });
               setPluginInstallStatus(PluginInstallStatus.ASK_CONFIRM);
               setModalOpen(true);
+            }}
+          />
+        </TabsContent>
+        <TabsContent value="mcp-servers">
+          <MCPServerComponent
+            key={refreshKey}
+            onEditServer={(serverName) => {
+              setEditingServerName(serverName);
+              setIsEditMode(true);
+              setMcpSSEModalOpen(true);
             }}
           />
         </TabsContent>
@@ -435,7 +463,6 @@ export default function PluginConfigPage() {
         </DialogContent>
       </Dialog>
 
-      {/* 拖拽提示覆盖层 */}
       {isDragOver && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50 pointer-events-none">
           <div className="bg-white rounded-lg p-8 shadow-lg border-2 border-dashed border-gray-500">
@@ -449,13 +476,32 @@ export default function PluginConfigPage() {
         </div>
       )}
 
-      {/* <PluginSortDialog
-        open={sortModalOpen}
-        onOpenChange={setSortModalOpen}
-        onSortComplete={() => {
-          pluginInstalledRef.current?.refreshPluginList();
+      <MCPFormDialog
+        open={mcpSSEModalOpen}
+        onOpenChange={setMcpSSEModalOpen}
+        serverName={editingServerName}
+        isEditMode={isEditMode}
+        onSuccess={() => {
+          setEditingServerName(null);
+          setIsEditMode(false);
+          setRefreshKey((prev) => prev + 1);
         }}
-      /> */}
+        onDelete={() => {
+          setShowDeleteConfirmModal(true);
+        }}
+      />
+
+      <MCPDeleteConfirmDialog
+        open={showDeleteConfirmModal}
+        onOpenChange={setShowDeleteConfirmModal}
+        serverName={editingServerName}
+        onSuccess={() => {
+          setMcpSSEModalOpen(false);
+          setEditingServerName(null);
+          setIsEditMode(false);
+          setRefreshKey((prev) => prev + 1);
+        }}
+      />
     </div>
   );
 }
