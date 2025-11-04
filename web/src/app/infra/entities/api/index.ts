@@ -329,6 +329,7 @@ export interface MCPServerRuntimeInfo {
   connected: boolean;
   error_message: string;
   tool_count: number;
+  tools: MCPTool[];
 }
 
 export interface MCPServer {
@@ -345,5 +346,5 @@ export interface MCPServer {
 export interface MCPTool {
   name: string;
   description: string;
-  parameters: object;
+  parameters?: object;
 }

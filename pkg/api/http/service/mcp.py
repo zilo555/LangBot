@@ -101,6 +101,12 @@ class MCPService:
     def __init__(self, ap: app.Application) -> None:
         self.ap = ap
 
+    async def get_runtime_info(self, server_name: str) -> dict | None:
+        session = self.ap.tool_mgr.mcp_tool_loader.get_session(server_name)
+        if session:
+            return session.get_runtime_info_dict()
+        return None
+
     async def get_mcp_servers(self, contain_runtime_info: bool = False) -> list[dict]:
         result = await self.ap.persistence_mgr.execute_async(sqlalchemy.select(persistence_mcp.MCPServer))
 
@@ -110,12 +116,7 @@ class MCPService:
         ]
         if contain_runtime_info:
             for server in serialized_servers:
-                session = self.ap.tool_mgr.mcp_tool_loader.get_session(server['name'])
-
-                runtime_info = None
-
-                if session:
-                    runtime_info = session.get_runtime_info_dict()
+                runtime_info = await self.get_runtime_info(server['name'])
 
                 server['runtime_info'] = runtime_info if runtime_info else None
 
@@ -137,15 +138,6 @@ class MCPService:
 
         return server_data['uuid']
 
-    async def get_mcp_server(self, server_uuid: str) -> dict | None:
-        result = await self.ap.persistence_mgr.execute_async(
-            sqlalchemy.select(persistence_mcp.MCPServer).where(persistence_mcp.MCPServer.uuid == server_uuid)
-        )
-        server = result.first()
-        if server is None:
-            return None
-        return self.ap.persistence_mgr.serialize_model(persistence_mcp.MCPServer, server)
-
     async def get_mcp_server_by_name(self, server_name: str) -> dict | None:
         result = await self.ap.persistence_mgr.execute_async(
             sqlalchemy.select(persistence_mcp.MCPServer).where(persistence_mcp.MCPServer.name == server_name)
@@ -153,7 +145,11 @@ class MCPService:
         server = result.first()
         if server is None:
             return None
-        return self.ap.persistence_mgr.serialize_model(persistence_mcp.MCPServer, server)
+
+        runtime_info = await self.get_runtime_info(server.name)
+        server_data = self.ap.persistence_mgr.serialize_model(persistence_mcp.MCPServer, server)
+        server_data['runtime_info'] = runtime_info if runtime_info else None
+        return server_data
 
     async def update_mcp_server(self, server_uuid: str, server_data: dict) -> None:
         result = await self.ap.persistence_mgr.execute_async(
