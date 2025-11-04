@@ -14,6 +14,12 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
+import {
   Form,
   FormControl,
   FormDescription,
@@ -32,6 +38,98 @@ import {
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { httpClient } from '@/app/infra/http/HttpClient';
+import {
+  MCPServerRuntimeInfo,
+  MCPTool,
+  MCPServer,
+} from '@/app/infra/entities/api';
+
+// Status Display Component - 只在测试中或连接失败时使用
+function StatusDisplay({
+  testing,
+  runtimeInfo,
+  t,
+}: {
+  testing: boolean;
+  runtimeInfo: MCPServerRuntimeInfo;
+  t: (key: string) => string;
+}) {
+  if (testing) {
+    return (
+      <div className="flex items-center gap-2 text-blue-600">
+        <svg
+          className="w-5 h-5 animate-spin"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          />
+        </svg>
+        <span className="font-medium">{t('mcp.testing')}</span>
+      </div>
+    );
+  }
+
+  // 连接失败
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center gap-2 text-red-600">
+        <svg
+          className="w-5 h-5"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span className="font-medium">{t('mcp.connectionFailed')}</span>
+      </div>
+      {runtimeInfo.error_message && (
+        <div className="text-sm text-red-500 pl-7">
+          {runtimeInfo.error_message}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Tools List Component
+function ToolsList({ tools }: { tools: MCPTool[] }) {
+  return (
+    <div className="space-y-2 max-h-[300px] overflow-y-auto">
+      {tools.map((tool, index) => (
+        <Card key={index} className="py-3 shadow-none">
+          <CardHeader>
+            <CardTitle className="text-sm">{tool.name}</CardTitle>
+            {tool.description && (
+              <CardDescription className="text-xs">
+                {tool.description}
+              </CardDescription>
+            )}
+          </CardHeader>
+        </Card>
+      ))}
+    </div>
+  );
+}
 
 const getFormSchema = (t: (key: string) => string) =>
   z.object({
@@ -72,7 +170,6 @@ interface MCPFormDialogProps {
   isEditMode?: boolean;
   onSuccess?: () => void;
   onDelete?: () => void;
-  onUpdateToolsCache?: (serverName: string, toolsCount: number) => void;
 }
 
 export default function MCPFormDialog({
@@ -82,7 +179,6 @@ export default function MCPFormDialog({
   isEditMode = false,
   onSuccess,
   onDelete,
-  onUpdateToolsCache,
 }: MCPFormDialogProps) {
   const { t } = useTranslation();
   const formSchema = getFormSchema(t);
@@ -102,11 +198,9 @@ export default function MCPFormDialog({
     { key: string; type: 'string' | 'number' | 'boolean'; value: string }[]
   >([]);
   const [mcpTesting, setMcpTesting] = useState(false);
-  const [mcpTestStatus, setMcpTestStatus] = useState<
-    'idle' | 'testing' | 'success' | 'failed'
-  >('idle');
-  const [mcpToolNames, setMcpToolNames] = useState<string[]>([]);
-  const [mcpTestError, setMcpTestError] = useState<string>('');
+  const [runtimeInfo, setRuntimeInfo] = useState<MCPServerRuntimeInfo | null>(
+    null,
+  );
 
   // Load server data when editing
   useEffect(() => {
@@ -116,9 +210,7 @@ export default function MCPFormDialog({
       // Reset form when creating new server
       form.reset();
       setExtraArgs([]);
-      setMcpTestStatus('idle');
-      setMcpToolNames([]);
-      setMcpTestError('');
+      setRuntimeInfo(null);
     }
   }, [open, isEditMode, serverName]);
 
@@ -145,88 +237,11 @@ export default function MCPFormDialog({
         form.setValue('extra_args', headers);
       }
 
-      setMcpTestStatus('testing');
-      setMcpToolNames([]);
-      setMcpTestError('');
-
-      try {
-        const res = await httpClient.testMCPServer(server.name);
-        if (res.task_id) {
-          const taskId = res.task_id;
-
-          const interval = setInterval(() => {
-            httpClient
-              .getAsyncTask(taskId)
-              .then((taskResp) => {
-                if (taskResp.runtime && taskResp.runtime.done) {
-                  clearInterval(interval);
-
-                  if (taskResp.runtime.exception) {
-                    setMcpTestStatus('failed');
-                    setMcpToolNames([]);
-                    setMcpTestError(taskResp.runtime.exception || '未知错误');
-                  } else if (taskResp.runtime.result) {
-                    try {
-                      let result: {
-                        status?: string;
-                        tools_count?: number;
-                        tools_names_lists?: string[];
-                        error?: string;
-                      };
-
-                      const rawResult: unknown = taskResp.runtime.result;
-                      if (typeof rawResult === 'string') {
-                        result = JSON.parse(rawResult.replace(/'/g, '"'));
-                      } else {
-                        result = rawResult as typeof result;
-                      }
-
-                      if (
-                        result.tools_names_lists &&
-                        result.tools_names_lists.length > 0
-                      ) {
-                        setMcpTestStatus('success');
-                        setMcpToolNames(result.tools_names_lists);
-                        // Update tools cache
-                        if (onUpdateToolsCache && serverName) {
-                          onUpdateToolsCache(
-                            serverName,
-                            result.tools_names_lists.length,
-                          );
-                        }
-                      } else {
-                        setMcpTestStatus('failed');
-                        setMcpToolNames([]);
-                        setMcpTestError('未找到任何工具');
-                      }
-                    } catch (parseError) {
-                      setMcpTestStatus('failed');
-                      setMcpToolNames([]);
-                      setMcpTestError('解析测试结果失败');
-                    }
-                  } else {
-                    setMcpTestStatus('failed');
-                    setMcpToolNames([]);
-                    setMcpTestError('测试未返回结果');
-                  }
-                }
-              })
-              .catch((err) => {
-                clearInterval(interval);
-                setMcpTestStatus('failed');
-                setMcpToolNames([]);
-                setMcpTestError(err.message || '获取任务状态失败');
-              });
-          }, 1000);
-        } else {
-          setMcpTestStatus('failed');
-          setMcpToolNames([]);
-          setMcpTestError('未获取到任务ID');
-        }
-      } catch (error) {
-        setMcpTestStatus('failed');
-        setMcpToolNames([]);
-        setMcpTestError((error as Error).message || '测试连接时发生错误');
+      // Set runtime_info from server data
+      if (server.runtime_info) {
+        setRuntimeInfo(server.runtime_info);
+      } else {
+        setRuntimeInfo(null);
       }
     } catch (error) {
       console.error('Failed to load server:', error);
@@ -235,167 +250,103 @@ export default function MCPFormDialog({
   }
 
   async function handleFormSubmit(value: z.infer<typeof formSchema>) {
-    const extraArgsObj: Record<string, string | number | boolean> = {};
-    value.extra_args?.forEach(
-      (arg: { key: string; type: string; value: string }) => {
-        if (arg.type === 'number') {
-          extraArgsObj[arg.key] = Number(arg.value);
-        } else if (arg.type === 'boolean') {
-          extraArgsObj[arg.key] = arg.value === 'true';
-        } else {
-          extraArgsObj[arg.key] = arg.value;
-        }
-      },
-    );
+    // Convert extra_args to headers - all values must be strings according to MCPServerExtraArgsSSE
+    const headers: Record<string, string> = {};
+    value.extra_args?.forEach((arg) => {
+      // Convert all values to strings to match MCPServerExtraArgsSSE.headers type
+      headers[arg.key] = String(arg.value);
+    });
 
     try {
-      const serverConfig = {
+      const serverConfig: Omit<
+        MCPServer,
+        'uuid' | 'created_at' | 'updated_at' | 'runtime_info'
+      > = {
         name: value.name,
         mode: 'sse' as const,
         enable: true,
-        url: value.url,
-        headers: extraArgsObj as Record<string, string>,
-        timeout: value.timeout,
-        ssereadtimeout: value.ssereadtimeout,
+        extra_args: {
+          url: value.url,
+          headers: headers,
+          timeout: value.timeout,
+          ssereadtimeout: value.ssereadtimeout,
+        },
       };
 
       if (isEditMode && serverName) {
         await httpClient.updateMCPServer(serverName, serverConfig);
         toast.success(t('mcp.updateSuccess'));
       } else {
-        await httpClient.createMCPServer({
-          extra_args: {
-            url: value.url,
-            headers: extraArgsObj as Record<string, string>,
-            timeout: value.timeout,
-            ssereadtimeout: value.ssereadtimeout,
-          },
-          name: value.name,
-          mode: 'sse' as const,
-          enable: true,
-        });
+        await httpClient.createMCPServer(serverConfig);
         toast.success(t('mcp.createSuccess'));
       }
 
-      onOpenChange(false);
-      form.reset();
-      setExtraArgs([]);
-
-      if (onSuccess) {
-        onSuccess();
-      }
+      handleDialogClose(false);
+      onSuccess?.();
     } catch (error) {
       console.error('Failed to save MCP server:', error);
       toast.error(isEditMode ? t('mcp.updateFailed') : t('mcp.createFailed'));
     }
   }
 
-  function testMcp() {
+  async function testMcp() {
+    const serverName = form.getValues('name');
     setMcpTesting(true);
-    const extraArgsObj: Record<string, string | number | boolean> = {};
-    form
-      .getValues('extra_args')
-      ?.forEach((arg: { key: string; type: string; value: string }) => {
-        if (arg.type === 'number') {
-          extraArgsObj[arg.key] = Number(arg.value);
-        } else if (arg.type === 'boolean') {
-          extraArgsObj[arg.key] = arg.value === 'true';
-        } else {
-          extraArgsObj[arg.key] = arg.value;
-        }
-      });
-    httpClient
-      .testMCPServer(form.getValues('name'))
-      .then((res) => {
-        if (res.task_id) {
-          const taskId = res.task_id;
 
-          const interval = setInterval(() => {
-            httpClient
-              .getAsyncTask(taskId)
-              .then((taskResp) => {
-                if (taskResp.runtime && taskResp.runtime.done) {
-                  clearInterval(interval);
-                  setMcpTesting(false);
+    try {
+      const { task_id } = await httpClient.testMCPServer(serverName);
+      if (!task_id) {
+        throw new Error(t('mcp.noTaskId'));
+      }
 
-                  if (taskResp.runtime.exception) {
-                    toast.error(
-                      t('mcp.testError') +
-                        ': ' +
-                        (taskResp.runtime.exception || t('mcp.unknownError')),
-                    );
-                  } else if (taskResp.runtime.result) {
-                    try {
-                      let result: {
-                        status?: string;
-                        tools_count?: number;
-                        tools_names_lists?: string[];
-                        error?: string;
-                      };
+      const interval = setInterval(async () => {
+        try {
+          const taskResp = await httpClient.getAsyncTask(task_id);
 
-                      const rawResult: unknown = taskResp.runtime.result;
-                      if (typeof rawResult === 'string') {
-                        result = JSON.parse(rawResult.replace(/'/g, '"'));
-                      } else {
-                        result = rawResult as typeof result;
-                      }
+          if (taskResp.runtime?.done) {
+            clearInterval(interval);
+            setMcpTesting(false);
 
-                      if (
-                        result.tools_names_lists &&
-                        result.tools_names_lists.length > 0
-                      ) {
-                        toast.success(
-                          t('mcp.testSuccess') +
-                            ' - ' +
-                            result.tools_names_lists.length +
-                            ' ' +
-                            t('mcp.toolsFound'),
-                        );
-                      } else {
-                        toast.error(
-                          t('mcp.testError') + ': ' + t('mcp.noToolsFound'),
-                        );
-                      }
-                    } catch (parseError) {
-                      console.error('Failed to parse test result:', parseError);
-                      toast.error(
-                        t('mcp.testError') + ': ' + t('mcp.parseResultFailed'),
-                      );
-                    }
-                  } else {
-                    toast.error(
-                      t('mcp.testError') + ': ' + t('mcp.noResultReturned'),
-                    );
-                  }
-                }
-              })
-              .catch((err) => {
-                console.error('获取测试任务状态失败:', err);
-                clearInterval(interval);
-                setMcpTesting(false);
-                toast.error(
-                  t('mcp.testError') +
-                    ': ' +
-                    (err.message || t('mcp.getTaskFailed')),
-                );
+            if (taskResp.runtime.exception) {
+              const errorMsg =
+                taskResp.runtime.exception || t('mcp.unknownError');
+              toast.error(`${t('mcp.testError')}: ${errorMsg}`);
+              setRuntimeInfo({
+                connected: false,
+                error_message: errorMsg,
+                tool_count: 0,
+                tools: [],
               });
-          }, 1000);
-        } else {
+            } else if (taskResp.runtime.result) {
+              await loadServerForEdit(serverName);
+              toast.success(t('mcp.testSuccess'));
+            } else {
+              toast.error(
+                `${t('mcp.testError')}: ${t('mcp.noResultReturned')}`,
+              );
+            }
+          }
+        } catch (err) {
+          clearInterval(interval);
           setMcpTesting(false);
-          toast.error(t('mcp.testError') + ': ' + t('mcp.noTaskId'));
+          const errorMsg = (err as Error).message || t('mcp.getTaskFailed');
+          toast.error(`${t('mcp.testError')}: ${errorMsg}`);
         }
-      })
-      .catch((err) => {
-        console.error('启动测试失败:', err);
-        setMcpTesting(false);
-        toast.error(
-          t('mcp.testError') + ': ' + (err.message || t('mcp.unknownError')),
-        );
-      });
+      }, 1000);
+    } catch (err) {
+      setMcpTesting(false);
+      const errorMsg = (err as Error).message || t('mcp.unknownError');
+      toast.error(`${t('mcp.testError')}: ${errorMsg}`);
+    }
   }
 
   const addExtraArg = () => {
-    setExtraArgs([...extraArgs, { key: '', type: 'string', value: '' }]);
+    const newArgs = [
+      ...extraArgs,
+      { key: '', type: 'string' as const, value: '' },
+    ];
+    setExtraArgs(newArgs);
+    form.setValue('extra_args', newArgs);
   };
 
   const removeExtraArg = (index: number) => {
@@ -410,25 +361,22 @@ export default function MCPFormDialog({
     value: string,
   ) => {
     const newArgs = [...extraArgs];
-    newArgs[index] = {
-      ...newArgs[index],
-      [field]: value,
-    };
+    newArgs[index] = { ...newArgs[index], [field]: value };
     setExtraArgs(newArgs);
     form.setValue('extra_args', newArgs);
   };
 
+  const handleDialogClose = (open: boolean) => {
+    onOpenChange(open);
+    if (!open) {
+      form.reset();
+      setExtraArgs([]);
+      setRuntimeInfo(null);
+    }
+  };
+
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(open) => {
-        onOpenChange(open);
-        if (!open) {
-          form.reset();
-          setExtraArgs([]);
-        }
-      }}
-    >
+    <Dialog open={open} onOpenChange={handleDialogClose}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
@@ -436,97 +384,25 @@ export default function MCPFormDialog({
           </DialogTitle>
         </DialogHeader>
 
-        {isEditMode && (
-          <div className="mb-4 p-3 rounded-lg border">
-            {mcpTestStatus === 'testing' && (
-              <div className="flex items-center gap-2 text-blue-600">
-                <svg
-                  className="w-5 h-5 animate-spin"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                <span className="font-medium">{t('mcp.testing')}</span>
+        {isEditMode && runtimeInfo && (
+          <div className="mb-4 space-y-3">
+            {/* 测试中或连接失败时显示状态 */}
+            {(mcpTesting || !runtimeInfo.connected) && (
+              <div className="p-3 rounded-lg border">
+                <StatusDisplay
+                  testing={mcpTesting}
+                  runtimeInfo={runtimeInfo}
+                  t={t}
+                />
               </div>
             )}
 
-            {mcpTestStatus === 'success' && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-green-600">
-                  <svg
-                    className="w-5 h-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <span className="font-medium">
-                    {t('mcp.connectionSuccess')} - {mcpToolNames.length}{' '}
-                    {t('mcp.toolsFound')}
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {mcpToolNames.map((toolName, index) => (
-                    <span
-                      key={index}
-                      className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md"
-                    >
-                      {toolName}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {mcpTestStatus === 'failed' && (
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 text-red-600">
-                  <svg
-                    className="w-5 h-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <span className="font-medium">
-                    {t('mcp.connectionFailed')}
-                  </span>
-                </div>
-                {mcpTestError && (
-                  <div className="text-sm text-red-500 pl-7">
-                    {mcpTestError}
-                  </div>
-                )}
-              </div>
-            )}
+            {/* 连接成功时只显示工具列表 */}
+            {!mcpTesting &&
+              runtimeInfo.connected &&
+              runtimeInfo.tools?.length > 0 && (
+                <ToolsList tools={runtimeInfo.tools} />
+              )}
           </div>
         )}
 
@@ -695,11 +571,7 @@ export default function MCPFormDialog({
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => {
-                    onOpenChange(false);
-                    form.reset();
-                    setExtraArgs([]);
-                  }}
+                  onClick={() => handleDialogClose(false)}
                 >
                   {t('common.cancel')}
                 </Button>

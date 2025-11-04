@@ -9,41 +9,24 @@ import { httpClient } from '@/app/infra/http/HttpClient';
 
 export default function MCPComponent({
   onEditServer,
-  toolsCountCache = {},
 }: {
   askInstallServer?: (githubURL: string) => void;
   onEditServer?: (serverName: string) => void;
-  toolsCountCache?: Record<string, number>;
 }) {
   const { t } = useTranslation();
   const [installedServers, setInstalledServers] = useState<MCPCardVO[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    initData();
+    fetchInstalledServers();
   }, []);
-
-  useEffect(() => {
-    fetchInstalledServers();
-  }, [toolsCountCache]);
-
-  function initData() {
-    fetchInstalledServers();
-  }
 
   function fetchInstalledServers() {
     setLoading(true);
     httpClient
       .getMCPServers()
       .then((resp) => {
-        const servers = resp.servers.map((server) => {
-          const vo = new MCPCardVO(server);
-
-          if (toolsCountCache[server.name] !== undefined) {
-            vo.tools = toolsCountCache[server.name];
-          }
-          return vo;
-        });
+        const servers = resp.servers.map((server) => new MCPCardVO(server));
         setInstalledServers(servers);
         setLoading(false);
       })

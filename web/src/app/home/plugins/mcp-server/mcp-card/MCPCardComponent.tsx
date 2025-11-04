@@ -1,12 +1,11 @@
 import { MCPCardVO } from '@/app/home/plugins/mcp-server/MCPCardVO';
 import { useState, useEffect } from 'react';
 import { httpClient } from '@/app/infra/http/HttpClient';
-import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { RefreshCcw, Wrench } from 'lucide-react';
+import { RefreshCcw, Wrench, Ban, AlertCircle } from 'lucide-react';
 
 export default function MCPCardComponent({
   cardVO,
@@ -23,19 +22,12 @@ export default function MCPCardComponent({
   const [testing, setTesting] = useState(false);
   const [toolsCount, setToolsCount] = useState(cardVO.tools);
   const [status, setStatus] = useState(cardVO.status);
-  const [error, setError] = useState(cardVO.error);
 
   useEffect(() => {
-    console.log(`[MCPCard ${cardVO.name}] Status updated:`, {
-      status: cardVO.status,
-      tools: cardVO.tools,
-      error: cardVO.error,
-    });
     setStatus(cardVO.status);
-    setError(cardVO.error);
     setToolsCount(cardVO.tools);
     setEnabled(cardVO.enable);
-  }, [cardVO.name, cardVO.status, cardVO.error, cardVO.tools, cardVO.enable]);
+  }, [cardVO.status, cardVO.tools, cardVO.enable]);
 
   function handleEnable(checked: boolean) {
     setSwitchEnable(false);
@@ -54,65 +46,28 @@ export default function MCPCardComponent({
   }
 
   function handleTest(e: React.MouseEvent) {
-    e.stopPropagation(); // 阻止事件冒泡
+    e.stopPropagation();
     setTesting(true);
+
     httpClient
       .testMCPServer(cardVO.name)
       .then((resp) => {
         const taskId = resp.task_id;
-        // 监控任务状态
+
         const interval = setInterval(() => {
           httpClient.getAsyncTask(taskId).then((taskResp) => {
             if (taskResp.runtime.done) {
               clearInterval(interval);
+              setTesting(false);
+
               if (taskResp.runtime.exception) {
                 toast.error(t('mcp.testFailed') + taskResp.runtime.exception);
               } else {
-                // 解析测试结果获取工具数量
-                try {
-                  const rawResult = taskResp.runtime.result as
-                    | string
-                    | {
-                        status?: string;
-                        tools_count?: number;
-                        tools_names_lists?: string[];
-                        error?: string;
-                      }
-                    | undefined;
-
-                  if (rawResult) {
-                    let result: {
-                      status?: string;
-                      tools_count?: number;
-                      tools_names_lists?: string[];
-                      error?: string;
-                    };
-
-                    if (typeof rawResult === 'string') {
-                      result = JSON.parse(rawResult.replace(/'/g, '"'));
-                    } else {
-                      result = rawResult;
-                    }
-
-                    if (result.tools_count !== undefined) {
-                      setToolsCount(result.tools_count);
-                      toast.success(
-                        t('mcp.testSuccess') +
-                          ` - ${result.tools_count} ${t('mcp.toolsFound')}`,
-                      );
-                    } else {
-                      toast.success(t('mcp.testSuccess'));
-                    }
-                  } else {
-                    toast.success(t('mcp.testSuccess'));
-                  }
-                } catch (parseError) {
-                  console.error('Failed to parse test result:', parseError);
-                  toast.success(t('mcp.testSuccess'));
-                }
-                onRefresh();
+                toast.success(t('mcp.testSuccess'));
               }
-              setTesting(false);
+
+              // Refresh to get updated runtime_info
+              onRefresh();
             }
           });
         }, 1000);
@@ -141,28 +96,37 @@ export default function MCPCardComponent({
 
         <div className="w-full h-full flex flex-col items-start justify-between gap-[0.6rem]">
           <div className="flex flex-col items-start justify-start">
-            <div className="flex flex-col items-start justify-start">
-              <div className="flex flex-row items-center justify-start gap-[0.4rem]">
-                <div className="text-[1.2rem] text-black dark:text-[#f0f0f0] font-medium">
-                  {cardVO.name}
-                </div>
-              </div>
+            <div className="text-[1.2rem] text-black dark:text-[#f0f0f0] font-medium">
+              {cardVO.name}
             </div>
-
-            {error && (
-              <div className="text-[0.7rem] text-red-500 dark:text-red-400 line-clamp-2 mt-1">
-                {error}
-              </div>
-            )}
           </div>
 
           <div className="w-full flex flex-row items-start justify-start gap-[0.6rem]">
-            <div className="flex h-full flex-row items-center justify-center gap-[0.4rem]">
-              <Wrench className="w-5 h-5" />
-              <div className="text-base text-black dark:text-[#f0f0f0] font-medium">
-                {t('mcp.toolCount', { count: toolsCount })}
+            {!enabled ? (
+              // 未启用 - 橙色
+              <div className="flex flex-row items-center gap-[0.4rem]">
+                <Ban className="w-4 h-4 text-orange-500 dark:text-orange-400" />
+                <div className="text-sm text-orange-500 dark:text-orange-400 font-medium">
+                  {t('mcp.statusDisabled')}
+                </div>
               </div>
-            </div>
+            ) : status === 'connected' ? (
+              // 连接成功 - 显示工具数量
+              <div className="flex h-full flex-row items-center justify-center gap-[0.4rem]">
+                <Wrench className="w-5 h-5" />
+                <div className="text-base text-black dark:text-[#f0f0f0] font-medium">
+                  {t('mcp.toolCount', { count: toolsCount })}
+                </div>
+              </div>
+            ) : (
+              // 连接失败 - 红色
+              <div className="flex flex-row items-center gap-[0.4rem]">
+                <AlertCircle className="w-4 h-4 text-red-500 dark:text-red-400" />
+                <div className="text-sm text-red-500 dark:text-red-400 font-medium">
+                  {t('mcp.connectionFailed')}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

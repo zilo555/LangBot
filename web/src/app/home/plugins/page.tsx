@@ -70,11 +70,6 @@ export default function PluginConfigPage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // 缓存每个服务器测试后的工具数量
-  const [serverToolsCache, setServerToolsCache] = useState<
-    Record<string, number>
-  >({});
-
   useEffect(() => {
     const fetchPluginSystemStatus = async () => {
       try {
@@ -404,7 +399,6 @@ export default function PluginConfigPage() {
               setIsEditMode(true);
               setMcpSSEModalOpen(true);
             }}
-            toolsCountCache={serverToolsCache}
           />
         </TabsContent>
       </Tabs>
@@ -495,12 +489,6 @@ export default function PluginConfigPage() {
         }}
         onDelete={() => {
           setShowDeleteConfirmModal(true);
-        }}
-        onUpdateToolsCache={(serverName, toolsCount) => {
-          setServerToolsCache((prev) => ({
-            ...prev,
-            [serverName]: toolsCount,
-          }));
         }}
       />
 

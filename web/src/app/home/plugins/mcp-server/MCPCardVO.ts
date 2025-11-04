@@ -1,4 +1,4 @@
-import { MCPServer, MCPServerConfig } from '@/app/infra/entities/api';
+import { MCPServer } from '@/app/infra/entities/api';
 
 export class MCPCardVO {
   name: string;
@@ -7,20 +7,24 @@ export class MCPCardVO {
   status: 'connected' | 'disconnected' | 'error' | 'disabled';
   tools: number;
   error?: string;
-  config: MCPServerConfig;
 
   constructor(data: MCPServer) {
     this.name = data.name;
     this.mode = data.mode;
     this.enable = data.enable;
 
-    this.status =
-      (data.status as string) === 'enabled' ? 'connected' : data.status;
-    this.tools = Array.isArray(data.tools)
-      ? data.tools.length
-      : data.tools || 0;
-    this.error = data.error;
-    this.config = data.config;
+    // Determine status from runtime_info
+    if (!data.runtime_info) {
+      this.status = 'disconnected';
+      this.tools = 0;
+    } else if (data.runtime_info.connected) {
+      this.status = 'connected';
+      this.tools = data.runtime_info.tool_count || 0;
+    } else {
+      this.status = 'error';
+      this.tools = 0;
+      this.error = data.runtime_info.error_message;
+    }
   }
 
   getStatusColor(): string {
