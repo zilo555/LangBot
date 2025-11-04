@@ -271,7 +271,7 @@ const zhHans = {
     markAsReadFailed: '标记为已读失败',
   },
   mcp: {
-    title: 'MCP管理',
+    title: 'MCP',
     createServer: '添加 MCP 服务器',
     editServer: '修改 MCP 服务器',
     deleteServer: '删除 MCP 服务器',

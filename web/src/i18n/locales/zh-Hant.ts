@@ -269,7 +269,7 @@ const zhHant = {
     markAsReadFailed: '標記為已讀失敗',
   },
   mcp: {
-    title: 'MCP管理',
+    title: 'MCP',
     createServer: '新增MCP伺服器',
     editServer: '編輯MCP伺服器',
     deleteServer: '刪除MCP伺服器',

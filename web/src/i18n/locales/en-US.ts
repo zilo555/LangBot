@@ -283,7 +283,7 @@ const enUS = {
     markAsReadFailed: 'Mark as read failed',
   },
   mcp: {
-    title: 'MCP Management',
+    title: 'MCP',
     createServer: 'Add MCP Server',
     editServer: 'Edit MCP Server',
     deleteServer: 'Delete MCP Server',

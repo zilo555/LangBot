@@ -285,7 +285,7 @@ const jaJP = {
     markAsReadFailed: '既読に設定に失敗しました',
   },
   mcp: {
-    title: 'MCP管理',
+    title: 'MCP',
     createServer: 'MCPサーバーを追加',
     editServer: 'MCPサーバーを編集',
     deleteServer: 'MCPサーバーを削除',
