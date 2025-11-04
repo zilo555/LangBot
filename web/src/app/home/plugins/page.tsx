@@ -3,9 +3,10 @@ import PluginInstalledComponent, {
   PluginInstalledComponentRef,
 } from '@/app/home/plugins/plugin-installed/PluginInstalledComponent';
 import MarketPage from '@/app/home/plugins/plugin-market/PluginMarketComponent';
-// import PluginSortDialog from '@/app/home/plugins/plugin-sort/PluginSortDialog';
 
 import MCPServerComponent from '@/app/home/plugins/mcp-server/MCPServerComponent';
+import MCPFormDialog from '@/app/home/plugins/mcp-server/mcp-form/MCPFormDialog';
+import MCPDeleteConfirmDialog from '@/app/home/plugins/mcp-server/mcp-form/MCPDeleteConfirmDialog';
 import styles from './plugins.module.css';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -38,27 +39,6 @@ import { useTranslation } from 'react-i18next';
 import { PluginV4 } from '@/app/infra/entities/plugin';
 import { systemInfo } from '@/app/infra/http/HttpClient';
 import { ApiRespPluginSystemStatus } from '@/app/infra/entities/api';
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@/components/ui/select';
-
-import { Resolver, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { DialogDescription } from '@radix-ui/react-dialog';
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
 
 enum PluginInstallStatus {
   WAIT_INPUT = 'wait_input',
@@ -83,76 +63,18 @@ export default function PluginConfigPage() {
     useState<ApiRespPluginSystemStatus | null>(null);
   const [statusLoading, setStatusLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const addExtraArg = () => {
-    setExtraArgs([...extraArgs, { key: '', type: 'string', value: '' }]);
-  };
-  const removeExtraArg = (index: number) => {
-    const newArgs = extraArgs.filter((_, i) => i !== index);
-    setExtraArgs(newArgs);
-    form.setValue('extra_args', newArgs);
-  };
-  const getFormSchema = (t: (key: string) => string) =>
-    z.object({
-      name: z
-        .string({ required_error: t('mcp.nameRequired') })
-        .min(1, { message: t('mcp.nameRequired') }),
-      timeout: z
-        .number({ invalid_type_error: t('mcp.timeoutMustBeNumber') })
-        .positive({ message: t('mcp.timeoutMustBePositive') })
-        .default(30),
-      ssereadtimeout: z
-        .number({ invalid_type_error: t('mcp.sseTimeoutMustBeNumber') })
-        .positive({ message: t('mcp.timeoutMustBePositive') })
-        .default(300),
-      url: z
-        .string({ required_error: t('mcp.urlRequired') })
-        .min(1, { message: t('mcp.urlRequired') }),
-      extra_args: z
-        .array(
-          z.object({
-            key: z.string(),
-            type: z.enum(['string', 'number', 'boolean']),
-            value: z.string(),
-          }),
-        )
-        .optional(),
-    });
-
-  const formSchema = getFormSchema(t);
-
-  type FormValues = z.infer<typeof formSchema> & {
-    timeout: number;
-    ssereadtimeout: number;
-  };
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema) as unknown as Resolver<FormValues>,
-    defaultValues: {
-      name: '',
-      url: '',
-      timeout: 30,
-      ssereadtimeout: 300,
-      extra_args: [],
-    },
-  });
-
-  const [extraArgs, setExtraArgs] = useState<
-    { key: string; type: 'string' | 'number' | 'boolean'; value: string }[]
-  >([]);
-  const updateExtraArg = (
-    index: number,
-    field: 'key' | 'type' | 'value',
-    value: string,
-  ) => {
-    const newArgs = [...extraArgs];
-    newArgs[index] = {
-      ...newArgs[index],
-      [field]: value,
-    };
-    setExtraArgs(newArgs);
-    form.setValue('extra_args', newArgs);
-  };
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [editingServerName, setEditingServerName] = useState<string | null>(
+    null,
+  );
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // 缓存每个服务器测试后的工具数量
+  const [serverToolsCache, setServerToolsCache] = useState<
+    Record<string, number>
+  >({});
+
   useEffect(() => {
     const fetchPluginSystemStatus = async () => {
       try {
@@ -169,22 +91,18 @@ export default function PluginConfigPage() {
 
     fetchPluginSystemStatus();
   }, [t]);
-  //这个是旧版本的测试github url，下面重写了一个新版本的watchTask函数，用来检测Mcp
+
   function watchTask(taskId: number) {
     let alreadySuccess = false;
-    console.log('taskId:', taskId);
 
-    // 每秒拉取一次任务状态
     const interval = setInterval(() => {
       httpClient.getAsyncTask(taskId).then((resp) => {
-        console.log('task status:', resp);
         if (resp.runtime.done) {
           clearInterval(interval);
           if (resp.runtime.exception) {
             setInstallError(resp.runtime.exception);
             setPluginInstallStatus(PluginInstallStatus.ERROR);
           } else {
-            // success
             if (!alreadySuccess) {
               toast.success(t('plugins.installSuccess'));
               alreadySuccess = true;
@@ -199,124 +117,6 @@ export default function PluginConfigPage() {
   }
 
   const pluginInstalledRef = useRef<PluginInstalledComponentRef>(null);
-  const [mcpTesting, setMcpTesting] = useState(false);
-  const [editingServerName, setEditingServerName] = useState<string | null>(
-    null,
-  );
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  // MCP测试结果状态
-  const [mcpTestStatus, setMcpTestStatus] = useState<
-    'idle' | 'testing' | 'success' | 'failed'
-  >('idle');
-  const [mcpToolNames, setMcpToolNames] = useState<string[]>([]);
-  const [mcpTestError, setMcpTestError] = useState<string>('');
-
-  // 缓存每个服务器测试后的工具数量
-  const [serverToolsCache, setServerToolsCache] = useState<
-    Record<string, number>
-  >({});
-
-  // 强制清理 body 样式以修复 Dialog 关闭后点击失效的问题
-  useEffect(() => {
-    console.log('[Dialog Debug] States:', {
-      mcpSSEModalOpen,
-      modalOpen,
-      showDeleteConfirmModal,
-    });
-
-    if (!mcpSSEModalOpen && !modalOpen && !showDeleteConfirmModal) {
-      const cleanup = () => {
-        document.body.style.removeProperty('pointer-events');
-        document.body.style.removeProperty('overflow');
-
-        if (document.body.style.pointerEvents === 'none') {
-          document.body.style.pointerEvents = '';
-        }
-        if (document.body.style.overflow === 'hidden') {
-          document.body.style.overflow = '';
-        }
-
-        console.log(
-          '[Dialog Debug] After cleanup - body.style.pointerEvents:',
-          document.body.style.pointerEvents,
-        );
-        console.log(
-          '[Dialog Debug] After cleanup - body.style.overflow:',
-          document.body.style.overflow,
-        );
-
-        // 检查计算后的样式
-        const computedStyle = window.getComputedStyle(document.body);
-        console.log(
-          '[Dialog Debug] Computed pointerEvents:',
-          computedStyle.pointerEvents,
-        );
-      };
-
-      // 多次清理以确保覆盖 Radix 的设置
-      cleanup();
-      const timer1 = setTimeout(cleanup, 0);
-      const timer2 = setTimeout(cleanup, 50);
-      const timer3 = setTimeout(cleanup, 100);
-      const timer4 = setTimeout(cleanup, 200);
-      const timer5 = setTimeout(cleanup, 300);
-
-      return () => {
-        clearTimeout(timer1);
-        clearTimeout(timer2);
-        clearTimeout(timer3);
-        clearTimeout(timer4);
-        clearTimeout(timer5);
-      };
-    }
-  }, [mcpSSEModalOpen, modalOpen, showDeleteConfirmModal]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!mcpSSEModalOpen && !modalOpen && !showDeleteConfirmModal) {
-        if (document.body.style.pointerEvents === 'none') {
-          console.log(
-            '[Global Cleanup] Found stale pointer-events, cleaning...',
-          );
-          document.body.style.removeProperty('pointer-events');
-          document.body.style.pointerEvents = '';
-        }
-      }
-    }, 500);
-
-    return () => clearInterval(interval);
-  }, [mcpSSEModalOpen, modalOpen, showDeleteConfirmModal]);
-
-  // MutationObserver：监视 body 的 style 变化
-  useEffect(() => {
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (
-          mutation.type === 'attributes' &&
-          mutation.attributeName === 'style'
-        ) {
-          if (!mcpSSEModalOpen && !modalOpen && !showDeleteConfirmModal) {
-            if (document.body.style.pointerEvents === 'none') {
-              console.log(
-                '[MutationObserver] Detected pointer-events being set to none, reverting...',
-              );
-              document.body.style.removeProperty('pointer-events');
-              document.body.style.pointerEvents = '';
-            }
-          }
-        }
-      });
-    });
-
-    observer.observe(document.body, {
-      attributes: true,
-      attributeFilter: ['style'],
-    });
-
-    return () => observer.disconnect();
-  }, [mcpSSEModalOpen, modalOpen, showDeleteConfirmModal]);
 
   function handleModalConfirm() {
     installPlugin(installSource, installInfo as Record<string, unknown>);
@@ -364,340 +164,6 @@ export default function PluginConfigPage() {
     },
     [watchTask],
   );
-
-  async function deleteMCPServer() {
-    if (!editingServerName) return;
-
-    try {
-      await httpClient.deleteMCPServer(editingServerName);
-      toast.success(t('mcp.deleteSuccess'));
-
-      // 关闭所有对话框
-      setShowDeleteConfirmModal(false);
-      setMcpSSEModalOpen(false);
-
-      // 重置状态
-      form.reset();
-      setExtraArgs([]);
-      setEditingServerName(null);
-      setIsEditMode(false);
-
-      // 刷新服务器列表
-      setRefreshKey((prev) => prev + 1);
-    } catch (error) {
-      console.error('Failed to delete server:', error);
-      toast.error(t('mcp.deleteFailed'));
-    }
-  }
-
-  async function loadServerForEdit(serverName: string) {
-    try {
-      const resp = await httpClient.getMCPServer(serverName);
-      const server = resp.server ?? resp;
-      console.log('Loaded server for edit:', server);
-
-      const extraArgs = server.extra_args;
-      form.setValue('name', server.name);
-      form.setValue('url', extraArgs.url);
-      form.setValue('timeout', extraArgs.timeout);
-      form.setValue('ssereadtimeout', extraArgs.ssereadtimeout);
-
-      if (extraArgs.headers) {
-        const headers = Object.entries(extraArgs.headers).map(
-          ([key, value]) => ({
-            key,
-            type: 'string' as const,
-            value: String(value),
-          }),
-        );
-        setExtraArgs(headers);
-        form.setValue('extra_args', headers);
-      }
-
-      setMcpTestStatus('testing');
-      setMcpToolNames([]);
-      setMcpTestError('');
-
-      setEditingServerName(serverName);
-      setIsEditMode(true);
-      setMcpSSEModalOpen(true);
-
-      try {
-        const res = await httpClient.testMCPServer(server.name);
-        if (res.task_id) {
-          const taskId = res.task_id;
-
-          const interval = setInterval(() => {
-            httpClient
-              .getAsyncTask(taskId)
-              .then((taskResp) => {
-                console.log('Task response:', taskResp);
-
-                if (taskResp.runtime && taskResp.runtime.done) {
-                  clearInterval(interval);
-
-                  console.log('Task completed. Runtime:', taskResp.runtime);
-                  console.log('Result:', taskResp.runtime.result);
-                  console.log('Exception:', taskResp.runtime.exception);
-
-                  if (taskResp.runtime.exception) {
-                    console.log('Test failed with exception');
-                    setMcpTestStatus('failed');
-                    setMcpToolNames([]);
-                    setMcpTestError(taskResp.runtime.exception || '未知错误');
-                  } else if (taskResp.runtime.result) {
-                    try {
-                      let result: {
-                        status?: string;
-                        tools_count?: number;
-                        tools_names_lists?: string[];
-                        error?: string;
-                      };
-
-                      const rawResult: unknown = taskResp.runtime.result;
-                      if (typeof rawResult === 'string') {
-                        console.log('Result is string, parsing...');
-                        result = JSON.parse(rawResult.replace(/'/g, '"'));
-                      } else {
-                        result = rawResult as typeof result;
-                      }
-
-                      console.log('Parsed result:', result);
-                      console.log(
-                        'tools_names_lists:',
-                        result.tools_names_lists,
-                      );
-                      console.log(
-                        'tools_names_lists length:',
-                        result.tools_names_lists?.length,
-                      );
-
-                      if (
-                        result.tools_names_lists &&
-                        result.tools_names_lists.length > 0
-                      ) {
-                        console.log(
-                          'Test success with',
-                          result.tools_names_lists.length,
-                          'tools',
-                        );
-                        setMcpTestStatus('success');
-                        setMcpToolNames(result.tools_names_lists);
-                        // 保存工具数量到缓存
-                        setServerToolsCache((prev) => ({
-                          ...prev,
-                          [server.name]: result.tools_names_lists!.length,
-                        }));
-                      } else {
-                        console.log('Test failed: no tools found');
-                        setMcpTestStatus('failed');
-                        setMcpToolNames([]);
-                        setMcpTestError('未找到任何工具');
-                      }
-                    } catch (parseError) {
-                      console.error('Failed to parse result:', parseError);
-                      setMcpTestStatus('failed');
-                      setMcpToolNames([]);
-                      setMcpTestError('解析测试结果失败');
-                    }
-                  } else {
-                    // 没结果
-                    console.log('Test failed: no result');
-                    setMcpTestStatus('failed');
-                    setMcpToolNames([]);
-                    setMcpTestError('测试未返回结果');
-                  }
-                }
-              })
-              .catch((err) => {
-                console.error('获取任务状态失败:', err);
-                clearInterval(interval);
-                setMcpTestStatus('failed');
-                setMcpToolNames([]);
-                setMcpTestError(err.message || '获取任务状态失败');
-              });
-          }, 1000);
-        } else {
-          setMcpTestStatus('failed');
-          setMcpToolNames([]);
-          setMcpTestError('未获取到任务ID');
-        }
-      } catch (error) {
-        console.error('Failed to test server:', error);
-        setMcpTestStatus('failed');
-        setMcpToolNames([]);
-        setMcpTestError((error as Error).message || '测试连接时发生错误');
-      }
-    } catch (error) {
-      console.error('Failed to load server:', error);
-      toast.error(t('mcp.loadFailed'));
-    }
-  }
-
-  async function handleFormSubmit(value: z.infer<typeof formSchema>) {
-    const extraArgsObj: Record<string, string | number | boolean> = {};
-    value.extra_args?.forEach(
-      (arg: { key: string; type: string; value: string }) => {
-        if (arg.type === 'number') {
-          extraArgsObj[arg.key] = Number(arg.value);
-        } else if (arg.type === 'boolean') {
-          extraArgsObj[arg.key] = arg.value === 'true';
-        } else {
-          extraArgsObj[arg.key] = arg.value;
-        }
-      },
-    );
-
-    try {
-      // 构造符合 MCPServerConfig 类型的数据
-      const serverConfig = {
-        name: value.name,
-        mode: 'sse' as const,
-        enable: true,
-        url: value.url,
-        headers: extraArgsObj as Record<string, string>,
-        timeout: value.timeout,
-        ssereadtimeout: value.ssereadtimeout,
-      };
-
-      if (isEditMode && editingServerName) {
-        await httpClient.updateMCPServer(editingServerName, serverConfig);
-        toast.success(t('mcp.updateSuccess'));
-      } else {
-        await httpClient.createMCPServer({
-          extra_args: {
-            url: value.url,
-            headers: extraArgsObj as Record<string, string>,
-            timeout: value.timeout,
-            ssereadtimeout: value.ssereadtimeout,
-          },
-          name: value.name,
-          mode: 'sse' as const,
-          enable: true,
-        });
-        toast.success(t('mcp.createSuccess'));
-      }
-
-      setMcpSSEModalOpen(false);
-
-      form.reset();
-      setExtraArgs([]);
-      setEditingServerName(null);
-      setIsEditMode(false);
-
-      setRefreshKey((prev) => prev + 1);
-    } catch (error) {
-      console.error('Failed to save MCP server:', error);
-      toast.error(isEditMode ? t('mcp.updateFailed') : t('mcp.createFailed'));
-    }
-  }
-
-  function testMcp() {
-    setMcpTesting(true);
-    const extraArgsObj: Record<string, string | number | boolean> = {};
-    form
-      .getValues('extra_args')
-      ?.forEach((arg: { key: string; type: string; value: string }) => {
-        if (arg.type === 'number') {
-          extraArgsObj[arg.key] = Number(arg.value);
-        } else if (arg.type === 'boolean') {
-          extraArgsObj[arg.key] = arg.value === 'true';
-        } else {
-          extraArgsObj[arg.key] = arg.value;
-        }
-      });
-    httpClient
-      .testMCPServer(form.getValues('name'))
-      .then((res) => {
-        console.log(res);
-        if (res.task_id) {
-          const taskId = res.task_id;
-
-          const interval = setInterval(() => {
-            httpClient
-              .getAsyncTask(taskId)
-              .then((taskResp) => {
-                console.log('Test task response:', taskResp);
-
-                if (taskResp.runtime && taskResp.runtime.done) {
-                  clearInterval(interval);
-                  setMcpTesting(false);
-
-                  if (taskResp.runtime.exception) {
-                    toast.error(
-                      t('mcp.testError') +
-                        ': ' +
-                        (taskResp.runtime.exception || t('mcp.unknownError')),
-                    );
-                  } else if (taskResp.runtime.result) {
-                    try {
-                      let result: {
-                        status?: string;
-                        tools_count?: number;
-                        tools_names_lists?: string[];
-                        error?: string;
-                      };
-
-                      const rawResult: unknown = taskResp.runtime.result;
-                      if (typeof rawResult === 'string') {
-                        result = JSON.parse(rawResult.replace(/'/g, '"'));
-                      } else {
-                        result = rawResult as typeof result;
-                      }
-
-                      if (
-                        result.tools_names_lists &&
-                        result.tools_names_lists.length > 0
-                      ) {
-                        toast.success(
-                          t('mcp.testSuccess') +
-                            ' - ' +
-                            result.tools_names_lists.length +
-                            ' ' +
-                            t('mcp.toolsFound'),
-                        );
-                      } else {
-                        toast.error(
-                          t('mcp.testError') + ': ' + t('mcp.noToolsFound'),
-                        );
-                      }
-                    } catch (parseError) {
-                      console.error('Failed to parse test result:', parseError);
-                      toast.error(
-                        t('mcp.testError') + ': ' + t('mcp.parseResultFailed'),
-                      );
-                    }
-                  } else {
-                    toast.error(
-                      t('mcp.testError') + ': ' + t('mcp.noResultReturned'),
-                    );
-                  }
-                }
-              })
-              .catch((err) => {
-                console.error('获取测试任务状态失败:', err);
-                clearInterval(interval);
-                setMcpTesting(false);
-                toast.error(
-                  t('mcp.testError') +
-                    ': ' +
-                    (err.message || t('mcp.getTaskFailed')),
-                );
-              });
-          }, 1000);
-        } else {
-          setMcpTesting(false);
-          toast.error(t('mcp.testError') + ': ' + t('mcp.noTaskId'));
-        }
-      })
-      .catch((err) => {
-        console.error('启动测试失败:', err);
-        setMcpTesting(false);
-        toast.error(
-          t('mcp.testError') + ': ' + (err.message || t('mcp.unknownError')),
-        );
-      });
-  }
 
   const validateFileType = (file: File): boolean => {
     const allowedExtensions = ['.lbpkg', '.zip'];
@@ -884,8 +350,6 @@ export default function PluginConfigPage() {
                         setActiveTab('mcp-servers');
                         setIsEditMode(false);
                         setEditingServerName(null);
-                        form.reset();
-                        setExtraArgs([]);
                         setMcpSSEModalOpen(true);
                       }}
                     >
@@ -936,7 +400,9 @@ export default function PluginConfigPage() {
           <MCPServerComponent
             key={refreshKey}
             onEditServer={(serverName) => {
-              loadServerForEdit(serverName);
+              setEditingServerName(serverName);
+              setIsEditMode(true);
+              setMcpSSEModalOpen(true);
             }}
             toolsCountCache={serverToolsCache}
           />
@@ -1004,7 +470,6 @@ export default function PluginConfigPage() {
         </DialogContent>
       </Dialog>
 
-      {/* 拖拽提示覆盖层 */}
       {isDragOver && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-50 flex items-center justify-center z-50 pointer-events-none">
           <div className="bg-white rounded-lg p-8 shadow-lg border-2 border-dashed border-gray-500">
@@ -1018,337 +483,38 @@ export default function PluginConfigPage() {
         </div>
       )}
 
-      <div>
-        <Dialog
-          open={showDeleteConfirmModal}
-          onOpenChange={setShowDeleteConfirmModal}
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{t('mcp.confirmDeleteTitle')}</DialogTitle>
-            </DialogHeader>
-            <DialogDescription>
-              {t('mcp.confirmDeleteServer')}
-            </DialogDescription>
-            <DialogFooter>
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  deleteMCPServer();
-                  setShowDeleteConfirmModal(false);
-                }}
-              >
-                {t('common.confirm')}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      <MCPFormDialog
+        open={mcpSSEModalOpen}
+        onOpenChange={setMcpSSEModalOpen}
+        serverName={editingServerName}
+        isEditMode={isEditMode}
+        onSuccess={() => {
+          setEditingServerName(null);
+          setIsEditMode(false);
+          setRefreshKey((prev) => prev + 1);
+        }}
+        onDelete={() => {
+          setShowDeleteConfirmModal(true);
+        }}
+        onUpdateToolsCache={(serverName, toolsCount) => {
+          setServerToolsCache((prev) => ({
+            ...prev,
+            [serverName]: toolsCount,
+          }));
+        }}
+      />
 
-        <Dialog
-          open={mcpSSEModalOpen}
-          onOpenChange={(open) => {
-            setMcpSSEModalOpen(open);
-            if (!open) {
-              // 关闭对话框时重置编辑状态
-              setIsEditMode(false);
-              setEditingServerName(null);
-              form.reset();
-              setExtraArgs([]);
-            }
-          }}
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {isEditMode ? t('mcp.editServer') : t('mcp.createServer')}
-              </DialogTitle>
-            </DialogHeader>
-
-            {/* 测试结果显示区域 - 仅在编辑模式显示 */}
-            {isEditMode && (
-              <div className="mb-4 p-3 rounded-lg border">
-                {mcpTestStatus === 'testing' && (
-                  <div className="flex items-center gap-2 text-blue-600">
-                    <svg
-                      className="w-5 h-5 animate-spin"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    <span className="font-medium">{t('mcp.testing')}</span>
-                  </div>
-                )}
-
-                {mcpTestStatus === 'success' && (
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-green-600">
-                      <svg
-                        className="w-5 h-5"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      <span className="font-medium">
-                        {t('mcp.connectionSuccess')} - {mcpToolNames.length}{' '}
-                        {t('mcp.toolsFound')}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {mcpToolNames.map((toolName, index) => (
-                        <span
-                          key={index}
-                          className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-md"
-                        >
-                          {toolName}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {mcpTestStatus === 'failed' && (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-red-600">
-                      <svg
-                        className="w-5 h-5"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      <span className="font-medium">
-                        {t('mcp.connectionFailed')}
-                      </span>
-                    </div>
-                    {mcpTestError && (
-                      <div className="text-sm text-red-500 pl-7">
-                        {mcpTestError}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(handleFormSubmit)}
-                className="space-y-4"
-              >
-                <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('mcp.name')}</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="url"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('mcp.url')}</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="timeout"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('mcp.timeout')}</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder={t('mcp.timeout')}
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(Number(e.target.value))
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="ssereadtimeout"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('mcp.sseTimeout')}</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder={t('mcp.sseTimeoutDescription')}
-                            {...field}
-                            onChange={(e) =>
-                              field.onChange(Number(e.target.value))
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormItem>
-                    <FormLabel>{t('models.extraParameters')}</FormLabel>
-                    <div className="space-y-2">
-                      {extraArgs.map((arg, index) => (
-                        <div key={index} className="flex gap-2">
-                          <Input
-                            placeholder={t('models.keyName')}
-                            value={arg.key}
-                            onChange={(e) =>
-                              updateExtraArg(index, 'key', e.target.value)
-                            }
-                          />
-                          <Select
-                            value={arg.type}
-                            onValueChange={(value) =>
-                              updateExtraArg(index, 'type', value)
-                            }
-                          >
-                            <SelectTrigger className="w-[120px] bg-[#ffffff] dark:bg-[#2a2a2e]">
-                              <SelectValue placeholder={t('models.type')} />
-                            </SelectTrigger>
-                            <SelectContent className="bg-[#ffffff] dark:bg-[#2a2a2e]">
-                              <SelectItem value="string">
-                                {t('models.string')}
-                              </SelectItem>
-                              <SelectItem value="number">
-                                {t('models.number')}
-                              </SelectItem>
-                              <SelectItem value="boolean">
-                                {t('models.boolean')}
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Input
-                            placeholder={t('models.value')}
-                            value={arg.value}
-                            onChange={(e) =>
-                              updateExtraArg(index, 'value', e.target.value)
-                            }
-                          />
-                          <button
-                            type="button"
-                            className="p-2 hover:bg-gray-100 rounded"
-                            onClick={() => removeExtraArg(index)}
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              fill="currentColor"
-                              className="w-5 h-5 text-red-500"
-                            >
-                              <path d="M7 4V2H17V4H22V6H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V6H2V4H7ZM6 6V20H18V6H6ZM9 9H11V17H9V9ZM13 9H15V17H13V9Z"></path>
-                            </svg>
-                          </button>
-                        </div>
-                      ))}
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={addExtraArg}
-                      >
-                        {t('models.addParameter')}
-                      </Button>
-                    </div>
-                    <FormDescription>
-                      {t('mcp.extraParametersDescription')}
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-
-                  <DialogFooter>
-                    {isEditMode && (
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        onClick={() => setShowDeleteConfirmModal(true)}
-                      >
-                        {t('common.delete')}
-                      </Button>
-                    )}
-
-                    <Button type="submit">
-                      {isEditMode ? t('common.save') : t('common.submit')}
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => testMcp()}
-                      disabled={mcpTesting}
-                    >
-                      {t('common.test')}
-                    </Button>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setMcpSSEModalOpen(false);
-                        form.reset();
-                        setExtraArgs([]);
-                        setIsEditMode(false);
-                        setEditingServerName(null);
-                      }}
-                    >
-                      {t('common.cancel')}
-                    </Button>
-                  </DialogFooter>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-      </div>
+      <MCPDeleteConfirmDialog
+        open={showDeleteConfirmModal}
+        onOpenChange={setShowDeleteConfirmModal}
+        serverName={editingServerName}
+        onSuccess={() => {
+          setMcpSSEModalOpen(false);
+          setEditingServerName(null);
+          setIsEditMode(false);
+          setRefreshKey((prev) => prev + 1);
+        }}
+      />
     </div>
   );
 }
