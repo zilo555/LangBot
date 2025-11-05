@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ApiRespPluginConfig } from '@/app/infra/entities/api';
 import { Plugin } from '@/app/infra/entities/plugin';
 import { httpClient } from '@/app/infra/http/HttpClient';
@@ -24,6 +24,7 @@ export default function PluginForm({
   const [pluginInfo, setPluginInfo] = useState<Plugin>();
   const [pluginConfig, setPluginConfig] = useState<ApiRespPluginConfig>();
   const [isSaving, setIsLoading] = useState(false);
+  const currentFormValues = useRef<object>({});
 
   useEffect(() => {
     // 获取插件信息
@@ -36,11 +37,11 @@ export default function PluginForm({
     });
   }, [pluginAuthor, pluginName]);
 
-  const handleSubmit = async (values: object) => {
+  const handleSubmit = async () => {
     setIsLoading(true);
     const isDebugPlugin = pluginInfo?.debug;
     httpClient
-      .updatePluginConfig(pluginAuthor, pluginName, values)
+      .updatePluginConfig(pluginAuthor, pluginName, currentFormValues.current)
       .then(() => {
         toast.success(
           isDebugPlugin
@@ -95,14 +96,8 @@ export default function PluginForm({
             itemConfigList={pluginInfo.manifest.manifest.spec.config}
             initialValues={pluginConfig.config as Record<string, object>}
             onSubmit={(values) => {
-              let config = pluginConfig.config;
-              config = {
-                ...config,
-                ...values,
-              };
-              setPluginConfig({
-                config: config,
-              });
+              // 只保存表单值的引用，不触发状态更新
+              currentFormValues.current = values;
             }}
           />
         )}
@@ -117,7 +112,7 @@ export default function PluginForm({
         <div className="flex justify-end gap-2">
           <Button
             type="submit"
-            onClick={() => handleSubmit(pluginConfig.config)}
+            onClick={() => handleSubmit()}
             disabled={isSaving}
           >
             {isSaving ? t('plugins.saving') : t('plugins.saveConfig')}

@@ -442,6 +442,20 @@ export class BackendClient extends BaseHttpClient {
     return this.put(`/api/v1/plugins/${author}/${name}/config`, config);
   }
 
+  public uploadPluginConfigFile(file: File): Promise<{ file_key: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.request<{ file_key: string }>({
+      method: 'post',
+      url: '/api/v1/plugins/config-files',
+      data: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+  }
+
   public getPluginIconURL(author: string, name: string): string {
     if (this.instance.defaults.baseURL === '/') {
       const url = window.location.href;
