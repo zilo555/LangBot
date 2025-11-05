@@ -242,6 +242,14 @@ const enUS = {
     saveConfigSuccessDebugPlugin:
       'Configuration saved successfully, please manually restart the plugin',
     saveConfigError: 'Configuration save failed: ',
+    fileUpload: {
+      tooLarge: 'File size exceeds 10MB limit',
+      success: 'File uploaded successfully',
+      failed: 'File upload failed',
+      uploading: 'Uploading...',
+      chooseFile: 'Choose File',
+      addFile: 'Add File',
+    },
     installFromGithub: 'From GitHub',
     enterRepoUrl: 'Enter GitHub repository URL',
     repoUrlPlaceholder: 'e.g., https://github.com/owner/repo',

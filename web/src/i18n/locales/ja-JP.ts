@@ -242,6 +242,14 @@ const jaJP = {
     saveConfigSuccessDebugPlugin:
       '設定を保存しました。手動でプラグインを再起動してください',
     saveConfigError: '設定の保存に失敗しました：',
+    fileUpload: {
+      tooLarge: 'ファイルサイズが 10MB の制限を超えています',
+      success: 'ファイルのアップロードに成功しました',
+      failed: 'ファイルのアップロードに失敗しました',
+      uploading: 'アップロード中...',
+      chooseFile: 'ファイルを選択',
+      addFile: 'ファイルを追加',
+    },
     installFromGithub: 'GitHubから',
     enterRepoUrl: 'GitHubリポジトリのURLを入力してください',
     repoUrlPlaceholder: '例: https://github.com/owner/repo',

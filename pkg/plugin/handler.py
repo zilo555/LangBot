@@ -436,6 +436,25 @@ class RuntimeConnectionHandler(handler.Handler):
                 },
             )
 
+        @self.action(RuntimeToLangBotAction.GET_CONFIG_FILE)
+        async def get_config_file(data: dict[str, Any]) -> handler.ActionResponse:
+            """Get a config file by file key"""
+            file_key = data['file_key']
+
+            try:
+                # Load file from storage
+                file_bytes = await self.ap.storage_mgr.storage_provider.load(file_key)
+
+                return handler.ActionResponse.success(
+                    data={
+                        'file_base64': base64.b64encode(file_bytes).decode('utf-8'),
+                    },
+                )
+            except Exception as e:
+                return handler.ActionResponse.error(
+                    message=f'Failed to load config file {file_key}: {e}',
+                )
+
     async def ping(self) -> dict[str, Any]:
         """Ping the runtime"""
         return await self.call_action(

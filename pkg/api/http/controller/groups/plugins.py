@@ -4,6 +4,8 @@ import base64
 import quart
 import re
 import httpx
+import uuid
+import os
 
 from .....core import taskmgr
 from .. import group
@@ -269,3 +271,39 @@ class PluginsRouterGroup(group.RouterGroup):
             )
 
             return self.success(data={'task_id': wrapper.id})
+
+        @self.route('/config-files', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
+        async def _() -> str:
+            """Upload a file for plugin configuration"""
+            file = (await quart.request.files).get('file')
+            if file is None:
+                return self.http_status(400, -1, 'file is required')
+
+            # Check file size (10MB limit)
+            MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+            file_bytes = file.read()
+            if len(file_bytes) > MAX_FILE_SIZE:
+                return self.http_status(400, -1, 'file size exceeds 10MB limit')
+
+            # Generate unique file key with original extension
+            original_filename = file.filename
+            _, ext = os.path.splitext(original_filename)
+            file_key = f'plugin_config_{uuid.uuid4().hex}{ext}'
+
+            # Save file using storage manager
+            await self.ap.storage_mgr.storage_provider.save(file_key, file_bytes)
+
+            return self.success(data={'file_key': file_key})
+
+        @self.route('/config-files/<file_key>', methods=['DELETE'], auth_type=group.AuthType.USER_TOKEN)
+        async def _(file_key: str) -> str:
+            """Delete a plugin configuration file"""
+            # Only allow deletion of files with plugin_config_ prefix for security
+            if not file_key.startswith('plugin_config_'):
+                return self.http_status(400, -1, 'invalid file key')
+
+            try:
+                await self.ap.storage_mgr.storage_provider.delete(file_key)
+                return self.success(data={'deleted': True})
+            except Exception as e:
+                return self.http_status(500, -1, f'failed to delete file: {str(e)}')
