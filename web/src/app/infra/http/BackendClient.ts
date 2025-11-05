@@ -456,6 +456,12 @@ export class BackendClient extends BaseHttpClient {
     });
   }
 
+  public deletePluginConfigFile(
+    fileKey: string,
+  ): Promise<{ deleted: boolean }> {
+    return this.delete(`/api/v1/plugins/config-files/${fileKey}`);
+  }
+
   public getPluginIconURL(author: string, name: string): string {
     if (this.instance.defaults.baseURL === '/') {
       const url = window.location.href;

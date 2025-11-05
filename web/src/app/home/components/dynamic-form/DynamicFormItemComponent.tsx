@@ -33,10 +33,12 @@ import { Card, CardContent } from '@/components/ui/card';
 export default function DynamicFormItemComponent({
   config,
   field,
+  onFileUploaded,
 }: {
   config: IDynamicFormItemSchema;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   field: ControllerRenderProps<any, any>;
+  onFileUploaded?: (fileKey: string) => void;
 }) {
   const [llmModels, setLlmModels] = useState<LLMModel[]>([]);
   const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([]);
@@ -55,6 +57,10 @@ export default function DynamicFormItemComponent({
       setUploading(true);
       const response = await httpClient.uploadPluginConfigFile(file);
       toast.success(t('plugins.fileUpload.success'));
+
+      // 通知父组件文件已上传
+      onFileUploaded?.(response.file_key);
+
       return {
         file_key: response.file_key,
         mimetype: file.type,

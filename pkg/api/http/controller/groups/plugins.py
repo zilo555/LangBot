@@ -294,3 +294,16 @@ class PluginsRouterGroup(group.RouterGroup):
             await self.ap.storage_mgr.storage_provider.save(file_key, file_bytes)
 
             return self.success(data={'file_key': file_key})
+
+        @self.route('/config-files/<file_key>', methods=['DELETE'], auth_type=group.AuthType.USER_TOKEN)
+        async def _(file_key: str) -> str:
+            """Delete a plugin configuration file"""
+            # Only allow deletion of files with plugin_config_ prefix for security
+            if not file_key.startswith('plugin_config_'):
+                return self.http_status(400, -1, 'invalid file key')
+
+            try:
+                await self.ap.storage_mgr.storage_provider.delete(file_key)
+                return self.success(data={'deleted': True})
+            except Exception as e:
+                return self.http_status(500, -1, f'failed to delete file: {str(e)}')

@@ -18,10 +18,12 @@ export default function DynamicFormComponent({
   itemConfigList,
   onSubmit,
   initialValues,
+  onFileUploaded,
 }: {
   itemConfigList: IDynamicFormItemSchema[];
   onSubmit?: (val: object) => unknown;
   initialValues?: Record<string, object>;
+  onFileUploaded?: (fileKey: string) => void;
 }) {
   const isInitialMount = useRef(true);
   const previousInitialValues = useRef(initialValues);
@@ -169,7 +171,11 @@ export default function DynamicFormComponent({
                   {config.required && <span className="text-red-500">*</span>}
                 </FormLabel>
                 <FormControl>
-                  <DynamicFormItemComponent config={config} field={field} />
+                  <DynamicFormItemComponent
+                    config={config}
+                    field={field}
+                    onFileUploaded={onFileUploaded}
+                  />
                 </FormControl>
                 {config.description && (
                   <p className="text-sm text-muted-foreground">
