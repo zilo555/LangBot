@@ -30,10 +30,11 @@ export default function MCPComponent({
     };
   }, []);
 
-  // Check if any server is connecting and start/stop polling accordingly
+  // Check if any enabled server is connecting and start/stop polling accordingly
   useEffect(() => {
     const hasConnecting = installedServers.some(
-      (server) => server.status === MCPSessionStatus.CONNECTING,
+      (server) =>
+        server.enable && server.status === MCPSessionStatus.CONNECTING,
     );
 
     if (hasConnecting && !pollingIntervalRef.current) {
@@ -42,7 +43,7 @@ export default function MCPComponent({
         fetchInstalledServers();
       }, 3000);
     } else if (!hasConnecting && pollingIntervalRef.current) {
-      // Stop polling when no server is connecting
+      // Stop polling when no enabled server is connecting
       clearInterval(pollingIntervalRef.current);
       pollingIntervalRef.current = null;
     }
