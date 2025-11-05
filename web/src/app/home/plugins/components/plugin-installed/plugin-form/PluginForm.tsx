@@ -8,7 +8,6 @@ import { toast } from 'sonner';
 import { extractI18nObject } from '@/i18n/I18nProvider';
 import { useTranslation } from 'react-i18next';
 import PluginComponentList from '@/app/home/plugins/components/plugin-installed/PluginComponentList';
-import { IFileConfig } from '@/app/infra/entities/form/dynamic';
 
 export default function PluginForm({
   pluginAuthor,
@@ -39,6 +38,7 @@ export default function PluginForm({
       setPluginConfig(res);
 
       // 提取初始配置中的所有文件 key
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const extractFileKeys = (obj: any): string[] => {
         const keys: string[] = [];
         if (obj && typeof obj === 'object') {
@@ -74,6 +74,7 @@ export default function PluginForm({
       );
 
       // 提取最终保存的配置中的所有文件 key
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const extractFileKeys = (obj: any): string[] => {
         const keys: string[] = [];
         if (obj && typeof obj === 'object') {
