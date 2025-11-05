@@ -121,7 +121,8 @@ export default function PluginConfigPage() {
     };
 
     fetchPluginSystemStatus();
-  }, [t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
