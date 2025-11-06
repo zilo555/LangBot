@@ -136,6 +136,7 @@ const zhHant = {
     adapterConfig: '適配器設定',
     bindPipeline: '綁定流程線',
     selectPipeline: '選擇流程線',
+    selectBot: '請選擇機器人',
     botLogTitle: '機器人日誌',
     enableAutoRefresh: '開啟自動重新整理',
     session: '對話',

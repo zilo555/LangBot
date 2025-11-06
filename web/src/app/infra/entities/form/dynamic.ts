@@ -30,6 +30,7 @@ export enum DynamicFormItemType {
   UNKNOWN = 'unknown',
   KNOWLEDGE_BASE_SELECTOR = 'knowledge-base-selector',
   PLUGIN_SELECTOR = 'plugin-selector',
+  BOT_SELECTOR = 'bot-selector',
 }
 
 export interface IFileConfig {

@@ -136,6 +136,7 @@ const zhHans = {
     adapterConfig: '适配器配置',
     bindPipeline: '绑定流水线',
     selectPipeline: '选择流水线',
+    selectBot: '请选择机器人',
     botLogTitle: '机器人日志',
     enableAutoRefresh: '开启自动刷新',
     session: '会话',

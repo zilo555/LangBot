@@ -139,6 +139,7 @@ const enUS = {
     adapterConfig: 'Adapter Configuration',
     bindPipeline: 'Bind Pipeline',
     selectPipeline: 'Select Pipeline',
+    selectBot: 'Select Bot',
     botLogTitle: 'Bot Log',
     enableAutoRefresh: 'Enable Auto Refresh',
     session: 'Session',

@@ -141,6 +141,7 @@ const jaJP = {
     adapterConfig: 'アダプター設定',
     bindPipeline: 'パイプラインを紐付け',
     selectPipeline: 'パイプラインを選択',
+    selectBot: 'ボットを選択してください',
     botLogTitle: 'ボットログ',
     enableAutoRefresh: '自動更新を有効にする',
     session: 'セッション',

@@ -17,7 +17,7 @@ import { ControllerRenderProps } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import { httpClient } from '@/app/infra/http/HttpClient';
-import { LLMModel } from '@/app/infra/entities/api';
+import { LLMModel, Bot } from '@/app/infra/entities/api';
 import { KnowledgeBase } from '@/app/infra/entities/api';
 import { toast } from 'sonner';
 import {
@@ -42,6 +42,7 @@ export default function DynamicFormItemComponent({
 }) {
   const [llmModels, setLlmModels] = useState<LLMModel[]>([]);
   const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([]);
+  const [bots, setBots] = useState<Bot[]>([]);
   const [uploading, setUploading] = useState<boolean>(false);
   const { t } = useTranslation();
 
@@ -97,6 +98,19 @@ export default function DynamicFormItemComponent({
         })
         .catch((err) => {
           toast.error('Failed to get knowledge base list: ' + err.message);
+        });
+    }
+  }, [config.type]);
+
+  useEffect(() => {
+    if (config.type === DynamicFormItemType.BOT_SELECTOR) {
+      httpClient
+        .getBots()
+        .then((resp) => {
+          setBots(resp.bots);
+        })
+        .catch((err) => {
+          toast.error('Failed to get bot list: ' + err.message);
         });
     }
   }, [config.type]);
@@ -315,6 +329,24 @@ export default function DynamicFormItemComponent({
               {knowledgeBases.map((base) => (
                 <SelectItem key={base.uuid} value={base.uuid ?? ''}>
                   {base.name}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      );
+
+    case DynamicFormItemType.BOT_SELECTOR:
+      return (
+        <Select value={field.value} onValueChange={field.onChange}>
+          <SelectTrigger className="bg-[#ffffff] dark:bg-[#2a2a2e]">
+            <SelectValue placeholder={t('bots.selectBot')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {bots.map((bot) => (
+                <SelectItem key={bot.uuid} value={bot.uuid ?? ''}>
+                  {bot.name}
                 </SelectItem>
               ))}
             </SelectGroup>
