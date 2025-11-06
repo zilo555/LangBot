@@ -157,6 +157,9 @@ class PlatformManager:
         self.adapter_dict = {}
 
     async def initialize(self):
+        # delete all bot log images
+        await self.ap.storage_mgr.storage_provider.delete_dir_recursive('bot_log_images')
+
         self.adapter_components = self.ap.discover.get_components_by_kind('MessagePlatformAdapter')
         adapter_dict: dict[str, type[abstract_platform_adapter.AbstractMessagePlatformAdapter]] = {}
         for component in self.adapter_components:
