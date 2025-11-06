@@ -150,7 +150,7 @@ const zhHans = {
   },
   plugins: {
     title: '插件扩展',
-    description: '安装和配置用于扩展 LangBot 功能的插件',
+    description: '安装和配置用于扩展功能的插件，请在流水线配置中选用',
     createPlugin: '创建插件',
     editPlugin: '编辑插件',
     installed: '已安装',
@@ -413,7 +413,7 @@ const zhHans = {
     deleteSuccess: '删除成功',
     deleteError: '删除失败：',
     extensions: {
-      title: '插件集成',
+      title: '扩展集成',
       loadError: '加载插件列表失败',
       saveSuccess: '保存成功',
       saveError: '保存失败',
@@ -422,6 +422,12 @@ const zhHans = {
       noPluginsSelected: '未选择任何插件',
       addPlugin: '添加插件',
       selectPlugins: '选择插件',
+      pluginsTitle: '插件',
+      mcpServersTitle: 'MCP 服务器',
+      noMCPServersSelected: '未选择任何 MCP 服务器',
+      addMCPServer: '添加 MCP 服务器',
+      selectMCPServers: '选择 MCP 服务器',
+      toolCount: '{{count}} 个工具',
     },
     debugDialog: {
       title: '流水线对话',

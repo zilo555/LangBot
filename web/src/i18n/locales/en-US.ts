@@ -154,7 +154,7 @@ const enUS = {
   plugins: {
     title: 'Extensions',
     description:
-      'Install and configure plugins to extend LangBot functionality',
+      'Install and configure plugins to extend functionality, please select them in the pipeline configuration',
     createPlugin: 'Create Plugin',
     editPlugin: 'Edit Plugin',
     installed: 'Installed',
@@ -438,6 +438,12 @@ const enUS = {
       noPluginsSelected: 'No plugins selected',
       addPlugin: 'Add Plugin',
       selectPlugins: 'Select Plugins',
+      pluginsTitle: 'Plugins',
+      mcpServersTitle: 'MCP Servers',
+      noMCPServersSelected: 'No MCP servers selected',
+      addMCPServer: 'Add MCP Server',
+      selectMCPServers: 'Select MCP Servers',
+      toolCount: '{{count}} tools',
     },
     debugDialog: {
       title: 'Pipeline Chat',

@@ -150,7 +150,7 @@ const zhHant = {
   },
   plugins: {
     title: '外掛擴展',
-    description: '安裝和設定用於擴展 LangBot 功能的外掛',
+    description: '安裝和設定用於擴展功能的外掛，請在流程線配置中選用',
     createPlugin: '建立外掛',
     editPlugin: '編輯外掛',
     installed: '已安裝',
@@ -411,7 +411,7 @@ const zhHant = {
     deleteSuccess: '刪除成功',
     deleteError: '刪除失敗：',
     extensions: {
-      title: '插件集成',
+      title: '擴展集成',
       loadError: '載入插件清單失敗',
       saveSuccess: '儲存成功',
       saveError: '儲存失敗',
@@ -420,6 +420,12 @@ const zhHant = {
       noPluginsSelected: '未選擇任何插件',
       addPlugin: '新增插件',
       selectPlugins: '選擇插件',
+      pluginsTitle: '插件',
+      mcpServersTitle: 'MCP 伺服器',
+      noMCPServersSelected: '未選擇任何 MCP 伺服器',
+      addMCPServer: '新增 MCP 伺服器',
+      selectMCPServers: '選擇 MCP 伺服器',
+      toolCount: '{{count}} 個工具',
     },
     debugDialog: {
       title: '流程線對話',

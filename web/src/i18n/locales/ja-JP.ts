@@ -155,7 +155,8 @@ const jaJP = {
   },
   plugins: {
     title: '拡張機能',
-    description: 'LangBotの機能を拡張するプラグインをインストール・設定',
+    description:
+      'LangBotの機能を拡張するプラグインをインストール・設定。流水線設定で使用します',
     createPlugin: 'プラグインを作成',
     editPlugin: 'プラグインを編集',
     installed: 'インストール済み',
@@ -440,6 +441,12 @@ const jaJP = {
       noPluginsSelected: 'プラグインが選択されていません',
       addPlugin: 'プラグインを追加',
       selectPlugins: 'プラグインを選択',
+      pluginsTitle: 'プラグイン',
+      mcpServersTitle: 'MCPサーバー',
+      noMCPServersSelected: 'MCPサーバーが選択されていません',
+      addMCPServer: 'MCPサーバーを追加',
+      selectMCPServers: 'MCPサーバーを選択',
+      toolCount: '{{count}}個のツール',
     },
     debugDialog: {
       title: 'パイプラインのチャット',
