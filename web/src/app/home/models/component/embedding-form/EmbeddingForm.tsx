@@ -75,7 +75,7 @@ const getFormSchema = (t: (key: string) => string) =>
       .string()
       .min(1, { message: t('models.modelProviderRequired') }),
     url: z.string().min(1, { message: t('models.requestURLRequired') }),
-    api_key: z.string().min(1, { message: t('models.apiKeyRequired') }),
+    api_key: z.string().optional(),
     extra_args: z.array(getExtraArgSchema(t)).optional(),
   });
 
@@ -101,7 +101,7 @@ export default function EmbeddingForm({
       name: '',
       model_provider: '',
       url: '',
-      api_key: 'sk-xxxxx',
+      api_key: '',
       extra_args: [],
     },
   });
@@ -245,7 +245,7 @@ export default function EmbeddingForm({
         timeout: 120,
       },
       extra_args: extraArgsObj,
-      api_keys: [value.api_key],
+      api_keys: value.api_key ? [value.api_key] : [],
     };
 
     if (editMode) {
@@ -310,6 +310,7 @@ export default function EmbeddingForm({
           extraArgsObj[arg.key] = arg.value;
         }
       });
+    const apiKey = form.getValues('api_key');
     httpClient
       .testEmbeddingModel('_', {
         uuid: '',
@@ -320,7 +321,7 @@ export default function EmbeddingForm({
           base_url: form.getValues('url'),
           timeout: 120,
         },
-        api_keys: [form.getValues('api_key')],
+        api_keys: apiKey ? [apiKey] : [],
         extra_args: extraArgsObj,
       })
       .then((res) => {
@@ -461,10 +462,7 @@ export default function EmbeddingForm({
                 name="api_key"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      {t('models.apiKey')}
-                      <span className="text-red-500">*</span>
-                    </FormLabel>
+                    <FormLabel>{t('models.apiKey')}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>

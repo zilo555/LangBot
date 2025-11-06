@@ -76,7 +76,7 @@ const getFormSchema = (t: (key: string) => string) =>
       .string()
       .min(1, { message: t('models.modelProviderRequired') }),
     url: z.string().min(1, { message: t('models.requestURLRequired') }),
-    api_key: z.string().min(1, { message: t('models.apiKeyRequired') }),
+    api_key: z.string().optional(),
     abilities: z.array(z.string()),
     extra_args: z.array(getExtraArgSchema(t)).optional(),
   });
@@ -103,7 +103,7 @@ export default function LLMForm({
       name: '',
       model_provider: '',
       url: '',
-      api_key: 'sk-xxxxx',
+      api_key: '',
       abilities: [],
       extra_args: [],
     },
@@ -261,7 +261,7 @@ export default function LLMForm({
         timeout: 120,
       },
       extra_args: extraArgsObj,
-      api_keys: [value.api_key],
+      api_keys: value.api_key ? [value.api_key] : [],
       abilities: value.abilities,
     };
 
@@ -324,6 +324,7 @@ export default function LLMForm({
           extraArgsObj[arg.key] = arg.value;
         }
       });
+    const apiKey = form.getValues('api_key');
     httpClient
       .testLLMModel('_', {
         uuid: '',
@@ -334,7 +335,7 @@ export default function LLMForm({
           base_url: form.getValues('url'),
           timeout: 120,
         },
-        api_keys: [form.getValues('api_key')],
+        api_keys: apiKey ? [apiKey] : [],
         abilities: form.getValues('abilities'),
         extra_args: extraArgsObj,
       })
@@ -478,10 +479,7 @@ export default function LLMForm({
                 name="api_key"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      {t('models.apiKey')}
-                      <span className="text-red-500">*</span>
-                    </FormLabel>
+                    <FormLabel>{t('models.apiKey')}</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
