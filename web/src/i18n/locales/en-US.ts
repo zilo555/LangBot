@@ -427,6 +427,17 @@ const enUS = {
     defaultPipelineCannotDelete: 'Default pipeline cannot be deleted',
     deleteSuccess: 'Deleted successfully',
     deleteError: 'Delete failed: ',
+    extensions: {
+      title: 'Plugins',
+      loadError: 'Failed to load plugins',
+      saveSuccess: 'Saved successfully',
+      saveError: 'Save failed',
+      noPluginsAvailable: 'No plugins available',
+      disabled: 'Disabled',
+      noPluginsSelected: 'No plugins selected',
+      addPlugin: 'Add Plugin',
+      selectPlugins: 'Select Plugins',
+    },
     debugDialog: {
       title: 'Pipeline Chat',
       selectPipeline: 'Select Pipeline',

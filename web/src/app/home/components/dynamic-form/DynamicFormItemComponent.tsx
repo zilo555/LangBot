@@ -83,7 +83,7 @@ export default function DynamicFormItemComponent({
           setLlmModels(resp.models);
         })
         .catch((err) => {
-          toast.error('获取 LLM 模型列表失败：' + err.message);
+          toast.error('Failed to get LLM model list: ' + err.message);
         });
     }
   }, [config.type]);
@@ -96,7 +96,7 @@ export default function DynamicFormItemComponent({
           setKnowledgeBases(resp.bases);
         })
         .catch((err) => {
-          toast.error('获取知识库列表失败：' + err.message);
+          toast.error('Failed to get knowledge base list: ' + err.message);
         });
     }
   }, [config.type]);

@@ -9,6 +9,9 @@ export interface IDynamicFormItemSchema {
   type: DynamicFormItemType;
   description?: I18nObject;
   options?: IDynamicFormItemOption[];
+
+  /** when type is PLUGIN_SELECTOR, the scopes is the scopes of components(plugin contains), the default is all */
+  scopes?: string[];
   accept?: string; // For file type: accepted MIME types
 }
 
@@ -26,6 +29,7 @@ export enum DynamicFormItemType {
   PROMPT_EDITOR = 'prompt-editor',
   UNKNOWN = 'unknown',
   KNOWLEDGE_BASE_SELECTOR = 'knowledge-base-selector',
+  PLUGIN_SELECTOR = 'plugin-selector',
 }
 
 export interface IFileConfig {
