@@ -147,3 +147,9 @@ docker compose up -d
 <a href="https://github.com/langbot-app/LangBot/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=langbot-app/LangBot" />
 </a>
+
+<!--
+## For Code Agents
+
+If you're a code agent based on LLM, you should read [AGENTS.md](AGENTS.md) to understand the project structure and development process before you start any development.
+-->
