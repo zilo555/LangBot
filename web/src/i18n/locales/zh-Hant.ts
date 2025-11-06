@@ -480,6 +480,7 @@ const zhHant = {
       uploadSuccess: '文檔上傳成功！',
       uploadError: '文檔上傳失敗，請重試',
       uploadingFile: '上傳文檔中...',
+      fileSizeExceeded: '檔案大小超過 10MB 限制，請分割成較小的檔案後上傳',
       actions: '操作',
       delete: '刪除文檔',
       fileDeleteSuccess: '文檔刪除成功',
