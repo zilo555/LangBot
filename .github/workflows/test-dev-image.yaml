@@ -61,9 +61,9 @@ jobs:
             fi
           }
 
-          # Wait 15 seconds before first attempt
-          echo "Waiting 15 seconds for services to start..."
-          sleep 15
+          # Wait 30 seconds before first attempt
+          echo "Waiting 30 seconds for services to start..."
+          sleep 30
 
           # Try up to 3 times with 30-second intervals
           max_attempts=3
