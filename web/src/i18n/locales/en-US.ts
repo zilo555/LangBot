@@ -39,6 +39,7 @@ const enUS = {
     deleteSuccess: 'Deleted successfully',
     deleteError: 'Delete failed: ',
     addRound: 'Add Round',
+    copy: 'Copy',
     copySuccess: 'Copy Successfully',
     test: 'Test',
     forgotPassword: 'Forgot Password?',
@@ -440,6 +441,7 @@ const enUS = {
     createError: 'Creation failed: ',
     saveSuccess: 'Saved successfully',
     saveError: 'Save failed: ',
+    copySuffix: ' Copy',
     deleteConfirmation:
       'Are you sure you want to delete this pipeline? Bots bound to this pipeline will not work.',
     defaultPipelineCannotDelete: 'Default pipeline cannot be deleted',

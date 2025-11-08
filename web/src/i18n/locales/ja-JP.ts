@@ -40,6 +40,7 @@ const jaJP = {
     deleteSuccess: '削除に成功しました',
     deleteError: '削除に失敗しました：',
     addRound: 'ラウンドを追加',
+    copy: 'コピー',
     copySuccess: 'コピーに成功しました',
     test: 'テスト',
     forgotPassword: 'パスワードを忘れた？',
@@ -443,6 +444,7 @@ const jaJP = {
     createError: '作成に失敗しました：',
     saveSuccess: '保存に成功しました',
     saveError: '保存に失敗しました：',
+    copySuffix: ' Copy',
     deleteConfirmation:
       '本当にこのパイプラインを削除しますか？このパイプラインに紐付けられたボットは動作しなくなります。',
     defaultPipelineCannotDelete: 'デフォルトパイプラインは削除できません',
