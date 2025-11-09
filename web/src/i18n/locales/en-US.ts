@@ -448,7 +448,7 @@ const enUS = {
     deleteSuccess: 'Deleted successfully',
     deleteError: 'Delete failed: ',
     extensions: {
-      title: 'Plugins',
+      title: 'Extensions',
       loadError: 'Failed to load plugins',
       saveSuccess: 'Saved successfully',
       saveError: 'Save failed',
