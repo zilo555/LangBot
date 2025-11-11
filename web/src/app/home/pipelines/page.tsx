@@ -116,7 +116,6 @@ export default function PluginConfigPage() {
         onOpenChange={setDialogOpen}
         pipelineId={selectedPipelineId || undefined}
         isEditMode={isEditForm}
-        isDefaultPipeline={selectedPipelineIsDefault}
         onFinish={() => {
           getPipelines();
         }}
