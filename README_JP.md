@@ -27,7 +27,7 @@ LangBot は、エージェント、RAG、MCP などの LLM アプリケーショ
 
 #### クイックスタート
 
-`uvx` を使用して一鍵で起動します（[uv](https://docs.astral.sh/uv/getting-started/installation/) が必要です）：
+`uvx` を使用した迅速なデプロイ（[uv](https://docs.astral.sh/uv/getting-started/installation/) が必要です）：
 
 ```bash
 uvx langbot
