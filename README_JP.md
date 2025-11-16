@@ -25,6 +25,16 @@ LangBot は、エージェント、RAG、MCP などの LLM アプリケーショ
 
 ## 📦 始め方
 
+#### クイックスタート
+
+`uvx` を使用して一鍵で起動します（インストール不要）：
+
+```bash
+uvx langbot
+```
+
+http://localhost:5300 にアクセスして使用を開始します。
+
 #### Docker Compose デプロイ
 
 ```bash

@@ -25,7 +25,7 @@ LangBot is an open-source LLM native instant messaging robot development platfor
 
 ## 📦 Getting Started
 
-#### Quick Start (Recommended)
+#### Quick Start
 
 Use `uvx` to start with one command (no installation required):
 
@@ -33,16 +33,7 @@ Use `uvx` to start with one command (no installation required):
 uvx langbot
 ```
 
-Or install with `pip` and run:
-
-```bash
-pip install langbot
-langbot
-```
-
 Visit http://localhost:5300 to start using it.
-
-Detailed documentation [PyPI Installation](docs/PYPI_INSTALLATION.md).
 
 #### Docker Compose Deployment
 

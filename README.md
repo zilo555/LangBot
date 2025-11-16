@@ -31,7 +31,7 @@ LangBot 是一个开源的大语言模型原生即时通信机器人开发平台
 
 ## 📦 开始使用
 
-#### 快速体验（推荐）
+#### 快速部署
 
 使用 `uvx` 一键启动（无需安装）：
 
@@ -39,16 +39,7 @@ LangBot 是一个开源的大语言模型原生即时通信机器人开发平台
 uvx langbot
 ```
 
-或使用 `pip` 安装后运行：
-
-```bash
-pip install langbot
-langbot
-```
-
 访问 http://localhost:5300 即可开始使用。
-
-详细文档[PyPI 安装](docs/PYPI_INSTALLATION.md)。
 
 #### Docker Compose 部署
 

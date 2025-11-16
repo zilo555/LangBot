@@ -27,6 +27,16 @@ LangBot 是一個開源的大語言模型原生即時通訊機器人開發平台
 
 ## 📦 開始使用
 
+#### 快速部署
+
+使用 `uvx` 一鍵啟動（無需安裝）：
+
+```bash
+uvx langbot
+```
+
+訪問 http://localhost:5300 即可開始使用。
+
 #### Docker Compose 部署
 
 ```bash
