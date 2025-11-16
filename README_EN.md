@@ -27,7 +27,7 @@ LangBot is an open-source LLM native instant messaging robot development platfor
 
 #### Quick Start
 
-Use `uvx` to start with one command (no installation required):
+Use `uvx` to start with one command (need to install [uv](https://docs.astral.sh/uv/getting-started/installation/)):
 
 ```bash
 uvx langbot

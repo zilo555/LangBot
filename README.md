@@ -33,7 +33,7 @@ LangBot 是一个开源的大语言模型原生即时通信机器人开发平台
 
 #### 快速部署
 
-使用 `uvx` 一键启动（无需安装）：
+使用 `uvx` 一键启动（需要先安装 [uv](https://docs.astral.sh/uv/getting-started/installation/)）：
 
 ```bash
 uvx langbot
