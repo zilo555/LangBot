@@ -476,6 +476,15 @@ function MarketPageContent({
             {!hasMore && plugins.length > 0 && (
               <div className="text-center text-muted-foreground py-6">
                 {t('market.allLoaded')}
+                {' · '}
+                <a
+                  href="https://github.com/langbot-app/langbot-plugin-demo/issues/new?template=plugin-request.yml"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  {t('market.requestPlugin')}
+                </a>
               </div>
             )}
           </>

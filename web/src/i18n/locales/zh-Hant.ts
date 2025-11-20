@@ -335,6 +335,7 @@ const zhHant = {
     markAsReadFailed: '標記為已讀失敗',
     filterByComponent: '組件',
     allComponents: '全部組件',
+    requestPlugin: '請求插件',
   },
   mcp: {
     title: 'MCP',

@@ -337,6 +337,7 @@ const zhHans = {
     markAsReadFailed: '标记为已读失败',
     filterByComponent: '组件',
     allComponents: '全部组件',
+    requestPlugin: '请求插件',
   },
   mcp: {
     title: 'MCP',

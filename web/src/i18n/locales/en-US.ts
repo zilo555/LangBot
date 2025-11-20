@@ -353,6 +353,7 @@ const enUS = {
     markAsReadFailed: 'Mark as read failed',
     filterByComponent: 'Component',
     allComponents: 'All Components',
+    requestPlugin: 'Request Plugin',
   },
   mcp: {
     title: 'MCP',

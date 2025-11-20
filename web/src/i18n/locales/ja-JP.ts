@@ -355,6 +355,7 @@ const jaJP = {
     markAsReadFailed: '既読に設定に失敗しました',
     filterByComponent: 'コンポーネント',
     allComponents: '全部コンポーネント',
+    requestPlugin: 'プラグインをリクエスト',
   },
   mcp: {
     title: 'MCP',
