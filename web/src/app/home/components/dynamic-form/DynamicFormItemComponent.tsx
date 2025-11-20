@@ -240,7 +240,7 @@ export default function DynamicFormItemComponent({
                             model.requester,
                           )}
                           alt="icon"
-                          className="w-8 h-8 rounded-full"
+                          className="w-8 h-8 rounded-[8%]"
                         />
                         <h4 className="font-medium">{model.name}</h4>
                       </div>
