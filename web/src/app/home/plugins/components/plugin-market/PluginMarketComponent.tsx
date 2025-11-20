@@ -263,6 +263,18 @@ function MarketPageContent({
     }
   }, [currentPage, isLoadingMore, hasMore, fetchPlugins, searchQuery]);
 
+  // Check if content fills the viewport and load more if needed
+  const checkAndLoadMore = useCallback(() => {
+    const scrollContainer = scrollContainerRef.current;
+    if (!scrollContainer || isLoading || isLoadingMore || !hasMore) return;
+
+    const { scrollHeight, clientHeight } = scrollContainer;
+    // If content doesn't fill the viewport (no scrollbar), load more
+    if (scrollHeight <= clientHeight) {
+      loadMore();
+    }
+  }, [loadMore, isLoading, isLoadingMore, hasMore]);
+
   // Listen to scroll events on the scroll container
   useEffect(() => {
     const scrollContainer = scrollContainerRef.current;
@@ -279,6 +291,25 @@ function MarketPageContent({
     scrollContainer.addEventListener('scroll', handleScroll);
     return () => scrollContainer.removeEventListener('scroll', handleScroll);
   }, [loadMore]);
+
+  // Check if we need to load more after content changes or initial load
+  useEffect(() => {
+    // Small delay to ensure DOM has updated
+    const timer = setTimeout(() => {
+      checkAndLoadMore();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [plugins, checkAndLoadMore]);
+
+  // Also check on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      checkAndLoadMore();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [checkAndLoadMore]);
 
   // 安装插件
   // const handleInstallPlugin = (plugin: PluginV4) => {
@@ -360,7 +391,7 @@ function MarketPageContent({
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 pb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6 pb-6 pt-4">
               {plugins.map((plugin) => (
                 <PluginMarketCardComponent
                   key={plugin.pluginId}
