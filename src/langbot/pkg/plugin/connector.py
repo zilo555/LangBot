@@ -8,6 +8,7 @@ import os
 import sys
 import httpx
 from async_lru import alru_cache
+from langbot_plugin.api.entities.builtin.pipeline.query import provider_session
 
 from ..core import app
 from . import handler
@@ -321,13 +322,20 @@ class PluginRuntimeConnector:
         return tools
 
     async def call_tool(
-        self, tool_name: str, parameters: dict[str, Any], bound_plugins: list[str] | None = None
+        self,
+        tool_name: str,
+        parameters: dict[str, Any],
+        session: provider_session.Session,
+        query_id: int,
+        bound_plugins: list[str] | None = None,
     ) -> dict[str, Any]:
         if not self.is_enable_plugin:
             return {'error': 'Tool not found: plugin system is disabled'}
 
         # Pass include_plugins to runtime for validation
-        return await self.handler.call_tool(tool_name, parameters, include_plugins=bound_plugins)
+        return await self.handler.call_tool(
+            tool_name, parameters, session.model_dump(serialize_as_any=True), query_id, include_plugins=bound_plugins
+        )
 
     async def list_commands(self, bound_plugins: list[str] | None = None) -> list[ComponentManifest]:
         if not self.is_enable_plugin:

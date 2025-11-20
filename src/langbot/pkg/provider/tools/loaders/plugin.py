@@ -3,6 +3,8 @@ from __future__ import annotations
 import typing
 import traceback
 
+from langbot_plugin.api.entities.events import pipeline_query
+
 from .. import loader
 import langbot_plugin.api.entities.builtin.resource.tool as resource_tool
 
@@ -43,9 +45,11 @@ class PluginToolLoader(loader.ToolLoader):
                 return tool
         return None
 
-    async def invoke_tool(self, name: str, parameters: dict) -> typing.Any:
+    async def invoke_tool(self, name: str, parameters: dict, query: pipeline_query.Query) -> typing.Any:
         try:
-            return await self.ap.plugin_connector.call_tool(name, parameters)
+            return await self.ap.plugin_connector.call_tool(
+                name, parameters, session=query.session, query_id=query.query_id
+            )
         except Exception as e:
             self.ap.logger.error(f'执行函数 {name} 时发生错误: {e}')
             traceback.print_exc()

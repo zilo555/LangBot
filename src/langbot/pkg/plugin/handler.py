@@ -620,7 +620,12 @@ class RuntimeConnectionHandler(handler.Handler):
         )
 
     async def call_tool(
-        self, tool_name: str, parameters: dict[str, Any], include_plugins: list[str] | None = None
+        self,
+        tool_name: str,
+        parameters: dict[str, Any],
+        session: dict[str, Any],
+        query_id: int,
+        include_plugins: list[str] | None = None,
     ) -> dict[str, Any]:
         """Call tool"""
         result = await self.call_action(
@@ -628,6 +633,8 @@ class RuntimeConnectionHandler(handler.Handler):
             {
                 'tool_name': tool_name,
                 'tool_parameters': parameters,
+                'session': session,
+                'query_id': query_id,
                 'include_plugins': include_plugins,
             },
             timeout=60,

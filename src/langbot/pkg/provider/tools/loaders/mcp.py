@@ -4,6 +4,7 @@ import enum
 import typing
 from contextlib import AsyncExitStack
 import traceback
+from langbot_plugin.api.entities.events import pipeline_query
 import sqlalchemy
 import asyncio
 
@@ -329,7 +330,7 @@ class MCPLoader(loader.ToolLoader):
                     return True
         return False
 
-    async def invoke_tool(self, name: str, parameters: dict) -> typing.Any:
+    async def invoke_tool(self, name: str, parameters: dict, query: pipeline_query.Query) -> typing.Any:
         """执行工具调用"""
         for session in self.sessions.values():
             for function in session.get_tools():

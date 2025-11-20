@@ -3,6 +3,8 @@ from __future__ import annotations
 import abc
 import typing
 
+from langbot_plugin.api.entities.events import pipeline_query
+
 from ...core import app
 import langbot_plugin.api.entities.builtin.resource.tool as resource_tool
 
@@ -45,7 +47,7 @@ class ToolLoader(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def invoke_tool(self, name: str, parameters: dict) -> typing.Any:
+    async def invoke_tool(self, name: str, parameters: dict, query: pipeline_query.Query) -> typing.Any:
         """执行工具调用"""
         pass
 

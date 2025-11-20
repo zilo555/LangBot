@@ -196,7 +196,7 @@ class LocalAgentRunner(runner.RequestRunner):
 
                     parameters = json.loads(func.arguments)
 
-                    func_ret = await self.ap.tool_mgr.execute_func_call(func.name, parameters)
+                    func_ret = await self.ap.tool_mgr.execute_func_call(func.name, parameters, query=query)
                     if is_stream:
                         msg = provider_message.MessageChunk(
                             role='tool',

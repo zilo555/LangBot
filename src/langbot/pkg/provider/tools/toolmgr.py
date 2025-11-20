@@ -7,6 +7,7 @@ from langbot.pkg.utils import importutil
 from langbot.pkg.provider.tools import loaders
 from langbot.pkg.provider.tools.loaders import mcp as mcp_loader, plugin as plugin_loader
 import langbot_plugin.api.entities.builtin.resource.tool as resource_tool
+from langbot_plugin.api.entities.events import pipeline_query
 
 importutil.import_modules_in_pkg(loaders)
 
@@ -91,13 +92,13 @@ class ToolManager:
 
         return tools
 
-    async def execute_func_call(self, name: str, parameters: dict) -> typing.Any:
+    async def execute_func_call(self, name: str, parameters: dict, query: pipeline_query.Query) -> typing.Any:
         """执行函数调用"""
 
         if await self.plugin_tool_loader.has_tool(name):
-            return await self.plugin_tool_loader.invoke_tool(name, parameters)
+            return await self.plugin_tool_loader.invoke_tool(name, parameters, query)
         elif await self.mcp_tool_loader.has_tool(name):
-            return await self.mcp_tool_loader.invoke_tool(name, parameters)
+            return await self.mcp_tool_loader.invoke_tool(name, parameters, query)
         else:
             raise ValueError(f'未找到工具: {name}')
 
