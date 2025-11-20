@@ -127,20 +127,20 @@ function MarketPageContent({
       }
 
       try {
-        let response;
         const { sortBy, sortOrder } = getCurrentSort();
         const filterValue =
           componentFilter === 'all' ? undefined : componentFilter;
 
         // Always use searchMarketplacePlugins to support component filtering
-        response = await getCloudServiceClientSync().searchMarketplacePlugins(
-          isSearch && searchQuery.trim() ? searchQuery.trim() : '',
-          page,
-          pageSize,
-          sortBy,
-          sortOrder,
-          filterValue,
-        );
+        const response =
+          await getCloudServiceClientSync().searchMarketplacePlugins(
+            isSearch && searchQuery.trim() ? searchQuery.trim() : '',
+            page,
+            pageSize,
+            sortBy,
+            sortOrder,
+            filterValue,
+          );
 
         const data: ApiRespMarketplacePlugins = response;
         const newPlugins = data.plugins.map(transformToVO);
