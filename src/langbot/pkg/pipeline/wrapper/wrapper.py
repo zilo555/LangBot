@@ -96,7 +96,7 @@ class ResponseWrapper(stage.PipelineStage):
                     if result.tool_calls is not None and len(result.tool_calls) > 0:  # 有函数调用
                         function_names = [tc.function.name for tc in result.tool_calls]
 
-                        reply_text = f'调用函数 {".".join(function_names)}...'
+                        reply_text = f'Call {".".join(function_names)}...'
 
                         query.resp_message_chain.append(
                             platform_message.MessageChain([platform_message.Plain(text=reply_text)])
