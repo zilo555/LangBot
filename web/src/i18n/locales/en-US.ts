@@ -351,6 +351,8 @@ const enUS = {
     markAsRead: 'Mark as Read',
     markAsReadSuccess: 'Marked as read',
     markAsReadFailed: 'Mark as read failed',
+    filterByComponent: 'Component',
+    allComponents: 'All Components',
   },
   mcp: {
     title: 'MCP',

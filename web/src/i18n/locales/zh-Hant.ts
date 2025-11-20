@@ -333,6 +333,8 @@ const zhHant = {
     markAsRead: '已讀',
     markAsReadSuccess: '已標記為已讀',
     markAsReadFailed: '標記為已讀失敗',
+    filterByComponent: '組件',
+    allComponents: '全部組件',
   },
   mcp: {
     title: 'MCP',

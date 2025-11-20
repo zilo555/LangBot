@@ -335,6 +335,8 @@ const zhHans = {
     markAsRead: '已读',
     markAsReadSuccess: '已标记为已读',
     markAsReadFailed: '标记为已读失败',
+    filterByComponent: '组件',
+    allComponents: '全部组件',
   },
   mcp: {
     title: 'MCP',

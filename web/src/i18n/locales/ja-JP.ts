@@ -353,6 +353,8 @@ const jaJP = {
     markAsRead: '既読',
     markAsReadSuccess: '既読に設定しました',
     markAsReadFailed: '既読に設定に失敗しました',
+    filterByComponent: 'コンポーネント',
+    allComponents: '全部コンポーネント',
   },
   mcp: {
     title: 'MCP',
