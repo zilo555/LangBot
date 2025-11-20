@@ -1,4 +1,3 @@
-import { PluginComponent } from '@/app/infra/entities/plugin';
 import { TFunction } from 'i18next';
 import { Wrench, AudioWaveform, Hash } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -9,31 +8,22 @@ export default function PluginComponentList({
   showTitle,
   useBadge,
   t,
+  responsive = false,
 }: {
-  components: PluginComponent[];
+  components: Record<string, number>;
   showComponentName: boolean;
   showTitle: boolean;
   useBadge: boolean;
   t: TFunction;
+  responsive?: boolean;
 }) {
-  const componentKindCount: Record<string, number> = {};
-
-  for (const component of components) {
-    const kind = component.manifest.manifest.kind;
-    if (componentKindCount[kind]) {
-      componentKindCount[kind]++;
-    } else {
-      componentKindCount[kind] = 1;
-    }
-  }
-
   const kindIconMap: Record<string, React.ReactNode> = {
     Tool: <Wrench className="w-5 h-5" />,
     EventListener: <AudioWaveform className="w-5 h-5" />,
     Command: <Hash className="w-5 h-5" />,
   };
 
-  const componentKindList = Object.keys(componentKindCount);
+  const componentKindList = Object.keys(components || {});
 
   return (
     <>
@@ -44,11 +34,21 @@ export default function PluginComponentList({
             return (
               <>
                 {useBadge && (
-                  <Badge variant="outline">
+                  <Badge
+                    key={kind}
+                    variant="outline"
+                    className="flex items-center gap-1"
+                  >
                     {kindIconMap[kind]}
-                    {showComponentName &&
-                      t('plugins.componentName.' + kind) + '  '}
-                    {componentKindCount[kind]}
+                    {/* 响应式显示组件名称：在中等屏幕以上显示 */}
+                    {responsive ? (
+                      <span className="hidden md:inline">
+                        {t('plugins.componentName.' + kind)}
+                      </span>
+                    ) : (
+                      showComponentName && t('plugins.componentName.' + kind)
+                    )}
+                    <span className="ml-1">{components[kind]}</span>
                   </Badge>
                 )}
 
@@ -58,9 +58,15 @@ export default function PluginComponentList({
                     className="flex flex-row items-center justify-start gap-[0.2rem]"
                   >
                     {kindIconMap[kind]}
-                    {showComponentName &&
-                      t('plugins.componentName.' + kind) + '  '}
-                    {componentKindCount[kind]}
+                    {/* 响应式显示组件名称：在中等屏幕以上显示 */}
+                    {responsive ? (
+                      <span className="hidden md:inline">
+                        {t('plugins.componentName.' + kind)}
+                      </span>
+                    ) : (
+                      showComponentName && t('plugins.componentName.' + kind)
+                    )}
+                    <span className="ml-1">{components[kind]}</span>
                   </div>
                 )}
               </>

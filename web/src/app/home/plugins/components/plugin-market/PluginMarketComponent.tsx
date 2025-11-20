@@ -111,6 +111,7 @@ function MarketPageContent({
       ),
       githubURL: plugin.repository,
       version: plugin.latest_version,
+      components: plugin.components,
     });
   }, []);
 

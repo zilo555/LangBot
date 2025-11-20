@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { PluginV4 } from '@/app/infra/entities/plugin';
 import { getCloudServiceClientSync } from '@/app/infra/http';
 import { extractI18nObject } from '@/i18n/I18nProvider';
+import PluginComponentList from '@/app/home/plugins/components/plugin-installed/PluginComponentList';
 
 interface PluginDetailDialogProps {
   open: boolean;
@@ -104,6 +105,15 @@ export default function PluginDetailDialog({
             <Download className="w-4 h-4" />
             {plugin!.install_count.toLocaleString()} {t('market.downloads')}
           </Badge>
+          {plugin!.components && Object.keys(plugin!.components).length > 0 && (
+            <PluginComponentList
+              components={plugin!.components}
+              showComponentName={true}
+              showTitle={false}
+              useBadge={true}
+              t={t}
+            />
+          )}
           {plugin!.repository && (
             <button
               onClick={(e) => {

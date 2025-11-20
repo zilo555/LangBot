@@ -8,6 +8,7 @@ export interface IPluginMarketCardVO {
   iconURL: string;
   githubURL: string;
   version: string;
+  components?: Record<string, number>;
 }
 
 export class PluginMarketCardVO implements IPluginMarketCardVO {
@@ -20,6 +21,7 @@ export class PluginMarketCardVO implements IPluginMarketCardVO {
   githubURL: string;
   installCount: number;
   version: string;
+  components?: Record<string, number>;
 
   constructor(prop: IPluginMarketCardVO) {
     this.description = prop.description;
@@ -31,5 +33,6 @@ export class PluginMarketCardVO implements IPluginMarketCardVO {
     this.installCount = prop.installCount;
     this.pluginId = prop.pluginId;
     this.version = prop.version;
+    this.components = prop.components;
   }
 }

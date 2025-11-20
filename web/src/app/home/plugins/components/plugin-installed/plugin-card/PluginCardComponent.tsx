@@ -128,7 +128,18 @@ export default function PluginCardComponent({
 
             <div className="w-full flex flex-row items-start justify-start gap-[0.6rem]">
               <PluginComponentList
-                components={cardVO.components}
+                components={(() => {
+                  const componentKindCount: Record<string, number> = {};
+                  for (const component of cardVO.components) {
+                    const kind = component.manifest.manifest.kind;
+                    if (componentKindCount[kind]) {
+                      componentKindCount[kind]++;
+                    } else {
+                      componentKindCount[kind] = 1;
+                    }
+                  }
+                  return componentKindCount;
+                })()}
                 showComponentName={false}
                 showTitle={true}
                 useBadge={false}

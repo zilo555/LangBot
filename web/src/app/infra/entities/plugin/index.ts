@@ -40,6 +40,7 @@ export interface PluginV4 {
   tags: string[];
   install_count: number;
   latest_version: string;
+  components: Record<string, number>;
   status: PluginV4Status;
   created_at: string;
   updated_at: string;

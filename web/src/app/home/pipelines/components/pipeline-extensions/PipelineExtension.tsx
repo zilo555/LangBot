@@ -234,7 +234,19 @@ export default function PipelineExtension({
                         </div>
                         <div className="flex gap-1 mt-1">
                           <PluginComponentList
-                            components={plugin.components}
+                            components={(() => {
+                              const componentKindCount: Record<string, number> =
+                                {};
+                              for (const component of plugin.components) {
+                                const kind = component.manifest.manifest.kind;
+                                if (componentKindCount[kind]) {
+                                  componentKindCount[kind]++;
+                                } else {
+                                  componentKindCount[kind] = 1;
+                                }
+                              }
+                              return componentKindCount;
+                            })()}
                             showComponentName={true}
                             showTitle={false}
                             useBadge={true}
@@ -401,7 +413,19 @@ export default function PipelineExtension({
                       </div>
                       <div className="flex gap-1 mt-1">
                         <PluginComponentList
-                          components={plugin.components}
+                          components={(() => {
+                            const componentKindCount: Record<string, number> =
+                              {};
+                            for (const component of plugin.components) {
+                              const kind = component.manifest.manifest.kind;
+                              if (componentKindCount[kind]) {
+                                componentKindCount[kind]++;
+                              } else {
+                                componentKindCount[kind] = 1;
+                              }
+                            }
+                            return componentKindCount;
+                          })()}
                           showComponentName={true}
                           showTitle={false}
                           useBadge={true}

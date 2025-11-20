@@ -1,4 +1,7 @@
 import { PluginMarketCardVO } from './PluginMarketCardVO';
+import { useTranslation } from 'react-i18next';
+import { Badge } from '@/components/ui/badge';
+import { Wrench, AudioWaveform, Hash } from 'lucide-react';
 
 export default function PluginMarketCardComponent({
   cardVO,
@@ -7,18 +10,32 @@ export default function PluginMarketCardComponent({
   cardVO: PluginMarketCardVO;
   onPluginClick?: (author: string, pluginName: string) => void;
 }) {
+  const { t } = useTranslation();
+
   function handleCardClick() {
     if (onPluginClick) {
       onPluginClick(cardVO.author, cardVO.pluginName);
     }
   }
 
+  const kindIconMap: Record<string, React.ReactNode> = {
+    Tool: <Wrench className="w-4 h-4" />,
+    EventListener: <AudioWaveform className="w-4 h-4" />,
+    Command: <Hash className="w-4 h-4" />,
+  };
+
+  const componentKindNameMap: Record<string, string> = {
+    Tool: t('plugins.componentName.Tool'),
+    EventListener: t('plugins.componentName.EventListener'),
+    Command: t('plugins.componentName.Command'),
+  };
+
   return (
     <div
-      className="w-[100%] h-auto min-h-[8rem] sm:h-[9rem] bg-white rounded-[10px] shadow-[0px_0px_4px_0_rgba(0,0,0,0.2)] p-3 sm:p-[1rem] cursor-pointer hover:shadow-[0px_2px_8px_0_rgba(0,0,0,0.15)] transition-shadow duration-200 dark:bg-[#1f1f22]"
+      className="w-[100%] h-auto min-h-[8rem] sm:min-h-[9rem] bg-white rounded-[10px] shadow-[0px_0px_4px_0_rgba(0,0,0,0.2)] p-3 sm:p-[1rem] cursor-pointer hover:shadow-[0px_2px_8px_0_rgba(0,0,0,0.15)] transition-shadow duration-200 dark:bg-[#1f1f22]"
       onClick={handleCardClick}
     >
-      <div className="w-full h-full flex flex-col justify-between gap-2">
+      <div className="w-full h-full flex flex-col justify-between gap-3">
         {/* 上部分：插件信息 */}
         <div className="flex flex-row items-start justify-start gap-2 sm:gap-[1.2rem] min-h-0">
           <img
@@ -60,23 +77,45 @@ export default function PluginMarketCardComponent({
           </div>
         </div>
 
-        {/* 下部分：下载量 */}
-        <div className="w-full flex flex-row items-center justify-start gap-[0.3rem] sm:gap-[0.4rem] px-0 sm:px-[0.4rem] flex-shrink-0">
-          <svg
-            className="w-4 h-4 sm:w-[1.2rem] sm:h-[1.2rem] text-[#2563eb] flex-shrink-0"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7,10 12,15 17,10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          <div className="text-xs sm:text-sm text-[#2563eb] font-medium whitespace-nowrap">
-            {cardVO.installCount.toLocaleString()}
+        {/* 下部分：下载量和组件列表 */}
+        <div className="w-full flex flex-row items-center justify-between gap-[0.3rem] sm:gap-[0.4rem] px-0 sm:px-[0.4rem] flex-shrink-0">
+          <div className="flex flex-row items-center justify-start gap-[0.3rem] sm:gap-[0.4rem]">
+            <svg
+              className="w-4 h-4 sm:w-[1.2rem] sm:h-[1.2rem] text-[#2563eb] flex-shrink-0"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7,10 12,15 17,10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            <div className="text-xs sm:text-sm text-[#2563eb] font-medium whitespace-nowrap">
+              {cardVO.installCount.toLocaleString()}
+            </div>
           </div>
+
+          {/* 组件列表 */}
+          {cardVO.components && Object.keys(cardVO.components).length > 0 && (
+            <div className="flex flex-row items-center gap-1">
+              {Object.entries(cardVO.components).map(([kind, count]) => (
+                <Badge
+                  key={kind}
+                  variant="outline"
+                  className="flex items-center gap-1"
+                >
+                  {kindIconMap[kind]}
+                  {/* 响应式显示组件名称：在中等屏幕以上显示 */}
+                  <span className="hidden md:inline">
+                    {componentKindNameMap[kind]}
+                  </span>
+                  <span className="ml-1">{count}</span>
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

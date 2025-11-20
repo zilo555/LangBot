@@ -160,7 +160,18 @@ export default function PluginForm({
 
         <div className="mb-4 flex flex-row items-center justify-start gap-[0.4rem]">
           <PluginComponentList
-            components={pluginInfo.components}
+            components={(() => {
+              const componentKindCount: Record<string, number> = {};
+              for (const component of pluginInfo.components) {
+                const kind = component.manifest.manifest.kind;
+                if (componentKindCount[kind]) {
+                  componentKindCount[kind]++;
+                } else {
+                  componentKindCount[kind] = 1;
+                }
+              }
+              return componentKindCount;
+            })()}
             showComponentName={true}
             showTitle={false}
             useBadge={true}
