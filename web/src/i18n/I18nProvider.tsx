@@ -37,3 +37,20 @@ export const extractI18nObject = (i18nObject: I18nObject): string => {
     ''
   );
 };
+
+// 工具函数：将 i18n 语言代码转换为 API 语言代码
+// i18n 使用：zh-Hans, en-US, ja-JP
+// API 使用：zh_Hans, en, ja_JP
+export const getAPILanguageCode = (): string => {
+  const language = i18n.language;
+  // zh-Hans -> zh_Hans
+  if (language === 'zh-Hans') return 'zh_Hans';
+  // zh-Hant -> zh_Hant
+  if (language === 'zh-Hant') return 'zh_Hant';
+  // en-US -> en
+  if (language === 'en-US') return 'en';
+  // ja-JP -> ja_JP
+  if (language === 'ja-JP') return 'ja_JP';
+  // 默认返回 en
+  return 'en';
+};

@@ -61,9 +61,11 @@ export class CloudServiceClient extends BaseHttpClient {
   public getPluginREADME(
     author: string,
     pluginName: string,
+    language?: string,
   ): Promise<{ readme: string }> {
     return this.get<{ readme: string }>(
       `/api/v1/marketplace/plugins/${author}/${pluginName}/resources/README`,
+      language ? { language } : undefined,
     );
   }
 

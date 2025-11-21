@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { PluginV4 } from '@/app/infra/entities/plugin';
 import { getCloudServiceClientSync } from '@/app/infra/http';
-import { extractI18nObject } from '@/i18n/I18nProvider';
+import { extractI18nObject, getAPILanguageCode } from '@/i18n/I18nProvider';
 import PluginComponentList from '@/app/home/plugins/components/plugin-installed/PluginComponentList';
 
 interface PluginDetailDialogProps {
@@ -54,11 +54,16 @@ export default function PluginDetailDialog({
       );
       setPlugin(detailResponse.plugin);
 
-      // 获取README
+      // 获取README，根据当前语言设置传递language参数
       setIsLoadingReadme(true);
       try {
+        const languageCode = getAPILanguageCode();
         const readmeResponse =
-          await getCloudServiceClientSync().getPluginREADME(author, pluginName);
+          await getCloudServiceClientSync().getPluginREADME(
+            author,
+            pluginName,
+            languageCode,
+          );
         setReadme(readmeResponse.readme);
       } catch (error) {
         console.warn('Failed to load README:', error);
