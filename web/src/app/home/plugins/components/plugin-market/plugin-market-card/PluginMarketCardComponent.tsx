@@ -1,21 +1,37 @@
 import { PluginMarketCardVO } from './PluginMarketCardVO';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
-import { Wrench, AudioWaveform, Hash } from 'lucide-react';
+import {
+  Wrench,
+  AudioWaveform,
+  Hash,
+  Download,
+  ExternalLink,
+} from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 export default function PluginMarketCardComponent({
   cardVO,
-  onPluginClick,
+  onInstall,
 }: {
   cardVO: PluginMarketCardVO;
-  onPluginClick?: (author: string, pluginName: string) => void;
+  onInstall?: (author: string, pluginName: string) => void;
 }) {
   const { t } = useTranslation();
+  const [isHovered, setIsHovered] = useState(false);
 
-  function handleCardClick() {
-    if (onPluginClick) {
-      onPluginClick(cardVO.author, cardVO.pluginName);
+  function handleInstallClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (onInstall) {
+      onInstall(cardVO.author, cardVO.pluginName);
     }
+  }
+
+  function handleViewDetailsClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    const detailUrl = `https://space.langbot.app/market/${cardVO.author}/${cardVO.pluginName}`;
+    window.open(detailUrl, '_blank');
   }
 
   const kindIconMap: Record<string, React.ReactNode> = {
@@ -32,8 +48,9 @@ export default function PluginMarketCardComponent({
 
   return (
     <div
-      className="w-[100%] h-auto min-h-[8rem] sm:min-h-[9rem] bg-white rounded-[10px] shadow-[0px_0px_4px_0_rgba(0,0,0,0.2)] p-3 sm:p-[1rem] cursor-pointer hover:shadow-[0px_2px_8px_0_rgba(0,0,0,0.15)] transition-shadow duration-200 dark:bg-[#1f1f22]"
-      onClick={handleCardClick}
+      className="w-[100%] h-auto min-h-[8rem] sm:min-h-[9rem] bg-white rounded-[10px] shadow-[0px_0px_4px_0_rgba(0,0,0,0.2)] p-3 sm:p-[1rem] hover:shadow-[0px_2px_8px_0_rgba(0,0,0,0.15)] transition-shadow duration-200 dark:bg-[#1f1f22] relative"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <div className="w-full h-full flex flex-col justify-between gap-3">
         {/* 上部分：插件信息 */}
@@ -118,6 +135,27 @@ export default function PluginMarketCardComponent({
           )}
         </div>
       </div>
+
+      {/* Hover overlay with action buttons */}
+      {isHovered && (
+        <div className="absolute inset-0 bg-gray-100/65 dark:bg-black/40 rounded-[10px] flex items-center justify-center gap-3 transition-opacity duration-200">
+          <Button
+            onClick={handleInstallClick}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2"
+          >
+            <Download className="w-4 h-4" />
+            {t('market.install')}
+          </Button>
+          <Button
+            onClick={handleViewDetailsClick}
+            variant="outline"
+            className="bg-white hover:bg-gray-100 text-gray-900 dark:bg-white dark:hover:bg-gray-100 dark:text-gray-900 px-4 py-2 rounded-lg shadow-lg flex items-center gap-2"
+          >
+            <ExternalLink className="w-4 h-4" />
+            {t('market.viewDetails')}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

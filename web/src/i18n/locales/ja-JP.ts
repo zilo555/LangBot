@@ -356,6 +356,7 @@ const jaJP = {
     filterByComponent: 'コンポーネント',
     allComponents: '全部コンポーネント',
     requestPlugin: 'プラグインをリクエスト',
+    viewDetails: '詳細を表示',
   },
   mcp: {
     title: 'MCP',

@@ -336,6 +336,7 @@ const zhHant = {
     filterByComponent: '組件',
     allComponents: '全部組件',
     requestPlugin: '請求插件',
+    viewDetails: '查看詳情',
   },
   mcp: {
     title: 'MCP',

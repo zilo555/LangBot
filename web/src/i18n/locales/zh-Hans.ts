@@ -338,6 +338,7 @@ const zhHans = {
     filterByComponent: '组件',
     allComponents: '全部组件',
     requestPlugin: '请求插件',
+    viewDetails: '查看详情',
   },
   mcp: {
     title: 'MCP',

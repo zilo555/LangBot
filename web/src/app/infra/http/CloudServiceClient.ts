@@ -82,6 +82,6 @@ export class CloudServiceClient extends BaseHttpClient {
   }
 
   public getPluginMarketplaceURL(author: string, name: string): string {
-    return `${this.baseURL}/market?author=${author}&plugin=${name}`;
+    return `https://space.langbot.app/market/${author}/${name}`;
   }
 }

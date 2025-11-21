@@ -354,6 +354,7 @@ const enUS = {
     filterByComponent: 'Component',
     allComponents: 'All Components',
     requestPlugin: 'Request Plugin',
+    viewDetails: 'View Details',
   },
   mcp: {
     title: 'MCP',

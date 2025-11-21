@@ -14,7 +14,6 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Search, Loader2, Wrench, AudioWaveform, Hash } from 'lucide-react';
 import PluginMarketCardComponent from './plugin-market-card/PluginMarketCardComponent';
 import { PluginMarketCardVO } from './plugin-market-card/PluginMarketCardVO';
-import PluginDetailDialog from './plugin-detail-dialog/PluginDetailDialog';
 import { getCloudServiceClientSync } from '@/app/infra/http';
 import { useTranslation } from 'react-i18next';
 import { PluginV4 } from '@/app/infra/entities/plugin';
@@ -47,15 +46,6 @@ function MarketPageContent({
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [sortOption, setSortOption] = useState('install_count_desc');
-
-  // Plugin detail dialog state
-  const [selectedPluginAuthor, setSelectedPluginAuthor] = useState<
-    string | null
-  >(null);
-  const [selectedPluginName, setSelectedPluginName] = useState<string | null>(
-    null,
-  );
-  const [dialogOpen, setDialogOpen] = useState(false);
 
   const pageSize = 16; // 每页16个，4行x4列
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -230,33 +220,46 @@ function MarketPageContent({
     fetchPlugins(1, !!searchQuery.trim(), true);
   }, [sortOption, componentFilter]);
 
-  // 处理URL参数，检查是否需要打开插件详情对话框
+  // 处理URL参数，重定向到 LangBot Space
   useEffect(() => {
     const author = searchParams.get('author');
     const pluginName = searchParams.get('plugin');
 
     if (author && pluginName) {
-      setSelectedPluginAuthor(author);
-      setSelectedPluginName(pluginName);
-      setDialogOpen(true);
+      const detailUrl = `https://space.langbot.app/market/${author}/${pluginName}`;
+      window.open(detailUrl, '_blank');
     }
   }, [searchParams]);
 
-  // 插件详情对话框处理函数
-  const handlePluginClick = useCallback(
-    (author: string, pluginName: string) => {
-      setSelectedPluginAuthor(author);
-      setSelectedPluginName(pluginName);
-      setDialogOpen(true);
-    },
-    [],
-  );
+  // 处理安装插件
+  const handleInstallPlugin = useCallback(
+    async (author: string, pluginName: string) => {
+      try {
+        // Find the full plugin object from the list
+        const pluginVO = plugins.find(
+          (p) => p.author === author && p.pluginName === pluginName,
+        );
+        if (!pluginVO) {
+          console.error('Plugin not found:', author, pluginName);
+          return;
+        }
 
-  const handleDialogClose = useCallback(() => {
-    setDialogOpen(false);
-    setSelectedPluginAuthor(null);
-    setSelectedPluginName(null);
-  }, []);
+        // Fetch full plugin details to get PluginV4 object
+        const response = await getCloudServiceClientSync().getPluginDetail(
+          author,
+          pluginName,
+        );
+        const pluginV4: PluginV4 = response.plugin;
+
+        // Call the install function passed from parent
+        installPlugin(pluginV4);
+      } catch (error) {
+        console.error('Failed to install plugin:', error);
+        toast.error(t('market.installFailed'));
+      }
+    },
+    [plugins, installPlugin, t],
+  );
 
   // 清理定时器
   useEffect(() => {
@@ -459,7 +462,7 @@ function MarketPageContent({
                 <PluginMarketCardComponent
                   key={plugin.pluginId}
                   cardVO={plugin}
-                  onPluginClick={handlePluginClick}
+                  onInstall={handleInstallPlugin}
                 />
               ))}
             </div>
@@ -490,15 +493,6 @@ function MarketPageContent({
           </>
         )}
       </div>
-
-      {/* Plugin detail dialog */}
-      <PluginDetailDialog
-        open={dialogOpen}
-        onOpenChange={handleDialogClose}
-        author={selectedPluginAuthor}
-        pluginName={selectedPluginName}
-        installPlugin={installPlugin}
-      />
     </div>
   );
 }
