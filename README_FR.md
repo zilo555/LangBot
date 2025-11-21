@@ -79,10 +79,10 @@ Cliquez sur les boutons Star et Watch dans le coin supérieur droit du dépôt p
 
 ## ✨ Fonctionnalités
 
-- 💬 Chat avec LLM / Agent : Prend en charge plusieurs LLM, adapté aux chats de groupe et privés ; Prend en charge les conversations multi-tours, les appels d'outils, les capacités multimodales et de sortie en streaming. Implémentation RAG (base de connaissances) intégrée, et intégration profonde avec [Dify](https://dify.ai).
+- 💬 Chat avec LLM / Agent : Prend en charge plusieurs LLM, adapté aux chats de groupe et privés ; Prend en charge les conversations multi-tours, les appels d'outils, les capacités multimodales et de sortie en streaming. Implémentation RAG (base de connaissances) intégrée, et intégration profonde avec [Dify](https://dify.ai), [Coze](https://coze.com), [n8n](https://n8n.io) etc. LLMOps platforms.
 - 🤖 Support Multi-plateforme : Actuellement compatible avec QQ, QQ Channel, WeCom, WeChat personnel, Lark, DingTalk, Discord, Telegram, etc.
 - 🛠️ Haute Stabilité, Riche en Fonctionnalités : Contrôle d'accès natif, limitation de débit, filtrage de mots sensibles, etc. ; Facile à utiliser, prend en charge plusieurs méthodes de déploiement. Prend en charge plusieurs configurations de pipeline, différents bots pour différents scénarios.
-- 🧩 Extension de Plugin, Communauté Active : Prend en charge les mécanismes de plugin pilotés par événements, l'extension de composants, etc. ; Intégration du protocole [MCP](https://modelcontextprotocol.io/) d'Anthropic ; Dispose actuellement de centaines de plugins.
+- 🧩 Extension de Plugin, Communauté Active : Système de plugin de haute stabilité, haute sécurité de niveau production; Prend en charge les mécanismes de plugin pilotés par événements, l'extension de composants, etc. ; Intégration du protocole [MCP](https://modelcontextprotocol.io/) d'Anthropic ; Dispose actuellement de centaines de plugins.
 - 😻 Interface Web : Prend en charge la gestion des instances LangBot via le navigateur. Pas besoin d'écrire manuellement les fichiers de configuration.
 
 Pour des spécifications plus détaillées, veuillez consulter la [documentation](https://docs.langbot.app/en/insight/features.html).
