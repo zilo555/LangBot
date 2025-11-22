@@ -32,6 +32,7 @@ class AsyncDifyServiceClient:
         conversation_id: str = '',
         files: list[dict[str, typing.Any]] = [],
         timeout: float = 30.0,
+        model_config: dict[str, typing.Any] | None = None,
     ) -> typing.AsyncGenerator[dict[str, typing.Any], None]:
         """发送消息"""
         if response_mode != 'streaming':
@@ -42,6 +43,16 @@ class AsyncDifyServiceClient:
             trust_env=True,
             timeout=timeout,
         ) as client:
+            payload = {
+                'inputs': inputs,
+                'query': query,
+                'user': user,
+                'response_mode': response_mode,
+                'conversation_id': conversation_id,
+                'files': files,
+                'model_config': model_config or {},
+            }
+
             async with client.stream(
                 'POST',
                 '/chat-messages',
@@ -49,14 +60,7 @@ class AsyncDifyServiceClient:
                     'Authorization': f'Bearer {self.api_key}',
                     'Content-Type': 'application/json',
                 },
-                json={
-                    'inputs': inputs,
-                    'query': query,
-                    'user': user,
-                    'response_mode': response_mode,
-                    'conversation_id': conversation_id,
-                    'files': files,
-                },
+                json=payload,
             ) as r:
                 async for chunk in r.aiter_lines():
                     if r.status_code != 200:
