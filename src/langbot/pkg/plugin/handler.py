@@ -602,6 +602,51 @@ class RuntimeConnectionHandler(handler.Handler):
             'mime_type': mime_type,
         }
 
+    async def get_plugin_readme(self, plugin_author: str, plugin_name: str, language: str = 'en') -> str:
+        """Get plugin readme"""
+        try:
+            result = await self.call_action(
+                LangBotToRuntimeAction.GET_PLUGIN_README,
+                {
+                    'plugin_author': plugin_author,
+                    'plugin_name': plugin_name,
+                    'language': language,
+                },
+                timeout=20,
+            )
+        except Exception:
+            traceback.print_exc()
+            return ''
+
+        readme_file_key = result.get('readme_file_key')
+        if not readme_file_key:
+            return ''
+
+        readme_bytes = await self.read_local_file(readme_file_key)
+        await self.delete_local_file(readme_file_key)
+
+        return readme_bytes.decode('utf-8')
+
+    async def get_plugin_assets(self, plugin_author: str, plugin_name: str, filepath: str) -> dict[str, Any]:
+        """Get plugin assets"""
+        result = await self.call_action(
+            LangBotToRuntimeAction.GET_PLUGIN_ASSETS_FILE,
+            {
+                'plugin_author': plugin_author,
+                'plugin_name': plugin_name,
+                'file_path': filepath,
+            },
+            timeout=20,
+        )
+        asset_file_key = result['file_file_key']
+        mime_type = result['mime_type']
+        asset_bytes = await self.read_local_file(asset_file_key)
+        await self.delete_local_file(asset_file_key)
+        return {
+            'asset_base64': base64.b64encode(asset_bytes).decode('utf-8'),
+            'mime_type': mime_type,
+        }
+
     async def cleanup_plugin_data(self, plugin_author: str, plugin_name: str) -> None:
         """Cleanup plugin settings and binary storage"""
         # Delete plugin settings
@@ -637,7 +682,7 @@ class RuntimeConnectionHandler(handler.Handler):
                 'query_id': query_id,
                 'include_plugins': include_plugins,
             },
-            timeout=60,
+            timeout=180,
         )
 
         return result['tool_response']

@@ -83,6 +83,16 @@ class PluginsRouterGroup(group.RouterGroup):
                 return self.success(data={})
 
         @self.route(
+            '/<author>/<plugin_name>/readme',
+            methods=['GET'],
+            auth_type=group.AuthType.USER_TOKEN,
+        )
+        async def _(author: str, plugin_name: str) -> quart.Response:
+            language = quart.request.args.get('language', 'en')
+            readme = await self.ap.plugin_connector.get_plugin_readme(author, plugin_name, language=language)
+            return self.success(data={'readme': readme})
+
+        @self.route(
             '/<author>/<plugin_name>/icon',
             methods=['GET'],
             auth_type=group.AuthType.NONE,
@@ -95,6 +105,17 @@ class PluginsRouterGroup(group.RouterGroup):
             icon_data = base64.b64decode(icon_base64)
 
             return quart.Response(icon_data, mimetype=mime_type)
+
+        @self.route(
+            '/<author>/<plugin_name>/assets/<filepath>',
+            methods=['GET'],
+            auth_type=group.AuthType.NONE,
+        )
+        async def _(author: str, plugin_name: str, filepath: str) -> quart.Response:
+            asset_data = await self.ap.plugin_connector.get_plugin_assets(author, plugin_name, filepath)
+            asset_bytes = base64.b64decode(asset_data['asset_base64'])
+            mime_type = asset_data['mime_type']
+            return quart.Response(asset_bytes, mimetype=mime_type)
 
         @self.route('/github/releases', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
         async def _() -> str:
