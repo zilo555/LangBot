@@ -169,7 +169,7 @@ export default function HomeSidebar({
             onClick={() => {
               window.open('https://github.com/langbot-app/LangBot', '_blank');
             }}
-            className="flex justify-center cursor-pointer p-2 rounded-lg hover:bg-accent/30 transition-colors"
+            className="flex justify-center cursor-pointer p-2 rounded-lg transition-colors"
           >
             <Badge
               variant="outline"
