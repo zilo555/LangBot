@@ -81,16 +81,9 @@ class KnowledgeService:
         runtime_kb = await self.ap.rag_mgr.get_knowledge_base_by_uuid(kb_uuid)
         if runtime_kb is None:
             raise Exception('Knowledge base not found')
-
-        # Get top_k based on KB type
-        if runtime_kb.get_type() == 'internal':
-            top_k = runtime_kb.knowledge_base_entity.top_k
-        elif runtime_kb.get_type() == 'external':
-            top_k = runtime_kb.external_kb_entity.top_k
-        else:
-            top_k = 5  # default fallback
-
-        return [result.model_dump() for result in await runtime_kb.retrieve(query, top_k)]
+        return [
+            result.model_dump() for result in await runtime_kb.retrieve(query, runtime_kb.knowledge_base_entity.top_k)
+        ]
 
     async def get_files_by_knowledge_base(self, kb_uuid: str) -> list[dict]:
         """获取知识库文件"""
