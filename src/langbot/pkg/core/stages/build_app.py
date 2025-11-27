@@ -23,6 +23,7 @@ from ...api.http.service import knowledge as knowledge_service
 from ...api.http.service import mcp as mcp_service
 from ...api.http.service import apikey as apikey_service
 from ...api.http.service import webhook as webhook_service
+from ...api.http.service import external_kb as external_kb_service
 from ...discover import engine as discover_engine
 from ...storage import mgr as storagemgr
 from ...utils import logcache
@@ -62,14 +63,6 @@ class BuildAppStage(stage.BootingStage):
         persistence_mgr_inst = persistencemgr.PersistenceManager(ap)
         ap.persistence_mgr = persistence_mgr_inst
         await persistence_mgr_inst.initialize()
-
-        async def runtime_disconnect_callback(connector: plugin_connector.PluginRuntimeConnector) -> None:
-            await asyncio.sleep(3)
-            await plugin_connector_inst.initialize()
-
-        plugin_connector_inst = plugin_connector.PluginRuntimeConnector(ap, runtime_disconnect_callback)
-        await plugin_connector_inst.initialize()
-        ap.plugin_connector = plugin_connector_inst
 
         cmd_mgr_inst = cmdmgr.CommandManager(ap)
         await cmd_mgr_inst.initialize()
@@ -130,6 +123,9 @@ class BuildAppStage(stage.BootingStage):
         knowledge_service_inst = knowledge_service.KnowledgeService(ap)
         ap.knowledge_service = knowledge_service_inst
 
+        external_kb_service_inst = external_kb_service.ExternalKBService(ap)
+        ap.external_kb_service = external_kb_service_inst
+
         mcp_service_inst = mcp_service.MCPService(ap)
         ap.mcp_service = mcp_service_inst
 
@@ -138,6 +134,14 @@ class BuildAppStage(stage.BootingStage):
 
         webhook_service_inst = webhook_service.WebhookService(ap)
         ap.webhook_service = webhook_service_inst
+
+        async def runtime_disconnect_callback(connector: plugin_connector.PluginRuntimeConnector) -> None:
+            await asyncio.sleep(3)
+            await plugin_connector_inst.initialize()
+
+        plugin_connector_inst = plugin_connector.PluginRuntimeConnector(ap, runtime_disconnect_callback)
+        await plugin_connector_inst.initialize()
+        ap.plugin_connector = plugin_connector_inst
 
         ctrl = controller.Controller(ap)
         ap.ctrl = ctrl

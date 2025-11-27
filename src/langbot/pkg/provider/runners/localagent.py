@@ -6,6 +6,7 @@ import typing
 from .. import runner
 import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
 import langbot_plugin.api.entities.builtin.provider.message as provider_message
+import langbot_plugin.api.entities.builtin.rag.context as rag_context
 
 
 rag_combined_prompt_template = """
@@ -63,7 +64,7 @@ class LocalAgentRunner(runner.RequestRunner):
 
         if kb_uuids and user_message_text:
             # only support text for now
-            all_results = []
+            all_results: list[rag_context.RetrievalResultEntry] = []
 
             # Retrieve from each knowledge base
             for kb_uuid in kb_uuids:
@@ -73,7 +74,15 @@ class LocalAgentRunner(runner.RequestRunner):
                     self.ap.logger.warning(f'Knowledge base {kb_uuid} not found, skipping')
                     continue
 
-                result = await kb.retrieve(user_message_text, kb.knowledge_base_entity.top_k)
+                # Get top_k based on KB type
+                if kb.get_type() == 'internal':
+                    top_k = kb.knowledge_base_entity.top_k
+                elif kb.get_type() == 'external':
+                    top_k = 5  # external kb's top_k is managed by plugin config
+                else:
+                    top_k = 5  # default fallback
+
+                result = await kb.retrieve(user_message_text, top_k)
 
                 if result:
                     all_results.extend(result)
@@ -81,9 +90,14 @@ class LocalAgentRunner(runner.RequestRunner):
             final_user_message_text = ''
 
             if all_results:
-                rag_context = '\n\n'.join(
-                    f'[{i + 1}] {entry.metadata.get("text", "")}' for i, entry in enumerate(all_results)
-                )
+                texts = []
+                idx = 1
+                for entry in all_results:
+                    for content in entry.content:
+                        if content.type == 'text' and content.text is not None:
+                            texts.append(f'[{idx}] {content.text}')
+                            idx += 1
+                rag_context = '\n\n'.join(texts)
                 final_user_message_text = rag_combined_prompt_template.format(
                     rag_context=rag_context, user_message=user_message_text
                 )

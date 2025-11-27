@@ -71,6 +71,9 @@ class KnowledgeService:
         runtime_kb = await self.ap.rag_mgr.get_knowledge_base_by_uuid(kb_uuid)
         if runtime_kb is None:
             raise Exception('Knowledge base not found')
+        # Only internal KBs support file storage
+        if runtime_kb.get_type() != 'internal':
+            raise Exception('Only internal knowledge bases support file storage')
         return await runtime_kb.store_file(file_id)
 
     async def retrieve_knowledge_base(self, kb_uuid: str, query: str) -> list[dict]:
@@ -78,9 +81,16 @@ class KnowledgeService:
         runtime_kb = await self.ap.rag_mgr.get_knowledge_base_by_uuid(kb_uuid)
         if runtime_kb is None:
             raise Exception('Knowledge base not found')
-        return [
-            result.model_dump() for result in await runtime_kb.retrieve(query, runtime_kb.knowledge_base_entity.top_k)
-        ]
+
+        # Get top_k based on KB type
+        if runtime_kb.get_type() == 'internal':
+            top_k = runtime_kb.knowledge_base_entity.top_k
+        elif runtime_kb.get_type() == 'external':
+            top_k = runtime_kb.external_kb_entity.top_k
+        else:
+            top_k = 5  # default fallback
+
+        return [result.model_dump() for result in await runtime_kb.retrieve(query, top_k)]
 
     async def get_files_by_knowledge_base(self, kb_uuid: str) -> list[dict]:
         """获取知识库文件"""
@@ -95,6 +105,9 @@ class KnowledgeService:
         runtime_kb = await self.ap.rag_mgr.get_knowledge_base_by_uuid(kb_uuid)
         if runtime_kb is None:
             raise Exception('Knowledge base not found')
+        # Only internal KBs support file deletion
+        if runtime_kb.get_type() != 'internal':
+            raise Exception('Only internal knowledge bases support file deletion')
         await runtime_kb.delete_file(file_id)
 
     async def delete_knowledge_base(self, kb_uuid: str) -> None:

@@ -713,3 +713,48 @@ class RuntimeConnectionHandler(handler.Handler):
 
         async for ret in gen:
             yield ret
+
+    # KnowledgeRetriever methods
+    async def list_knowledge_retrievers(self, include_plugins: list[str] | None = None) -> list[dict[str, Any]]:
+        """List knowledge retrievers"""
+        result = await self.call_action(
+            LangBotToRuntimeAction.LIST_KNOWLEDGE_RETRIEVERS,
+            {
+                'include_plugins': include_plugins,
+            },
+            timeout=10,
+        )
+        return result['retrievers']
+
+    async def retrieve_knowledge(
+        self,
+        plugin_author: str,
+        plugin_name: str,
+        retriever_name: str,
+        instance_id: str,
+        retrieval_context: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        """Retrieve knowledge"""
+        result = await self.call_action(
+            LangBotToRuntimeAction.RETRIEVE_KNOWLEDGE,
+            {
+                'plugin_author': plugin_author,
+                'plugin_name': plugin_name,
+                'retriever_name': retriever_name,
+                'instance_id': instance_id,
+                'retrieval_context': retrieval_context,
+            },
+            timeout=30,
+        )
+        return result['retrieval_results']
+
+    async def sync_polymorphic_component_instances(self, required_instances: list[dict[str, Any]]) -> dict[str, Any]:
+        """Sync polymorphic component instances with runtime"""
+        result = await self.call_action(
+            LangBotToRuntimeAction.SYNC_POLYMORPHIC_COMPONENT_INSTANCES,
+            {
+                'required_instances': required_instances,
+            },
+            timeout=30,
+        )
+        return result
