@@ -250,6 +250,7 @@ const enUS = {
       Tool: 'Tool',
       EventListener: 'Event Listener',
       Command: 'Command',
+      KnowledgeRetriever: 'Knowledge Retriever',
     },
     uploadLocal: 'Upload Local',
     debugging: 'Debugging',

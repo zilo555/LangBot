@@ -239,6 +239,7 @@ const zhHans = {
       Tool: '工具',
       EventListener: '事件监听器',
       Command: '命令',
+      KnowledgeRetriever: '知识检索',
     },
     uploadLocal: '本地上传',
     debugging: '调试中',

@@ -251,6 +251,7 @@ const jaJP = {
       Tool: 'ツール',
       EventListener: 'イベント監視器',
       Command: 'コマンド',
+      KnowledgeRetriever: '知識検索',
     },
     uploadLocal: 'ローカルアップロード',
     debugging: 'デバッグ中',

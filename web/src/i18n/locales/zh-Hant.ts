@@ -238,6 +238,7 @@ const zhHant = {
       Tool: '工具',
       EventListener: '事件監聽器',
       Command: '命令',
+      KnowledgeRetriever: '知識檢索',
     },
     uploadLocal: '本地上傳',
     debugging: '調試中',
