@@ -12,6 +12,9 @@ import {
   Image,
   Plain,
   At,
+  Quote,
+  Voice,
+  Source,
 } from '@/app/infra/entities/message';
 import { toast } from 'sonner';
 import AtBadge from './AtBadge';
@@ -46,6 +49,8 @@ export default function DebugDialog({
   const [isUploading, setIsUploading] = useState(false);
   const [previewImageUrl, setPreviewImageUrl] = useState<string>('');
   const [showImagePreview, setShowImagePreview] = useState(false);
+  const [quotedMessage, setQuotedMessage] = useState<Message | null>(null);
+  const [hoveredMessageId, setHoveredMessageId] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -285,7 +290,13 @@ export default function DebugDialog({
   };
 
   const sendMessage = async () => {
-    if (!inputValue.trim() && !hasAt && selectedImages.length === 0) return;
+    if (
+      !inputValue.trim() &&
+      !hasAt &&
+      selectedImages.length === 0 &&
+      !quotedMessage
+    )
+      return;
     if (!isConnected || !wsClientRef.current) {
       toast.error(t('pipelines.debugDialog.notConnected'));
       return;
@@ -295,6 +306,25 @@ export default function DebugDialog({
       setIsUploading(true);
 
       const messageChain = [];
+
+      // 添加引用消息(如果有)
+      if (quotedMessage) {
+        // 获取被引用消息的Source组件以获取message_id
+        const sourceComponent = quotedMessage.message_chain.find(
+          (c) => c.type === 'Source',
+        ) as Source | undefined;
+        const messageId = sourceComponent
+          ? sourceComponent.id
+          : quotedMessage.id;
+
+        messageChain.push({
+          type: 'Quote',
+          id: messageId,
+          origin: quotedMessage.message_chain.filter(
+            (c) => c.type !== 'Source',
+          ),
+        });
+      }
 
       let text_content = inputValue.trim();
       if (hasAt) {
@@ -334,9 +364,10 @@ export default function DebugDialog({
         }
       }
 
-      // 清空输入框和图片
+      // 清空输入框、图片和引用消息
       setInputValue('');
       setHasAt(false);
+      setQuotedMessage(null);
       selectedImages.forEach((img) => URL.revokeObjectURL(img.preview));
       setSelectedImages([]);
 
@@ -412,8 +443,53 @@ export default function DebugDialog({
         );
       }
 
-      case 'Voice':
-        return <span key={index}>[语音]</span>;
+      case 'Voice': {
+        const voice = component as Voice;
+        const voiceUrl = voice.url || (voice.base64 ? voice.base64 : '');
+
+        if (!voiceUrl) {
+          return <span key={index}>[语音]</span>;
+        }
+
+        return (
+          <div key={index} className="my-2 flex items-center gap-2">
+            <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M18 3a1 1 0 00-1.196-.98l-10 2A1 1 0 006 5v9.114A4.369 4.369 0 005 14c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V7.82l8-1.6v5.894A4.37 4.37 0 0015 12c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2V3z" />
+              </svg>
+              <audio
+                controls
+                src={voiceUrl}
+                className="h-8"
+                style={{ maxWidth: '200px' }}
+              >
+                Your browser does not support the audio element.
+              </audio>
+              {voice.length && voice.length > 0 && (
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  {voice.length}s
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      case 'Quote': {
+        const quote = component as Quote;
+        return (
+          <div
+            key={index}
+            className="mb-2 pl-3 border-l-2 border-gray-400 dark:border-gray-500"
+          >
+            <div className="text-sm opacity-75">
+              {quote.origin?.map((comp, idx) =>
+                renderMessageComponent(comp as MessageChainComponent, idx),
+              )}
+            </div>
+          </div>
+        );
+      }
 
       case 'Source':
         // Source 不显示
@@ -422,6 +498,60 @@ export default function DebugDialog({
       default:
         return <span key={index}>[{component.type}]</span>;
     }
+  };
+
+  const getMessageTimestamp = (message: Message): number => {
+    // 首先尝试从message_chain中的Source组件获取时间戳
+    const sourceComponent = message.message_chain.find(
+      (c) => c.type === 'Source',
+    ) as Source | undefined;
+
+    if (sourceComponent && sourceComponent.timestamp) {
+      return sourceComponent.timestamp;
+    }
+
+    // 如果没有Source组件，使用message.timestamp
+    // 假设timestamp是ISO字符串，转换为Unix时间戳（秒）
+    if (message.timestamp) {
+      return Math.floor(new Date(message.timestamp).getTime() / 1000);
+    }
+
+    return 0;
+  };
+
+  const formatTimestamp = (timestamp: number): string => {
+    if (!timestamp) return '';
+
+    const date = new Date(timestamp * 1000);
+    const now = new Date();
+
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+
+    // 判断是否是今天
+    const isToday = now.toDateString() === date.toDateString();
+    if (isToday) {
+      return `${hours}:${minutes}`;
+    }
+
+    // 判断是否是昨天
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const isYesterday = yesterday.toDateString() === date.toDateString();
+    if (isYesterday) {
+      return `${t('bots.yesterday')} ${hours}:${minutes}`;
+    }
+
+    // 判断是否是今年
+    const isThisYear = now.getFullYear() === date.getFullYear();
+    if (isThisYear) {
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      return t('bots.dateFormat', { month, day });
+    }
+
+    // 更早的日期
+    return t('bots.earlier');
   };
 
   const renderMessageContent = (message: Message) => {
@@ -489,31 +619,68 @@ export default function DebugDialog({
                 <div
                   key={message.id + message.timestamp}
                   className={cn(
-                    'flex',
+                    'flex group',
                     message.role === 'user' ? 'justify-end' : 'justify-start',
                   )}
+                  onMouseEnter={() => setHoveredMessageId(message.id)}
+                  onMouseLeave={() => setHoveredMessageId(null)}
                 >
                   <div
                     className={cn(
-                      'max-w-md px-5 py-3 rounded-2xl',
-                      message.role === 'user'
-                        ? 'bg-[#2288ee] text-white rounded-br-none'
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none',
+                      'relative flex items-end gap-2',
+                      message.role === 'user' ? 'flex-row-reverse' : 'flex-row',
                     )}
                   >
-                    {renderMessageContent(message)}
                     <div
                       className={cn(
-                        'text-xs mt-2',
+                        'max-w-md px-5 py-3 rounded-2xl',
                         message.role === 'user'
-                          ? 'text-white/70'
-                          : 'text-gray-500 dark:text-gray-400',
+                          ? 'bg-[#2288ee] text-white rounded-br-none'
+                          : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none',
                       )}
                     >
-                      {message.role === 'user'
-                        ? t('pipelines.debugDialog.userMessage')
-                        : t('pipelines.debugDialog.botMessage')}
+                      {renderMessageContent(message)}
+                      <div
+                        className={cn(
+                          'text-xs mt-2 flex items-center justify-between gap-2',
+                          message.role === 'user'
+                            ? 'text-white/70'
+                            : 'text-gray-500 dark:text-gray-400',
+                        )}
+                      >
+                        <span>
+                          {message.role === 'user'
+                            ? t('pipelines.debugDialog.userMessage')
+                            : t('pipelines.debugDialog.botMessage')}
+                        </span>
+                        <span className="text-[10px]">
+                          {formatTimestamp(getMessageTimestamp(message))}
+                        </span>
+                      </div>
                     </div>
+                    {hoveredMessageId === message.id && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 whitespace-nowrap"
+                        onClick={() => setQuotedMessage(message)}
+                      >
+                        <svg
+                          className="w-3 h-3 mr-1"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                          />
+                        </svg>
+                        {t('pipelines.debugDialog.reply')}
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))
@@ -521,6 +688,34 @@ export default function DebugDialog({
             <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
+
+        {/* 引用消息预览区域 */}
+        {quotedMessage && (
+          <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex items-start gap-2">
+              <div className="flex-1 pl-3 border-l-2 border-[#2288ee]">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  {t('pipelines.debugDialog.replyTo')}{' '}
+                  {quotedMessage.role === 'user'
+                    ? t('pipelines.debugDialog.userMessage')
+                    : t('pipelines.debugDialog.botMessage')}
+                </div>
+                <div className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2">
+                  {quotedMessage.message_chain
+                    .filter((c) => c.type === 'Plain')
+                    .map((c) => (c as Plain).text)
+                    .join('')}
+                </div>
+              </div>
+              <button
+                onClick={() => setQuotedMessage(null)}
+                className="w-5 h-5 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* 图片预览区域 */}
         {selectedImages.length > 0 && (
@@ -624,7 +819,10 @@ export default function DebugDialog({
           <Button
             onClick={sendMessage}
             disabled={
-              (!inputValue.trim() && !hasAt && selectedImages.length === 0) ||
+              (!inputValue.trim() &&
+                !hasAt &&
+                selectedImages.length === 0 &&
+                !quotedMessage) ||
               !isConnected ||
               isUploading
             }
