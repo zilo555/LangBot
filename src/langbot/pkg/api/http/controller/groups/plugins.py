@@ -15,7 +15,7 @@ from langbot_plugin.runtime.plugin.mgr import PluginInstallSource
 @group.group_class('plugins', '/api/v1/plugins')
 class PluginsRouterGroup(group.RouterGroup):
     async def initialize(self) -> None:
-        @self.route('', methods=['GET'], auth_type=group.AuthType.USER_TOKEN)
+        @self.route('', methods=['GET'], auth_type=group.AuthType.USER_TOKEN_OR_API_KEY)
         async def _() -> str:
             plugins = await self.ap.plugin_connector.list_plugins()
 
@@ -24,7 +24,7 @@ class PluginsRouterGroup(group.RouterGroup):
         @self.route(
             '/<author>/<plugin_name>/upgrade',
             methods=['POST'],
-            auth_type=group.AuthType.USER_TOKEN,
+            auth_type=group.AuthType.USER_TOKEN_OR_API_KEY,
         )
         async def _(author: str, plugin_name: str) -> str:
             ctx = taskmgr.TaskContext.new()
@@ -40,7 +40,7 @@ class PluginsRouterGroup(group.RouterGroup):
         @self.route(
             '/<author>/<plugin_name>',
             methods=['GET', 'DELETE'],
-            auth_type=group.AuthType.USER_TOKEN,
+            auth_type=group.AuthType.USER_TOKEN_OR_API_KEY,
         )
         async def _(author: str, plugin_name: str) -> str:
             if quart.request.method == 'GET':
@@ -66,7 +66,7 @@ class PluginsRouterGroup(group.RouterGroup):
         @self.route(
             '/<author>/<plugin_name>/config',
             methods=['GET', 'PUT'],
-            auth_type=group.AuthType.USER_TOKEN,
+            auth_type=group.AuthType.USER_TOKEN_OR_API_KEY,
         )
         async def _(author: str, plugin_name: str) -> quart.Response:
             plugin = await self.ap.plugin_connector.get_plugin_info(author, plugin_name)
@@ -85,7 +85,7 @@ class PluginsRouterGroup(group.RouterGroup):
         @self.route(
             '/<author>/<plugin_name>/readme',
             methods=['GET'],
-            auth_type=group.AuthType.USER_TOKEN,
+            auth_type=group.AuthType.USER_TOKEN_OR_API_KEY,
         )
         async def _(author: str, plugin_name: str) -> quart.Response:
             language = quart.request.args.get('language', 'en')
@@ -117,7 +117,7 @@ class PluginsRouterGroup(group.RouterGroup):
             mime_type = asset_data['mime_type']
             return quart.Response(asset_bytes, mimetype=mime_type)
 
-        @self.route('/github/releases', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
+        @self.route('/github/releases', methods=['POST'], auth_type=group.AuthType.USER_TOKEN_OR_API_KEY)
         async def _() -> str:
             """Get releases from a GitHub repository URL"""
             data = await quart.request.json
@@ -166,7 +166,7 @@ class PluginsRouterGroup(group.RouterGroup):
         @self.route(
             '/github/release-assets',
             methods=['POST'],
-            auth_type=group.AuthType.USER_TOKEN,
+            auth_type=group.AuthType.USER_TOKEN_OR_API_KEY,
         )
         async def _() -> str:
             """Get assets from a specific GitHub release"""
@@ -220,7 +220,7 @@ class PluginsRouterGroup(group.RouterGroup):
             except httpx.RequestError as e:
                 return self.http_status(500, -1, f'Failed to fetch release assets: {str(e)}')
 
-        @self.route('/install/github', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
+        @self.route('/install/github', methods=['POST'], auth_type=group.AuthType.USER_TOKEN_OR_API_KEY)
         async def _() -> str:
             """Install plugin from GitHub release asset"""
             data = await quart.request.json
@@ -254,7 +254,7 @@ class PluginsRouterGroup(group.RouterGroup):
         @self.route(
             '/install/marketplace',
             methods=['POST'],
-            auth_type=group.AuthType.USER_TOKEN,
+            auth_type=group.AuthType.USER_TOKEN_OR_API_KEY,
         )
         async def _() -> str:
             data = await quart.request.json
@@ -270,7 +270,7 @@ class PluginsRouterGroup(group.RouterGroup):
 
             return self.success(data={'task_id': wrapper.id})
 
-        @self.route('/install/local', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
+        @self.route('/install/local', methods=['POST'], auth_type=group.AuthType.USER_TOKEN_OR_API_KEY)
         async def _() -> str:
             file = (await quart.request.files).get('file')
             if file is None:

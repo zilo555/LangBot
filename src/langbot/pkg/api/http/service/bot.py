@@ -139,3 +139,29 @@ class BotService:
         logs, total_count = await runtime_bot.logger.get_logs(from_index, max_count)
 
         return [log.to_json() for log in logs], total_count
+
+    async def send_message(self, bot_uuid: str, target_type: str, target_id: str, message_chain_data: dict) -> None:
+        """Send message to a specific target via bot
+
+        Args:
+            bot_uuid: The UUID of the bot
+            target_type: The type of the target, can be "group", "person"
+            target_id: The ID of the target
+            message_chain_data: The message chain data in dict format
+        """
+        # Import here to avoid circular imports
+        import langbot_plugin.api.entities.builtin.platform.message as platform_message
+
+        # Get runtime bot
+        runtime_bot = await self.ap.platform_mgr.get_bot_by_uuid(bot_uuid)
+        if runtime_bot is None:
+            raise Exception(f'Bot not found: {bot_uuid}')
+
+        # Validate and convert message chain
+        try:
+            message_chain = platform_message.MessageChain.model_validate(message_chain_data)
+        except Exception as e:
+            raise Exception(f'Invalid message_chain format: {str(e)}')
+
+        # Send message via adapter
+        await runtime_bot.adapter.send_message(target_type, str(target_id), message_chain)

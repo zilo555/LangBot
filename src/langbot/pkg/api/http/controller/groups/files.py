@@ -28,7 +28,7 @@ class FilesRouterGroup(group.RouterGroup):
 
             return quart.Response(image_bytes, mimetype=mime_type)
 
-        @self.route('/images', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
+        @self.route('/images', methods=['POST'], auth_type=group.AuthType.USER_TOKEN_OR_API_KEY)
         async def upload_image() -> quart.Response:
             request = quart.request
 
@@ -76,7 +76,7 @@ class FilesRouterGroup(group.RouterGroup):
                 }
             )
 
-        @self.route('/documents', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
+        @self.route('/documents', methods=['POST'], auth_type=group.AuthType.USER_TOKEN_OR_API_KEY)
         async def upload_document() -> quart.Response:
             request = quart.request
 
