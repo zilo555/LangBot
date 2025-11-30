@@ -264,7 +264,6 @@ const zhHant = {
     updateSuccess: '插件更新成功',
     updateError: '更新失敗：',
     saveConfigSuccessNormal: '儲存配置成功',
-    saveConfigSuccessDebugPlugin: '儲存配置成功，請手動重啟插件',
     saveConfigError: '儲存配置失敗：',
     config: '配置',
     readme: '文件',

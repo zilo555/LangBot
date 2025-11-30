@@ -265,7 +265,6 @@ const zhHans = {
     updateSuccess: '插件更新成功',
     updateError: '更新失败：',
     saveConfigSuccessNormal: '保存配置成功',
-    saveConfigSuccessDebugPlugin: '保存配置成功，请手动重启插件',
     saveConfigError: '保存配置失败：',
     config: '配置',
     readme: '文档',

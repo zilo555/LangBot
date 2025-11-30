@@ -278,8 +278,6 @@ const enUS = {
     updateSuccess: 'Plugin updated successfully',
     updateError: 'Update failed: ',
     saveConfigSuccessNormal: 'Configuration saved successfully',
-    saveConfigSuccessDebugPlugin:
-      'Configuration saved successfully, please manually restart the plugin',
     saveConfigError: 'Configuration save failed: ',
     config: 'Configuration',
     readme: 'Documentation',

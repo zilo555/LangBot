@@ -279,8 +279,6 @@ const jaJP = {
     updateSuccess: 'プラグインの更新に成功しました',
     updateError: '更新に失敗しました：',
     saveConfigSuccessNormal: '設定を保存しました',
-    saveConfigSuccessDebugPlugin:
-      '設定を保存しました。手動でプラグインを再起動してください',
     saveConfigError: '設定の保存に失敗しました：',
     config: '設定',
     readme: 'ドキュメント',
