@@ -63,7 +63,6 @@ export default function PluginForm({
 
   const handleSubmit = async () => {
     setIsLoading(true);
-    const isDebugPlugin = pluginInfo?.debug;
 
     try {
       // 保存配置
