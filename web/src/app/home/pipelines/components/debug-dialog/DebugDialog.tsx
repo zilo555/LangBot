@@ -20,6 +20,13 @@ import { toast } from 'sonner';
 import AtBadge from './AtBadge';
 import { WebSocketClient } from '@/app/infra/websocket/WebSocketClient';
 import ImagePreviewDialog from './ImagePreviewDialog';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
+import rehypeRaw from 'rehype-raw';
+import rehypeSlug from 'rehype-slug';
+import rehypeAutolinkHeadings from 'rehype-autolink-headings';
+import '@/styles/github-markdown.css';
 
 interface DebugDialogProps {
   open: boolean;
@@ -50,7 +57,9 @@ export default function DebugDialog({
   const [previewImageUrl, setPreviewImageUrl] = useState<string>('');
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [quotedMessage, setQuotedMessage] = useState<Message | null>(null);
-  const [hoveredMessageId, setHoveredMessageId] = useState<number | null>(null);
+  const [rawModeMessages, setRawModeMessages] = useState<Set<string>>(
+    new Set(),
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -195,6 +204,8 @@ export default function DebugDialog({
   // 监听 sessionType 和 selectedPipelineId 变化，重新加载消息和连接
   useEffect(() => {
     if (open) {
+      // 清空当前消息，避免显示旧的消息
+      setMessages([]);
       loadMessages(selectedPipelineId);
       initWebSocket(selectedPipelineId);
     }
@@ -554,7 +565,111 @@ export default function DebugDialog({
     return t('bots.earlier');
   };
 
+  // Generate a unique key for a message
+  const getMessageKey = (message: Message): string => {
+    return `${message.id}-${message.timestamp}`;
+  };
+
+  // Toggle raw mode for a message (by default, messages are in markdown mode)
+  const toggleRawMode = (message: Message) => {
+    const key = getMessageKey(message);
+    setRawModeMessages((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(key)) {
+        newSet.delete(key);
+      } else {
+        newSet.add(key);
+      }
+      return newSet;
+    });
+  };
+
+  // Check if message has any Plain text content
+  const hasPlainText = (message: Message): boolean => {
+    return message.message_chain.some((c) => c.type === 'Plain');
+  };
+
+  // Extract plain text from message chain
+  const getPlainText = (message: Message): string => {
+    return message.message_chain
+      .filter((c) => c.type === 'Plain')
+      .map((c) => (c as Plain).text)
+      .join('');
+  };
+
   const renderMessageContent = (message: Message) => {
+    const key = getMessageKey(message);
+    const isRawMode = rawModeMessages.has(key);
+
+    // By default, render with markdown if there's plain text (unless raw mode is enabled)
+    if (!isRawMode && hasPlainText(message)) {
+      const plainText = getPlainText(message);
+      const nonPlainComponents = message.message_chain.filter(
+        (c) => c.type !== 'Plain' && c.type !== 'Source',
+      );
+
+      return (
+        <div className="text-base leading-relaxed align-middle">
+          {/* Render non-Plain components first */}
+          {nonPlainComponents.map((component, index) =>
+            renderMessageComponent(component, index),
+          )}
+          {/* Render Plain text as markdown */}
+          <div className="markdown-body">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[
+                rehypeRaw,
+                rehypeHighlight,
+                rehypeSlug,
+                [
+                  rehypeAutolinkHeadings,
+                  {
+                    behavior: 'wrap',
+                    properties: {
+                      className: ['anchor'],
+                    },
+                  },
+                ],
+              ]}
+              components={{
+                ul: ({ children }) => <ul className="list-disc">{children}</ul>,
+                ol: ({ children }) => (
+                  <ol className="list-decimal">{children}</ol>
+                ),
+                li: ({ children }) => <li className="ml-4">{children}</li>,
+                img: ({ src, alt, ...props }) => {
+                  const imageSrc = src || '';
+
+                  if (typeof imageSrc !== 'string') {
+                    return (
+                      <img
+                        src={src}
+                        alt={alt || ''}
+                        className="max-w-full h-auto rounded-lg my-4"
+                        {...props}
+                      />
+                    );
+                  }
+
+                  return (
+                    <img
+                      src={imageSrc}
+                      alt={alt || ''}
+                      className="max-w-lg h-auto my-4"
+                      {...props}
+                    />
+                  );
+                },
+              }}
+            >
+              {plainText}
+            </ReactMarkdown>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="text-base leading-relaxed align-middle whitespace-pre-wrap">
         {message.message_chain.map((component, index) =>
@@ -619,68 +734,109 @@ export default function DebugDialog({
                 <div
                   key={message.id + message.timestamp}
                   className={cn(
-                    'flex group',
+                    'flex',
                     message.role === 'user' ? 'justify-end' : 'justify-start',
                   )}
-                  onMouseEnter={() => setHoveredMessageId(message.id)}
-                  onMouseLeave={() => setHoveredMessageId(null)}
                 >
                   <div
                     className={cn(
-                      'relative flex items-end gap-2',
-                      message.role === 'user' ? 'flex-row-reverse' : 'flex-row',
+                      'max-w-3xl px-5 py-3 rounded-2xl',
+                      message.role === 'user'
+                        ? 'user-message-bubble bg-blue-100 dark:bg-blue-900 text-gray-900 dark:text-gray-100 rounded-br-none'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none',
                     )}
                   >
+                    {renderMessageContent(message)}
                     <div
                       className={cn(
-                        'max-w-md px-5 py-3 rounded-2xl',
+                        'text-xs mt-2 flex items-center justify-between gap-2',
                         message.role === 'user'
-                          ? 'bg-[#2288ee] text-white rounded-br-none'
-                          : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-none',
+                          ? 'text-gray-600 dark:text-gray-300'
+                          : 'text-gray-500 dark:text-gray-400',
                       )}
                     >
-                      {renderMessageContent(message)}
-                      <div
-                        className={cn(
-                          'text-xs mt-2 flex items-center justify-between gap-2',
-                          message.role === 'user'
-                            ? 'text-white/70'
-                            : 'text-gray-500 dark:text-gray-400',
-                        )}
-                      >
+                      <div className="flex items-center gap-2">
                         <span>
                           {message.role === 'user'
                             ? t('pipelines.debugDialog.userMessage')
                             : t('pipelines.debugDialog.botMessage')}
                         </span>
-                        <span className="text-[10px]">
-                          {formatTimestamp(getMessageTimestamp(message))}
-                        </span>
-                      </div>
-                    </div>
-                    {hoveredMessageId === message.id && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 px-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 whitespace-nowrap"
-                        onClick={() => setQuotedMessage(message)}
-                      >
-                        <svg
-                          className="w-3 h-3 mr-1"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
+                        {hasPlainText(message) && (
+                          <button
+                            onClick={() => toggleRawMode(message)}
+                            className={cn(
+                              'px-1.5 py-0.5 rounded text-[10px] transition-colors',
+                              message.role === 'user'
+                                ? 'hover:bg-blue-200 dark:hover:bg-blue-800'
+                                : 'hover:bg-gray-200 dark:hover:bg-gray-700',
+                            )}
+                            title={
+                              rawModeMessages.has(getMessageKey(message))
+                                ? t('pipelines.debugDialog.showMarkdown')
+                                : t('pipelines.debugDialog.showRaw')
+                            }
+                          >
+                            {rawModeMessages.has(getMessageKey(message)) ? (
+                              <span className="flex items-center gap-0.5">
+                                <svg
+                                  className="w-3 h-3"
+                                  viewBox="0 0 16 16"
+                                  fill="currentColor"
+                                >
+                                  <path d="M14.85 3H1.15C.52 3 0 3.52 0 4.15v7.69C0 12.48.52 13 1.15 13h13.69c.64 0 1.15-.52 1.15-1.15v-7.7C16 3.52 15.48 3 14.85 3zM9 11H7V8L5.5 9.92 4 8v3H2V5h2l1.5 2L7 5h2v6zm2.99.5L9.5 8H11V5h2v3h1.5l-2.51 3.5z" />
+                                </svg>
+                                MD
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-0.5">
+                                <svg
+                                  className="w-3 h-3"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 6h16M4 12h16M4 18h7"
+                                  />
+                                </svg>
+                                {t('pipelines.debugDialog.showRaw')}
+                              </span>
+                            )}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setQuotedMessage(message)}
+                          className={cn(
+                            'px-1.5 py-0.5 rounded text-[10px] transition-colors flex items-center gap-0.5',
+                            message.role === 'user'
+                              ? 'hover:bg-blue-200 dark:hover:bg-blue-800'
+                              : 'hover:bg-gray-200 dark:hover:bg-gray-700',
+                          )}
+                          title={t('pipelines.debugDialog.reply')}
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
-                          />
-                        </svg>
-                        {t('pipelines.debugDialog.reply')}
-                      </Button>
-                    )}
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                            />
+                          </svg>
+                          {t('pipelines.debugDialog.reply')}
+                        </button>
+                      </div>
+                      <span className="text-[10px]">
+                        {formatTimestamp(getMessageTimestamp(message))}
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))
