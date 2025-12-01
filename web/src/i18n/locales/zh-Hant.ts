@@ -581,6 +581,8 @@ const zhHant = {
     retriever: '檢索器',
     selectRetriever: '選擇一個檢索器...',
     retrieverConfiguration: '檢索器配置',
+    retrieverInstallInfo: '您可以從',
+    retrieverMarketLink: '此處安裝知識檢索器插件',
   },
   register: {
     title: '初始化 LangBot 👋',

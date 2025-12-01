@@ -605,6 +605,8 @@ const enUS = {
     retriever: 'Retriever',
     selectRetriever: 'Select a retriever...',
     retrieverConfiguration: 'Retriever Configuration',
+    retrieverInstallInfo: 'You can install Knowledge Retriever plugins from',
+    retrieverMarketLink: 'here',
   },
   register: {
     title: 'Initialize LangBot 👋',

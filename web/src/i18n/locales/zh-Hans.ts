@@ -583,6 +583,8 @@ const zhHans = {
     retriever: '检索器',
     selectRetriever: '选择一个检索器...',
     retrieverConfiguration: '检索器配置',
+    retrieverInstallInfo: '您可以从',
+    retrieverMarketLink: '此处安装知识检索器插件',
   },
   register: {
     title: '初始化 LangBot 👋',

@@ -610,6 +610,8 @@ const jaJP = {
     retriever: '検索器',
     selectRetriever: '検索器を選択...',
     retrieverConfiguration: '検索器設定',
+    retrieverInstallInfo: 'ナレッジ検索器プラグインは',
+    retrieverMarketLink: 'こちらからインストールできます',
   },
   register: {
     title: 'LangBot を初期化 👋',
