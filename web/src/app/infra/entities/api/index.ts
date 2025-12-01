@@ -63,6 +63,7 @@ export interface KnowledgeBase {
   description: string;
   embedding_model_uuid: string;
   created_at?: string;
+  updated_at?: string;
   top_k: number;
 }
 
