@@ -84,7 +84,7 @@ docker compose up -d
 ## ✨ 特性
 
 - 💬 大模型对话、Agent：支持多种大模型，适配群聊和私聊；具有多轮对话、工具调用、多模态、流式输出能力，自带 RAG（知识库）实现，并深度适配 [Dify](https://dify.ai)、[Coze](https://coze.com)、[n8n](https://n8n.io)等 LLMOps 平台。
-- 🤖 多平台支持：目前支持 QQ、QQ频道、企业微信、个人微信、飞书、Discord、Telegram 等平台。
+- 🤖 多平台支持：目前支持 QQ、QQ频道、企业微信、个人微信、飞书、Discord、Telegram、KOOK、Slack、LINE 等平台。
 - 🛠️ 高稳定性、功能完备：原生支持访问控制、限速、敏感词过滤等机制；配置简单，支持多种部署方式。支持多流水线配置，不同机器人用于不同应用场景。
 - 🧩 插件扩展、活跃社区：高稳定性、高安全性的生产级插件系统，支持事件驱动、组件扩展等插件机制；适配 Anthropic [MCP 协议](https://modelcontextprotocol.io/)；目前已有数百个插件。
 - 😻 Web 管理面板：支持通过浏览器管理 LangBot 实例，不再需要手动编写配置文件。
@@ -108,6 +108,7 @@ docker compose up -d
 | 微信公众号 | ✅ |  |
 | 飞书 | ✅ |  |
 | 钉钉 | ✅ |  |
+| KOOK | ✅ |  |
 | Discord | ✅ |  |
 | Telegram | ✅ |  |
 | Slack | ✅ |  |
