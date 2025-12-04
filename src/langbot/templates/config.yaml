@@ -36,6 +36,15 @@ vdb:
         host: localhost
         port: 6333
         api_key: ''
+    milvus:
+        uri: 'http://127.0.0.1:19530'
+        token: ''
+    pgvector:
+        host: '127.0.0.1'
+        port: 5433
+        database: 'langbot'
+        user: 'postgres'
+        password: 'postgres'
 storage:
     use: local
     s3:
