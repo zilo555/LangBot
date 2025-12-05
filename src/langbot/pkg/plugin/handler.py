@@ -565,7 +565,7 @@ class RuntimeConnectionHandler(handler.Handler):
                 'event_context': event_context,
                 'include_plugins': include_plugins,
             },
-            timeout=60,
+            timeout=180,
         )
 
         return result
