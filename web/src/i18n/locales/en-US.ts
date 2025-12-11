@@ -535,6 +535,7 @@ const enUS = {
       loadPipelinesFailed: 'Failed to load pipelines',
       atTips: 'Mention the bot',
       streaming: 'Streaming',
+      streamOutput: 'Stream',
       connected: 'WebSocket connected',
       disconnected: 'WebSocket disconnected',
       connectionError: 'WebSocket connection error',

@@ -204,6 +204,7 @@ export class WebSocketClient {
    */
   public sendMessage(
     messageChain: Array<{ type: string; text?: string; target?: string }>,
+    stream: boolean = true,
   ) {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       throw new Error('WebSocket未连接');
@@ -212,6 +213,7 @@ export class WebSocketClient {
     const message = {
       type: 'message',
       message: messageChain,
+      stream: stream,
     };
 
     this.ws.send(JSON.stringify(message));

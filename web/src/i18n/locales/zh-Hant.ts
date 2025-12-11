@@ -515,6 +515,7 @@ const zhHant = {
       loadPipelinesFailed: '載入流程線失敗',
       atTips: '提及機器人',
       streaming: '串流傳輸',
+      streamOutput: '串流',
       connected: 'WebSocket已連接',
       disconnected: 'WebSocket未連接',
       connectionError: 'WebSocket連接錯誤',

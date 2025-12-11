@@ -538,6 +538,7 @@ const jaJP = {
       loadPipelinesFailed: 'パイプラインの読み込みに失敗しました',
       atTips: 'ボットをメンション',
       streaming: 'ストリーミング',
+      streamOutput: 'ストリーム',
       connected: 'WebSocket接続済み',
       disconnected: 'WebSocket未接続',
       connectionError: 'WebSocket接続エラー',

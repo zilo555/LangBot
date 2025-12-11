@@ -5,6 +5,7 @@ import { DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import {
   Message,
@@ -60,6 +61,7 @@ export default function DebugDialog({
   const [rawModeMessages, setRawModeMessages] = useState<Set<string>>(
     new Set(),
   );
+  const [streamOutput, setStreamOutput] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -384,7 +386,7 @@ export default function DebugDialog({
 
       // 通过WebSocket发送消息
       // 不在本地添加消息，等待后端广播回来（带有正确的ID）
-      wsClientRef.current.sendMessage(messageChain);
+      wsClientRef.current.sendMessage(messageChain, streamOutput);
     } catch (error) {
       console.error('Failed to send message:', error);
       toast.error(t('pipelines.debugDialog.sendFailed'));
@@ -897,7 +899,18 @@ export default function DebugDialog({
         )}
 
         <div className="p-4 pb-0 bg-white dark:bg-black flex gap-2">
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {t('pipelines.debugDialog.streamOutput')}
+              </span>
+              <Switch
+                checked={streamOutput}
+                onCheckedChange={setStreamOutput}
+                disabled={!isConnected}
+                className="data-[state=checked]:bg-[#2288ee]"
+              />
+            </div>
             <input
               ref={fileInputRef}
               type="file"

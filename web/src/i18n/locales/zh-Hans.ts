@@ -517,6 +517,7 @@ const zhHans = {
       loadPipelinesFailed: '加载流水线失败',
       atTips: '提及机器人',
       streaming: '流式传输',
+      streamOutput: '流式',
       connected: 'WebSocket已连接',
       disconnected: 'WebSocket未连接',
       connectionError: 'WebSocket连接错误',
