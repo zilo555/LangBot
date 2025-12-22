@@ -2,8 +2,9 @@ const zhHans = {
   common: {
     login: '登录',
     logout: '退出登录',
-    accountOptions: '账户选项',
+    accountOptions: '系统设置',
     account: '账户',
+    integration: '连接',
     email: '邮箱',
     password: '密码',
     welcome: '欢迎回到 LangBot 👋',
@@ -16,6 +17,7 @@ const zhHans = {
     emptyPassword: '请输入密码',
     language: '语言',
     helpDocs: '帮助文档',
+    featureRequest: '需求建议',
     create: '创建',
     edit: '编辑',
     delete: '删除',

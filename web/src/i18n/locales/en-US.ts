@@ -2,8 +2,9 @@ const enUS = {
   common: {
     login: 'Login',
     logout: 'Logout',
-    accountOptions: 'Account',
+    accountOptions: 'Settings',
     account: 'Account',
+    integration: 'Integration',
     email: 'Email',
     password: 'Password',
     welcome: 'Welcome back to LangBot 👋',
@@ -16,6 +17,7 @@ const enUS = {
     emptyPassword: 'Please enter your password',
     language: 'Language',
     helpDocs: 'Get Help',
+    featureRequest: 'Feature Request',
     create: 'Create',
     edit: 'Edit',
     delete: 'Delete',

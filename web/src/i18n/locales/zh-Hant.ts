@@ -2,8 +2,9 @@ const zhHant = {
   common: {
     login: '登入',
     logout: '登出',
-    accountOptions: '帳戶選項',
+    accountOptions: '系統設定',
     account: '帳戶',
+    integration: '連接',
     email: '電子郵件',
     password: '密碼',
     welcome: '歡迎回到 LangBot 👋',
@@ -16,6 +17,7 @@ const zhHant = {
     emptyPassword: '請輸入密碼',
     language: '語言',
     helpDocs: '輔助說明',
+    featureRequest: '需求建議',
     create: '建立',
     edit: '編輯',
     delete: '刪除',

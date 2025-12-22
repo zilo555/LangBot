@@ -2,8 +2,9 @@ const jaJP = {
   common: {
     login: 'ログイン',
     logout: 'ログアウト',
-    accountOptions: 'アカウントオプション',
+    accountOptions: 'システム設定',
     account: 'アカウント',
+    integration: '連携',
     email: 'メールアドレス',
     password: 'パスワード',
     welcome: 'LangBot へおかえりなさい 👋',
@@ -17,6 +18,7 @@ const jaJP = {
     emptyPassword: 'パスワードを入力してください',
     language: '言語',
     helpDocs: 'ヘルプドキュメント',
+    featureRequest: '機能リクエスト',
     create: '作成',
     edit: '編集',
     delete: '削除',
