@@ -1,4 +1,5 @@
 import logging
+import logging.handlers
 import sys
 import time
 
@@ -14,6 +15,10 @@ log_colors_config = {
     'ERROR': 'red',
     'CRITICAL': 'cyan',
 }
+
+# Log rotation configuration to prevent unbounded log file growth
+LOG_FILE_MAX_BYTES = 10 * 1024 * 1024  # 10MB per file
+LOG_FILE_BACKUP_COUNT = 5  # Keep 5 backup files (total ~50MB max)
 
 
 async def init_logging(extra_handlers: list[logging.Handler] = None) -> logging.Logger:
@@ -43,9 +48,17 @@ async def init_logging(extra_handlers: list[logging.Handler] = None) -> logging.
     # stream_handler.setFormatter(color_formatter)
     stream_handler.stream = open(sys.stdout.fileno(), mode='w', encoding='utf-8', buffering=1)
 
+    # Use RotatingFileHandler to prevent unbounded log file growth
+    rotating_file_handler = logging.handlers.RotatingFileHandler(
+        log_file_name,
+        encoding='utf-8',
+        maxBytes=LOG_FILE_MAX_BYTES,
+        backupCount=LOG_FILE_BACKUP_COUNT,
+    )
+
     log_handlers: list[logging.Handler] = [
         stream_handler,
-        logging.FileHandler(log_file_name, encoding='utf-8'),
+        rotating_file_handler,
     ]
     log_handlers += extra_handlers if extra_handlers is not None else []
 
