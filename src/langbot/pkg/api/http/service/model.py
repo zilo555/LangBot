@@ -110,13 +110,13 @@ class LLMModelsService:
         # extra_args = model_data.get('extra_args', {})
         # if not extra_args or 'thinking' not in extra_args:
         #     extra_args['thinking'] = {'type': 'disabled'}
-
+        extra_args = model_data.get('extra_args', {})
         await runtime_llm_model.requester.invoke_llm(
             query=None,
             model=runtime_llm_model,
             messages=[provider_message.Message(role='user', content='Hello, world! Please just reply a "Hello".')],
             funcs=[],
-            # extra_args=extra_args,
+            extra_args=extra_args,
         )
 
 
