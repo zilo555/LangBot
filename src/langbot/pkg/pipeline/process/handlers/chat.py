@@ -14,6 +14,7 @@ from ....utils import importutil
 from ....provider import runners
 import langbot_plugin.api.entities.builtin.provider.session as provider_session
 import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
+import langbot_plugin.api.entities.builtin.provider.message as provider_message
 
 
 importutil.import_modules_in_pkg(runners)
@@ -61,8 +62,14 @@ class ChatMessageHandler(handler.MessageHandler):
                 yield entities.StageProcessResult(result_type=entities.ResultType.INTERRUPT, new_query=query)
         else:
             if event_ctx.event.user_message_alter is not None:
-                # if isinstance(event_ctx.event, str):  # 现在暂时不考虑多模态alter
-                query.user_message.content = event_ctx.event.user_message_alter
+                if isinstance(event_ctx.event.user_message_alter, list):
+                    query.user_message.content = event_ctx.event.user_message_alter
+                elif isinstance(event_ctx.event.user_message_alter, str):
+                    query.user_message.content = [
+                        provider_message.ContentElement.from_text(event_ctx.event.user_message_alter)
+                    ]
+                elif isinstance(event_ctx.event.user_message_alter, provider_message.ContentElement):
+                    query.user_message.content = [event_ctx.event.user_message_alter]
 
             text_length = 0
             try:
