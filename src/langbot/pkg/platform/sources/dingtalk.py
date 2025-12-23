@@ -260,7 +260,8 @@ class DingTalkAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
         await self.bot.start()
 
     async def kill(self) -> bool:
-        return False
+        await self.bot.stop()
+        return True
 
     async def is_muted(self) -> bool:
         return False
