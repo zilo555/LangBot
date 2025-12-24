@@ -40,6 +40,8 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { extractI18nObject } from '@/i18n/I18nProvider';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 const getExtraArgSchema = (t: (key: string) => string) =>
   z
@@ -119,6 +121,7 @@ export default function EmbeddingForm({
     string[]
   >([]);
   const [modelTesting, setModelTesting] = useState(false);
+  const [testErrorMessage, setTestErrorMessage] = useState<string | null>(null);
   const [currentModelProvider, setCurrentModelProvider] = useState('');
 
   useEffect(() => {
@@ -301,6 +304,7 @@ export default function EmbeddingForm({
 
   function testEmbeddingModelInForm() {
     setModelTesting(true);
+    setTestErrorMessage(null);
     const extraArgsObj: Record<string, string | number | boolean> = {};
     form
       .getValues('extra_args')
@@ -329,9 +333,10 @@ export default function EmbeddingForm({
       })
       .then(() => {
         toast.success(t('models.testSuccess'));
+        setTestErrorMessage(null);
       })
-      .catch(() => {
-        toast.error(t('models.testError'));
+      .catch((err: { message?: string }) => {
+        setTestErrorMessage(err?.message || t('models.testError'));
       })
       .finally(() => {
         setModelTesting(false);
@@ -598,6 +603,15 @@ export default function EmbeddingForm({
               <FormMessage />
             </FormItem>
           </div>
+          {testErrorMessage && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>{t('models.testError')}</AlertTitle>
+              <AlertDescription className="break-all">
+                {testErrorMessage}
+              </AlertDescription>
+            </Alert>
+          )}
           <DialogFooter>
             {editMode && (
               <Button

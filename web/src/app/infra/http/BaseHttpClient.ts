@@ -93,7 +93,9 @@ export abstract class BaseHttpClient {
         // 统一错误处理
         if (error.response) {
           const { status, data } = error.response;
-          const errMessage = data?.message || error.message;
+          // Backend uses 'msg' field, also check 'message' for compatibility
+          const errMessage =
+            (data as { msg?: string })?.msg || data?.message || error.message;
 
           switch (status) {
             case 401:
