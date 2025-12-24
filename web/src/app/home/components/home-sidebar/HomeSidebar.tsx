@@ -35,6 +35,28 @@ import { LanguageSelector } from '@/components/ui/language-selector';
 import { Badge } from '@/components/ui/badge';
 import PasswordChangeDialog from '@/app/home/components/password-change-dialog/PasswordChangeDialog';
 import ApiIntegrationDialog from '@/app/home/components/api-integration-dialog/ApiIntegrationDialog';
+import NewVersionDialog from '@/app/home/components/new-version-dialog/NewVersionDialog';
+import { GitHubRelease } from '@/app/infra/http/CloudServiceClient';
+
+// Compare two version strings, returns true if v1 > v2
+function compareVersions(v1: string, v2: string): boolean {
+  // Remove 'v' prefix if present
+  const clean1 = v1.replace(/^v/, '');
+  const clean2 = v2.replace(/^v/, '');
+
+  const parts1 = clean1.split('.').map((p) => parseInt(p, 10) || 0);
+  const parts2 = clean2.split('.').map((p) => parseInt(p, 10) || 0);
+
+  const maxLen = Math.max(parts1.length, parts2.length);
+
+  for (let i = 0; i < maxLen; i++) {
+    const p1 = parts1[i] || 0;
+    const p2 = parts2[i] || 0;
+    if (p1 > p2) return true;
+    if (p1 < p2) return false;
+  }
+  return false;
+}
 
 // TODO 侧边导航栏要加动画
 export default function HomeSidebar({
@@ -58,6 +80,11 @@ export default function HomeSidebar({
   const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false);
   const [languageSelectorOpen, setLanguageSelectorOpen] = useState(false);
   const [starCount, setStarCount] = useState<number | null>(null);
+  const [latestRelease, setLatestRelease] = useState<GitHubRelease | null>(
+    null,
+  );
+  const [hasNewVersion, setHasNewVersion] = useState(false);
+  const [versionDialogOpen, setVersionDialogOpen] = useState(false);
 
   useEffect(() => {
     initSelect();
@@ -74,6 +101,28 @@ export default function HomeSidebar({
       })
       .catch((error) => {
         console.error('Failed to fetch GitHub star count:', error);
+      });
+
+    // Fetch releases to check for new version
+    getCloudServiceClientSync()
+      .getLangBotReleases()
+      .then((releases) => {
+        if (releases && releases.length > 0) {
+          // Find the latest non-prerelease, non-draft release
+          const latestStable = releases.find((r) => !r.prerelease && !r.draft);
+          const latest = latestStable || releases[0];
+          setLatestRelease(latest);
+
+          // Compare versions
+          const currentVersion = systemInfo?.version;
+          if (currentVersion && latest.tag_name) {
+            const isNewer = compareVersions(latest.tag_name, currentVersion);
+            setHasNewVersion(isNewer);
+          }
+        }
+      })
+      .catch((error) => {
+        console.error('Failed to fetch releases:', error);
       });
   }, []);
 
@@ -138,8 +187,18 @@ export default function HomeSidebar({
           {/* 文字 */}
           <div className={`${styles.langbotTextContainer}`}>
             <div className={`${styles.langbotText}`}>LangBot</div>
-            <div className={`${styles.langbotVersion}`}>
-              {systemInfo?.version}
+            <div className="flex items-center gap-1.5">
+              <div className={`${styles.langbotVersion}`}>
+                {systemInfo?.version}
+              </div>
+              {hasNewVersion && (
+                <Badge
+                  onClick={() => setVersionDialogOpen(true)}
+                  className="bg-red-500 hover:bg-red-600 text-white text-[0.6rem] px-1.5 py-0 h-4 cursor-pointer"
+                >
+                  {t('plugins.new')}
+                </Badge>
+              )}
             </div>
           </div>
         </div>
@@ -349,6 +408,11 @@ export default function HomeSidebar({
       <ApiIntegrationDialog
         open={apiKeyDialogOpen}
         onOpenChange={setApiKeyDialogOpen}
+      />
+      <NewVersionDialog
+        open={versionDialogOpen}
+        onOpenChange={setVersionDialogOpen}
+        release={latestRelease}
       />
     </div>
   );

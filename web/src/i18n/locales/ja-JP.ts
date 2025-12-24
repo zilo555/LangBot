@@ -682,6 +682,11 @@ const jaJP = {
     extraParametersDescription:
       'リクエストボディに追加されるパラメータ（max_tokens、temperature、top_p など）',
   },
+  version: {
+    newVersionAvailable: '新しいバージョンが利用可能',
+    viewUpdateGuide: 'アップデート方法を見る',
+    noReleaseNotes: 'リリースノートはありません',
+  },
 };
 
 export default jaJP;

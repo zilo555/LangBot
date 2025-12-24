@@ -651,6 +651,11 @@ const zhHans = {
     extraParametersDescription:
       '将在请求时附加到请求体中，如 max_tokens, temperature, top_p 等',
   },
+  version: {
+    newVersionAvailable: '有新版本可用',
+    viewUpdateGuide: '查看更新方式',
+    noReleaseNotes: '暂无更新日志',
+  },
 };
 
 export default zhHans;

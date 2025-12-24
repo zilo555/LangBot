@@ -677,6 +677,11 @@ const enUS = {
     extraParametersDescription:
       'Will be attached to the request body, such as max_tokens, temperature, top_p, etc.',
   },
+  version: {
+    newVersionAvailable: 'New Version Available',
+    viewUpdateGuide: 'View Update Guide',
+    noReleaseNotes: 'No release notes available',
+  },
 };
 
 export default enUS;

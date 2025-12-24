@@ -649,6 +649,11 @@ const zhHant = {
     extraParametersDescription:
       '將在請求時附加到請求體中，如 max_tokens, temperature, top_p 等',
   },
+  version: {
+    newVersionAvailable: '有新版本可用',
+    viewUpdateGuide: '查看更新方式',
+    noReleaseNotes: '暫無更新日誌',
+  },
 };
 
 export default zhHant;
