@@ -1,6 +1,6 @@
-import { ICreateLLMField } from '@/app/home/models/component/ICreateLLMField';
+import { ICreateLLMField } from '../ICreateLLMField';
 import { useEffect, useState } from 'react';
-import { IChooseRequesterEntity } from '@/app/home/models/component/ChooseRequesterEntity';
+import { IChooseRequesterEntity } from '../ChooseRequesterEntity';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { LLMModel } from '@/app/infra/entities/api';
 import { UUID } from 'uuidjs';

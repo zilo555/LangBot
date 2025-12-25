@@ -33,6 +33,8 @@ class UserRouterGroup(group.RouterGroup):
                 token = await self.ap.user_service.authenticate(json_data['user'], json_data['password'])
             except argon2.exceptions.VerifyMismatchError:
                 return self.fail(1, 'Invalid username or password')
+            except ValueError as e:
+                return self.fail(1, str(e))
 
             return self.success(data={'token': token})
 
@@ -71,9 +73,7 @@ class UserRouterGroup(group.RouterGroup):
         @self.route('/change-password', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
         async def _(user_email: str) -> str:
             # Check if password change is allowed
-            allow_change_password = self.ap.instance_config.data.get('system', {}).get(
-                'allow_change_password', True
-            )
+            allow_change_password = self.ap.instance_config.data.get('system', {}).get('allow_change_password', True)
             if not allow_change_password:
                 return self.http_status(403, -1, 'Password change is disabled')
 
@@ -90,3 +90,67 @@ class UserRouterGroup(group.RouterGroup):
                 return self.http_status(400, -1, str(e))
 
             return self.success(data={'user': user_email})
+
+        # Space OAuth endpoints (redirect flow)
+
+        @self.route('/space/authorize-url', methods=['GET'], auth_type=group.AuthType.NONE)
+        async def _() -> str:
+            """Get Space OAuth authorization URL for redirect"""
+            redirect_uri = quart.request.args.get('redirect_uri', '')
+            state = quart.request.args.get('state', '')
+
+            if not redirect_uri:
+                return self.fail(1, 'Missing redirect_uri parameter')
+
+            try:
+                authorize_url = self.ap.user_service.get_space_oauth_authorize_url(redirect_uri, state)
+                return self.success(data={'authorize_url': authorize_url})
+            except Exception as e:
+                return self.fail(1, str(e))
+
+        @self.route('/space/callback', methods=['POST'], auth_type=group.AuthType.NONE)
+        async def _() -> str:
+            """Handle OAuth callback - exchange code for tokens and authenticate"""
+            json_data = await quart.request.json
+            code = json_data.get('code')
+
+            if not code:
+                return self.fail(1, 'Missing authorization code')
+
+            try:
+                # Exchange code for tokens
+                token_data = await self.ap.user_service.exchange_space_oauth_code(code)
+                access_token = token_data.get('access_token')
+                refresh_token = token_data.get('refresh_token')
+
+                if not access_token:
+                    return self.fail(1, 'Failed to get access token from Space')
+
+                # Authenticate and create/update local user
+                jwt_token, user_obj = await self.ap.user_service.authenticate_space_user(access_token, refresh_token)
+
+                return self.success(
+                    data={
+                        'token': jwt_token,
+                        'user': user_obj.user,
+                    }
+                )
+            except ValueError as e:
+                return self.fail(1, str(e))
+            except Exception as e:
+                return self.fail(2, f'OAuth callback failed: {str(e)}')
+
+        @self.route('/info', methods=['GET'], auth_type=group.AuthType.USER_TOKEN)
+        async def _(user_email: str) -> str:
+            """Get current user information including account type"""
+            user_obj = await self.ap.user_service.get_user_by_email(user_email)
+
+            if user_obj is None:
+                return self.http_status(404, -1, 'User not found')
+
+            return self.success(
+                data={
+                    'user': user_obj.user,
+                    'account_type': user_obj.account_type,
+                }
+            )

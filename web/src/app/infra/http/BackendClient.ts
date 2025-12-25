@@ -688,4 +688,89 @@ export class BackendClient extends BaseHttpClient {
       new_password: newPassword,
     });
   }
+
+  public getUserInfo(): Promise<{
+    user: string;
+    account_type: 'local' | 'space';
+  }> {
+    return this.get('/api/v1/user/info');
+  }
+
+  // ============ Space OAuth API (Redirect Flow) ============
+  public getSpaceAuthorizeUrl(
+    redirectUri: string,
+    state?: string,
+  ): Promise<{
+    authorize_url: string;
+  }> {
+    const params: Record<string, string> = { redirect_uri: redirectUri };
+    if (state) {
+      params.state = state;
+    }
+    return this.get('/api/v1/user/space/authorize-url', params);
+  }
+
+  public exchangeSpaceOAuthCode(code: string): Promise<{
+    token: string;
+    user: string;
+  }> {
+    return this.post('/api/v1/user/space/callback', { code });
+  }
+
+  // ============ Space Models Sync API ============
+  public syncSpaceModels(spaceUrl?: string): Promise<{
+    created_llm: number;
+    updated_llm: number;
+    created_embedding: number;
+    updated_embedding: number;
+    skipped: number;
+  }> {
+    return this.post('/api/v1/space/models/sync', { space_url: spaceUrl });
+  }
+
+  public getSpaceModels(): Promise<{
+    llm_models: Array<{
+      uuid: string;
+      name: string;
+      description: string;
+      requester: string;
+      space_model_id: string;
+      source: string;
+    }>;
+    embedding_models: Array<{
+      uuid: string;
+      name: string;
+      description: string;
+      requester: string;
+      space_model_id: string;
+      source: string;
+    }>;
+  }> {
+    return this.get('/api/v1/space/models');
+  }
+
+  public deleteSpaceModels(): Promise<{
+    deleted_llm: number;
+    deleted_embedding: number;
+  }> {
+    return this.delete('/api/v1/space/models');
+  }
+
+  public getAvailableSpaceModels(spaceUrl?: string): Promise<{
+    models: Array<{
+      model_id: string;
+      display_name: { [key: string]: string };
+      description: { [key: string]: string };
+      category: string;
+      provider: string;
+    }>;
+    vendors: Array<{
+      id: number;
+      name: string;
+    }>;
+    total: number;
+  }> {
+    const params = spaceUrl ? { space_url: spaceUrl } : {};
+    return this.get('/api/v1/space/models/available', params);
+  }
 }

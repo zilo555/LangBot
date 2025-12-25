@@ -1,6 +1,6 @@
-import { ICreateEmbeddingField } from '@/app/home/models/component/ICreateEmbeddingField';
+import { ICreateEmbeddingField } from '../ICreateEmbeddingField';
 import { useEffect, useState } from 'react';
-import { IChooseRequesterEntity } from '@/app/home/models/component/ChooseRequesterEntity';
+import { IChooseRequesterEntity } from '../ChooseRequesterEntity';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { EmbeddingModel } from '@/app/infra/entities/api';
 import { UUID } from 'uuidjs';
