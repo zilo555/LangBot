@@ -104,7 +104,7 @@ const zhHans = {
   models: {
     title: '模型配置',
     description: '配置和管理可在流水线中使用的模型',
-    createModel: '创建模型',
+    createModel: '创建对话模型',
     editModel: '编辑模型',
     getModelListError: '获取模型列表失败：',
     modelName: '模型名称',

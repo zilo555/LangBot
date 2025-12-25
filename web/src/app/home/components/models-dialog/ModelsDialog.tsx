@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { LLMCardVO } from '@/app/home/models/component/llm-card/LLMCardVO';
-import styles from './LLMConfig.module.css';
-import LLMCard from '@/app/home/models/component/llm-card/LLMCard';
-import LLMForm from '@/app/home/models/component/llm-form/LLMForm';
-import CreateCardComponent from '@/app/infra/basic-component/create-card-component/CreateCardComponent';
+import { Plus, MessageSquareText, Cpu, Info } from 'lucide-react';
+import { LLMCardVO } from './component/llm-card/LLMCardVO';
+import LLMCard from './component/llm-card/LLMCard';
+import LLMForm from './component/llm-form/LLMForm';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { LLMModel } from '@/app/infra/entities/api';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,15 +14,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { extractI18nObject } from '@/i18n/I18nProvider';
-import { EmbeddingCardVO } from '@/app/home/models/component/embedding-card/EmbeddingCardVO';
-import EmbeddingCard from '@/app/home/models/component/embedding-card/EmbeddingCard';
-import EmbeddingForm from '@/app/home/models/component/embedding-form/EmbeddingForm';
+import { EmbeddingCardVO } from './component/embedding-card/EmbeddingCardVO';
+import EmbeddingCard from './component/embedding-card/EmbeddingCard';
+import EmbeddingForm from './component/embedding-form/EmbeddingForm';
 
-export default function LLMConfigPage() {
+interface ModelsDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export default function ModelsDialog({
+  open,
+  onOpenChange,
+}: ModelsDialogProps) {
   const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<string>('llm');
   const [cardList, setCardList] = useState<LLMCardVO[]>([]);
   const [modalOpen, setModalOpen] = useState<boolean>(false);
   const [isEditForm, setIsEditForm] = useState(false);
@@ -37,9 +46,11 @@ export default function LLMConfigPage() {
     useState<EmbeddingCardVO | null>(null);
 
   useEffect(() => {
-    getLLMModelList();
-    getEmbeddingModelList();
-  }, []);
+    if (open) {
+      getLLMModelList();
+      getEmbeddingModelList();
+    }
+  }, [open]);
 
   async function getLLMModelList() {
     const requesterNameListResp = await httpClient.getProviderRequesters('llm');
@@ -134,7 +145,108 @@ export default function LLMConfigPage() {
   }
 
   return (
-    <div>
+    <>
+      <Dialog
+        open={open}
+        onOpenChange={(newOpen) => {
+          if (!newOpen && (modalOpen || embeddingModalOpen)) {
+            return;
+          }
+          onOpenChange(newOpen);
+        }}
+      >
+        <DialogContent className="overflow-hidden p-0 !max-w-[80vw] h-[75vh] flex flex-col">
+          <DialogHeader className="px-6 pt-6 pb-0">
+            <DialogTitle>{t('models.title')}</DialogTitle>
+          </DialogHeader>
+
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full flex-1 flex flex-col overflow-hidden px-6 pb-6"
+          >
+            <div className="flex flex-row justify-between items-center mb-2 mt-4">
+              <TabsList className="shadow-md py-5 bg-[#f0f0f0] dark:bg-[#2a2a2e]">
+                <TabsTrigger value="llm" className="px-6 py-4 cursor-pointer">
+                  <MessageSquareText className="h-4 w-4 mr-1.5" />
+                  {t('llm.llmModels')}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="embedding"
+                  className="px-6 py-4 cursor-pointer"
+                >
+                  <Cpu className="h-4 w-4 mr-1.5" />
+                  {t('embedding.embeddingModels')}
+                </TabsTrigger>
+              </TabsList>
+              <Button
+                size="sm"
+                onClick={
+                  activeTab === 'llm'
+                    ? handleCreateModelClick
+                    : handleCreateEmbeddingModelClick
+                }
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                {activeTab === 'llm'
+                  ? t('models.createModel')
+                  : t('embedding.createModel')}
+              </Button>
+            </div>
+
+            <div className="mb-3 flex items-center">
+              <Info className="h-4 w-4 mr-1.5 text-muted-foreground" />
+              {activeTab === 'llm' ? (
+                <p className="text-sm text-muted-foreground flex items-center">
+                  {t('llm.description')}
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground flex items-center">
+                  {t('embedding.description')}
+                </p>
+              )}
+            </div>
+
+            <TabsContent value="llm" className="flex-1 overflow-auto mt-0">
+              <div className="w-full grid grid-cols-[repeat(auto-fill,minmax(20rem,1fr))] gap-4">
+                {cardList.map((cardVO) => {
+                  return (
+                    <div
+                      key={cardVO.id}
+                      onClick={() => {
+                        selectLLM(cardVO);
+                      }}
+                    >
+                      <LLMCard cardVO={cardVO}></LLMCard>
+                    </div>
+                  );
+                })}
+              </div>
+            </TabsContent>
+
+            <TabsContent
+              value="embedding"
+              className="flex-1 overflow-auto mt-0"
+            >
+              <div className="w-full grid grid-cols-[repeat(auto-fill,minmax(20rem,1fr))] gap-4">
+                {embeddingCardList.map((cardVO) => {
+                  return (
+                    <div
+                      key={cardVO.id}
+                      onClick={() => {
+                        selectEmbedding(cardVO);
+                      }}
+                    >
+                      <EmbeddingCard cardVO={cardVO}></EmbeddingCard>
+                    </div>
+                  );
+                })}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="w-[700px] p-6">
           <DialogHeader>
@@ -159,6 +271,7 @@ export default function LLMConfigPage() {
           />
         </DialogContent>
       </Dialog>
+
       <Dialog open={embeddingModalOpen} onOpenChange={setEmbeddingModalOpen}>
         <DialogContent className="w-[700px] p-6">
           <DialogHeader>
@@ -185,84 +298,6 @@ export default function LLMConfigPage() {
           />
         </DialogContent>
       </Dialog>
-
-      <Tabs defaultValue="llm" className="w-full">
-        <div className="flex flex-row gap-0 mb-4">
-          <div className="flex flex-row justify-between items-center px-[0.8rem]">
-            <TabsList className="shadow-md py-5 bg-[#f0f0f0] dark:bg-[#2a2a2e]">
-              <TabsTrigger value="llm" className="px-6 py-4 cursor-pointer">
-                {t('llm.llmModels')}
-              </TabsTrigger>
-              <TabsTrigger
-                value="embedding"
-                className="px-6 py-4 cursor-pointer"
-              >
-                {t('embedding.embeddingModels')}
-              </TabsTrigger>
-            </TabsList>
-          </div>
-          <TabsContent value="llm">
-            <div className="flex flex-row justify-between items-center px-[0.4rem] h-full">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {t('llm.description')}
-              </p>
-            </div>
-          </TabsContent>
-          <TabsContent value="embedding">
-            <div className="flex flex-row justify-between items-center px-[0.4rem] h-full">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                {t('embedding.description')}
-              </p>
-            </div>
-          </TabsContent>
-        </div>
-
-        <TabsContent value="llm">
-          <div className={`${styles.modelListContainer}`}>
-            <CreateCardComponent
-              width={'100%'}
-              height={'10rem'}
-              plusSize={'90px'}
-              onClick={handleCreateModelClick}
-            />
-            {cardList.map((cardVO) => {
-              return (
-                <div
-                  key={cardVO.id}
-                  onClick={() => {
-                    selectLLM(cardVO);
-                  }}
-                >
-                  <LLMCard cardVO={cardVO}></LLMCard>
-                </div>
-              );
-            })}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="embedding">
-          <div className={`${styles.modelListContainer}`}>
-            <CreateCardComponent
-              width={'100%'}
-              height={'10rem'}
-              plusSize={'90px'}
-              onClick={handleCreateEmbeddingModelClick}
-            />
-            {embeddingCardList.map((cardVO) => {
-              return (
-                <div
-                  key={cardVO.id}
-                  onClick={() => {
-                    selectEmbedding(cardVO);
-                  }}
-                >
-                  <EmbeddingCard cardVO={cardVO}></EmbeddingCard>
-                </div>
-              );
-            })}
-          </div>
-        </TabsContent>
-      </Tabs>
-    </div>
+    </>
   );
 }
