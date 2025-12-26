@@ -43,7 +43,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Eye, Wrench } from 'lucide-react';
 
 export default function DynamicFormItemComponent({
   config,
@@ -277,9 +277,15 @@ export default function DynamicFormItemComponent({
                 <SelectLabel>{providerName}</SelectLabel>
                 {models.map((model) => (
                   <SelectItem key={model.uuid} value={model.uuid}>
-                    {model.name}
-                    {model.abilities?.includes('vision') && ' 👁'}
-                    {model.abilities?.includes('func_call') && ' 🔧'}
+                    <span className="inline-flex items-center gap-1">
+                      {model.name}
+                      {model.abilities?.includes('vision') && (
+                        <Eye className="h-3 w-3 text-muted-foreground" />
+                      )}
+                      {model.abilities?.includes('func_call') && (
+                        <Wrench className="h-3 w-3 text-muted-foreground" />
+                      )}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectGroup>

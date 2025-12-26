@@ -11,6 +11,8 @@ import {
   Settings,
   Sparkles,
   LogIn,
+  Eye,
+  Wrench,
 } from 'lucide-react';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import {
@@ -400,13 +402,13 @@ export default function ModelsDialog({
                           {t('models.chat')}
                         </Badge>
                         {model.abilities?.includes('vision') && (
-                          <Badge variant="outline" className="text-xs">
-                            👁
+                          <Badge variant="outline" className="text-xs gap-1">
+                            <Eye className="h-3 w-3" />
                           </Badge>
                         )}
                         {model.abilities?.includes('func_call') && (
-                          <Badge variant="outline" className="text-xs">
-                            🔧
+                          <Badge variant="outline" className="text-xs gap-1">
+                            <Wrench className="h-3 w-3" />
                           </Badge>
                         )}
                       </div>
