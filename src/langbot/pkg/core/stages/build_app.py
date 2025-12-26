@@ -17,6 +17,7 @@ from ...persistence import mgr as persistencemgr
 from ...api.http.controller import main as http_controller
 from ...api.http.service import user as user_service
 from ...api.http.service import model as model_service
+from ...api.http.service import provider as provider_service
 from ...api.http.service import pipeline as pipeline_service
 from ...api.http.service import bot as bot_service
 from ...api.http.service import knowledge as knowledge_service
@@ -24,7 +25,6 @@ from ...api.http.service import mcp as mcp_service
 from ...api.http.service import apikey as apikey_service
 from ...api.http.service import webhook as webhook_service
 from ...api.http.service import external_kb as external_kb_service
-from ...api.http.service import space_models as space_models_service
 from ...discover import engine as discover_engine
 from ...storage import mgr as storagemgr
 from ...utils import logcache
@@ -115,6 +115,9 @@ class BuildAppStage(stage.BootingStage):
         embedding_models_service_inst = model_service.EmbeddingModelsService(ap)
         ap.embedding_models_service = embedding_models_service_inst
 
+        provider_service_inst = provider_service.ModelProviderService(ap)
+        ap.provider_service = provider_service_inst
+
         pipeline_service_inst = pipeline_service.PipelineService(ap)
         ap.pipeline_service = pipeline_service_inst
 
@@ -135,9 +138,6 @@ class BuildAppStage(stage.BootingStage):
 
         webhook_service_inst = webhook_service.WebhookService(ap)
         ap.webhook_service = webhook_service_inst
-
-        space_models_service_inst = space_models_service.SpaceModelsService(ap)
-        ap.space_models_service = space_models_service_inst
 
         async def runtime_disconnect_callback(connector: plugin_connector.PluginRuntimeConnector) -> None:
             await asyncio.sleep(3)

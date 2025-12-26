@@ -38,6 +38,9 @@ import {
   ExternalKnowledgeBase,
   ApiRespExternalKnowledgeBases,
   ApiRespExternalKnowledgeBase,
+  ApiRespModelProviders,
+  ApiRespModelProvider,
+  ModelProvider,
 } from '@/app/infra/entities/api';
 import { Plugin } from '@/app/infra/entities/plugin';
 import { GetBotLogsRequest } from '@/app/infra/http/requestParam/bots/GetBotLogsRequest';
@@ -65,7 +68,6 @@ export class BackendClient extends BaseHttpClient {
 
   public getProviderRequesterIconURL(name: string): string {
     if (this.instance.defaults.baseURL === '/') {
-      // 获取用户访问的URL
       const url = window.location.href;
       const baseURL = url.split('/').slice(0, 3).join('/');
       return `${baseURL}/api/v1/provider/requesters/${name}/icon`;
@@ -76,9 +78,38 @@ export class BackendClient extends BaseHttpClient {
     );
   }
 
+  // ============ Model Providers ============
+  public getModelProviders(): Promise<ApiRespModelProviders> {
+    return this.get('/api/v1/provider/providers');
+  }
+
+  public getModelProvider(uuid: string): Promise<ApiRespModelProvider> {
+    return this.get(`/api/v1/provider/providers/${uuid}`);
+  }
+
+  public createModelProvider(
+    provider: Omit<ModelProvider, 'uuid'>,
+  ): Promise<{ uuid: string }> {
+    return this.post('/api/v1/provider/providers', provider);
+  }
+
+  public updateModelProvider(
+    uuid: string,
+    provider: Partial<ModelProvider>,
+  ): Promise<object> {
+    return this.put(`/api/v1/provider/providers/${uuid}`, provider);
+  }
+
+  public deleteModelProvider(uuid: string): Promise<object> {
+    return this.delete(`/api/v1/provider/providers/${uuid}`);
+  }
+
   // ============ Provider Model LLM ============
-  public getProviderLLMModels(): Promise<ApiRespProviderLLMModels> {
-    return this.get('/api/v1/provider/models/llm');
+  public getProviderLLMModels(
+    providerUuid?: string,
+  ): Promise<ApiRespProviderLLMModels> {
+    const params = providerUuid ? { provider_uuid: providerUuid } : {};
+    return this.get('/api/v1/provider/models/llm', params);
   }
 
   public getProviderLLMModel(uuid: string): Promise<ApiRespProviderLLMModel> {
@@ -105,8 +136,11 @@ export class BackendClient extends BaseHttpClient {
   }
 
   // ============ Provider Model Embedding ============
-  public getProviderEmbeddingModels(): Promise<ApiRespProviderEmbeddingModels> {
-    return this.get('/api/v1/provider/models/embedding');
+  public getProviderEmbeddingModels(
+    providerUuid?: string,
+  ): Promise<ApiRespProviderEmbeddingModels> {
+    const params = providerUuid ? { provider_uuid: providerUuid } : {};
+    return this.get('/api/v1/provider/models/embedding', params);
   }
 
   public getProviderEmbeddingModel(
@@ -715,62 +749,5 @@ export class BackendClient extends BaseHttpClient {
     user: string;
   }> {
     return this.post('/api/v1/user/space/callback', { code });
-  }
-
-  // ============ Space Models Sync API ============
-  public syncSpaceModels(spaceUrl?: string): Promise<{
-    created_llm: number;
-    updated_llm: number;
-    created_embedding: number;
-    updated_embedding: number;
-    skipped: number;
-  }> {
-    return this.post('/api/v1/space/models/sync', { space_url: spaceUrl });
-  }
-
-  public getSpaceModels(): Promise<{
-    llm_models: Array<{
-      uuid: string;
-      name: string;
-      description: string;
-      requester: string;
-      space_model_id: string;
-      source: string;
-    }>;
-    embedding_models: Array<{
-      uuid: string;
-      name: string;
-      description: string;
-      requester: string;
-      space_model_id: string;
-      source: string;
-    }>;
-  }> {
-    return this.get('/api/v1/space/models');
-  }
-
-  public deleteSpaceModels(): Promise<{
-    deleted_llm: number;
-    deleted_embedding: number;
-  }> {
-    return this.delete('/api/v1/space/models');
-  }
-
-  public getAvailableSpaceModels(spaceUrl?: string): Promise<{
-    models: Array<{
-      model_id: string;
-      display_name: { [key: string]: string };
-      description: { [key: string]: string };
-      category: string;
-      provider: string;
-    }>;
-    vendors: Array<{
-      id: number;
-      name: string;
-    }>;
-    total: number;
-  }> {
-    const params = spaceUrl ? { space_url: spaceUrl } : {};
-    return this.get('/api/v1/space/models/available', params);
   }
 }

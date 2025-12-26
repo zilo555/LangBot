@@ -1,9 +1,6 @@
-import { ICreateEmbeddingField } from '../ICreateEmbeddingField';
 import { useEffect, useState } from 'react';
-import { IChooseRequesterEntity } from '../ChooseRequesterEntity';
 import { httpClient } from '@/app/infra/http/HttpClient';
-import { EmbeddingModel } from '@/app/infra/entities/api';
-import { UUID } from 'uuidjs';
+import { ModelProvider } from '@/app/infra/entities/api';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -42,59 +39,43 @@ import { toast } from 'sonner';
 import { extractI18nObject } from '@/i18n/I18nProvider';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
-
-const getExtraArgSchema = (t: (key: string) => string) =>
-  z
-    .object({
-      key: z.string().min(1, { message: t('models.keyNameRequired') }),
-      type: z.enum(['string', 'number', 'boolean']),
-      value: z.string(),
-    })
-    .superRefine((data, ctx) => {
-      if (data.type === 'number' && isNaN(Number(data.value))) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: t('models.mustBeValidNumber'),
-          path: ['value'],
-        });
-      }
-      if (
-        data.type === 'boolean' &&
-        data.value !== 'true' &&
-        data.value !== 'false'
-      ) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: t('models.mustBeTrueOrFalse'),
-          path: ['value'],
-        });
-      }
-    });
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const getFormSchema = (t: (key: string) => string) =>
   z.object({
     name: z.string().min(1, { message: t('models.modelNameRequired') }),
-    model_provider: z
-      .string()
-      .min(1, { message: t('models.modelProviderRequired') }),
-    url: z.string().optional(),
-    api_key: z.string().optional(),
-    extra_args: z.array(getExtraArgSchema(t)).optional(),
+    provider_uuid: z.string().optional(),
+    new_provider_requester: z.string().optional(),
+    new_provider_url: z.string().optional(),
+    new_provider_api_key: z.string().optional(),
+    extra_args: z
+      .array(
+        z.object({
+          key: z.string(),
+          type: z.enum(['string', 'number', 'boolean']),
+          value: z.string(),
+        }),
+      )
+      .optional(),
   });
+
+interface EmbeddingFormProps {
+  editMode: boolean;
+  initEmbeddingId?: string;
+  providers: ModelProvider[];
+  onFormSubmit: () => void;
+  onFormCancel: () => void;
+  onEmbeddingDeleted: () => void;
+}
 
 export default function EmbeddingForm({
   editMode,
   initEmbeddingId,
+  providers,
   onFormSubmit,
   onFormCancel,
   onEmbeddingDeleted,
-}: {
-  editMode: boolean;
-  initEmbeddingId?: string;
-  onFormSubmit: () => void;
-  onFormCancel: () => void;
-  onEmbeddingDeleted: () => void;
-}) {
+}: EmbeddingFormProps) {
   const { t } = useTranslation();
   const formSchema = getFormSchema(t);
 
@@ -102,9 +83,10 @@ export default function EmbeddingForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      model_provider: '',
-      url: '',
-      api_key: '',
+      provider_uuid: '',
+      new_provider_requester: '',
+      new_provider_url: '',
+      new_provider_api_key: '',
       extra_args: [],
     },
   });
@@ -112,54 +94,178 @@ export default function EmbeddingForm({
   const [extraArgs, setExtraArgs] = useState<
     { key: string; type: 'string' | 'number' | 'boolean'; value: string }[]
   >([]);
-
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
-  const [requesterNameList, setRequesterNameList] = useState<
-    IChooseRequesterEntity[]
-  >([]);
-  const [requesterDefaultURLList, setRequesterDefaultURLList] = useState<
-    string[]
-  >([]);
   const [modelTesting, setModelTesting] = useState(false);
   const [testErrorMessage, setTestErrorMessage] = useState<string | null>(null);
-  const [currentModelProvider, setCurrentModelProvider] = useState('');
+  const [providerMode, setProviderMode] = useState<'existing' | 'new'>(
+    'existing',
+  );
+
+  const [requesterList, setRequesterList] = useState<
+    { label: string; value: string; category: string; defaultUrl: string }[]
+  >([]);
 
   useEffect(() => {
-    initEmbeddingModelFormComponent().then(() => {
-      if (editMode && initEmbeddingId) {
-        getEmbeddingConfig(initEmbeddingId).then((val) => {
-          form.setValue('name', val.name);
-          form.setValue('model_provider', val.model_provider);
-          setCurrentModelProvider(val.model_provider);
-          form.setValue('url', val.url);
-          form.setValue('api_key', val.api_key);
-          if (val.extra_args) {
-            const args = val.extra_args.map((arg) => {
-              const [key, value] = arg.split(':');
-              let type: 'string' | 'number' | 'boolean' = 'string';
-              if (!isNaN(Number(value))) {
-                type = 'number';
-              } else if (value === 'true' || value === 'false') {
-                type = 'boolean';
-              }
-              return {
-                key,
-                type,
-                value,
-              };
-            });
-            setExtraArgs(args);
-            form.setValue('extra_args', args);
-          }
-        });
-      } else {
-        form.reset();
-      }
+    loadRequesters();
+    if (editMode && initEmbeddingId) {
+      loadModel(initEmbeddingId);
+    }
+  }, [editMode, initEmbeddingId]);
+
+  async function loadRequesters() {
+    const resp = await httpClient.getProviderRequesters('text-embedding');
+    setRequesterList(
+      resp.requesters.map((item) => ({
+        label: extractI18nObject(item.label),
+        value: item.name,
+        category: item.spec.provider_category || 'manufacturer',
+        defaultUrl:
+          item.spec.config
+            .find((c) => c.name === 'base_url')
+            ?.default?.toString() || '',
+      })),
+    );
+  }
+
+  async function loadModel(id: string) {
+    const resp = await httpClient.getProviderEmbeddingModel(id);
+    const model = resp.model;
+
+    form.setValue('name', model.name);
+    form.setValue('provider_uuid', model.provider_uuid);
+
+    if (model.extra_args) {
+      const args = Object.entries(model.extra_args).map(([key, value]) => {
+        let type: 'string' | 'number' | 'boolean' = 'string';
+        if (typeof value === 'number') type = 'number';
+        else if (typeof value === 'boolean') type = 'boolean';
+        return { key, type, value: String(value) };
+      });
+      setExtraArgs(args);
+      form.setValue('extra_args', args);
+    }
+
+    setProviderMode('existing');
+  }
+
+  function handleFormSubmit(values: z.infer<typeof formSchema>) {
+    const extraArgsObj: Record<string, string | number | boolean> = {};
+    values.extra_args?.forEach((arg) => {
+      if (arg.type === 'number') extraArgsObj[arg.key] = Number(arg.value);
+      else if (arg.type === 'boolean')
+        extraArgsObj[arg.key] = arg.value === 'true';
+      else extraArgsObj[arg.key] = arg.value;
     });
-  }, []);
+
+    const modelData: Record<string, unknown> = {
+      name: values.name,
+      extra_args: extraArgsObj,
+    };
+
+    if (providerMode === 'existing' && values.provider_uuid) {
+      modelData.provider_uuid = values.provider_uuid;
+    } else if (providerMode === 'new') {
+      modelData.provider = {
+        requester: values.new_provider_requester,
+        base_url: values.new_provider_url,
+        api_keys: values.new_provider_api_key
+          ? [values.new_provider_api_key]
+          : [],
+      };
+    }
+
+    if (editMode && initEmbeddingId) {
+      updateModel(initEmbeddingId, modelData);
+    } else {
+      createModel(modelData);
+    }
+  }
+
+  async function createModel(data: Record<string, unknown>) {
+    try {
+      await httpClient.createProviderEmbeddingModel(data as never);
+      toast.success(t('models.createSuccess'));
+      onFormSubmit();
+    } catch (err) {
+      toast.error(t('models.createError') + (err as Error).message);
+    }
+  }
+
+  async function updateModel(id: string, data: Record<string, unknown>) {
+    try {
+      await httpClient.updateProviderEmbeddingModel(id, data as never);
+      toast.success(t('models.saveSuccess'));
+      onFormSubmit();
+    } catch (err) {
+      toast.error(t('models.saveError') + (err as Error).message);
+    }
+  }
+
+  async function deleteModel() {
+    if (!initEmbeddingId) return;
+    try {
+      await httpClient.deleteProviderEmbeddingModel(initEmbeddingId);
+      toast.success(t('models.deleteSuccess'));
+      onEmbeddingDeleted();
+    } catch (err) {
+      toast.error(t('models.deleteError') + (err as Error).message);
+    }
+  }
+
+  async function testModel() {
+    setModelTesting(true);
+    setTestErrorMessage(null);
+
+    const values = form.getValues();
+    const extraArgsObj: Record<string, string | number | boolean> = {};
+    values.extra_args?.forEach((arg) => {
+      if (arg.type === 'number') extraArgsObj[arg.key] = Number(arg.value);
+      else if (arg.type === 'boolean')
+        extraArgsObj[arg.key] = arg.value === 'true';
+      else extraArgsObj[arg.key] = arg.value;
+    });
+
+    let provider: Record<string, unknown>;
+    if (providerMode === 'existing' && values.provider_uuid) {
+      const p = providers.find((p) => p.uuid === values.provider_uuid);
+      provider = {
+        requester: p?.requester || '',
+        base_url: p?.base_url || '',
+        api_keys: p?.api_keys || [],
+      };
+    } else {
+      provider = {
+        requester: values.new_provider_requester,
+        base_url: values.new_provider_url,
+        api_keys: values.new_provider_api_key
+          ? [values.new_provider_api_key]
+          : [],
+      };
+    }
+
+    try {
+      await httpClient.testEmbeddingModel('_', {
+        uuid: '',
+        name: values.name,
+        provider_uuid: '',
+        provider,
+        extra_args: extraArgsObj,
+      } as never);
+      toast.success(t('models.testSuccess'));
+    } catch (err) {
+      setTestErrorMessage((err as Error).message || t('models.testError'));
+    } finally {
+      setModelTesting(false);
+    }
+  }
 
   const addExtraArg = () => {
-    setExtraArgs([...extraArgs, { key: '', type: 'string', value: '' }]);
+    const newArgs = [
+      ...extraArgs,
+      { key: '', type: 'string' as const, value: '' },
+    ];
+    setExtraArgs(newArgs);
+    form.setValue('extra_args', newArgs);
   };
 
   const updateExtraArg = (
@@ -168,10 +274,7 @@ export default function EmbeddingForm({
     value: string,
   ) => {
     const newArgs = [...extraArgs];
-    newArgs[index] = {
-      ...newArgs[index],
-      [field]: value,
-    };
+    newArgs[index] = { ...newArgs[index], [field]: value };
     setExtraArgs(newArgs);
     form.setValue('extra_args', newArgs);
   };
@@ -181,167 +284,6 @@ export default function EmbeddingForm({
     setExtraArgs(newArgs);
     form.setValue('extra_args', newArgs);
   };
-
-  async function initEmbeddingModelFormComponent() {
-    const requesterNameList =
-      await httpClient.getProviderRequesters('text-embedding');
-    setRequesterNameList(
-      requesterNameList.requesters.map((item) => {
-        return {
-          label: extractI18nObject(item.label),
-          value: item.name,
-          provider_category: item.spec.provider_category || 'manufacturer',
-          description: extractI18nObject(item.description) || undefined,
-        };
-      }),
-    );
-    setRequesterDefaultURLList(
-      requesterNameList.requesters.map((item) => {
-        const config = item.spec.config;
-        for (let i = 0; i < config.length; i++) {
-          if (config[i].name == 'base_url') {
-            return config[i].default?.toString() || '';
-          }
-        }
-        return '';
-      }),
-    );
-  }
-
-  async function getEmbeddingConfig(
-    id: string,
-  ): Promise<ICreateEmbeddingField> {
-    const embeddingModel = await httpClient.getProviderEmbeddingModel(id);
-
-    const fakeExtraArgs = [];
-    const extraArgs = embeddingModel.model.extra_args as Record<string, string>;
-    for (const key in extraArgs) {
-      fakeExtraArgs.push(`${key}:${extraArgs[key]}`);
-    }
-    return {
-      name: embeddingModel.model.name,
-      model_provider: embeddingModel.model.requester,
-      url: embeddingModel.model.requester_config?.base_url,
-      api_key: embeddingModel.model.api_keys[0],
-      extra_args: fakeExtraArgs,
-    };
-  }
-
-  function handleFormSubmit(value: z.infer<typeof formSchema>) {
-    const extraArgsObj: Record<string, string | number | boolean> = {};
-    value.extra_args?.forEach(
-      (arg: { key: string; type: string; value: string }) => {
-        if (arg.type === 'number') {
-          extraArgsObj[arg.key] = Number(arg.value);
-        } else if (arg.type === 'boolean') {
-          extraArgsObj[arg.key] = arg.value === 'true';
-        } else {
-          extraArgsObj[arg.key] = arg.value;
-        }
-      },
-    );
-
-    const embeddingModel: EmbeddingModel = {
-      uuid: editMode ? initEmbeddingId || '' : UUID.generate(),
-      name: value.name,
-      description: '',
-      requester: value.model_provider,
-      requester_config: {
-        base_url: value.url || '',
-        timeout: 120,
-      },
-      extra_args: extraArgsObj,
-      api_keys: value.api_key ? [value.api_key] : [],
-    };
-
-    if (editMode) {
-      onSaveEdit(embeddingModel).then(() => {
-        form.reset();
-      });
-    } else {
-      onCreateEmbedding(embeddingModel).then(() => {
-        form.reset();
-      });
-    }
-  }
-
-  async function onCreateEmbedding(embeddingModel: EmbeddingModel) {
-    try {
-      await httpClient.createProviderEmbeddingModel(embeddingModel);
-      onFormSubmit();
-      toast.success(t('models.createSuccess'));
-    } catch (err) {
-      toast.error(t('models.createError') + (err as Error).message);
-    }
-  }
-
-  async function onSaveEdit(embeddingModel: EmbeddingModel) {
-    try {
-      await httpClient.updateProviderEmbeddingModel(
-        initEmbeddingId || '',
-        embeddingModel,
-      );
-      onFormSubmit();
-      toast.success(t('models.saveSuccess'));
-    } catch (err) {
-      toast.error(t('models.saveError') + (err as Error).message);
-    }
-  }
-
-  function deleteModel() {
-    if (initEmbeddingId) {
-      httpClient
-        .deleteProviderEmbeddingModel(initEmbeddingId)
-        .then(() => {
-          onEmbeddingDeleted();
-          toast.success(t('models.deleteSuccess'));
-        })
-        .catch((err) => {
-          toast.error(t('models.deleteError') + err.message);
-        });
-    }
-  }
-
-  function testEmbeddingModelInForm() {
-    setModelTesting(true);
-    setTestErrorMessage(null);
-    const extraArgsObj: Record<string, string | number | boolean> = {};
-    form
-      .getValues('extra_args')
-      ?.forEach((arg: { key: string; type: string; value: string }) => {
-        if (arg.type === 'number') {
-          extraArgsObj[arg.key] = Number(arg.value);
-        } else if (arg.type === 'boolean') {
-          extraArgsObj[arg.key] = arg.value === 'true';
-        } else {
-          extraArgsObj[arg.key] = arg.value;
-        }
-      });
-    const apiKey = form.getValues('api_key');
-    httpClient
-      .testEmbeddingModel('_', {
-        uuid: '',
-        name: form.getValues('name'),
-        description: '',
-        requester: form.getValues('model_provider'),
-        requester_config: {
-          base_url: form.getValues('url') ?? '',
-          timeout: 120,
-        },
-        api_keys: apiKey ? [apiKey] : [],
-        extra_args: extraArgsObj,
-      })
-      .then(() => {
-        toast.success(t('models.testSuccess'));
-        setTestErrorMessage(null);
-      })
-      .catch((err: { message?: string }) => {
-        setTestErrorMessage(err?.message || t('models.testError'));
-      })
-      .finally(() => {
-        setModelTesting(false);
-      });
-  }
 
   return (
     <div>
@@ -379,230 +321,224 @@ export default function EmbeddingForm({
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(handleFormSubmit)}
-          className="space-y-8"
+          className="space-y-6"
         >
-          <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t('models.modelName')}
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                  <FormDescription>
-                    {t('models.modelProviderDescription')}
-                  </FormDescription>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="model_provider"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t('models.modelProvider')}
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        setCurrentModelProvider(value);
-                        const index = requesterNameList.findIndex(
-                          (item) => item.value === value,
-                        );
-                        if (index !== -1) {
-                          form.setValue('url', requesterDefaultURLList[index]);
-                        }
-                      }}
-                      value={field.value}
-                    >
-                      <SelectTrigger className="w-[180px] bg-[#ffffff] dark:bg-[#2a2a2e]">
-                        <SelectValue
-                          placeholder={t('models.selectModelProvider')}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>{t('models.builtin')}</SelectLabel>
-                          {requesterNameList
-                            .filter(
-                              (item) => item.provider_category === 'builtin',
-                            )
-                            .map((item) => (
-                              <SelectItem key={item.value} value={item.value}>
-                                {item.label}
-                              </SelectItem>
-                            ))}
-                        </SelectGroup>
-                        <SelectGroup>
-                          <SelectLabel>
-                            {t('models.modelManufacturer')}
-                          </SelectLabel>
-                          {requesterNameList
-                            .filter(
-                              (item) =>
-                                item.provider_category === 'manufacturer',
-                            )
-                            .map((item) => (
-                              <SelectItem key={item.value} value={item.value}>
-                                {item.label}
-                              </SelectItem>
-                            ))}
-                        </SelectGroup>
-                        <SelectGroup>
-                          <SelectLabel>
-                            {t('models.aggregationPlatform')}
-                          </SelectLabel>
-                          {requesterNameList
-                            .filter((item) => item.provider_category === 'maas')
-                            .map((item) => (
-                              <SelectItem key={item.value} value={item.value}>
-                                {item.label}
-                              </SelectItem>
-                            ))}
-                        </SelectGroup>
-                        <SelectGroup>
-                          <SelectLabel>{t('models.selfDeployed')}</SelectLabel>
-                          {requesterNameList
-                            .filter(
-                              (item) =>
-                                item.provider_category === 'self-hosted',
-                            )
-                            .map((item) => (
-                              <SelectItem key={item.value} value={item.value}>
-                                {item.label}
-                              </SelectItem>
-                            ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  {currentModelProvider &&
-                    requesterNameList.find(
-                      (item) => item.value === currentModelProvider,
-                    )?.description && (
-                      <FormDescription>
-                        {
-                          requesterNameList.find(
-                            (item) => item.value === currentModelProvider,
-                          )?.description
-                        }
-                      </FormDescription>
-                    )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {!['seekdb-embedding'].includes(currentModelProvider) && (
-              <FormField
-                control={form.control}
-                name="url"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('models.requestURL')}</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  {t('models.modelName')}
+                  <span className="text-red-500">*</span>
+                </FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="text-embedding-3-small" />
+                </FormControl>
+                <FormDescription>
+                  {t('models.modelProviderDescription')}
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
             )}
+          />
 
-            {!['ollama-chat', 'seekdb-embedding'].includes(
-              currentModelProvider,
-            ) && (
-              <FormField
-                control={form.control}
-                name="api_key"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('models.apiKey')}</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+          <div>
+            <FormLabel>{t('models.provider')}</FormLabel>
+            <Tabs
+              value={providerMode}
+              onValueChange={(v) => setProviderMode(v as 'existing' | 'new')}
+              className="mt-2"
+            >
+              <TabsList>
+                <TabsTrigger value="existing">
+                  {t('models.existingProvider')}
+                </TabsTrigger>
+                <TabsTrigger value="new">{t('models.newProvider')}</TabsTrigger>
+              </TabsList>
 
-            <FormItem>
-              <FormLabel>{t('models.extraParameters')}</FormLabel>
-              <div className="space-y-2">
-                {extraArgs.map((arg, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Input
-                      placeholder={t('models.keyName')}
-                      value={arg.key}
-                      onChange={(e) =>
-                        updateExtraArg(index, 'key', e.target.value)
-                      }
-                    />
-                    <Select
-                      value={arg.type}
-                      onValueChange={(value) =>
-                        updateExtraArg(index, 'type', value)
-                      }
-                    >
-                      <SelectTrigger className="w-[120px] bg-[#ffffff] dark:bg-[#2a2a2e]">
-                        <SelectValue placeholder={t('models.type')} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="string">
-                          {t('models.string')}
-                        </SelectItem>
-                        <SelectItem value="number">
-                          {t('models.number')}
-                        </SelectItem>
-                        <SelectItem value="boolean">
-                          {t('models.boolean')}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      placeholder={t('models.value')}
-                      value={arg.value}
-                      onChange={(e) =>
-                        updateExtraArg(index, 'value', e.target.value)
-                      }
-                    />
-                    <button
-                      type="button"
-                      className="p-2 hover:bg-gray-100 rounded"
-                      onClick={() => removeExtraArg(index)}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        className="w-5 h-5 text-red-500"
+              <TabsContent value="existing" className="mt-3">
+                <FormField
+                  control={form.control}
+                  name="provider_uuid"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
                       >
-                        <path d="M7 4V2H17V4H22V6H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V6H2V4H7ZM6 6V20H18V6H6ZM9 9H11V17H9V9ZM13 9H15V17H13V9Z"></path>
-                      </svg>
-                    </button>
-                  </div>
-                ))}
-                <Button type="button" variant="outline" onClick={addExtraArg}>
-                  {t('models.addParameter')}
-                </Button>
-              </div>
-              <FormDescription>
-                {t('embedding.extraParametersDescription')}
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
+                        <SelectTrigger className="bg-background">
+                          <SelectValue
+                            placeholder={t('models.selectProvider')}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {providers.map((p) => (
+                            <SelectItem key={p.uuid} value={p.uuid}>
+                              {p.name} ({p.base_url || 'default'})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+
+              <TabsContent value="new" className="mt-3 space-y-4">
+                <FormField
+                  control={form.control}
+                  name="new_provider_requester"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('models.requester')}</FormLabel>
+                      <Select
+                        onValueChange={(v) => {
+                          field.onChange(v);
+                          const req = requesterList.find((r) => r.value === v);
+                          if (req)
+                            form.setValue('new_provider_url', req.defaultUrl);
+                        }}
+                        value={field.value}
+                      >
+                        <SelectTrigger className="bg-background">
+                          <SelectValue
+                            placeholder={t('models.selectRequester')}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>
+                              {t('models.modelManufacturer')}
+                            </SelectLabel>
+                            {requesterList
+                              .filter((r) => r.category === 'manufacturer')
+                              .map((r) => (
+                                <SelectItem key={r.value} value={r.value}>
+                                  {r.label}
+                                </SelectItem>
+                              ))}
+                          </SelectGroup>
+                          <SelectGroup>
+                            <SelectLabel>
+                              {t('models.aggregationPlatform')}
+                            </SelectLabel>
+                            {requesterList
+                              .filter((r) => r.category === 'maas')
+                              .map((r) => (
+                                <SelectItem key={r.value} value={r.value}>
+                                  {r.label}
+                                </SelectItem>
+                              ))}
+                          </SelectGroup>
+                          <SelectGroup>
+                            <SelectLabel>
+                              {t('models.selfDeployed')}
+                            </SelectLabel>
+                            {requesterList
+                              .filter((r) => r.category === 'self-hosted')
+                              .map((r) => (
+                                <SelectItem key={r.value} value={r.value}>
+                                  {r.label}
+                                </SelectItem>
+                              ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="new_provider_url"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('models.requestURL')}</FormLabel>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="new_provider_api_key"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>{t('models.apiKey')}</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="password" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </TabsContent>
+            </Tabs>
           </div>
+
+          <FormItem>
+            <FormLabel>{t('models.extraParameters')}</FormLabel>
+            <div className="space-y-2">
+              {extraArgs.map((arg, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    placeholder={t('models.keyName')}
+                    value={arg.key}
+                    onChange={(e) =>
+                      updateExtraArg(index, 'key', e.target.value)
+                    }
+                  />
+                  <Select
+                    value={arg.type}
+                    onValueChange={(v) => updateExtraArg(index, 'type', v)}
+                  >
+                    <SelectTrigger className="w-[120px] bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="string">
+                        {t('models.string')}
+                      </SelectItem>
+                      <SelectItem value="number">
+                        {t('models.number')}
+                      </SelectItem>
+                      <SelectItem value="boolean">
+                        {t('models.boolean')}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    placeholder={t('models.value')}
+                    value={arg.value}
+                    onChange={(e) =>
+                      updateExtraArg(index, 'value', e.target.value)
+                    }
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeExtraArg(index)}
+                  >
+                    <span className="text-red-500">×</span>
+                  </Button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" onClick={addExtraArg}>
+                {t('models.addParameter')}
+              </Button>
+            </div>
+            <FormDescription>
+              {t('embedding.extraParametersDescription')}
+            </FormDescription>
+          </FormItem>
+
           {testErrorMessage && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
@@ -612,6 +548,7 @@ export default function EmbeddingForm({
               </AlertDescription>
             </Alert>
           )}
+
           <DialogFooter>
             {editMode && (
               <Button
@@ -622,25 +559,18 @@ export default function EmbeddingForm({
                 {t('common.delete')}
               </Button>
             )}
-
             <Button type="submit">
               {editMode ? t('common.save') : t('common.submit')}
             </Button>
-
             <Button
               type="button"
               variant="outline"
-              onClick={() => testEmbeddingModelInForm()}
+              onClick={testModel}
               disabled={modelTesting}
             >
               {t('common.test')}
             </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onFormCancel()}
-            >
+            <Button type="button" variant="outline" onClick={onFormCancel}>
               {t('common.cancel')}
             </Button>
           </DialogFooter>
