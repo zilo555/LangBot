@@ -52,6 +52,7 @@ const jaJP = {
     loginWithSpace: 'Space でログイン',
     spaceLoginRecommended: 'おすすめ：Space からモデルとクレジットを同期',
     loginLocal: 'ローカルアカウントでログイン',
+    loginWithPassword: 'パスワードでログイン',
     spaceLoginTitle: 'Space でログイン',
     spaceLoginDescription:
       'QRコードをスキャンするか、下のリンクにアクセスして認証してください',
@@ -71,6 +72,7 @@ const jaJP = {
     spaceLoginError: 'ログインに失敗しました',
     spaceLoginNoCode: '認証コードがありません',
     backToLogin: 'ログインに戻る',
+    backToHome: 'ホームに戻る',
     spaceAccountCannotChangePassword:
       'Space アカウントはここでパスワードを変更できません',
     theme: 'テーマ',
@@ -715,6 +717,7 @@ const jaJP = {
     initWithSpace: 'Space で初期化',
     spaceRecommended: 'おすすめ：Space からモデルとクレジットを同期',
     registerLocal: 'ローカルアカウントを登録',
+    registerWithPassword: 'メールアドレスとパスワードで登録',
     initSuccess: '初期化に成功しました。ログインしてください',
     initFailed: '初期化に失敗しました：',
   },
@@ -756,6 +759,26 @@ const jaJP = {
     newVersionAvailable: '新しいバージョンが利用可能',
     viewUpdateGuide: 'アップデート方法を見る',
     noReleaseNotes: 'リリースノートはありません',
+  },
+  account: {
+    settings: 'アカウント設定',
+    setPassword: 'パスワードを設定',
+    passwordSetSuccess: 'パスワードの設定に成功しました',
+    bindSpace: 'Space アカウントを連携',
+    bindSpaceDescription:
+      'ローカルアカウントを Space アカウントに連携して、モデルとクレジットを同期します',
+    bindSpaceButton: 'Space アカウントを連携',
+    bindSpaceConfirmTitle: '連携を確認',
+    bindSpaceConfirmDescription:
+      'ローカルアカウントを Space アカウントに連携しようとしています',
+    bindSpaceWarning:
+      '連携後、ログインメールアドレスは Space アカウントのメールアドレスに変更されます。パスワードを設定している場合は、引き続きメールアドレスとパスワードでログインできます。',
+    bindSpaceSuccess: 'Space アカウントの連携に成功しました',
+    bindSpaceFailed: 'Space アカウントの連携に失敗しました',
+    bindSpaceInvalidState:
+      '無効な連携リクエストです。アカウント設定から再度お試しください。',
+    setPasswordHint:
+      'パスワードを設定すると、メールアドレスとパスワードでログインできます',
   },
 };
 

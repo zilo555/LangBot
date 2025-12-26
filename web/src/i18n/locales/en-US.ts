@@ -51,6 +51,7 @@ const enUS = {
     loginWithSpace: 'Login with Space',
     spaceLoginRecommended: 'Recommended: Sync models and credits from Space',
     loginLocal: 'Login with local account',
+    loginWithPassword: 'Login with password',
     spaceLoginTitle: 'Login with Space',
     spaceLoginDescription:
       'Scan the QR code or visit the link below to authorize',
@@ -69,6 +70,7 @@ const enUS = {
     spaceLoginError: 'Login Failed',
     spaceLoginNoCode: 'Missing authorization code',
     backToLogin: 'Back to Login',
+    backToHome: 'Back to Home',
     spaceAccountCannotChangePassword:
       'Space accounts cannot change password here',
     theme: 'Theme',
@@ -707,6 +709,7 @@ const enUS = {
     initWithSpace: 'Initialize with Space',
     spaceRecommended: 'Recommended: Sync models and credits from Space',
     registerLocal: 'Register local account',
+    registerWithPassword: 'Register with email and password',
     initSuccess: 'Initialization successful, please login',
     initFailed: 'Initialization failed: ',
   },
@@ -748,6 +751,26 @@ const enUS = {
     newVersionAvailable: 'New Version Available',
     viewUpdateGuide: 'View Update Guide',
     noReleaseNotes: 'No release notes available',
+  },
+  account: {
+    settings: 'Account Settings',
+    setPassword: 'Set Password',
+    passwordSetSuccess: 'Password set successfully',
+    bindSpace: 'Bind Space Account',
+    bindSpaceDescription:
+      'Link your local account to a Space account to sync models and credits',
+    bindSpaceButton: 'Bind Space Account',
+    bindSpaceConfirmTitle: 'Confirm Binding',
+    bindSpaceConfirmDescription:
+      'You are about to bind your local account to a Space account',
+    bindSpaceWarning:
+      'After binding, your login email will be changed to the Space account email. You can still use email/password login if you have set a password.',
+    bindSpaceSuccess: 'Space account bound successfully',
+    bindSpaceFailed: 'Failed to bind Space account',
+    bindSpaceInvalidState:
+      'Invalid bind request. Please try again from account settings.',
+    setPasswordHint:
+      'After setting a password, you can login with email and password',
   },
 };
 

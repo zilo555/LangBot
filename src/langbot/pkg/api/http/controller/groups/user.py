@@ -152,5 +152,87 @@ class UserRouterGroup(group.RouterGroup):
                 data={
                     'user': user_obj.user,
                     'account_type': user_obj.account_type,
+                    'has_password': bool(user_obj.password and user_obj.password.strip()),
                 }
             )
+
+        @self.route('/account-info', methods=['GET'], auth_type=group.AuthType.NONE)
+        async def _() -> str:
+            """Get account info for login page (account type and has_password)"""
+            if not await self.ap.user_service.is_initialized():
+                return self.success(data={'initialized': False})
+
+            user_obj = await self.ap.user_service.get_first_user()
+            if user_obj is None:
+                return self.success(data={'initialized': False})
+
+            return self.success(
+                data={
+                    'initialized': True,
+                    'account_type': user_obj.account_type,
+                    'has_password': bool(user_obj.password and user_obj.password.strip()),
+                }
+            )
+
+        @self.route('/set-password', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
+        async def _(user_email: str) -> str:
+            """Set password for Space account (first time) or change password"""
+            json_data = await quart.request.json
+            new_password = json_data.get('new_password')
+            current_password = json_data.get('current_password')
+
+            if not new_password:
+                return self.http_status(400, -1, 'New password is required')
+
+            user_obj = await self.ap.user_service.get_user_by_email(user_email)
+            if user_obj is None:
+                return self.http_status(404, -1, 'User not found')
+
+            try:
+                await self.ap.user_service.set_password(user_email, new_password, current_password)
+                return self.success(data={'user': user_email})
+            except ValueError as e:
+                return self.http_status(400, -1, str(e))
+            except argon2.exceptions.VerifyMismatchError:
+                return self.http_status(400, -1, 'Current password is incorrect')
+
+        @self.route('/bind-space', methods=['POST'], auth_type=group.AuthType.NONE)
+        async def _() -> str:
+            """Bind Space account to existing local account"""
+            json_data = await quart.request.json
+            code = json_data.get('code')
+            state = json_data.get('state')  # JWT token passed as state
+
+            if not code:
+                return self.http_status(400, -1, 'Missing authorization code')
+
+            if not state:
+                return self.http_status(400, -1, 'Missing state parameter')
+
+            # Verify state is a valid JWT token
+            try:
+                user_email = await self.ap.user_service.verify_jwt_token(state)
+            except Exception:
+                return self.http_status(401, -1, 'Invalid or expired state')
+
+            user_obj = await self.ap.user_service.get_user_by_email(user_email)
+            if user_obj is None:
+                return self.http_status(404, -1, 'User not found')
+
+            if user_obj.account_type != 'local':
+                return self.http_status(400, -1, 'Only local accounts can bind to Space')
+
+            try:
+                updated_user = await self.ap.user_service.bind_space_account(user_email, code)
+                jwt_token = await self.ap.user_service.generate_jwt_token(updated_user.user)
+                return self.success(
+                    data={
+                        'token': jwt_token,
+                        'user': updated_user.user,
+                        'account_type': updated_user.account_type,
+                    }
+                )
+            except ValueError as e:
+                return self.http_status(400, -1, str(e))
+            except Exception as e:
+                return self.http_status(500, -1, f'Failed to bind Space account: {str(e)}')

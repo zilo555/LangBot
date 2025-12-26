@@ -726,8 +726,38 @@ export class BackendClient extends BaseHttpClient {
   public getUserInfo(): Promise<{
     user: string;
     account_type: 'local' | 'space';
+    has_password: boolean;
   }> {
     return this.get('/api/v1/user/info');
+  }
+
+  public getAccountInfo(): Promise<{
+    initialized: boolean;
+    account_type?: 'local' | 'space';
+    has_password?: boolean;
+  }> {
+    return this.get('/api/v1/user/account-info');
+  }
+
+  public setPassword(
+    newPassword: string,
+    currentPassword?: string,
+  ): Promise<{ user: string }> {
+    return this.post('/api/v1/user/set-password', {
+      new_password: newPassword,
+      current_password: currentPassword,
+    });
+  }
+
+  public bindSpaceAccount(
+    code: string,
+    state: string,
+  ): Promise<{
+    token: string;
+    user: string;
+    account_type: 'local' | 'space';
+  }> {
+    return this.post('/api/v1/user/bind-space', { code, state });
   }
 
   // ============ Space OAuth API (Redirect Flow) ============

@@ -6,6 +6,7 @@ import jwt
 import datetime
 import aiohttp
 import typing
+import asyncio
 
 from ....core import app
 from ....entity.persistence import user
@@ -14,9 +15,11 @@ from ....utils import constants
 
 class UserService:
     ap: app.Application
+    _create_user_lock: asyncio.Lock
 
     def __init__(self, ap: app.Application) -> None:
         self.ap = ap
+        self._create_user_lock = asyncio.Lock()
 
     def _get_space_config(self) -> typing.Dict[str, str]:
         """Get Space configuration from config file"""
@@ -197,42 +200,62 @@ class UserService:
         refresh_token: str,
         api_key: str,
     ) -> user.User:
-        """Create or update a Space user account"""
-        # Check if user with this Space UUID already exists
-        existing_user = await self.get_user_by_space_account_uuid(space_account_uuid)
+        """Create or update a Space user account (only if system not initialized or user exists)"""
+        async with self._create_user_lock:
+            # Check if user with this Space UUID already exists
+            existing_user = await self.get_user_by_space_account_uuid(space_account_uuid)
 
-        if existing_user:
-            # Update existing user's tokens
+            if existing_user:
+                # Update existing user's tokens
+                await self.ap.persistence_mgr.execute_async(
+                    sqlalchemy.update(user.User)
+                    .where(user.User.space_account_uuid == space_account_uuid)
+                    .values(
+                        space_access_token=access_token,
+                        space_refresh_token=refresh_token,
+                        space_api_key=api_key,
+                    )
+                )
+                return await self.get_user_by_space_account_uuid(space_account_uuid)
+
+            # Check if user with same email exists
+            existing_email_user = await self.get_user_by_email(email)
+            if existing_email_user:
+                # Update existing user to link with Space account
+                await self.ap.persistence_mgr.execute_async(
+                    sqlalchemy.update(user.User)
+                    .where(user.User.user == email)
+                    .values(
+                        account_type='space',
+                        space_account_uuid=space_account_uuid,
+                        space_access_token=access_token,
+                        space_refresh_token=refresh_token,
+                        space_api_key=api_key,
+                    )
+                )
+                return await self.get_user_by_email(email)
+
+            # Check if system is already initialized
+            is_initialized = await self.is_initialized()
+            if is_initialized:
+                raise ValueError(
+                    'This LangBot instance already has an account. Please use the existing account to login.'
+                )
+
+            # Create new Space user (first time initialization)
             await self.ap.persistence_mgr.execute_async(
-                sqlalchemy.update(user.User)
-                .where(user.User.space_account_uuid == space_account_uuid)
-                .values(
+                sqlalchemy.insert(user.User).values(
+                    user=email,
+                    password='',  # Space users don't have local password
+                    account_type='space',
+                    space_account_uuid=space_account_uuid,
                     space_access_token=access_token,
                     space_refresh_token=refresh_token,
                     space_api_key=api_key,
                 )
             )
+
             return await self.get_user_by_space_account_uuid(space_account_uuid)
-
-        # Check if user with same email exists as local account
-        existing_email_user = await self.get_user_by_email(email)
-        if existing_email_user and existing_email_user.account_type == 'local':
-            raise ValueError('A local account with this email already exists. Please use a different email.')
-
-        # Create new Space user
-        await self.ap.persistence_mgr.execute_async(
-            sqlalchemy.insert(user.User).values(
-                user=email,
-                password='',  # Space users don't have local password
-                account_type='space',
-                space_account_uuid=space_account_uuid,
-                space_access_token=access_token,
-                space_refresh_token=refresh_token,
-                space_api_key=api_key,
-            )
-        )
-
-        return await self.get_user_by_space_account_uuid(space_account_uuid)
 
     async def authenticate_space_user(self, access_token: str, refresh_token: str) -> typing.Tuple[str, user.User]:
         """Authenticate with Space and return JWT token"""
@@ -261,3 +284,71 @@ class UserService:
         jwt_token = await self.generate_jwt_token(email)
 
         return jwt_token, user_obj
+
+    async def get_first_user(self) -> user.User | None:
+        """Get the first user (for single-user mode)"""
+        result = await self.ap.persistence_mgr.execute_async(sqlalchemy.select(user.User).limit(1))
+        result_list = result.all()
+        return result_list[0] if result_list else None
+
+    async def set_password(self, user_email: str, new_password: str, current_password: str | None = None) -> None:
+        """Set or change password for a user"""
+        ph = argon2.PasswordHasher()
+        user_obj = await self.get_user_by_email(user_email)
+
+        if user_obj is None:
+            raise ValueError('User not found')
+
+        # If user already has a password, verify current password
+        has_password = bool(user_obj.password and user_obj.password.strip())
+        if has_password:
+            if not current_password:
+                raise ValueError('Current password is required')
+            ph.verify(user_obj.password, current_password)
+
+        hashed_password = ph.hash(new_password)
+        await self.ap.persistence_mgr.execute_async(
+            sqlalchemy.update(user.User).where(user.User.user == user_email).values(password=hashed_password)
+        )
+
+    async def bind_space_account(self, user_email: str, code: str) -> user.User:
+        """Bind Space account to existing local account"""
+        # Exchange code for tokens
+        token_data = await self.exchange_space_oauth_code(code)
+        access_token = token_data.get('access_token')
+        refresh_token = token_data.get('refresh_token')
+
+        if not access_token:
+            raise ValueError('Failed to get access token from Space')
+
+        # Get Space user info
+        user_info = await self.get_space_user_info(access_token)
+        account = user_info.get('account', {})
+        api_key = user_info.get('api_key', '')
+
+        space_account_uuid = account.get('uuid')
+        space_email = account.get('email')
+
+        if not space_account_uuid or not space_email:
+            raise ValueError('Invalid Space user info')
+
+        # Check if this Space account is already bound to another user
+        existing_space_user = await self.get_user_by_space_account_uuid(space_account_uuid)
+        if existing_space_user and existing_space_user.user != user_email:
+            raise ValueError('This Space account is already bound to another user')
+
+        # Update local account to Space account
+        await self.ap.persistence_mgr.execute_async(
+            sqlalchemy.update(user.User)
+            .where(user.User.user == user_email)
+            .values(
+                user=space_email,  # Update email to Space email
+                account_type='space',
+                space_account_uuid=space_account_uuid,
+                space_access_token=access_token,
+                space_refresh_token=refresh_token,
+                space_api_key=api_key,
+            )
+        )
+
+        return await self.get_user_by_email(space_email)

@@ -231,7 +231,7 @@ export default function Register() {
                 variant="outline"
                 className="w-full cursor-pointer"
               >
-                {t('register.registerLocal')}
+                {t('register.registerWithPassword')}
               </Button>
             </form>
           </Form>

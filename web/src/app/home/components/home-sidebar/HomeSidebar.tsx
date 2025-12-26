@@ -9,7 +9,7 @@ import {
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { sidebarConfigList } from '@/app/home/components/home-sidebar/sidbarConfigList';
 import langbotIcon from '@/app/assets/langbot-logo.webp';
-import { systemInfo } from '@/app/infra/http/HttpClient';
+import { systemInfo, httpClient } from '@/app/infra/http/HttpClient';
 import { getCloudServiceClientSync } from '@/app/infra/http';
 import { useTranslation } from 'react-i18next';
 import {
@@ -18,9 +18,9 @@ import {
   Monitor,
   CircleHelp,
   Lightbulb,
-  Lock,
   LogOut,
   KeyRound,
+  User,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
@@ -33,7 +33,7 @@ import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { LanguageSelector } from '@/components/ui/language-selector';
 import { Badge } from '@/components/ui/badge';
-import PasswordChangeDialog from '@/app/home/components/password-change-dialog/PasswordChangeDialog';
+import AccountSettingsDialog from '@/app/home/components/account-settings-dialog/AccountSettingsDialog';
 import ApiIntegrationDialog from '@/app/home/components/api-integration-dialog/ApiIntegrationDialog';
 import NewVersionDialog from '@/app/home/components/new-version-dialog/NewVersionDialog';
 import ModelsDialog from '@/app/home/components/models-dialog/ModelsDialog';
@@ -85,7 +85,7 @@ export default function HomeSidebar({
   const { theme, setTheme } = useTheme();
   const { t } = useTranslation();
   const [popoverOpen, setPopoverOpen] = useState(false);
-  const [passwordChangeOpen, setPasswordChangeOpen] = useState(false);
+  const [accountSettingsOpen, setAccountSettingsOpen] = useState(false);
   const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false);
   const [languageSelectorOpen, setLanguageSelectorOpen] = useState(false);
   const [starCount, setStarCount] = useState<number | null>(null);
@@ -95,6 +95,7 @@ export default function HomeSidebar({
   const [hasNewVersion, setHasNewVersion] = useState(false);
   const [versionDialogOpen, setVersionDialogOpen] = useState(false);
   const [modelsDialogOpen, setModelsDialogOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState<string>('');
 
   // 处理模型对话框的打开和关闭，同时更新 URL
   function handleModelsDialogChange(open: boolean) {
@@ -118,6 +119,21 @@ export default function HomeSidebar({
     if (!localStorage.getItem('token')) {
       localStorage.setItem('token', 'test-token');
       localStorage.setItem('userEmail', 'test@example.com');
+    }
+
+    // Load user email
+    const storedEmail = localStorage.getItem('userEmail');
+    if (storedEmail) {
+      setUserEmail(storedEmail);
+    } else {
+      // Fetch from API if not in localStorage
+      httpClient
+        .getUserInfo()
+        .then((info) => {
+          setUserEmail(info.user);
+          localStorage.setItem('userEmail', info.user);
+        })
+        .catch(() => {});
     }
 
     getCloudServiceClientSync()
@@ -374,6 +390,20 @@ export default function HomeSidebar({
 
             <div className="flex flex-col gap-2 w-full">
               <span className="text-sm font-medium">{t('common.account')}</span>
+              {/* User email display */}
+              <Button
+                variant="ghost"
+                className="w-full justify-start font-normal"
+                onClick={() => {
+                  setAccountSettingsOpen(true);
+                  setPopoverOpen(false);
+                }}
+              >
+                <User className="w-4 h-4 mr-2" />
+                <span className="truncate max-w-[180px]">
+                  {userEmail || t('account.settings')}
+                </span>
+              </Button>
               <Button
                 variant="ghost"
                 className="w-full justify-start font-normal"
@@ -416,19 +446,6 @@ export default function HomeSidebar({
                 <Lightbulb className="w-4 h-4 mr-2" />
                 {t('common.featureRequest')}
               </Button>
-              {systemInfo?.allow_change_password && (
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start font-normal"
-                  onClick={() => {
-                    setPasswordChangeOpen(true);
-                    setPopoverOpen(false);
-                  }}
-                >
-                  <Lock className="w-4 h-4 mr-2" />
-                  {t('common.changePassword')}
-                </Button>
-              )}
               <Button
                 variant="ghost"
                 className="w-full justify-start font-normal"
@@ -443,9 +460,9 @@ export default function HomeSidebar({
           </PopoverContent>
         </Popover>
       </div>
-      <PasswordChangeDialog
-        open={passwordChangeOpen}
-        onOpenChange={setPasswordChangeOpen}
+      <AccountSettingsDialog
+        open={accountSettingsOpen}
+        onOpenChange={setAccountSettingsOpen}
       />
       <ApiIntegrationDialog
         open={apiKeyDialogOpen}

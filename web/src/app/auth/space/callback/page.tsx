@@ -5,7 +5,12 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import {
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
+  AlertTriangle,
+} from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -21,26 +26,24 @@ export default function SpaceOAuthCallback() {
   const searchParams = useSearchParams();
   const { t } = useTranslation();
 
-  const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
-    'loading',
-  );
+  const [status, setStatus] = useState<
+    'loading' | 'confirm' | 'success' | 'error'
+  >('loading');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [isBindMode, setIsBindMode] = useState(false);
+  const [code, setCode] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleOAuthCallback = useCallback(
-    async (code: string) => {
+    async (authCode: string) => {
       try {
-        const response = await httpClient.exchangeSpaceOAuthCode(code);
-
-        // Store token and user info
+        const response = await httpClient.exchangeSpaceOAuthCode(authCode);
         localStorage.setItem('token', response.token);
         if (response.user) {
           localStorage.setItem('userEmail', response.user);
         }
-
         setStatus('success');
         toast.success(t('common.spaceLoginSuccess'));
-
-        // Redirect to home after a brief delay to show success state
         setTimeout(() => {
           router.push('/home');
         }, 1000);
@@ -52,10 +55,40 @@ export default function SpaceOAuthCallback() {
     [router, t],
   );
 
+  const [bindState, setBindState] = useState<string | null>(null);
+
+  const handleBindAccount = useCallback(
+    async (authCode: string, state: string) => {
+      setIsProcessing(true);
+      try {
+        const response = await httpClient.bindSpaceAccount(authCode, state);
+        localStorage.setItem('token', response.token);
+        if (response.user) {
+          localStorage.setItem('userEmail', response.user);
+        }
+        setStatus('success');
+        toast.success(t('account.bindSpaceSuccess'));
+        setTimeout(() => {
+          router.push('/home');
+        }, 1000);
+      } catch (err) {
+        setStatus('error');
+        setErrorMessage(
+          err instanceof Error ? err.message : t('account.bindSpaceFailed'),
+        );
+      } finally {
+        setIsProcessing(false);
+      }
+    },
+    [router, t],
+  );
+
   useEffect(() => {
-    const code = searchParams.get('code');
+    const authCode = searchParams.get('code');
     const error = searchParams.get('error');
     const errorDescription = searchParams.get('error_description');
+    const mode = searchParams.get('mode');
+    const state = searchParams.get('state');
 
     if (error) {
       setStatus('error');
@@ -65,21 +98,44 @@ export default function SpaceOAuthCallback() {
       return;
     }
 
-    if (!code) {
+    if (!authCode) {
       setStatus('error');
       setErrorMessage(t('common.spaceLoginNoCode'));
       return;
     }
 
-    // Exchange code for token
-    handleOAuthCallback(code);
+    setCode(authCode);
+
+    if (mode === 'bind') {
+      // Bind mode - verify state (token) exists
+      if (!state) {
+        setStatus('error');
+        setErrorMessage(t('account.bindSpaceInvalidState'));
+        return;
+      }
+      setBindState(state);
+      setIsBindMode(true);
+      setStatus('confirm');
+    } else {
+      // Normal login/register mode
+      handleOAuthCallback(authCode);
+    }
   }, [searchParams, handleOAuthCallback, t]);
+
+  const handleConfirmBind = () => {
+    if (code && bindState) {
+      handleBindAccount(code, bindState);
+    }
+  };
+
+  const handleCancelBind = () => {
+    router.push('/home');
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-neutral-900">
-      <Card className="w-[375px] shadow-lg dark:shadow-white/10">
+      <Card className="w-[400px] shadow-lg dark:shadow-white/10">
         <CardHeader className="text-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={langbotIcon.src}
             alt="LangBot"
@@ -87,12 +143,20 @@ export default function SpaceOAuthCallback() {
           />
           <CardTitle className="text-xl">
             {status === 'loading' && t('common.spaceLoginProcessing')}
-            {status === 'success' && t('common.spaceLoginSuccess')}
-            {status === 'error' && t('common.spaceLoginError')}
+            {status === 'confirm' && t('account.bindSpaceConfirmTitle')}
+            {status === 'success' &&
+              (isBindMode
+                ? t('account.bindSpaceSuccess')
+                : t('common.spaceLoginSuccess'))}
+            {status === 'error' &&
+              (isBindMode
+                ? t('account.bindSpaceFailed')
+                : t('common.spaceLoginError'))}
           </CardTitle>
           <CardDescription>
             {status === 'loading' &&
               t('common.spaceLoginProcessingDescription')}
+            {status === 'confirm' && t('account.bindSpaceConfirmDescription')}
             {status === 'success' && t('common.spaceLoginSuccessDescription')}
             {status === 'error' && errorMessage}
           </CardDescription>
@@ -101,6 +165,34 @@ export default function SpaceOAuthCallback() {
           {status === 'loading' && (
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
           )}
+          {status === 'confirm' && (
+            <>
+              <AlertTriangle className="h-12 w-12 text-yellow-500" />
+              <p className="text-sm text-center text-muted-foreground px-4">
+                {t('account.bindSpaceWarning')}
+              </p>
+              <div className="flex gap-3 w-full">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={handleCancelBind}
+                  disabled={isProcessing}
+                >
+                  {t('common.cancel')}
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={handleConfirmBind}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : null}
+                  {t('common.confirm')}
+                </Button>
+              </div>
+            </>
+          )}
           {status === 'success' && (
             <CheckCircle2 className="h-12 w-12 text-green-500" />
           )}
@@ -108,10 +200,10 @@ export default function SpaceOAuthCallback() {
             <>
               <AlertCircle className="h-12 w-12 text-red-500" />
               <Button
-                onClick={() => router.push('/login')}
+                onClick={() => router.push(isBindMode ? '/home' : '/login')}
                 className="w-full mt-4"
               >
-                {t('common.backToLogin')}
+                {isBindMode ? t('common.backToHome') : t('common.backToLogin')}
               </Button>
             </>
           )}
