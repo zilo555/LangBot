@@ -8,3 +8,5 @@ required_database_version = 16
 debug_mode = False
 
 edition = 'community'
+
+instance_id = ''

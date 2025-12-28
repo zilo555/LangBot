@@ -145,13 +145,15 @@ class UserService:
 
     async def exchange_space_oauth_code(self, code: str) -> typing.Dict:
         """Exchange OAuth authorization code for tokens"""
+        from langbot.pkg.utils import constants
+
         space_config = self._get_space_config()
         space_url = space_config['url']
 
         async with aiohttp.ClientSession() as session:
             async with session.post(
                 f'{space_url}/api/v1/accounts/oauth/token',
-                json={'code': code},
+                json={'code': code, 'instance_id': constants.instance_id},
             ) as response:
                 if response.status != 200:
                     raise ValueError(f'Failed to exchange OAuth code: {await response.text()}')

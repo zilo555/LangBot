@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import os
 from typing import Any
+from langbot.pkg.utils import constants
 import yaml
 import importlib.resources as resources
+import uuid
+import time
 
 from .. import stage, app
 from ..bootutils import config
@@ -141,6 +144,22 @@ class LoadConfigStage(stage.BootingStage):
         ap.instance_config.data = _apply_env_overrides_to_config(ap.instance_config.data)
 
         await ap.instance_config.dump_config()
+
+        # load or generate instance id
+        ap.instance_id = await config.load_json_config(
+            'data/labels/instance_id.json',
+            template_data={
+                'instance_id': f'instance_{str(uuid.uuid4())}',
+                'instance_create_ts': int(time.time()),
+            },
+            completion=False,
+        )
+
+        constants.instance_id = ap.instance_id.data['instance_id']
+
+        print(f'LangBot instance id: {constants.instance_id}')
+
+        await ap.instance_id.dump_config()
 
         ap.sensitive_meta = await config.load_json_config(
             'data/metadata/sensitive-words.json',

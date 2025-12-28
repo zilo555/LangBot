@@ -76,6 +76,8 @@ class Application:
 
     instance_config: config_mgr.ConfigManager = None
 
+    instance_id: config_mgr.ConfigManager = None  # used to identify the instance
+
     # ======= Metadata config manager =======
 
     sensitive_meta: config_mgr.ConfigManager = None
