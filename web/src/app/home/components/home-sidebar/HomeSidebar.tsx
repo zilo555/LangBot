@@ -29,7 +29,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { LanguageSelector } from '@/components/ui/language-selector';
 import { Badge } from '@/components/ui/badge';
 import AccountSettingsDialog from '@/app/home/components/account-settings-dialog/AccountSettingsDialog';
@@ -376,28 +375,32 @@ export default function HomeSidebar({
               </span>
             </div>
 
-            <LanguageSelector
-              triggerClassName="w-full"
-              onOpenChange={setLanguageSelectorOpen}
-            />
-            <ToggleGroup
-              type="single"
-              value={theme}
-              onValueChange={(value) => {
-                if (value) setTheme(value);
-              }}
-              className="w-full justify-start"
-            >
-              <ToggleGroupItem value="light" size="sm">
-                <Sun className="h-4 w-4" />
-              </ToggleGroupItem>
-              <ToggleGroupItem value="dark" size="sm">
-                <Moon className="h-4 w-4" />
-              </ToggleGroupItem>
-              <ToggleGroupItem value="system" size="sm">
-                <Monitor className="h-4 w-4" />
-              </ToggleGroupItem>
-            </ToggleGroup>
+            <div className="flex items-center gap-2">
+              <LanguageSelector
+                triggerClassName="flex-1"
+                onOpenChange={setLanguageSelectorOpen}
+              />
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() =>
+                  setTheme(
+                    theme === 'light'
+                      ? 'dark'
+                      : theme === 'dark'
+                        ? 'system'
+                        : 'light',
+                  )
+                }
+                className="h-9 w-9 shrink-0"
+              >
+                {theme === 'light' && <Sun className="h-[1.2rem] w-[1.2rem]" />}
+                {theme === 'dark' && <Moon className="h-[1.2rem] w-[1.2rem]" />}
+                {theme === 'system' && (
+                  <Monitor className="h-[1.2rem] w-[1.2rem]" />
+                )}
+              </Button>
+            </div>
 
             <div className="flex flex-col gap-1">
               <Button
