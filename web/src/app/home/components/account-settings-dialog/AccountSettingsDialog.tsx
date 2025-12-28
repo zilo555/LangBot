@@ -2,9 +2,6 @@
 
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import {
@@ -16,17 +13,16 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
+  Item,
+  ItemMedia,
+  ItemContent,
+  ItemTitle,
+  ItemDescription,
+  ItemActions,
+} from '@/components/ui/item';
 import { httpClient } from '@/app/infra/http/HttpClient';
-import { Loader2, ExternalLink } from 'lucide-react';
+import { Loader2, ExternalLink, KeyRound } from 'lucide-react';
+import PasswordChangeDialog from '../password-change-dialog/PasswordChangeDialog';
 
 interface AccountSettingsDialogProps {
   open: boolean;
@@ -38,60 +34,18 @@ export default function AccountSettingsDialog({
   onOpenChange,
 }: AccountSettingsDialogProps) {
   const { t } = useTranslation();
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [accountType, setAccountType] = useState<'local' | 'space'>('local');
   const [hasPassword, setHasPassword] = useState(false);
   const [userEmail, setUserEmail] = useState('');
   const [loading, setLoading] = useState(true);
   const [spaceBindLoading, setSpaceBindLoading] = useState(false);
-
-  // Schema with optional currentPassword
-  const formSchema = z
-    .object({
-      currentPassword: z.string().optional(),
-      newPassword: z
-        .string()
-        .min(1, { message: t('common.newPasswordRequired') }),
-      confirmNewPassword: z
-        .string()
-        .min(1, { message: t('common.confirmPasswordRequired') }),
-    })
-    .refine((data) => data.newPassword === data.confirmNewPassword, {
-      message: t('common.passwordsDoNotMatch'),
-      path: ['confirmNewPassword'],
-    })
-    .refine(
-      (data) =>
-        !hasPassword ||
-        (data.currentPassword && data.currentPassword.length > 0),
-      {
-        message: t('common.currentPasswordRequired'),
-        path: ['currentPassword'],
-      },
-    );
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      currentPassword: '',
-      newPassword: '',
-      confirmNewPassword: '',
-    },
-  });
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
       loadUserInfo();
     }
   }, [open]);
-
-  useEffect(() => {
-    form.reset({
-      currentPassword: '',
-      newPassword: '',
-      confirmNewPassword: '',
-    });
-  }, [hasPassword, form]);
 
   async function loadUserInfo() {
     setLoading(true);
@@ -106,20 +60,6 @@ export default function AccountSettingsDialog({
       setLoading(false);
     }
   }
-
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsSubmitting(true);
-    try {
-      await httpClient.setPassword(values.newPassword, values.currentPassword);
-      toast.success(t('account.passwordSetSuccess'));
-      form.reset();
-      setHasPassword(true);
-    } catch {
-      toast.error(t('common.changePasswordFailed'));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleBindSpace = async () => {
     setSpaceBindLoading(true);
@@ -144,131 +84,123 @@ export default function AccountSettingsDialog({
     }
   };
 
+  const handlePasswordDialogClose = (dialogOpen: boolean) => {
+    setPasswordDialogOpen(dialogOpen);
+    if (!dialogOpen) {
+      // Reload user info to update password status
+      loadUserInfo();
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{t('account.settings')}</DialogTitle>
-          <DialogDescription>{userEmail}</DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('account.settings')}</DialogTitle>
+            <DialogDescription>{userEmail}</DialogDescription>
+          </DialogHeader>
 
-        {loading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin" />
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Password Section */}
-            <div className="space-y-4">
-              <h4 className="text-sm font-medium">
-                {hasPassword
-                  ? t('common.changePassword')
-                  : t('account.setPassword')}
-              </h4>
-              {!hasPassword && (
-                <p className="text-sm text-muted-foreground">
-                  {t('account.setPasswordHint')}
-                </p>
-              )}
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit(onSubmit)}
-                  className="space-y-4"
-                >
-                  {hasPassword && (
-                    <FormField
-                      control={form.control}
-                      name="currentPassword"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>{t('common.currentPassword')}</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="password"
-                              placeholder={t('common.enterCurrentPassword')}
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  )}
-                  <FormField
-                    control={form.control}
-                    name="newPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('common.newPassword')}</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="password"
-                            placeholder={t('common.enterNewPassword')}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="confirmNewPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>{t('common.confirmNewPassword')}</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="password"
-                            placeholder={t('common.enterConfirmPassword')}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full"
-                  >
-                    {isSubmitting ? t('common.saving') : t('common.save')}
-                  </Button>
-                </form>
-              </Form>
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin" />
             </div>
-
-            {/* Bind Space Account - only for local accounts */}
-            {accountType === 'local' && (
-              <>
-                <Separator />
-                <div className="space-y-4">
-                  <h4 className="text-sm font-medium">
-                    {t('account.bindSpace')}
-                  </h4>
-                  <p className="text-sm text-muted-foreground">
-                    {t('account.bindSpaceDescription')}
-                  </p>
+          ) : (
+            <div className="space-y-2">
+              {/* Password Item */}
+              <Item size="sm" variant="muted" className="rounded-lg">
+                <ItemMedia variant="icon">
+                  <KeyRound className="h-4 w-4" />
+                </ItemMedia>
+                <ItemContent>
+                  <ItemTitle>{t('account.passwordStatus')}</ItemTitle>
+                  <ItemDescription>
+                    {hasPassword
+                      ? t('account.passwordSetDescription')
+                      : t('account.setPasswordHint')}
+                  </ItemDescription>
+                </ItemContent>
+                <ItemActions>
                   <Button
                     variant="outline"
-                    className="w-full"
-                    onClick={handleBindSpace}
-                    disabled={spaceBindLoading}
+                    size="sm"
+                    onClick={() => setPasswordDialogOpen(true)}
                   >
-                    {spaceBindLoading ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                    )}
-                    {t('account.bindSpaceButton')}
+                    {hasPassword
+                      ? t('common.changePassword')
+                      : t('account.setPassword')}
                   </Button>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+                </ItemActions>
+              </Item>
+
+              {/* Space Account Item */}
+              <Item size="sm" variant="muted" className="rounded-lg">
+                <ItemMedia variant="icon">
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M12 2L2 7L12 12L22 7L12 2Z"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M2 17L12 22L22 17"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M2 12L12 17L22 12"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </ItemMedia>
+                <ItemContent>
+                  <ItemTitle>{t('account.spaceStatus')}</ItemTitle>
+                  <ItemDescription>
+                    {accountType === 'space'
+                      ? t('account.spaceBoundDescription')
+                      : t('account.bindSpaceDescription')}
+                  </ItemDescription>
+                </ItemContent>
+                {accountType === 'local' && (
+                  <ItemActions>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleBindSpace}
+                      disabled={spaceBindLoading}
+                    >
+                      {spaceBindLoading ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                      )}
+                      {t('account.bindSpaceButton')}
+                    </Button>
+                  </ItemActions>
+                )}
+              </Item>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <PasswordChangeDialog
+        open={passwordDialogOpen}
+        onOpenChange={handlePasswordDialogClose}
+        hasPassword={hasPassword}
+      />
+    </>
   );
 }

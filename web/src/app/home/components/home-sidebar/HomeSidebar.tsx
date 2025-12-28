@@ -20,7 +20,6 @@ import {
   Lightbulb,
   LogOut,
   KeyRound,
-  User,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
@@ -79,6 +78,12 @@ export default function HomeSidebar({
     if (searchParams.get('action') === 'showModelSettings') {
       setModelsDialogOpen(true);
     }
+    if (searchParams.get('action') === 'showAccountSettings') {
+      setAccountSettingsOpen(true);
+    }
+    if (searchParams.get('action') === 'showApiIntegrationSettings') {
+      setApiKeyDialogOpen(true);
+    }
   }, [searchParams]);
 
   const [selectedChild, setSelectedChild] = useState<SidebarChildVO>();
@@ -103,6 +108,23 @@ export default function HomeSidebar({
     if (open) {
       const params = new URLSearchParams(searchParams.toString());
       params.set('action', 'showModelSettings');
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    } else {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('action');
+      const newUrl = params.toString()
+        ? `${pathname}?${params.toString()}`
+        : pathname;
+      router.replace(newUrl, { scroll: false });
+    }
+  }
+
+  // 处理账户设置对话框的打开和关闭，同时更新 URL
+  function handleAccountSettingsChange(open: boolean) {
+    setAccountSettingsOpen(open);
+    if (open) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('action', 'showAccountSettings');
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     } else {
       const params = new URLSearchParams(searchParams.toString());
@@ -337,44 +359,47 @@ export default function HomeSidebar({
           <PopoverContent
             side="right"
             align="end"
-            className="w-auto p-4 flex flex-col gap-4"
+            className="w-auto p-2 flex flex-col gap-2"
           >
-            <div className="flex flex-col gap-2 w-full">
-              <span className="text-sm font-medium">{t('common.theme')}</span>
-              <ToggleGroup
-                type="single"
-                value={theme}
-                onValueChange={(value) => {
-                  if (value) setTheme(value);
-                }}
-                className="justify-start"
-              >
-                <ToggleGroupItem value="light" size="sm">
-                  <Sun className="h-4 w-4" />
-                </ToggleGroupItem>
-                <ToggleGroupItem value="dark" size="sm">
-                  <Moon className="h-4 w-4" />
-                </ToggleGroupItem>
-                <ToggleGroupItem value="system" size="sm">
-                  <Monitor className="h-4 w-4" />
-                </ToggleGroupItem>
-              </ToggleGroup>
+            <div
+              className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent cursor-pointer"
+              onClick={() => {
+                handleAccountSettingsChange(true);
+                setPopoverOpen(false);
+              }}
+            >
+              <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">
+                {userEmail ? userEmail.charAt(0).toUpperCase() : 'U'}
+              </div>
+              <span className="text-sm truncate max-w-[180px]">
+                {userEmail || t('account.settings')}
+              </span>
             </div>
 
-            <div className="flex flex-col gap-2 w-full">
-              <span className="text-sm font-medium">
-                {t('common.language')}
-              </span>
-              <LanguageSelector
-                triggerClassName="w-full"
-                onOpenChange={setLanguageSelectorOpen}
-              />
-            </div>
+            <LanguageSelector
+              triggerClassName="w-full"
+              onOpenChange={setLanguageSelectorOpen}
+            />
+            <ToggleGroup
+              type="single"
+              value={theme}
+              onValueChange={(value) => {
+                if (value) setTheme(value);
+              }}
+              className="w-full justify-start"
+            >
+              <ToggleGroupItem value="light" size="sm">
+                <Sun className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="dark" size="sm">
+                <Moon className="h-4 w-4" />
+              </ToggleGroupItem>
+              <ToggleGroupItem value="system" size="sm">
+                <Monitor className="h-4 w-4" />
+              </ToggleGroupItem>
+            </ToggleGroup>
 
-            <div className="flex flex-col gap-2 w-full">
-              <span className="text-sm font-medium">
-                {t('common.integration')}
-              </span>
+            <div className="flex flex-col gap-1">
               <Button
                 variant="ghost"
                 className="w-full justify-start font-normal"
@@ -386,36 +411,12 @@ export default function HomeSidebar({
                 <KeyRound className="w-4 h-4 mr-2" />
                 {t('common.apiIntegration')}
               </Button>
-            </div>
-
-            <div className="flex flex-col gap-2 w-full">
-              <span className="text-sm font-medium">{t('common.account')}</span>
-              {/* User email display */}
               <Button
                 variant="ghost"
                 className="w-full justify-start font-normal"
                 onClick={() => {
-                  setAccountSettingsOpen(true);
-                  setPopoverOpen(false);
-                }}
-              >
-                <User className="w-4 h-4 mr-2" />
-                <span className="truncate max-w-[180px]">
-                  {userEmail || t('account.settings')}
-                </span>
-              </Button>
-              <Button
-                variant="ghost"
-                className="w-full justify-start font-normal"
-                onClick={() => {
-                  // open docs.langbot.app
                   const language = localStorage.getItem('langbot_language');
-                  if (language === 'zh-Hans') {
-                    window.open(
-                      'https://docs.langbot.app/zh/insight/guide.html',
-                      '_blank',
-                    );
-                  } else if (language === 'zh-Hant') {
+                  if (language === 'zh-Hans' || language === 'zh-Hant') {
                     window.open(
                       'https://docs.langbot.app/zh/insight/guide.html',
                       '_blank',
@@ -449,9 +450,7 @@ export default function HomeSidebar({
               <Button
                 variant="ghost"
                 className="w-full justify-start font-normal"
-                onClick={() => {
-                  handleLogout();
-                }}
+                onClick={() => handleLogout()}
               >
                 <LogOut className="w-4 h-4 mr-2" />
                 {t('common.logout')}
@@ -462,7 +461,7 @@ export default function HomeSidebar({
       </div>
       <AccountSettingsDialog
         open={accountSettingsOpen}
-        onOpenChange={setAccountSettingsOpen}
+        onOpenChange={handleAccountSettingsChange}
       />
       <ApiIntegrationDialog
         open={apiKeyDialogOpen}

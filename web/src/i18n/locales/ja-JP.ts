@@ -50,7 +50,8 @@ const jaJP = {
     loading: '読み込み中...',
     or: 'または',
     loginWithSpace: 'Space でログイン',
-    spaceLoginRecommended: 'おすすめ：Space からモデルとクレジットを同期',
+    spaceLoginRecommended:
+      'おすすめ：公式の安定したモデル API とクラウドサービスを利用',
     loginLocal: 'ローカルアカウントでログイン',
     loginWithPassword: 'パスワードでログイン',
     spaceLoginTitle: 'Space でログイン',
@@ -715,7 +716,8 @@ const jaJP = {
       '入力したメールアドレスとパスワードが初期管理者アカウントになります',
     register: '登録',
     initWithSpace: 'Space で初期化',
-    spaceRecommended: 'おすすめ：Space からモデルとクレジットを同期',
+    spaceRecommended:
+      'おすすめ：公式の安定したモデル API とクラウドサービスを利用',
     registerLocal: 'ローカルアカウントを登録',
     registerWithPassword: 'メールアドレスとパスワードで登録',
     initSuccess: '初期化に成功しました。ログインしてください',
@@ -764,21 +766,30 @@ const jaJP = {
     settings: 'アカウント設定',
     setPassword: 'パスワードを設定',
     passwordSetSuccess: 'パスワードの設定に成功しました',
+    passwordStatus: 'ローカルパスワード',
+    passwordSet: '設定済み',
+    passwordNotSet: '未設定',
+    passwordSetDescription:
+      'パスワードが設定されています。メールとパスワードでログインできます',
+    spaceStatus: 'Space アカウント',
+    spaceBound: '連携済み',
+    spaceNotBound: '未連携',
+    spaceBoundDescription:
+      'Space アカウントと連携済み、公式モデル API とクラウドサービスが利用可能',
     bindSpace: 'Space アカウントを連携',
-    bindSpaceDescription:
-      'ローカルアカウントを Space アカウントに連携して、モデルとクレジットを同期します',
-    bindSpaceButton: 'Space アカウントを連携',
+    bindSpaceDescription: '連携して公式モデル API とクラウドサービスを利用',
+    bindSpaceButton: '連携',
     bindSpaceConfirmTitle: '連携を確認',
     bindSpaceConfirmDescription:
-      'ローカルアカウントを Space アカウントに連携しようとしています',
+      'ローカルインスタンスを Space アカウントに連携しようとしています',
     bindSpaceWarning:
-      '連携後、ログインメールアドレスは Space アカウントのメールアドレスに変更されます。パスワードを設定している場合は、引き続きメールアドレスとパスワードでログインできます。',
+      '連携後、ログインメールアドレスは {{localEmail}} から Space アカウントのメールアドレスに変更されます。',
     bindSpaceSuccess: 'Space アカウントの連携に成功しました',
     bindSpaceFailed: 'Space アカウントの連携に失敗しました',
     bindSpaceInvalidState:
       '無効な連携リクエストです。アカウント設定から再度お試しください。',
     setPasswordHint:
-      'パスワードを設定すると、メールアドレスとパスワードでログインできます',
+      'パスワードを設定するとメールとパスワードでログインできます',
   },
 };
 

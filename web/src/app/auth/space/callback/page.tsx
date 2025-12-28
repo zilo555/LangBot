@@ -33,6 +33,7 @@ export default function SpaceOAuthCallback() {
   const [isBindMode, setIsBindMode] = useState(false);
   const [code, setCode] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [localEmail, setLocalEmail] = useState<string>('');
 
   const handleOAuthCallback = useCallback(
     async (authCode: string) => {
@@ -115,6 +116,7 @@ export default function SpaceOAuthCallback() {
       }
       setBindState(state);
       setIsBindMode(true);
+      setLocalEmail(localStorage.getItem('userEmail') || '');
       setStatus('confirm');
     } else {
       // Normal login/register mode
@@ -169,7 +171,9 @@ export default function SpaceOAuthCallback() {
             <>
               <AlertTriangle className="h-12 w-12 text-yellow-500" />
               <p className="text-sm text-center text-muted-foreground px-4">
-                {t('account.bindSpaceWarning')}
+                {t('account.bindSpaceWarning', {
+                  localEmail: localEmail || '-',
+                })}
               </p>
               <div className="flex gap-3 w-full">
                 <Button

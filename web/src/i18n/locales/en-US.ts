@@ -49,7 +49,8 @@ const enUS = {
     loading: 'Loading...',
     or: 'or',
     loginWithSpace: 'Login with Space',
-    spaceLoginRecommended: 'Recommended: Sync models and credits from Space',
+    spaceLoginRecommended:
+      'Recommended: Use official stable model APIs and cloud services',
     loginLocal: 'Login with local account',
     loginWithPassword: 'Login with password',
     spaceLoginTitle: 'Login with Space',
@@ -707,7 +708,8 @@ const enUS = {
       'The email and password you fill in will be used as the initial administrator account',
     register: 'Register',
     initWithSpace: 'Initialize with Space',
-    spaceRecommended: 'Recommended: Sync models and credits from Space',
+    spaceRecommended:
+      'Recommended: Use official stable model APIs and cloud services',
     registerLocal: 'Register local account',
     registerWithPassword: 'Register with email and password',
     initSuccess: 'Initialization successful, please login',
@@ -756,21 +758,29 @@ const enUS = {
     settings: 'Account Settings',
     setPassword: 'Set Password',
     passwordSetSuccess: 'Password set successfully',
+    passwordStatus: 'Local Password',
+    passwordSet: 'Set',
+    passwordNotSet: 'Not Set',
+    passwordSetDescription:
+      'Password is set, you can login with email and password',
+    spaceStatus: 'Space Account',
+    spaceBound: 'Bound',
+    spaceNotBound: 'Not Bound',
+    spaceBoundDescription:
+      'Space account bound, official model APIs and cloud services available',
     bindSpace: 'Bind Space Account',
-    bindSpaceDescription:
-      'Link your local account to a Space account to sync models and credits',
-    bindSpaceButton: 'Bind Space Account',
+    bindSpaceDescription: 'Bind to use official model APIs and cloud services',
+    bindSpaceButton: 'Bind',
     bindSpaceConfirmTitle: 'Confirm Binding',
     bindSpaceConfirmDescription:
-      'You are about to bind your local account to a Space account',
+      'You are about to bind your local instance to a Space account',
     bindSpaceWarning:
-      'After binding, your login email will be changed to the Space account email. You can still use email/password login if you have set a password.',
+      'After binding, your login email will be changed from {{localEmail}} to the Space account email.',
     bindSpaceSuccess: 'Space account bound successfully',
     bindSpaceFailed: 'Failed to bind Space account',
     bindSpaceInvalidState:
       'Invalid bind request. Please try again from account settings.',
-    setPasswordHint:
-      'After setting a password, you can login with email and password',
+    setPasswordHint: 'Set a password to login with email and password',
   },
 };
 
