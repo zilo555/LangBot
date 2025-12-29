@@ -73,9 +73,11 @@ class UserRouterGroup(group.RouterGroup):
         @self.route('/change-password', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
         async def _(user_email: str) -> str:
             # Check if password change is allowed
-            allow_change_password = self.ap.instance_config.data.get('system', {}).get('allow_change_password', True)
-            if not allow_change_password:
-                return self.http_status(403, -1, 'Password change is disabled')
+            allow_modify_login_info = self.ap.instance_config.data.get('system', {}).get(
+                'allow_modify_login_info', True
+            )
+            if not allow_modify_login_info:
+                return self.http_status(403, -1, 'Modifying login info is disabled')
 
             json_data = await quart.request.json
 
@@ -199,6 +201,13 @@ class UserRouterGroup(group.RouterGroup):
         @self.route('/bind-space', methods=['POST'], auth_type=group.AuthType.NONE)
         async def _() -> str:
             """Bind Space account to existing local account"""
+            # Check if modifying login info is allowed
+            allow_modify_login_info = self.ap.instance_config.data.get('system', {}).get(
+                'allow_modify_login_info', True
+            )
+            if not allow_modify_login_info:
+                return self.http_status(403, -1, 'Modifying login info is disabled')
+
             json_data = await quart.request.json
             code = json_data.get('code')
             state = json_data.get('state')  # JWT token passed as state

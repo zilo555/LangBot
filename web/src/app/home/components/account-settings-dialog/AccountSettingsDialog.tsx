@@ -21,6 +21,7 @@ import {
   ItemActions,
 } from '@/components/ui/item';
 import { httpClient } from '@/app/infra/http/HttpClient';
+import { systemInfo } from '@/app/infra/http';
 import { Loader2, ExternalLink, KeyRound } from 'lucide-react';
 import PasswordChangeDialog from '../password-change-dialog/PasswordChangeDialog';
 
@@ -125,6 +126,7 @@ export default function AccountSettingsDialog({
                     variant="outline"
                     size="sm"
                     onClick={() => setPasswordDialogOpen(true)}
+                    disabled={!systemInfo.allow_modify_login_info}
                   >
                     {hasPassword
                       ? t('common.changePassword')
@@ -179,7 +181,9 @@ export default function AccountSettingsDialog({
                       variant="outline"
                       size="sm"
                       onClick={handleBindSpace}
-                      disabled={spaceBindLoading}
+                      disabled={
+                        spaceBindLoading || !systemInfo.allow_modify_login_info
+                      }
                     >
                       {spaceBindLoading ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />

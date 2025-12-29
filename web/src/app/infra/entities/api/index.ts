@@ -241,7 +241,7 @@ export interface ApiRespSystemInfo {
   version: string;
   cloud_service_url: string;
   enable_marketplace: boolean;
-  allow_change_password: boolean;
+  allow_modify_login_info: boolean;
 }
 
 export interface ApiRespPluginSystemStatus {

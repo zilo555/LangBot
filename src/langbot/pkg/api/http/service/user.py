@@ -26,7 +26,7 @@ class UserService:
         space_config = self.ap.instance_config.data.get('space', {})
         return {
             'url': space_config.get('url', 'https://space.langbot.app'),
-            'api_url': space_config.get('api_url', 'https://api.langbot.app'),
+            'models_gateway_api_url': space_config.get('models_gateway_api_url', 'https://api.langbot.cloud'),
             'oauth_authorize_url': space_config.get('oauth_authorize_url', 'https://space.langbot.app/auth/authorize'),
         }
 

@@ -23,8 +23,8 @@ class SystemRouterGroup(group.RouterGroup):
                         if 'cloud_service_url' in self.ap.instance_config.data.get('plugin', {})
                         else 'https://space.langbot.app'
                     ),
-                    'allow_change_password': self.ap.instance_config.data.get('system', {}).get(
-                        'allow_change_password', True
+                    'allow_modify_login_info': self.ap.instance_config.data.get('system', {}).get(
+                        'allow_modify_login_info', True
                     ),
                 }
             )
