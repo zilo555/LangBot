@@ -158,6 +158,12 @@ class UserRouterGroup(group.RouterGroup):
                 }
             )
 
+        @self.route('/space-credits', methods=['GET'], auth_type=group.AuthType.USER_TOKEN)
+        async def _(user_email: str) -> str:
+            """Get Space credits balance for current user"""
+            credits = await self.ap.user_service.get_space_credits(user_email)
+            return self.success(data={'credits': credits})
+
         @self.route('/account-info', methods=['GET'], auth_type=group.AuthType.NONE)
         async def _() -> str:
             """Get account info for login page (account type and has_password)"""

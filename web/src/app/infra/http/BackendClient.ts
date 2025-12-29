@@ -731,6 +731,10 @@ export class BackendClient extends BaseHttpClient {
     return this.get('/api/v1/user/info');
   }
 
+  public getSpaceCredits(): Promise<{ credits: number | null }> {
+    return this.get('/api/v1/user/space-credits');
+  }
+
   public getAccountInfo(): Promise<{
     initialized: boolean;
     account_type?: 'local' | 'space';

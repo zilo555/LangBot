@@ -16,10 +16,12 @@ from ....utils import constants
 class UserService:
     ap: app.Application
     _create_user_lock: asyncio.Lock
+    _space_credits_cache: typing.Dict[str, typing.Tuple[int, float]]  # {user_email: (credits, timestamp)}
 
     def __init__(self, ap: app.Application) -> None:
         self.ap = ap
         self._create_user_lock = asyncio.Lock()
+        self._space_credits_cache = {}
 
     def _get_space_config(self) -> typing.Dict[str, str]:
         """Get Space configuration from config file"""
@@ -177,6 +179,30 @@ class UserService:
                 if data.get('code') != 0:
                     raise ValueError(f'Failed to get user info: {data.get("msg")}')
                 return data.get('data', {})
+
+    async def get_space_credits(self, user_email: str, force_refresh: bool = False) -> int | None:
+        """Get Space credits for user with caching (60s TTL)"""
+        import time
+
+        cache_ttl = 60
+
+        if not force_refresh and user_email in self._space_credits_cache:
+            credits, ts = self._space_credits_cache[user_email]
+            if time.time() - ts < cache_ttl:
+                return credits
+
+        user_obj = await self.get_user_by_email(user_email)
+        if not user_obj or user_obj.account_type != 'space' or not user_obj.space_access_token:
+            return None
+
+        try:
+            info = await self.get_space_user_info(user_obj.space_access_token)
+            credits = info.get('credits')
+            if credits is not None:
+                self._space_credits_cache[user_email] = (credits, time.time())
+            return credits
+        except Exception:
+            return self._space_credits_cache.get(user_email, (None, 0))[0]
 
     async def refresh_space_token(self, refresh_token: str) -> typing.Dict:
         """Refresh Space access token"""

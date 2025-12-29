@@ -9,12 +9,11 @@ import {
   ChevronRight,
   Trash2,
   Settings,
-  Sparkles,
   LogIn,
   Eye,
   Wrench,
 } from 'lucide-react';
-import { httpClient } from '@/app/infra/http/HttpClient';
+import { httpClient, systemInfo } from '@/app/infra/http/HttpClient';
 import {
   LLMModel,
   EmbeddingModel,
@@ -46,6 +45,7 @@ import { Badge } from '@/components/ui/badge';
 import LLMForm from './component/llm-form/LLMForm';
 import EmbeddingForm from './component/embedding-form/EmbeddingForm';
 import ProviderForm from './component/provider-form/ProviderForm';
+import langbotIcon from '@/app/assets/langbot-logo.webp';
 
 interface ModelsDialogProps {
   open: boolean;
@@ -62,7 +62,7 @@ export default function ModelsDialog({
 
   const [providers, setProviders] = useState<ModelProvider[]>([]);
   const [accountType, setAccountType] = useState<'local' | 'space'>('local');
-  const [spaceBalance] = useState<number | null>(null);
+  const [spaceCredits, setSpaceCredits] = useState<number | null>(null);
 
   // Expanded providers and their models
   const [expandedProviders, setExpandedProviders] = useState<Set<string>>(
@@ -103,6 +103,10 @@ export default function ModelsDialog({
     try {
       const userInfo = await httpClient.getUserInfo();
       setAccountType(userInfo.account_type);
+      if (userInfo.account_type === 'space') {
+        const creditsInfo = await httpClient.getSpaceCredits();
+        setSpaceCredits(creditsInfo.credits);
+      }
     } catch {
       setAccountType('local');
     }
@@ -279,8 +283,12 @@ export default function ModelsDialog({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 flex-1">
                 {isLangBotModels ? (
-                  <div className="p-2 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg">
-                    <Sparkles className="h-5 w-5 text-white" />
+                  <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0">
+                    <img
+                      src={langbotIcon.src}
+                      alt="LangBot"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 ) : (
                   <img
@@ -332,11 +340,29 @@ export default function ModelsDialog({
                     {t('models.loginWithSpace')}
                   </Button>
                 )}
-                {isLangBotModels && accountType === 'space' && (
-                  <Badge variant="secondary">
-                    {t('models.balance')}: {spaceBalance ?? '--'}
-                  </Badge>
-                )}
+                {isLangBotModels &&
+                  accountType === 'space' &&
+                  spaceCredits !== null && (
+                    <div className="flex items-center gap-1 border rounded-md px-2 h-8 text-sm mr-2">
+                      <span>
+                        {(spaceCredits / 5000).toFixed(2)} {t('models.credits')}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-5 w-5"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(
+                            `${systemInfo.cloud_service_url}/billing`,
+                            '_blank',
+                          );
+                        }}
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
                 {!isLangBotModels && (
                   <>
                     <Button
@@ -480,8 +506,12 @@ export default function ModelsDialog({
         <CardHeader className="p-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg">
-                <Sparkles className="h-5 w-5 text-white" />
+              <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0">
+                <img
+                  src={langbotIcon.src}
+                  alt="LangBot"
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div>
                 <CardTitle className="text-base">
@@ -492,11 +522,32 @@ export default function ModelsDialog({
                 </p>
               </div>
             </div>
-            {accountType !== 'space' && (
+            {accountType !== 'space' ? (
               <Button variant="outline" size="sm" onClick={handleSpaceLogin}>
                 <LogIn className="h-4 w-4 mr-1" />
                 {t('models.loginWithSpace')}
               </Button>
+            ) : (
+              spaceCredits !== null && (
+                <div className="flex items-center gap-1 border rounded-md px-2 h-8 text-sm">
+                  <span>
+                    {(spaceCredits / 5000).toFixed(2)} {t('models.credits')}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-5 w-5"
+                    onClick={() =>
+                      window.open(
+                        `${systemInfo.cloud_service_url}/billing`,
+                        '_blank',
+                      )
+                    }
+                  >
+                    <Plus className="h-3 w-3" />
+                  </Button>
+                </div>
+              )
             )}
           </div>
         </CardHeader>
@@ -531,12 +582,15 @@ export default function ModelsDialog({
             <DialogTitle>{t('models.title')}</DialogTitle>
           </DialogHeader>
 
-          <div className="flex-1 flex flex-col overflow-hidden px-6 pb-6 mt-4">
+          <div className="flex-1 flex flex-col overflow-hidden px-6 pb-6 mt-0">
             {/* Fixed LangBot Models Card */}
             <div className="flex-shrink-0">{renderLangBotModelsCard()}</div>
 
             {/* Add Model Button */}
-            <div className="flex-shrink-0 mb-3 flex justify-end">
+            <div className="flex-shrink-0 mb-3 flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">
+                {t('models.providerCount', { count: otherProviders.length })}
+              </span>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button size="sm" variant="outline">
