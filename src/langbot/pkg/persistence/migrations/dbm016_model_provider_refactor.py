@@ -247,9 +247,14 @@ class DBMigrateModelProviderRefactor(migration.DBMigration):
         deprecated_llm_cols = ['requester', 'requester_config', 'api_keys', 'description', 'source', 'space_model_id']
         for col in deprecated_llm_cols:
             if col in llm_columns:
-                await self.ap.persistence_mgr.execute_async(
-                    sqlalchemy.text(f'ALTER TABLE llm_models DROP COLUMN IF EXISTS {col}')
-                )
+                if self.ap.persistence_mgr.db.name == 'postgresql':
+                    await self.ap.persistence_mgr.execute_async(
+                        sqlalchemy.text(f'ALTER TABLE llm_models DROP COLUMN IF EXISTS {col}')
+                    )
+                else:
+                    await self.ap.persistence_mgr.execute_async(
+                        sqlalchemy.text(f'ALTER TABLE llm_models DROP COLUMN {col}')
+                    )
 
         embedding_columns = await self._get_columns('embedding_models')
         deprecated_embedding_cols = [
@@ -262,9 +267,14 @@ class DBMigrateModelProviderRefactor(migration.DBMigration):
         ]
         for col in deprecated_embedding_cols:
             if col in embedding_columns:
-                await self.ap.persistence_mgr.execute_async(
-                    sqlalchemy.text(f'ALTER TABLE embedding_models DROP COLUMN IF EXISTS {col}')
-                )
+                if self.ap.persistence_mgr.db.name == 'postgresql':
+                    await self.ap.persistence_mgr.execute_async(
+                        sqlalchemy.text(f'ALTER TABLE embedding_models DROP COLUMN IF EXISTS {col}')
+                    )
+                else:
+                    await self.ap.persistence_mgr.execute_async(
+                        sqlalchemy.text(f'ALTER TABLE embedding_models DROP COLUMN {col}')
+                    )
 
     async def _get_columns(self, table_name: str) -> list:
         """Get column names for a table"""
