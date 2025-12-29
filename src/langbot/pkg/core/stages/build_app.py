@@ -16,6 +16,7 @@ from ...platform.webhook_pusher import WebhookPusher
 from ...persistence import mgr as persistencemgr
 from ...api.http.controller import main as http_controller
 from ...api.http.service import user as user_service
+from ...api.http.service import space as space_service
 from ...api.http.service import model as model_service
 from ...api.http.service import provider as provider_service
 from ...api.http.service import pipeline as pipeline_service
@@ -108,6 +109,9 @@ class BuildAppStage(stage.BootingStage):
 
         user_service_inst = user_service.UserService(ap)
         ap.user_service = user_service_inst
+
+        space_service_inst = space_service.SpaceService(ap)
+        ap.space_service = space_service_inst
 
         llm_model_service_inst = model_service.LLMModelsService(ap)
         ap.llm_model_service = llm_model_service_inst

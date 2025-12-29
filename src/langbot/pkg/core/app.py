@@ -19,6 +19,7 @@ from ..utils import version as version_mgr, proxy as proxy_mgr
 from ..persistence import mgr as persistencemgr
 from ..api.http.controller import main as http_controller
 from ..api.http.service import user as user_service
+from ..api.http.service import space as space_service
 from ..api.http.service import model as model_service
 from ..api.http.service import provider as provider_service
 from ..api.http.service import pipeline as pipeline_service
@@ -116,6 +117,8 @@ class Application:
     # ========= HTTP Services =========
 
     user_service: user_service.UserService = None
+
+    space_service: space_service.SpaceService = None
 
     llm_model_service: model_service.LLMModelsService = None
 

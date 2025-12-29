@@ -4,7 +4,6 @@ import sqlalchemy
 import argon2
 import jwt
 import datetime
-import aiohttp
 import typing
 import asyncio
 
@@ -16,21 +15,10 @@ from ....utils import constants
 class UserService:
     ap: app.Application
     _create_user_lock: asyncio.Lock
-    _space_credits_cache: typing.Dict[str, typing.Tuple[int, float]]  # {user_email: (credits, timestamp)}
 
     def __init__(self, ap: app.Application) -> None:
         self.ap = ap
         self._create_user_lock = asyncio.Lock()
-        self._space_credits_cache = {}
-
-    def _get_space_config(self) -> typing.Dict[str, str]:
-        """Get Space configuration from config file"""
-        space_config = self.ap.instance_config.data.get('space', {})
-        return {
-            'url': space_config.get('url', 'https://space.langbot.app'),
-            'models_gateway_api_url': space_config.get('models_gateway_api_url', 'https://api.langbot.cloud'),
-            'oauth_authorize_url': space_config.get('oauth_authorize_url', 'https://space.langbot.app/auth/authorize'),
-        }
 
     async def is_initialized(self) -> bool:
         result = await self.ap.persistence_mgr.execute_async(sqlalchemy.select(user.User).limit(1))
@@ -131,94 +119,7 @@ class UserService:
             sqlalchemy.update(user.User).where(user.User.user == user_email).values(password=hashed_password)
         )
 
-    # Space OAuth methods (redirect flow)
-
-    def get_space_oauth_authorize_url(self, redirect_uri: str, state: str = '') -> str:
-        """Get the Space OAuth authorization URL for redirect"""
-        space_config = self._get_space_config()
-        authorize_url = space_config['oauth_authorize_url']
-
-        # Build the authorization URL with redirect_uri
-        params = f'redirect_uri={redirect_uri}'
-        if state:
-            params += f'&state={state}'
-
-        return f'{authorize_url}?{params}'
-
-    async def exchange_space_oauth_code(self, code: str) -> typing.Dict:
-        """Exchange OAuth authorization code for tokens"""
-        from langbot.pkg.utils import constants
-
-        space_config = self._get_space_config()
-        space_url = space_config['url']
-
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                f'{space_url}/api/v1/accounts/oauth/token',
-                json={'code': code, 'instance_id': constants.instance_id},
-            ) as response:
-                if response.status != 200:
-                    raise ValueError(f'Failed to exchange OAuth code: {await response.text()}')
-                data = await response.json()
-                if data.get('code') != 0:
-                    raise ValueError(f'Failed to exchange OAuth code: {data.get("msg")}')
-                return data.get('data', {})
-
-    async def get_space_user_info(self, access_token: str) -> typing.Dict:
-        """Get user info from Space using access token"""
-        space_config = self._get_space_config()
-        space_url = space_config['url']
-
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                f'{space_url}/api/v1/accounts/me', headers={'Authorization': f'Bearer {access_token}'}
-            ) as response:
-                if response.status != 200:
-                    raise ValueError(f'Failed to get user info: {await response.text()}')
-                data = await response.json()
-                if data.get('code') != 0:
-                    raise ValueError(f'Failed to get user info: {data.get("msg")}')
-                return data.get('data', {})
-
-    async def get_space_credits(self, user_email: str, force_refresh: bool = False) -> int | None:
-        """Get Space credits for user with caching (60s TTL)"""
-        import time
-
-        cache_ttl = 60
-
-        if not force_refresh and user_email in self._space_credits_cache:
-            credits, ts = self._space_credits_cache[user_email]
-            if time.time() - ts < cache_ttl:
-                return credits
-
-        user_obj = await self.get_user_by_email(user_email)
-        if not user_obj or user_obj.account_type != 'space' or not user_obj.space_access_token:
-            return None
-
-        try:
-            info = await self.get_space_user_info(user_obj.space_access_token)
-            credits = info.get('credits')
-            if credits is not None:
-                self._space_credits_cache[user_email] = (credits, time.time())
-            return credits
-        except Exception:
-            return self._space_credits_cache.get(user_email, (None, 0))[0]
-
-    async def refresh_space_token(self, refresh_token: str) -> typing.Dict:
-        """Refresh Space access token"""
-        space_config = self._get_space_config()
-        space_url = space_config['url']
-
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                f'{space_url}/api/v1/accounts/token/refresh', json={'refresh_token': refresh_token}
-            ) as response:
-                if response.status != 200:
-                    raise ValueError(f'Failed to refresh token: {await response.text()}')
-                data = await response.json()
-                if data.get('code') != 0:
-                    raise ValueError(f'Failed to refresh token: {data.get("msg")}')
-                return data.get('data', {})
+    # Space user management
 
     async def create_or_update_space_user(
         self,
@@ -227,8 +128,11 @@ class UserService:
         access_token: str,
         refresh_token: str,
         api_key: str,
+        expires_in: int = 0,
     ) -> user.User:
         """Create or update a Space user account (only if system not initialized or user exists)"""
+        expires_at = datetime.datetime.now() + datetime.timedelta(seconds=expires_in) if expires_in > 0 else None
+
         async with self._create_user_lock:
             # Check if user with this Space UUID already exists
             existing_user = await self.get_user_by_space_account_uuid(space_account_uuid)
@@ -242,6 +146,7 @@ class UserService:
                         space_access_token=access_token,
                         space_refresh_token=refresh_token,
                         space_api_key=api_key,
+                        space_access_token_expires_at=expires_at,
                     )
                 )
                 return await self.get_user_by_space_account_uuid(space_account_uuid)
@@ -259,6 +164,7 @@ class UserService:
                         space_access_token=access_token,
                         space_refresh_token=refresh_token,
                         space_api_key=api_key,
+                        space_access_token_expires_at=expires_at,
                     )
                 )
                 return await self.get_user_by_email(email)
@@ -280,15 +186,18 @@ class UserService:
                     space_access_token=access_token,
                     space_refresh_token=refresh_token,
                     space_api_key=api_key,
+                    space_access_token_expires_at=expires_at,
                 )
             )
 
             return await self.get_user_by_space_account_uuid(space_account_uuid)
 
-    async def authenticate_space_user(self, access_token: str, refresh_token: str) -> typing.Tuple[str, user.User]:
+    async def authenticate_space_user(
+        self, access_token: str, refresh_token: str, expires_in: int = 0
+    ) -> typing.Tuple[str, user.User]:
         """Authenticate with Space and return JWT token"""
-        # Get user info from Space
-        user_info = await self.get_space_user_info(access_token)
+        # Get user info from Space using raw API (token just obtained, no need to validate)
+        user_info = await self.ap.space_service.get_user_info_raw(access_token)
 
         account = user_info.get('account', {})
         api_key = user_info.get('api_key', '')
@@ -306,6 +215,7 @@ class UserService:
             access_token=access_token,
             refresh_token=refresh_token,
             api_key=api_key,
+            expires_in=expires_in,
         )
 
         # Generate JWT token
@@ -342,15 +252,18 @@ class UserService:
     async def bind_space_account(self, user_email: str, code: str) -> user.User:
         """Bind Space account to existing local account"""
         # Exchange code for tokens
-        token_data = await self.exchange_space_oauth_code(code)
+        token_data = await self.ap.space_service.exchange_oauth_code(code)
         access_token = token_data.get('access_token')
         refresh_token = token_data.get('refresh_token')
+        expires_in = token_data.get('expires_in', 0)
 
         if not access_token:
             raise ValueError('Failed to get access token from Space')
 
-        # Get Space user info
-        user_info = await self.get_space_user_info(access_token)
+        expires_at = datetime.datetime.now() + datetime.timedelta(seconds=expires_in) if expires_in > 0 else None
+
+        # Get Space user info (token just obtained, use raw API)
+        user_info = await self.ap.space_service.get_user_info_raw(access_token)
         account = user_info.get('account', {})
         api_key = user_info.get('api_key', '')
 
@@ -376,6 +289,7 @@ class UserService:
                 space_access_token=access_token,
                 space_refresh_token=refresh_token,
                 space_api_key=api_key,
+                space_access_token_expires_at=expires_at,
             )
         )
 

@@ -66,6 +66,18 @@ class DBMigrateSpaceAccountSupport(migration.DBMigration):
                     sqlalchemy.text('ALTER TABLE users ADD COLUMN space_refresh_token TEXT')
                 )
 
+        # Add space_access_token_expires_at column
+        if 'space_access_token_expires_at' not in columns:
+            if self.ap.persistence_mgr.db.name == 'postgresql':
+                await self.ap.persistence_mgr.execute_async(
+                    sqlalchemy.text('ALTER TABLE users ADD COLUMN space_access_token_expires_at TIMESTAMP')
+                )
+
+            else:
+                await self.ap.persistence_mgr.execute_async(
+                    sqlalchemy.text('ALTER TABLE users ADD COLUMN space_access_token_expires_at DATETIME')
+                )
+
         # Add space_api_key column
         if 'space_api_key' not in columns:
             if self.ap.persistence_mgr.db.name == 'postgresql':

@@ -105,7 +105,7 @@ class UserRouterGroup(group.RouterGroup):
                 return self.fail(1, 'Missing redirect_uri parameter')
 
             try:
-                authorize_url = self.ap.user_service.get_space_oauth_authorize_url(redirect_uri, state)
+                authorize_url = self.ap.space_service.get_oauth_authorize_url(redirect_uri, state)
                 return self.success(data={'authorize_url': authorize_url})
             except Exception as e:
                 return self.fail(1, str(e))
@@ -121,15 +121,18 @@ class UserRouterGroup(group.RouterGroup):
 
             try:
                 # Exchange code for tokens
-                token_data = await self.ap.user_service.exchange_space_oauth_code(code)
+                token_data = await self.ap.space_service.exchange_oauth_code(code)
                 access_token = token_data.get('access_token')
                 refresh_token = token_data.get('refresh_token')
+                expires_in = token_data.get('expires_in', 0)
 
                 if not access_token:
                     return self.fail(1, 'Failed to get access token from Space')
 
                 # Authenticate and create/update local user
-                jwt_token, user_obj = await self.ap.user_service.authenticate_space_user(access_token, refresh_token)
+                jwt_token, user_obj = await self.ap.user_service.authenticate_space_user(
+                    access_token, refresh_token, expires_in
+                )
 
                 return self.success(
                     data={
@@ -161,7 +164,7 @@ class UserRouterGroup(group.RouterGroup):
         @self.route('/space-credits', methods=['GET'], auth_type=group.AuthType.USER_TOKEN)
         async def _(user_email: str) -> str:
             """Get Space credits balance for current user"""
-            credits = await self.ap.user_service.get_space_credits(user_email)
+            credits = await self.ap.space_service.get_credits(user_email)
             return self.success(data={'credits': credits})
 
         @self.route('/account-info', methods=['GET'], auth_type=group.AuthType.NONE)

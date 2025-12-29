@@ -17,6 +17,7 @@ class User(Base):
     space_account_uuid = sqlalchemy.Column(sqlalchemy.String(255), nullable=True)
     space_access_token = sqlalchemy.Column(sqlalchemy.Text, nullable=True)
     space_refresh_token = sqlalchemy.Column(sqlalchemy.Text, nullable=True)
+    space_access_token_expires_at = sqlalchemy.Column(sqlalchemy.DateTime, nullable=True)
     space_api_key = sqlalchemy.Column(sqlalchemy.String(255), nullable=True)
 
     created_at = sqlalchemy.Column(sqlalchemy.DateTime, nullable=False, server_default=sqlalchemy.func.now())
