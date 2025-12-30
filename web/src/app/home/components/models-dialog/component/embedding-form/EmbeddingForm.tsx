@@ -373,11 +373,15 @@ export default function EmbeddingForm({
                           />
                         </SelectTrigger>
                         <SelectContent>
-                          {providers.map((p) => (
-                            <SelectItem key={p.uuid} value={p.uuid}>
-                              {p.name} ({p.base_url || 'default'})
-                            </SelectItem>
-                          ))}
+                          {providers
+                            .filter(
+                              (p) => p.requester !== 'space-chat-completions',
+                            )
+                            .map((p) => (
+                              <SelectItem key={p.uuid} value={p.uuid}>
+                                {p.name} ({p.base_url || 'default'})
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -413,7 +417,11 @@ export default function EmbeddingForm({
                               {t('models.modelManufacturer')}
                             </SelectLabel>
                             {requesterList
-                              .filter((r) => r.category === 'manufacturer')
+                              .filter(
+                                (r) =>
+                                  r.category === 'manufacturer' &&
+                                  r.value !== 'space-chat-completions',
+                              )
                               .map((r) => (
                                 <SelectItem key={r.value} value={r.value}>
                                   {r.label}
@@ -425,7 +433,11 @@ export default function EmbeddingForm({
                               {t('models.aggregationPlatform')}
                             </SelectLabel>
                             {requesterList
-                              .filter((r) => r.category === 'maas')
+                              .filter(
+                                (r) =>
+                                  r.category === 'maas' &&
+                                  r.value !== 'space-chat-completions',
+                              )
                               .map((r) => (
                                 <SelectItem key={r.value} value={r.value}>
                                   {r.label}
@@ -437,7 +449,11 @@ export default function EmbeddingForm({
                               {t('models.selfDeployed')}
                             </SelectLabel>
                             {requesterList
-                              .filter((r) => r.category === 'self-hosted')
+                              .filter(
+                                (r) =>
+                                  r.category === 'self-hosted' &&
+                                  r.value !== 'space-chat-completions',
+                              )
                               .map((r) => (
                                 <SelectItem key={r.value} value={r.value}>
                                   {r.label}

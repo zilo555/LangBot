@@ -9,7 +9,7 @@ import sqlalchemy.ext.asyncio as sqlalchemy_asyncio
 import sqlalchemy
 
 from . import database, migration
-from ..entity.persistence import base, pipeline, metadata
+from ..entity.persistence import base, pipeline, metadata, model as persistence_model
 from ..entity import persistence
 from ..core import app
 from ..utils import constants, importutil
@@ -79,6 +79,7 @@ class PersistenceManager:
             self.ap.logger.info(f'Successfully upgraded database to version {last_migration_number}.')
 
         await self.write_default_pipeline()
+        await self.write_space_model_providers()
 
     async def create_tables(self):
         # create tables
@@ -123,7 +124,28 @@ class PersistenceManager:
 
             await self.execute_async(sqlalchemy.insert(pipeline.LegacyPipeline).values(pipeline_data))
 
-        # =================================
+    async def write_space_model_providers(self):
+        # write space model providers
+        result = await self.execute_async(
+            sqlalchemy.select(persistence_model.ModelProvider).where(
+                persistence_model.ModelProvider.requester == 'space-chat-completions'
+            )
+        )
+        if result.first() is None:
+            self.ap.logger.info('Creating space model providers...')
+            space_chat_completions_model_provider = {
+                'uuid': str(uuid.uuid4()),
+                'name': 'LangBot Models',
+                'requester': 'space-chat-completions',
+                'base_url': 'https://api.langbot.cloud/v1',
+                'api_keys': [],
+            }
+
+            await self.execute_async(
+                sqlalchemy.insert(persistence_model.ModelProvider).values(space_chat_completions_model_provider)
+            )
+
+    # =================================
 
     async def execute_async(self, *args, **kwargs) -> sqlalchemy.engine.cursor.CursorResult:
         async with self.get_db_engine().connect() as conn:

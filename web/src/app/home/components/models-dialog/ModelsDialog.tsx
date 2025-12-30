@@ -53,6 +53,7 @@ interface ModelsDialogProps {
 }
 
 const LANGBOT_MODELS_PROVIDER_NAME = 'LangBot Models';
+const LANGBOT_MODELS_PROVIDER_REQUESTER = 'space-chat-completions';
 
 export default function ModelsDialog({
   open,
@@ -253,10 +254,10 @@ export default function ModelsDialog({
 
   // Separate LangBot Models provider
   const langbotProvider = providers.find(
-    (p) => p.name === LANGBOT_MODELS_PROVIDER_NAME,
+    (p) => p.requester === LANGBOT_MODELS_PROVIDER_REQUESTER,
   );
   const otherProviders = providers.filter(
-    (p) => p.name !== LANGBOT_MODELS_PROVIDER_NAME,
+    (p) => p.requester !== LANGBOT_MODELS_PROVIDER_REQUESTER,
   );
 
   function renderProviderCard(
@@ -501,58 +502,6 @@ export default function ModelsDialog({
     if (langbotProvider) {
       return renderProviderCard(langbotProvider, true);
     }
-    return (
-      <Card className="mb-2">
-        <CardHeader className="p-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0">
-                <img
-                  src={langbotIcon.src}
-                  alt="LangBot"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div>
-                <CardTitle className="text-base">
-                  {LANGBOT_MODELS_PROVIDER_NAME}
-                </CardTitle>
-                <p className="text-xs text-muted-foreground">
-                  {t('models.langbotModelsDescription')}
-                </p>
-              </div>
-            </div>
-            {accountType !== 'space' ? (
-              <Button variant="outline" size="sm" onClick={handleSpaceLogin}>
-                <LogIn className="h-4 w-4 mr-1" />
-                {t('models.loginWithSpace')}
-              </Button>
-            ) : (
-              spaceCredits !== null && (
-                <div className="flex items-center gap-1 border rounded-md px-2 h-8 text-sm">
-                  <span>
-                    {(spaceCredits / 5000).toFixed(2)} {t('models.credits')}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-5 w-5"
-                    onClick={() =>
-                      window.open(
-                        `${systemInfo.cloud_service_url}/billing`,
-                        '_blank',
-                      )
-                    }
-                  >
-                    <Plus className="h-3 w-3" />
-                  </Button>
-                </div>
-              )
-            )}
-          </div>
-        </CardHeader>
-      </Card>
-    );
   }
 
   function handleFormClose() {
