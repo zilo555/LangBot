@@ -125,25 +125,39 @@ class PersistenceManager:
             await self.execute_async(sqlalchemy.insert(pipeline.LegacyPipeline).values(pipeline_data))
 
     async def write_space_model_providers(self):
+        space_models_gateway_api_url = self.ap.instance_config.data.get('space', {}).get(
+            'models_gateway_api_url', 'https://api.langbot.cloud/v1'
+        )
+
         # write space model providers
         result = await self.execute_async(
             sqlalchemy.select(persistence_model.ModelProvider).where(
                 persistence_model.ModelProvider.requester == 'space-chat-completions'
             )
         )
-        if result.first() is None:
+        exists_space_chat_completions_model_provider = result.first()
+
+        # api keys will be set/updated when the oauth callback
+        if exists_space_chat_completions_model_provider is None:
             self.ap.logger.info('Creating space model providers...')
             space_chat_completions_model_provider = {
                 'uuid': '00000000-0000-0000-0000-000000000000',
                 'name': 'LangBot Models',
                 'requester': 'space-chat-completions',
-                'base_url': 'https://api.langbot.cloud/v1',
+                'base_url': space_models_gateway_api_url,
                 'api_keys': [],
             }
 
             await self.execute_async(
                 sqlalchemy.insert(persistence_model.ModelProvider).values(space_chat_completions_model_provider)
             )
+        else:
+            if exists_space_chat_completions_model_provider.base_url != space_models_gateway_api_url:
+                await self.execute_async(
+                    sqlalchemy.update(persistence_model.ModelProvider)
+                    .where(persistence_model.ModelProvider.uuid == exists_space_chat_completions_model_provider.uuid)
+                    .values({'base_url': space_models_gateway_api_url})
+                )
 
     # =================================
 

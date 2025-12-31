@@ -16,6 +16,9 @@ class ModelManager:
 
     ap: app.Application
 
+    provider_dict: dict[str, requester.RuntimeProvider]
+    """运行时模型提供商字典, uuid -> RuntimeProvider"""
+
     llm_models: list[requester.RuntimeLLMModel]
 
     embedding_models: list[requester.RuntimeEmbeddingModel]
@@ -51,23 +54,31 @@ class ModelManager:
         self.embedding_models = []
 
         # Load all providers first
+        self.provider_dict = {}
         providers_result = await self.ap.persistence_mgr.execute_async(
             sqlalchemy.select(persistence_model.ModelProvider)
         )
-        providers = {p.uuid: p for p in providers_result.all()}
+        for provider in providers_result.all():
+            try:
+                runtime_provider = await self.load_provider(provider)
+                self.provider_dict[provider.uuid] = runtime_provider
+            except provider_errors.RequesterNotFoundError as e:
+                self.ap.logger.warning(f'Requester {e.requester_name} not found, skipping provider {provider.uuid}')
+                continue
+            except Exception as e:
+                self.ap.logger.error(f'Failed to load provider {provider.uuid}: {e}\n{traceback.format_exc()}')
 
         # Load LLM models
         result = await self.ap.persistence_mgr.execute_async(sqlalchemy.select(persistence_model.LLMModel))
         llm_models = result.all()
         for llm_model in llm_models:
             try:
-                provider = providers.get(llm_model.provider_uuid)
+                provider = self.provider_dict.get(llm_model.provider_uuid)
                 if provider is None:
                     self.ap.logger.warning(f'Provider {llm_model.provider_uuid} not found for model {llm_model.uuid}')
                     continue
-                await self.load_llm_model_with_provider(llm_model, provider)
-            except provider_errors.RequesterNotFoundError as e:
-                self.ap.logger.warning(f'Requester {e.requester_name} not found, skipping llm model {llm_model.uuid}')
+                runtime_llm_model = await self.load_llm_model_with_provider(llm_model, provider)
+                self.llm_models.append(runtime_llm_model)
             except Exception as e:
                 self.ap.logger.error(f'Failed to load model {llm_model.uuid}: {e}\n{traceback.format_exc()}')
 
@@ -76,17 +87,14 @@ class ModelManager:
         embedding_models = result.all()
         for embedding_model in embedding_models:
             try:
-                provider = providers.get(embedding_model.provider_uuid)
+                provider = self.provider_dict.get(embedding_model.provider_uuid)
                 if provider is None:
                     self.ap.logger.warning(
                         f'Provider {embedding_model.provider_uuid} not found for model {embedding_model.uuid}'
                     )
                     continue
-                await self.load_embedding_model_with_provider(embedding_model, provider)
-            except provider_errors.RequesterNotFoundError as e:
-                self.ap.logger.warning(
-                    f'Requester {e.requester_name} not found, skipping embedding model {embedding_model.uuid}'
-                )
+                runtime_embedding_model = await self.load_embedding_model_with_provider(embedding_model, provider)
+                self.embedding_models.append(runtime_embedding_model)
             except Exception as e:
                 self.ap.logger.error(f'Failed to load model {embedding_model.uuid}: {e}\n{traceback.format_exc()}')
 
@@ -149,123 +157,139 @@ class ModelManager:
                     preserve_uuid=True,
                 )
 
-    async def init_runtime_llm_model(
+    async def init_temporary_runtime_llm_model(
         self,
         model_info: dict,
-    ):
+    ) -> requester.RuntimeLLMModel:
         """Initialize runtime LLM model from dict (for testing)"""
         provider_info = model_info.get('provider', {})
-        requester_name = provider_info.get('requester', '')
-        base_url = provider_info.get('base_url', '')
-        api_keys = provider_info.get('api_keys', [])
 
-        if requester_name not in self.requester_dict:
-            raise provider_errors.RequesterNotFoundError(requester_name)
-
-        requester_cfg = {'base_url': base_url}
-        requester_inst = self.requester_dict[requester_name](ap=self.ap, config=requester_cfg)
-        await requester_inst.initialize()
-
-        # Create a temporary model entity
-        model_entity = persistence_model.LLMModel(
-            uuid=model_info.get('uuid', ''),
-            name=model_info.get('name', ''),
-            provider_uuid='',
-            abilities=model_info.get('abilities', []),
-            extra_args=model_info.get('extra_args', {}),
-        )
+        runtime_provider = await self.load_provider(provider_info)
 
         runtime_llm_model = requester.RuntimeLLMModel(
-            model_entity=model_entity,
-            token_mgr=token.TokenManager(name=model_entity.uuid, tokens=api_keys),
-            requester=requester_inst,
+            model_entity=persistence_model.LLMModel(
+                uuid=model_info.get('uuid', ''),
+                name=model_info.get('name', ''),
+                provider_uuid='',
+                abilities=model_info.get('abilities', []),
+                extra_args=model_info.get('extra_args', {}),
+            ),
+            provider=runtime_provider,
         )
 
         return runtime_llm_model
 
-    async def init_runtime_embedding_model(
+    async def init_temporary_runtime_embedding_model(
         self,
         model_info: dict,
-    ):
+    ) -> requester.RuntimeEmbeddingModel:
         """Initialize runtime embedding model from dict (for testing)"""
         provider_info = model_info.get('provider', {})
-        requester_name = provider_info.get('requester', '')
-        base_url = provider_info.get('base_url', '')
-        api_keys = provider_info.get('api_keys', [])
-
-        if requester_name not in self.requester_dict:
-            raise provider_errors.RequesterNotFoundError(requester_name)
-
-        requester_cfg = {'base_url': base_url}
-        requester_inst = self.requester_dict[requester_name](ap=self.ap, config=requester_cfg)
-        await requester_inst.initialize()
-
-        model_entity = persistence_model.EmbeddingModel(
-            uuid=model_info.get('uuid', ''),
-            name=model_info.get('name', ''),
-            provider_uuid='',
-            extra_args=model_info.get('extra_args', {}),
-        )
+        runtime_provider = await self.load_provider(provider_info)
 
         runtime_embedding_model = requester.RuntimeEmbeddingModel(
-            model_entity=model_entity,
-            token_mgr=token.TokenManager(name=model_entity.uuid, tokens=api_keys),
-            requester=requester_inst,
+            model_entity=persistence_model.EmbeddingModel(
+                uuid=model_info.get('uuid', ''),
+                name=model_info.get('name', ''),
+                provider_uuid='',
+                extra_args=model_info.get('extra_args', {}),
+            ),
+            provider=runtime_provider,
         )
 
         return runtime_embedding_model
 
+    async def load_provider(
+        self, provider_info: persistence_model.ModelProvider | sqlalchemy.Row | dict
+    ) -> requester.RuntimeProvider:
+        """Load provider from dict"""
+        if isinstance(provider_info, sqlalchemy.Row):
+            provider_entity = persistence_model.ModelProvider(**provider_info._mapping)
+        elif isinstance(provider_info, dict):
+            provider_entity = persistence_model.ModelProvider(**provider_info)
+        else:
+            provider_entity = provider_info
+
+        if provider_entity.requester not in self.requester_dict:
+            raise provider_errors.RequesterNotFoundError(provider_entity.requester)
+
+        requester_inst = self.requester_dict[provider_entity.requester](
+            ap=self.ap, config={'base_url': provider_entity.base_url}
+        )
+        await requester_inst.initialize()
+
+        token_mgr = token.TokenManager(name=provider_entity.uuid, tokens=provider_entity.api_keys or [])
+
+        provider = requester.RuntimeProvider(
+            provider_entity=provider_entity,
+            token_mgr=token_mgr,
+            requester=requester_inst,
+        )
+        return provider
+
+    async def remove_provider(self, provider_uuid: str):
+        """Remove provider
+
+        This method will not consider the models using this provider,
+        because the models should be removed by the caller.
+        """
+        del self.provider_dict[provider_uuid]
+
+    async def reload_provider(self, provider_uuid: str):
+        """Reload provider"""
+        provider_entity = await self.ap.persistence_mgr.execute_async(
+            sqlalchemy.select(persistence_model.ModelProvider).where(
+                persistence_model.ModelProvider.uuid == provider_uuid
+            )
+        )
+        provider_entity = provider_entity.first()
+        if provider_entity is None:
+            raise provider_errors.ProviderNotFoundError(provider_uuid)
+
+        new_runtime_provider = await self.load_provider(provider_entity)
+
+        # update refs in runtime models
+        for model in self.llm_models:
+            if model.provider.provider_entity.uuid == provider_uuid:
+                model.provider = new_runtime_provider
+        for model in self.embedding_models:
+            if model.provider.provider_entity.uuid == provider_uuid:
+                model.provider = new_runtime_provider
+
+        # update ref in provider dict
+        self.provider_dict[provider_uuid] = new_runtime_provider
+
     async def load_llm_model_with_provider(
         self,
         model_info: persistence_model.LLMModel | sqlalchemy.Row,
-        provider: persistence_model.ModelProvider | sqlalchemy.Row,
-    ):
+        provider: requester.RuntimeProvider,
+    ) -> requester.RuntimeLLMModel:
         """Load LLM model with provider info"""
         if isinstance(model_info, sqlalchemy.Row):
             model_info = persistence_model.LLMModel(**model_info._mapping)
-        if isinstance(provider, sqlalchemy.Row):
-            provider = persistence_model.ModelProvider(**provider._mapping)
-
-        if provider.requester not in self.requester_dict:
-            raise provider_errors.RequesterNotFoundError(provider.requester)
-
-        requester_cfg = {'base_url': provider.base_url}
-        requester_inst = self.requester_dict[provider.requester](ap=self.ap, config=requester_cfg)
-        await requester_inst.initialize()
 
         runtime_llm_model = requester.RuntimeLLMModel(
             model_entity=model_info,
-            token_mgr=token.TokenManager(name=model_info.uuid, tokens=provider.api_keys or []),
-            requester=requester_inst,
+            provider=provider,
         )
 
-        self.llm_models.append(runtime_llm_model)
+        return runtime_llm_model
 
     async def load_embedding_model_with_provider(
         self,
         model_info: persistence_model.EmbeddingModel | sqlalchemy.Row,
-        provider: persistence_model.ModelProvider | sqlalchemy.Row,
-    ):
+        provider: requester.RuntimeProvider,
+    ) -> requester.RuntimeEmbeddingModel:
         """Load embedding model with provider info"""
         if isinstance(model_info, sqlalchemy.Row):
             model_info = persistence_model.EmbeddingModel(**model_info._mapping)
-        if isinstance(provider, sqlalchemy.Row):
-            provider = persistence_model.ModelProvider(**provider._mapping)
-
-        if provider.requester not in self.requester_dict:
-            raise provider_errors.RequesterNotFoundError(provider.requester)
-
-        requester_cfg = {'base_url': provider.base_url}
-        requester_inst = self.requester_dict[provider.requester](ap=self.ap, config=requester_cfg)
-        await requester_inst.initialize()
 
         runtime_embedding_model = requester.RuntimeEmbeddingModel(
             model_entity=model_info,
-            token_mgr=token.TokenManager(name=model_info.uuid, tokens=provider.api_keys or []),
-            requester=requester_inst,
+            provider=provider,
         )
 
-        self.embedding_models.append(runtime_embedding_model)
+        return runtime_embedding_model
 
     async def load_llm_model(self, model_info: dict):
         """Load LLM model from dict (with provider info)"""

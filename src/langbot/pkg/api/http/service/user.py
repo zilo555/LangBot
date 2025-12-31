@@ -149,6 +149,7 @@ class UserService:
                         space_access_token_expires_at=expires_at,
                     )
                 )
+                await self.ap.provider_service.update_space_model_provider_api_keys(api_key)
                 return await self.get_user_by_space_account_uuid(space_account_uuid)
 
             # Check if user with same email exists
@@ -167,6 +168,7 @@ class UserService:
                         space_access_token_expires_at=expires_at,
                     )
                 )
+                await self.ap.provider_service.update_space_model_provider_api_keys(api_key)
                 return await self.get_user_by_email(email)
 
             # Check if system is already initialized
@@ -189,6 +191,7 @@ class UserService:
                     space_access_token_expires_at=expires_at,
                 )
             )
+            await self.ap.provider_service.update_space_model_provider_api_keys(api_key)
 
             return await self.get_user_by_space_account_uuid(space_account_uuid)
 

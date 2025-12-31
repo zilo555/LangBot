@@ -61,6 +61,10 @@ class ModelProviderService:
         await self.ap.persistence_mgr.execute_async(
             sqlalchemy.insert(persistence_model.ModelProvider).values(**provider_data)
         )
+
+        # load to runtime
+        runtime_provider = await self.ap.model_mgr.load_provider(provider_data)
+        self.ap.model_mgr.provider_dict[runtime_provider.provider_entity.uuid] = runtime_provider
         return provider_data['uuid']
 
     async def update_provider(self, provider_uuid: str, provider_data: dict) -> None:
@@ -72,8 +76,7 @@ class ModelProviderService:
             .where(persistence_model.ModelProvider.uuid == provider_uuid)
             .values(**provider_data)
         )
-        # Reload all models using this provider
-        await self.ap.model_mgr.load_models_from_db()
+        await self.ap.model_mgr.reload_provider(provider_uuid)
 
     async def delete_provider(self, provider_uuid: str) -> None:
         """Delete a provider (only if no models reference it)"""
@@ -99,6 +102,8 @@ class ModelProviderService:
                 persistence_model.ModelProvider.uuid == provider_uuid
             )
         )
+
+        await self.ap.model_mgr.remove_provider(provider_uuid)
 
     async def get_provider_model_counts(self, provider_uuid: str) -> dict:
         """Get count of models using this provider"""
@@ -150,3 +155,12 @@ class ModelProviderService:
                 'api_keys': api_keys or [],
             }
         )
+
+    async def update_space_model_provider_api_keys(self, api_key: str) -> None:
+        """Update Space model provider API keys"""
+        await self.ap.persistence_mgr.execute_async(
+            sqlalchemy.update(persistence_model.ModelProvider)
+            .where(persistence_model.ModelProvider.uuid == '00000000-0000-0000-0000-000000000000')
+            .values(api_keys=[api_key])
+        )
+        await self.ap.model_mgr.reload_provider('00000000-0000-0000-0000-000000000000')

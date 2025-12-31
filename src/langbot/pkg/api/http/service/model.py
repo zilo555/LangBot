@@ -85,10 +85,17 @@ class LLMModelsService:
 
         await self.ap.persistence_mgr.execute_async(sqlalchemy.insert(persistence_model.LLMModel).values(**model_data))
 
-        llm_model = await self.get_llm_model(model_data['uuid'])
-        await self.ap.model_mgr.load_llm_model(llm_model)
+        runtime_provider = self.ap.model_mgr.provider_dict.get(model_data['provider_uuid'])
+        if runtime_provider is None:
+            raise Exception('provider not found')
 
-        # Check if default pipeline has no model bound
+        runtime_llm_model = await self.ap.model_mgr.load_llm_model_with_provider(
+            persistence_model.LLMModel(**model_data),
+            runtime_provider,
+        )
+        self.ap.model_mgr.llm_models.append(runtime_llm_model)
+
+        # set the default pipeline model to this model
         result = await self.ap.persistence_mgr.execute_async(
             sqlalchemy.select(persistence_pipeline.LegacyPipeline).where(
                 persistence_pipeline.LegacyPipeline.is_default == True
@@ -152,8 +159,16 @@ class LLMModelsService:
         )
 
         await self.ap.model_mgr.remove_llm_model(model_uuid)
-        llm_model = await self.get_llm_model(model_uuid)
-        await self.ap.model_mgr.load_llm_model(llm_model)
+
+        runtime_provider = self.ap.model_mgr.provider_dict.get(model_data['provider_uuid'])
+        if runtime_provider is None:
+            raise Exception('provider not found')
+
+        runtime_llm_model = await self.ap.model_mgr.load_llm_model_with_provider(
+            persistence_model.LLMModel(**model_data),
+            runtime_provider,
+        )
+        self.ap.model_mgr.llm_models.append(runtime_llm_model)
 
     async def delete_llm_model(self, model_uuid: str) -> None:
         """Delete an LLM model"""
@@ -174,10 +189,10 @@ class LLMModelsService:
             if runtime_llm_model is None:
                 raise Exception('model not found')
         else:
-            runtime_llm_model = await self.ap.model_mgr.init_runtime_llm_model(model_data)
+            runtime_llm_model = await self.ap.model_mgr.init_temporary_runtime_llm_model(model_data)
 
         extra_args = model_data.get('extra_args', {})
-        await runtime_llm_model.requester.invoke_llm(
+        await runtime_llm_model.provider.requester.invoke_llm(
             query=None,
             model=runtime_llm_model,
             messages=[provider_message.Message(role='user', content='Hello, world! Please just reply a "Hello".')],
@@ -244,8 +259,15 @@ class EmbeddingModelsService:
             sqlalchemy.insert(persistence_model.EmbeddingModel).values(**model_data)
         )
 
-        embedding_model = await self.get_embedding_model(model_data['uuid'])
-        await self.ap.model_mgr.load_embedding_model(embedding_model)
+        runtime_provider = self.ap.model_mgr.provider_dict.get(model_data['provider_uuid'])
+        if runtime_provider is None:
+            raise Exception('provider not found')
+
+        runtime_embedding_model = await self.ap.model_mgr.load_embedding_model_with_provider(
+            persistence_model.EmbeddingModel(**model_data),
+            runtime_provider,
+        )
+        self.ap.model_mgr.embedding_models.append(runtime_embedding_model)
 
         return model_data['uuid']
 
@@ -298,8 +320,16 @@ class EmbeddingModelsService:
         )
 
         await self.ap.model_mgr.remove_embedding_model(model_uuid)
-        embedding_model = await self.get_embedding_model(model_uuid)
-        await self.ap.model_mgr.load_embedding_model(embedding_model)
+
+        runtime_provider = self.ap.model_mgr.provider_dict.get(model_data['provider_uuid'])
+        if runtime_provider is None:
+            raise Exception('provider not found')
+
+        runtime_embedding_model = await self.ap.model_mgr.load_embedding_model_with_provider(
+            persistence_model.EmbeddingModel(**model_data),
+            runtime_provider,
+        )
+        self.ap.model_mgr.embedding_models.append(runtime_embedding_model)
 
     async def delete_embedding_model(self, model_uuid: str) -> None:
         """Delete an embedding model"""
@@ -322,9 +352,9 @@ class EmbeddingModelsService:
             if runtime_embedding_model is None:
                 raise Exception('model not found')
         else:
-            runtime_embedding_model = await self.ap.model_mgr.init_runtime_embedding_model(model_data)
+            runtime_embedding_model = await self.ap.model_mgr.init_temporary_runtime_embedding_model(model_data)
 
-        await runtime_embedding_model.requester.invoke_embedding(
+        await runtime_embedding_model.provider.requester.invoke_embedding(
             model=runtime_embedding_model,
             input_text=['Hello, world!'],
             extra_args={},

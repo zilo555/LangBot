@@ -1,6 +1,7 @@
 import quart
 import argon2
 import asyncio
+import traceback
 
 from .. import group
 
@@ -141,8 +142,10 @@ class UserRouterGroup(group.RouterGroup):
                     }
                 )
             except ValueError as e:
+                traceback.print_exc()
                 return self.fail(1, str(e))
             except Exception as e:
+                traceback.print_exc()
                 return self.fail(2, f'OAuth callback failed: {str(e)}')
 
         @self.route('/info', methods=['GET'], auth_type=group.AuthType.USER_TOKEN)
