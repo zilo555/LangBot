@@ -61,6 +61,12 @@ class DBMigrateModelProviderRefactor(migration.DBMigration):
                 sqlalchemy.text('ALTER TABLE llm_models ADD COLUMN provider_uuid VARCHAR(255)')
             )
 
+        # Add prefered_ranking column if not exists
+        if 'prefered_ranking' not in llm_columns:
+            await self.ap.persistence_mgr.execute_async(
+                sqlalchemy.text('ALTER TABLE llm_models ADD COLUMN prefered_ranking INTEGER NOT NULL DEFAULT 0')
+            )
+
         # Only migrate if old columns exist
         if 'requester' not in llm_columns:
             return
@@ -150,6 +156,12 @@ class DBMigrateModelProviderRefactor(migration.DBMigration):
         if 'provider_uuid' not in embedding_columns:
             await self.ap.persistence_mgr.execute_async(
                 sqlalchemy.text('ALTER TABLE embedding_models ADD COLUMN provider_uuid VARCHAR(255)')
+            )
+
+        # Add prefered_ranking column if not exists
+        if 'prefered_ranking' not in embedding_columns:
+            await self.ap.persistence_mgr.execute_async(
+                sqlalchemy.text('ALTER TABLE embedding_models ADD COLUMN prefered_ranking INTEGER NOT NULL DEFAULT 0')
             )
 
         # Only migrate if old columns exist

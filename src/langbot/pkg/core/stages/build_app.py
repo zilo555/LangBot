@@ -45,68 +45,6 @@ class BuildAppStage(stage.BootingStage):
         discover.discover_blueprint('templates/components.yaml')
         ap.discover = discover
 
-        proxy_mgr = proxy.ProxyManager(ap)
-        await proxy_mgr.initialize()
-        ap.proxy_mgr = proxy_mgr
-
-        ver_mgr = version.VersionManager(ap)
-        await ver_mgr.initialize()
-        ap.ver_mgr = ver_mgr
-
-        ap.query_pool = pool.QueryPool()
-
-        log_cache = logcache.LogCache()
-        ap.log_cache = log_cache
-
-        storage_mgr_inst = storagemgr.StorageMgr(ap)
-        await storage_mgr_inst.initialize()
-        ap.storage_mgr = storage_mgr_inst
-
-        persistence_mgr_inst = persistencemgr.PersistenceManager(ap)
-        ap.persistence_mgr = persistence_mgr_inst
-        await persistence_mgr_inst.initialize()
-
-        cmd_mgr_inst = cmdmgr.CommandManager(ap)
-        await cmd_mgr_inst.initialize()
-        ap.cmd_mgr = cmd_mgr_inst
-
-        llm_model_mgr_inst = llm_model_mgr.ModelManager(ap)
-        await llm_model_mgr_inst.initialize()
-        ap.model_mgr = llm_model_mgr_inst
-
-        llm_session_mgr_inst = llm_session_mgr.SessionManager(ap)
-        await llm_session_mgr_inst.initialize()
-        ap.sess_mgr = llm_session_mgr_inst
-
-        llm_tool_mgr_inst = llm_tool_mgr.ToolManager(ap)
-        await llm_tool_mgr_inst.initialize()
-        ap.tool_mgr = llm_tool_mgr_inst
-
-        im_mgr_inst = im_mgr.PlatformManager(ap=ap)
-        await im_mgr_inst.initialize()
-        ap.platform_mgr = im_mgr_inst
-
-        # Initialize webhook pusher
-        webhook_pusher_inst = WebhookPusher(ap)
-        ap.webhook_pusher = webhook_pusher_inst
-
-        pipeline_mgr = pipelinemgr.PipelineManager(ap)
-        await pipeline_mgr.initialize()
-        ap.pipeline_mgr = pipeline_mgr
-
-        rag_mgr_inst = rag_mgr.RAGManager(ap)
-        await rag_mgr_inst.initialize()
-        ap.rag_mgr = rag_mgr_inst
-
-        # 初始化向量数据库管理器
-        vectordb_mgr_inst = vectordb_mgr.VectorDBManager(ap)
-        await vectordb_mgr_inst.initialize()
-        ap.vector_db_mgr = vectordb_mgr_inst
-
-        http_ctrl = http_controller.HTTPController(ap)
-        await http_ctrl.initialize()
-        ap.http_ctrl = http_ctrl
-
         user_service_inst = user_service.UserService(ap)
         ap.user_service = user_service_inst
 
@@ -142,6 +80,68 @@ class BuildAppStage(stage.BootingStage):
 
         webhook_service_inst = webhook_service.WebhookService(ap)
         ap.webhook_service = webhook_service_inst
+
+        proxy_mgr = proxy.ProxyManager(ap)
+        await proxy_mgr.initialize()
+        ap.proxy_mgr = proxy_mgr
+
+        ver_mgr = version.VersionManager(ap)
+        await ver_mgr.initialize()
+        ap.ver_mgr = ver_mgr
+
+        ap.query_pool = pool.QueryPool()
+
+        log_cache = logcache.LogCache()
+        ap.log_cache = log_cache
+
+        storage_mgr_inst = storagemgr.StorageMgr(ap)
+        await storage_mgr_inst.initialize()
+        ap.storage_mgr = storage_mgr_inst
+
+        persistence_mgr_inst = persistencemgr.PersistenceManager(ap)
+        ap.persistence_mgr = persistence_mgr_inst
+        await persistence_mgr_inst.initialize()
+
+        cmd_mgr_inst = cmdmgr.CommandManager(ap)
+        await cmd_mgr_inst.initialize()
+        ap.cmd_mgr = cmd_mgr_inst
+
+        llm_model_mgr_inst = llm_model_mgr.ModelManager(ap)
+        ap.model_mgr = llm_model_mgr_inst
+        await llm_model_mgr_inst.initialize()
+
+        llm_session_mgr_inst = llm_session_mgr.SessionManager(ap)
+        await llm_session_mgr_inst.initialize()
+        ap.sess_mgr = llm_session_mgr_inst
+
+        llm_tool_mgr_inst = llm_tool_mgr.ToolManager(ap)
+        await llm_tool_mgr_inst.initialize()
+        ap.tool_mgr = llm_tool_mgr_inst
+
+        im_mgr_inst = im_mgr.PlatformManager(ap=ap)
+        await im_mgr_inst.initialize()
+        ap.platform_mgr = im_mgr_inst
+
+        # Initialize webhook pusher
+        webhook_pusher_inst = WebhookPusher(ap)
+        ap.webhook_pusher = webhook_pusher_inst
+
+        pipeline_mgr = pipelinemgr.PipelineManager(ap)
+        await pipeline_mgr.initialize()
+        ap.pipeline_mgr = pipeline_mgr
+
+        rag_mgr_inst = rag_mgr.RAGManager(ap)
+        await rag_mgr_inst.initialize()
+        ap.rag_mgr = rag_mgr_inst
+
+        # 初始化向量数据库管理器
+        vectordb_mgr_inst = vectordb_mgr.VectorDBManager(ap)
+        await vectordb_mgr_inst.initialize()
+        ap.vector_db_mgr = vectordb_mgr_inst
+
+        http_ctrl = http_controller.HTTPController(ap)
+        await http_ctrl.initialize()
+        ap.http_ctrl = http_ctrl
 
         async def runtime_disconnect_callback(connector: plugin_connector.PluginRuntimeConnector) -> None:
             await asyncio.sleep(3)

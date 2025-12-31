@@ -41,6 +41,7 @@ class ModelManager:
         self.requester_dict = requester_dict
 
         await self.load_models_from_db()
+        await self.sync_new_models_from_space()
 
     async def load_models_from_db(self):
         """Load models from database"""
@@ -88,6 +89,65 @@ class ModelManager:
                 )
             except Exception as e:
                 self.ap.logger.error(f'Failed to load model {embedding_model.uuid}: {e}\n{traceback.format_exc()}')
+
+    async def sync_new_models_from_space(self):
+        """Sync models from Space"""
+        space_model_provider = await self.ap.persistence_mgr.execute_async(
+            sqlalchemy.select(persistence_model.ModelProvider).where(
+                persistence_model.ModelProvider.requester == 'space-chat-completions'
+            )
+        )
+        result = space_model_provider.first()
+        if result is None:
+            raise provider_errors.ProviderNotFoundError('LangBot Models')
+
+        space_model_provider = result
+
+        # get the latest models from space
+        space_models = await self.ap.space_service.get_models()
+
+        exists_llm_models_uuids = [m['uuid'] for m in await self.ap.llm_model_service.get_llm_models()]
+        exists_embedding_models_uuids = [
+            m['uuid'] for m in await self.ap.embedding_models_service.get_embedding_models()
+        ]
+
+        for space_model in space_models:
+            if space_model.category == 'chat':
+                uuid = space_model.uuid
+
+                if uuid in exists_llm_models_uuids:
+                    continue
+
+                # model will be automatically loaded
+                await self.ap.llm_model_service.create_llm_model(
+                    {
+                        'uuid': space_model.uuid,
+                        'name': space_model.model_id,
+                        'provider_uuid': space_model_provider.uuid,
+                        'abilities': space_model.llm_abilities or [],
+                        'extra_args': {},
+                        'prefered_ranking': space_model.featured_order,
+                    },
+                    preserve_uuid=True,
+                )
+
+            elif space_model.category == 'embedding':
+                uuid = space_model.uuid
+
+                if uuid in exists_embedding_models_uuids:
+                    continue
+
+                # model will be automatically loaded
+                await self.ap.embedding_models_service.create_embedding_model(
+                    {
+                        'uuid': space_model.uuid,
+                        'name': space_model.model_id,
+                        'provider_uuid': space_model_provider.uuid,
+                        'extra_args': {},
+                        'prefered_ranking': space_model.featured_order,
+                    },
+                    preserve_uuid=True,
+                )
 
     async def init_runtime_llm_model(
         self,

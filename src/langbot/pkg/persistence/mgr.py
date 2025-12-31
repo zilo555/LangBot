@@ -134,7 +134,7 @@ class PersistenceManager:
         if result.first() is None:
             self.ap.logger.info('Creating space model providers...')
             space_chat_completions_model_provider = {
-                'uuid': str(uuid.uuid4()),
+                'uuid': '00000000-0000-0000-0000-000000000000',
                 'name': 'LangBot Models',
                 'requester': 'space-chat-completions',
                 'base_url': 'https://api.langbot.cloud/v1',

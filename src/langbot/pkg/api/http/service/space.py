@@ -8,6 +8,7 @@ import sqlalchemy
 
 from ....core import app
 from ....entity.persistence import user
+from ....entity.dto.space_model import SpaceModel
 
 
 class SpaceService:
@@ -170,3 +171,19 @@ class SpaceService:
             return credits
         except Exception:
             return self._credits_cache.get(user_email, (None, 0))[0]
+
+    async def get_models(self) -> typing.List[SpaceModel]:
+        """Get models from Space"""
+
+        space_config = self._get_space_config()
+        space_url = space_config['url']
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f'{space_url}/api/v1/models') as response:
+                if response.status != 200:
+                    raise ValueError(f'Failed to get models: {await response.text()}')
+                data = await response.json()
+                if data.get('code') != 0:
+                    raise ValueError(f'Failed to get models: {data.get("msg")}')
+                models_data = data.get('data', {}).get('models', [])
+                return [SpaceModel.model_validate(model_dict) for model_dict in models_data]

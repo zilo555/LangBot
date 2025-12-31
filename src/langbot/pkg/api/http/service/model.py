@@ -64,9 +64,10 @@ class LLMModelsService:
         models = result.all()
         return [self.ap.persistence_mgr.serialize_model(persistence_model.LLMModel, m) for m in models]
 
-    async def create_llm_model(self, model_data: dict) -> str:
+    async def create_llm_model(self, model_data: dict, preserve_uuid: bool = False) -> str:
         """Create a new LLM model"""
-        model_data['uuid'] = str(uuid.uuid4())
+        if not preserve_uuid:
+            model_data['uuid'] = str(uuid.uuid4())
 
         # Handle provider creation if needed
         if 'provider' in model_data:
@@ -222,9 +223,10 @@ class EmbeddingModelsService:
         models = result.all()
         return [self.ap.persistence_mgr.serialize_model(persistence_model.EmbeddingModel, m) for m in models]
 
-    async def create_embedding_model(self, model_data: dict) -> str:
+    async def create_embedding_model(self, model_data: dict, preserve_uuid: bool = False) -> str:
         """Create a new embedding model"""
-        model_data['uuid'] = str(uuid.uuid4())
+        if not preserve_uuid:
+            model_data['uuid'] = str(uuid.uuid4())
 
         if 'provider' in model_data:
             provider_data = model_data.pop('provider')
