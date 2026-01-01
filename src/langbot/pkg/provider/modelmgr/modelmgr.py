@@ -45,6 +45,12 @@ class ModelManager:
 
         await self.load_models_from_db()
 
+        # Check if space models service is disabled
+        space_config = self.ap.instance_config.data.get('space', {})
+        if space_config.get('disable_models_service', False):
+            self.ap.logger.info('LangBot Space Models service is disabled, skipping sync.')
+            return
+
         try:
             await self.sync_new_models_from_space()
         except Exception as e:

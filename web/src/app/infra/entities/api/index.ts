@@ -242,6 +242,7 @@ export interface ApiRespSystemInfo {
   cloud_service_url: string;
   enable_marketplace: boolean;
   allow_modify_login_info: boolean;
+  disable_models_service: boolean;
 }
 
 export interface ApiRespPluginSystemStatus {

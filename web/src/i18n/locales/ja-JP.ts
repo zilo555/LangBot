@@ -215,6 +215,7 @@ const jaJP = {
     addProvider: 'プロバイダーを追加',
     addProviderHint:
       '他のソースのモデルを使用するにはプロバイダーを追加してください',
+    addProviderHintSimple: 'モデルを使用するにはプロバイダーを追加してください',
     noProviders: 'プロバイダーがありません',
     providerName: 'プロバイダー名',
     providerNameRequired: 'プロバイダー名は必須です',

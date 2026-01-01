@@ -62,7 +62,13 @@ export default function ProviderForm({
   });
 
   const [requesterList, setRequesterList] = useState<
-    { label: string; value: string; category: string; defaultUrl: string }[]
+    {
+      label: string;
+      value: string;
+      category: string;
+      defaultUrl: string;
+      description: string;
+    }[]
   >([]);
 
   useEffect(() => {
@@ -73,17 +79,20 @@ export default function ProviderForm({
   }, [providerId]);
 
   async function loadRequesters() {
-    const resp = await httpClient.getProviderRequesters('llm');
+    const resp = await httpClient.getProviderRequesters();
     setRequesterList(
-      resp.requesters.map((item) => ({
-        label: extractI18nObject(item.label),
-        value: item.name,
-        category: item.spec.provider_category || 'manufacturer',
-        defaultUrl:
-          item.spec.config
-            .find((c) => c.name === 'base_url')
-            ?.default?.toString() || '',
-      })),
+      resp.requesters
+        .filter((item) => item.name !== 'space-chat-completions')
+        .map((item) => ({
+          label: extractI18nObject(item.label),
+          value: item.name,
+          category: item.spec.provider_category || 'manufacturer',
+          defaultUrl:
+            item.spec.config
+              .find((c) => c.name === 'base_url')
+              ?.default?.toString() || '',
+          description: extractI18nObject(item.description),
+        })),
     );
   }
 
@@ -145,63 +154,134 @@ export default function ProviderForm({
         <FormField
           control={form.control}
           name="requester"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                {t('models.requester')}
-                <span className="text-red-500">*</span>
-              </FormLabel>
-              <Select
-                onValueChange={(v) => {
-                  field.onChange(v);
-                  const req = requesterList.find((r) => r.value === v);
-                  // Auto-fill default URL when creating new provider
-                  // or when base_url is empty in edit mode
-                  if (req && (!providerId || !form.getValues('base_url'))) {
-                    form.setValue('base_url', req.defaultUrl);
-                  }
-                }}
-                value={field.value}
-              >
-                <SelectTrigger className="bg-background">
-                  <SelectValue placeholder={t('models.selectRequester')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel>{t('models.modelManufacturer')}</SelectLabel>
-                    {requesterList
-                      .filter((r) => r.category === 'manufacturer')
-                      .map((r) => (
-                        <SelectItem key={r.value} value={r.value}>
-                          {r.label}
-                        </SelectItem>
-                      ))}
-                  </SelectGroup>
-                  <SelectGroup>
-                    <SelectLabel>{t('models.aggregationPlatform')}</SelectLabel>
-                    {requesterList
-                      .filter((r) => r.category === 'maas')
-                      .map((r) => (
-                        <SelectItem key={r.value} value={r.value}>
-                          {r.label}
-                        </SelectItem>
-                      ))}
-                  </SelectGroup>
-                  <SelectGroup>
-                    <SelectLabel>{t('models.selfDeployed')}</SelectLabel>
-                    {requesterList
-                      .filter((r) => r.category === 'self-hosted')
-                      .map((r) => (
-                        <SelectItem key={r.value} value={r.value}>
-                          {r.label}
-                        </SelectItem>
-                      ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => {
+            const selectedRequester = requesterList.find(
+              (r) => r.value === field.value,
+            );
+            return (
+              <FormItem>
+                <FormLabel>
+                  {t('models.requester')}
+                  <span className="text-red-500">*</span>
+                </FormLabel>
+                <Select
+                  onValueChange={(v) => {
+                    field.onChange(v);
+                    const req = requesterList.find((r) => r.value === v);
+                    // Auto-fill default URL when creating new provider
+                    // or when base_url is empty in edit mode
+                    if (req && (!providerId || !form.getValues('base_url'))) {
+                      form.setValue('base_url', req.defaultUrl);
+                    }
+                  }}
+                  value={field.value}
+                >
+                  <SelectTrigger className="bg-background">
+                    {selectedRequester ? (
+                      <div className="flex items-center gap-2">
+                        <img
+                          src={httpClient.getProviderRequesterIconURL(
+                            selectedRequester.value,
+                          )}
+                          alt={selectedRequester.label}
+                          className="h-5 w-5 rounded"
+                        />
+                        <span>{selectedRequester.label}</span>
+                      </div>
+                    ) : (
+                      <SelectValue placeholder={t('models.selectRequester')} />
+                    )}
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>{t('models.builtin')}</SelectLabel>
+                      {requesterList
+                        .filter((r) => r.category === 'builtin')
+                        .map((r) => (
+                          <SelectItem key={r.value} value={r.value}>
+                            <div className="flex items-center gap-2">
+                              <img
+                                src={httpClient.getProviderRequesterIconURL(
+                                  r.value,
+                                )}
+                                alt={r.label}
+                                className="h-5 w-5 rounded"
+                              />
+                              <span>{r.label}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                    </SelectGroup>
+                    <SelectGroup>
+                      <SelectLabel>{t('models.modelManufacturer')}</SelectLabel>
+                      {requesterList
+                        .filter((r) => r.category === 'manufacturer')
+                        .map((r) => (
+                          <SelectItem key={r.value} value={r.value}>
+                            <div className="flex items-center gap-2">
+                              <img
+                                src={httpClient.getProviderRequesterIconURL(
+                                  r.value,
+                                )}
+                                alt={r.label}
+                                className="h-5 w-5 rounded"
+                              />
+                              <span>{r.label}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                    </SelectGroup>
+                    <SelectGroup>
+                      <SelectLabel>
+                        {t('models.aggregationPlatform')}
+                      </SelectLabel>
+                      {requesterList
+                        .filter((r) => r.category === 'maas')
+                        .map((r) => (
+                          <SelectItem key={r.value} value={r.value}>
+                            <div className="flex items-center gap-2">
+                              <img
+                                src={httpClient.getProviderRequesterIconURL(
+                                  r.value,
+                                )}
+                                alt={r.label}
+                                className="h-5 w-5 rounded"
+                              />
+                              <span>{r.label}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                    </SelectGroup>
+                    <SelectGroup>
+                      <SelectLabel>{t('models.selfDeployed')}</SelectLabel>
+                      {requesterList
+                        .filter((r) => r.category === 'self-hosted')
+                        .map((r) => (
+                          <SelectItem key={r.value} value={r.value}>
+                            <div className="flex items-center gap-2">
+                              <img
+                                src={httpClient.getProviderRequesterIconURL(
+                                  r.value,
+                                )}
+                                alt={r.label}
+                                className="h-5 w-5 rounded"
+                              />
+                              <span>{r.label}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+                {selectedRequester?.description && (
+                  <p className="text-sm text-muted-foreground">
+                    {selectedRequester.description}
+                  </p>
+                )}
+              </FormItem>
+            );
+          }}
         />
 
         <FormField

@@ -209,6 +209,7 @@ const enUS = {
     editProvider: 'Edit Provider',
     addProvider: 'Add Provider',
     addProviderHint: 'Add providers to use models from other sources',
+    addProviderHintSimple: 'Add providers to use models',
     noProviders: 'No providers yet',
     providerName: 'Provider Name',
     providerNameRequired: 'Provider name is required',

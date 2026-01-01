@@ -13,7 +13,7 @@ import {
   FormMessage,
   FormDescription,
 } from '@/components/ui/form';
-import { httpClient } from '@/app/infra/http/HttpClient';
+import { httpClient, systemInfo } from '@/app/infra/http/HttpClient';
 import {
   Select,
   SelectContent,
@@ -95,7 +95,14 @@ export default function KBForm({
 
   const getEmbeddingModelNameList = async () => {
     const resp = await httpClient.getProviderEmbeddingModels();
-    setEmbeddingModels(resp.models);
+    let models = resp.models;
+    // Filter out space-chat-completions models when models service is disabled
+    if (systemInfo.disable_models_service) {
+      models = models.filter(
+        (m) => m.provider?.requester !== 'space-chat-completions',
+      );
+    }
+    setEmbeddingModels(models);
   };
 
   const onSubmit = (data: z.infer<typeof formSchema>) => {

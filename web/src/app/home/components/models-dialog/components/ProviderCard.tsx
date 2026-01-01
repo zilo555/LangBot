@@ -38,7 +38,6 @@ interface ProviderCardProps {
   models?: ProviderModels;
   accountType: 'local' | 'space';
   spaceCredits: number | null;
-  requesterNameList: { label: string; value: string }[];
   // Popover states
   addModelPopoverOpen: string | null;
   editModelPopoverOpen: string | null;
@@ -94,7 +93,6 @@ export default function ProviderCard({
   models,
   accountType,
   spaceCredits,
-  requesterNameList,
   addModelPopoverOpen,
   editModelPopoverOpen,
   deleteConfirmOpen,
@@ -128,12 +126,6 @@ export default function ProviderCard({
   const totalModels =
     (provider.llm_count || 0) + (provider.embedding_count || 0);
 
-  const getRequesterLabel = (requester: string) => {
-    return (
-      requesterNameList.find((r) => r.value === requester)?.label || requester
-    );
-  };
-
   return (
     <Card className="mb-2">
       <Collapsible open={isExpanded} onOpenChange={onToggle}>
@@ -159,11 +151,7 @@ export default function ProviderCard({
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <CardTitle className="text-base">
-                    {isLangBotModels
-                      ? provider.name
-                      : getRequesterLabel(provider.requester)}
-                  </CardTitle>
+                  <CardTitle className="text-base">{provider.name}</CardTitle>
                   <Badge variant="outline" className="text-xs">
                     {t('models.modelsCount', { count: totalModels })}
                   </Badge>

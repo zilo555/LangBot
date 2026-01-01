@@ -17,7 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { ControllerRenderProps } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
-import { httpClient } from '@/app/infra/http/HttpClient';
+import { httpClient, systemInfo } from '@/app/infra/http/HttpClient';
 import {
   LLMModel,
   Bot,
@@ -98,7 +98,14 @@ export default function DynamicFormItemComponent({
       httpClient
         .getProviderLLMModels()
         .then((resp) => {
-          setLlmModels(resp.models);
+          let models = resp.models;
+          // Filter out space-chat-completions models when models service is disabled
+          if (systemInfo.disable_models_service) {
+            models = models.filter(
+              (m) => m.provider?.requester !== 'space-chat-completions',
+            );
+          }
+          setLlmModels(models);
         })
         .catch((err) => {
           toast.error('Failed to get LLM model list: ' + err.message);

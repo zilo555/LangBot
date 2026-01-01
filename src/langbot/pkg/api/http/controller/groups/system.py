@@ -22,6 +22,9 @@ class SystemRouterGroup(group.RouterGroup):
                     'allow_modify_login_info': self.ap.instance_config.data.get('system', {}).get(
                         'allow_modify_login_info', True
                     ),
+                    'disable_models_service': self.ap.instance_config.data.get('space', {}).get(
+                        'disable_models_service', False
+                    ),
                 }
             )
 

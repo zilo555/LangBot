@@ -202,6 +202,7 @@ const zhHans = {
     editProvider: '编辑供应商',
     addProvider: '添加供应商',
     addProviderHint: '添加自定义供应商以使用其他来源的模型',
+    addProviderHintSimple: '添加自定义供应商以使用模型',
     noProviders: '暂无自定义供应商',
     providerName: '供应商名称',
     providerNameRequired: '供应商名称不能为空',

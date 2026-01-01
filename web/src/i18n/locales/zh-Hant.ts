@@ -201,6 +201,7 @@ const zhHant = {
     editProvider: '編輯供應商',
     addProvider: '新增供應商',
     addProviderHint: '新增供應商以使用其他來源的模型',
+    addProviderHintSimple: '新增供應商以使用模型',
     noProviders: '暫無供應商',
     providerName: '供應商名稱',
     providerNameRequired: '供應商名稱不能為空',

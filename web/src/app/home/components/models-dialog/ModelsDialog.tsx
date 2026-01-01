@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, Boxes } from 'lucide-react';
-import { httpClient } from '@/app/infra/http/HttpClient';
+import { httpClient, systemInfo } from '@/app/infra/http/HttpClient';
 import { ModelProvider } from '@/app/infra/entities/api';
 import {
   Dialog,
@@ -13,7 +13,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { extractI18nObject } from '@/i18n/I18nProvider';
 import ProviderForm from './component/provider-form/ProviderForm';
 import { ProviderCard } from './components';
 import {
@@ -86,17 +85,13 @@ export default function ModelsDialog({
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<TestResult | null>(null);
 
-  const [requesterNameList, setRequesterNameList] = useState<
-    { label: string; value: string }[]
-  >([]);
-
   // Track if providers have been loaded initially
   const [providersLoaded, setProvidersLoaded] = useState(false);
 
-  // Separate LangBot Models provider
-  const langbotProvider = providers.find(
-    (p) => p.requester === LANGBOT_MODELS_PROVIDER_REQUESTER,
-  );
+  // Separate LangBot Models provider (hide when models service is disabled)
+  const langbotProvider = systemInfo.disable_models_service
+    ? undefined
+    : providers.find((p) => p.requester === LANGBOT_MODELS_PROVIDER_REQUESTER);
   const otherProviders = providers.filter(
     (p) => p.requester !== LANGBOT_MODELS_PROVIDER_REQUESTER,
   );
@@ -104,7 +99,6 @@ export default function ModelsDialog({
   useEffect(() => {
     if (open) {
       loadUserInfo();
-      loadRequesterLists();
       loadProviders();
     }
   }, [open]);
@@ -131,20 +125,6 @@ export default function ModelsDialog({
       }
     } catch {
       setAccountType('local');
-    }
-  }
-
-  async function loadRequesterLists() {
-    try {
-      const llmRequesters = await httpClient.getProviderRequesters('llm');
-      setRequesterNameList(
-        llmRequesters.requesters.map((item) => ({
-          label: extractI18nObject(item.label),
-          value: item.name,
-        })),
-      );
-    } catch (err) {
-      console.error('Failed to load requester lists', err);
     }
   }
 
@@ -397,7 +377,6 @@ export default function ModelsDialog({
         models={providerModels[provider.uuid]}
         accountType={accountType}
         spaceCredits={spaceCredits}
-        requesterNameList={requesterNameList}
         addModelPopoverOpen={addModelPopoverOpen}
         editModelPopoverOpen={editModelPopoverOpen}
         deleteConfirmOpen={deleteConfirmOpen}
@@ -462,7 +441,11 @@ export default function ModelsDialog({
             <div className="flex-shrink-0 mb-3 flex justify-between items-center">
               <span className="text-sm text-muted-foreground">
                 {otherProviders.length === 0
-                  ? t('models.addProviderHint')
+                  ? t(
+                      systemInfo.disable_models_service
+                        ? 'models.addProviderHintSimple'
+                        : 'models.addProviderHint',
+                    )
                   : t('models.providerCount', { count: otherProviders.length })}
               </span>
               <Button

@@ -57,7 +57,7 @@ export class BackendClient extends BaseHttpClient {
 
   // ============ Provider API ============
   public getProviderRequesters(
-    model_type: string,
+    model_type?: string,
   ): Promise<ApiRespProviderRequesters> {
     return this.get('/api/v1/provider/requesters', { type: model_type });
   }
