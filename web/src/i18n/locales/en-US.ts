@@ -122,6 +122,7 @@ const enUS = {
       'Webhooks allow LangBot to push person and group message events to external systems',
     actions: 'Actions',
     apiKeyCreatedMessage: 'Please copy this API key.',
+    none: 'None',
   },
   notFound: {
     title: 'Page not found',
@@ -206,6 +207,9 @@ const enUS = {
     loginToUseModels: 'Login with Space to use cloud models',
     noModels: 'No models configured',
     editProvider: 'Edit Provider',
+    addProvider: 'Add Provider',
+    addProviderHint: 'Add providers to use models from other sources',
+    noProviders: 'No providers yet',
     providerName: 'Provider Name',
     providerNameRequired: 'Provider name is required',
     requesterRequired: 'Provider type is required',

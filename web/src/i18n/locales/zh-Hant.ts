@@ -115,6 +115,7 @@ const zhHant = {
     webhookHint: 'Webhook 允許 LangBot 將個人訊息和群組訊息事件推送到外部系統',
     actions: '操作',
     apiKeyCreatedMessage: '請複製此 API 金鑰。',
+    none: '無',
   },
   notFound: {
     title: '頁面不存在',
@@ -198,6 +199,9 @@ const zhHant = {
     loginToUseModels: '使用 Space 登入以使用雲端模型',
     noModels: '暫無模型',
     editProvider: '編輯供應商',
+    addProvider: '新增供應商',
+    addProviderHint: '新增供應商以使用其他來源的模型',
+    noProviders: '暫無供應商',
     providerName: '供應商名稱',
     providerNameRequired: '供應商名稱不能為空',
     requesterRequired: '供應商類型不能為空',

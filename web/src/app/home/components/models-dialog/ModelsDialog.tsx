@@ -1,24 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  Plus,
-  MessageSquareText,
-  Cpu,
-  ChevronDown,
-  ChevronRight,
-  Trash2,
-  Settings,
-  LogIn,
-  Eye,
-  Wrench,
-} from 'lucide-react';
-import { httpClient, systemInfo } from '@/app/infra/http/HttpClient';
-import {
-  LLMModel,
-  EmbeddingModel,
-  ModelProvider,
-} from '@/app/infra/entities/api';
+import { Plus, Boxes } from 'lucide-react';
+import { httpClient } from '@/app/infra/http/HttpClient';
+import { ModelProvider } from '@/app/infra/entities/api';
 import {
   Dialog,
   DialogContent,
@@ -26,33 +11,37 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { extractI18nObject } from '@/i18n/I18nProvider';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import LLMForm from './component/llm-form/LLMForm';
-import EmbeddingForm from './component/embedding-form/EmbeddingForm';
 import ProviderForm from './component/provider-form/ProviderForm';
-import langbotIcon from '@/app/assets/langbot-logo.webp';
+import { ProviderCard } from './components';
+import {
+  ExtraArg,
+  ModelType,
+  TestResult,
+  ProviderModels,
+  LANGBOT_MODELS_PROVIDER_REQUESTER,
+} from './types';
 
 interface ModelsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const LANGBOT_MODELS_PROVIDER_REQUESTER = 'space-chat-completions';
+function convertExtraArgsToObject(
+  args: ExtraArg[],
+): Record<string, string | number | boolean> {
+  const obj: Record<string, string | number | boolean> = {};
+  args.forEach((arg) => {
+    if (arg.key.trim()) {
+      if (arg.type === 'number') obj[arg.key] = Number(arg.value);
+      else if (arg.type === 'boolean') obj[arg.key] = arg.value === 'true';
+      else obj[arg.key] = arg.value;
+    }
+  });
+  return obj;
+}
 
 export default function ModelsDialog({
   open,
@@ -69,27 +58,48 @@ export default function ModelsDialog({
     new Set(),
   );
   const [providerModels, setProviderModels] = useState<
-    Record<string, { llm: LLMModel[]; embedding: EmbeddingModel[] }>
+    Record<string, ProviderModels>
   >({});
   const [loadingProviders, setLoadingProviders] = useState<Set<string>>(
     new Set(),
   );
 
-  // Form modals
-  const [llmFormOpen, setLLMFormOpen] = useState(false);
-  const [embeddingFormOpen, setEmbeddingFormOpen] = useState(false);
+  // Provider form modal
   const [providerFormOpen, setProviderFormOpen] = useState(false);
-  const [editingLLMId, setEditingLLMId] = useState<string | null>(null);
-  const [editingEmbeddingId, setEditingEmbeddingId] = useState<string | null>(
-    null,
-  );
   const [editingProviderId, setEditingProviderId] = useState<string | null>(
     null,
   );
 
+  // Popover states
+  const [addModelPopoverOpen, setAddModelPopoverOpen] = useState<string | null>(
+    null,
+  );
+  const [editModelPopoverOpen, setEditModelPopoverOpen] = useState<
+    string | null
+  >(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState<string | null>(
+    null,
+  );
+
+  // Form states
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResult, setTestResult] = useState<TestResult | null>(null);
+
   const [requesterNameList, setRequesterNameList] = useState<
     { label: string; value: string }[]
   >([]);
+
+  // Track if providers have been loaded initially
+  const [providersLoaded, setProvidersLoaded] = useState(false);
+
+  // Separate LangBot Models provider
+  const langbotProvider = providers.find(
+    (p) => p.requester === LANGBOT_MODELS_PROVIDER_REQUESTER,
+  );
+  const otherProviders = providers.filter(
+    (p) => p.requester !== LANGBOT_MODELS_PROVIDER_REQUESTER,
+  );
 
   useEffect(() => {
     if (open) {
@@ -98,6 +108,18 @@ export default function ModelsDialog({
       loadProviders();
     }
   }, [open]);
+
+  // Auto-expand LangBot Models when no external providers exist
+  useEffect(() => {
+    if (providersLoaded && langbotProvider && otherProviders.length === 0) {
+      if (!expandedProviders.has(langbotProvider.uuid)) {
+        setExpandedProviders(new Set([langbotProvider.uuid]));
+        if (!providerModels[langbotProvider.uuid]) {
+          loadProviderModels(langbotProvider.uuid);
+        }
+      }
+    }
+  }, [providersLoaded, providers]);
 
   async function loadUserInfo() {
     try {
@@ -130,16 +152,19 @@ export default function ModelsDialog({
     try {
       const resp = await httpClient.getModelProviders();
       setProviders(resp.providers);
+      setProvidersLoaded(true);
     } catch (err) {
       console.error('Failed to load providers', err);
       toast.error(t('models.loadError'));
     }
   }
 
-  async function loadProviderModels(providerUuid: string) {
+  async function loadProviderModels(providerUuid: string, silent = false) {
     if (loadingProviders.has(providerUuid)) return;
 
-    setLoadingProviders((prev) => new Set(prev).add(providerUuid));
+    if (!silent) {
+      setLoadingProviders((prev) => new Set(prev).add(providerUuid));
+    }
     try {
       const [llmResp, embeddingResp] = await Promise.all([
         httpClient.getProviderLLMModels(providerUuid),
@@ -155,11 +180,13 @@ export default function ModelsDialog({
     } catch (err) {
       console.error('Failed to load models', err);
     } finally {
-      setLoadingProviders((prev) => {
-        const next = new Set(prev);
-        next.delete(providerUuid);
-        return next;
-      });
+      if (!silent) {
+        setLoadingProviders((prev) => {
+          const next = new Set(prev);
+          next.delete(providerUuid);
+          return next;
+        });
+      }
     }
   }
 
@@ -178,24 +205,9 @@ export default function ModelsDialog({
     });
   }
 
-  function handleCreateLLM() {
-    setEditingLLMId(null);
-    setLLMFormOpen(true);
-  }
-
-  function handleCreateEmbedding() {
-    setEditingEmbeddingId(null);
-    setEmbeddingFormOpen(true);
-  }
-
-  function handleEditLLM(modelId: string) {
-    setEditingLLMId(modelId);
-    setLLMFormOpen(true);
-  }
-
-  function handleEditEmbedding(modelId: string) {
-    setEditingEmbeddingId(modelId);
-    setEmbeddingFormOpen(true);
+  function handleCreateProvider() {
+    setEditingProviderId(null);
+    setProviderFormOpen(true);
   }
 
   function handleEditProvider(providerId: string) {
@@ -213,303 +225,217 @@ export default function ModelsDialog({
     }
   }
 
-  async function handleDeleteLLM(modelId: string, providerUuid: string) {
+  function handleSpaceLogin() {
+    window.location.href = '/auth/space';
+  }
+
+  async function handleAddModel(
+    providerUuid: string,
+    modelType: ModelType,
+    name: string,
+    abilities: string[],
+    extraArgs: ExtraArg[],
+  ) {
+    if (!name.trim()) {
+      toast.error(t('models.modelNameRequired'));
+      return;
+    }
+    setIsSubmitting(true);
     try {
-      await httpClient.deleteProviderLLMModel(modelId);
-      toast.success(t('models.deleteSuccess'));
-      loadProviderModels(providerUuid);
-      loadProviders(); // Refresh counts
+      const extraArgsObj = convertExtraArgsToObject(extraArgs);
+
+      if (modelType === 'llm') {
+        await httpClient.createProviderLLMModel({
+          name,
+          provider_uuid: providerUuid,
+          abilities,
+          extra_args: extraArgsObj,
+        } as never);
+      } else {
+        await httpClient.createProviderEmbeddingModel({
+          name,
+          provider_uuid: providerUuid,
+          extra_args: extraArgsObj,
+        } as never);
+      }
+      setAddModelPopoverOpen(null);
+      loadProviderModels(providerUuid, true);
+      loadProviders();
     } catch (err) {
-      toast.error(t('models.deleteError') + (err as Error).message);
+      toast.error(t('models.createError') + (err as Error).message);
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
-  async function handleDeleteEmbedding(modelId: string, providerUuid: string) {
+  async function handleUpdateModel(
+    providerUuid: string,
+    modelId: string,
+    modelType: ModelType,
+    name: string,
+    abilities: string[],
+    extraArgs: ExtraArg[],
+  ) {
+    if (!name.trim()) {
+      toast.error(t('models.modelNameRequired'));
+      return;
+    }
+    setIsSubmitting(true);
     try {
-      await httpClient.deleteProviderEmbeddingModel(modelId);
+      const extraArgsObj = convertExtraArgsToObject(extraArgs);
+
+      if (modelType === 'llm') {
+        await httpClient.updateProviderLLMModel(modelId, {
+          name,
+          provider_uuid: providerUuid,
+          abilities,
+          extra_args: extraArgsObj,
+        } as never);
+      } else {
+        await httpClient.updateProviderEmbeddingModel(modelId, {
+          name,
+          provider_uuid: providerUuid,
+          extra_args: extraArgsObj,
+        } as never);
+      }
+      setEditModelPopoverOpen(null);
+      loadProviderModels(providerUuid, true);
+      loadProviders();
+    } catch (err) {
+      toast.error(t('models.saveError') + (err as Error).message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleDeleteModel(
+    providerUuid: string,
+    modelId: string,
+    modelType: ModelType,
+  ) {
+    try {
+      if (modelType === 'llm') {
+        await httpClient.deleteProviderLLMModel(modelId);
+      } else {
+        await httpClient.deleteProviderEmbeddingModel(modelId);
+      }
       toast.success(t('models.deleteSuccess'));
-      loadProviderModels(providerUuid);
+      loadProviderModels(providerUuid, true);
       loadProviders();
     } catch (err) {
       toast.error(t('models.deleteError') + (err as Error).message);
     }
   }
 
-  function handleSpaceLogin() {
-    window.location.href = '/auth/space';
+  async function handleTestModel(
+    providerUuid: string,
+    name: string,
+    modelType: ModelType,
+    abilities: string[],
+    extraArgs: ExtraArg[],
+  ) {
+    setIsTesting(true);
+    setTestResult(null);
+    const startTime = Date.now();
+    try {
+      const extraArgsObj = convertExtraArgsToObject(extraArgs);
+
+      // Get the provider info
+      const provider = providers.find((p) => p.uuid === providerUuid);
+      const providerData = {
+        requester: provider?.requester || '',
+        base_url: provider?.base_url || '',
+        api_keys: provider?.api_keys || [],
+      };
+
+      if (modelType === 'llm') {
+        await httpClient.testLLMModel('_', {
+          uuid: '',
+          name,
+          provider_uuid: '',
+          provider: providerData,
+          abilities,
+          extra_args: extraArgsObj,
+        } as never);
+      } else {
+        await httpClient.testEmbeddingModel('_', {
+          uuid: '',
+          name,
+          provider_uuid: '',
+          provider: providerData,
+          extra_args: extraArgsObj,
+        } as never);
+      }
+      const duration = Date.now() - startTime;
+      setTestResult({ success: true, duration });
+    } catch (err) {
+      toast.error(t('models.testError') + ': ' + (err as Error).message);
+      setTestResult(null);
+    } finally {
+      setIsTesting(false);
+    }
   }
 
-  function getRequesterLabel(requester: string) {
-    return (
-      requesterNameList.find((r) => r.value === requester)?.label || requester
-    );
+  function handleFormClose() {
+    setProviderFormOpen(false);
+    loadProviders();
+    // Refresh expanded providers
+    expandedProviders.forEach((uuid) => loadProviderModels(uuid));
   }
-
-  function maskApiKey(key: string): string {
-    if (!key) return '';
-    if (key.length <= 8) return '****';
-    return `${key.slice(0, 4)}...${key.slice(-4)}`;
-  }
-
-  // Separate LangBot Models provider
-  const langbotProvider = providers.find(
-    (p) => p.requester === LANGBOT_MODELS_PROVIDER_REQUESTER,
-  );
-  const otherProviders = providers.filter(
-    (p) => p.requester !== LANGBOT_MODELS_PROVIDER_REQUESTER,
-  );
 
   function renderProviderCard(
     provider: ModelProvider,
     isLangBotModels: boolean = false,
   ) {
-    const isExpanded = expandedProviders.has(provider.uuid);
-    const isLoading = loadingProviders.has(provider.uuid);
-    const models = providerModels[provider.uuid];
-    const canDelete =
-      !isLangBotModels &&
-      (provider.llm_count || 0) === 0 &&
-      (provider.embedding_count || 0) === 0;
-    const totalModels =
-      (provider.llm_count || 0) + (provider.embedding_count || 0);
-
     return (
-      <Card key={provider.uuid} className="mb-2">
-        <Collapsible
-          open={isExpanded}
-          onOpenChange={() => toggleProvider(provider.uuid)}
-        >
-          <CardHeader className="px-4 pb-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 flex-1">
-                {isLangBotModels ? (
-                  <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0">
-                    <img
-                      src={langbotIcon.src}
-                      alt="LangBot"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <img
-                    src={httpClient.getProviderRequesterIconURL(
-                      provider.requester,
-                    )}
-                    alt={provider.name}
-                    className="h-9 w-9 rounded-lg"
-                  />
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <CardTitle className="text-base">
-                      {isLangBotModels
-                        ? provider.name
-                        : getRequesterLabel(provider.requester)}
-                    </CardTitle>
-                    <Badge variant="outline" className="text-xs">
-                      {t('models.modelsCount', { count: totalModels })}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {isLangBotModels ? (
-                      t('models.langbotModelsDescription')
-                    ) : (
-                      <>
-                        {provider.base_url}
-                        {provider.base_url &&
-                          provider.api_keys?.length > 0 &&
-                          ' · '}
-                        {provider.api_keys?.length > 0 &&
-                          maskApiKey(provider.api_keys[0])}
-                      </>
-                    )}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 ml-2">
-                {isLangBotModels && accountType !== 'space' && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSpaceLogin();
-                    }}
-                  >
-                    <LogIn className="h-4 w-4 mr-1" />
-                    {t('models.loginWithSpace')}
-                  </Button>
-                )}
-                {isLangBotModels &&
-                  accountType === 'space' &&
-                  spaceCredits !== null && (
-                    <div className="flex items-center gap-1 border rounded-md px-2 h-8 text-sm mr-2">
-                      <span>
-                        {(spaceCredits / 5000).toFixed(2)} {t('models.credits')}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-5 w-5"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          window.open(
-                            `${systemInfo.cloud_service_url}/profile?tab=billing`,
-                            '_blank',
-                          );
-                        }}
-                      >
-                        <Plus className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  )}
-                {!isLangBotModels && (
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditProvider(provider.uuid);
-                      }}
-                    >
-                      <Settings className="h-4 w-4" />
-                    </Button>
-                    {canDelete && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteProvider(provider.uuid);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-            <CollapsibleTrigger className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground cursor-pointer mt-2">
-              {isExpanded ? (
-                <ChevronDown className="h-3 w-3" />
-              ) : (
-                <ChevronRight className="h-3 w-3" />
-              )}
-              <span>
-                {isExpanded
-                  ? t('models.collapseModels')
-                  : t('models.expandModels')}
-              </span>
-            </CollapsibleTrigger>
-          </CardHeader>
-          <CollapsibleContent>
-            <CardContent className="px-4">
-              {isLoading ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  {t('common.loading')}...
-                </p>
-              ) : models ? (
-                <div className="space-y-2">
-                  {models.llm.map((model) => (
-                    <div
-                      key={model.uuid}
-                      className="flex items-center justify-between py-2 px-3 rounded-md border bg-background hover:bg-accent cursor-pointer"
-                      onClick={() => handleEditLLM(model.uuid)}
-                    >
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-medium">
-                          {model.name}
-                        </span>
-                        <Badge variant="secondary" className="text-xs">
-                          {t('models.chat')}
-                        </Badge>
-                        {model.abilities?.includes('vision') && (
-                          <Badge variant="outline" className="text-xs gap-1">
-                            <Eye className="h-3 w-3" />
-                          </Badge>
-                        )}
-                        {model.abilities?.includes('func_call') && (
-                          <Badge variant="outline" className="text-xs gap-1">
-                            <Wrench className="h-3 w-3" />
-                          </Badge>
-                        )}
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 flex-shrink-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteLLM(model.uuid, provider.uuid);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                      </Button>
-                    </div>
-                  ))}
-                  {models.embedding.map((model) => (
-                    <div
-                      key={model.uuid}
-                      className="flex items-center justify-between py-2 px-3 rounded-md border bg-background hover:bg-accent cursor-pointer"
-                      onClick={() => handleEditEmbedding(model.uuid)}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">
-                          {model.name}
-                        </span>
-                        <Badge variant="secondary" className="text-xs">
-                          {t('models.embedding')}
-                        </Badge>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 flex-shrink-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteEmbedding(model.uuid, provider.uuid);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                      </Button>
-                    </div>
-                  ))}
-                  {models.llm.length === 0 && models.embedding.length === 0 && (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      {t('models.noModels')}
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  {t('models.noModels')}
-                </p>
-              )}
-            </CardContent>
-          </CollapsibleContent>
-        </Collapsible>
-      </Card>
+      <ProviderCard
+        key={provider.uuid}
+        provider={provider}
+        isLangBotModels={isLangBotModels}
+        isExpanded={expandedProviders.has(provider.uuid)}
+        isLoading={loadingProviders.has(provider.uuid)}
+        models={providerModels[provider.uuid]}
+        accountType={accountType}
+        spaceCredits={spaceCredits}
+        requesterNameList={requesterNameList}
+        addModelPopoverOpen={addModelPopoverOpen}
+        editModelPopoverOpen={editModelPopoverOpen}
+        deleteConfirmOpen={deleteConfirmOpen}
+        onToggle={() => toggleProvider(provider.uuid)}
+        onEditProvider={() => handleEditProvider(provider.uuid)}
+        onDeleteProvider={() => handleDeleteProvider(provider.uuid)}
+        onSpaceLogin={handleSpaceLogin}
+        onOpenAddModel={() => setAddModelPopoverOpen(provider.uuid)}
+        onCloseAddModel={() => setAddModelPopoverOpen(null)}
+        onAddModel={(modelType, name, abilities, extraArgs) =>
+          handleAddModel(provider.uuid, modelType, name, abilities, extraArgs)
+        }
+        onOpenEditModel={(modelId) => setEditModelPopoverOpen(modelId)}
+        onCloseEditModel={() => setEditModelPopoverOpen(null)}
+        onUpdateModel={(modelId, modelType, name, abilities, extraArgs) =>
+          handleUpdateModel(
+            provider.uuid,
+            modelId,
+            modelType,
+            name,
+            abilities,
+            extraArgs,
+          )
+        }
+        onOpenDeleteConfirm={(modelId) => setDeleteConfirmOpen(modelId)}
+        onCloseDeleteConfirm={() => setDeleteConfirmOpen(null)}
+        onDeleteModel={(modelId, modelType) =>
+          handleDeleteModel(provider.uuid, modelId, modelType)
+        }
+        onTestModel={(name, modelType, abilities, extraArgs) =>
+          handleTestModel(provider.uuid, name, modelType, abilities, extraArgs)
+        }
+        isSubmitting={isSubmitting}
+        isTesting={isTesting}
+        testResult={testResult}
+        onResetTestResult={() => setTestResult(null)}
+      />
     );
-  }
-
-  // Virtual LangBot Models card if not exists
-  function renderLangBotModelsCard() {
-    if (langbotProvider) {
-      return renderProviderCard(langbotProvider, true);
-    }
-  }
-
-  function handleFormClose() {
-    setLLMFormOpen(false);
-    setEmbeddingFormOpen(false);
-    setProviderFormOpen(false);
-    loadProviders();
-    // Refresh expanded providers
-    expandedProviders.forEach((uuid) => loadProviderModels(uuid));
   }
 
   return (
@@ -517,11 +443,7 @@ export default function ModelsDialog({
       <Dialog
         open={open}
         onOpenChange={(newOpen) => {
-          if (
-            !newOpen &&
-            (llmFormOpen || embeddingFormOpen || providerFormOpen)
-          )
-            return;
+          if (!newOpen && providerFormOpen) return;
           onOpenChange(newOpen);
         }}
       >
@@ -532,84 +454,50 @@ export default function ModelsDialog({
 
           <div className="flex-1 flex flex-col overflow-hidden px-6 pb-6 mt-0">
             {/* Fixed LangBot Models Card */}
-            <div className="flex-shrink-0">{renderLangBotModelsCard()}</div>
+            <div className="flex-shrink-0">
+              {langbotProvider && renderProviderCard(langbotProvider, true)}
+            </div>
 
-            {/* Add Model Button */}
+            {/* Add Provider Button */}
             <div className="flex-shrink-0 mb-3 flex justify-between items-center">
               <span className="text-sm text-muted-foreground">
-                {t('models.providerCount', { count: otherProviders.length })}
+                {otherProviders.length === 0
+                  ? t('models.addProviderHint')
+                  : t('models.providerCount', { count: otherProviders.length })}
               </span>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button size="sm" variant="outline">
-                    <Plus className="h-4 w-4 mr-1" />
-                    {t('models.addModel')}
-                    <ChevronDown className="h-4 w-4 ml-1" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleCreateLLM}>
-                    <MessageSquareText className="h-4 w-4 mr-2" />
-                    {t('models.addLLMModel')}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleCreateEmbedding}>
-                    <Cpu className="h-4 w-4 mr-2" />
-                    {t('models.addEmbeddingModel')}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleCreateProvider}
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                {t('models.addProvider')}
+              </Button>
             </div>
 
             {/* Scrollable Provider List */}
             <div className="flex-1 overflow-auto">
-              {otherProviders.map((p) => renderProviderCard(p))}
+              {otherProviders.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                  <Boxes className="h-12 w-12 mb-3 opacity-50" />
+                  <p className="text-sm">{t('models.noProviders')}</p>
+                </div>
+              ) : (
+                otherProviders.map((p) => renderProviderCard(p))
+              )}
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={llmFormOpen} onOpenChange={setLLMFormOpen}>
-        <DialogContent className="w-[700px] max-h-[90vh] overflow-y-auto p-6">
-          <DialogHeader>
-            <DialogTitle>
-              {editingLLMId ? t('models.editModel') : t('models.createModel')}
-            </DialogTitle>
-          </DialogHeader>
-          <LLMForm
-            editMode={!!editingLLMId}
-            initLLMId={editingLLMId || undefined}
-            providers={providers}
-            onFormSubmit={handleFormClose}
-            onFormCancel={() => setLLMFormOpen(false)}
-            onLLMDeleted={handleFormClose}
-          />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={embeddingFormOpen} onOpenChange={setEmbeddingFormOpen}>
-        <DialogContent className="w-[700px] max-h-[90vh] overflow-y-auto p-6">
-          <DialogHeader>
-            <DialogTitle>
-              {editingEmbeddingId
-                ? t('embedding.editModel')
-                : t('embedding.createModel')}
-            </DialogTitle>
-          </DialogHeader>
-          <EmbeddingForm
-            editMode={!!editingEmbeddingId}
-            initEmbeddingId={editingEmbeddingId || undefined}
-            providers={providers}
-            onFormSubmit={handleFormClose}
-            onFormCancel={() => setEmbeddingFormOpen(false)}
-            onEmbeddingDeleted={handleFormClose}
-          />
         </DialogContent>
       </Dialog>
 
       <Dialog open={providerFormOpen} onOpenChange={setProviderFormOpen}>
         <DialogContent className="w-[600px] p-6">
           <DialogHeader>
-            <DialogTitle>{t('models.editProvider')}</DialogTitle>
+            <DialogTitle>
+              {editingProviderId
+                ? t('models.editProvider')
+                : t('models.addProvider')}
+            </DialogTitle>
           </DialogHeader>
           <ProviderForm
             providerId={editingProviderId || undefined}

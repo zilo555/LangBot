@@ -124,6 +124,7 @@ const jaJP = {
       'Webhook を使用すると、LangBot は個人メッセージとグループメッセージイベントを外部システムにプッシュできます',
     actions: 'アクション',
     apiKeyCreatedMessage: 'この API キーをコピーしてください。',
+    none: 'なし',
   },
   notFound: {
     title: 'ページが見つかりません',
@@ -211,6 +212,10 @@ const jaJP = {
     loginToUseModels: 'Space でログインしてクラウドモデルを使用',
     noModels: 'モデルがありません',
     editProvider: 'プロバイダーを編集',
+    addProvider: 'プロバイダーを追加',
+    addProviderHint:
+      '他のソースのモデルを使用するにはプロバイダーを追加してください',
+    noProviders: 'プロバイダーがありません',
     providerName: 'プロバイダー名',
     providerNameRequired: 'プロバイダー名は必須です',
     requesterRequired: 'プロバイダータイプは必須です',

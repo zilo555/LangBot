@@ -115,6 +115,7 @@ const zhHans = {
     webhookHint: 'Webhook 允许 LangBot 将个人消息和群消息事件推送到外部系统',
     actions: '操作',
     apiKeyCreatedMessage: '请复制此 API 密钥。',
+    none: '无',
   },
   notFound: {
     title: '页面不存在',
@@ -182,7 +183,7 @@ const zhHans = {
     spaceModelReadOnly: 'Space 模型为只读',
     noSpaceModels: '暂无 Space 模型。点击同步按钮从 Space 获取模型。',
     noLocalModels: '暂无本地模型。点击创建按钮添加模型。',
-    providerCount: '共 {{count}} 个供应商',
+    providerCount: '共 {{count}} 个自定义供应商',
     // 供应商结构新增键
     addModel: '添加模型',
     addLLMModel: '添加对话模型',
@@ -199,6 +200,9 @@ const zhHans = {
     loginToUseModels: '通过 Space 登录以使用云端模型',
     noModels: '暂无模型',
     editProvider: '编辑供应商',
+    addProvider: '添加供应商',
+    addProviderHint: '添加自定义供应商以使用其他来源的模型',
+    noProviders: '暂无自定义供应商',
     providerName: '供应商名称',
     providerNameRequired: '供应商名称不能为空',
     requesterRequired: '供应商类型不能为空',
