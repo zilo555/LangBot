@@ -355,7 +355,7 @@ export default function ModelsDialog({
                         onClick={(e) => {
                           e.stopPropagation();
                           window.open(
-                            `${systemInfo.cloud_service_url}/billing`,
+                            `${systemInfo.cloud_service_url}/profile?tab=billing`,
                             '_blank',
                           );
                         }}

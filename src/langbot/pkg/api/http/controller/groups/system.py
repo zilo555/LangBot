@@ -17,11 +17,7 @@ class SystemRouterGroup(group.RouterGroup):
                         'enable_marketplace', True
                     ),
                     'cloud_service_url': (
-                        self.ap.instance_config.data.get('plugin', {}).get(
-                            'cloud_service_url', 'https://space.langbot.app'
-                        )
-                        if 'cloud_service_url' in self.ap.instance_config.data.get('plugin', {})
-                        else 'https://space.langbot.app'
+                        self.ap.instance_config.data.get('space', {}).get('url', 'https://space.langbot.app')
                     ),
                     'allow_modify_login_info': self.ap.instance_config.data.get('system', {}).get(
                         'allow_modify_login_info', True

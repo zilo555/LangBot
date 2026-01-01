@@ -44,7 +44,12 @@ class ModelManager:
         self.requester_dict = requester_dict
 
         await self.load_models_from_db()
-        await self.sync_new_models_from_space()
+
+        try:
+            await self.sync_new_models_from_space()
+        except Exception as e:
+            self.ap.logger.warning('Failed to sync new models from LangBot Space, model list may not be updated.')
+            self.ap.logger.warning(f'  - Error: {e}')
 
     async def load_models_from_db(self):
         """Load models from database"""
