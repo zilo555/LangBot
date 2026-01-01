@@ -52,7 +52,6 @@ interface ModelsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const LANGBOT_MODELS_PROVIDER_NAME = 'LangBot Models';
 const LANGBOT_MODELS_PROVIDER_REQUESTER = 'space-chat-completions';
 
 export default function ModelsDialog({

@@ -26,11 +26,6 @@ import {
   ApiRespPluginSystemStatus,
 } from '@/app/infra/entities/api';
 import { toast } from 'sonner';
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from '@/components/ui/hover-card';
 import { useTranslation } from 'react-i18next';
 import { extractI18nObject } from '@/i18n/I18nProvider';
 import { Textarea } from '@/components/ui/textarea';
