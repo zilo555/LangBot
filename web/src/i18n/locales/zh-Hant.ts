@@ -750,6 +750,7 @@ const zhHant = {
     bindSpaceFailed: '綁定 Space 帳戶失敗',
     bindSpaceInvalidState: '無效的綁定請求，請從帳戶設定重新發起',
     setPasswordHint: '設定密碼後可使用電子郵件密碼登入',
+    spaceEmailMismatch: 'Space登入帳號電子郵件與本實例帳號電子郵件不匹配',
   },
 };
 

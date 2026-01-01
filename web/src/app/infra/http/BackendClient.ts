@@ -753,7 +753,7 @@ export class BackendClient extends BaseHttpClient {
     });
   }
 
-  public bindSpaceAccount(
+  public async bindSpaceAccount(
     code: string,
     state: string,
   ): Promise<{
@@ -761,7 +761,17 @@ export class BackendClient extends BaseHttpClient {
     user: string;
     account_type: 'local' | 'space';
   }> {
-    return this.post('/api/v1/user/bind-space', { code, state });
+    const response = await this.instance.post('/api/v1/user/bind-space', {
+      code,
+      state,
+    });
+    if (response.data.code !== 0) {
+      throw {
+        code: response.data.code,
+        msg: response.data.msg || 'Unknown error',
+      };
+    }
+    return response.data.data;
   }
 
   // ============ Space OAuth API (Redirect Flow) ============
@@ -778,10 +788,19 @@ export class BackendClient extends BaseHttpClient {
     return this.get('/api/v1/user/space/authorize-url', params);
   }
 
-  public exchangeSpaceOAuthCode(code: string): Promise<{
+  public async exchangeSpaceOAuthCode(code: string): Promise<{
     token: string;
     user: string;
   }> {
-    return this.post('/api/v1/user/space/callback', { code });
+    const response = await this.instance.post('/api/v1/user/space/callback', {
+      code,
+    });
+    if (response.data.code !== 0) {
+      throw {
+        code: response.data.code,
+        msg: response.data.msg || 'Unknown error',
+      };
+    }
+    return response.data.data;
   }
 }

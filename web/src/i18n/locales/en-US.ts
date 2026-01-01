@@ -789,6 +789,8 @@ const enUS = {
     bindSpaceInvalidState:
       'Invalid bind request. Please try again from account settings.',
     setPasswordHint: 'Set a password to login with email and password',
+    spaceEmailMismatch:
+      'Space login email does not match the local account email',
   },
 };
 

@@ -10,6 +10,7 @@ import asyncio
 from ....core import app
 from ....entity.persistence import user
 from ....utils import constants
+from ....entity.errors import account as account_errors
 
 
 class UserService:
@@ -174,9 +175,7 @@ class UserService:
             # Check if system is already initialized
             is_initialized = await self.is_initialized()
             if is_initialized:
-                raise ValueError(
-                    'This LangBot instance already has an account. Please use the existing account to login.'
-                )
+                raise account_errors.AccountEmailMismatchError()
 
             # Create new Space user (first time initialization)
             await self.ap.persistence_mgr.execute_async(

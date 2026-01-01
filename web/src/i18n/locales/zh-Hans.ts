@@ -753,6 +753,7 @@ const zhHans = {
     bindSpaceFailed: '绑定 Space 账户失败',
     bindSpaceInvalidState: '无效的绑定请求，请从账户设置重新发起',
     setPasswordHint: '设置密码后可使用邮箱密码登录',
+    spaceEmailMismatch: 'Space登录账号邮箱与本实例账号邮箱不匹配',
   },
 };
 

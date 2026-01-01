@@ -48,9 +48,15 @@ function SpaceOAuthCallbackContent() {
         setTimeout(() => {
           router.push('/home');
         }, 1000);
-      } catch {
+      } catch (err) {
         setStatus('error');
-        setErrorMessage(t('common.spaceLoginFailed'));
+        const errorObj = err as { msg?: string };
+        const errMsg = (errorObj?.msg || '').toLowerCase();
+        if (errMsg.includes('account email mismatch')) {
+          setErrorMessage(t('account.spaceEmailMismatch'));
+        } else {
+          setErrorMessage(t('common.spaceLoginFailed'));
+        }
       }
     },
     [router, t],
@@ -74,9 +80,13 @@ function SpaceOAuthCallbackContent() {
         }, 1000);
       } catch (err) {
         setStatus('error');
-        setErrorMessage(
-          err instanceof Error ? err.message : t('account.bindSpaceFailed'),
-        );
+        const errorObj = err as { msg?: string };
+        const errMsg = (errorObj?.msg || '').toLowerCase();
+        if (errMsg.includes('account email mismatch')) {
+          setErrorMessage(t('account.spaceEmailMismatch'));
+        } else {
+          setErrorMessage(t('account.bindSpaceFailed'));
+        }
       } finally {
         setIsProcessing(false);
       }

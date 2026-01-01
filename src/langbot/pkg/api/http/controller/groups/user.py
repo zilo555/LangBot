@@ -4,6 +4,7 @@ import asyncio
 import traceback
 
 from .. import group
+from .....entity.errors import account as account_errors
 
 
 @group.group_class('user', '/api/v1/user')
@@ -141,6 +142,8 @@ class UserRouterGroup(group.RouterGroup):
                         'user': user_obj.user,
                     }
                 )
+            except account_errors.AccountEmailMismatchError as e:
+                return self.fail(3, str(e))
             except ValueError as e:
                 traceback.print_exc()
                 return self.fail(1, str(e))
