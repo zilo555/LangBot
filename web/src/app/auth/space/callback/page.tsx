@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { toast } from 'sonner';
@@ -21,7 +21,7 @@ import {
 import { Button } from '@/components/ui/button';
 import langbotIcon from '@/app/assets/langbot-logo.webp';
 
-export default function SpaceOAuthCallback() {
+function SpaceOAuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useTranslation();
@@ -214,5 +214,25 @@ export default function SpaceOAuthCallback() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-neutral-900">
+      <Card className="w-[400px] shadow-lg dark:shadow-white/10">
+        <CardContent className="flex flex-col items-center py-12">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+export default function SpaceOAuthCallback() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <SpaceOAuthCallbackContent />
+    </Suspense>
   );
 }
