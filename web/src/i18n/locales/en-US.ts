@@ -218,6 +218,8 @@ const enUS = {
     providerSaveError: 'Failed to save provider: ',
     providerDeleted: 'Provider deleted',
     providerDeleteError: 'Failed to delete provider: ',
+    deleteProviderConfirmation:
+      'Are you sure you want to delete this provider?',
     loadError: 'Failed to load data',
     chat: 'Chat',
     embedding: 'Embedding',

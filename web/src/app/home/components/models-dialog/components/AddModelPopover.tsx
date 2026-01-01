@@ -17,7 +17,6 @@ import { ExtraArg, ModelType, TestResult } from '../types';
 import ExtraArgsEditor from './ExtraArgsEditor';
 
 interface AddModelPopoverProps {
-  providerUuid: string;
   isOpen: boolean;
   onOpen: () => void;
   onClose: () => void;
@@ -40,7 +39,6 @@ interface AddModelPopoverProps {
 }
 
 export default function AddModelPopover({
-  providerUuid,
   isOpen,
   onOpen,
   onClose,

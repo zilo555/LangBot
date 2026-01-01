@@ -224,6 +224,7 @@ const jaJP = {
     providerSaveError: 'プロバイダーの保存に失敗しました：',
     providerDeleted: 'プロバイダーを削除しました',
     providerDeleteError: 'プロバイダーの削除に失敗しました：',
+    deleteProviderConfirmation: 'このプロバイダーを削除してもよろしいですか？',
     loadError: 'データの読み込みに失敗しました',
     chat: 'チャット',
     embedding: '埋め込み',

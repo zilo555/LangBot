@@ -211,6 +211,7 @@ const zhHans = {
     providerSaveError: '保存供应商失败：',
     providerDeleted: '供应商已删除',
     providerDeleteError: '删除供应商失败：',
+    deleteProviderConfirmation: '你确定要删除这个供应商吗？',
     loadError: '加载数据失败',
     chat: '对话',
     embedding: '嵌入',

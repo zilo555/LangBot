@@ -20,7 +20,6 @@ import ExtraArgsEditor from './ExtraArgsEditor';
 interface ModelItemProps {
   model: LLMModel | EmbeddingModel;
   modelType: ModelType;
-  providerUuid: string;
   isLangBotModels: boolean;
   editModelPopoverOpen: string | null;
   deleteConfirmOpen: string | null;
@@ -58,7 +57,6 @@ function convertExtraArgsToArray(extraArgs?: object): ExtraArg[] {
 export default function ModelItem({
   model,
   modelType,
-  providerUuid,
   isLangBotModels,
   editModelPopoverOpen,
   deleteConfirmOpen,

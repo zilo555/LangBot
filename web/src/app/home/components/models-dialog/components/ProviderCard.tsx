@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import {
   Plus,
   ChevronDown,
@@ -9,17 +10,18 @@ import {
   LogIn,
 } from 'lucide-react';
 import { httpClient, systemInfo } from '@/app/infra/http/HttpClient';
-import {
-  ModelProvider,
-  LLMModel,
-  EmbeddingModel,
-} from '@/app/infra/entities/api';
+import { ModelProvider } from '@/app/infra/entities/api';
 import { Button } from '@/components/ui/button';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useTranslation } from 'react-i18next';
@@ -116,6 +118,8 @@ export default function ProviderCard({
   onResetTestResult,
 }: ProviderCardProps) {
   const { t } = useTranslation();
+  const [deleteProviderConfirmOpen, setDeleteProviderConfirmOpen] =
+    useState(false);
 
   const canDelete =
     !isLangBotModels &&
@@ -231,17 +235,55 @@ export default function ProviderCard({
                     <Settings className="h-4 w-4" />
                   </Button>
                   {canDelete && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteProvider();
-                      }}
+                    <Popover
+                      open={deleteProviderConfirmOpen}
+                      onOpenChange={setDeleteProviderConfirmOpen}
                     >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className="w-64"
+                        align="end"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="space-y-3">
+                          <p className="text-sm">
+                            {t('models.deleteProviderConfirmation')}
+                          </p>
+                          <div className="flex gap-2 justify-end">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                setDeleteProviderConfirmOpen(false)
+                              }
+                            >
+                              {t('common.cancel')}
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => {
+                                onDeleteProvider();
+                                setDeleteProviderConfirmOpen(false);
+                              }}
+                            >
+                              {t('common.delete')}
+                            </Button>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   )}
                 </>
               )}
@@ -266,7 +308,6 @@ export default function ProviderCard({
             )}
             {!isLangBotModels && (
               <AddModelPopover
-                providerUuid={provider.uuid}
                 isOpen={addModelPopoverOpen === provider.uuid}
                 onOpen={onOpenAddModel}
                 onClose={onCloseAddModel}
@@ -293,7 +334,6 @@ export default function ProviderCard({
                     key={model.uuid}
                     model={model}
                     modelType="llm"
-                    providerUuid={provider.uuid}
                     isLangBotModels={isLangBotModels}
                     editModelPopoverOpen={editModelPopoverOpen}
                     deleteConfirmOpen={deleteConfirmOpen}
@@ -325,7 +365,6 @@ export default function ProviderCard({
                     key={model.uuid}
                     model={model}
                     modelType="embedding"
-                    providerUuid={provider.uuid}
                     isLangBotModels={isLangBotModels}
                     editModelPopoverOpen={editModelPopoverOpen}
                     deleteConfirmOpen={deleteConfirmOpen}
