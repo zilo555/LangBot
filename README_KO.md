@@ -17,9 +17,11 @@
 <img src="https://img.shields.io/badge/python-3.10 ~ 3.13 -blue.svg" alt="python">
 
 <a href="https://langbot.app">홈</a> ｜
+<a href="https://docs.langbot.app/en/insight/features.html">기능 사양</a> ｜
 <a href="https://docs.langbot.app/en/insight/guide.html">배포</a> ｜
-<a href="https://docs.langbot.app/en/plugin/plugin-intro.html">플러그인</a> ｜
-<a href="https://github.com/langbot-app/LangBot/issues/new?assignees=&labels=%E7%8B%AC%E7%AB%8B%E6%8F%92%E4%BB%B6&projects=&template=submit-plugin.yml&title=%5BPlugin%5D%3A+%E8%AF%B7%E6%B1%82%E7%99%BB%E8%AE%B0%E6%96%B0%E6%8F%92%E4%BB%B6">플러그인 제출</a>
+<a href="https://docs.langbot.app/en/tags/readme.html">API 통합</a> ｜
+<a href="https://space.langbot.app">플러그인 마켓</a> ｜
+<a href="https://langbot.featurebase.app/roadmap">로드맵</a>
 
 </div>
 
