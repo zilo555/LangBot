@@ -11,7 +11,7 @@ import {
   Settings,
   FileText,
 } from 'lucide-react';
-import { getCloudServiceClientSync } from '@/app/infra/http';
+import { getCloudServiceClientSync, systemInfo } from '@/app/infra/http';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { Button } from '@/components/ui/button';
 import {
@@ -203,6 +203,7 @@ export default function PluginCardComponent({
                         } else if (cardVO.install_source === 'marketplace') {
                           window.open(
                             getCloudServiceClientSync().getPluginMarketplaceURL(
+                              systemInfo.cloud_service_url,
                               cardVO.author,
                               cardVO.name,
                             ),
