@@ -28,6 +28,7 @@ import {
 import { DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { extractI18nObject } from '@/i18n/I18nProvider';
+import { CustomApiError } from '@/app/infra/entities/common';
 
 const getFormSchema = (t: (key: string) => string) =>
   z.object({
@@ -124,7 +125,7 @@ export default function ProviderForm({
       }
       onFormSubmit();
     } catch (err) {
-      toast.error(t('models.providerSaveError') + (err as Error).message);
+      toast.error(t('models.providerSaveError') + (err as CustomApiError).msg);
     }
   }
 

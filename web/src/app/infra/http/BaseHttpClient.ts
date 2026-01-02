@@ -147,7 +147,7 @@ export abstract class BaseHttpClient {
   // 错误处理
   protected handleError(error: object): never {
     if (axios.isCancel(error)) {
-      throw { code: -2, message: 'Request canceled', data: null };
+      throw { code: -2, msg: 'Request canceled', data: null };
     }
     throw error;
   }

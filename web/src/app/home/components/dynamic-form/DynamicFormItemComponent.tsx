@@ -108,7 +108,7 @@ export default function DynamicFormItemComponent({
           setLlmModels(models);
         })
         .catch((err) => {
-          toast.error('Failed to get LLM model list: ' + err.message);
+          toast.error('Failed to get LLM model list: ' + err.msg);
         });
     }
   }, [config.type]);
@@ -124,7 +124,7 @@ export default function DynamicFormItemComponent({
           setKnowledgeBases(resp.bases);
         })
         .catch((err) => {
-          toast.error('Failed to get knowledge base list: ' + err.message);
+          toast.error('Failed to get knowledge base list: ' + err.msg);
         });
 
       // Fetch plugin system status
@@ -165,7 +165,7 @@ export default function DynamicFormItemComponent({
           setBots(resp.bots);
         })
         .catch((err) => {
-          toast.error('Failed to get bot list: ' + err.message);
+          toast.error('Failed to get bot list: ' + err.msg);
         });
     }
   }, [config.type]);

@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { extractI18nObject } from '@/i18n/I18nProvider';
 import BotDetailDialog from '@/app/home/bots/BotDetailDialog';
+import { CustomApiError } from '@/app/infra/entities/common';
 
 export default function BotConfigPage() {
   const { t } = useTranslation();
@@ -54,10 +55,7 @@ export default function BotConfigPage() {
       })
       .catch((err) => {
         console.error('get bot list error', err);
-        toast.error(t('bots.getBotListError') + err.message);
-      })
-      .finally(() => {
-        // setIsLoading(false);
+        toast.error(t('bots.getBotListError') + (err as CustomApiError).msg);
       });
   }
 

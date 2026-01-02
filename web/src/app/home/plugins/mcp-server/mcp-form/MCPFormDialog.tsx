@@ -44,6 +44,7 @@ import {
   MCPServer,
   MCPSessionStatus,
 } from '@/app/infra/entities/api';
+import { CustomApiError } from '@/app/infra/entities/common';
 
 // Status Display Component - 在测试中、连接中或连接失败时使用
 function StatusDisplay({
@@ -409,7 +410,8 @@ export default function MCPFormDialog({
         } catch (err) {
           clearInterval(interval);
           setMcpTesting(false);
-          const errorMsg = (err as Error).message || t('mcp.getTaskFailed');
+          const errorMsg =
+            (err as CustomApiError).msg || t('mcp.getTaskFailed');
           toast.error(`${t('mcp.testError')}: ${errorMsg}`);
         }
       }, 1000);

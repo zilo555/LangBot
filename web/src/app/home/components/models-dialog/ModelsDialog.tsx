@@ -22,6 +22,7 @@ import {
   ProviderModels,
   LANGBOT_MODELS_PROVIDER_REQUESTER,
 } from './types';
+import { CustomApiError } from '@/app/infra/entities/common';
 
 interface ModelsDialogProps {
   open: boolean;
@@ -349,7 +350,8 @@ export default function ModelsDialog({
       const duration = Date.now() - startTime;
       setTestResult({ success: true, duration });
     } catch (err) {
-      toast.error(t('models.testError') + ': ' + (err as Error).message);
+      console.error('Failed to test model', err);
+      toast.error(t('models.testError') + ': ' + (err as CustomApiError).msg);
       setTestResult(null);
     } finally {
       setIsTesting(false);

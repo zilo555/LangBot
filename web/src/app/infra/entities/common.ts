@@ -19,3 +19,7 @@ export interface ComponentManifest {
   };
   spec: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 }
+
+export interface CustomApiError {
+  msg?: string;
+}

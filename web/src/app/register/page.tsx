@@ -28,6 +28,7 @@ import langbotIcon from '@/app/assets/langbot-logo.webp';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { CustomApiError } from '@/app/infra/entities/common';
 
 const formSchema = (t: (key: string) => string) =>
   z.object({
@@ -75,7 +76,7 @@ export default function Register() {
         router.push('/login');
       })
       .catch((err: Error) => {
-        toast.error(t('register.initFailed') + err.message);
+        toast.error(t('register.initFailed') + (err as CustomApiError).msg);
       });
   }
 

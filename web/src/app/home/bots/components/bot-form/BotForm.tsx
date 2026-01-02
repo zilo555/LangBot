@@ -49,6 +49,7 @@ import {
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { extractI18nObject } from '@/i18n/I18nProvider';
+import { CustomApiError } from '@/app/infra/entities/common';
 
 const getFormSchema = (t: (key: string) => string) =>
   z.object({
@@ -241,7 +242,9 @@ export default function BotForm({
             }
           })
           .catch((err) => {
-            toast.error(t('bots.getBotConfigError') + err.message);
+            toast.error(
+              t('bots.getBotConfigError') + (err as CustomApiError).msg,
+            );
           });
       } else {
         form.reset();
@@ -384,7 +387,7 @@ export default function BotForm({
           toast.success(t('bots.saveSuccess'));
         })
         .catch((err) => {
-          toast.error(t('bots.saveError') + err.message);
+          toast.error(t('bots.saveError') + err.msg);
         })
         .finally(() => {
           setIsLoading(false);
@@ -410,7 +413,7 @@ export default function BotForm({
           onNewBotCreated(res.uuid);
         })
         .catch((err) => {
-          toast.error(t('bots.createError') + err.message);
+          toast.error(t('bots.createError') + err.msg);
         })
         .finally(() => {
           setIsLoading(false);
@@ -429,7 +432,7 @@ export default function BotForm({
           toast.success(t('bots.deleteSuccess'));
         })
         .catch((err) => {
-          toast.error(t('bots.deleteError') + err.message);
+          toast.error(t('bots.deleteError') + err.msg);
         });
     }
   }

@@ -41,7 +41,7 @@ export default function MCPCardComponent({
         setSwitchEnable(true);
       })
       .catch((err) => {
-        toast.error(t('mcp.modifyFailed') + err.message);
+        toast.error(t('mcp.modifyFailed') + err.msg);
         setSwitchEnable(true);
       });
   }
@@ -76,7 +76,7 @@ export default function MCPCardComponent({
         }, 1000);
       })
       .catch((err) => {
-        toast.error(t('mcp.refreshFailed') + err.message);
+        toast.error(t('mcp.refreshFailed') + err.msg);
         setTesting(false);
       });
   }
