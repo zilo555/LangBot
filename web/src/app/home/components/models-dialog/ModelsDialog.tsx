@@ -428,7 +428,7 @@ export default function ModelsDialog({
           onOpenChange(newOpen);
         }}
       >
-        <DialogContent className="overflow-hidden p-0 h-[80vh] flex flex-col">
+        <DialogContent className="overflow-hidden p-0 h-[80vh] flex flex-col !max-w-[37rem]">
           <DialogHeader className="px-6 pt-6 pb-0">
             <DialogTitle>{t('models.title')}</DialogTitle>
           </DialogHeader>
