@@ -30,7 +30,7 @@ class BailianChatCompletions(modelscopechatcmpl.ModelScopeChatCompletions):
         extra_args: dict[str, typing.Any] = {},
         remove_think: bool = False,
     ) -> provider_message.Message | typing.AsyncGenerator[provider_message.MessageChunk, None]:
-        self.client.api_key = use_model.token_mgr.get_token()
+        self.client.api_key = use_model.provider.token_mgr.get_token()
 
         args = {}
         args['model'] = use_model.model_entity.name
@@ -117,7 +117,7 @@ class BailianChatCompletions(modelscopechatcmpl.ModelScopeChatCompletions):
         if is_use_dashscope_call:
             response = dashscope.MultiModalConversation.call(
                 # 若没有配置环境变量，请用百炼API Key将下行替换为：api_key = "sk-xxx"
-                api_key=use_model.token_mgr.get_token(),
+                api_key=use_model.provider.token_mgr.get_token(),
                 model=use_model.model_entity.name,
                 messages=messages,
                 result_format='message',

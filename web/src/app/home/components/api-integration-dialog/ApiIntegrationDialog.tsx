@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Copy, Check, Trash2, Plus } from 'lucide-react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
   Dialog,
   DialogContent,
@@ -66,6 +67,9 @@ export default function ApiIntegrationDialog({
   onOpenChange,
 }: ApiIntegrationDialogProps) {
   const { t } = useTranslation();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState('apikeys');
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
@@ -84,6 +88,30 @@ export default function ApiIntegrationDialog({
   const [newWebhookEnabled, setNewWebhookEnabled] = useState(true);
   const [deleteWebhookId, setDeleteWebhookId] = useState<number | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  // Sync URL with dialog state
+  useEffect(() => {
+    if (open) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('action', 'showApiIntegrationSettings');
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    }
+  }, [open]);
+
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen && (deleteKeyId || deleteWebhookId)) {
+      return;
+    }
+    if (!newOpen) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('action');
+      const newUrl = params.toString()
+        ? `${pathname}?${params.toString()}`
+        : pathname;
+      router.replace(newUrl, { scroll: false });
+    }
+    onOpenChange(newOpen);
+  };
 
   // 清理 body 样式，防止对话框关闭后页面无法交互
   useEffect(() => {
@@ -233,16 +261,7 @@ export default function ApiIntegrationDialog({
 
   return (
     <>
-      <Dialog
-        open={open}
-        onOpenChange={(newOpen) => {
-          // 如果删除确认框是打开的，不允许关闭主对话框
-          if (!newOpen && (deleteKeyId || deleteWebhookId)) {
-            return;
-          }
-          onOpenChange(newOpen);
-        }}
-      >
+      <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="sm:max-w-[800px] h-[26rem] flex flex-col">
           <DialogHeader>
             <DialogTitle>{t('common.manageApiIntegration')}</DialogTitle>

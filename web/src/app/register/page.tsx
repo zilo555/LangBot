@@ -20,14 +20,20 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock } from 'lucide-react';
+import { Mail, Lock, Loader2, Info } from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import langbotIcon from '@/app/assets/langbot-logo.webp';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { CustomApiError } from '@/app/infra/entities/common';
 
 const formSchema = (t: (key: string) => string) =>
   z.object({
@@ -38,6 +44,7 @@ const formSchema = (t: (key: string) => string) =>
 export default function Register() {
   const router = useRouter();
   const { t } = useTranslation();
+  const [spaceLoading, setSpaceLoading] = useState(false);
 
   const form = useForm<z.infer<ReturnType<typeof formSchema>>>({
     resolver: zodResolver(formSchema(t)),
@@ -74,9 +81,29 @@ export default function Register() {
         router.push('/login');
       })
       .catch((err: Error) => {
-        toast.error(t('register.initFailed') + err.message);
+        toast.error(t('register.initFailed') + (err as CustomApiError).msg);
       });
   }
+
+  // Space OAuth redirect handler
+  const handleSpaceLoginClick = async () => {
+    setSpaceLoading(true);
+
+    try {
+      // Build the redirect URI to the OAuth callback page
+      const currentOrigin = window.location.origin;
+      const redirectUri = `${currentOrigin}/auth/space/callback`;
+
+      // Get the authorization URL from backend
+      const response = await httpClient.getSpaceAuthorizeUrl(redirectUri);
+
+      // Redirect to Space authorization page
+      window.location.href = response.authorize_url;
+    } catch {
+      toast.error(t('common.spaceLoginFailed'));
+      setSpaceLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-neutral-900">
@@ -100,7 +127,78 @@ export default function Register() {
             {t('register.adminAccountNote')}
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-6">
+          {/* Space Login - Recommended */}
+          <div className="space-y-3">
+            <Button
+              type="button"
+              className="w-full cursor-pointer"
+              onClick={handleSpaceLoginClick}
+              disabled={spaceLoading}
+            >
+              {spaceLoading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <svg
+                  className="mr-2 h-4 w-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12 2L2 7L12 12L22 7L12 2Z"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M2 17L12 22L22 17"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M2 12L12 17L22 12"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
+              {t('register.initWithSpace')}
+            </Button>
+            <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
+              {t('register.spaceRecommended')}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Info className="h-3.5 w-3.5 cursor-pointer hover:text-foreground transition-colors" />
+                </PopoverTrigger>
+                <PopoverContent side="right" className="w-80 text-sm">
+                  <ul className="space-y-2 list-disc list-inside text-muted-foreground">
+                    <li>{t('register.spaceInfoTip1')}</li>
+                    <li>{t('register.spaceInfoTip2')}</li>
+                    <li>{t('register.spaceInfoTip3')}</li>
+                  </ul>
+                </PopoverContent>
+              </Popover>
+            </p>
+          </div>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white dark:bg-card px-2 text-muted-foreground">
+                {t('common.or')}
+              </span>
+            </div>
+          </div>
+
+          {/* Local Account Registration */}
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
@@ -146,8 +244,12 @@ export default function Register() {
                 )}
               />
 
-              <Button type="submit" className="w-full mt-4 cursor-pointer">
-                {t('register.register')}
+              <Button
+                type="submit"
+                variant="outline"
+                className="w-full cursor-pointer"
+              >
+                {t('register.registerWithPassword')}
               </Button>
             </form>
           </Form>

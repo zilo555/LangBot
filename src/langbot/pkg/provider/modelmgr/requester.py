@@ -11,11 +11,11 @@ import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
 import langbot_plugin.api.entities.builtin.provider.message as provider_message
 
 
-class RuntimeLLMModel:
-    """运行时模型"""
+class RuntimeProvider:
+    """运行时模型提供商"""
 
-    model_entity: persistence_model.LLMModel
-    """模型数据"""
+    provider_entity: persistence_model.ModelProvider
+    """提供商数据"""
 
     token_mgr: token.TokenManager
     """api key管理器"""
@@ -25,13 +25,31 @@ class RuntimeLLMModel:
 
     def __init__(
         self,
-        model_entity: persistence_model.LLMModel,
+        provider_entity: persistence_model.ModelProvider,
         token_mgr: token.TokenManager,
         requester: ProviderAPIRequester,
     ):
-        self.model_entity = model_entity
+        self.provider_entity = provider_entity
         self.token_mgr = token_mgr
         self.requester = requester
+
+
+class RuntimeLLMModel:
+    """运行时模型"""
+
+    model_entity: persistence_model.LLMModel
+    """模型数据"""
+
+    provider: RuntimeProvider
+    """提供商实例"""
+
+    def __init__(
+        self,
+        model_entity: persistence_model.LLMModel,
+        provider: RuntimeProvider,
+    ):
+        self.model_entity = model_entity
+        self.provider = provider
 
 
 class RuntimeEmbeddingModel:
@@ -40,21 +58,16 @@ class RuntimeEmbeddingModel:
     model_entity: persistence_model.EmbeddingModel
     """模型数据"""
 
-    token_mgr: token.TokenManager
-    """api key管理器"""
-
-    requester: ProviderAPIRequester
-    """请求器实例"""
+    provider: RuntimeProvider
+    """提供商实例"""
 
     def __init__(
         self,
         model_entity: persistence_model.EmbeddingModel,
-        token_mgr: token.TokenManager,
-        requester: ProviderAPIRequester,
+        provider: RuntimeProvider,
     ):
         self.model_entity = model_entity
-        self.token_mgr = token_mgr
-        self.requester = requester
+        self.provider = provider
 
 
 class ProviderAPIRequester(metaclass=abc.ABCMeta):

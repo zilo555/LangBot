@@ -33,7 +33,7 @@ class Embedder(BaseService):
         await self.ap.persistence_mgr.execute_async(sqlalchemy.insert(persistence_rag.Chunk).values(chunk_dicts))
 
         # get embeddings
-        embeddings_list: list[list[float]] = await embedding_model.requester.invoke_embedding(
+        embeddings_list: list[list[float]] = await embedding_model.provider.requester.invoke_embedding(
             model=embedding_model,
             input_text=chunks,
             extra_args={},  # TODO: add extra args

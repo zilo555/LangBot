@@ -29,7 +29,7 @@ class GeminiChatCompletions(chatcmpl.OpenAIChatCompletions):
         extra_args: dict[str, typing.Any] = {},
         remove_think: bool = False,
     ) -> provider_message.MessageChunk:
-        self.client.api_key = use_model.token_mgr.get_token()
+        self.client.api_key = use_model.provider.token_mgr.get_token()
 
         args = {}
         args['model'] = use_model.model_entity.name

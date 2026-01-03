@@ -4,7 +4,7 @@ import asyncio
 import typing
 
 import openai
-import openai.types.chat.chat_completion as chat_completion
+import openai.types.chat.chat_completion as chat_completion_module
 import httpx
 
 from .. import errors, requester
@@ -35,7 +35,7 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
         self,
         args: dict,
         extra_body: dict = {},
-    ) -> chat_completion.ChatCompletion:
+    ) -> chat_completion_module.ChatCompletion:
         return await self.client.chat.completions.create(**args, extra_body=extra_body)
 
     async def _req_stream(
@@ -48,9 +48,12 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
 
     async def _make_msg(
         self,
-        chat_completion: chat_completion.ChatCompletion,
+        chat_completion: chat_completion_module.ChatCompletion,
         remove_think: bool = False,
     ) -> provider_message.Message:
+        if not isinstance(chat_completion, chat_completion_module.ChatCompletion):
+            raise TypeError(f'Expected ChatCompletion, got {type(chat_completion).__name__}: {chat_completion[:16]}')
+
         chatcmpl_message = chat_completion.choices[0].message.model_dump()
 
         # 确保 role 字段存在且不为 None
@@ -130,7 +133,7 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
         extra_args: dict[str, typing.Any] = {},
         remove_think: bool = False,
     ) -> provider_message.MessageChunk:
-        self.client.api_key = use_model.token_mgr.get_token()
+        self.client.api_key = use_model.provider.token_mgr.get_token()
 
         args = {}
         args['model'] = use_model.model_entity.name
@@ -251,7 +254,7 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
         extra_args: dict[str, typing.Any] = {},
         remove_think: bool = False,
     ) -> provider_message.Message:
-        self.client.api_key = use_model.token_mgr.get_token()
+        self.client.api_key = use_model.provider.token_mgr.get_token()
 
         args = {}
         args['model'] = use_model.model_entity.name
@@ -337,7 +340,7 @@ class OpenAIChatCompletions(requester.ProviderAPIRequester):
         extra_args: dict[str, typing.Any] = {},
     ) -> list[list[float]]:
         """调用 Embedding API"""
-        self.client.api_key = model.token_mgr.get_token()
+        self.client.api_key = model.provider.token_mgr.get_token()
 
         args = {
             'model': model.model_entity.name,

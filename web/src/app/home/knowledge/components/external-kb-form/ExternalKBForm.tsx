@@ -291,7 +291,7 @@ export default function ExternalKBForm({
           toast.success(t('knowledge.updateExternalSuccess'));
         })
         .catch((err) => {
-          toast.error('Failed to update KB: ' + err.message);
+          toast.error('Failed to update KB: ' + err.msg);
         });
     } else {
       // Create new KB
@@ -303,7 +303,7 @@ export default function ExternalKBForm({
           form.reset();
         })
         .catch((err) => {
-          toast.error('Failed to create KB: ' + err.message);
+          toast.error('Failed to create KB: ' + err.msg);
         });
     }
   }
@@ -321,7 +321,7 @@ export default function ExternalKBForm({
         toast.success(t('knowledge.deleteExternalSuccess'));
       })
       .catch((err) => {
-        toast.error('Failed to delete KB: ' + err.message);
+        toast.error('Failed to delete KB: ' + err.msg);
       });
   }
 

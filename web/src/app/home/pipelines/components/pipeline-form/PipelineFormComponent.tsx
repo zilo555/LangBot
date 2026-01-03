@@ -181,7 +181,7 @@ export default function PipelineFormComponent({
         toast.success(t('pipelines.createSuccess'));
       })
       .catch((err) => {
-        toast.error(t('pipelines.createError') + err.message);
+        toast.error(t('pipelines.createError') + err.msg);
       });
   }
 
@@ -211,7 +211,7 @@ export default function PipelineFormComponent({
         toast.success(t('pipelines.saveSuccess'));
       })
       .catch((err) => {
-        toast.error(t('pipelines.saveError') + err.message);
+        toast.error(t('pipelines.saveError') + err.msg);
       });
   }
 
@@ -340,7 +340,7 @@ export default function PipelineFormComponent({
           toast.success(t('pipelines.deleteSuccess'));
         })
         .catch((err) => {
-          toast.error(t('pipelines.deleteError') + err.message);
+          toast.error(t('pipelines.deleteError') + err.msg);
         });
     }
   };
@@ -360,7 +360,7 @@ export default function PipelineFormComponent({
           onCancel();
         })
         .catch((err) => {
-          toast.error(t('pipelines.createError') + err.message);
+          toast.error(t('pipelines.createError') + err.msg);
         });
     }
   };

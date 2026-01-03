@@ -16,7 +16,9 @@ from ...platform.webhook_pusher import WebhookPusher
 from ...persistence import mgr as persistencemgr
 from ...api.http.controller import main as http_controller
 from ...api.http.service import user as user_service
+from ...api.http.service import space as space_service
 from ...api.http.service import model as model_service
+from ...api.http.service import provider as provider_service
 from ...api.http.service import pipeline as pipeline_service
 from ...api.http.service import bot as bot_service
 from ...api.http.service import knowledge as knowledge_service
@@ -42,6 +44,42 @@ class BuildAppStage(stage.BootingStage):
         discover = discover_engine.ComponentDiscoveryEngine(ap)
         discover.discover_blueprint('templates/components.yaml')
         ap.discover = discover
+
+        user_service_inst = user_service.UserService(ap)
+        ap.user_service = user_service_inst
+
+        space_service_inst = space_service.SpaceService(ap)
+        ap.space_service = space_service_inst
+
+        llm_model_service_inst = model_service.LLMModelsService(ap)
+        ap.llm_model_service = llm_model_service_inst
+
+        embedding_models_service_inst = model_service.EmbeddingModelsService(ap)
+        ap.embedding_models_service = embedding_models_service_inst
+
+        provider_service_inst = provider_service.ModelProviderService(ap)
+        ap.provider_service = provider_service_inst
+
+        pipeline_service_inst = pipeline_service.PipelineService(ap)
+        ap.pipeline_service = pipeline_service_inst
+
+        bot_service_inst = bot_service.BotService(ap)
+        ap.bot_service = bot_service_inst
+
+        knowledge_service_inst = knowledge_service.KnowledgeService(ap)
+        ap.knowledge_service = knowledge_service_inst
+
+        external_kb_service_inst = external_kb_service.ExternalKBService(ap)
+        ap.external_kb_service = external_kb_service_inst
+
+        mcp_service_inst = mcp_service.MCPService(ap)
+        ap.mcp_service = mcp_service_inst
+
+        apikey_service_inst = apikey_service.ApiKeyService(ap)
+        ap.apikey_service = apikey_service_inst
+
+        webhook_service_inst = webhook_service.WebhookService(ap)
+        ap.webhook_service = webhook_service_inst
 
         proxy_mgr = proxy.ProxyManager(ap)
         await proxy_mgr.initialize()
@@ -69,8 +107,8 @@ class BuildAppStage(stage.BootingStage):
         ap.cmd_mgr = cmd_mgr_inst
 
         llm_model_mgr_inst = llm_model_mgr.ModelManager(ap)
-        await llm_model_mgr_inst.initialize()
         ap.model_mgr = llm_model_mgr_inst
+        await llm_model_mgr_inst.initialize()
 
         llm_session_mgr_inst = llm_session_mgr.SessionManager(ap)
         await llm_session_mgr_inst.initialize()
@@ -104,36 +142,6 @@ class BuildAppStage(stage.BootingStage):
         http_ctrl = http_controller.HTTPController(ap)
         await http_ctrl.initialize()
         ap.http_ctrl = http_ctrl
-
-        user_service_inst = user_service.UserService(ap)
-        ap.user_service = user_service_inst
-
-        llm_model_service_inst = model_service.LLMModelsService(ap)
-        ap.llm_model_service = llm_model_service_inst
-
-        embedding_models_service_inst = model_service.EmbeddingModelsService(ap)
-        ap.embedding_models_service = embedding_models_service_inst
-
-        pipeline_service_inst = pipeline_service.PipelineService(ap)
-        ap.pipeline_service = pipeline_service_inst
-
-        bot_service_inst = bot_service.BotService(ap)
-        ap.bot_service = bot_service_inst
-
-        knowledge_service_inst = knowledge_service.KnowledgeService(ap)
-        ap.knowledge_service = knowledge_service_inst
-
-        external_kb_service_inst = external_kb_service.ExternalKBService(ap)
-        ap.external_kb_service = external_kb_service_inst
-
-        mcp_service_inst = mcp_service.MCPService(ap)
-        ap.mcp_service = mcp_service_inst
-
-        apikey_service_inst = apikey_service.ApiKeyService(ap)
-        ap.apikey_service = apikey_service_inst
-
-        webhook_service_inst = webhook_service.WebhookService(ap)
-        ap.webhook_service = webhook_service_inst
 
         async def runtime_disconnect_callback(connector: plugin_connector.PluginRuntimeConnector) -> None:
             await asyncio.sleep(3)

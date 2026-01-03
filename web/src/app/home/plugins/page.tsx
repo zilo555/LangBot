@@ -282,7 +282,7 @@ export default function PluginConfigPage() {
           watchTask(taskId);
         })
         .catch((err) => {
-          setInstallError(err.message);
+          setInstallError(err.msg);
           setPluginInstallStatus(PluginInstallStatus.ERROR);
         });
     } else if (installSource === 'local') {
@@ -293,7 +293,7 @@ export default function PluginConfigPage() {
           watchTask(taskId);
         })
         .catch((err) => {
-          setInstallError(err.message);
+          setInstallError(err.msg);
           setPluginInstallStatus(PluginInstallStatus.ERROR);
         });
     } else if (installSource === 'marketplace') {

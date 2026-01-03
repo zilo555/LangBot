@@ -18,6 +18,8 @@ class TokenManager:
         self.using_token_index = 0
 
     def get_token(self) -> str:
+        if len(self.tokens) == 0:
+            return ''
         return self.tokens[self.using_token_index]
 
     def next_token(self):

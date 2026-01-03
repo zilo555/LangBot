@@ -56,7 +56,7 @@ class AnthropicMessages(requester.ProviderAPIRequester):
         extra_args: dict[str, typing.Any] = {},
         remove_think: bool = False,
     ) -> provider_message.Message:
-        self.client.api_key = model.token_mgr.get_token()
+        self.client.api_key = model.provider.token_mgr.get_token()
 
         args = extra_args.copy()
         args['model'] = model.model_entity.name
@@ -190,7 +190,7 @@ class AnthropicMessages(requester.ProviderAPIRequester):
         extra_args: dict[str, typing.Any] = {},
         remove_think: bool = False,
     ) -> provider_message.Message:
-        self.client.api_key = model.token_mgr.get_token()
+        self.client.api_key = model.provider.token_mgr.get_token()
 
         args = extra_args.copy()
         args['model'] = model.model_entity.name
