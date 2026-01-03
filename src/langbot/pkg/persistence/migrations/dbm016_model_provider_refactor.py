@@ -251,9 +251,6 @@ class DBMigrateModelProviderRefactor(migration.DBMigration):
 
     async def _cleanup_columns(self):
         """Remove deprecated columns from model tables"""
-        # SQLite doesn't support DROP COLUMN easily, so we skip for SQLite
-        if self.ap.persistence_mgr.db.name != 'postgresql':
-            return
 
         llm_columns = await self._get_columns('llm_models')
         deprecated_llm_cols = ['requester', 'requester_config', 'api_keys', 'description', 'source', 'space_model_id']
