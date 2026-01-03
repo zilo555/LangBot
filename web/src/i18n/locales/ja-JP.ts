@@ -721,11 +721,17 @@ const jaJP = {
     title: 'LangBot を初期化 👋',
     description: 'これはLangBotの初回起動です',
     adminAccountNote:
-      '入力したメールアドレスとパスワードが初期管理者アカウントになります',
+      'ここで初期化されたアカウントは管理者アカウントとして使用されます',
     register: '登録',
     initWithSpace: 'Space で初期化',
     spaceRecommended:
       'おすすめ：公式の安定したモデル API とクラウドサービスを利用',
+    spaceInfoTip1:
+      'Space は統一されたアカウント認証サービスを提供し、機密情報をアップロードすることはありません。',
+    spaceInfoTip2:
+      'Space アカウントでログインすると、LangBot Models などのクラウドサービスを利用でき、無料のモデル呼び出しクレジットで迅速に開始できます。',
+    spaceInfoTip3:
+      'ログイン方法は他の機能に影響しません。いつでも他のソースからモデルを設定して使用できます。',
     registerLocal: 'ローカルアカウントを登録',
     registerWithPassword: 'メールアドレスとパスワードで登録',
     initSuccess: '初期化に成功しました。ログインしてください',

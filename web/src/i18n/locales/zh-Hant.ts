@@ -681,10 +681,15 @@ const zhHant = {
   register: {
     title: '初始化 LangBot 👋',
     description: '這是您首次啟動 LangBot',
-    adminAccountNote: '您填寫的電子郵件和密碼將作為初始管理員帳號',
+    adminAccountNote: '您在此處初始化使用的帳號將作為管理員帳號',
     register: '註冊',
     initWithSpace: '透過 Space 初始化',
     spaceRecommended: '推薦：使用官方提供的穩定模型 API 和雲服務',
+    spaceInfoTip1: 'Space 提供統一的帳戶鑑權服務，不會上傳您的任何敏感資訊。',
+    spaceInfoTip2:
+      '使用 Space 帳戶登入可使用 LangBot Models 等雲服務，您將會獲得一定的免費模型調用額度幫助您快速起步。',
+    spaceInfoTip3:
+      '登入方式不會影響其他功能，您在任何情況下都可以配置使用其他來源的模型。',
     registerLocal: '註冊本地帳號',
     registerWithPassword: '透過電子郵件密碼組合註冊',
     initSuccess: '初始化成功 請登入',

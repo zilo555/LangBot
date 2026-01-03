@@ -713,11 +713,17 @@ const enUS = {
     title: 'Initialize LangBot 👋',
     description: 'This is your first time starting LangBot',
     adminAccountNote:
-      'The email and password you fill in will be used as the initial administrator account',
+      'The account you use here will be set as the administrator account',
     register: 'Register',
     initWithSpace: 'Initialize with Space',
     spaceRecommended:
       'Recommended: Use official stable model APIs and cloud services',
+    spaceInfoTip1:
+      'Space provides unified account authentication services without uploading any of your sensitive information.',
+    spaceInfoTip2:
+      'Logging in with a Space account gives you access to LangBot Models and other cloud services, including free model call credits to help you get started quickly.',
+    spaceInfoTip3:
+      'Your login method does not affect other features. You can configure and use models from other sources at any time.',
     registerLocal: 'Register local account',
     registerWithPassword: 'Register with email and password',
     initSuccess: 'Initialization successful, please login',

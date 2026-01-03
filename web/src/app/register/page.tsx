@@ -23,7 +23,12 @@ import {
 import { useEffect, useState } from 'react';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { useRouter } from 'next/navigation';
-import { Mail, Lock, Loader2 } from 'lucide-react';
+import { Mail, Lock, Loader2, Info } from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import langbotIcon from '@/app/assets/langbot-logo.webp';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -165,8 +170,20 @@ export default function Register() {
               )}
               {t('register.initWithSpace')}
             </Button>
-            <p className="text-xs text-center text-muted-foreground">
+            <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1">
               {t('register.spaceRecommended')}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Info className="h-3.5 w-3.5 cursor-pointer hover:text-foreground transition-colors" />
+                </PopoverTrigger>
+                <PopoverContent side="right" className="w-80 text-sm">
+                  <ul className="space-y-2 list-disc list-inside text-muted-foreground">
+                    <li>{t('register.spaceInfoTip1')}</li>
+                    <li>{t('register.spaceInfoTip2')}</li>
+                    <li>{t('register.spaceInfoTip3')}</li>
+                  </ul>
+                </PopoverContent>
+              </Popover>
             </p>
           </div>
 
