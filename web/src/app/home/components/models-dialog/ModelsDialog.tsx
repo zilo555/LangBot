@@ -206,8 +206,23 @@ export default function ModelsDialog({
     }
   }
 
-  function handleSpaceLogin() {
-    window.location.href = '/auth/space';
+  async function handleSpaceLogin() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error(t('common.error'));
+        return;
+      }
+      const currentOrigin = window.location.origin;
+      const redirectUri = `${currentOrigin}/auth/space/callback?mode=bind`;
+      const response = await httpClient.getSpaceAuthorizeUrl(
+        redirectUri,
+        token,
+      );
+      window.location.href = response.authorize_url;
+    } catch {
+      toast.error(t('common.spaceLoginFailed'));
+    }
   }
 
   async function handleAddModel(
