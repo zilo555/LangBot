@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import httpx
+from ..core import app as core_app
 
 
 class TelemetryManager:
@@ -14,7 +15,7 @@ class TelemetryManager:
 
     send_tasks: list[asyncio.Task] = []
 
-    def __init__(self, ap):
+    def __init__(self, ap: core_app.Application):
         self.ap = ap
 
         self.telemetry_config = {}
