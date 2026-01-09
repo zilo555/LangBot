@@ -144,7 +144,6 @@ class ChatMessageHandler(handler.MessageHandler):
                 query.session.using_conversation.messages.append(query.user_message)
 
                 query.session.using_conversation.messages.extend(query.resp_messages)
-                assert False == True, 'must fail'
             except Exception as e:
                 error_info = f'{traceback.format_exc()}'
                 self.ap.logger.error(f'Conversation({query.query_id}) Request Failed: {error_info}')
