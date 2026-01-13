@@ -2,7 +2,7 @@ import { MCPServer, MCPSessionStatus } from '@/app/infra/entities/api';
 
 export class MCPCardVO {
   name: string;
-  mode: 'stdio' | 'sse';
+  mode: 'stdio' | 'sse' | 'http';
   enable: boolean;
   status: MCPSessionStatus;
   tools: number;
