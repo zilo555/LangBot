@@ -402,13 +402,17 @@ export default function PluginConfigPage() {
   };
 
   const handleCopyDebugInfo = (text: string, type: 'url' | 'key') => {
-    navigator.clipboard.writeText(text);
-    if (type === 'url') {
-      setCopiedDebugUrl(true);
-      setTimeout(() => setCopiedDebugUrl(false), 2000);
-    } else {
-      setCopiedDebugKey(true);
-      setTimeout(() => setCopiedDebugKey(false), 2000);
+    try {
+      navigator.clipboard.writeText(text);
+      if (type === 'url') {
+        setCopiedDebugUrl(true);
+        setTimeout(() => setCopiedDebugUrl(false), 2000);
+      } else {
+        setCopiedDebugKey(true);
+        setTimeout(() => setCopiedDebugKey(false), 2000);
+      }
+    } catch {
+      
     }
   };
 
