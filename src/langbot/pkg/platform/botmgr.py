@@ -75,10 +75,17 @@ class RuntimeBot:
 
             # Only add to query pool if no webhook requested to skip pipeline
             if not skip_pipeline:
+                launcher_id = event.sender.id
+
+                if hasattr(adapter, 'get_launcher_id'):
+                    custom_launcher_id = adapter.get_launcher_id(event)
+                    if custom_launcher_id:
+                        launcher_id = custom_launcher_id
+
                 await self.ap.query_pool.add_query(
                     bot_uuid=self.bot_entity.uuid,
                     launcher_type=provider_session.LauncherTypes.PERSON,
-                    launcher_id=event.sender.id,
+                    launcher_id=launcher_id,
                     sender_id=event.sender.id,
                     message_event=event,
                     message_chain=event.message_chain,
@@ -86,7 +93,7 @@ class RuntimeBot:
                     pipeline_uuid=self.bot_entity.use_pipeline_uuid,
                 )
             else:
-                await self.logger.info(f'Pipeline skipped for person message due to webhook response')
+                await self.logger.info('Pipeline skipped for person message due to webhook response')
 
         async def on_group_message(
             event: platform_events.GroupMessage,
@@ -111,10 +118,17 @@ class RuntimeBot:
 
             # Only add to query pool if no webhook requested to skip pipeline
             if not skip_pipeline:
+                launcher_id = event.group.id
+
+                if hasattr(adapter, 'get_launcher_id'):
+                    custom_launcher_id = adapter.get_launcher_id(event)
+                    if custom_launcher_id:
+                        launcher_id = custom_launcher_id
+
                 await self.ap.query_pool.add_query(
                     bot_uuid=self.bot_entity.uuid,
                     launcher_type=provider_session.LauncherTypes.GROUP,
-                    launcher_id=event.group.id,
+                    launcher_id=launcher_id,
                     sender_id=event.sender.id,
                     message_event=event,
                     message_chain=event.message_chain,
@@ -122,7 +136,7 @@ class RuntimeBot:
                     pipeline_uuid=self.bot_entity.use_pipeline_uuid,
                 )
             else:
-                await self.logger.info(f'Pipeline skipped for group message due to webhook response')
+                await self.logger.info('Pipeline skipped for group message due to webhook response')
 
         self.adapter.register_listener(platform_events.FriendMessage, on_friend_message)
         self.adapter.register_listener(platform_events.GroupMessage, on_group_message)

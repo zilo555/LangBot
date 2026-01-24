@@ -3,10 +3,8 @@ from __future__ import annotations
 import asyncio
 from typing import Any, Dict, List
 
-import sqlalchemy
 
 from langbot.pkg.core import app
-from langbot.pkg.entity.persistence import model as persistence_model
 from langbot.pkg.vector.vdb import VectorDatabase
 
 try:
@@ -87,14 +85,16 @@ class SeekDBVectorDatabase(VectorDatabase):
         self._collections: Dict[str, Any] = {}
         self._collection_configs: Dict[str, HNSWConfiguration] = {}
 
-        self._escape_table = str.maketrans({
-            '\x00': '',
-            '\\': '\\\\',
-            '"': '\\"',
-            '\n': '\\n',
-            '\r': '\\r',
-            '\t': '\\t',
-        })
+        self._escape_table = str.maketrans(
+            {
+                '\x00': '',
+                '\\': '\\\\',
+                '"': '\\"',
+                '\n': '\\n',
+                '\r': '\\r',
+                '\t': '\\t',
+            }
+        )
 
     async def _get_or_create_collection_internal(self, collection: str, vector_size: int = None) -> Any:
         """Internal method to get or create a collection with proper configuration."""
@@ -133,8 +133,10 @@ class SeekDBVectorDatabase(VectorDatabase):
     def _clean_metadata(self, meta: Dict[str, Any]) -> Dict[str, Any]:
         """SeekDB metadata doesn't support \\ and ", insert will error 3104"""
         return {
-            k: v.translate(self._escape_table) if isinstance(v, str)
-            else v if v is None or isinstance(v, (int, float, bool))
+            k: v.translate(self._escape_table)
+            if isinstance(v, str)
+            else v
+            if v is None or isinstance(v, (int, float, bool))
             else str(v)
             for k, v in meta.items()
             if v is not None
@@ -145,11 +147,7 @@ class SeekDBVectorDatabase(VectorDatabase):
         return await self._get_or_create_collection_internal(collection)
 
     async def add_embeddings(
-        self,
-        collection: str,
-        ids: List[str],
-        embeddings_list: List[List[float]],
-        metadatas: List[Dict[str, Any]]
+        self, collection: str, ids: List[str], embeddings_list: List[List[float]], metadatas: List[Dict[str, Any]]
     ) -> None:
         """Add vector embeddings to the specified collection.
 
