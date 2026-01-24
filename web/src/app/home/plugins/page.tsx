@@ -412,7 +412,11 @@ export default function PluginConfigPage() {
         setTimeout(() => setCopiedDebugKey(false), 2000);
       }
     } catch {
-      
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
     }
   };
 
