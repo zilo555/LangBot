@@ -1,7 +1,7 @@
 [project]
 name = "langbot"
-version = "4.7.2"
-description = "Production-grade platform for building IM bots"
+version = "4.8.0"
+description = "Production-grade platform for building agentic IM bots"
 readme = "README.md"
 license-files = ["LICENSE"]
 requires-python = ">=3.11,<4.0"
