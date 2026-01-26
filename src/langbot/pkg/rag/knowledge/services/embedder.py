@@ -38,10 +38,12 @@ class Embedder(BaseService):
 
         for i in range(0, len(chunks), MAX_BATCH_SIZE):
             batch = chunks[i : i + MAX_BATCH_SIZE]
-            batch_embeddings = await embedding_model.provider.requester.invoke_embedding(
+            batch_embeddings = await embedding_model.provider.invoke_embedding(
                 model=embedding_model,
                 input_text=batch,
                 extra_args={},  # TODO: add extra args
+                knowledge_base_id=kb_id,
+                call_type='embedding',
             )
             embeddings_list.extend(batch_embeddings)
 
