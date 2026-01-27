@@ -3,9 +3,10 @@
 import styles from './layout.module.css';
 import HomeSidebar from '@/app/home/components/home-sidebar/HomeSidebar';
 import HomeTitleBar from '@/app/home/components/home-titlebar/HomeTitleBar';
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { SidebarChildVO } from '@/app/home/components/home-sidebar/HomeSidebarChild';
 import { I18nObject } from '@/app/infra/entities/common';
+import { userInfo, initializeUserInfo } from '@/app/infra/http';
 
 export default function HomeLayout({
   children,
@@ -18,6 +19,13 @@ export default function HomeLayout({
     en_US: '',
     zh_Hans: '',
   });
+
+  // Initialize user info if not already initialized
+  useEffect(() => {
+    if (!userInfo) {
+      initializeUserInfo();
+    }
+  }, []);
 
   const onSelectedChangeAction = useCallback((child: SidebarChildVO) => {
     setTitle(child.name);

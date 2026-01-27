@@ -14,7 +14,7 @@ import {
   FormMessage,
   FormDescription,
 } from '@/components/ui/form';
-import { httpClient, systemInfo } from '@/app/infra/http/HttpClient';
+import { httpClient, systemInfo, userInfo } from '@/app/infra/http';
 import {
   Select,
   SelectContent,
@@ -101,8 +101,11 @@ export default function KBForm({
   const getEmbeddingModelNameList = async () => {
     const resp = await httpClient.getProviderEmbeddingModels();
     let models = resp.models;
-    // Filter out space-chat-completions models when models service is disabled
-    if (systemInfo.disable_models_service) {
+    // Filter out space-chat-completions models when not logged in with space account or when models service is disabled
+    if (
+      systemInfo.disable_models_service ||
+      userInfo?.account_type !== 'space'
+    ) {
       models = models.filter(
         (m) => m.provider?.requester !== 'space-chat-completions',
       );
