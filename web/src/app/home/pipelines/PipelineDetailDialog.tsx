@@ -211,7 +211,7 @@ export default function PipelineDialog({
                         : t('pipelines.debugDialog.disconnected')}
                     </span>
                   </div>
-                  <div className="ml-auto">
+                  <div className="ml-auto mr-4">
                     <Button
                       variant="outline"
                       size="sm"
