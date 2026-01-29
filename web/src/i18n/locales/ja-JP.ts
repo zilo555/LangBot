@@ -447,7 +447,7 @@ const jaJP = {
     downloadFailed: 'ダウンロード失敗',
     noReadme: 'このプラグインはREADMEドキュメントを提供していません',
     description: '説明',
-    tags: 'タグ',
+    tagLabel: 'タグ',
     submissionTitle: 'プラグインの提出が審査中です： {{name}}',
     submissionPending: 'プラグインの提出が審査中です： {{name}}',
     submissionApproved: 'プラグインの提出が承認されました： {{name}}',
@@ -462,6 +462,13 @@ const jaJP = {
     filterByComponent: 'コンポーネント',
     allComponents: '全部コンポーネント',
     requestPlugin: 'プラグインをリクエスト',
+    tags: {
+      filterByTags: 'タグで絞り込み',
+      selected: '選択済み',
+      selectTags: 'タグを選択',
+      clearAll: 'クリア',
+      noTags: 'タグがありません',
+    },
     viewDetails: '詳細を表示',
   },
   mcp: {

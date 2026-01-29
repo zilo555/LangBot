@@ -446,7 +446,7 @@ const enUS = {
     downloadFailed: 'Download failed',
     noReadme: 'This plugin does not provide README documentation',
     description: 'Description',
-    tags: 'Tags',
+    tagLabel: 'Tags',
     submissionTitle: 'You have a plugin submission under review: {{name}}',
     submissionPending: 'Your plugin submission is under review: {{name}}',
     submissionApproved: 'Your plugin submission has been approved: {{name}}',
@@ -462,6 +462,13 @@ const enUS = {
     allComponents: 'All Components',
     requestPlugin: 'Request Plugin',
     viewDetails: 'View Details',
+    tags: {
+      filterByTags: 'Filter by Tags',
+      selected: 'selected',
+      selectTags: 'Select Tags',
+      clearAll: 'Clear All',
+      noTags: 'No tags available',
+    },
   },
   mcp: {
     title: 'MCP',

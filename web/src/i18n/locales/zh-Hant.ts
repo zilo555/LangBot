@@ -418,7 +418,7 @@ const zhHant = {
     downloadFailed: '下載失敗',
     noReadme: '該插件沒有提供 README 文件',
     description: '描述',
-    tags: '標籤',
+    tagLabel: '標籤',
     submissionTitle: '您有插件提交正在審核中： {{name}}',
     submissionApproved: '您的插件提交已通過審核： {{name}}',
     submissionRejected: '您的插件提交已被拒絕： {{name}}',
@@ -432,6 +432,13 @@ const zhHant = {
     filterByComponent: '組件',
     allComponents: '全部組件',
     requestPlugin: '請求插件',
+    tags: {
+      filterByTags: '按標籤篩選',
+      selected: '已選',
+      selectTags: '選擇標籤',
+      clearAll: '清空',
+      noTags: '暫無標籤',
+    },
     viewDetails: '查看詳情',
   },
   mcp: {

@@ -425,7 +425,7 @@ const zhHans = {
     downloadFailed: '下载失败',
     noReadme: '该插件没有提供 README 文档',
     description: '描述',
-    tags: '标签',
+    tagLabel: '标签',
     submissionTitle: '您有插件提交正在审核中： {{name}}',
     submissionApproved: '您的插件提交已通过审核： {{name}}',
     submissionRejected: '您的插件提交已被拒绝： {{name}}',
@@ -439,6 +439,13 @@ const zhHans = {
     filterByComponent: '组件',
     allComponents: '全部组件',
     requestPlugin: '请求插件',
+    tags: {
+      filterByTags: '按标签筛选',
+      selected: '已选',
+      selectTags: '选择标签',
+      clearAll: '清空',
+      noTags: '暂无标签',
+    },
     viewDetails: '查看详情',
   },
   mcp: {

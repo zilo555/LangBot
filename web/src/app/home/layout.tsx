@@ -3,7 +3,13 @@
 import styles from './layout.module.css';
 import HomeSidebar from '@/app/home/components/home-sidebar/HomeSidebar';
 import HomeTitleBar from '@/app/home/components/home-titlebar/HomeTitleBar';
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  Suspense,
+} from 'react';
 import { SidebarChildVO } from '@/app/home/components/home-sidebar/HomeSidebarChild';
 import { I18nObject } from '@/app/infra/entities/common';
 import { userInfo, initializeUserInfo } from '@/app/infra/http';
@@ -39,7 +45,9 @@ export default function HomeLayout({
   return (
     <div className={styles.homeLayoutContainer}>
       <aside className={styles.sidebar}>
-        <HomeSidebar onSelectedChangeAction={onSelectedChangeAction} />
+        <Suspense fallback={<div />}>
+          <HomeSidebar onSelectedChangeAction={onSelectedChangeAction} />
+        </Suspense>
       </aside>
 
       <div className={styles.main}>

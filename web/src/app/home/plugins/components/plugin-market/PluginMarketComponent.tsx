@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -11,14 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import {
-  Search,
-  Loader2,
-  Wrench,
-  AudioWaveform,
-  Hash,
-  Book,
-} from 'lucide-react';
+import { Search, Wrench, AudioWaveform, Hash, Book } from 'lucide-react';
 import PluginMarketCardComponent from './plugin-market-card/PluginMarketCardComponent';
 import { PluginMarketCardVO } from './plugin-market-card/PluginMarketCardVO';
 import { getCloudServiceClientSync } from '@/app/infra/http';
@@ -28,6 +20,8 @@ import { extractI18nObject } from '@/i18n/I18nProvider';
 import { toast } from 'sonner';
 import { ApiRespMarketplacePlugins } from '@/app/infra/entities/api';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { TagsFilter } from './TagsFilter';
+import { PluginTag } from '@/app/infra/http/CloudServiceClient';
 
 interface SortOption {
   value: string;
@@ -43,10 +37,12 @@ function MarketPageContent({
   installPlugin: (plugin: PluginV4) => void;
 }) {
   const { t } = useTranslation();
-  const searchParams = useSearchParams();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [componentFilter, setComponentFilter] = useState<string>('all');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [availableTags, setAvailableTags] = useState<PluginTag[]>([]);
+  const [tagNames, setTagNames] = useState<Record<string, string>>({});
   const [plugins, setPlugins] = useState<PluginMarketCardVO[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -112,6 +108,7 @@ function MarketPageContent({
       githubURL: plugin.repository,
       version: plugin.latest_version,
       components: plugin.components,
+      tags: plugin.tags || [],
     });
   }, []);
 
@@ -129,7 +126,7 @@ function MarketPageContent({
         const filterValue =
           componentFilter === 'all' ? undefined : componentFilter;
 
-        // Always use searchMarketplacePlugins to support component filtering
+        // Always use searchMarketplacePlugins to support component filtering and tags filtering
         const response =
           await getCloudServiceClientSync().searchMarketplacePlugins(
             isSearch && searchQuery.trim() ? searchQuery.trim() : '',
@@ -138,6 +135,7 @@ function MarketPageContent({
             sortBy,
             sortOrder,
             filterValue,
+            selectedTags.length > 0 ? selectedTags : undefined,
           );
 
         const data: ApiRespMarketplacePlugins = response;
@@ -166,6 +164,7 @@ function MarketPageContent({
     [
       searchQuery,
       componentFilter,
+      selectedTags,
       pageSize,
       transformToVO,
       plugins.length,
@@ -176,7 +175,33 @@ function MarketPageContent({
   // 初始加载
   useEffect(() => {
     fetchPlugins(1, false, true);
+    fetchAvailableTags();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // 获取可用标签
+  const fetchAvailableTags = async () => {
+    try {
+      const response = await getCloudServiceClientSync().getAllTags();
+      const tags = response.tags || [];
+      setAvailableTags(tags);
+
+      // Build tag names map for all components to use
+      const nameMap: Record<string, string> = {};
+      tags.forEach((tag: PluginTag) => {
+        const displayName = {
+          en_US: tag.display_name.en_US || tag.tag,
+          zh_Hans: tag.display_name.zh_Hans || tag.tag,
+          zh_Hant: tag.display_name.zh_Hant,
+          ja_JP: tag.display_name.ja_JP,
+        };
+        nameMap[tag.tag] = extractI18nObject(displayName);
+      });
+      setTagNames(nameMap);
+    } catch (error) {
+      console.error('Failed to fetch tags:', error);
+    }
+  };
 
   // 搜索功能
   const handleSearch = useCallback(
@@ -228,16 +253,19 @@ function MarketPageContent({
     fetchPlugins(1, !!searchQuery.trim(), true);
   }, [sortOption, componentFilter]);
 
-  // 处理URL参数，重定向到 LangBot Space
+  // Tags 筛选变化时重新搜索
   useEffect(() => {
-    const author = searchParams.get('author');
-    const pluginName = searchParams.get('plugin');
-
-    if (author && pluginName) {
-      const detailUrl = `https://space.langbot.app/market/${author}/${pluginName}`;
-      window.open(detailUrl, '_blank');
+    if (!isLoading) {
+      setCurrentPage(1);
+      fetchPlugins(1, searchQuery.trim() !== '', true);
     }
-  }, [searchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTags]);
+
+  // 处理 tags 变化
+  const handleTagsChange = useCallback((tags: string[]) => {
+    setSelectedTags(tags);
+  }, []);
 
   // 处理安装插件
   const handleInstallPlugin = useCallback(
@@ -343,8 +371,8 @@ function MarketPageContent({
     <div className="h-full flex flex-col">
       {/* Fixed header with search and sort controls */}
       <div className="flex-shrink-0 space-y-4 px-3 sm:px-4 py-4 sm:py-6">
-        {/* Search box */}
-        <div className="flex items-center justify-center">
+        {/* Search box and Tags filter */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <div className="relative w-full max-w-2xl">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
@@ -363,6 +391,13 @@ function MarketPageContent({
               className="pl-10 pr-4 text-sm sm:text-base"
             />
           </div>
+
+          {/* Tags filter */}
+          <TagsFilter
+            availableTags={availableTags}
+            selectedTags={selectedTags}
+            onTagsChange={handleTagsChange}
+          />
         </div>
 
         {/* Component filter and sort */}
@@ -477,6 +512,7 @@ function MarketPageContent({
                   key={plugin.pluginId}
                   cardVO={plugin}
                   onInstall={handleInstallPlugin}
+                  tagNames={tagNames}
                 />
               ))}
             </div>
