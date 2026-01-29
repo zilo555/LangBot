@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 const formSchema = (t: (key: string) => string) =>
   z.object({
@@ -123,7 +124,7 @@ export default function Login() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-neutral-900">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <LoadingSpinner />
       </div>
     );
   }

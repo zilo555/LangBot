@@ -27,6 +27,7 @@ import { PluginV4 } from '@/app/infra/entities/plugin';
 import { extractI18nObject } from '@/i18n/I18nProvider';
 import { toast } from 'sonner';
 import { ApiRespMarketplacePlugins } from '@/app/infra/entities/api';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 
 interface SortOption {
   value: string;
@@ -460,8 +461,7 @@ function MarketPageContent({
       >
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin" />
-            <span className="ml-2">{t('market.loading')}</span>
+            <LoadingSpinner text={t('market.loading')} />
           </div>
         ) : plugins.length === 0 ? (
           <div className="flex items-center justify-center py-12">
@@ -484,8 +484,7 @@ function MarketPageContent({
             {/* Loading more indicator */}
             {isLoadingMore && (
               <div className="flex items-center justify-center py-6">
-                <Loader2 className="h-6 w-6 animate-spin" />
-                <span className="ml-2">{t('market.loadingMore')}</span>
+                <LoadingSpinner size="sm" text={t('market.loadingMore')} />
               </div>
             )}
 
@@ -522,8 +521,7 @@ export default function MarketPage({
       fallback={
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin" />
-            <span className="ml-2">加载中...</span>
+            <LoadingSpinner text="加载中..." />
           </div>
         </div>
       }

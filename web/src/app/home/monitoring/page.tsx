@@ -13,6 +13,7 @@ import { MessageDetailsCard } from './components/MessageDetailsCard';
 import { MessageContentRenderer } from './components/MessageContentRenderer';
 import { MessageDetails } from './types/monitoring';
 import { httpClient } from '@/app/infra/http/HttpClient';
+import { LoadingSpinner, LoadingPage } from '@/components/ui/loading-spinner';
 
 interface RawMessageData {
   id: string;
@@ -262,11 +263,10 @@ function MonitoringPageContent() {
             <TabsContent value="messages" className="p-6 m-0">
               <div>
                 {loading && (
-                  <div className="text-center text-gray-500 dark:text-gray-400 py-12">
-                    <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 dark:border-blue-400 mb-4"></div>
-                    <p className="text-sm font-medium">
-                      {t('monitoring.messageList.loading')}
-                    </p>
+                  <div className="py-12 flex justify-center">
+                    <LoadingSpinner
+                      text={t('monitoring.messageList.loading')}
+                    />
                   </div>
                 )}
 
@@ -363,8 +363,8 @@ function MonitoringPageContent() {
                             {expandedMessageId === msg.id && (
                               <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-gray-50 dark:bg-gray-900">
                                 {loadingDetails[msg.id] && (
-                                  <div className="text-center text-gray-500 dark:text-gray-400 py-4">
-                                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 dark:border-white"></div>
+                                  <div className="py-4 flex justify-center">
+                                    <LoadingSpinner size="sm" text="" />
                                   </div>
                                 )}
                                 {!loadingDetails[msg.id] &&
@@ -410,9 +410,8 @@ function MonitoringPageContent() {
             <TabsContent value="modelCalls" className="p-6 m-0">
               <div>
                 {loading && (
-                  <div className="text-center text-gray-500 dark:text-gray-400 py-12">
-                    <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 dark:border-blue-400 mb-4"></div>
-                    <p className="text-sm font-medium">{t('common.loading')}</p>
+                  <div className="py-12 flex justify-center">
+                    <LoadingSpinner text={t('common.loading')} />
                   </div>
                 )}
 
@@ -629,9 +628,8 @@ function MonitoringPageContent() {
             <TabsContent value="errors" className="p-6 m-0">
               <div>
                 {loading && (
-                  <div className="text-center text-gray-500 dark:text-gray-400 py-12">
-                    <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 dark:border-blue-400 mb-4"></div>
-                    <p className="text-sm font-medium">{t('common.loading')}</p>
+                  <div className="py-12 flex justify-center">
+                    <LoadingSpinner text={t('common.loading')} />
                   </div>
                 )}
 
@@ -810,7 +808,7 @@ function MonitoringPageContent() {
 
 export default function MonitoringPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<LoadingPage />}>
       <MonitoringPageContent />
     </Suspense>
   );
