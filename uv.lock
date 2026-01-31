@@ -1790,7 +1790,7 @@ wheels = [
 
 [[package]]
 name = "langbot"
-version = "4.8.1"
+version = "4.8.2"
 source = { editable = "." }
 dependencies = [
     { name = "aiocqhttp" },
@@ -1893,7 +1893,7 @@ requires-dist = [
     { name = "ebooklib", specifier = ">=0.18" },
     { name = "gewechat-client", specifier = ">=0.1.5" },
     { name = "html2text", specifier = ">=2024.2.26" },
-    { name = "langbot-plugin", specifier = "==0.2.4" },
+    { name = "langbot-plugin", specifier = "==0.2.5" },
     { name = "langchain", specifier = ">=0.2.0" },
     { name = "langchain-text-splitters", specifier = ">=0.0.1" },
     { name = "lark-oapi", specifier = ">=1.4.15" },
@@ -1916,7 +1916,7 @@ requires-dist = [
     { name = "pymilvus", specifier = ">=2.6.4" },
     { name = "pynacl", specifier = ">=1.5.0" },
     { name = "pypdf2", specifier = ">=3.0.1" },
-    { name = "pyseekdb", specifier = ">=0.1.0" },
+    { name = "pyseekdb", specifier = "==1.0.0b7" },
     { name = "python-docx", specifier = ">=1.1.0" },
     { name = "python-socks", specifier = ">=2.7.1" },
     { name = "python-telegram-bot", specifier = ">=22.0" },
@@ -1949,7 +1949,7 @@ dev = [
 
 [[package]]
 name = "langbot-plugin"
-version = "0.2.4"
+version = "0.2.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
@@ -1967,9 +1967,9 @@ dependencies = [
     { name = "watchdog" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fc/5b/20941924d5ec9153c7ce236d9fa41874fa782cc7cd7303b22a8a11184168/langbot_plugin-0.2.4.tar.gz", hash = "sha256:319bdb2b809add762eb74b25787388f4adc9b34843511c59a47c175ee4de8eb1", size = 103713 }
+sdist = { url = "https://files.pythonhosted.org/packages/28/0e/117dfc00f36323cce2369be5176d5cd5247ff52edb34791413af9623f290/langbot_plugin-0.2.5.tar.gz", hash = "sha256:a1bf04c1c07b30c72fb9b28e1330372bb4a43ae2db309394435fc088c513cfd5", size = 103910 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/79/0b/0e5375828e458083b264c69eb7b1d5ccb9e2a8d307977263964cacfe1b09/langbot_plugin-0.2.4-py3-none-any.whl", hash = "sha256:9f186c654727a04d3236dff27639501cae160797c70b3bcc76dc7d8641b5055e", size = 133150 },
+    { url = "https://files.pythonhosted.org/packages/b1/0e/19b9a427206fa46aafbff03437296e38f425365c9ea6a97cbcfa791da2f8/langbot_plugin-0.2.5-py3-none-any.whl", hash = "sha256:b784248fc1f4754cd143bd9a16a7abd89a5c9735a4aa2b03c1c1e771b7d361e9", size = 133362 },
 ]
 
 [[package]]
@@ -4013,7 +4013,7 @@ wheels = [
 
 [[package]]
 name = "pyseekdb"
-version = "1.0.0b8"
+version = "1.0.0b7"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "httpx" },
@@ -4026,7 +4026,7 @@ dependencies = [
     { name = "tqdm" },
 ]
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/59/ab/f7f4c1c5a9c4b3dc772e5767c62530db904512ab9c3b6766761a9dfdf784/pyseekdb-1.0.0b8-py3-none-any.whl", hash = "sha256:7ffdec9025bf5719877eeb3ecff42bab1a4e06c7996e93d72023e2377fa0eba1", size = 58582 },
+    { url = "https://files.pythonhosted.org/packages/92/6a/a0d4728de90e028a60a3583e6e96579087f0cf793e705ea7898a1490541c/pyseekdb-1.0.0b7-py3-none-any.whl", hash = "sha256:e32920636c345bc73adf03040f9bcb1ecc420d652cedae1558999cce19a67d52", size = 60927 },
 ]
 
 [[package]]
