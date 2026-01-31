@@ -43,7 +43,7 @@ class DeepseekChatCompletions(chatcmpl.OpenAIChatCompletions):
         # deepseek 不支持多模态，把content都转换成纯文字
         for m in messages:
             if 'content' in m and isinstance(m['content'], list):
-                m['content'] = ' '.join([c['text'] for c in m['content']])
+                m['content'] = ' '.join([c['text'] for c in m['content'] if 'text' in c])
 
         args['messages'] = messages
 
