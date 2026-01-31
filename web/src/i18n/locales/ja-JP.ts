@@ -647,6 +647,11 @@ const jaJP = {
       showMarkdown: 'Markdownで表示',
       showRaw: '原文で表示',
     },
+    monitoring: {
+      title: 'モニタリング',
+      description: 'このパイプラインの実行ログとエラー情報を表示（過去24時間）',
+      detailedLogs: '詳細ログ',
+    },
   },
   knowledge: {
     title: '知識ベース',

@@ -644,6 +644,12 @@ const enUS = {
       showMarkdown: 'Show Markdown',
       showRaw: 'Show Raw',
     },
+    monitoring: {
+      title: 'Monitoring',
+      description:
+        'View execution logs and errors for this pipeline (last 24 hours)',
+      detailedLogs: 'Detailed Logs',
+    },
   },
   knowledge: {
     title: 'Knowledge',
