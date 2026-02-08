@@ -820,6 +820,7 @@ class MonitoringService:
 
         try:
             import json
+
             message_chain = json.loads(message_content)
             if not isinstance(message_chain, list):
                 return message_content
@@ -909,7 +910,9 @@ class MonitoringService:
                 'pipeline_name': row[0].pipeline_name if isinstance(row, tuple) else row.pipeline_name,
                 'runner_name': row[0].runner_name if isinstance(row, tuple) else row.runner_name,
                 'message_content': row[0].message_content if isinstance(row, tuple) else row.message_content,
-                'message_text': self._extract_message_text(row[0].message_content if isinstance(row, tuple) else row.message_content),
+                'message_text': self._extract_message_text(
+                    row[0].message_content if isinstance(row, tuple) else row.message_content
+                ),
                 'session_id': row[0].session_id if isinstance(row, tuple) else row.session_id,
                 'status': row[0].status if isinstance(row, tuple) else row.status,
                 'level': row[0].level if isinstance(row, tuple) else row.level,
@@ -1108,7 +1111,9 @@ class MonitoringService:
                 'pipeline_name': row[0].pipeline_name if isinstance(row, tuple) else row.pipeline_name,
                 'message_count': row[0].message_count if isinstance(row, tuple) else row.message_count,
                 'start_time': self._format_timestamp(row[0].start_time if isinstance(row, tuple) else row.start_time),
-                'last_activity': self._format_timestamp(row[0].last_activity if isinstance(row, tuple) else row.last_activity),
+                'last_activity': self._format_timestamp(
+                    row[0].last_activity if isinstance(row, tuple) else row.last_activity
+                ),
                 'is_active': str(row[0].is_active if isinstance(row, tuple) else row.is_active),
                 'platform': row[0].platform if isinstance(row, tuple) else row.platform,
                 'user_id': row[0].user_id if isinstance(row, tuple) else row.user_id,

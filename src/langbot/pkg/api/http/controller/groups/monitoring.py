@@ -348,9 +348,22 @@ class MonitoringRouterGroup(group.RouterGroup):
                     end_time=end_time,
                     limit=limit,
                 )
-                headers = ['id', 'timestamp', 'bot_id', 'bot_name', 'pipeline_id', 'pipeline_name',
-                          'runner_name', 'message_content', 'message_text', 'session_id', 'status', 'level',
-                          'platform', 'user_id']
+                headers = [
+                    'id',
+                    'timestamp',
+                    'bot_id',
+                    'bot_name',
+                    'pipeline_id',
+                    'pipeline_name',
+                    'runner_name',
+                    'message_content',
+                    'message_text',
+                    'session_id',
+                    'status',
+                    'level',
+                    'platform',
+                    'user_id',
+                ]
             elif export_type == 'llm-calls':
                 data = await self.ap.monitoring_service.export_llm_calls(
                     bot_ids=bot_ids if bot_ids else None,
@@ -359,18 +372,46 @@ class MonitoringRouterGroup(group.RouterGroup):
                     end_time=end_time,
                     limit=limit,
                 )
-                headers = ['id', 'timestamp', 'model_name', 'input_tokens', 'output_tokens',
-                          'total_tokens', 'duration_ms', 'cost', 'status', 'bot_id', 'bot_name',
-                          'pipeline_id', 'pipeline_name', 'session_id', 'message_id', 'error_message']
+                headers = [
+                    'id',
+                    'timestamp',
+                    'model_name',
+                    'input_tokens',
+                    'output_tokens',
+                    'total_tokens',
+                    'duration_ms',
+                    'cost',
+                    'status',
+                    'bot_id',
+                    'bot_name',
+                    'pipeline_id',
+                    'pipeline_name',
+                    'session_id',
+                    'message_id',
+                    'error_message',
+                ]
             elif export_type == 'embedding-calls':
                 data = await self.ap.monitoring_service.export_embedding_calls(
                     start_time=start_time,
                     end_time=end_time,
                     limit=limit,
                 )
-                headers = ['id', 'timestamp', 'model_name', 'prompt_tokens', 'total_tokens',
-                          'duration_ms', 'input_count', 'status', 'error_message', 'knowledge_base_id',
-                          'query_text', 'session_id', 'message_id', 'call_type']
+                headers = [
+                    'id',
+                    'timestamp',
+                    'model_name',
+                    'prompt_tokens',
+                    'total_tokens',
+                    'duration_ms',
+                    'input_count',
+                    'status',
+                    'error_message',
+                    'knowledge_base_id',
+                    'query_text',
+                    'session_id',
+                    'message_id',
+                    'call_type',
+                ]
             elif export_type == 'errors':
                 data = await self.ap.monitoring_service.export_errors(
                     bot_ids=bot_ids if bot_ids else None,
@@ -379,8 +420,19 @@ class MonitoringRouterGroup(group.RouterGroup):
                     end_time=end_time,
                     limit=limit,
                 )
-                headers = ['id', 'timestamp', 'error_type', 'error_message', 'bot_id', 'bot_name',
-                          'pipeline_id', 'pipeline_name', 'session_id', 'message_id', 'stack_trace']
+                headers = [
+                    'id',
+                    'timestamp',
+                    'error_type',
+                    'error_message',
+                    'bot_id',
+                    'bot_name',
+                    'pipeline_id',
+                    'pipeline_name',
+                    'session_id',
+                    'message_id',
+                    'stack_trace',
+                ]
             elif export_type == 'sessions':
                 data = await self.ap.monitoring_service.export_sessions(
                     bot_ids=bot_ids if bot_ids else None,
@@ -389,9 +441,19 @@ class MonitoringRouterGroup(group.RouterGroup):
                     end_time=end_time,
                     limit=limit,
                 )
-                headers = ['session_id', 'bot_id', 'bot_name', 'pipeline_id', 'pipeline_name',
-                          'message_count', 'start_time', 'last_activity', 'is_active',
-                          'platform', 'user_id']
+                headers = [
+                    'session_id',
+                    'bot_id',
+                    'bot_name',
+                    'pipeline_id',
+                    'pipeline_name',
+                    'message_count',
+                    'start_time',
+                    'last_activity',
+                    'is_active',
+                    'platform',
+                    'user_id',
+                ]
             else:
                 return self.error(message=f'Invalid export type: {export_type}', code=400)
 
@@ -417,6 +479,8 @@ class MonitoringRouterGroup(group.RouterGroup):
             # Return as file download
             response = await quart.make_response(csv_content)
             response.headers['Content-Type'] = 'text/csv; charset=utf-8'
-            response.headers['Content-Disposition'] = f'attachment; filename="monitoring-{export_type}-{int(datetime.datetime.now().timestamp())}.csv"'
+            response.headers['Content-Disposition'] = (
+                f'attachment; filename="monitoring-{export_type}-{int(datetime.datetime.now().timestamp())}.csv"'
+            )
 
             return response, 200

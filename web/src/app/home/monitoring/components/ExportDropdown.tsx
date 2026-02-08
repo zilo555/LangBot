@@ -2,7 +2,14 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Download, FileText, Database, AlertCircle, Users, Layers } from 'lucide-react';
+import {
+  Download,
+  FileText,
+  Database,
+  AlertCircle,
+  Users,
+  Layers,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -13,8 +20,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { backendClient } from '@/app/infra/http';
-import { FilterState, TimeRangeOption } from '../types/monitoring';
-import { DateRange, dateUtils } from '../utils/dateUtils';
+import { FilterState } from '../types/monitoring';
 
 export type ExportType =
   | 'messages'
@@ -104,7 +110,9 @@ export function ExportDropdown({ filterState }: ExportDropdownProps) {
       const contentDisposition = response.headers['content-disposition'];
       let filename = `monitoring-${type}-${Date.now()}.csv`;
       if (contentDisposition) {
-        const filenameMatch = contentDisposition.match(/filename="?([^";\n]+)"?/);
+        const filenameMatch = contentDisposition.match(
+          /filename="?([^";\n]+)"?/,
+        );
         if (filenameMatch) {
           filename = filenameMatch[1];
         }
@@ -129,7 +137,11 @@ export function ExportDropdown({ filterState }: ExportDropdownProps) {
     }
   };
 
-  const exportOptions: { type: ExportType; label: string; icon: React.ReactNode }[] = [
+  const exportOptions: {
+    type: ExportType;
+    label: string;
+    icon: React.ReactNode;
+  }[] = [
     {
       type: 'messages',
       label: t('monitoring.export.messages'),
