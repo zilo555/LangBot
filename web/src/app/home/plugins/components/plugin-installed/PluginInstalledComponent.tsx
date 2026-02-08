@@ -389,7 +389,9 @@ const PluginInstalledComponent = forwardRef<PluginInstalledComponentRef>(
                 <DialogHeader className="px-6 pt-6 pb-2 border-b">
                   <DialogTitle>
                     {readmePlugin &&
-                      `${readmePlugin.author}/${readmePlugin.name} - ${t('plugins.readme')}`}
+                      `${readmePlugin.author}/${readmePlugin.name} - ${t(
+                        'plugins.readme',
+                      )}`}
                   </DialogTitle>
                 </DialogHeader>
                 <div className="flex-1 overflow-y-auto">

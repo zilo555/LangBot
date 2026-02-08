@@ -74,7 +74,10 @@ export default function TrafficChart({
       // <= 7 days: 4-hour buckets
       bucketSize = 4 * 60 * 60 * 1000;
       formatTime = (date) =>
-        `${date.toLocaleDateString([], { month: 'short', day: 'numeric' })} ${date.toLocaleTimeString([], { hour: '2-digit' })}`;
+        `${date.toLocaleDateString([], {
+          month: 'short',
+          day: 'numeric',
+        })} ${date.toLocaleTimeString([], { hour: '2-digit' })}`;
     } else {
       // > 7 days: 1-day buckets
       bucketSize = 24 * 60 * 60 * 1000;
