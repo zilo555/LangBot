@@ -912,6 +912,15 @@ const zhHans = {
     viewMonitoring: '查看日志监控',
     refreshData: '刷新数据',
     exportData: '导出数据',
+    export: {
+      title: '导出数据',
+      exporting: '导出中...',
+      messages: '消息记录',
+      llmCalls: 'LLM 调用',
+      embeddingCalls: 'Embedding 调用',
+      errors: '错误日志',
+      sessions: '会话记录',
+    },
   },
 };
 

@@ -952,6 +952,15 @@ const enUS = {
     viewMonitoring: 'View Monitoring',
     refreshData: 'Refresh Data',
     exportData: 'Export Data',
+    export: {
+      title: 'Export Data',
+      exporting: 'Exporting...',
+      messages: 'Messages',
+      llmCalls: 'LLM Calls',
+      embeddingCalls: 'Embedding Calls',
+      errors: 'Error Logs',
+      sessions: 'Sessions',
+    },
   },
 };
 
