@@ -206,4 +206,19 @@ export abstract class BaseHttpClient {
       ...config,
     });
   }
+
+  public async downloadFile(
+    url: string,
+    config?: RequestConfig,
+  ): Promise<AxiosResponse<Blob>> {
+    try {
+      const response = await this.instance.get<Blob>(url, {
+        responseType: 'blob',
+        ...config,
+      });
+      return response;
+    } catch (error) {
+      return this.handleError(error as object);
+    }
+  }
 }

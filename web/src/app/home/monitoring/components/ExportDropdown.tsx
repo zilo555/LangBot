@@ -98,12 +98,9 @@ export function ExportDropdown({ filterState }: ExportDropdownProps) {
         });
       }
 
-      // Use backendClient's instance to get the auth token
-      const response = await backendClient.instance.get(
+      // Use backendClient's downloadFile method for blob response
+      const response = await backendClient.downloadFile(
         `/api/v1/monitoring/export?${params.toString()}`,
-        {
-          responseType: 'blob',
-        },
       );
 
       // Get filename from content-disposition header
