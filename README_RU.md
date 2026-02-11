@@ -111,6 +111,7 @@ LangBot добавлен в BTPanel. Если у вас установлен BTP
 | WeComCS | ✅ |  |
 | WeCom AI Bot | ✅ |  |
 | Личный WeChat | ✅ |  |
+| Satori | ✅ |  |
 | KOOK | ✅ |  |
 | Lark | ✅ |  |
 | DingTalk | ✅ |  |
