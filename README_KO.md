@@ -111,6 +111,7 @@ LangBot은 BTPanel에 등록되어 있습니다. BTPanel을 설치한 경우 [�
 | WeComCS | ✅ |  |
 | WeCom AI Bot | ✅ |  |
 | 개인 WeChat | ✅ |  |
+| Satori | ✅ |  |
 | KOOK | ✅ |  |
 | Lark | ✅ |  |
 | DingTalk | ✅ |  |
