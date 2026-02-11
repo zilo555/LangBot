@@ -115,6 +115,7 @@ docker compose up -d
 | 飞书 | ✅ |  |
 | 钉钉 | ✅ |  |
 | KOOK | ✅ |  |
+| Satori | ✅ |  |
 | Discord | ✅ |  |
 | Telegram | ✅ |  |
 | Slack | ✅ |  |
