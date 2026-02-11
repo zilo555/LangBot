@@ -111,6 +111,7 @@ Hoặc truy cập môi trường demo: https://demo.langbot.dev/
 | WeComCS | ✅ |  |
 | WeCom AI Bot | ✅ |  |
 | WeChat Cá nhân | ✅ |  |
+| Satori | ✅ |  |
 | KOOK | ✅ |  |
 | Lark | ✅ |  |
 | DingTalk | ✅ |  |
