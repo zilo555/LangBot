@@ -114,6 +114,7 @@ LangBotはBTPanelにリストされています。BTPanelをインストール�
 | Lark | ✅ |  |
 | DingTalk | ✅ |  |
 | KOOK | ✅ |  |
+| Satori | ✅ |  |
 
 ### LLMs
 
