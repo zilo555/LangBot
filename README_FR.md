@@ -114,6 +114,7 @@ Ou visitez l'environnement de démonstration : https://demo.langbot.dev/
 | Lark | ✅ |  |
 | DingTalk | ✅ |  |
 | KOOK | ✅ |  |
+| Satori | ✅ |  |
 
 ### LLMs
 
