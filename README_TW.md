@@ -111,7 +111,6 @@ docker compose up -d
 | 企微對外客服 | ✅ |  |
 | 企微智能機器人 | ✅ |  |
 | 微信公眾號 | ✅ |  |
-| Satori | ✅ |  |
 | KOOK | ✅ |  |
 | Lark | ✅ |  |
 | DingTalk | ✅ |  |
