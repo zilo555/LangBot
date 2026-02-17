@@ -939,6 +939,15 @@ const jaJP = {
     viewMonitoring: 'モニタリングを表示',
     refreshData: 'データを更新',
     exportData: 'データをエクスポート',
+    export: {
+      title: 'データをエクスポート',
+      exporting: 'エクスポート中...',
+      messages: 'メッセージ',
+      llmCalls: 'LLM コール',
+      embeddingCalls: 'Embedding コール',
+      errors: 'エラーログ',
+      sessions: 'セッション',
+    },
   },
 };
 

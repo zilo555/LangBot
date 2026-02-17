@@ -323,3 +323,164 @@ class MonitoringRouterGroup(group.RouterGroup):
                 return self.error(message=f'Message {message_id} not found', code=404)
 
             return self.success(data=details)
+
+        @self.route('/export', methods=['GET'], auth_type=group.AuthType.USER_TOKEN)
+        async def export_data() -> tuple[str, int]:
+            """Export monitoring data as CSV"""
+            # Parse query parameters
+            export_type = quart.request.args.get('type', 'messages')
+            bot_ids = quart.request.args.getlist('botId')
+            pipeline_ids = quart.request.args.getlist('pipelineId')
+            start_time_str = quart.request.args.get('startTime')
+            end_time_str = quart.request.args.get('endTime')
+            limit = int(quart.request.args.get('limit', 100000))
+
+            # Parse datetime
+            start_time = parse_iso_datetime(start_time_str)
+            end_time = parse_iso_datetime(end_time_str)
+
+            # Get data based on export type
+            if export_type == 'messages':
+                data = await self.ap.monitoring_service.export_messages(
+                    bot_ids=bot_ids if bot_ids else None,
+                    pipeline_ids=pipeline_ids if pipeline_ids else None,
+                    start_time=start_time,
+                    end_time=end_time,
+                    limit=limit,
+                )
+                headers = [
+                    'id',
+                    'timestamp',
+                    'bot_id',
+                    'bot_name',
+                    'pipeline_id',
+                    'pipeline_name',
+                    'runner_name',
+                    'message_content',
+                    'message_text',
+                    'session_id',
+                    'status',
+                    'level',
+                    'platform',
+                    'user_id',
+                ]
+            elif export_type == 'llm-calls':
+                data = await self.ap.monitoring_service.export_llm_calls(
+                    bot_ids=bot_ids if bot_ids else None,
+                    pipeline_ids=pipeline_ids if pipeline_ids else None,
+                    start_time=start_time,
+                    end_time=end_time,
+                    limit=limit,
+                )
+                headers = [
+                    'id',
+                    'timestamp',
+                    'model_name',
+                    'input_tokens',
+                    'output_tokens',
+                    'total_tokens',
+                    'duration_ms',
+                    'cost',
+                    'status',
+                    'bot_id',
+                    'bot_name',
+                    'pipeline_id',
+                    'pipeline_name',
+                    'session_id',
+                    'message_id',
+                    'error_message',
+                ]
+            elif export_type == 'embedding-calls':
+                data = await self.ap.monitoring_service.export_embedding_calls(
+                    start_time=start_time,
+                    end_time=end_time,
+                    limit=limit,
+                )
+                headers = [
+                    'id',
+                    'timestamp',
+                    'model_name',
+                    'prompt_tokens',
+                    'total_tokens',
+                    'duration_ms',
+                    'input_count',
+                    'status',
+                    'error_message',
+                    'knowledge_base_id',
+                    'query_text',
+                    'session_id',
+                    'message_id',
+                    'call_type',
+                ]
+            elif export_type == 'errors':
+                data = await self.ap.monitoring_service.export_errors(
+                    bot_ids=bot_ids if bot_ids else None,
+                    pipeline_ids=pipeline_ids if pipeline_ids else None,
+                    start_time=start_time,
+                    end_time=end_time,
+                    limit=limit,
+                )
+                headers = [
+                    'id',
+                    'timestamp',
+                    'error_type',
+                    'error_message',
+                    'bot_id',
+                    'bot_name',
+                    'pipeline_id',
+                    'pipeline_name',
+                    'session_id',
+                    'message_id',
+                    'stack_trace',
+                ]
+            elif export_type == 'sessions':
+                data = await self.ap.monitoring_service.export_sessions(
+                    bot_ids=bot_ids if bot_ids else None,
+                    pipeline_ids=pipeline_ids if pipeline_ids else None,
+                    start_time=start_time,
+                    end_time=end_time,
+                    limit=limit,
+                )
+                headers = [
+                    'session_id',
+                    'bot_id',
+                    'bot_name',
+                    'pipeline_id',
+                    'pipeline_name',
+                    'message_count',
+                    'start_time',
+                    'last_activity',
+                    'is_active',
+                    'platform',
+                    'user_id',
+                ]
+            else:
+                return self.error(message=f'Invalid export type: {export_type}', code=400)
+
+            # Generate CSV content with UTF-8 BOM for Excel compatibility
+            import io
+
+            output = io.StringIO()
+            # Write UTF-8 BOM for Excel
+            output.write('\ufeff')
+            # Write header
+            output.write(','.join(headers) + '\n')
+
+            # Escape and write each row
+            for row in data:
+                escaped_values = []
+                for header in headers:
+                    value = row.get(header, '')
+                    escaped_values.append(self.ap.monitoring_service._escape_csv_field(value))
+                output.write(','.join(escaped_values) + '\n')
+
+            csv_content = output.getvalue()
+
+            # Return as file download
+            response = await quart.make_response(csv_content)
+            response.headers['Content-Type'] = 'text/csv; charset=utf-8'
+            response.headers['Content-Disposition'] = (
+                f'attachment; filename="monitoring-{export_type}-{int(datetime.datetime.now().timestamp())}.csv"'
+            )
+
+            return response, 200
