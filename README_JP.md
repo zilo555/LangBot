@@ -9,7 +9,7 @@
 
 <h3>LangBotでIMボットを素早く構築、デバッグ、デプロイ。</h3>
 
-[English](README_EN.md) / [简体中文](README.md) / [繁體中文](README_TW.md) / 日本語 / [Español](README_ES.md) / [Français](README_FR.md) / [한국어](README_KO.md) / [Русский](README_RU.md) / [Tiếng Việt](README_VI.md)
+[English](README.md) / [简体中文](README_CN.md) / [繁體中文](README_TW.md) / 日本語 / [Español](README_ES.md) / [Français](README_FR.md) / [한국어](README_KO.md) / [Русский](README_RU.md) / [Tiếng Việt](README_VI.md)
 
 [![Discord](https://img.shields.io/discord/1335141740050649118?logo=discord&labelColor=%20%235462eb&logoColor=%20%23f5f5f5&color=%20%235462eb)](https://discord.gg/wdNEHETs87)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/langbot-app/LangBot)
@@ -73,12 +73,6 @@ LangBotはBTPanelにリストされています。BTPanelをインストール�
 
 [Kubernetes デプロイ](./docker/README_K8S.md) ドキュメントを参照してください。
 
-## 😎 最新情報を入手
-
-リポジトリの右上にある Star と Watch ボタンをクリックして、最新の更新を取得してください。
-
-![star gif](https://docs.langbot.app/star.gif)
-
 ## ✨ 機能
 
 <img width="500" src="https://docs.langbot.app/ui/bot-page-en-rounded.png" />
@@ -140,6 +134,12 @@ LangBotはBTPanelにリストされています。BTPanelをインストール�
 | [Volc Engine Ark](https://console.volcengine.com/ark/region:ark+cn-beijing/model?vendor=Bytedance&view=LIST_VIEW) | ✅ | LLMゲートウェイ(MaaS), LLMOpsプラットフォーム |
 | [ModelScope](https://modelscope.cn/docs/model-service/API-Inference/intro) | ✅ | LLMゲートウェイ(MaaS) |
 | [MCP](https://modelcontextprotocol.io/) | ✅ | MCPプロトコルをサポート |
+
+## 😎 最新情報を入手
+
+リポジトリの右上にある Star と Watch ボタンをクリックして、最新の更新を取得してください。
+
+![star gif](https://docs.langbot.app/star.gif)
 
 ## 🤝 コミュニティ貢献
 

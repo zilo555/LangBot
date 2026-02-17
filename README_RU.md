@@ -9,7 +9,7 @@
 
 <h3>Быстро создавайте, отлаживайте и развертывайте IM-ботов с LangBot.</h3>
 
-[English](README_EN.md) / [简体中文](README.md) / [繁體中文](README_TW.md) / [日本語](README_JP.md) / [Español](README_ES.md) / [Français](README_FR.md) / [한국어](README_KO.md) / Русский / [Tiếng Việt](README_VI.md)
+[English](README.md) / [简体中文](README_CN.md) / [繁體中文](README_TW.md) / [日本語](README_JP.md) / [Español](README_ES.md) / [Français](README_FR.md) / [한국어](README_KO.md) / Русский / [Tiếng Việt](README_VI.md)
 
 [![Discord](https://img.shields.io/discord/1335141740050649118?logo=discord&labelColor=%20%235462eb&logoColor=%20%23f5f5f5&color=%20%235462eb)](https://discord.gg/wdNEHETs87)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/langbot-app/LangBot)
@@ -73,12 +73,6 @@ LangBot добавлен в BTPanel. Если у вас установлен BTP
 
 См. документацию [Развертывание Kubernetes](./docker/README_K8S.md).
 
-## 😎 Оставайтесь в курсе
-
-Нажмите кнопки Star и Watch в правом верхнем углу репозитория, чтобы получать последние обновления.
-
-![star gif](https://docs.langbot.app/star.gif)
-
 ## ✨ Функции
 
 <img width="500" src="https://docs.langbot.app/ui/bot-page-en-rounded.png" />
@@ -140,6 +134,12 @@ LangBot добавлен в BTPanel. Если у вас установлен BTP
 | [Volc Engine Ark](https://console.volcengine.com/ark/region:ark+cn-beijing/model?vendor=Bytedance&view=LIST_VIEW) | ✅ | Шлюз LLM (MaaS), платформа LLMOps |
 | [ModelScope](https://modelscope.cn/docs/model-service/API-Inference/intro) | ✅ | Шлюз LLM (MaaS) |
 | [MCP](https://modelcontextprotocol.io/) | ✅ | Поддержка доступа к инструментам через протокол MCP |
+
+## 😎 Оставайтесь в курсе
+
+Нажмите кнопки Star и Watch в правом верхнем углу репозитория, чтобы получать последние обновления.
+
+![star gif](https://docs.langbot.app/star.gif)
 
 ## 🤝 Вклад сообщества
 

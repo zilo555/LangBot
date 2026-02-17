@@ -9,7 +9,7 @@
 
 <h3>Cree, depure y despliegue bots de mensajería instantánea rápidamente con LangBot.</h3>
 
-[English](README_EN.md) / [简体中文](README.md) / [繁體中文](README_TW.md) / [日本語](README_JP.md) / Español / [Français](README_FR.md) / [한국어](README_KO.md) / [Русский](README_RU.md) / [Tiếng Việt](README_VI.md)
+[English](README.md) / [简体中文](README_CN.md) / [繁體中文](README_TW.md) / [日本語](README_JP.md) / Español / [Français](README_FR.md) / [한국어](README_KO.md) / [Русский](README_RU.md) / [Tiếng Việt](README_VI.md)
 
 [![Discord](https://img.shields.io/discord/1335141740050649118?logo=discord&labelColor=%20%235462eb&logoColor=%20%23f5f5f5&color=%20%235462eb)](https://discord.gg/wdNEHETs87)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/langbot-app/LangBot)
@@ -74,12 +74,6 @@ Use directamente la versión publicada para ejecutar, consulte la documentación
 
 Consulte la documentación de [Despliegue en Kubernetes](./docker/README_K8S.md).
 
-## 😎 Manténgase Actualizado
-
-Haga clic en los botones Star y Watch en la esquina superior derecha del repositorio para obtener las últimas actualizaciones.
-
-![star gif](https://docs.langbot.app/star.gif)
-
 ## ✨ Características
 
 <img width="500" src="https://docs.langbot.app/ui/bot-page-en-rounded.png" />
@@ -141,6 +135,12 @@ O visite el entorno de demostración: https://demo.langbot.dev/
 | [Volc Engine Ark](https://console.volcengine.com/ark/region:ark+cn-beijing/model?vendor=Bytedance&view=LIST_VIEW) | ✅ | Gateway LLM (MaaS), plataforma LLMOps |
 | [ModelScope](https://modelscope.cn/docs/model-service/API-Inference/intro) | ✅ | Gateway LLM (MaaS) |
 | [MCP](https://modelcontextprotocol.io/) | ✅ | Compatible con acceso a herramientas a través del protocolo MCP |
+
+## 😎 Manténgase Actualizado
+
+Haga clic en los botones Star y Watch en la esquina superior derecha del repositorio para obtener las últimas actualizaciones.
+
+![star gif](https://docs.langbot.app/star.gif)
 
 ## 🤝 Contribución de la Comunidad
 

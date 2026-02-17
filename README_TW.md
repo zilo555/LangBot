@@ -7,7 +7,7 @@
 
 <h3>使用 LangBot 快速建構、除錯和部署 IM 機器人。</h3>
 
-[English](README_EN.md) / [简体中文](README.md) / 繁體中文 / [日本語](README_JP.md) / [Español](README_ES.md) / [Français](README_FR.md) / [한국어](README_KO.md) / [Русский](README_RU.md) / [Tiếng Việt](README_VI.md)
+[English](README.md) / [简体中文](README_CN.md) / 繁體中文 / [日本語](README_JP.md) / [Español](README_ES.md) / [Français](README_FR.md) / [한국어](README_KO.md) / [Русский](README_RU.md) / [Tiếng Việt](README_VI.md)
 
 [![Discord](https://img.shields.io/discord/1335141740050649118?logo=discord&labelColor=%20%235462eb&logoColor=%20%23f5f5f5&color=%20%235462eb)](https://discord.gg/wdNEHETs87)
 [![QQ Group](https://img.shields.io/badge/%E7%A4%BE%E5%8C%BAQQ%E7%BE%A4-966235608-blue)](https://qm.qq.com/q/JLi38whHum)
@@ -72,12 +72,6 @@ docker compose up -d
 #### Kubernetes 部署
 
 參考 [Kubernetes 部署](./docker/README_K8S.md) 文件。
-
-## 😎 保持更新
-
-點擊倉庫右上角 Star 和 Watch 按鈕，獲取最新動態。
-
-![star gif](https://docs.langbot.app/star.gif)
 
 ## ✨ 特性
 
@@ -154,6 +148,12 @@ docker compose up -d
 | 平台/模型 | 備註 |
 | --- | --- |
 | 阿里雲百煉 | [外掛](https://github.com/Thetail001/LangBot_BailianTextToImagePlugin)
+
+## 😎 保持更新
+
+點擊倉庫右上角 Star 和 Watch 按鈕，獲取最新動態。
+
+![star gif](https://docs.langbot.app/star.gif)
 
 ## 😘 社群貢獻
 

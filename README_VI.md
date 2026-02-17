@@ -9,7 +9,7 @@
 
 <h3>Xây dựng, gỡ lỗi và triển khai bot IM nhanh chóng với LangBot.</h3>
 
-[English](README_EN.md) / [简体中文](README.md) / [繁體中文](README_TW.md) / [日本語](README_JP.md) / [Español](README_ES.md) / [Français](README_FR.md) / [한국어](README_KO.md) / [Русский](README_RU.md) / Tiếng Việt
+[English](README.md) / [简体中文](README_CN.md) / [繁體中文](README_TW.md) / [日本語](README_JP.md) / [Español](README_ES.md) / [Français](README_FR.md) / [한국어](README_KO.md) / [Русский](README_RU.md) / Tiếng Việt
 
 [![Discord](https://img.shields.io/discord/1335141740050649118?logo=discord&labelColor=%20%235462eb&logoColor=%20%23f5f5f5&color=%20%235462eb)](https://discord.gg/wdNEHETs87)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/langbot-app/LangBot)
@@ -73,12 +73,6 @@ Sử dụng trực tiếp phiên bản phát hành để chạy, xem tài liệu
 
 Tham khảo tài liệu [Triển khai Kubernetes](./docker/README_K8S.md).
 
-## 😎 Cập nhật Mới nhất
-
-Nhấp vào các nút Star và Watch ở góc trên bên phải của kho lưu trữ để nhận các bản cập nhật mới nhất.
-
-![star gif](https://docs.langbot.app/star.gif)
-
 ## ✨ Tính năng
 
 <img width="500" src="https://docs.langbot.app/ui/bot-page-en-rounded.png" />
@@ -140,6 +134,12 @@ Hoặc truy cập môi trường demo: https://demo.langbot.dev/
 | [Volc Engine Ark](https://console.volcengine.com/ark/region:ark+cn-beijing/model?vendor=Bytedance&view=LIST_VIEW) | ✅ | Cổng LLM (MaaS), nền tảng LLMOps |
 | [ModelScope](https://modelscope.cn/docs/model-service/API-Inference/intro) | ✅ | Cổng LLM (MaaS) |
 | [MCP](https://modelcontextprotocol.io/) | ✅ | Hỗ trợ truy cập công cụ qua giao thức MCP |
+
+## 😎 Cập nhật Mới nhất
+
+Nhấp vào các nút Star và Watch ở góc trên bên phải của kho lưu trữ để nhận các bản cập nhật mới nhất.
+
+![star gif](https://docs.langbot.app/star.gif)
 
 ## 🤝 Đóng góp Cộng đồng
 
