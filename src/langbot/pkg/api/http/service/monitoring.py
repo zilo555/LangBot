@@ -801,6 +801,9 @@ class MonitoringService:
         """Escape a field for CSV output"""
         if field is None:
             return ''
+        # Convert non-string types to string first
+        if not isinstance(field, str):
+            field = str(field)
         # Replace common escape sequences
         field = field.replace('\r\n', '\n').replace('\r', '\n')
         # If field contains comma, double quote, or newline, wrap in quotes
