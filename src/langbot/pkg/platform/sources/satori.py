@@ -216,7 +216,7 @@ class SatoriMessageConverter(abstract_platform_adapter.AbstractMessageConverter)
             components.append(platform_message.Plain(text=content))
 
         message_chain = platform_message.MessageChain(components)
-        await adapter.logger.info(f'Satori 消息解析完成: 共 {len(components)} 个组件 内容长度={len(content)} 字符')
+        await adapter.logger.debug(f'Satori 消息解析完成: 共 {len(components)} 个组件 内容长度={len(content)} 字符')
         return message_chain
 
 
