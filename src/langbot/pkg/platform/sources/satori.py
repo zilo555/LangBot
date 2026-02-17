@@ -645,10 +645,15 @@ class SatoriAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
             message_id = str(message.get('id', '') or '')
             message_content = str(message.get('content', '') or '')
 
-            # Log received message (truncate long content)
+            # Log received message (truncate long content for debug preview)
             log_content = message_content[:100] + '...' if len(message_content) > 100 else message_content
+            # At info level, avoid logging raw content to protect privacy and reduce log volume
             await self.logger.info(
-                f"Satori 消息接收: 用户ID={user_id}, 用户名={user_name}, 内容长度={len(message_content)}, 预览='{log_content}'"
+                f"Satori 消息接收: 用户ID={user_id}, 用户名={user_name}, 内容长度={len(message_content)}, 消息ID={message_id}"
+            )
+            # Detailed content preview only at debug level
+            await self.logger.debug(
+                f"Satori 消息内容预览: 用户ID={user_id}, 消息ID={message_id}, 预览='{log_content}'"
             )
 
             # Convert message content
