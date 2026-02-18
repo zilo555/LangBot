@@ -89,6 +89,7 @@ docker compose up -d
 | Lark | ✅ |  |
 | DingTalk | ✅ |  |
 | KOOK | ✅ |  |
+| Satori | ✅ |  |
 
 ---
 
