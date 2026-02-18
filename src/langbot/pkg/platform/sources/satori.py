@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import typing
+import typing 
 import time
 import datetime
 import json
@@ -991,3 +991,4 @@ class SatoriAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
     async def run_async(self):
         """Async run wrapper"""
         await self.run()
+
