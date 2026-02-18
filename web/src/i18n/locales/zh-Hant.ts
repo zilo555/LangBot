@@ -887,6 +887,15 @@ const zhHant = {
     viewMonitoring: '查看日誌監控',
     refreshData: '重新整理資料',
     exportData: '匯出資料',
+    export: {
+      title: '匯出資料',
+      exporting: '匯出中...',
+      messages: '訊息記錄',
+      llmCalls: 'LLM 呼叫',
+      embeddingCalls: 'Embedding 呼叫',
+      errors: '錯誤日誌',
+      sessions: '會話記錄',
+    },
   },
 };
 

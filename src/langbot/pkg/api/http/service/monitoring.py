@@ -794,3 +794,332 @@ class MonitoringService:
             },
             'errors': errors,
         }
+
+    # ========== Export Methods ==========
+
+    def _escape_csv_field(self, field: str | None) -> str:
+        """Escape a field for CSV output"""
+        if field is None:
+            return ''
+        # Convert non-string types to string first
+        if not isinstance(field, str):
+            field = str(field)
+        # Replace common escape sequences
+        field = field.replace('\r\n', '\n').replace('\r', '\n')
+        # If field contains comma, double quote, or newline, wrap in quotes
+        if ',' in field or '"' in field or '\n' in field:
+            # Escape double quotes by doubling them
+            field = '"' + field.replace('"', '""') + '"'
+        return field
+
+    def _format_timestamp(self, dt: datetime.datetime) -> str:
+        """Format datetime to ISO format string"""
+        return dt.strftime('%Y-%m-%d %H:%M:%S')
+
+    def _extract_message_text(self, message_content: str) -> str:
+        """Extract plain text from message chain JSON"""
+        if not message_content:
+            return ''
+
+        try:
+            import json
+
+            message_chain = json.loads(message_content)
+            if not isinstance(message_chain, list):
+                return message_content
+
+            text_parts = []
+            for component in message_chain:
+                if not isinstance(component, dict):
+                    continue
+                component_type = component.get('type')
+                if component_type == 'Plain':
+                    text = component.get('text', '')
+                    text_parts.append(text)
+                elif component_type == 'At':
+                    display = component.get('display', '')
+                    target = component.get('target', '')
+                    if display:
+                        text_parts.append(f'@{display}')
+                    elif target:
+                        text_parts.append(f'@{target}')
+                elif component_type == 'AtAll':
+                    text_parts.append('@All')
+                elif component_type == 'Image':
+                    text_parts.append('[Image]')
+                elif component_type == 'File':
+                    name = component.get('name', 'File')
+                    text_parts.append(f'[File: {name}]')
+                elif component_type == 'Voice':
+                    length = component.get('length', 0)
+                    text_parts.append(f'[Voice {length}s]')
+                elif component_type == 'Quote':
+                    # Quote content is in 'origin' field
+                    origin = component.get('origin', [])
+                    if isinstance(origin, list):
+                        for item in origin:
+                            if isinstance(item, dict) and item.get('type') == 'Plain':
+                                text_parts.append(f'> {item.get("text", "")}')
+                elif component_type == 'Source':
+                    # Skip Source component
+                    continue
+                else:
+                    # Other unknown types
+                    text_parts.append(f'[{component_type}]')
+
+            return ''.join(text_parts)
+        except (json.JSONDecodeError, TypeError, KeyError):
+            # If not valid JSON, return as-is
+            return message_content
+
+    async def export_messages(
+        self,
+        bot_ids: list[str] | None = None,
+        pipeline_ids: list[str] | None = None,
+        start_time: datetime.datetime | None = None,
+        end_time: datetime.datetime | None = None,
+        limit: int = 100000,
+    ) -> list[dict]:
+        """Export messages as list of dictionaries for CSV conversion"""
+        conditions = []
+
+        if bot_ids:
+            conditions.append(persistence_monitoring.MonitoringMessage.bot_id.in_(bot_ids))
+        if pipeline_ids:
+            conditions.append(persistence_monitoring.MonitoringMessage.pipeline_id.in_(pipeline_ids))
+        if start_time:
+            conditions.append(persistence_monitoring.MonitoringMessage.timestamp >= start_time)
+        if end_time:
+            conditions.append(persistence_monitoring.MonitoringMessage.timestamp <= end_time)
+
+        query = sqlalchemy.select(persistence_monitoring.MonitoringMessage).order_by(
+            persistence_monitoring.MonitoringMessage.timestamp.desc()
+        )
+        if conditions:
+            query = query.where(sqlalchemy.and_(*conditions))
+
+        query = query.limit(limit)
+
+        result = await self.ap.persistence_mgr.execute_async(query)
+        rows = result.all()
+
+        return [
+            {
+                'id': row[0].id if isinstance(row, tuple) else row.id,
+                'timestamp': self._format_timestamp(row[0].timestamp if isinstance(row, tuple) else row.timestamp),
+                'bot_id': row[0].bot_id if isinstance(row, tuple) else row.bot_id,
+                'bot_name': row[0].bot_name if isinstance(row, tuple) else row.bot_name,
+                'pipeline_id': row[0].pipeline_id if isinstance(row, tuple) else row.pipeline_id,
+                'pipeline_name': row[0].pipeline_name if isinstance(row, tuple) else row.pipeline_name,
+                'runner_name': row[0].runner_name if isinstance(row, tuple) else row.runner_name,
+                'message_content': row[0].message_content if isinstance(row, tuple) else row.message_content,
+                'message_text': self._extract_message_text(
+                    row[0].message_content if isinstance(row, tuple) else row.message_content
+                ),
+                'session_id': row[0].session_id if isinstance(row, tuple) else row.session_id,
+                'status': row[0].status if isinstance(row, tuple) else row.status,
+                'level': row[0].level if isinstance(row, tuple) else row.level,
+                'platform': row[0].platform if isinstance(row, tuple) else row.platform,
+                'user_id': row[0].user_id if isinstance(row, tuple) else row.user_id,
+            }
+            for row in rows
+        ]
+
+    async def export_llm_calls(
+        self,
+        bot_ids: list[str] | None = None,
+        pipeline_ids: list[str] | None = None,
+        start_time: datetime.datetime | None = None,
+        end_time: datetime.datetime | None = None,
+        limit: int = 100000,
+    ) -> list[dict]:
+        """Export LLM calls as list of dictionaries for CSV conversion"""
+        conditions = []
+
+        if bot_ids:
+            conditions.append(persistence_monitoring.MonitoringLLMCall.bot_id.in_(bot_ids))
+        if pipeline_ids:
+            conditions.append(persistence_monitoring.MonitoringLLMCall.pipeline_id.in_(pipeline_ids))
+        if start_time:
+            conditions.append(persistence_monitoring.MonitoringLLMCall.timestamp >= start_time)
+        if end_time:
+            conditions.append(persistence_monitoring.MonitoringLLMCall.timestamp <= end_time)
+
+        query = sqlalchemy.select(persistence_monitoring.MonitoringLLMCall).order_by(
+            persistence_monitoring.MonitoringLLMCall.timestamp.desc()
+        )
+        if conditions:
+            query = query.where(sqlalchemy.and_(*conditions))
+
+        query = query.limit(limit)
+
+        result = await self.ap.persistence_mgr.execute_async(query)
+        rows = result.all()
+
+        return [
+            {
+                'id': row[0].id if isinstance(row, tuple) else row.id,
+                'timestamp': self._format_timestamp(row[0].timestamp if isinstance(row, tuple) else row.timestamp),
+                'model_name': row[0].model_name if isinstance(row, tuple) else row.model_name,
+                'input_tokens': row[0].input_tokens if isinstance(row, tuple) else row.input_tokens,
+                'output_tokens': row[0].output_tokens if isinstance(row, tuple) else row.output_tokens,
+                'total_tokens': row[0].total_tokens if isinstance(row, tuple) else row.total_tokens,
+                'duration_ms': row[0].duration if isinstance(row, tuple) else row.duration,
+                'cost': row[0].cost if isinstance(row, tuple) else row.cost,
+                'status': row[0].status if isinstance(row, tuple) else row.status,
+                'bot_id': row[0].bot_id if isinstance(row, tuple) else row.bot_id,
+                'bot_name': row[0].bot_name if isinstance(row, tuple) else row.bot_name,
+                'pipeline_id': row[0].pipeline_id if isinstance(row, tuple) else row.pipeline_id,
+                'pipeline_name': row[0].pipeline_name if isinstance(row, tuple) else row.pipeline_name,
+                'session_id': row[0].session_id if isinstance(row, tuple) else row.session_id,
+                'message_id': row[0].message_id if isinstance(row, tuple) else row.message_id,
+                'error_message': row[0].error_message if isinstance(row, tuple) else row.error_message,
+            }
+            for row in rows
+        ]
+
+    async def export_embedding_calls(
+        self,
+        start_time: datetime.datetime | None = None,
+        end_time: datetime.datetime | None = None,
+        knowledge_base_id: str | None = None,
+        limit: int = 100000,
+    ) -> list[dict]:
+        """Export embedding calls as list of dictionaries for CSV conversion"""
+        conditions = []
+
+        if start_time:
+            conditions.append(persistence_monitoring.MonitoringEmbeddingCall.timestamp >= start_time)
+        if end_time:
+            conditions.append(persistence_monitoring.MonitoringEmbeddingCall.timestamp <= end_time)
+        if knowledge_base_id:
+            conditions.append(persistence_monitoring.MonitoringEmbeddingCall.knowledge_base_id == knowledge_base_id)
+
+        query = sqlalchemy.select(persistence_monitoring.MonitoringEmbeddingCall).order_by(
+            persistence_monitoring.MonitoringEmbeddingCall.timestamp.desc()
+        )
+        if conditions:
+            query = query.where(sqlalchemy.and_(*conditions))
+
+        query = query.limit(limit)
+
+        result = await self.ap.persistence_mgr.execute_async(query)
+        rows = result.all()
+
+        return [
+            {
+                'id': row[0].id if isinstance(row, tuple) else row.id,
+                'timestamp': self._format_timestamp(row[0].timestamp if isinstance(row, tuple) else row.timestamp),
+                'model_name': row[0].model_name if isinstance(row, tuple) else row.model_name,
+                'prompt_tokens': row[0].prompt_tokens if isinstance(row, tuple) else row.prompt_tokens,
+                'total_tokens': row[0].total_tokens if isinstance(row, tuple) else row.total_tokens,
+                'duration_ms': row[0].duration if isinstance(row, tuple) else row.duration,
+                'input_count': row[0].input_count if isinstance(row, tuple) else row.input_count,
+                'status': row[0].status if isinstance(row, tuple) else row.status,
+                'error_message': row[0].error_message if isinstance(row, tuple) else row.error_message,
+                'knowledge_base_id': row[0].knowledge_base_id if isinstance(row, tuple) else row.knowledge_base_id,
+                'query_text': row[0].query_text if isinstance(row, tuple) else row.query_text,
+                'session_id': row[0].session_id if isinstance(row, tuple) else row.session_id,
+                'message_id': row[0].message_id if isinstance(row, tuple) else row.message_id,
+                'call_type': row[0].call_type if isinstance(row, tuple) else row.call_type,
+            }
+            for row in rows
+        ]
+
+    async def export_errors(
+        self,
+        bot_ids: list[str] | None = None,
+        pipeline_ids: list[str] | None = None,
+        start_time: datetime.datetime | None = None,
+        end_time: datetime.datetime | None = None,
+        limit: int = 100000,
+    ) -> list[dict]:
+        """Export errors as list of dictionaries for CSV conversion"""
+        conditions = []
+
+        if bot_ids:
+            conditions.append(persistence_monitoring.MonitoringError.bot_id.in_(bot_ids))
+        if pipeline_ids:
+            conditions.append(persistence_monitoring.MonitoringError.pipeline_id.in_(pipeline_ids))
+        if start_time:
+            conditions.append(persistence_monitoring.MonitoringError.timestamp >= start_time)
+        if end_time:
+            conditions.append(persistence_monitoring.MonitoringError.timestamp <= end_time)
+
+        query = sqlalchemy.select(persistence_monitoring.MonitoringError).order_by(
+            persistence_monitoring.MonitoringError.timestamp.desc()
+        )
+        if conditions:
+            query = query.where(sqlalchemy.and_(*conditions))
+
+        query = query.limit(limit)
+
+        result = await self.ap.persistence_mgr.execute_async(query)
+        rows = result.all()
+
+        return [
+            {
+                'id': row[0].id if isinstance(row, tuple) else row.id,
+                'timestamp': self._format_timestamp(row[0].timestamp if isinstance(row, tuple) else row.timestamp),
+                'error_type': row[0].error_type if isinstance(row, tuple) else row.error_type,
+                'error_message': row[0].error_message if isinstance(row, tuple) else row.error_message,
+                'bot_id': row[0].bot_id if isinstance(row, tuple) else row.bot_id,
+                'bot_name': row[0].bot_name if isinstance(row, tuple) else row.bot_name,
+                'pipeline_id': row[0].pipeline_id if isinstance(row, tuple) else row.pipeline_id,
+                'pipeline_name': row[0].pipeline_name if isinstance(row, tuple) else row.pipeline_name,
+                'session_id': row[0].session_id if isinstance(row, tuple) else row.session_id,
+                'message_id': row[0].message_id if isinstance(row, tuple) else row.message_id,
+                'stack_trace': row[0].stack_trace if isinstance(row, tuple) else row.stack_trace,
+            }
+            for row in rows
+        ]
+
+    async def export_sessions(
+        self,
+        bot_ids: list[str] | None = None,
+        pipeline_ids: list[str] | None = None,
+        start_time: datetime.datetime | None = None,
+        end_time: datetime.datetime | None = None,
+        limit: int = 100000,
+    ) -> list[dict]:
+        """Export sessions as list of dictionaries for CSV conversion"""
+        conditions = []
+
+        if bot_ids:
+            conditions.append(persistence_monitoring.MonitoringSession.bot_id.in_(bot_ids))
+        if pipeline_ids:
+            conditions.append(persistence_monitoring.MonitoringSession.pipeline_id.in_(pipeline_ids))
+        if start_time:
+            conditions.append(persistence_monitoring.MonitoringSession.start_time >= start_time)
+        if end_time:
+            conditions.append(persistence_monitoring.MonitoringSession.start_time <= end_time)
+
+        query = sqlalchemy.select(persistence_monitoring.MonitoringSession).order_by(
+            persistence_monitoring.MonitoringSession.last_activity.desc()
+        )
+        if conditions:
+            query = query.where(sqlalchemy.and_(*conditions))
+
+        query = query.limit(limit)
+
+        result = await self.ap.persistence_mgr.execute_async(query)
+        rows = result.all()
+
+        return [
+            {
+                'session_id': row[0].session_id if isinstance(row, tuple) else row.session_id,
+                'bot_id': row[0].bot_id if isinstance(row, tuple) else row.bot_id,
+                'bot_name': row[0].bot_name if isinstance(row, tuple) else row.bot_name,
+                'pipeline_id': row[0].pipeline_id if isinstance(row, tuple) else row.pipeline_id,
+                'pipeline_name': row[0].pipeline_name if isinstance(row, tuple) else row.pipeline_name,
+                'message_count': row[0].message_count if isinstance(row, tuple) else row.message_count,
+                'start_time': self._format_timestamp(row[0].start_time if isinstance(row, tuple) else row.start_time),
+                'last_activity': self._format_timestamp(
+                    row[0].last_activity if isinstance(row, tuple) else row.last_activity
+                ),
+                'is_active': str(row[0].is_active if isinstance(row, tuple) else row.is_active),
+                'platform': row[0].platform if isinstance(row, tuple) else row.platform,
+                'user_id': row[0].user_id if isinstance(row, tuple) else row.user_id,
+            }
+            for row in rows
+        ]

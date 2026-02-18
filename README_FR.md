@@ -7,19 +7,21 @@
 
 <a href="https://www.producthunt.com/products/langbot?utm_source=badge-follow&utm_medium=badge&utm_source=badge-langbot" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/follow.svg?product_id=1077185&theme=light" alt="LangBot - Production&#0045;grade&#0032;IM&#0032;bot&#0032;made&#0032;easy&#0046; | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
 
-<h3>Créez, déboguez et déployez rapidement des bots de messagerie instantanée avec LangBot.</h3>
+<h3>Plateforme de niveau production pour construire des bots de messagerie instantanée avec agents IA.</h3>
+<h4>Créez, déboguez et déployez rapidement des bots IA sur Slack, Discord, Telegram, WeChat et plus.</h4>
 
-[English](README_EN.md) / [简体中文](README.md) / [繁體中文](README_TW.md) / [日本語](README_JP.md) / [Español](README_ES.md) / Français / [한국어](README_KO.md) / [Русский](README_RU.md) / [Tiếng Việt](README_VI.md)
+[English](README.md) / [简体中文](README_CN.md) / [繁體中文](README_TW.md) / [日本語](README_JP.md) / [Español](README_ES.md) / Français / [한국어](README_KO.md) / [Русский](README_RU.md) / [Tiếng Việt](README_VI.md)
 
 [![Discord](https://img.shields.io/discord/1335141740050649118?logo=discord&labelColor=%20%235462eb&logoColor=%20%23f5f5f5&color=%20%235462eb)](https://discord.gg/wdNEHETs87)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/langbot-app/LangBot)
 [![GitHub release (latest by date)](https://img.shields.io/github/v/release/langbot-app/LangBot)](https://github.com/langbot-app/LangBot/releases/latest)
 <img src="https://img.shields.io/badge/python-3.10 ~ 3.13 -blue.svg" alt="python">
+[![GitHub stars](https://img.shields.io/github/stars/langbot-app/LangBot?style=social)](https://github.com/langbot-app/LangBot/stargazers)
 
 <a href="https://langbot.app">Accueil</a> ｜
 <a href="https://docs.langbot.app/en/insight/features.html">Fonctionnalités</a> ｜
-<a href="https://docs.langbot.app/en/insight/guide.html">Déploiement</a> ｜
-<a href="https://docs.langbot.app/en/tags/readme.html">Intégration API</a> ｜
+<a href="https://docs.langbot.app/en/insight/guide.html">Documentation</a> ｜
+<a href="https://docs.langbot.app/en/tags/readme.html">API</a> ｜
 <a href="https://space.langbot.app">Marché des Plugins</a> ｜
 <a href="https://langbot.featurebase.app/roadmap">Feuille de Route</a>
 
@@ -27,19 +29,36 @@
 
 </p>
 
-## 📦 Commencer
+---
 
-#### Démarrage Rapide
+## 🚀 Qu'est-ce que LangBot ?
 
-Utilisez `uvx` pour démarrer avec une commande (besoin d'installer [uv](https://docs.astral.sh/uv/getting-started/installation/)) :
+LangBot est une **plateforme open-source de niveau production** pour créer des bots de messagerie instantanée alimentés par l'IA. Elle connecte les grands modèles de langage (LLMs) à n'importe quelle plateforme de chat, vous permettant de créer des agents intelligents capables de converser, d'exécuter des tâches et de s'intégrer à vos workflows existants.
+
+### Capacités Clés
+
+- **💬 Conversations IA & Agents** — Dialogues multi-tours, appels d'outils, support multimodal, sortie en streaming. RAG (base de connaissances) intégré avec intégration profonde de [Dify](https://dify.ai), [Coze](https://coze.com), [n8n](https://n8n.io), [Langflow](https://langflow.org).
+- **🤖 Support Universel des Plateformes de MI** — Un seul code pour Discord, Telegram, Slack, LINE, QQ, WeChat, WeCom, Lark, DingTalk, KOOK.
+- **🛠️ Prêt pour la Production** — Contrôle d'accès, limitation de débit, filtrage de mots sensibles, surveillance complète et gestion des exceptions. Approuvé par les entreprises.
+- **🧩 Écosystème de Plugins** — Des centaines de plugins, architecture événementielle, extensions de composants, et support du [protocole MCP](https://modelcontextprotocol.io/).
+- **😻 Panneau de Gestion Web** — Configurez, gérez et surveillez vos bots via une interface navigateur intuitive. Aucune édition de YAML requise.
+- **📊 Architecture Multi-Pipeline** — Différents bots pour différents scénarios, avec surveillance complète et gestion des exceptions.
+
+[→ En savoir plus sur toutes les fonctionnalités](https://docs.langbot.app/en/insight/features.html)
+
+---
+
+## 📦 Démarrage Rapide
+
+### Lancement en une ligne
 
 ```bash
 uvx langbot
 ```
 
-Visitez http://localhost:5300 pour commencer à l'utiliser.
+> Nécessite [uv](https://docs.astral.sh/uv/getting-started/installation/). Visitez http://localhost:5300 — c'est prêt.
 
-#### Déploiement avec Docker Compose
+### Docker Compose
 
 ```bash
 git clone https://github.com/langbot-app/LangBot
@@ -47,104 +66,101 @@ cd LangBot/docker
 docker compose up -d
 ```
 
-Visitez http://localhost:5300 pour commencer à l'utiliser.
-
-Documentation détaillée [Déploiement Docker](https://docs.langbot.app/en/deploy/langbot/docker.html).
-
-#### Déploiement en un clic sur BTPanel
-
-LangBot a été répertorié sur BTPanel. Si vous avez installé BTPanel, vous pouvez utiliser la [documentation](https://docs.langbot.app/en/deploy/langbot/one-click/bt.html) pour l'utiliser.
-
-#### Déploiement Cloud Zeabur
-
-Modèle Zeabur contribué par la communauté.
+### Déploiement Cloud en un Clic
 
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/en-US/templates/ZKTBDH)
-
-#### Déploiement Cloud Railway
-
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.app/template/yRrAyL?referralCode=vogKPF)
 
-#### Autres Méthodes de Déploiement
+**Plus d'options :** [Docker](https://docs.langbot.app/en/deploy/langbot/docker.html) · [Manuel](https://docs.langbot.app/en/deploy/langbot/manual.html) · [BTPanel](https://docs.langbot.app/en/deploy/langbot/one-click/bt.html) · [Kubernetes](./docker/README_K8S.md)
 
-Utilisez directement la version publiée pour exécuter, consultez la documentation de [Déploiement Manuel](https://docs.langbot.app/en/deploy/langbot/manual.html).
+---
 
-#### Déploiement Kubernetes
+## ✨ Plateformes Supportées
 
-Consultez la documentation de [Déploiement Kubernetes](./docker/README_K8S.md).
-
-## 😎 Restez à Jour
-
-Cliquez sur les boutons Star et Watch dans le coin supérieur droit du dépôt pour obtenir les dernières mises à jour.
-
-![star gif](https://docs.langbot.app/star.gif)
-
-## ✨ Fonctionnalités
-
-<img width="500" src="https://docs.langbot.app/ui/bot-page-en-rounded.png" />
-
-
-- 💬 Chat avec LLM / Agent : Prend en charge plusieurs LLM, adapté aux chats de groupe et privés ; Prend en charge les conversations multi-tours, les appels d'outils, les capacités multimodales et de sortie en streaming. Implémentation RAG (base de connaissances) intégrée, et intégration profonde avec [Dify](https://dify.ai), [Coze](https://coze.com), [n8n](https://n8n.io), [Langflow](https://langflow.org) etc. LLMOps platforms.
-- 🤖 Support Multi-plateforme : Actuellement compatible avec QQ, QQ Channel, WeCom, WeChat personnel, Lark, DingTalk, Discord, Telegram, KOOK, Slack, LINE, etc.
-- 🛠️ Haute Stabilité, Riche en Fonctionnalités : Contrôle d'accès natif, limitation de débit, filtrage de mots sensibles, etc. ; Facile à utiliser, prend en charge plusieurs méthodes de déploiement.
-- 🧩 Extension de Plugin, Communauté Active : Système de plugin de haute stabilité, haute sécurité de niveau production; Prend en charge les mécanismes de plugin pilotés par événements, l'extension de composants, etc. ; Intégration du protocole [MCP](https://modelcontextprotocol.io/) d'Anthropic ; Dispose actuellement de centaines de plugins.
-- 😻 Interface Web : Prend en charge la gestion des instances LangBot via le navigateur. Pas besoin d'écrire manuellement les fichiers de configuration.
-- 📊 Fonctionnalités de Niveau Production : Prend en charge plusieurs configurations de pipeline, différents bots pour différents scénarios. Dispose de capacités complètes de surveillance et de gestion des exceptions.
-
-Pour des spécifications plus détaillées, veuillez consulter la [documentation](https://docs.langbot.app/en/insight/features.html).
-
-Ou visitez l'environnement de démonstration : https://demo.langbot.dev/
-  - Informations de connexion : Email : `demo@langbot.app` Mot de passe : `langbot123456`
-  - Note : Pour la démonstration WebUI uniquement, veuillez ne pas entrer d'informations sensibles dans l'environnement public.
-
-### Plateformes de Messagerie
-
-| Plateforme | Statut | Remarques |
-| --- | --- | --- |
+| Plateforme | Statut | Notes |
+|----------|--------|-------|
 | Discord | ✅ |  |
 | Telegram | ✅ |  |
 | Slack | ✅ |  |
 | LINE | ✅ |  |
-| QQ Personnel | ✅ |  |
-| API Officielle QQ | ✅ |  |
-| WeCom | ✅ |  |
-| WeComCS | ✅ |  |
-| WeCom AI Bot | ✅ |  |
-| WeChat Personnel | ✅ |  |
+| QQ | ✅ | Personnel & API Officielle |
+| WeCom | ✅ | WeChat Entreprise, CS Externe, AI Bot |
+| WeChat | ✅ | Personnel & Compte Officiel |
 | Lark | ✅ |  |
 | DingTalk | ✅ |  |
 | KOOK | ✅ |  |
 | Satori | ✅ |  |
 
-### LLMs
+---
 
-| LLM | Statut | Remarques |
-| --- | --- | --- |
-| [OpenAI](https://platform.openai.com/) | ✅ | Disponible pour tout modèle au format d'interface OpenAI |
-| [DeepSeek](https://www.deepseek.com/) | ✅ |  |
-| [Moonshot](https://www.moonshot.cn/) | ✅ |  |
-| [Anthropic](https://www.anthropic.com/) | ✅ |  |
-| [xAI](https://x.ai/) | ✅ |  |
-| [Zhipu AI](https://open.bigmodel.cn/) | ✅ |  |
-| [CompShare](https://www.compshare.cn/?ytag=GPU_YY-gh_langbot) | ✅ | Plateforme de ressources LLM et GPU |
-| [PPIO](https://ppinfra.com/user/register?invited_by=QJKFYD&utm_source=github_langbot) | ✅ | Plateforme de ressources LLM et GPU |
-| [接口 AI](https://jiekou.ai/) | ✅ | Plateforme d'agrégation LLM |
-| [ShengSuanYun](https://www.shengsuanyun.com/?from=CH_KYIPP758) | ✅ | Plateforme de ressources LLM et GPU |
-| [302.AI](https://share.302.ai/SuTG99) | ✅ | Passerelle LLM (MaaS) |
-| [Google Gemini](https://aistudio.google.com/prompts/new_chat) | ✅ | |
-| [Dify](https://dify.ai) | ✅ | Plateforme LLMOps |
-| [Ollama](https://ollama.com/) | ✅ | Plateforme d'exécution LLM locale |
-| [LMStudio](https://lmstudio.ai/) | ✅ | Plateforme d'exécution LLM locale |
-| [GiteeAI](https://ai.gitee.com/) | ✅ | Passerelle d'interface LLM (MaaS) |
-| [SiliconFlow](https://siliconflow.cn/) | ✅ | Passerelle LLM (MaaS) |
-| [Aliyun Bailian](https://bailian.console.aliyun.com/) | ✅ | Passerelle LLM (MaaS), plateforme LLMOps |
-| [Volc Engine Ark](https://console.volcengine.com/ark/region:ark+cn-beijing/model?vendor=Bytedance&view=LIST_VIEW) | ✅ | Passerelle LLM (MaaS), plateforme LLMOps |
-| [ModelScope](https://modelscope.cn/docs/model-service/API-Inference/intro) | ✅ | Passerelle LLM (MaaS) |
-| [MCP](https://modelcontextprotocol.io/) | ✅ | Prend en charge l'accès aux outils via le protocole MCP |
+## 🤖 LLMs et Intégrations Supportés
 
-## 🤝 Contribution de la Communauté
+| Fournisseur | Type | Statut |
+|----------|------|--------|
+| [OpenAI](https://platform.openai.com/) | LLM | ✅ |
+| [Anthropic](https://www.anthropic.com/) | LLM | ✅ |
+| [DeepSeek](https://www.deepseek.com/) | LLM | ✅ |
+| [Google Gemini](https://aistudio.google.com/prompts/new_chat) | LLM | ✅ |
+| [xAI](https://x.ai/) | LLM | ✅ |
+| [Moonshot](https://www.moonshot.cn/) | LLM | ✅ |
+| [Zhipu AI](https://open.bigmodel.cn/) | LLM | ✅ |
+| [Ollama](https://ollama.com/) | LLM Local | ✅ |
+| [LM Studio](https://lmstudio.ai/) | LLM Local | ✅ |
+| [Dify](https://dify.ai) | LLMOps | ✅ |
+| [MCP](https://modelcontextprotocol.io/) | Protocole | ✅ |
+| [SiliconFlow](https://siliconflow.cn/) | Passerelle | ✅ |
+| [Aliyun Bailian](https://bailian.console.aliyun.com/) | Passerelle | ✅ |
+| [Volc Engine Ark](https://console.volcengine.com/ark/region:ark+cn-beijing/model?vendor=Bytedance&view=LIST_VIEW) | Passerelle | ✅ |
+| [ModelScope](https://modelscope.cn/docs/model-service/API-Inference/intro) | Passerelle | ✅ |
+| [GiteeAI](https://ai.gitee.com/) | Passerelle | ✅ |
+| [接口 AI](https://jiekou.ai/) | Passerelle | ✅ |
+| [302.AI](https://share.302.ai/SuTG99) | Passerelle | ✅ |
+| [CompShare](https://www.compshare.cn/?ytag=GPU_YY-gh_langbot) | Plateforme GPU | ✅ |
+| [PPIO](https://ppinfra.com/user/register?invited_by=QJKFYD&utm_source=github_langbot) | Plateforme GPU | ✅ |
+| [ShengSuanYun](https://www.shengsuanyun.com/?from=CH_KYIPP758) | Plateforme GPU | ✅ |
 
-Merci aux [contributeurs de code](https://github.com/langbot-app/LangBot/graphs/contributors) suivants et aux autres membres de la communauté pour leurs contributions à LangBot :
+[→ Voir toutes les intégrations](https://docs.langbot.app/en/insight/features.html)
+
+---
+
+## 🌟 Pourquoi LangBot ?
+
+| Cas d'Usage | Comment LangBot Aide |
+|----------|-------------------|
+| **Support Client** | Déployez des agents IA sur Slack/Discord/Telegram qui répondent aux questions en utilisant votre base de connaissances |
+| **Outils Internes** | Connectez les workflows n8n/Dify à WeCom/DingTalk pour automatiser vos processus métier |
+| **Gestion de Communauté** | Modérez les groupes QQ/Discord avec un filtrage de contenu et des interactions alimentés par l'IA |
+| **Présence Multi-plateforme** | Un seul bot, toutes les plateformes. Gérez tout depuis un tableau de bord unique |
+
+---
+
+## 🎮 Démo en Ligne
+
+**Essayez maintenant :** https://demo.langbot.dev/
+- Email : `demo@langbot.app`
+- Mot de passe : `langbot123456`
+
+*Note : Environnement de démonstration public. Ne saisissez pas d'informations sensibles.*
+
+---
+
+## 🤝 Communauté
+
+[![Discord](https://img.shields.io/discord/1335141740050649118?logo=discord&label=Discord)](https://discord.gg/wdNEHETs87)
+
+- 💬 [Communauté Discord](https://discord.gg/wdNEHETs87)
+
+---
+
+## ⭐ Historique des Stars
+
+[![Star History Chart](https://api.star-history.com/svg?repos=langbot-app/LangBot&type=Date)](https://star-history.com/#langbot-app/LangBot&Date)
+
+---
+
+## 😘 Contributeurs
+
+Merci à tous les [contributeurs](https://github.com/langbot-app/LangBot/graphs/contributors) qui ont aidé à améliorer LangBot :
 
 <a href="https://github.com/langbot-app/LangBot/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=langbot-app/LangBot" />
