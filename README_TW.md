@@ -91,6 +91,7 @@ docker compose up -d
 | Slack | ✅ |  |
 | LINE | ✅ |  |
 | KOOK | ✅ |  |
+| Satori | ✅ |  |
 
 ---
 
