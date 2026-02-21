@@ -497,6 +497,14 @@ class SatoriAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
 
             await self.send_identify()
 
+            # Cancel any existing heartbeat task before creating a new one
+            # to avoid race condition on rapid reconnection
+            if self.heartbeat_task and not self.heartbeat_task.done():
+                self.heartbeat_task.cancel()
+                try:
+                    await self.heartbeat_task
+                except asyncio.CancelledError:
+                    pass
             self.heartbeat_task = asyncio.create_task(self.heartbeat_loop())
 
             async for message in self.ws:
@@ -1080,3 +1088,4 @@ class SatoriAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
     async def run_async(self):
         """Async run wrapper"""
         await self.run()
+
