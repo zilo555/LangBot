@@ -1088,4 +1088,3 @@ class SatoriAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter):
     async def run_async(self):
         """Async run wrapper"""
         await self.run()
-
