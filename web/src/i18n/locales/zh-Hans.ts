@@ -922,6 +922,14 @@ const zhHans = {
       sessions: '会话记录',
     },
   },
+  limitation: {
+    maxBotsReached:
+      '已达到机器人数量上限（{{max}}个）。请先删除已有机器人后再创建新的。',
+    maxPipelinesReached:
+      '已达到流水线数量上限（{{max}}个）。请先删除已有流水线后再创建新的。',
+    maxExtensionsReached:
+      '已达到扩展数量上限（{{max}}个）。请先删除已有的 MCP 服务器或插件后再添加新的。',
+  },
 };
 
 export default zhHans;
