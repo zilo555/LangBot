@@ -31,24 +31,24 @@
 
 ---
 
-## 🚀 Qu'est-ce que LangBot ?
+## Qu'est-ce que LangBot ?
 
 LangBot est une **plateforme open-source de niveau production** pour créer des bots de messagerie instantanée alimentés par l'IA. Elle connecte les grands modèles de langage (LLMs) à n'importe quelle plateforme de chat, vous permettant de créer des agents intelligents capables de converser, d'exécuter des tâches et de s'intégrer à vos workflows existants.
 
 ### Capacités Clés
 
-- **💬 Conversations IA & Agents** — Dialogues multi-tours, appels d'outils, support multimodal, sortie en streaming. RAG (base de connaissances) intégré avec intégration profonde de [Dify](https://dify.ai), [Coze](https://coze.com), [n8n](https://n8n.io), [Langflow](https://langflow.org).
-- **🤖 Support Universel des Plateformes de MI** — Un seul code pour Discord, Telegram, Slack, LINE, QQ, WeChat, WeCom, Lark, DingTalk, KOOK.
-- **🛠️ Prêt pour la Production** — Contrôle d'accès, limitation de débit, filtrage de mots sensibles, surveillance complète et gestion des exceptions. Approuvé par les entreprises.
-- **🧩 Écosystème de Plugins** — Des centaines de plugins, architecture événementielle, extensions de composants, et support du [protocole MCP](https://modelcontextprotocol.io/).
-- **😻 Panneau de Gestion Web** — Configurez, gérez et surveillez vos bots via une interface navigateur intuitive. Aucune édition de YAML requise.
-- **📊 Architecture Multi-Pipeline** — Différents bots pour différents scénarios, avec surveillance complète et gestion des exceptions.
+- **Conversations IA & Agents** — Dialogues multi-tours, appels d'outils, support multimodal, sortie en streaming. RAG (base de connaissances) intégré avec intégration profonde de [Dify](https://dify.ai), [Coze](https://coze.com), [n8n](https://n8n.io), [Langflow](https://langflow.org).
+- **Support Universel des Plateformes de MI** — Un seul code pour Discord, Telegram, Slack, LINE, QQ, WeChat, WeCom, Lark, DingTalk, KOOK.
+- **Prêt pour la Production** — Contrôle d'accès, limitation de débit, filtrage de mots sensibles, surveillance complète et gestion des exceptions. Approuvé par les entreprises.
+- **Écosystème de Plugins** — Des centaines de plugins, architecture événementielle, extensions de composants, et support du [protocole MCP](https://modelcontextprotocol.io/).
+- **Panneau de Gestion Web** — Configurez, gérez et surveillez vos bots via une interface navigateur intuitive. Aucune édition de YAML requise.
+- **Architecture Multi-Pipeline** — Différents bots pour différents scénarios, avec surveillance complète et gestion des exceptions.
 
 [→ En savoir plus sur toutes les fonctionnalités](https://docs.langbot.app/en/insight/features.html)
 
 ---
 
-## 📦 Démarrage Rapide
+## Démarrage Rapide
 
 ### Lancement en une ligne
 
@@ -75,7 +75,7 @@ docker compose up -d
 
 ---
 
-## ✨ Plateformes Supportées
+## Plateformes Supportées
 
 | Plateforme | Statut | Notes |
 |----------|--------|-------|
@@ -93,7 +93,7 @@ docker compose up -d
 
 ---
 
-## 🤖 LLMs et Intégrations Supportés
+## LLMs et Intégrations Supportés
 
 | Fournisseur | Type | Statut |
 |----------|------|--------|
@@ -123,7 +123,7 @@ docker compose up -d
 
 ---
 
-## 🌟 Pourquoi LangBot ?
+## Pourquoi LangBot ?
 
 | Cas d'Usage | Comment LangBot Aide |
 |----------|-------------------|
@@ -134,7 +134,7 @@ docker compose up -d
 
 ---
 
-## 🎮 Démo en Ligne
+## Démo en Ligne
 
 **Essayez maintenant :** https://demo.langbot.dev/
 - Email : `demo@langbot.app`
@@ -144,21 +144,21 @@ docker compose up -d
 
 ---
 
-## 🤝 Communauté
+## Communauté
 
 [![Discord](https://img.shields.io/discord/1335141740050649118?logo=discord&label=Discord)](https://discord.gg/wdNEHETs87)
 
-- 💬 [Communauté Discord](https://discord.gg/wdNEHETs87)
+- [Communauté Discord](https://discord.gg/wdNEHETs87)
 
 ---
 
-## ⭐ Historique des Stars
+## Historique des Stars
 
 [![Star History Chart](https://api.star-history.com/svg?repos=langbot-app/LangBot&type=Date)](https://star-history.com/#langbot-app/LangBot&Date)
 
 ---
 
-## 😘 Contributeurs
+## Contributeurs
 
 Merci à tous les [contributeurs](https://github.com/langbot-app/LangBot/graphs/contributors) qui ont aidé à améliorer LangBot :
 

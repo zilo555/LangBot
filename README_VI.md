@@ -31,24 +31,24 @@
 
 ---
 
-## 🚀 LangBot là gì?
+## LangBot là gì?
 
 LangBot là một **nền tảng mã nguồn mở, cấp sản xuất** để xây dựng bot nhắn tin tức thời được hỗ trợ bởi AI. Nó kết nối các Mô hình Ngôn ngữ Lớn (LLM) với bất kỳ nền tảng chat nào, cho phép bạn tạo các agent thông minh có thể trò chuyện, thực hiện tác vụ và tích hợp với quy trình làm việc hiện có của bạn.
 
 ### Khả năng chính
 
-- **💬 Hội thoại AI & Agent** — Đối thoại nhiều lượt, gọi công cụ, hỗ trợ đa phương thức, đầu ra streaming. RAG (cơ sở kiến thức) tích hợp sẵn với tích hợp sâu vào [Dify](https://dify.ai), [Coze](https://coze.com), [n8n](https://n8n.io), [Langflow](https://langflow.org).
-- **🤖 Hỗ trợ đa nền tảng IM** — Một mã nguồn cho Discord, Telegram, Slack, LINE, QQ, WeChat, WeCom, Lark, DingTalk, KOOK.
-- **🛠️ Sẵn sàng cho sản xuất** — Kiểm soát truy cập, giới hạn tốc độ, lọc từ nhạy cảm, giám sát toàn diện và xử lý ngoại lệ. Được doanh nghiệp tin dùng.
-- **🧩 Hệ sinh thái Plugin** — Hàng trăm plugin, kiến trúc hướng sự kiện, mở rộng thành phần, và hỗ trợ [giao thức MCP](https://modelcontextprotocol.io/).
-- **😻 Bảng quản lý Web** — Cấu hình, quản lý và giám sát bot thông qua giao diện trình duyệt trực quan. Không cần chỉnh sửa YAML.
-- **📊 Kiến trúc đa Pipeline** — Các bot khác nhau cho các kịch bản khác nhau, với giám sát toàn diện và xử lý ngoại lệ.
+- **Hội thoại AI & Agent** — Đối thoại nhiều lượt, gọi công cụ, hỗ trợ đa phương thức, đầu ra streaming. RAG (cơ sở kiến thức) tích hợp sẵn với tích hợp sâu vào [Dify](https://dify.ai), [Coze](https://coze.com), [n8n](https://n8n.io), [Langflow](https://langflow.org).
+- **Hỗ trợ đa nền tảng IM** — Một mã nguồn cho Discord, Telegram, Slack, LINE, QQ, WeChat, WeCom, Lark, DingTalk, KOOK.
+- **Sẵn sàng cho sản xuất** — Kiểm soát truy cập, giới hạn tốc độ, lọc từ nhạy cảm, giám sát toàn diện và xử lý ngoại lệ. Được doanh nghiệp tin dùng.
+- **Hệ sinh thái Plugin** — Hàng trăm plugin, kiến trúc hướng sự kiện, mở rộng thành phần, và hỗ trợ [giao thức MCP](https://modelcontextprotocol.io/).
+- **Bảng quản lý Web** — Cấu hình, quản lý và giám sát bot thông qua giao diện trình duyệt trực quan. Không cần chỉnh sửa YAML.
+- **Kiến trúc đa Pipeline** — Các bot khác nhau cho các kịch bản khác nhau, với giám sát toàn diện và xử lý ngoại lệ.
 
 [→ Tìm hiểu thêm về tất cả tính năng](https://docs.langbot.app/en/insight/features.html)
 
 ---
 
-## 📦 Bắt đầu nhanh
+## Bắt đầu nhanh
 
 ### Khởi chạy một dòng
 
@@ -75,7 +75,7 @@ docker compose up -d
 
 ---
 
-## ✨ Nền tảng được hỗ trợ
+## Nền tảng được hỗ trợ
 
 | Nền tảng | Trạng thái | Ghi chú |
 |----------|--------|-------|
@@ -93,7 +93,7 @@ docker compose up -d
 
 ---
 
-## 🤖 LLM và tích hợp được hỗ trợ
+## LLM và tích hợp được hỗ trợ
 
 | Nhà cung cấp | Loại | Trạng thái |
 |----------|------|--------|
@@ -123,7 +123,7 @@ docker compose up -d
 
 ---
 
-## 🌟 Tại sao chọn LangBot?
+## Tại sao chọn LangBot?
 
 | Trường hợp sử dụng | LangBot giúp như thế nào |
 |----------|-------------------|
@@ -134,7 +134,7 @@ docker compose up -d
 
 ---
 
-## 🎮 Demo trực tuyến
+## Demo trực tuyến
 
 **Thử ngay:** https://demo.langbot.dev/
 - Email: `demo@langbot.app`
@@ -144,21 +144,21 @@ docker compose up -d
 
 ---
 
-## 🤝 Cộng đồng
+## Cộng đồng
 
 [![Discord](https://img.shields.io/discord/1335141740050649118?logo=discord&label=Discord)](https://discord.gg/wdNEHETs87)
 
-- 💬 [Cộng đồng Discord](https://discord.gg/wdNEHETs87)
+- [Cộng đồng Discord](https://discord.gg/wdNEHETs87)
 
 ---
 
-## ⭐ Lịch sử Star
+## Lịch sử Star
 
 [![Star History Chart](https://api.star-history.com/svg?repos=langbot-app/LangBot&type=Date)](https://star-history.com/#langbot-app/LangBot&Date)
 
 ---
 
-## 😘 Người đóng góp
+## Người đóng góp
 
 Cảm ơn tất cả [người đóng góp](https://github.com/langbot-app/LangBot/graphs/contributors) đã giúp LangBot trở nên tốt hơn:
 

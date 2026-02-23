@@ -31,24 +31,24 @@ English / [简体中文](README_CN.md) / [繁體中文](README_TW.md) / [日本�
 
 ---
 
-## 🚀 What is LangBot?
+## What is LangBot?
 
 LangBot is an **open-source, production-grade platform** for building AI-powered instant messaging bots. It connects Large Language Models (LLMs) to any chat platform, enabling you to create intelligent agents that can converse, execute tasks, and integrate with your existing workflows.
 
 ### Key Capabilities
 
-- **💬 AI Conversations & Agents** — Multi-turn dialogues, tool calling, multi-modal support, streaming output. Built-in RAG (knowledge base) with deep integration to [Dify](https://dify.ai), [Coze](https://coze.com), [n8n](https://n8n.io), [Langflow](https://langflow.org).
-- **🤖 Universal IM Platform Support** — One codebase for Discord, Telegram, Slack, LINE, QQ, WeChat, WeCom, Lark, DingTalk, KOOK.
-- **🛠️ Production-Ready** — Access control, rate limiting, sensitive word filtering, comprehensive monitoring, and exception handling. Trusted by enterprises.
-- **🧩 Plugin Ecosystem** — Hundreds of plugins, event-driven architecture, component extensions, and [MCP protocol](https://modelcontextprotocol.io/) support.
-- **😻 Web Management Panel** — Configure, manage, and monitor your bots through an intuitive browser interface. No YAML editing required.
-- **📊 Multi-Pipeline Architecture** — Different bots for different scenarios, with comprehensive monitoring and exception handling.
+- **AI Conversations & Agents** — Multi-turn dialogues, tool calling, multi-modal support, streaming output. Built-in RAG (knowledge base) with deep integration to [Dify](https://dify.ai), [Coze](https://coze.com), [n8n](https://n8n.io), [Langflow](https://langflow.org).
+- **Universal IM Platform Support** — One codebase for Discord, Telegram, Slack, LINE, QQ, WeChat, WeCom, Lark, DingTalk, KOOK.
+- **Production-Ready** — Access control, rate limiting, sensitive word filtering, comprehensive monitoring, and exception handling. Trusted by enterprises.
+- **Plugin Ecosystem** — Hundreds of plugins, event-driven architecture, component extensions, and [MCP protocol](https://modelcontextprotocol.io/) support.
+- **Web Management Panel** — Configure, manage, and monitor your bots through an intuitive browser interface. No YAML editing required.
+- **Multi-Pipeline Architecture** — Different bots for different scenarios, with comprehensive monitoring and exception handling.
 
 [→ Learn more about all features](https://docs.langbot.app/en/insight/features.html)
 
 ---
 
-## 📦 Quick Start
+## Quick Start
 
 ### One-Line Launch
 
@@ -75,7 +75,7 @@ docker compose up -d
 
 ---
 
-## ✨ Supported Platforms
+## Supported Platforms
 
 | Platform | Status | Notes |
 |----------|--------|-------|
@@ -93,7 +93,7 @@ docker compose up -d
 
 ---
 
-## 🤖 Supported LLMs & Integrations
+## Supported LLMs & Integrations
 
 | Provider | Type | Status |
 |----------|------|--------|
@@ -123,7 +123,7 @@ docker compose up -d
 
 ---
 
-## 🌟 Why LangBot?
+## Why LangBot?
 
 | Use Case | How LangBot Helps |
 |----------|-------------------|
@@ -134,7 +134,7 @@ docker compose up -d
 
 ---
 
-## 🎮 Live Demo
+## Live Demo
 
 **Try it now:** https://demo.langbot.dev/
 - Email: `demo@langbot.app`
@@ -144,21 +144,21 @@ docker compose up -d
 
 ---
 
-## 🤝 Community
+## Community
 
 [![Discord](https://img.shields.io/discord/1335141740050649118?logo=discord&label=Discord)](https://discord.gg/wdNEHETs87)
 
-- 💬 [Discord Community](https://discord.gg/wdNEHETs87)
+- [Discord Community](https://discord.gg/wdNEHETs87)
 
 ---
 
-## ⭐ Star History
+## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=langbot-app/LangBot&type=Date)](https://star-history.com/#langbot-app/LangBot&Date)
 
 ---
 
-## 😘 Contributors
+## Contributors
 
 Thanks to all [contributors](https://github.com/langbot-app/LangBot/graphs/contributors) who have helped make LangBot better:
 
