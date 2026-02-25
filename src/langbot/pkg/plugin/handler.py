@@ -279,6 +279,7 @@ class RuntimeConnectionHandler(handler.Handler):
             target_id = data['target_id']
             message_chain = data['message_chain']
 
+            # Use custom deserializer that properly handles Forward messages
             message_chain_obj = platform_message.MessageChain.model_validate(message_chain)
 
             bot = await self.ap.platform_mgr.get_bot_by_uuid(bot_uuid)
