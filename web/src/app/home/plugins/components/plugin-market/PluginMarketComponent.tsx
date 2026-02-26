@@ -297,15 +297,6 @@ function MarketPageContent({
   const handleInstallPlugin = useCallback(
     async (author: string, pluginName: string) => {
       try {
-        // Find the full plugin object from the list
-        const pluginVO = plugins.find(
-          (p) => p.author === author && p.pluginName === pluginName,
-        );
-        if (!pluginVO) {
-          console.error('Plugin not found:', author, pluginName);
-          return;
-        }
-
         // Fetch full plugin details to get PluginV4 object
         const response = await getCloudServiceClientSync().getPluginDetail(
           author,
