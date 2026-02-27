@@ -11,7 +11,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import DynamicFormItemComponent from '@/app/home/components/dynamic-form/DynamicFormItemComponent';
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { extractI18nObject } from '@/i18n/I18nProvider';
 
 export default function DynamicFormComponent({
@@ -146,34 +146,39 @@ export default function DynamicFormComponent({
   const onSubmitRef = useRef(onSubmit);
   onSubmitRef.current = onSubmit;
 
-  // 监听表单值变化
-  useEffect(() => {
-    // Emit initial form values immediately so the parent always has a valid snapshot,
-    // even if the user saves without modifying any field.
-    // form.watch(callback) only fires on subsequent changes, not on mount.
+  // Track the last emitted values to avoid emitting identical snapshots,
+  // which would cause the parent to call setValue with an equivalent object,
+  // triggering a re-render loop.
+  const lastEmittedRef = useRef<string>('');
+
+  const emitValues = useCallback(() => {
     const formValues = form.getValues();
-    const initialFinalValues = itemConfigList.reduce(
+    const finalValues = itemConfigList.reduce(
       (acc, item) => {
         acc[item.name] = formValues[item.name] ?? item.default;
         return acc;
       },
       {} as Record<string, object>,
     );
-    onSubmitRef.current?.(initialFinalValues);
+    const serialized = JSON.stringify(finalValues);
+    if (serialized !== lastEmittedRef.current) {
+      lastEmittedRef.current = serialized;
+      onSubmitRef.current?.(finalValues);
+    }
+  }, [form, itemConfigList]);
+
+  // 监听表单值变化
+  useEffect(() => {
+    // Emit initial form values immediately so the parent always has a valid snapshot,
+    // even if the user saves without modifying any field.
+    // form.watch(callback) only fires on subsequent changes, not on mount.
+    emitValues();
 
     const subscription = form.watch(() => {
-      const formValues = form.getValues();
-      const finalValues = itemConfigList.reduce(
-        (acc, item) => {
-          acc[item.name] = formValues[item.name] ?? item.default;
-          return acc;
-        },
-        {} as Record<string, object>,
-      );
-      onSubmitRef.current?.(finalValues);
+      emitValues();
     });
     return () => subscription.unsubscribe();
-  }, [form, itemConfigList]);
+  }, [form, itemConfigList, emitValues]);
 
   return (
     <Form {...form}>
