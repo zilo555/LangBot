@@ -9,9 +9,9 @@ import telegramify_markdown
 import typing
 import traceback
 import base64
-import aiohttp
 import pydantic
 
+from langbot.pkg.utils import httpclient
 import langbot_plugin.api.definition.abstract.platform.adapter as abstract_platform_adapter
 import langbot_plugin.api.entities.builtin.platform.message as platform_message
 import langbot_plugin.api.entities.builtin.platform.events as platform_events
@@ -33,9 +33,9 @@ class TelegramMessageConverter(abstract_platform_adapter.AbstractMessageConverte
                 if component.base64:
                     photo_bytes = base64.b64decode(component.base64)
                 elif component.url:
-                    async with aiohttp.ClientSession() as session:
-                        async with session.get(component.url) as response:
-                            photo_bytes = await response.read()
+                    session = httpclient.get_session()
+                    async with session.get(component.url) as response:
+                        photo_bytes = await response.read()
                 elif component.path:
                     with open(component.path, 'rb') as f:
                         photo_bytes = f.read()
@@ -74,10 +74,9 @@ class TelegramMessageConverter(abstract_platform_adapter.AbstractMessageConverte
             file_bytes = None
             file_format = ''
 
-            async with aiohttp.ClientSession(trust_env=True) as session:
-                async with session.get(file.file_path) as response:
-                    file_bytes = await response.read()
-                    file_format = 'image/jpeg'
+            async with httpclient.get_session(trust_env=True).get(file.file_path) as response:
+                file_bytes = await response.read()
+                file_format = 'image/jpeg'
 
             message_components.append(
                 platform_message.Image(
@@ -94,9 +93,8 @@ class TelegramMessageConverter(abstract_platform_adapter.AbstractMessageConverte
             file_bytes = None
             file_format = message.voice.mime_type or 'audio/ogg'
 
-            async with aiohttp.ClientSession(trust_env=True) as session:
-                async with session.get(file.file_path) as response:
-                    file_bytes = await response.read()
+            async with httpclient.get_session(trust_env=True).get(file.file_path) as response:
+                file_bytes = await response.read()
 
             message_components.append(
                 platform_message.Voice(
