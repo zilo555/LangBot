@@ -22,6 +22,7 @@ class StorageMgr:
 
         if storage_type == 's3':
             from .providers import s3storage
+
             self.storage_provider = s3storage.S3StorageProvider(self.ap)
             self.ap.logger.info('Initialized S3 storage backend.')
         else:
