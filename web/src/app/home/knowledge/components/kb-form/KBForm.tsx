@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { KnowledgeBase, KnowledgeEngine } from '@/app/infra/entities/api';
+import { CustomApiError } from '@/app/infra/entities/common';
 import { toast } from 'sonner';
 import { extractI18nObject } from '@/i18n/I18nProvider';
 import DynamicFormComponent from '@/app/home/components/dynamic-form/DynamicFormComponent';
@@ -217,7 +218,7 @@ export default function KBForm({
         })
         .catch((err) => {
           console.error('update knowledge base failed', err);
-          toast.error(t('knowledge.updateKnowledgeBaseFailed'));
+          toast.error(t('knowledge.updateKnowledgeBaseFailed') + (err as CustomApiError).msg);
         });
     } else {
       // Create knowledge base
@@ -228,7 +229,7 @@ export default function KBForm({
         })
         .catch((err) => {
           console.error('create knowledge base failed', err);
-          toast.error(t('knowledge.createKnowledgeBaseFailed'));
+          toast.error(t('knowledge.createKnowledgeBaseFailed') + (err as CustomApiError).msg);
         });
     }
   };

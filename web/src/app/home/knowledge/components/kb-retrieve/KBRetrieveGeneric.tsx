@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from 'react-i18next';
 import { RetrieveResult } from '@/app/infra/entities/api';
+import { CustomApiError } from '@/app/infra/entities/common';
 import { toast } from 'sonner';
 
 interface KBRetrieveGenericProps {
@@ -41,7 +42,7 @@ export default function KBRetrieveGeneric({
       setResults(response.results);
     } catch (error) {
       console.error('Retrieve failed:', error);
-      toast.error(t('knowledge.retrieveError'));
+      toast.error(t('knowledge.retrieveError') + (error as CustomApiError).msg);
     } finally {
       setLoading(false);
     }
