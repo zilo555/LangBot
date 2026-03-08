@@ -51,10 +51,10 @@ export default function KBRetrieveGeneric({
     if (getResultTitle) {
       return getResultTitle(result);
     }
-    // Default: use file_id or document_name from metadata
+    // Default: use document_name from metadata, fallback to file_id or id
     return (
-      (result.metadata.file_id as string) ||
       (result.metadata.document_name as string) ||
+      (result.metadata.file_id as string) ||
       result.id
     );
   };
