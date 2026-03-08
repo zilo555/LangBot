@@ -69,7 +69,9 @@ export default function KBDetailDialog({
       setKbInfo(resp.base);
     } catch (e) {
       console.error('Failed to load KB info:', e);
-      toast.error(t('knowledge.loadKnowledgeBaseFailed') + (e as CustomApiError).msg);
+      toast.error(
+        t('knowledge.loadKnowledgeBaseFailed') + (e as CustomApiError).msg,
+      );
     }
   }
 
@@ -137,7 +139,9 @@ export default function KBDetailDialog({
       onKbDeleted();
     } catch (e) {
       console.error('Failed to delete KB:', e);
-      toast.error(t('knowledge.deleteKnowledgeBaseFailed') + (e as CustomApiError).msg);
+      toast.error(
+        t('knowledge.deleteKnowledgeBaseFailed') + (e as CustomApiError).msg,
+      );
     } finally {
       setShowDeleteConfirm(false);
     }

@@ -87,7 +87,10 @@ export default function KBDoc({
       })
       .catch((error) => {
         console.error('Delete failed:', error);
-        toast.error(t('knowledge.documentsTab.fileDeleteFailed') + (error as CustomApiError).msg);
+        toast.error(
+          t('knowledge.documentsTab.fileDeleteFailed') +
+            (error as CustomApiError).msg,
+        );
       });
   };
 

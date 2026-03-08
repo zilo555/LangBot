@@ -97,7 +97,9 @@ export default function FileUploadZone({
         onUploadSuccess();
       } catch (error) {
         console.error('File upload failed:', error);
-        const errorMessage = t('knowledge.documentsTab.uploadError') + (error as CustomApiError).msg;
+        const errorMessage =
+          t('knowledge.documentsTab.uploadError') +
+          (error as CustomApiError).msg;
         toast.error(errorMessage, { id: toastId });
         onUploadError(errorMessage);
       } finally {

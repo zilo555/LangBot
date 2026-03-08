@@ -218,7 +218,10 @@ export default function KBForm({
         })
         .catch((err) => {
           console.error('update knowledge base failed', err);
-          toast.error(t('knowledge.updateKnowledgeBaseFailed') + (err as CustomApiError).msg);
+          toast.error(
+            t('knowledge.updateKnowledgeBaseFailed') +
+              (err as CustomApiError).msg,
+          );
         });
     } else {
       // Create knowledge base
@@ -229,7 +232,10 @@ export default function KBForm({
         })
         .catch((err) => {
           console.error('create knowledge base failed', err);
-          toast.error(t('knowledge.createKnowledgeBaseFailed') + (err as CustomApiError).msg);
+          toast.error(
+            t('knowledge.createKnowledgeBaseFailed') +
+              (err as CustomApiError).msg,
+          );
         });
     }
   };
