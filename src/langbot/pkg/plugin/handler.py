@@ -344,10 +344,7 @@ class RuntimeConnectionHandler(handler.Handler):
             async def _placeholder_func(**kwargs):
                 pass
 
-            funcs_obj = [
-                resource_tool.LLMTool.model_validate({**func, 'func': _placeholder_func})
-                for func in funcs
-            ]
+            funcs_obj = [resource_tool.LLMTool.model_validate({**func, 'func': _placeholder_func}) for func in funcs]
 
             result = await llm_model.provider.invoke_llm(
                 query=None,

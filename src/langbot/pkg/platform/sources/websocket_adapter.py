@@ -97,7 +97,13 @@ class WebSocketAdapter(abstract_platform_adapter.AbstractMessagePlatformAdapter)
         target_id: str,
         message: platform_message.MessageChain,
     ) -> dict:
-        """发送消息 - 这里用于主动推送消息到前端"""
+        """发送消息 - 这里用于主动推送消息到前端
+
+        对于 WebSocket 适配器，我们需要将消息广播到正确的 pipeline 连接。
+        target_id 可能是 launcher_id（如 websocket_xxx）或 pipeline_uuid。
+        我们需要尝试两种方式来确保消息能够送达。
+        """
+        # 获取当前的 pipeline_uuid
         pipeline_uuid = self.ap.platform_mgr.websocket_proxy_bot.bot_entity.use_pipeline_uuid
         session_type = 'group' if target_type == 'group' else 'person'
 
