@@ -468,6 +468,8 @@ const zhHans = {
       noTags: '暂无标签',
     },
     viewDetails: '查看详情',
+    deprecated: '已弃用',
+    deprecatedTooltip: '请安装对应「知识引擎」插件',
   },
   mcp: {
     title: 'MCP',
@@ -726,7 +728,7 @@ const zhHans = {
     engineSettingsReadonly: '编辑模式下不可修改',
     retrievalSettings: '检索设置',
     noEnginesAvailable: '没有可用的知识库引擎',
-    installEngineHint: '请先安装知识库插件',
+    installEngineHint: '请先安装「知识引擎」插件',
     createKnowledgeBaseFailed: '知识库创建失败：',
     loadKnowledgeBaseFailed: '知识库加载失败：',
     deleteKnowledgeBaseFailed: '知识库删除失败：',

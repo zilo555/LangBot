@@ -483,6 +483,9 @@ const enUS = {
     allComponents: 'All Components',
     requestPlugin: 'Request Plugin',
     viewDetails: 'View Details',
+    deprecated: 'Deprecated',
+    deprecatedTooltip:
+      'Please install the corresponding Knowledge Engine plugin.',
     tags: {
       filterByTags: 'Filter by Tags',
       selected: 'selected',
@@ -757,7 +760,7 @@ const enUS = {
     engineSettingsReadonly: 'read-only in edit mode',
     retrievalSettings: 'Retrieval Settings',
     noEnginesAvailable: 'No knowledge base engines available',
-    installEngineHint: 'Please install a knowledge base plugin first',
+    installEngineHint: 'Please install a "Knowledge Engine" plugin first',
     createKnowledgeBaseFailed: 'Failed to create knowledge base: ',
     loadKnowledgeBaseFailed: 'Failed to load knowledge base: ',
     deleteKnowledgeBaseFailed: 'Failed to delete knowledge base: ',

@@ -461,6 +461,8 @@ const zhHant = {
       noTags: '暫無標籤',
     },
     viewDetails: '查看詳情',
+    deprecated: '已棄用',
+    deprecatedTooltip: '請安裝對應「知識引擎」插件',
   },
   mcp: {
     title: 'MCP',
@@ -709,6 +711,8 @@ const zhHant = {
     fileName: '文檔名稱',
     noResults: '暫無結果',
     retrieveError: '檢索失敗：',
+    noEnginesAvailable: '沒有可用的知識庫引擎',
+    installEngineHint: '請先安裝「知識引擎」插件',
     unknownEngine: '未知引擎',
     loadKnowledgeBaseFailed: '知識庫載入失敗：',
     deleteKnowledgeBaseFailed: '知識庫刪除失敗：',

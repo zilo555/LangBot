@@ -491,6 +491,9 @@ const jaJP = {
       noTags: 'タグがありません',
     },
     viewDetails: '詳細を表示',
+    deprecated: '非推奨',
+    deprecatedTooltip:
+      '対応する「ナレッジエンジン」プラグインをインストールしてください。',
   },
   mcp: {
     title: 'MCP',
@@ -749,6 +752,9 @@ const jaJP = {
     fileName: 'ファイル名',
     noResults: '検索結果がありません',
     retrieveError: '検索に失敗しました：',
+    noEnginesAvailable: '利用可能なナレッジエンジンがありません',
+    installEngineHint:
+      '先に「ナレッジエンジン」プラグインをインストールしてください',
     unknownEngine: '不明なエンジン',
     loadKnowledgeBaseFailed: 'ナレッジベースの読み込みに失敗しました：',
     deleteKnowledgeBaseFailed: 'ナレッジベースの削除に失敗しました：',
