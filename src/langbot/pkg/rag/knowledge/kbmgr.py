@@ -321,13 +321,23 @@ class RuntimeKnowledgeBase(KnowledgeBaseInterface):
         if not plugin_id:
             raise ValueError(f'No RAG plugin ID configured for KB {kb.uuid}. Retrieval failed.')
 
+        # Extract session context before building retrieval_context
+        sender_id = settings.pop('sender_id', None)
+        session_name = settings.pop('session_name', None)
+
+        filters = settings.pop('filters', {})
+        if sender_id is not None:
+            filters['sender_id'] = sender_id
+        if session_name is not None:
+            filters['session_name'] = session_name
+
         retrieval_context = {
             'query': query,
             'knowledge_base_id': kb.uuid,
             'collection_id': kb.collection_id or kb.uuid,
             'retrieval_settings': settings,
             'creation_settings': kb.creation_settings or {},
-            'filters': settings.pop('filters', {}),
+            'filters': filters,
         }
 
         result = await self.ap.plugin_connector.call_rag_retrieve(
