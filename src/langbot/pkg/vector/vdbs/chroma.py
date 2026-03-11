@@ -79,7 +79,9 @@ class ChromaVectorDatabase(VectorDatabase):
         if filter:
             query_kwargs['where'] = filter
         results = await asyncio.to_thread(col.query, **query_kwargs)
-        self.ap.logger.info(f"Chroma vector search in '{collection}' returned {len(results.get('ids', [[]])[0])} results.")
+        self.ap.logger.info(
+            f"Chroma vector search in '{collection}' returned {len(results.get('ids', [[]])[0])} results."
+        )
         return results
 
     async def _full_text_search(
@@ -149,9 +151,7 @@ class ChromaVectorDatabase(VectorDatabase):
         fused_ids = [doc_id for doc_id, _ in fused]
 
         # Fetch full metadata and documents for fused results
-        fetched = await asyncio.to_thread(
-            col.get, ids=fused_ids, include=['metadatas', 'documents']
-        )
+        fetched = await asyncio.to_thread(col.get, ids=fused_ids, include=['metadatas', 'documents'])
 
         # col.get returns results in arbitrary order; re-order to match fused ranking
         fetched_map: dict[str, tuple] = {}
@@ -187,7 +187,7 @@ class ChromaVectorDatabase(VectorDatabase):
 
         self.ap.logger.info(
             f"Chroma hybrid search in '{collection}' returned {len(ordered_ids)} results "
-            f"(vector={len(vector_ids)}, text={len(text_ids)})."
+            f'(vector={len(vector_ids)}, text={len(text_ids)}).'
         )
         return {
             'ids': [ordered_ids],
