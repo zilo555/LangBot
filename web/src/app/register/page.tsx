@@ -266,7 +266,7 @@ export default function Register() {
             </a>{' '}
             {t('common.and')}{' '}
             <a
-              href="https://docs.langbot.app/insight/data-collection-policy"
+              href={t('common.dataCollectionPolicyUrl')}
               target="_blank"
               rel="noopener noreferrer"
               className="underline hover:text-foreground transition-colors"

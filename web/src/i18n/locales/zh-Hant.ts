@@ -51,6 +51,7 @@ const zhHant = {
     privacyPolicy: '隱私政策',
     and: '和',
     dataCollectionPolicy: '數據收集政策',
+    dataCollectionPolicyUrl: 'https://docs.langbot.app/zh/insight/data-collection-policy',
     loading: '載入中...',
     fieldRequired: '此欄位為必填',
     or: '或',
