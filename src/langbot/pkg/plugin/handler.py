@@ -993,7 +993,7 @@ class RuntimeConnectionHandler(handler.Handler):
         result = await self.call_action(
             LangBotToRuntimeAction.RAG_INGEST_DOCUMENT,
             {'plugin_author': plugin_author, 'plugin_name': plugin_name, 'context': context_data},
-            timeout=300,  # Ingestion can be slow
+            timeout=1200,  # Ingestion can be slow for large documents
         )
         return result
 
