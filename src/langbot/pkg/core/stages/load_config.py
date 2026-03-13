@@ -146,6 +146,8 @@ class LoadConfigStage(stage.BootingStage):
         await ap.instance_config.dump_config()
 
         # load or generate instance id
+        # Priority: system.instance_id from config.yaml (can be set via env var
+        # SYSTEM__INSTANCE_ID which is auto-mapped) > data/labels/instance_id.json > generate new
         ap.instance_id = await config.load_json_config(
             'data/labels/instance_id.json',
             template_data={
@@ -155,7 +157,13 @@ class LoadConfigStage(stage.BootingStage):
             completion=False,
         )
 
-        constants.instance_id = ap.instance_id.data['instance_id']
+        config_instance_id = ap.instance_config.data.get('system', {}).get('instance_id', '')
+        if config_instance_id:
+            # Use the instance_id from config.yaml (e.g. injected via SYSTEM__INSTANCE_ID env var)
+            constants.instance_id = config_instance_id
+        else:
+            # Fall back to the file-based instance id
+            constants.instance_id = ap.instance_id.data['instance_id']
         constants.edition = ap.instance_config.data.get('system', {}).get('edition', 'community')
 
         print(f'LangBot instance id: {constants.instance_id}')
