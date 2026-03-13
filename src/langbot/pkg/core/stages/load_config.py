@@ -146,29 +146,14 @@ class LoadConfigStage(stage.BootingStage):
         await ap.instance_config.dump_config()
 
         # load or generate instance id
-        # In SaaS (cloud edition), the instance id can be pre-set via LANGBOT__INSTANCE_ID
-        # environment variable to match the pod UUID, enabling zero-lookup telemetry routing.
-        env_instance_id = os.environ.get('LANGBOT__INSTANCE_ID')
-        if env_instance_id:
-            ap.instance_id = await config.load_json_config(
-                'data/labels/instance_id.json',
-                template_data={
-                    'instance_id': env_instance_id,
-                    'instance_create_ts': int(time.time()),
-                },
-                completion=False,
-            )
-            # Override with env value even if file already existed with a different id
-            ap.instance_id.data['instance_id'] = env_instance_id
-        else:
-            ap.instance_id = await config.load_json_config(
-                'data/labels/instance_id.json',
-                template_data={
-                    'instance_id': f'instance_{str(uuid.uuid4())}',
-                    'instance_create_ts': int(time.time()),
-                },
-                completion=False,
-            )
+        ap.instance_id = await config.load_json_config(
+            'data/labels/instance_id.json',
+            template_data={
+                'instance_id': f'instance_{str(uuid.uuid4())}',
+                'instance_create_ts': int(time.time()),
+            },
+            completion=False,
+        )
 
         constants.instance_id = ap.instance_id.data['instance_id']
         constants.edition = ap.instance_config.data.get('system', {}).get('edition', 'community')
