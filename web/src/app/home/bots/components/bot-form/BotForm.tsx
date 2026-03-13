@@ -117,8 +117,9 @@ export default function BotForm({
     useState<IDynamicFormItemSchema[]>([]);
   const [, setIsLoading] = useState<boolean>(false);
   const [webhookUrl, setWebhookUrl] = useState<string>('');
-  const webhookInputRef = React.useRef<HTMLInputElement>(null);
+  const [extraWebhookUrl, setExtraWebhookUrl] = useState<string>('');
   const [copied, setCopied] = useState<boolean>(false);
+  const [extraCopied, setExtraCopied] = useState<boolean>(false);
 
   // Watch adapter and adapter_config for filtering
   const currentAdapter = form.watch('adapter');
@@ -149,73 +150,42 @@ export default function BotForm({
     }
   }, [currentAdapter, currentAdapterConfig, dynamicFormConfigList]);
 
-  // 复制到剪贴板的辅助函数 - 使用页面上的真实input元素
-  const copyToClipboard = () => {
-    console.log('[Copy] Attempting to copy from input element');
-
-    const inputElement = webhookInputRef.current;
-    if (!inputElement) {
-      console.error('[Copy] Input element not found');
-      return;
+  // 复制到剪贴板的辅助函数
+  const copyToClipboard = (
+    text: string,
+    setStatus: React.Dispatch<React.SetStateAction<boolean>>,
+  ) => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard
+        .writeText(text)
+        .then(() => {
+          setStatus(true);
+          setTimeout(() => setStatus(false), 2000);
+        })
+        .catch(() => {
+          // 降级：创建临时textarea复制
+          fallbackCopy(text, setStatus);
+        });
+    } else {
+      fallbackCopy(text, setStatus);
     }
+  };
 
-    try {
-      // 确保input元素可见且未被禁用
-      inputElement.disabled = false;
-      inputElement.readOnly = false;
-
-      // 聚焦并选中所有文本
-      inputElement.focus();
-      inputElement.select();
-
-      // 尝试使用现代API
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        console.log(
-          '[Copy] Using Clipboard API with input value:',
-          inputElement.value,
-        );
-        navigator.clipboard
-          .writeText(inputElement.value)
-          .then(() => {
-            console.log('[Copy] Clipboard API success');
-            inputElement.blur(); // 取消选中
-            inputElement.readOnly = true;
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-          })
-          .catch((err) => {
-            console.error(
-              '[Copy] Clipboard API failed, trying execCommand:',
-              err,
-            );
-            // 降级到execCommand
-            const successful = document.execCommand('copy');
-            console.log('[Copy] execCommand result:', successful);
-            inputElement.blur();
-            inputElement.readOnly = true;
-            if (successful) {
-              setCopied(true);
-              setTimeout(() => setCopied(false), 2000);
-            }
-          });
-      } else {
-        // 直接使用execCommand
-        console.log(
-          '[Copy] Using execCommand with input value:',
-          inputElement.value,
-        );
-        const successful = document.execCommand('copy');
-        console.log('[Copy] execCommand result:', successful);
-        inputElement.blur();
-        inputElement.readOnly = true;
-        if (successful) {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        }
-      }
-    } catch (err) {
-      console.error('[Copy] Copy failed:', err);
-      inputElement.readOnly = true;
+  const fallbackCopy = (
+    text: string,
+    setStatus: React.Dispatch<React.SetStateAction<boolean>>,
+  ) => {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    const successful = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    if (successful) {
+      setStatus(true);
+      setTimeout(() => setStatus(false), 2000);
     }
   };
 
@@ -240,6 +210,7 @@ export default function BotForm({
             } else {
               setWebhookUrl('');
             }
+            setExtraWebhookUrl(val.extra_webhook_full_url || '');
           })
           .catch((err) => {
             toast.error(
@@ -249,6 +220,7 @@ export default function BotForm({
       } else {
         form.reset();
         setWebhookUrl('');
+        setExtraWebhookUrl('');
       }
     });
   }
@@ -321,14 +293,20 @@ export default function BotForm({
     setAdapterNameToDynamicConfigMap(adapterNameToDynamicConfigMap);
   }
 
-  async function getBotConfig(
-    botId: string,
-  ): Promise<z.infer<typeof formSchema> & { webhook_full_url?: string }> {
+  async function getBotConfig(botId: string): Promise<
+    z.infer<typeof formSchema> & {
+      webhook_full_url?: string;
+      extra_webhook_full_url?: string;
+    }
+  > {
     return new Promise((resolve, reject) => {
       httpClient
         .getBot(botId)
         .then((res) => {
           const bot = res.bot;
+          const runtimeValues = bot.adapter_runtime_values as
+            | Record<string, unknown>
+            | undefined;
           resolve({
             adapter: bot.adapter,
             description: bot.description,
@@ -336,10 +314,12 @@ export default function BotForm({
             adapter_config: bot.adapter_config,
             enable: bot.enable ?? true,
             use_pipeline_uuid: bot.use_pipeline_uuid ?? '',
-            webhook_full_url: bot.adapter_runtime_values
-              ? ((bot.adapter_runtime_values as Record<string, unknown>)
-                  .webhook_full_url as string)
-              : undefined,
+            webhook_full_url: runtimeValues?.webhook_full_url as
+              | string
+              | undefined,
+            extra_webhook_full_url: runtimeValues?.extra_webhook_full_url as
+              | string
+              | undefined,
           });
         })
         .catch((err) => {
@@ -536,7 +516,6 @@ export default function BotForm({
                       <FormLabel>{t('bots.webhookUrl')}</FormLabel>
                       <div className="flex items-center gap-2">
                         <Input
-                          ref={webhookInputRef}
                           value={webhookUrl}
                           readOnly
                           className="flex-1 bg-gray-50 dark:bg-gray-900"
@@ -549,7 +528,7 @@ export default function BotForm({
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={copyToClipboard}
+                          onClick={() => copyToClipboard(webhookUrl, setCopied)}
                         >
                           {copied ? (
                             <Check className="h-4 w-4 text-green-600 mr-2" />
@@ -559,8 +538,37 @@ export default function BotForm({
                           {t('common.copy')}
                         </Button>
                       </div>
+                      {extraWebhookUrl && (
+                        <div className="flex items-center gap-2 mt-2">
+                          <Input
+                            value={extraWebhookUrl}
+                            readOnly
+                            className="flex-1 bg-gray-50 dark:bg-gray-900"
+                            onClick={(e) => {
+                              (e.target as HTMLInputElement).select();
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              copyToClipboard(extraWebhookUrl, setExtraCopied)
+                            }
+                          >
+                            {extraCopied ? (
+                              <Check className="h-4 w-4 text-green-600 mr-2" />
+                            ) : (
+                              <Copy className="h-4 w-4 mr-2" />
+                            )}
+                            {t('common.copy')}
+                          </Button>
+                        </div>
+                      )}
                       <p className="text-sm text-gray-500 mt-1">
-                        {t('bots.webhookUrlHint')}
+                        {extraWebhookUrl
+                          ? t('bots.webhookUrlHintEither')
+                          : t('bots.webhookUrlHint')}
                       </p>
                     </FormItem>
                   )}

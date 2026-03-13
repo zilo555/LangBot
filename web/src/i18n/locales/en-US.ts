@@ -284,6 +284,8 @@ const enUS = {
     webhookUrlCopied: 'Webhook URL copied',
     webhookUrlHint:
       'Click the input to select all, then press Ctrl+C (Mac: Cmd+C) to copy, or click the button',
+    webhookUrlHintEither:
+      'Use either of the two URLs above in your platform configuration',
     logLevel: 'Log Level',
     allLevels: 'All Levels',
     selectLevel: 'Select Level',

@@ -273,6 +273,7 @@ const zhHans = {
     webhookUrlCopied: 'Webhook 地址已复制',
     webhookUrlHint:
       '点击输入框自动全选，然后按 Ctrl+C (Mac: Cmd+C) 复制，或点击右侧按钮',
+    webhookUrlHintEither: '以上两个地址任选其一填入平台配置即可',
     logLevel: '日志级别',
     allLevels: '全部级别',
     selectLevel: '选择级别',

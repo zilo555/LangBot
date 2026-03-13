@@ -289,6 +289,8 @@
     webhookUrlCopied: 'Webhook URL をコピーしました',
     webhookUrlHint:
       '入力ボックスをクリックして全選択し、Ctrl+C (Mac: Cmd+C) でコピーするか、右側のボタンをクリックしてください',
+    webhookUrlHintEither:
+      '上記の2つのURLのいずれかをプラットフォーム設定に使用してください',
     logLevel: 'ログレベル',
     allLevels: 'すべてのレベル',
     selectLevel: 'レベルを選択',
