@@ -348,10 +348,31 @@ export default function DynamicFormItemComponent({
         {} as Record<string, LLMModel[]>,
       );
 
-      const modelValue = field.value as {
-        primary: string;
-        fallbacks: string[];
-      };
+      const rawModelValue = field.value;
+      const modelValue: { primary: string; fallbacks: string[] } =
+        rawModelValue != null &&
+        typeof rawModelValue === 'object' &&
+        !Array.isArray(rawModelValue)
+          ? {
+              primary:
+                typeof (rawModelValue as Record<string, unknown>).primary ===
+                'string'
+                  ? ((rawModelValue as Record<string, unknown>)
+                      .primary as string)
+                  : '',
+              fallbacks: Array.isArray(
+                (rawModelValue as Record<string, unknown>).fallbacks,
+              )
+                ? (
+                    (rawModelValue as Record<string, unknown>)
+                      .fallbacks as unknown[]
+                  ).filter((v): v is string => typeof v === 'string')
+                : [],
+            }
+          : {
+              primary: typeof rawModelValue === 'string' ? rawModelValue : '',
+              fallbacks: [],
+            };
 
       const renderModelSelect = (
         value: string,

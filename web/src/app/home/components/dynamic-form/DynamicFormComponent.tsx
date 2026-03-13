@@ -34,6 +34,35 @@ export default function DynamicFormComponent({
   const previousInitialValues = useRef(initialValues);
   const { t } = useTranslation();
 
+  // Normalize a form value according to its field type.
+  // This ensures legacy/malformed data (e.g. a plain string for
+  // model-fallback-selector) is coerced to the expected shape
+  // so that downstream components never crash.
+  const normalizeFieldValue = (
+    item: IDynamicFormItemSchema,
+    value: unknown,
+  ): unknown => {
+    if (item.type === 'model-fallback-selector') {
+      if (value != null && typeof value === 'object' && !Array.isArray(value)) {
+        const obj = value as Record<string, unknown>;
+        return {
+          primary: typeof obj.primary === 'string' ? obj.primary : '',
+          fallbacks: Array.isArray(obj.fallbacks)
+            ? (obj.fallbacks as unknown[]).filter(
+                (v): v is string => typeof v === 'string',
+              )
+            : [],
+        };
+      }
+      // Legacy string format or any other unexpected type
+      return {
+        primary: typeof value === 'string' ? value : '',
+        fallbacks: [],
+      };
+    }
+    return value;
+  };
+
   // 根据 itemConfigList 动态生成 zod schema
   const formSchema = z.object(
     itemConfigList.reduce(
@@ -116,10 +145,10 @@ export default function DynamicFormComponent({
     resolver: zodResolver(formSchema),
     defaultValues: itemConfigList.reduce((acc, item) => {
       // 优先使用 initialValues，如果没有则使用默认值
-      const value = initialValues?.[item.name] ?? item.default;
+      const rawValue = initialValues?.[item.name] ?? item.default;
       return {
         ...acc,
-        [item.name]: value,
+        [item.name]: normalizeFieldValue(item, rawValue),
       };
     }, {} as FormValues),
   });
@@ -144,7 +173,8 @@ export default function DynamicFormComponent({
       // 合并默认值和初始值
       const mergedValues = itemConfigList.reduce(
         (acc, item) => {
-          acc[item.name] = initialValues[item.name] ?? item.default;
+          const rawValue = initialValues[item.name] ?? item.default;
+          acc[item.name] = normalizeFieldValue(item, rawValue) as object;
           return acc;
         },
         {} as Record<string, object>,
