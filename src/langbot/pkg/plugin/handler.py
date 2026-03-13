@@ -675,11 +675,15 @@ class RuntimeConnectionHandler(handler.Handler):
                 )
 
             try:
+                session_name = f'{query.session.launcher_type.value}_{query.session.launcher_id}'
                 entries = await kb.retrieve(
                     query_text,
                     settings={
                         'top_k': top_k,
                         'filters': filters,
+                        'session_name': session_name,
+                        'bot_uuid': query.bot_uuid or '',
+                        'sender_id': str(query.sender_id),
                     },
                 )
                 results = [entry.model_dump(mode='json') for entry in entries]
