@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   IChooseAdapterEntity,
   IPipelineEntity,
@@ -113,8 +113,6 @@ export default function BotForm({
   const [dynamicFormConfigList, setDynamicFormConfigList] = useState<
     IDynamicFormItemSchema[]
   >([]);
-  const [filteredDynamicFormConfigList, setFilteredDynamicFormConfigList] =
-    useState<IDynamicFormItemSchema[]>([]);
   const [, setIsLoading] = useState<boolean>(false);
   const [webhookUrl, setWebhookUrl] = useState<string>('');
   const [extraWebhookUrl, setExtraWebhookUrl] = useState<string>('');
@@ -125,30 +123,26 @@ export default function BotForm({
   const currentAdapter = form.watch('adapter');
   const currentAdapterConfig = form.watch('adapter_config');
 
+  // Derive the filtered config list via useMemo instead of useEffect+setState
+  // to avoid creating new array references that would cause DynamicFormComponent
+  // to re-subscribe its form.watch, re-emit values, and trigger an infinite loop.
+  // Only depend on the specific field we care about (enable-webhook) rather than
+  // the entire currentAdapterConfig object, which changes on every emission.
+  const enableWebhook = currentAdapterConfig?.['enable-webhook'];
+  const filteredDynamicFormConfigList = useMemo(() => {
+    if (currentAdapter === 'lark' && enableWebhook === false) {
+      // Hide encrypt-key field when webhook is disabled
+      return dynamicFormConfigList.filter(
+        (config) => config.name !== 'encrypt-key',
+      );
+    }
+    // For non-Lark adapters or when webhook is enabled/undefined, show all fields
+    return dynamicFormConfigList;
+  }, [currentAdapter, enableWebhook, dynamicFormConfigList]);
+
   useEffect(() => {
     setBotFormValues();
   }, []);
-
-  // Filter dynamic form config list based on enable-webhook status for Lark adapter
-  useEffect(() => {
-    if (currentAdapter === 'lark') {
-      const enableWebhook = currentAdapterConfig?.['enable-webhook'];
-      if (enableWebhook === false) {
-        // Hide encrypt-key field when webhook is disabled
-        setFilteredDynamicFormConfigList(
-          dynamicFormConfigList.filter(
-            (config) => config.name !== 'encrypt-key',
-          ),
-        );
-      } else {
-        // Show all fields when webhook is enabled or undefined
-        setFilteredDynamicFormConfigList(dynamicFormConfigList);
-      }
-    } else {
-      // For non-Lark adapters, show all fields
-      setFilteredDynamicFormConfigList(dynamicFormConfigList);
-    }
-  }, [currentAdapter, currentAdapterConfig, dynamicFormConfigList]);
 
   // 复制到剪贴板的辅助函数
   const copyToClipboard = (
@@ -510,8 +504,7 @@ export default function BotForm({
 
                 {/* Webhook 地址显示（统一 Webhook 模式） */}
                 {webhookUrl &&
-                  (currentAdapter !== 'lark' ||
-                    currentAdapterConfig?.['enable-webhook'] !== false) && (
+                  (currentAdapter !== 'lark' || enableWebhook !== false) && (
                     <FormItem>
                       <FormLabel>{t('bots.webhookUrl')}</FormLabel>
                       <div className="flex items-center gap-2">
@@ -675,7 +668,7 @@ export default function BotForm({
                 </div>
                 <DynamicFormComponent
                   itemConfigList={filteredDynamicFormConfigList}
-                  initialValues={form.watch('adapter_config')}
+                  initialValues={currentAdapterConfig}
                   onSubmit={(values) => {
                     form.setValue('adapter_config', values);
                   }}

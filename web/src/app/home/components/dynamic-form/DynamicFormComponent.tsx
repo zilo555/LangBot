@@ -211,6 +211,15 @@ export default function DynamicFormComponent({
     );
     onSubmitRef.current?.(initialFinalValues);
 
+    // Update previousInitialValues to the emitted snapshot so that if the
+    // parent writes these values back as new initialValues, the deep
+    // comparison in the initialValues-sync useEffect won't detect a change
+    // and won't trigger an infinite update loop.
+    previousInitialValues.current = initialFinalValues as Record<
+      string,
+      object
+    >;
+
     const subscription = form.watch(() => {
       const formValues = form.getValues();
       const finalValues = itemConfigList.reduce(
@@ -221,6 +230,7 @@ export default function DynamicFormComponent({
         {} as Record<string, object>,
       );
       onSubmitRef.current?.(finalValues);
+      previousInitialValues.current = finalValues as Record<string, object>;
     });
     return () => subscription.unsubscribe();
   }, [form, itemConfigList]);
