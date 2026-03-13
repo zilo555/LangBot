@@ -146,24 +146,50 @@ class LoadConfigStage(stage.BootingStage):
         await ap.instance_config.dump_config()
 
         # load or generate instance id
-        # Priority: system.instance_id from config.yaml (can be set via env var
-        # SYSTEM__INSTANCE_ID which is auto-mapped) > data/labels/instance_id.json > generate new
-        ap.instance_id = await config.load_json_config(
-            'data/labels/instance_id.json',
-            template_data={
-                'instance_id': f'instance_{str(uuid.uuid4())}',
-                'instance_create_ts': int(time.time()),
-            },
-            completion=False,
-        )
-
+        # Priority:
+        # 1. system.instance_id from config.yaml (can be set via SYSTEM__INSTANCE_ID env var)
+        # 2. data/labels/instance_id.json (if file exists)
+        # 3. Generate new and save to file
         config_instance_id = ap.instance_config.data.get('system', {}).get('instance_id', '')
+
         if config_instance_id:
-            # Use the instance_id from config.yaml (e.g. injected via SYSTEM__INSTANCE_ID env var)
+            # Use the instance_id from config.yaml
             constants.instance_id = config_instance_id
+            # Still load/create the file for backward compat, but don't use its value
+            ap.instance_id = await config.load_json_config(
+                'data/labels/instance_id.json',
+                template_data={
+                    'instance_id': f'instance_{str(uuid.uuid4())}',
+                    'instance_create_ts': int(time.time()),
+                },
+                completion=False,
+            )
         else:
-            # Fall back to the file-based instance id
-            constants.instance_id = ap.instance_id.data['instance_id']
+            # Try loading file-based instance id
+            instance_id_path = os.path.join('data', 'labels', 'instance_id.json')
+            if os.path.exists(instance_id_path):
+                # File exists, read it
+                ap.instance_id = await config.load_json_config(
+                    'data/labels/instance_id.json',
+                    template_data={
+                        'instance_id': '',
+                        'instance_create_ts': 0,
+                    },
+                    completion=False,
+                )
+                constants.instance_id = ap.instance_id.data['instance_id']
+            else:
+                # Neither config nor file, generate new and save to file
+                new_id = f'instance_{str(uuid.uuid4())}'
+                ap.instance_id = await config.load_json_config(
+                    'data/labels/instance_id.json',
+                    template_data={
+                        'instance_id': new_id,
+                        'instance_create_ts': int(time.time()),
+                    },
+                    completion=False,
+                )
+                constants.instance_id = new_id
         constants.edition = ap.instance_config.data.get('system', {}).get('edition', 'community')
 
         print(f'LangBot instance id: {constants.instance_id}')
