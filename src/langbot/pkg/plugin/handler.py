@@ -562,9 +562,7 @@ class RuntimeConnectionHandler(handler.Handler):
             limit = data.get('limit', 20)
             offset = data.get('offset', 0)
             try:
-                items, total = await self.ap.rag_runtime_service.vector_list(
-                    collection_id, filters, limit, offset
-                )
+                items, total = await self.ap.rag_runtime_service.vector_list(collection_id, filters, limit, offset)
                 return handler.ActionResponse.success(data={'items': items, 'total': total})
             except Exception as e:
                 return _make_rag_error_response(e, 'VectorStoreError', collection_id=collection_id)
