@@ -66,6 +66,7 @@ function MarketPageContent({
   const pageSize = 12; // 每页12个
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const isComposingRef = useRef(false);
 
   // 排序选项
   const sortOptions: SortOption[] = [
@@ -250,10 +251,14 @@ function MarketPageContent({
         clearTimeout(searchTimeoutRef.current);
       }
 
+      if (isComposingRef.current) {
+        return;
+      }
+
       // 设置新的定时器
       searchTimeoutRef.current = setTimeout(() => {
         handleSearch(value);
-      }, 300);
+      }, 500);
     },
     [handleSearch],
   );
@@ -398,6 +403,13 @@ function MarketPageContent({
               placeholder={t('market.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => handleSearchInputChange(e.target.value)}
+              onCompositionStart={() => {
+                isComposingRef.current = true;
+              }}
+              onCompositionEnd={(e) => {
+                isComposingRef.current = false;
+                handleSearchInputChange((e.target as HTMLInputElement).value);
+              }}
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
                   // Immediately search, clear debounce timer
