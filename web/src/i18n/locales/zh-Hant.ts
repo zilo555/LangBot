@@ -1,4 +1,11 @@
 const zhHant = {
+  sidebar: {
+    home: '首頁',
+    extensions: '擴展',
+    installedPlugins: '已安裝外掛',
+    pluginMarket: '外掛市場',
+    mcpServers: 'MCP 伺服器',
+  },
   common: {
     login: '登入',
     logout: '登出',
@@ -127,6 +134,8 @@ const zhHant = {
     actions: '操作',
     apiKeyCreatedMessage: '請複製此 API 金鑰，若按鈕無效，請手動複製。',
     none: '無',
+    more: '更多 ({{count}})',
+    less: '收起',
   },
   notFound: {
     title: '頁面不存在',
@@ -239,6 +248,7 @@ const zhHant = {
     title: '機器人',
     description: '建立和管理機器人，這是 LangBot 與各個平台連接的入口',
     createBot: '建立機器人',
+    selectFromSidebar: '從側邊欄選擇一個機器人',
     editBot: '編輯機器人',
     getBotListError: '取得機器人清單失敗：',
     botName: '機器人名稱',
@@ -562,6 +572,7 @@ const zhHant = {
     title: '流程線',
     description: '流程線定義了對訊息事件的處理流程，用於綁定到機器人',
     createPipeline: '建立流程線',
+    selectFromSidebar: '從側邊欄選擇一個流程線',
     editPipeline: '編輯流程線',
     chat: '對話',
     configuration: '設定',
@@ -651,6 +662,11 @@ const zhHant = {
       replyTo: '回覆給',
       showMarkdown: '渲染',
       showRaw: '原文',
+      allMembers: '全體成員',
+      file: '檔案',
+      voice: '語音',
+      uploadImage: '上傳圖片',
+      uploading: '上傳中...',
     },
     monitoring: {
       title: '監控日誌',
@@ -661,6 +677,7 @@ const zhHant = {
   knowledge: {
     title: '知識庫',
     createKnowledgeBase: '建立知識庫',
+    selectFromSidebar: '從側邊欄選擇一個知識庫',
     editKnowledgeBase: '編輯知識庫',
     selectKnowledgeBase: '選擇知識庫',
     selectKnowledgeBases: '選擇知識庫',
@@ -839,7 +856,7 @@ const zhHant = {
     spaceEmailMismatch: 'Space登入帳號電子郵件與本實例帳號電子郵件不匹配',
   },
   monitoring: {
-    title: '日誌監控',
+    title: '儀表盤',
     description: '監控機器人活動、LLM調用和系統效能',
     overview: '概覽',
     totalMessages: '總訊息數',

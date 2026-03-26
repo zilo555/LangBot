@@ -1,4 +1,11 @@
 ﻿const jaJP = {
+  sidebar: {
+    home: 'ホーム',
+    extensions: '拡張機能',
+    installedPlugins: 'インストール済みプラグイン',
+    pluginMarket: 'プラグインマーケット',
+    mcpServers: 'MCPサーバー',
+  },
   common: {
     login: 'ログイン',
     logout: 'ログアウト',
@@ -138,6 +145,8 @@
     apiKeyCreatedMessage:
       'この API キーをコピーしてください。もしボタンが無効な場合は手動でコピーしてください。',
     none: 'なし',
+    more: 'もっと見る ({{count}})',
+    less: '折りたたむ',
   },
   notFound: {
     title: 'ページが見つかりません',
@@ -256,6 +265,7 @@
     description:
       'ボットの作成と管理を行います。LangBotと各プラットフォームを接続するためのエントリーポイントです',
     createBot: 'ボットを作成',
+    selectFromSidebar: 'サイドバーからボットを選択してください',
     editBot: 'ボットを編集',
     getBotListError: 'ボットリストの取得に失敗しました：',
     botName: 'ボット名',
@@ -597,6 +607,7 @@
     description:
       'メッセージイベントの処理フローを定義し、ボットに紐付けて使用するパイプラインです',
     createPipeline: 'パイプラインを作成',
+    selectFromSidebar: 'サイドバーからパイプラインを選択してください',
     editPipeline: 'パイプラインを編集',
     chat: 'チャット',
     configuration: '設定',
@@ -688,9 +699,14 @@
       replyTo: '返信先',
       showMarkdown: 'Markdownで表示',
       showRaw: '原文で表示',
+      allMembers: '全メンバー',
+      file: 'ファイル',
+      voice: '音声',
+      uploadImage: '画像をアップロード',
+      uploading: 'アップロード中...',
     },
     monitoring: {
-      title: 'モニタリング',
+      title: 'ダッシュボード',
       description: 'このパイプラインの実行ログとエラー情報を表示（過去24時間）',
       detailedLogs: '詳細ログ',
     },
@@ -698,6 +714,7 @@
   knowledge: {
     title: '知識ベース',
     createKnowledgeBase: '知識ベースを作成',
+    selectFromSidebar: 'サイドバーから知識ベースを選択してください',
     editKnowledgeBase: '知識ベースを編集',
     selectKnowledgeBase: '知識ベースを選択',
     selectKnowledgeBases: '知識ベースを選択',
@@ -894,7 +911,7 @@
       'Spaceログインのメールアドレスがローカルアカウントのメールアドレスと一致しません',
   },
   monitoring: {
-    title: 'モニタリング',
+    title: 'ダッシュボード',
     description:
       'ボットアクティビティ、LLM呼び出し、システムパフォーマンスを監視',
     overview: '概要',

@@ -1,4 +1,11 @@
 const enUS = {
+  sidebar: {
+    home: 'Home',
+    extensions: 'Extensions',
+    installedPlugins: 'Installed Plugins',
+    pluginMarket: 'Marketplace',
+    mcpServers: 'MCP Servers',
+  },
   common: {
     login: 'Login',
     logout: 'Logout',
@@ -136,6 +143,8 @@ const enUS = {
     apiKeyCreatedMessage:
       'Please copy this API key, if the button is invalid, please copy manually.',
     none: 'None',
+    more: 'More ({{count}})',
+    less: 'Less',
   },
   notFound: {
     title: 'Page not found',
@@ -251,6 +260,7 @@ const enUS = {
     description:
       'Create and manage bots, which are the entry points for LangBot to connect with various platforms',
     createBot: 'Create Bot',
+    selectFromSidebar: 'Select a bot from the sidebar',
     editBot: 'Edit Bot',
     getBotListError: 'Failed to get bot list: ',
     botName: 'Bot Name',
@@ -596,6 +606,7 @@ const enUS = {
     description:
       'Pipelines define the processing flow for message events, used to bind to bots',
     createPipeline: 'Create Pipeline',
+    selectFromSidebar: 'Select a pipeline from the sidebar',
     editPipeline: 'Edit Pipeline',
     chat: 'Chat',
     configuration: 'Configuration',
@@ -685,9 +696,14 @@ const enUS = {
       replyTo: 'Reply to',
       showMarkdown: 'Show Markdown',
       showRaw: 'Show Raw',
+      allMembers: 'All Members',
+      file: 'File',
+      voice: 'Voice',
+      uploadImage: 'Upload Image',
+      uploading: 'Uploading...',
     },
     monitoring: {
-      title: 'Monitoring',
+      title: 'Dashboard',
       description:
         'View execution logs and errors for this pipeline (last 24 hours)',
       detailedLogs: 'Detailed Logs',
@@ -696,6 +712,7 @@ const enUS = {
   knowledge: {
     title: 'Knowledge',
     createKnowledgeBase: 'Create Knowledge Base',
+    selectFromSidebar: 'Select a knowledge base from the sidebar',
     editKnowledgeBase: 'Edit Knowledge Base',
     selectKnowledgeBase: 'Select Knowledge Base',
     selectKnowledgeBases: 'Select Knowledge Bases',
@@ -901,7 +918,7 @@ const enUS = {
       'Space login email does not match the local account email',
   },
   monitoring: {
-    title: 'Monitoring',
+    title: 'Dashboard',
     description: 'Monitor bot activities, LLM calls, and system performance',
     overview: 'Overview',
     totalMessages: 'Total Messages',

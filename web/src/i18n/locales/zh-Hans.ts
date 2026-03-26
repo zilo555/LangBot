@@ -1,4 +1,11 @@
 const zhHans = {
+  sidebar: {
+    home: '首页',
+    extensions: '扩展',
+    installedPlugins: '已安装插件',
+    pluginMarket: '插件市场',
+    mcpServers: 'MCP 服务器',
+  },
   common: {
     login: '登录',
     logout: '退出登录',
@@ -127,6 +134,8 @@ const zhHans = {
     actions: '操作',
     apiKeyCreatedMessage: '请复制此 API 密钥，若按钮无效，请手动复制。',
     none: '无',
+    more: '更多 ({{count}})',
+    less: '收起',
   },
   notFound: {
     title: '页面不存在',
@@ -240,6 +249,7 @@ const zhHans = {
     title: '机器人',
     description: '创建和管理机器人，这是 LangBot 与各个平台连接的入口',
     createBot: '创建机器人',
+    selectFromSidebar: '从侧边栏选择一个机器人',
     editBot: '编辑机器人',
     getBotListError: '获取机器人列表失败：',
     botName: '机器人名称',
@@ -569,6 +579,7 @@ const zhHans = {
     title: '流水线',
     description: '流水线定义了对消息事件的处理流程，用于绑定到机器人',
     createPipeline: '创建流水线',
+    selectFromSidebar: '从侧边栏选择一个流水线',
     editPipeline: '编辑流水线',
     chat: '对话',
     configuration: '配置',
@@ -658,6 +669,11 @@ const zhHans = {
       replyTo: '回复给',
       showMarkdown: '渲染',
       showRaw: '原文',
+      allMembers: '全体成员',
+      file: '文件',
+      voice: '语音',
+      uploadImage: '上传图片',
+      uploading: '上传中...',
     },
     monitoring: {
       title: '监控日志',
@@ -668,6 +684,7 @@ const zhHans = {
   knowledge: {
     title: '知识库',
     createKnowledgeBase: '创建知识库',
+    selectFromSidebar: '从侧边栏选择一个知识库',
     editKnowledgeBase: '编辑知识库',
     selectKnowledgeBase: '选择知识库',
     selectKnowledgeBases: '选择知识库',
@@ -857,7 +874,7 @@ const zhHans = {
     spaceEmailMismatch: 'Space登录账号邮箱与本实例账号邮箱不匹配',
   },
   monitoring: {
-    title: '日志监控',
+    title: '仪表盘',
     description: '查看机器人活动、LLM调用和系统性能',
     overview: '概览',
     totalMessages: '总消息数',
