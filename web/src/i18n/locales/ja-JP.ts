@@ -5,6 +5,7 @@
     installedPlugins: 'インストール済みプラグイン',
     pluginMarket: 'プラグインマーケット',
     mcpServers: 'MCPサーバー',
+    quickStart: 'クイックスタート',
   },
   common: {
     login: 'ログイン',
@@ -322,6 +323,7 @@
     allLevels: 'すべてのレベル',
     selectLevel: 'レベルを選択',
     levelsSelected: 'レベル選択済み',
+    noLogs: 'ログはまだありません',
     sessionMonitor: {
       title: 'セッション監視',
       sessions: 'セッション一覧',
@@ -1082,6 +1084,70 @@
       'パイプライン数が上限（{{max}}個）に達しました。新しいパイプラインを作成するには、既存のパイプラインを削除してください。',
     maxExtensionsReached:
       '拡張機能数が上限（{{max}}個）に達しました。新しい MCP サーバーやプラグインを追加するには、既存のものを削除してください。',
+  },
+  wizard: {
+    sidebarDescription: 'ガイド付きステップでボットを作成',
+    loading: 'ウィザードを読み込み中...',
+    loadError: 'ウィザードデータの読み込みに失敗しました',
+    skip: 'スキップ',
+    skipConfirmMessage:
+      'サイドバーからクイックスタートウィザードに再度アクセスするか、手動でボットを作成できます。',
+    skipConfirmOk: 'OK',
+    prev: '前へ',
+    next: '次へ',
+    finish: '作成＆デプロイ',
+    confirmCreateBot: '確定、ボットを作成',
+    createSuccess: 'パイプラインが作成され、ボットにリンクされました！',
+    botCreateSuccess: 'ボットが正常に作成されました！',
+    botSaveSuccess: 'ボット設定が保存され、有効になりました！',
+    createError: 'リソースの作成に失敗しました',
+    spaceAuthError: 'Space 認証の開始に失敗しました',
+    step: {
+      platform: 'プラットフォーム',
+      botConfig: 'ボット設定',
+      aiEngine: 'AIエンジン',
+      done: '完了',
+    },
+    platform: {
+      title: 'プラットフォームを選択',
+      description:
+        'ボットが接続するメッセージングプラットフォームを選択してください。',
+    },
+    botConfig: {
+      title: 'ボットを設定',
+      description:
+        'ボットをセットアップし、正常に動作することを確認してから続行してください。',
+      saveBot: '保存して有効化',
+      resaveBot: '設定を再保存',
+      botSaved:
+        'ボット設定が保存され、有効になりました。ログを確認して接続を検証してください。',
+      logsTitle: 'ボットログ',
+      logsDescription:
+        'ボットの活動を監視して、プラットフォーム接続が正常に動作していることを確認します。',
+    },
+    aiEngine: {
+      title: 'AIエンジンを選択',
+      description:
+        'ボットのインテリジェンスを駆動するAIエンジンを選択してください。',
+    },
+    spaceBanner: {
+      message:
+        'LangBot Spaceに接続して、無料トライアルモデルクレジットとゼロ設定の即時セットアップを入手！',
+      action: 'Spaceで認証',
+    },
+    config: {
+      botInfo: 'ボット情報',
+      botNamePlaceholder: 'ボット名を入力',
+      botDescPlaceholder: 'ボットの説明を入力（任意）',
+      platformConfig: '{{platform}} 設定',
+      aiConfig: '{{engine}} 設定',
+    },
+    done: {
+      title: '完了しました！',
+      description:
+        'ボットが作成され、AIパイプラインに接続されました。ワークベンチから管理できます。',
+      backToWorkbench: 'ワークベンチに戻る',
+    },
   },
 };
 

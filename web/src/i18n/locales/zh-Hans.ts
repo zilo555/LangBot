@@ -5,6 +5,7 @@ const zhHans = {
     installedPlugins: '已安装插件',
     pluginMarket: '插件市场',
     mcpServers: 'MCP 服务器',
+    quickStart: '快速开始',
   },
   common: {
     login: '登录',
@@ -306,6 +307,7 @@ const zhHans = {
     viewDetails: '详情',
     collapse: '收起',
     imagesAttached: '张图片',
+    noLogs: '暂无日志',
     sessionMonitor: {
       title: '会话监控',
       sessions: '会话列表',
@@ -1055,6 +1057,64 @@ const zhHans = {
       '已达到流水线数量上限（{{max}}个）。请先删除已有流水线后再创建新的。',
     maxExtensionsReached:
       '已达到扩展数量上限（{{max}}个）。请先删除已有的 MCP 服务器或插件后再添加新的。',
+  },
+  wizard: {
+    sidebarDescription: '通过引导步骤创建机器人',
+    loading: '正在加载向导...',
+    loadError: '加载向导数据失败',
+    skip: '跳过',
+    skipConfirmMessage:
+      '您之后可以在侧边栏重新进入快速开始向导，或手动创建机器人。',
+    skipConfirmOk: '确定',
+    prev: '上一步',
+    next: '下一步',
+    finish: '创建并部署',
+    confirmCreateBot: '确定，创建机器人',
+    createSuccess: '流水线已创建并关联到机器人！',
+    botCreateSuccess: '机器人创建成功！',
+    botSaveSuccess: '机器人配置已保存并启用！',
+    createError: '创建资源失败',
+    spaceAuthError: '无法发起 Space 授权',
+    step: {
+      platform: '平台接入',
+      botConfig: '机器人配置',
+      aiEngine: 'AI 引擎',
+      done: '完成',
+    },
+    platform: {
+      title: '选择平台',
+      description: '选择机器人要接入的消息平台。',
+    },
+    botConfig: {
+      title: '配置机器人',
+      description: '配置好机器人并确认其正常运行后再继续。',
+      saveBot: '保存并启用',
+      resaveBot: '重新保存配置',
+      botSaved: '机器人配置已保存并启用，请查看日志确认连接正常。',
+      logsTitle: '机器人日志',
+      logsDescription: '监控机器人活动，确认平台连接是否正常工作。',
+    },
+    aiEngine: {
+      title: '选择 AI 引擎',
+      description: '选择驱动机器人智能的 AI 引擎。',
+    },
+    spaceBanner: {
+      message: '接入 LangBot Space，获取免费试用模型额度，零配置极速开箱！',
+      action: '前往授权登录',
+    },
+    config: {
+      botInfo: '机器人信息',
+      botNamePlaceholder: '请输入机器人名称',
+      botDescPlaceholder: '请输入机器人描述（可选）',
+      platformConfig: '{{platform}} 配置',
+      aiConfig: '{{engine}} 配置',
+    },
+    done: {
+      title: '一切就绪！',
+      description:
+        '机器人已创建并连接到 AI 流水线。你现在可以在工作台中管理它。',
+      backToWorkbench: '返回工作台',
+    },
   },
 };
 
