@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next';
 import { extractI18nObject } from '@/i18n/I18nProvider';
 import { toast } from 'sonner';
 import { useAsyncTask, AsyncTaskStatus } from '@/hooks/useAsyncTask';
+import { useSidebarData } from '@/app/home/components/home-sidebar/SidebarDataContext';
 
 export interface PluginInstalledComponentRef {
   refreshPluginList: () => void;
@@ -37,6 +38,7 @@ const PluginInstalledComponent = forwardRef<PluginInstalledComponentRef>(
   (props, ref) => {
     const { t } = useTranslation();
     const router = useRouter();
+    const { refreshPlugins } = useSidebarData();
     const [pluginList, setPluginList] = useState<PluginCardVO[]>([]);
     const [showOperationModal, setShowOperationModal] = useState(false);
     const [operationType, setOperationType] = useState<PluginOperationType>(
@@ -54,6 +56,7 @@ const PluginInstalledComponent = forwardRef<PluginInstalledComponentRef>(
         toast.success(successMessage);
         setShowOperationModal(false);
         getPluginList();
+        refreshPlugins();
       },
       onError: () => {
         // Error is already handled in the hook state

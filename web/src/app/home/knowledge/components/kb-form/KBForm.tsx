@@ -310,19 +310,58 @@ export default function KBForm({
                       value={field.value}
                     >
                       <SelectTrigger className="w-full bg-[#ffffff] dark:bg-[#2a2a2e]">
-                        <SelectValue
-                          placeholder={t('knowledge.selectKnowledgeEngine')}
-                        />
+                        {field.value ? (
+                          (() => {
+                            const [author, name] = field.value.split('/');
+                            const engine = ragEngines.find(
+                              (e) => e.plugin_id === field.value,
+                            );
+                            return (
+                              <div className="flex items-center gap-2">
+                                <img
+                                  src={httpClient.getPluginIconURL(
+                                    author,
+                                    name,
+                                  )}
+                                  alt=""
+                                  className="h-5 w-5 rounded"
+                                />
+                                <span>
+                                  {engine
+                                    ? extractI18nObject(engine.name)
+                                    : field.value}
+                                </span>
+                              </div>
+                            );
+                          })()
+                        ) : (
+                          <SelectValue
+                            placeholder={t('knowledge.selectKnowledgeEngine')}
+                          />
+                        )}
                       </SelectTrigger>
                       <SelectContent className="fixed z-[1000]">
-                        {ragEngines.map((engine) => (
-                          <SelectItem
-                            key={engine.plugin_id}
-                            value={engine.plugin_id}
-                          >
-                            {extractI18nObject(engine.name)}
-                          </SelectItem>
-                        ))}
+                        {ragEngines.map((engine) => {
+                          const [author, name] = engine.plugin_id.split('/');
+                          return (
+                            <SelectItem
+                              key={engine.plugin_id}
+                              value={engine.plugin_id}
+                            >
+                              <div className="flex items-center gap-2">
+                                <img
+                                  src={httpClient.getPluginIconURL(
+                                    author,
+                                    name,
+                                  )}
+                                  alt=""
+                                  className="h-5 w-5 rounded"
+                                />
+                                <span>{extractI18nObject(engine.name)}</span>
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                   </FormControl>

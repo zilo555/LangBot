@@ -51,6 +51,7 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { systemInfo } from '@/app/infra/http/HttpClient';
 import { ApiRespPluginSystemStatus } from '@/app/infra/entities/api';
+import { useSidebarData } from '@/app/home/components/home-sidebar/SidebarDataContext';
 
 enum PluginInstallStatus {
   WAIT_INPUT = 'wait_input',
@@ -93,6 +94,7 @@ export default function PluginConfigPage() {
 function PluginListView() {
   const { t } = useTranslation();
   const router = useRouter();
+  const { refreshPlugins } = useSidebarData();
   const [modalOpen, setModalOpen] = useState(false);
   const [installSource, setInstallSource] = useState<string>('local');
   const [installInfo] = useState<Record<string, any>>({}); // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -167,6 +169,7 @@ function PluginListView() {
             resetGithubState();
             setModalOpen(false);
             pluginInstalledRef.current?.refreshPluginList();
+            refreshPlugins();
           }
         }
       });

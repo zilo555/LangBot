@@ -16,6 +16,7 @@ import { systemInfo } from '@/app/infra/http/HttpClient';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { PluginV4 } from '@/app/infra/entities/plugin';
+import { useSidebarData } from '@/app/home/components/home-sidebar/SidebarDataContext';
 
 enum PluginInstallStatus {
   ASK_CONFIRM = 'ask_confirm',
@@ -39,6 +40,7 @@ export default function MarketplacePage() {
 
 function MarketplaceContent() {
   const { t } = useTranslation();
+  const { refreshPlugins } = useSidebarData();
   const [modalOpen, setModalOpen] = useState(false);
   const [installInfo, setInstallInfo] = useState<Record<string, string>>({});
   const [pluginInstallStatus, setPluginInstallStatus] =
@@ -83,6 +85,7 @@ function MarketplaceContent() {
               alreadySuccess = true;
             }
             setModalOpen(false);
+            refreshPlugins();
           }
         }
       });

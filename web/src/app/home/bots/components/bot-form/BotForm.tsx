@@ -65,13 +65,11 @@ const getFormSchema = (t: (key: string) => string) =>
 export default function BotForm({
   initBotId,
   onFormSubmit,
-  onBotDeleted,
   onNewBotCreated,
   onDirtyChange,
 }: {
   initBotId?: string;
   onFormSubmit: (value: z.infer<ReturnType<typeof getFormSchema>>) => void;
-  onBotDeleted: () => void;
   onNewBotCreated: (botId: string) => void;
   onDirtyChange?: (dirty: boolean) => void;
 }) {
@@ -234,6 +232,7 @@ export default function BotForm({
         return {
           label: item.name,
           value: item.uuid ?? '',
+          emoji: item.emoji,
         };
       }),
     );
@@ -461,13 +460,40 @@ export default function BotForm({
                     <FormControl>
                       <Select onValueChange={field.onChange} {...field}>
                         <SelectTrigger>
-                          <SelectValue placeholder={t('bots.selectPipeline')} />
+                          {field.value ? (
+                            (() => {
+                              const pipeline = pipelineNameList.find(
+                                (p) => p.value === field.value,
+                              );
+                              return (
+                                <div className="flex items-center gap-2">
+                                  {pipeline?.emoji && (
+                                    <span className="text-sm shrink-0">
+                                      {pipeline.emoji}
+                                    </span>
+                                  )}
+                                  <span>{pipeline?.label ?? field.value}</span>
+                                </div>
+                              );
+                            })()
+                          ) : (
+                            <SelectValue
+                              placeholder={t('bots.selectPipeline')}
+                            />
+                          )}
                         </SelectTrigger>
                         <SelectContent>
                           <SelectGroup>
                             {pipelineNameList.map((item) => (
                               <SelectItem key={item.value} value={item.value}>
-                                {item.label}
+                                <div className="flex items-center gap-2">
+                                  {item.emoji && (
+                                    <span className="text-sm shrink-0">
+                                      {item.emoji}
+                                    </span>
+                                  )}
+                                  <span>{item.label}</span>
+                                </div>
                               </SelectItem>
                             ))}
                           </SelectGroup>
@@ -508,13 +534,35 @@ export default function BotForm({
                       value={field.value}
                     >
                       <SelectTrigger className="w-[240px]">
-                        <SelectValue placeholder={t('bots.selectAdapter')} />
+                        {field.value ? (
+                          <div className="flex items-center gap-2">
+                            <img
+                              src={httpClient.getAdapterIconURL(field.value)}
+                              alt=""
+                              className="h-5 w-5 rounded"
+                            />
+                            <span>
+                              {adapterNameList.find(
+                                (a) => a.value === field.value,
+                              )?.label ?? field.value}
+                            </span>
+                          </div>
+                        ) : (
+                          <SelectValue placeholder={t('bots.selectAdapter')} />
+                        )}
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
                           {adapterNameList.map((item) => (
                             <SelectItem key={item.value} value={item.value}>
-                              {item.label}
+                              <div className="flex items-center gap-2">
+                                <img
+                                  src={httpClient.getAdapterIconURL(item.value)}
+                                  alt=""
+                                  className="h-5 w-5 rounded"
+                                />
+                                <span>{item.label}</span>
+                              </div>
                             </SelectItem>
                           ))}
                         </SelectGroup>

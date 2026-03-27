@@ -144,7 +144,6 @@ export default function BotDetailContent({ id }: { id: string }) {
             <BotForm
               initBotId={undefined}
               onFormSubmit={handleFormSubmit}
-              onBotDeleted={handleBotDeleted}
               onNewBotCreated={handleNewBotCreated}
             />
           </div>
@@ -238,7 +237,6 @@ export default function BotDetailContent({ id }: { id: string }) {
               <BotForm
                 initBotId={id}
                 onFormSubmit={handleFormSubmit}
-                onBotDeleted={handleBotDeleted}
                 onNewBotCreated={handleNewBotCreated}
                 onDirtyChange={setFormDirty}
               />

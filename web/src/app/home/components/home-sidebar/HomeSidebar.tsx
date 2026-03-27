@@ -77,6 +77,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { ChevronRight, Plus } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useSidebarData, SidebarEntityItem } from './SidebarDataContext';
 
 // Compare two version strings, returns true if v1 > v2
@@ -316,6 +317,7 @@ function NavItems({
         const canCreate = CREATABLE_CATEGORIES.includes(config.id);
         const isCollapseOnly = COLLAPSIBLE_ONLY_CATEGORIES.includes(config.id);
         const isPlugin = config.id === 'plugins';
+        const isBot = config.id === 'bots';
         const isActive =
           selectedChild?.id === config.id ||
           pathname === routePrefix ||
@@ -391,9 +393,9 @@ function NavItems({
                               >
                                 <a
                                   href={itemRoute}
-                                  className={
-                                    isPlugin && !item.debug ? 'pr-6' : ''
-                                  }
+                                  className={cn(
+                                    isPlugin && !item.debug ? 'pr-6' : '',
+                                  )}
                                   onClick={(e) => {
                                     e.preventDefault();
                                     router.push(itemRoute);
@@ -404,11 +406,23 @@ function NavItems({
                                       {item.emoji}
                                     </span>
                                   ) : item.iconURL ? (
-                                    <img
-                                      src={item.iconURL}
-                                      alt=""
-                                      className="size-4 rounded shrink-0"
-                                    />
+                                    <span className="relative shrink-0">
+                                      <img
+                                        src={item.iconURL}
+                                        alt=""
+                                        className="size-4 rounded"
+                                      />
+                                      {isBot && (
+                                        <span
+                                          className={cn(
+                                            'absolute -bottom-0.5 -right-0.5 size-2 rounded-full border-2 border-sidebar',
+                                            item.enabled === false
+                                              ? 'bg-muted-foreground/40'
+                                              : 'bg-green-500',
+                                          )}
+                                        />
+                                      )}
+                                    </span>
                                   ) : null}
                                   <span className="truncate">{item.name}</span>
                                   {item.debug && (

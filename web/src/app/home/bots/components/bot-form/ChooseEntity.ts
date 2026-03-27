@@ -6,4 +6,5 @@ export interface IChooseAdapterEntity {
 export interface IPipelineEntity {
   label: string;
   value: string;
+  emoji?: string;
 }

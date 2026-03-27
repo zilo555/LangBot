@@ -18,6 +18,8 @@ export interface SidebarEntityItem {
   emoji?: string;
   iconURL?: string;
   updatedAt?: string; // ISO timestamp for sorting by most recently edited
+  // Bot-specific fields
+  enabled?: boolean;
   // Plugin-specific fields
   installSource?: string;
   installInfo?: Record<string, unknown>;
@@ -63,6 +65,7 @@ export function SidebarDataProvider({
           name: bot.name,
           iconURL: httpClient.getAdapterIconURL(bot.adapter),
           updatedAt: bot.updated_at,
+          enabled: bot.enable ?? true,
         })),
       );
     } catch (error) {

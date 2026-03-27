@@ -456,7 +456,7 @@ export default function PipelineFormComponent({
                             type="button"
                             onClick={() => setActiveSection(section.name)}
                             className={cn(
-                              'w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors text-left',
+                              'w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors text-left cursor-pointer',
                               activeSection === section.name
                                 ? 'bg-accent text-accent-foreground'
                                 : 'text-muted-foreground hover:bg-muted hover:text-foreground',

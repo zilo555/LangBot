@@ -541,7 +541,25 @@ export default function DynamicFormItemComponent({
       return (
         <Select value={field.value} onValueChange={field.onChange}>
           <SelectTrigger className="bg-[#ffffff] dark:bg-[#2a2a2e]">
-            <SelectValue placeholder={t('knowledge.selectKnowledgeBase')} />
+            {field.value && field.value !== '__none__' ? (
+              (() => {
+                const selectedKb = knowledgeBases.find(
+                  (kb) => kb.uuid === field.value,
+                );
+                return (
+                  <div className="flex items-center gap-2">
+                    {selectedKb?.emoji && (
+                      <span className="text-sm shrink-0">
+                        {selectedKb.emoji}
+                      </span>
+                    )}
+                    <span>{selectedKb?.name ?? field.value}</span>
+                  </div>
+                );
+              })()
+            ) : (
+              <SelectValue placeholder={t('knowledge.selectKnowledgeBase')} />
+            )}
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
@@ -553,7 +571,12 @@ export default function DynamicFormItemComponent({
                 <SelectLabel>{engineName}</SelectLabel>
                 {kbs.map((base) => (
                   <SelectItem key={base.uuid} value={base.uuid ?? ''}>
-                    {base.name}
+                    <div className="flex items-center gap-2">
+                      {base.emoji && (
+                        <span className="text-sm shrink-0">{base.emoji}</span>
+                      )}
+                      <span>{base.name}</span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectGroup>
@@ -597,6 +620,11 @@ export default function DynamicFormItemComponent({
                       <div className="flex items-center gap-2 flex-1">
                         <div className="flex-1 min-w-0">
                           <div className="font-medium flex items-center gap-2">
+                            {currentKb.emoji && (
+                              <span className="text-sm shrink-0">
+                                {currentKb.emoji}
+                              </span>
+                            )}
                             {currentKb.name}
                             {currentKb.knowledge_engine?.name && (
                               <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300">
@@ -686,7 +714,14 @@ export default function DynamicFormItemComponent({
                             aria-label={`Select ${base.name}`}
                           />
                           <div className="flex-1">
-                            <div className="font-medium">{base.name}</div>
+                            <div className="font-medium flex items-center gap-2">
+                              {base.emoji && (
+                                <span className="text-sm shrink-0">
+                                  {base.emoji}
+                                </span>
+                              )}
+                              {base.name}
+                            </div>
                             {base.description && (
                               <div className="text-sm text-muted-foreground">
                                 {base.description}
