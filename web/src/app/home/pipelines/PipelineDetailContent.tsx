@@ -71,6 +71,11 @@ export default function PipelineDetailContent({ id }: { id: string }) {
     );
   }
 
+  function handleDeletePipeline() {
+    refreshPipelines();
+    router.push('/home/pipelines');
+  }
+
   // ==================== Edit Mode ====================
   return (
     <div className="flex h-full flex-col">
@@ -121,7 +126,7 @@ export default function PipelineDetailContent({ id }: { id: string }) {
             showButtons={false}
             onFinish={handleFinish}
             onNewPipelineCreated={handleNewPipelineCreated}
-            onDeletePipeline={() => {}}
+            onDeletePipeline={handleDeletePipeline}
             onCancel={() => router.push('/home/pipelines')}
             onDirtyChange={setFormDirty}
           />
