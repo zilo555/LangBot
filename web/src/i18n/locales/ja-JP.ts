@@ -634,6 +634,7 @@
     recentlyEdited: '最近編集',
     earliestEdited: '最古編集',
     basicInfo: '基本情報',
+    basicInfoDescription: 'パイプラインの名前、アイコン、説明を設定',
     aiCapabilities: 'AI機能',
     triggerConditions: 'トリガー条件',
     safetyControls: '安全制御',
@@ -655,6 +656,13 @@
     copyConfirmation:
       'このパイプラインをコピーしますか？すべての設定を含む新しいパイプラインが作成されます。',
     unsavedChanges: '未保存の変更があります',
+    dangerZone: '危険ゾーン',
+    dangerZoneDescription: '元に戻せない操作',
+    deletePipelineAction: 'このパイプラインを削除',
+    deletePipelineHint:
+      '削除すると、このパイプラインに紐付けられたボットは動作しなくなります。',
+    copyPipelineAction: 'このパイプラインをコピー',
+    copyPipelineHint: 'すべての設定を複製した新しいパイプラインを作成します。',
     extensions: {
       title: 'プラグイン統合',
       loadError: 'プラグインリストの読み込みに失敗しました',
@@ -797,6 +805,18 @@
     fileName: 'ファイル名',
     noResults: '検索結果がありません',
     retrieveError: '検索に失敗しました：',
+    basicInfo: '基本情報',
+    basicInfoDescription: 'ナレッジベースの名前、アイコン、説明を設定',
+    engineSettings: 'エンジン設定',
+    engineSettingsDescription: '選択したナレッジエンジンの設定',
+    engineSettingsReadonly: '編集モードでは変更できません',
+    retrievalSettings: '検索設定',
+    retrievalSettingsDescription: 'このナレッジベースからの文書検索方法を設定',
+    dangerZone: '危険ゾーン',
+    dangerZoneDescription: '元に戻せない操作',
+    deleteKbAction: 'このナレッジベースを削除',
+    deleteKbHint:
+      '削除すると、このナレッジベース内のすべての文書とデータが完全に削除されます。',
     noEnginesAvailable: '利用可能なナレッジエンジンがありません',
     installEngineHint:
       '先に「ナレッジエンジン」プラグインをインストールしてください',

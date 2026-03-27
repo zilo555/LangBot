@@ -37,7 +37,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, X, Eye, Wrench } from 'lucide-react';
+import { Plus, X, Eye, Wrench, Trash2 } from 'lucide-react';
 
 export default function DynamicFormItemComponent({
   config,
@@ -181,27 +181,28 @@ export default function DynamicFormItemComponent({
       return (
         <Input
           type="number"
+          className="max-w-xs"
           {...field}
           onChange={(e) => field.onChange(Number(e.target.value))}
         />
       );
 
     case DynamicFormItemType.STRING:
-      return <Input {...field} />;
+      return <Input className="max-w-md" {...field} />;
 
     case DynamicFormItemType.TEXT:
-      return <Textarea {...field} className="min-h-[120px]" />;
+      return <Textarea {...field} className="min-h-[120px] max-w-2xl" />;
 
     case DynamicFormItemType.BOOLEAN:
       return <Switch checked={field.value} onCheckedChange={field.onChange} />;
 
     case DynamicFormItemType.STRING_ARRAY:
       return (
-        <div className="space-y-2">
+        <div className="space-y-2 max-w-md">
           {field.value.map((item: string, index: number) => (
-            <div key={index} className="flex gap-2 items-center">
+            <div key={index} className="flex gap-1.5 items-center">
               <Input
-                className="w-[200px]"
+                className="flex-1"
                 value={item}
                 onChange={(e) => {
                   const newValue = [...field.value];
@@ -209,9 +210,11 @@ export default function DynamicFormItemComponent({
                   field.onChange(newValue);
                 }}
               />
-              <button
+              <Button
                 type="button"
-                className="p-2 hover:bg-gray-100 rounded"
+                variant="ghost"
+                size="icon"
+                className="shrink-0 text-muted-foreground hover:text-destructive"
                 onClick={() => {
                   const newValue = field.value.filter(
                     (_: string, i: number) => i !== index,
@@ -219,24 +222,19 @@ export default function DynamicFormItemComponent({
                   field.onChange(newValue);
                 }}
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="w-5 h-5 text-red-500"
-                >
-                  <path d="M7 4V2H17V4H22V6H20V21C20 21.5523 19.5523 22 19 22H5C4.44772 22 4 21.5523 4 21V6H2V4H7ZM6 6V20H18V6H6ZM9 9H11V17H9V9ZM13 9H15V17H13V9Z"></path>
-                </svg>
-              </button>
+                <Trash2 className="size-4" />
+              </Button>
             </div>
           ))}
           <Button
             type="button"
             variant="outline"
+            className="w-full border-dashed text-muted-foreground hover:text-foreground"
             onClick={() => {
               field.onChange([...field.value, '']);
             }}
           >
+            <Plus className="size-4 mr-1.5" />
             {t('common.add')}
           </Button>
         </div>
@@ -245,7 +243,7 @@ export default function DynamicFormItemComponent({
     case DynamicFormItemType.SELECT:
       return (
         <Select value={field.value} onValueChange={field.onChange}>
-          <SelectTrigger className="bg-[#ffffff] dark:bg-[#2a2a2e]">
+          <SelectTrigger className="max-w-md bg-[#ffffff] dark:bg-[#2a2a2e]">
             <SelectValue placeholder={t('common.select')} />
           </SelectTrigger>
           <SelectContent>
@@ -274,31 +272,33 @@ export default function DynamicFormItemComponent({
       );
 
       return (
-        <Select value={field.value} onValueChange={field.onChange}>
-          <SelectTrigger className="bg-[#ffffff] dark:bg-[#2a2a2e]">
-            <SelectValue placeholder={t('models.selectModel')} />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.entries(groupedModels).map(([providerName, models]) => (
-              <SelectGroup key={providerName}>
-                <SelectLabel>{providerName}</SelectLabel>
-                {models.map((model) => (
-                  <SelectItem key={model.uuid} value={model.uuid}>
-                    <span className="inline-flex items-center gap-1">
-                      {model.name}
-                      {model.abilities?.includes('vision') && (
-                        <Eye className="h-3 w-3 text-muted-foreground" />
-                      )}
-                      {model.abilities?.includes('func_call') && (
-                        <Wrench className="h-3 w-3 text-muted-foreground" />
-                      )}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="max-w-md">
+          <Select value={field.value} onValueChange={field.onChange}>
+            <SelectTrigger className="bg-[#ffffff] dark:bg-[#2a2a2e]">
+              <SelectValue placeholder={t('models.selectModel')} />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(groupedModels).map(([providerName, models]) => (
+                <SelectGroup key={providerName}>
+                  <SelectLabel>{providerName}</SelectLabel>
+                  {models.map((model) => (
+                    <SelectItem key={model.uuid} value={model.uuid}>
+                      <span className="inline-flex items-center gap-1">
+                        {model.name}
+                        {model.abilities?.includes('vision') && (
+                          <Eye className="h-3 w-3 text-muted-foreground" />
+                        )}
+                        {model.abilities?.includes('func_call') && (
+                          <Wrench className="h-3 w-3 text-muted-foreground" />
+                        )}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       );
 
     case DynamicFormItemType.EMBEDDING_MODEL_SELECTOR:
@@ -314,25 +314,27 @@ export default function DynamicFormItemComponent({
       );
 
       return (
-        <Select value={field.value} onValueChange={field.onChange}>
-          <SelectTrigger className="bg-[#ffffff] dark:bg-[#2a2a2e]">
-            <SelectValue placeholder={t('knowledge.selectEmbeddingModel')} />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.entries(groupedEmbeddingModels).map(
-              ([providerName, models]) => (
-                <SelectGroup key={providerName}>
-                  <SelectLabel>{providerName}</SelectLabel>
-                  {models.map((model) => (
-                    <SelectItem key={model.uuid} value={model.uuid}>
-                      {model.name}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              ),
-            )}
-          </SelectContent>
-        </Select>
+        <div className="max-w-md">
+          <Select value={field.value} onValueChange={field.onChange}>
+            <SelectTrigger className="bg-[#ffffff] dark:bg-[#2a2a2e]">
+              <SelectValue placeholder={t('knowledge.selectEmbeddingModel')} />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(groupedEmbeddingModels).map(
+                ([providerName, models]) => (
+                  <SelectGroup key={providerName}>
+                    <SelectLabel>{providerName}</SelectLabel>
+                    {models.map((model) => (
+                      <SelectItem key={model.uuid} value={model.uuid}>
+                        {model.name}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                ),
+              )}
+            </SelectContent>
+          </Select>
+        </div>
       );
 
     case DynamicFormItemType.MODEL_FALLBACK_SELECTOR: {
@@ -495,11 +497,11 @@ export default function DynamicFormItemComponent({
                     <Button
                       type="button"
                       variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 text-destructive"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
                       onClick={() => removeFallbackModel(index)}
                     >
-                      <X className="h-4 w-4" />
+                      <Trash2 className="size-4" />
                     </Button>
                   </div>
                 </div>
@@ -512,10 +514,10 @@ export default function DynamicFormItemComponent({
             type="button"
             variant="outline"
             size="sm"
-            className="w-full"
+            className="w-full border-dashed text-muted-foreground hover:text-foreground"
             onClick={addFallbackModel}
           >
-            <Plus className="h-4 w-4 mr-1" />
+            <Plus className="size-4 mr-1.5" />
             {t('models.fallback.addFallback')}
           </Button>
         </div>

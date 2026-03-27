@@ -15,6 +15,7 @@ import { isNewerVersion } from '@/app/utils/versionCompare';
 export interface SidebarEntityItem {
   id: string;
   name: string;
+  description?: string;
   emoji?: string;
   iconURL?: string;
   updatedAt?: string; // ISO timestamp for sorting by most recently edited
@@ -63,6 +64,7 @@ export function SidebarDataProvider({
         resp.bots.map((bot) => ({
           id: bot.uuid || '',
           name: bot.name,
+          description: bot.description,
           iconURL: httpClient.getAdapterIconURL(bot.adapter),
           updatedAt: bot.updated_at,
           enabled: bot.enable ?? true,
@@ -80,6 +82,7 @@ export function SidebarDataProvider({
         resp.pipelines.map((p) => ({
           id: p.uuid || '',
           name: p.name,
+          description: p.description,
           emoji: p.emoji,
           updatedAt: p.updated_at,
         })),
@@ -96,6 +99,7 @@ export function SidebarDataProvider({
         resp.bases.map((kb) => ({
           id: kb.uuid || '',
           name: kb.name,
+          description: kb.description,
           emoji: kb.emoji,
           updatedAt: kb.updated_at,
         })),

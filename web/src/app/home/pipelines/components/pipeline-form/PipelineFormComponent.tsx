@@ -32,7 +32,24 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { extractI18nObject } from '@/i18n/I18nProvider';
 import { cn } from '@/lib/utils';
-import { Info, Brain, Zap, Shield, FileOutput } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Info,
+  Brain,
+  Zap,
+  Shield,
+  FileOutput,
+  Puzzle,
+  Trash2,
+  Copy,
+} from 'lucide-react';
+import PipelineExtension from '@/app/home/pipelines/components/pipeline-extensions/PipelineExtension';
 
 export default function PipelineFormComponent({
   onFinish,
@@ -42,6 +59,7 @@ export default function PipelineFormComponent({
   showButtons = true,
   onDeletePipeline,
   onCancel,
+  onDirtyChange,
 }: {
   pipelineId?: string;
   isEditMode: boolean;
@@ -51,6 +69,7 @@ export default function PipelineFormComponent({
   onNewPipelineCreated: (pipelineId: string) => void;
   onDeletePipeline: () => void;
   onCancel?: () => void;
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
   const { t } = useTranslation();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -93,6 +112,7 @@ export default function PipelineFormComponent({
     trigger: Zap,
     safety: Shield,
     output: FileOutput,
+    extensions: Puzzle,
   };
 
   const formLabelList: SectionItem[] = isEditMode
@@ -121,6 +141,11 @@ export default function PipelineFormComponent({
           label: t('pipelines.outputProcessing'),
           name: 'output',
           icon: SECTION_ICONS.output,
+        },
+        {
+          label: t('pipelines.extensions.title'),
+          name: 'extensions',
+          icon: SECTION_ICONS.extensions,
         },
       ]
     : [
@@ -164,6 +189,11 @@ export default function PipelineFormComponent({
     if (!isEditMode || !savedSnapshotRef.current) return false;
     return JSON.stringify(watchedValues) !== savedSnapshotRef.current;
   }, [isEditMode, watchedValues]);
+
+  // Notify parent when dirty state changes
+  useEffect(() => {
+    onDirtyChange?.(hasUnsavedChanges);
+  }, [hasUnsavedChanges, onDirtyChange]);
 
   useEffect(() => {
     // get config schema from metadata
@@ -314,27 +344,29 @@ export default function PipelineFormComponent({
       // If this is the runner selector stage, render it directly
       if (stage.name === 'runner') {
         return (
-          <div key={stage.name} className="space-y-4 mb-6">
-            <div className="text-lg font-medium">
-              {extractI18nObject(stage.label)}
-            </div>
-            {stage.description && (
-              <div className="text-sm text-muted-foreground">
-                {extractI18nObject(stage.description)}
-              </div>
-            )}
-            <DynamicFormComponent
-              itemConfigList={stage.config}
-              initialValues={
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (form.watch(formName) as Record<string, any>)?.[stage.name] ||
-                {}
-              }
-              onSubmit={(values) => {
-                handleDynamicFormEmit(formName, stage.name, values);
-              }}
-            />
-          </div>
+          <Card key={stage.name}>
+            <CardHeader>
+              <CardTitle>{extractI18nObject(stage.label)}</CardTitle>
+              {stage.description && (
+                <CardDescription>
+                  {extractI18nObject(stage.description)}
+                </CardDescription>
+              )}
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <DynamicFormComponent
+                itemConfigList={stage.config}
+                initialValues={
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  (form.watch(formName) as Record<string, any>)?.[stage.name] ||
+                  {}
+                }
+                onSubmit={(values) => {
+                  handleDynamicFormEmit(formName, stage.name, values);
+                }}
+              />
+            </CardContent>
+          </Card>
         );
       }
 
@@ -346,52 +378,56 @@ export default function PipelineFormComponent({
       // For n8n-service-api config, use N8nAuthFormComponent for form linkage
       if (stage.name === 'n8n-service-api') {
         return (
-          <div key={stage.name} className="space-y-4 mb-6">
-            <div className="text-lg font-medium">
-              {extractI18nObject(stage.label)}
-            </div>
-            {stage.description && (
-              <div className="text-sm text-muted-foreground">
-                {extractI18nObject(stage.description)}
-              </div>
-            )}
-            <N8nAuthFormComponent
-              itemConfigList={stage.config}
-              initialValues={
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                (form.watch(formName) as Record<string, any>)?.[stage.name] ||
-                {}
-              }
-              onSubmit={(values) => {
-                handleDynamicFormEmit(formName, stage.name, values);
-              }}
-            />
-          </div>
+          <Card key={stage.name}>
+            <CardHeader>
+              <CardTitle>{extractI18nObject(stage.label)}</CardTitle>
+              {stage.description && (
+                <CardDescription>
+                  {extractI18nObject(stage.description)}
+                </CardDescription>
+              )}
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <N8nAuthFormComponent
+                itemConfigList={stage.config}
+                initialValues={
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  (form.watch(formName) as Record<string, any>)?.[stage.name] ||
+                  {}
+                }
+                onSubmit={(values) => {
+                  handleDynamicFormEmit(formName, stage.name, values);
+                }}
+              />
+            </CardContent>
+          </Card>
         );
       }
     }
 
     return (
-      <div key={stage.name} className="space-y-4 mb-6">
-        <div className="text-lg font-medium">
-          {extractI18nObject(stage.label)}
-        </div>
-        {stage.description && (
-          <div className="text-sm text-muted-foreground">
-            {extractI18nObject(stage.description)}
-          </div>
-        )}
-        <DynamicFormComponent
-          itemConfigList={stage.config}
-          initialValues={
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (form.watch(formName) as Record<string, any>)?.[stage.name] || {}
-          }
-          onSubmit={(values) => {
-            handleDynamicFormEmit(formName, stage.name, values);
-          }}
-        />
-      </div>
+      <Card key={stage.name}>
+        <CardHeader>
+          <CardTitle>{extractI18nObject(stage.label)}</CardTitle>
+          {stage.description && (
+            <CardDescription>
+              {extractI18nObject(stage.description)}
+            </CardDescription>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <DynamicFormComponent
+            itemConfigList={stage.config}
+            initialValues={
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (form.watch(formName) as Record<string, any>)?.[stage.name] || {}
+            }
+            onSubmit={(values) => {
+              handleDynamicFormEmit(formName, stage.name, values);
+            }}
+          />
+        </CardContent>
+      </Card>
     );
   }
 
@@ -477,58 +513,130 @@ export default function PipelineFormComponent({
                 {/* Basic info section */}
                 {activeSection === 'basic' && (
                   <div className="space-y-6">
-                    {/* Name and Emoji in same row */}
-                    <div className="flex gap-4 items-start">
-                      <FormField
-                        control={form.control}
-                        name="basic.name"
-                        render={({ field }) => (
-                          <FormItem className="flex-1">
-                            <FormLabel>
-                              {t('common.name')}
-                              <span className="text-red-500">*</span>
-                            </FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="basic.emoji"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t('common.icon')}</FormLabel>
-                            <FormControl>
-                              <EmojiPicker
-                                value={field.value}
-                                onChange={field.onChange}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
+                    {/* Basic Information Card */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>{t('pipelines.basicInfo')}</CardTitle>
+                        <CardDescription>
+                          {t('pipelines.basicInfoDescription')}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {/* Name and Emoji in same row */}
+                        <div className="flex gap-4 items-start">
+                          <FormField
+                            control={form.control}
+                            name="basic.name"
+                            render={({ field }) => (
+                              <FormItem className="flex-1">
+                                <FormLabel>
+                                  {t('common.name')}
+                                  <span className="text-destructive">*</span>
+                                </FormLabel>
+                                <FormControl>
+                                  <Input {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="basic.emoji"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{t('common.icon')}</FormLabel>
+                                <FormControl>
+                                  <EmojiPicker
+                                    value={field.value}
+                                    onChange={field.onChange}
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
 
-                    <FormField
-                      control={form.control}
-                      name="basic.description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            {t('common.description')}
-                            <span className="text-red-500">*</span>
-                          </FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                        <FormField
+                          control={form.control}
+                          name="basic.description"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>
+                                {t('common.description')}
+                                <span className="text-destructive">*</span>
+                              </FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        {/* Copy pipeline (edit mode only) */}
+                        {isEditMode && (
+                          <div className="flex items-center justify-between rounded-lg border p-4">
+                            <div className="space-y-0.5">
+                              <p className="text-sm font-medium">
+                                {t('pipelines.copyPipelineAction')}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {t('pipelines.copyPipelineHint')}
+                              </p>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handleCopy}
+                            >
+                              <Copy className="size-4 mr-1.5" />
+                              {t('common.copy')}
+                            </Button>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    {/* Danger Zone (edit mode only) */}
+                    {isEditMode && (
+                      <Card className="border-destructive/50">
+                        <CardHeader>
+                          <CardTitle className="text-destructive">
+                            {t('pipelines.dangerZone')}
+                          </CardTitle>
+                          <CardDescription>
+                            {t('pipelines.dangerZoneDescription')}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="flex items-center justify-between">
+                            <div className="space-y-1">
+                              <p className="text-sm font-medium">
+                                {t('pipelines.deletePipelineAction')}
+                              </p>
+                              <p className="text-sm text-muted-foreground">
+                                {isDefaultPipeline
+                                  ? t('pipelines.defaultPipelineCannotDelete')
+                                  : t('pipelines.deletePipelineHint')}
+                              </p>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              disabled={isDefaultPipeline}
+                              onClick={handleDelete}
+                            >
+                              <Trash2 className="size-4 mr-1.5" />
+                              {t('common.delete')}
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
                   </div>
                 )}
 
@@ -565,6 +673,10 @@ export default function PipelineFormComponent({
                           renderDynamicForms(stage, 'output'),
                         )}
                       </div>
+                    )}
+
+                    {activeSection === 'extensions' && pipelineId && (
+                      <PipelineExtension pipelineId={pipelineId} />
                     )}
                   </>
                 )}

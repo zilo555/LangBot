@@ -632,7 +632,8 @@ const enUS = {
     earliestCreated: 'Earliest Created',
     recentlyEdited: 'Recently Edited',
     earliestEdited: 'Earliest Edited',
-    basicInfo: 'Basic',
+    basicInfo: 'Basic Information',
+    basicInfoDescription: 'Set the pipeline name, icon and description',
     aiCapabilities: 'AI',
     triggerConditions: 'Trigger',
     safetyControls: 'Safety',
@@ -653,6 +654,14 @@ const enUS = {
     copyConfirmation:
       'Are you sure you want to copy this pipeline? This will create a new pipeline with all configurations.',
     unsavedChanges: 'You have unsaved changes',
+    dangerZone: 'Danger Zone',
+    dangerZoneDescription: 'Irreversible and destructive actions',
+    deletePipelineAction: 'Delete this pipeline',
+    deletePipelineHint:
+      'Once deleted, bots bound to this pipeline will stop working.',
+    copyPipelineAction: 'Copy this pipeline',
+    copyPipelineHint:
+      'Create a new pipeline with all configurations duplicated.',
     extensions: {
       title: 'Extensions',
       loadError: 'Failed to load plugins',
@@ -801,9 +810,20 @@ const enUS = {
     builtInEngine: 'Built-in Engine',
     cannotChangeKnowledgeEngine:
       'Knowledge engine cannot be changed after creation',
+    basicInfo: 'Basic Information',
+    basicInfoDescription: 'Set the knowledge base name, icon and description',
     engineSettings: 'Engine Settings',
+    engineSettingsDescription:
+      'Configuration for the selected knowledge engine',
     engineSettingsReadonly: 'read-only in edit mode',
     retrievalSettings: 'Retrieval Settings',
+    retrievalSettingsDescription:
+      'Configure how documents are retrieved from this knowledge base',
+    dangerZone: 'Danger Zone',
+    dangerZoneDescription: 'Irreversible and destructive actions',
+    deleteKbAction: 'Delete this knowledge base',
+    deleteKbHint:
+      'Once deleted, all documents and data in this knowledge base will be permanently removed.',
     noEnginesAvailable: 'No knowledge base engines available',
     installEngineHint: 'Please install a "Knowledge Engine" plugin first',
     createKnowledgeBaseFailed: 'Failed to create knowledge base: ',

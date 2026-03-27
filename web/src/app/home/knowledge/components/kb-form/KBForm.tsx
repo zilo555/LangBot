@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -15,6 +15,13 @@ import {
   FormMessage,
   FormDescription,
 } from '@/components/ui/form';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import {
   Select,
@@ -50,17 +57,13 @@ const getFormSchema = (t: (key: string) => string) =>
 
 /**
  * Parse creation schema from Knowledge Engine to IDynamicFormItemSchema[]
- * Same pattern as ExternalKBForm uses for retriever config
  */
 function parseCreationSchema(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   schemaItems: any | any[] | undefined,
 ): IDynamicFormItemSchema[] {
   if (!schemaItems) return [];
-
-  // Handle wrapped schema (e.g. { schema: [...] }) which might be returned by the API
   const items = Array.isArray(schemaItems) ? schemaItems : schemaItems.schema;
-
   if (!items || !Array.isArray(items)) return [];
 
   return items.map(
@@ -83,10 +86,12 @@ export default function KBForm({
   initKbId,
   onNewKbCreated,
   onKbUpdated,
+  onDirtyChange,
 }: {
   initKbId?: string;
   onNewKbCreated: (kbId: string) => void;
   onKbUpdated: (kbId: string) => void;
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
   const { t } = useTranslation();
   const [ragEngines, setRagEngines] = useState<KnowledgeEngine[]>([]);
@@ -99,6 +104,10 @@ export default function KBForm({
   >({});
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Dirty tracking: snapshot of saved state for comparison
+  const savedSnapshotRef = useRef<string>('');
+  const isInitializing = useRef(true);
 
   const formSchema = getFormSchema(t);
 
@@ -117,6 +126,27 @@ export default function KBForm({
     (e) => e.plugin_id === selectedEngineId,
   );
 
+  // Dirty tracking: compare current form + dynamic settings against saved snapshot
+  const watchedFormValues = form.watch();
+  useEffect(() => {
+    if (!savedSnapshotRef.current || isInitializing.current) return;
+    const currentSnapshot = JSON.stringify({
+      form: watchedFormValues,
+      config: configSettings,
+      retrieval: retrievalSettings,
+    });
+    const dirty = currentSnapshot !== savedSnapshotRef.current;
+    onDirtyChange?.(dirty);
+  }, [watchedFormValues, configSettings, retrievalSettings, onDirtyChange]);
+
+  const captureSnapshot = () => {
+    savedSnapshotRef.current = JSON.stringify({
+      form: form.getValues(),
+      config: configSettings,
+      retrieval: retrievalSettings,
+    });
+  };
+
   useEffect(() => {
     loadRagEngines().then(() => {
       if (initKbId) {
@@ -131,7 +161,6 @@ export default function KBForm({
       const firstEngine = ragEngines[0];
       setSelectedEngineId(firstEngine.plugin_id);
       form.setValue('ragEngineId', firstEngine.plugin_id);
-      // Initialize config settings with defaults
       const formItems = parseCreationSchema(firstEngine.creation_schema);
       if (formItems.length > 0) {
         setConfigSettings(getDefaultValues(formItems));
@@ -157,6 +186,7 @@ export default function KBForm({
 
   const loadKbConfig = async (kbId: string) => {
     try {
+      isInitializing.current = true;
       setIsEditing(true);
 
       const res = await httpClient.getKnowledgeBase(kbId);
@@ -165,15 +195,24 @@ export default function KBForm({
       const engineId = kb.knowledge_engine_plugin_id || '';
       setSelectedEngineId(engineId);
 
-      form.setValue('name', kb.name);
-      form.setValue('description', kb.description);
-      form.setValue('emoji', kb.emoji || '📚');
-      form.setValue('ragEngineId', engineId);
+      form.reset({
+        name: kb.name,
+        description: kb.description,
+        emoji: kb.emoji || '📚',
+        ragEngineId: engineId,
+      });
 
       setConfigSettings(kb.creation_settings || {});
       setRetrievalSettings(kb.retrieval_settings || {});
+
+      // Capture snapshot after a tick so dynamic forms have emitted initial values
+      setTimeout(() => {
+        captureSnapshot();
+        isInitializing.current = false;
+      }, 500);
     } catch (err) {
       console.error('Failed to load KB config:', err);
+      isInitializing.current = false;
     }
   };
 
@@ -181,7 +220,6 @@ export default function KBForm({
     setSelectedEngineId(engineId);
     form.setValue('ragEngineId', engineId);
 
-    // Find engine and initialize config settings with defaults from schema
     const engine = ragEngines.find((e) => e.plugin_id === engineId);
     if (engine) {
       const formItems = parseCreationSchema(engine.creation_schema);
@@ -210,10 +248,11 @@ export default function KBForm({
     };
 
     if (initKbId) {
-      // Update knowledge base
       httpClient
         .updateKnowledgeBase(initKbId, kbData)
         .then((res) => {
+          captureSnapshot();
+          onDirtyChange?.(false);
           onKbUpdated(res.uuid);
           toast.success(t('knowledge.updateKnowledgeBaseSuccess'));
         })
@@ -225,7 +264,6 @@ export default function KBForm({
           );
         });
     } else {
-      // Create knowledge base
       httpClient
         .createKnowledgeBase(kbData)
         .then((res) => {
@@ -241,15 +279,11 @@ export default function KBForm({
     }
   };
 
-  // Convert creation schema to dynamic form items (same as ExternalKBForm)
-  // Memoize to avoid regenerating UUIDs on every render, which would cause
-  // DynamicFormComponent's useEffect to re-fire and trigger an infinite loop.
   const configFormItems = useMemo(
     () => parseCreationSchema(selectedEngine?.creation_schema),
     [selectedEngine?.creation_schema],
   );
 
-  // Convert retrieval schema to dynamic form items
   const retrievalFormItems = useMemo(
     () => parseCreationSchema(selectedEngine?.retrieval_schema),
     [selectedEngine?.retrieval_schema],
@@ -282,14 +316,75 @@ export default function KBForm({
   }
 
   return (
-    <>
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          id="kb-form"
-          className="space-y-8"
-        >
-          <div className="space-y-4">
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        id="kb-form"
+        className="space-y-6"
+      >
+        {/* Card 1: Basic Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('knowledge.basicInfo')}</CardTitle>
+            <CardDescription>
+              {t('knowledge.basicInfoDescription')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Name and Emoji in same row */}
+            <div className="flex gap-4 items-start">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>
+                      {t('knowledge.kbName')}
+                      <span className="text-destructive">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="emoji"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('common.icon')}</FormLabel>
+                    <FormControl>
+                      <EmojiPicker
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Description */}
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    {t('knowledge.kbDescription')}
+                    <span className="text-destructive">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {/* Knowledge Engine Selector */}
             <FormField
               control={form.control}
@@ -298,7 +393,7 @@ export default function KBForm({
                 <FormItem>
                   <FormLabel>
                     {t('knowledge.knowledgeEngine')}
-                    <span className="text-red-500">*</span>
+                    <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
                     <Select
@@ -379,102 +474,54 @@ export default function KBForm({
                 </FormItem>
               )}
             />
+          </CardContent>
+        </Card>
 
-            {/* Name and Emoji in same row */}
-            <div className="flex gap-4 items-start">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormLabel>
-                      {t('knowledge.kbName')}
-                      <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+        {/* Card 2: Engine Settings (dynamic form from creation_schema) */}
+        {configFormItems.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('knowledge.engineSettings')}</CardTitle>
+              <CardDescription>
+                {t('knowledge.engineSettingsDescription')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DynamicFormComponent
+                itemConfigList={configFormItems}
+                initialValues={configSettings as Record<string, object>}
+                onSubmit={(val) =>
+                  setConfigSettings(val as Record<string, unknown>)
+                }
+                isEditing={isEditing}
+                externalDependentValues={retrievalSettings}
               />
-              <FormField
-                control={form.control}
-                name="emoji"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('common.icon')}</FormLabel>
-                    <FormControl>
-                      <EmojiPicker
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Card 3: Retrieval Settings (dynamic form from retrieval_schema) */}
+        {retrievalFormItems.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('knowledge.retrievalSettings')}</CardTitle>
+              <CardDescription>
+                {t('knowledge.retrievalSettingsDescription')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <DynamicFormComponent
+                itemConfigList={retrievalFormItems}
+                initialValues={retrievalSettings as Record<string, object>}
+                onSubmit={(val) =>
+                  setRetrievalSettings(val as Record<string, unknown>)
+                }
+                externalDependentValues={configSettings}
               />
-            </div>
-
-            {/* Description */}
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t('knowledge.kbDescription')}
-                    <span className="text-red-500">*</span>
-                  </FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Engine specific fields (dynamic form from creation_schema) */}
-            {configFormItems.length > 0 && (
-              <div className="space-y-4 pt-2 border-t">
-                <div className="text-sm font-medium text-muted-foreground">
-                  {t('knowledge.engineSettings')}
-                </div>
-                <div>
-                  <DynamicFormComponent
-                    itemConfigList={configFormItems}
-                    initialValues={configSettings as Record<string, object>}
-                    onSubmit={(val) =>
-                      setConfigSettings(val as Record<string, unknown>)
-                    }
-                    isEditing={isEditing}
-                    externalDependentValues={retrievalSettings}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Retrieval settings (dynamic form from retrieval_schema) */}
-            {retrievalFormItems.length > 0 && (
-              <div className="space-y-4 pt-2 border-t">
-                <div className="text-sm font-medium text-muted-foreground">
-                  {t('knowledge.retrievalSettings')}
-                </div>
-                <div>
-                  <DynamicFormComponent
-                    itemConfigList={retrievalFormItems}
-                    initialValues={retrievalSettings as Record<string, object>}
-                    onSubmit={(val) =>
-                      setRetrievalSettings(val as Record<string, unknown>)
-                    }
-                    externalDependentValues={configSettings}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-        </form>
-      </Form>
-    </>
+            </CardContent>
+          </Card>
+        )}
+      </form>
+    </Form>
   );
 }

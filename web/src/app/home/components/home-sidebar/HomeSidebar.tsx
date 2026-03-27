@@ -77,6 +77,11 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { ChevronRight, Plus } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useSidebarData, SidebarEntityItem } from './SidebarDataContext';
 
@@ -346,7 +351,7 @@ function NavItems({
                   {canCreate && (
                     <button
                       type="button"
-                      className="p-1 rounded-sm hover:bg-sidebar-accent opacity-0 group-hover/category-header:opacity-100 transition-opacity"
+                      className="p-1 rounded-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground opacity-0 group-hover/category-header:opacity-100 transition-all"
                       onClick={(e) => {
                         e.stopPropagation();
                         router.push(`${routePrefix}?id=new`);
@@ -395,49 +400,66 @@ function NavItems({
                                 isPlugin ? 'group/plugin-item relative' : ''
                               }
                             >
-                              <SidebarMenuSubButton
-                                asChild
-                                isActive={isItemActive}
-                              >
-                                <a
-                                  href={itemRoute}
-                                  className={cn(
-                                    isPlugin && !item.debug ? 'pr-6' : '',
-                                  )}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    router.push(itemRoute);
-                                  }}
-                                >
-                                  {item.emoji ? (
-                                    <span className="text-sm shrink-0">
-                                      {item.emoji}
-                                    </span>
-                                  ) : item.iconURL ? (
-                                    <span className="relative shrink-0">
-                                      <img
-                                        src={item.iconURL}
-                                        alt=""
-                                        className="size-4 rounded"
-                                      />
-                                      {isBot && (
-                                        <span
-                                          className={cn(
-                                            'absolute -bottom-0.5 -right-0.5 size-2 rounded-full border-2 border-sidebar',
-                                            item.enabled === false
-                                              ? 'bg-muted-foreground/40'
-                                              : 'bg-green-500',
-                                          )}
-                                        />
+                              <Tooltip delayDuration={500}>
+                                <TooltipTrigger asChild>
+                                  <SidebarMenuSubButton
+                                    asChild
+                                    isActive={isItemActive}
+                                  >
+                                    <a
+                                      href={itemRoute}
+                                      className={cn(
+                                        isPlugin && !item.debug ? 'pr-6' : '',
                                       )}
-                                    </span>
-                                  ) : null}
-                                  <span className="truncate">{item.name}</span>
-                                  {item.debug && (
-                                    <Bug className="size-3.5 shrink-0 text-orange-400" />
-                                  )}
-                                </a>
-                              </SidebarMenuSubButton>
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        router.push(itemRoute);
+                                      }}
+                                    >
+                                      {item.emoji ? (
+                                        <span className="text-sm shrink-0">
+                                          {item.emoji}
+                                        </span>
+                                      ) : item.iconURL ? (
+                                        <span className="relative shrink-0">
+                                          <img
+                                            src={item.iconURL}
+                                            alt=""
+                                            className="size-4 rounded"
+                                          />
+                                          {isBot && (
+                                            <span
+                                              className={cn(
+                                                'absolute -bottom-0.5 -right-0.5 size-2 rounded-full border-2 border-sidebar',
+                                                item.enabled === false
+                                                  ? 'bg-muted-foreground/40'
+                                                  : 'bg-green-500',
+                                              )}
+                                            />
+                                          )}
+                                        </span>
+                                      ) : null}
+                                      <span className="truncate">
+                                        {item.name}
+                                      </span>
+                                      {item.debug && (
+                                        <Bug className="size-3.5 shrink-0 text-orange-400" />
+                                      )}
+                                    </a>
+                                  </SidebarMenuSubButton>
+                                </TooltipTrigger>
+                                {item.description && (
+                                  <TooltipContent
+                                    side="right"
+                                    align="center"
+                                    className="max-w-64"
+                                  >
+                                    {item.description.length > 80
+                                      ? item.description.slice(0, 80) + '…'
+                                      : item.description}
+                                  </TooltipContent>
+                                )}
+                              </Tooltip>
                               {/* Plugin context menu - shown on hover (not for debug plugins) */}
                               {isPlugin && !item.debug && (
                                 <PluginItemMenu

@@ -14,6 +14,7 @@ import DynamicFormItemComponent from '@/app/home/components/dynamic-form/Dynamic
 import { useEffect, useRef } from 'react';
 import { extractI18nObject } from '@/i18n/I18nProvider';
 import { useTranslation } from 'react-i18next';
+import { cn } from '@/lib/utils';
 
 export default function DynamicFormComponent({
   itemConfigList,
@@ -272,6 +273,46 @@ export default function DynamicFormComponent({
 
           // All fields are disabled when editing (creation_settings are immutable)
           const isFieldDisabled = !!isEditing;
+
+          // Boolean fields use a special inline layout
+          if (config.type === 'boolean') {
+            return (
+              <FormField
+                key={config.id}
+                control={form.control}
+                name={config.name as keyof FormValues}
+                render={({ field }) => (
+                  <FormItem>
+                    <div
+                      className={cn(
+                        'flex flex-row items-center justify-between rounded-lg border p-4 max-w-2xl',
+                        isFieldDisabled && 'pointer-events-none opacity-60',
+                      )}
+                    >
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">
+                          {extractI18nObject(config.label)}
+                        </FormLabel>
+                        {config.description && (
+                          <p className="text-sm text-muted-foreground">
+                            {extractI18nObject(config.description)}
+                          </p>
+                        )}
+                      </div>
+                      <FormControl>
+                        <DynamicFormItemComponent
+                          config={config}
+                          field={field}
+                          onFileUploaded={onFileUploaded}
+                        />
+                      </FormControl>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            );
+          }
 
           return (
             <FormField

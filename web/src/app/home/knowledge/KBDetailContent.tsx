@@ -5,6 +5,13 @@ import { useRouter } from 'next/navigation';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -21,7 +28,7 @@ import { useTranslation } from 'react-i18next';
 import { KnowledgeBase } from '@/app/infra/entities/api';
 import { CustomApiError } from '@/app/infra/entities/common';
 import { toast } from 'sonner';
-import { FileText, FolderOpen, Search } from 'lucide-react';
+import { FileText, FolderOpen, Search, Trash2 } from 'lucide-react';
 
 export default function KBDetailContent({ id }: { id: string }) {
   const isCreateMode = id === 'new';
@@ -44,6 +51,7 @@ export default function KBDetailContent({ id }: { id: string }) {
   const [activeTab, setActiveTab] = useState('metadata');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [kbInfo, setKbInfo] = useState<KnowledgeBase | null>(null);
+  const [formDirty, setFormDirty] = useState(false);
 
   const loadKbInfo = useCallback(
     async (kbId: string) => {
@@ -81,7 +89,6 @@ export default function KBDetailContent({ id }: { id: string }) {
 
   function handleNewKbCreated(newKbId: string) {
     refreshKnowledgeBases();
-    // Navigate to the newly created KB's detail view via query param
     router.push(`/home/knowledge?id=${encodeURIComponent(newKbId)}`);
   }
 
@@ -106,45 +113,47 @@ export default function KBDetailContent({ id }: { id: string }) {
     return await httpClient.retrieveKnowledgeBase(kbId, query);
   };
 
-  // Create mode: simple form layout
+  // ==================== Create Mode ====================
   if (isCreateMode) {
     return (
       <div className="flex h-full flex-col">
-        <div className="flex items-center gap-3 pb-4 shrink-0">
+        <div className="flex items-center justify-between pb-4 shrink-0">
           <h1 className="text-xl font-semibold">
             {t('knowledge.createKnowledgeBase')}
           </h1>
+          <Button type="submit" form="kb-form">
+            {t('common.submit')}
+          </Button>
         </div>
 
         <div className="flex-1 overflow-y-auto min-h-0">
-          <div className="mx-auto max-w-2xl space-y-6">
+          <div className="mx-auto max-w-3xl pb-8">
             <KBForm
               initKbId={undefined}
               onNewKbCreated={handleNewKbCreated}
               onKbUpdated={handleKbUpdated}
             />
-
-            <div className="flex justify-end gap-2 pb-4">
-              <Button type="submit" form="kb-form">
-                {t('common.submit')}
-              </Button>
-            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  // Edit mode: tabbed layout with metadata, documents (conditional), retrieve
+  // ==================== Edit Mode ====================
   return (
     <>
       <div className="flex h-full flex-col">
-        <div className="flex items-center gap-3 pb-4 shrink-0">
+        {/* Sticky Header: title + save button */}
+        <div className="flex items-center justify-between pb-4 shrink-0">
           <h1 className="text-xl font-semibold">
             {t('knowledge.editKnowledgeBase')}
           </h1>
+          <Button type="submit" form="kb-form" disabled={!formDirty}>
+            {t('common.save')}
+          </Button>
         </div>
 
+        {/* Horizontal Tabs */}
         <Tabs
           key={id}
           value={activeTab}
@@ -168,32 +177,55 @@ export default function KBDetailContent({ id }: { id: string }) {
             </TabsTrigger>
           </TabsList>
 
+          {/* Tab: Metadata */}
           <TabsContent
             value="metadata"
             className="flex-1 min-h-0 overflow-y-auto mt-4"
           >
-            <div className="mx-auto max-w-2xl">
+            <div className="mx-auto max-w-3xl space-y-6 pb-8">
               <KBForm
                 initKbId={id}
                 onNewKbCreated={handleNewKbCreated}
                 onKbUpdated={handleKbUpdated}
+                onDirtyChange={setFormDirty}
               />
 
-              <div className="flex justify-end gap-2 mt-6 pb-4">
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={() => setShowDeleteConfirm(true)}
-                >
-                  {t('common.delete')}
-                </Button>
-                <Button type="submit" form="kb-form">
-                  {t('common.save')}
-                </Button>
-              </div>
+              {/* Danger Zone Card */}
+              <Card className="border-destructive/50">
+                <CardHeader>
+                  <CardTitle className="text-destructive">
+                    {t('knowledge.dangerZone')}
+                  </CardTitle>
+                  <CardDescription>
+                    {t('knowledge.dangerZoneDescription')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium">
+                        {t('knowledge.deleteKbAction')}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {t('knowledge.deleteKbHint')}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setShowDeleteConfirm(true)}
+                    >
+                      <Trash2 className="size-4 mr-1.5" />
+                      {t('common.delete')}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
+          {/* Tab: Documents */}
           {hasDocumentCapability() && (
             <TabsContent
               value="documents"
@@ -207,6 +239,7 @@ export default function KBDetailContent({ id }: { id: string }) {
             </TabsContent>
           )}
 
+          {/* Tab: Retrieve */}
           <TabsContent
             value="retrieve"
             className="flex-1 min-h-0 overflow-y-auto mt-4"
