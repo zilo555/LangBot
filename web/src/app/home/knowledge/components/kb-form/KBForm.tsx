@@ -46,7 +46,7 @@ import { UUID } from 'uuidjs';
 const getFormSchema = (t: (key: string) => string) =>
   z.object({
     name: z.string().min(1, { message: t('knowledge.kbNameRequired') }),
-    description: z.string().optional().default(''),
+    description: z.string().optional(),
     emoji: z.string().optional(),
     ragEngineId: z
       .string()
@@ -238,7 +238,7 @@ export default function KBForm({
   const onSubmit = (data: z.infer<typeof formSchema>) => {
     const kbData: KnowledgeBase = {
       name: data.name,
-      description: data.description,
+      description: data.description ?? '',
       emoji: data.emoji,
       knowledge_engine_plugin_id: selectedEngineId,
       creation_settings: configSettings,

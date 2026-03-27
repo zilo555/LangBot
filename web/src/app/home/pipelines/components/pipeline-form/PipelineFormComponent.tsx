@@ -80,7 +80,7 @@ export default function PipelineFormComponent({
     ? z.object({
         basic: z.object({
           name: z.string().min(1, { message: t('pipelines.nameRequired') }),
-          description: z.string().optional().default(''),
+          description: z.string().optional(),
           emoji: z.string().optional(),
         }),
         ai: z.record(z.string(), z.any()),
@@ -91,7 +91,7 @@ export default function PipelineFormComponent({
     : z.object({
         basic: z.object({
           name: z.string().min(1, { message: t('pipelines.nameRequired') }),
-          description: z.string().optional().default(''),
+          description: z.string().optional(),
           emoji: z.string().optional(),
         }),
         ai: z.record(z.string(), z.any()).optional(),
@@ -253,7 +253,7 @@ export default function PipelineFormComponent({
   function handleCreate(values: FormValues) {
     const pipeline: Pipeline = {
       config: {},
-      description: values.basic.description,
+      description: values.basic.description ?? '',
       name: values.basic.name,
       emoji: values.basic.emoji,
     };
@@ -280,7 +280,7 @@ export default function PipelineFormComponent({
     const pipeline: Pipeline = {
       config: realConfig,
       // created_at: '',
-      description: values.basic.description,
+      description: values.basic.description ?? '',
       // for_version: '',
       name: values.basic.name,
       emoji: values.basic.emoji,

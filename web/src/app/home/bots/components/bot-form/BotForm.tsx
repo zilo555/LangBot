@@ -53,7 +53,7 @@ import { CustomApiError } from '@/app/infra/entities/common';
 const getFormSchema = (t: (key: string) => string) =>
   z.object({
     name: z.string().min(1, { message: t('bots.botNameRequired') }),
-    description: z.string().optional().default(''),
+    description: z.string().optional(),
     adapter: z.string().min(1, { message: t('bots.adapterRequired') }),
     adapter_config: z.record(z.string(), z.any()),
     enable: z.boolean().optional(),
@@ -337,7 +337,7 @@ export default function BotForm({
       const updateBot: Bot = {
         uuid: initBotId,
         name: form.getValues().name,
-        description: form.getValues().description,
+        description: form.getValues().description ?? '',
         adapter: form.getValues().adapter,
         adapter_config: form.getValues().adapter_config,
         enable: form.getValues().enable,
@@ -360,7 +360,7 @@ export default function BotForm({
     } else {
       const newBot: Bot = {
         name: form.getValues().name,
-        description: form.getValues().description,
+        description: form.getValues().description ?? '',
         adapter: form.getValues().adapter,
         adapter_config: form.getValues().adapter_config,
       };
