@@ -18,6 +18,7 @@ import {
   LogOut,
   KeyRound,
   Settings,
+  Star,
   Ellipsis,
   ArrowUp,
   ExternalLink,
@@ -115,6 +116,7 @@ const ENTITY_CATEGORY_IDS = [
   'pipelines',
   'knowledge',
   'plugins',
+  'mcp',
 ] as const;
 type EntityCategoryId = (typeof ENTITY_CATEGORY_IDS)[number];
 
@@ -124,6 +126,7 @@ const DETAIL_PAGE_CATEGORIES: EntityCategoryId[] = [
   'pipelines',
   'knowledge',
   'plugins',
+  'mcp',
 ];
 
 // Categories that support creating new entities from the sidebar
@@ -131,6 +134,7 @@ const CREATABLE_CATEGORIES: EntityCategoryId[] = [
   'bots',
   'pipelines',
   'knowledge',
+  'mcp',
 ];
 
 // Categories where clicking the parent only toggles collapse (no list page)
@@ -138,6 +142,7 @@ const COLLAPSIBLE_ONLY_CATEGORIES: EntityCategoryId[] = [
   'bots',
   'pipelines',
   'knowledge',
+  'mcp',
 ];
 
 function isEntityCategory(id: string): id is EntityCategoryId {
@@ -147,12 +152,13 @@ function isEntityCategory(id: string): id is EntityCategoryId {
 // Map sidebar config IDs to SidebarDataContext keys
 const ENTITY_KEY_MAP: Record<
   EntityCategoryId,
-  'bots' | 'pipelines' | 'knowledgeBases' | 'plugins'
+  'bots' | 'pipelines' | 'knowledgeBases' | 'plugins' | 'mcpServers'
 > = {
   bots: 'bots',
   pipelines: 'pipelines',
   knowledge: 'knowledgeBases',
   plugins: 'plugins',
+  mcp: 'mcpServers',
 };
 
 // Route prefix map for entity detail pages
@@ -161,6 +167,7 @@ const ENTITY_ROUTE_MAP: Record<EntityCategoryId, string> = {
   pipelines: '/home/pipelines',
   knowledge: '/home/knowledge',
   plugins: '/home/plugins',
+  mcp: '/home/mcp',
 };
 
 // localStorage key for collapsible section open/closed state
@@ -324,6 +331,7 @@ function NavItems({
         const isCollapseOnly = COLLAPSIBLE_ONLY_CATEGORIES.includes(config.id);
         const isPlugin = config.id === 'plugins';
         const isBot = config.id === 'bots';
+        const isMCP = config.id === 'mcp';
         const isActive =
           selectedChild?.id === config.id ||
           pathname === routePrefix ||
@@ -400,7 +408,7 @@ function NavItems({
                             alt=""
                             className="size-4 rounded"
                           />
-                          {isBot && (
+                          {(isBot || isMCP) && (
                             <span
                               className={cn(
                                 'absolute -bottom-0.5 -right-0.5 size-2 rounded-full border-2 border-popover',
@@ -411,6 +419,15 @@ function NavItems({
                             />
                           )}
                         </span>
+                      ) : isMCP ? (
+                        <span
+                          className={cn(
+                            'size-2 shrink-0 rounded-full',
+                            item.enabled === false
+                              ? 'bg-muted-foreground/40'
+                              : 'bg-green-500',
+                          )}
+                        />
                       ) : null}
                       <span className="truncate">{item.name}</span>
                     </button>
@@ -447,7 +464,7 @@ function NavItems({
                                   alt=""
                                   className="size-4 rounded"
                                 />
-                                {isBot && (
+                                {(isBot || isMCP) && (
                                   <span
                                     className={cn(
                                       'absolute -bottom-0.5 -right-0.5 size-2 rounded-full border-2 border-sidebar',
@@ -458,6 +475,15 @@ function NavItems({
                                   />
                                 )}
                               </span>
+                            ) : isMCP ? (
+                              <span
+                                className={cn(
+                                  'size-2 shrink-0 rounded-full',
+                                  item.enabled === false
+                                    ? 'bg-muted-foreground/40'
+                                    : 'bg-green-500',
+                                )}
+                              />
                             ) : null}
                             <span className="truncate">{item.name}</span>
                             {item.debug && (
@@ -914,7 +940,8 @@ export default function HomeSidebar({
   const [versionDialogOpen, setVersionDialogOpen] = useState(false);
   const [modelsDialogOpen, setModelsDialogOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string>('');
-
+  const [starCount, setStarCount] = useState<number | null>(null);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   function handleModelsDialogChange(open: boolean) {
     setModelsDialogOpen(open);
     if (open) {
@@ -985,6 +1012,15 @@ export default function HomeSidebar({
       .catch((error) => {
         console.error('Failed to fetch releases:', error);
       });
+
+    getCloudServiceClientSync()
+      .getGitHubRepoInfo()
+      .then((info) => {
+        if (info?.repo?.stargazers_count != null) {
+          setStarCount(info.repo.stargazers_count);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // Update selected state + notify parent without navigating
@@ -1122,6 +1158,19 @@ export default function HomeSidebar({
 
         {/* Footer */}
         <SidebarFooter>
+          {/* API Integration entry */}
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={() => setApiKeyDialogOpen(true)}
+                tooltip={t('common.apiIntegration')}
+              >
+                <KeyRound className="size-4" />
+                <span>{t('common.apiIntegration')}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+
           {/* Models entry */}
           <SidebarMenu>
             <SidebarMenuItem>
@@ -1145,7 +1194,7 @@ export default function HomeSidebar({
           {/* User menu using sidebar-07 nav-user DropdownMenu pattern */}
           <SidebarMenu>
             <SidebarMenuItem>
-              <DropdownMenu>
+              <DropdownMenu open={userMenuOpen} onOpenChange={setUserMenuOpen}>
                 <DropdownMenuTrigger asChild>
                   <SidebarMenuButton
                     size="lg"
@@ -1226,10 +1275,6 @@ export default function HomeSidebar({
                       <Settings />
                       {t('account.settings')}
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setApiKeyDialogOpen(true)}>
-                      <KeyRound />
-                      {t('common.apiIntegration')}
-                    </DropdownMenuItem>
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
 
@@ -1265,6 +1310,29 @@ export default function HomeSidebar({
                     >
                       <Lightbulb />
                       {t('common.featureRequest')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        window.open(
+                          'https://github.com/langbot-app/LangBot',
+                          '_blank',
+                        );
+                      }}
+                    >
+                      <Star
+                        className={cn(
+                          'text-yellow-500',
+                          userMenuOpen && 'animate-twinkle',
+                        )}
+                      />
+                      <span className="flex-1">{t('common.starOnGitHub')}</span>
+                      {starCount != null && (
+                        <Badge variant="secondary" className="ml-auto text-xs">
+                          {starCount >= 1000
+                            ? `${(starCount / 1000).toFixed(1)}k`
+                            : starCount}
+                        </Badge>
+                      )}
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />

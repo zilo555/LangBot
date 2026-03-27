@@ -29,6 +29,7 @@ const enUS = {
     language: 'Language',
     helpDocs: 'Get Help',
     featureRequest: 'Feature Request',
+    starOnGitHub: 'Star on GitHub',
     create: 'Create',
     edit: 'Edit',
     delete: 'Delete',
@@ -612,6 +613,13 @@ const enUS = {
     sseTimeoutNonNegative: 'SSE timeout cannot be negative',
     updateSuccess: 'Updated successfully',
     updateFailed: 'Update failed: ',
+    selectFromSidebar: 'Select an MCP server from the sidebar',
+    dangerZone: 'Danger Zone',
+    dangerZoneDescription:
+      'Irreversible and destructive actions for this MCP server.',
+    deleteMCPAction: 'Delete this MCP server',
+    deleteMCPHint:
+      'Once deleted, this MCP server configuration cannot be recovered.',
   },
   pipelines: {
     title: 'Pipelines',

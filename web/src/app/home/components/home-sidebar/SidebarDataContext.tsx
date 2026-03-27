@@ -34,10 +34,12 @@ export interface SidebarDataContextValue {
   pipelines: SidebarEntityItem[];
   knowledgeBases: SidebarEntityItem[];
   plugins: SidebarEntityItem[];
+  mcpServers: SidebarEntityItem[];
   refreshBots: () => Promise<void>;
   refreshPipelines: () => Promise<void>;
   refreshKnowledgeBases: () => Promise<void>;
   refreshPlugins: () => Promise<void>;
+  refreshMCPServers: () => Promise<void>;
   refreshAll: () => Promise<void>;
   // Breadcrumb: entity name shown when viewing a detail page
   detailEntityName: string | null;
@@ -55,6 +57,7 @@ export function SidebarDataProvider({
   const [pipelines, setPipelines] = useState<SidebarEntityItem[]>([]);
   const [knowledgeBases, setKnowledgeBases] = useState<SidebarEntityItem[]>([]);
   const [plugins, setPlugins] = useState<SidebarEntityItem[]>([]);
+  const [mcpServers, setMCPServers] = useState<SidebarEntityItem[]>([]);
   const [detailEntityName, setDetailEntityName] = useState<string | null>(null);
 
   const refreshBots = useCallback(async () => {
@@ -158,14 +161,36 @@ export function SidebarDataProvider({
     }
   }, []);
 
+  const refreshMCPServers = useCallback(async () => {
+    try {
+      const resp = await httpClient.getMCPServers();
+      setMCPServers(
+        resp.servers.map((server) => ({
+          id: server.name,
+          name: server.name,
+          enabled: server.enable,
+        })),
+      );
+    } catch (error) {
+      console.error('Failed to fetch MCP servers for sidebar:', error);
+    }
+  }, []);
+
   const refreshAll = useCallback(async () => {
     await Promise.all([
       refreshBots(),
       refreshPipelines(),
       refreshKnowledgeBases(),
       refreshPlugins(),
+      refreshMCPServers(),
     ]);
-  }, [refreshBots, refreshPipelines, refreshKnowledgeBases, refreshPlugins]);
+  }, [
+    refreshBots,
+    refreshPipelines,
+    refreshKnowledgeBases,
+    refreshPlugins,
+    refreshMCPServers,
+  ]);
 
   // Fetch all entity lists on mount
   useEffect(() => {
@@ -179,10 +204,12 @@ export function SidebarDataProvider({
         pipelines,
         knowledgeBases,
         plugins,
+        mcpServers,
         refreshBots,
         refreshPipelines,
         refreshKnowledgeBases,
         refreshPlugins,
+        refreshMCPServers,
         refreshAll,
         detailEntityName,
         setDetailEntityName,
