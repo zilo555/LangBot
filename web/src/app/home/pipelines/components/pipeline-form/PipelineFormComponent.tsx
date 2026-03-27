@@ -475,11 +475,11 @@ export default function PipelineFormComponent({
             onSubmit={form.handleSubmit(handleFormSubmit)}
             className="h-full flex flex-col flex-1 min-h-0 mb-2"
           >
-            <div className="flex-1 flex min-h-0">
+            <div className="flex-1 flex flex-col md:flex-row min-h-0">
               {/* Vertical section navigation (only show when multiple sections) */}
               {formLabelList.length > 1 && (
-                <nav className="w-44 shrink-0 pr-4 mr-4 border-r overflow-y-auto">
-                  <ul className="space-y-1">
+                <nav className="shrink-0 mb-4 md:mb-0 md:w-44 md:pr-4 md:mr-4 md:border-r overflow-x-auto md:overflow-x-visible md:overflow-y-auto">
+                  <ul className="flex md:flex-col gap-1 md:space-y-1">
                     {formLabelList.map((section) => {
                       const Icon = section.icon;
                       return (
@@ -488,7 +488,7 @@ export default function PipelineFormComponent({
                             type="button"
                             onClick={() => setActiveSection(section.name)}
                             className={cn(
-                              'w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors text-left cursor-pointer',
+                              'w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors text-left cursor-pointer whitespace-nowrap',
                               activeSection === section.name
                                 ? 'bg-accent text-accent-foreground'
                                 : 'text-muted-foreground hover:bg-muted hover:text-foreground',

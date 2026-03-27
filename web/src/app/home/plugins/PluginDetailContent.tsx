@@ -77,9 +77,9 @@ export default function PluginDetailContent({ id }: { id: string }) {
         ) : null}
       </div>
 
-      <div className="flex flex-1 flex-row overflow-hidden min-h-0 gap-6 max-w-full">
+      <div className="flex flex-1 flex-col md:flex-row overflow-hidden min-h-0 gap-6 max-w-full">
         {/* Left side - Config */}
-        <div className="w-[380px] flex-shrink-0 overflow-y-auto overflow-x-hidden">
+        <div className="md:w-[380px] md:flex-shrink-0 overflow-y-auto overflow-x-hidden">
           <PluginForm
             pluginAuthor={pluginAuthor}
             pluginName={pluginName}

@@ -442,68 +442,70 @@ function MarketPageContent({
         {/* Component filter and sort */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 px-3 sm:px-4">
           {/* Component filter */}
-          <div className="flex flex-col sm:flex-row items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-center gap-2 min-w-0 max-w-full">
             <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
               {t('market.filterByComponent')}:
             </span>
-            <ToggleGroup
-              type="single"
-              spacing={2}
-              size="sm"
-              value={componentFilter}
-              onValueChange={(value) => {
-                if (value) handleComponentFilterChange(value);
-              }}
-              className="justify-start"
-            >
-              <ToggleGroupItem
-                value="all"
-                aria-label="All components"
-                className="text-xs sm:text-sm cursor-pointer"
+            <div className="overflow-x-auto max-w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <ToggleGroup
+                type="single"
+                spacing={2}
+                size="sm"
+                value={componentFilter}
+                onValueChange={(value) => {
+                  if (value) handleComponentFilterChange(value);
+                }}
+                className="justify-start flex-nowrap"
               >
-                {t('market.allComponents')}
-              </ToggleGroupItem>
-              <ToggleGroupItem
-                value="Tool"
-                aria-label="Tool"
-                className="text-xs sm:text-sm cursor-pointer"
-              >
-                <Wrench className="h-4 w-4 mr-1" />
-                {t('plugins.componentName.Tool')}
-              </ToggleGroupItem>
-              <ToggleGroupItem
-                value="Command"
-                aria-label="Command"
-                className="text-xs sm:text-sm cursor-pointer"
-              >
-                <Hash className="h-4 w-4 mr-1" />
-                {t('plugins.componentName.Command')}
-              </ToggleGroupItem>
-              <ToggleGroupItem
-                value="EventListener"
-                aria-label="EventListener"
-                className="text-xs sm:text-sm cursor-pointer"
-              >
-                <AudioWaveform className="h-4 w-4 mr-1" />
-                {t('plugins.componentName.EventListener')}
-              </ToggleGroupItem>
-              <ToggleGroupItem
-                value="KnowledgeEngine"
-                aria-label="KnowledgeEngine"
-                className="text-xs sm:text-sm cursor-pointer"
-              >
-                <Book className="h-4 w-4 mr-1" />
-                {t('plugins.componentName.KnowledgeEngine')}
-              </ToggleGroupItem>
-              <ToggleGroupItem
-                value="Parser"
-                aria-label="Parser"
-                className="text-xs sm:text-sm cursor-pointer"
-              >
-                <FileText className="h-4 w-4 mr-1" />
-                {t('plugins.componentName.Parser')}
-              </ToggleGroupItem>
-            </ToggleGroup>
+                <ToggleGroupItem
+                  value="all"
+                  aria-label="All components"
+                  className="text-xs sm:text-sm cursor-pointer"
+                >
+                  {t('market.allComponents')}
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="Tool"
+                  aria-label="Tool"
+                  className="text-xs sm:text-sm cursor-pointer"
+                >
+                  <Wrench className="h-4 w-4 mr-1" />
+                  {t('plugins.componentName.Tool')}
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="Command"
+                  aria-label="Command"
+                  className="text-xs sm:text-sm cursor-pointer"
+                >
+                  <Hash className="h-4 w-4 mr-1" />
+                  {t('plugins.componentName.Command')}
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="EventListener"
+                  aria-label="EventListener"
+                  className="text-xs sm:text-sm cursor-pointer"
+                >
+                  <AudioWaveform className="h-4 w-4 mr-1" />
+                  {t('plugins.componentName.EventListener')}
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="KnowledgeEngine"
+                  aria-label="KnowledgeEngine"
+                  className="text-xs sm:text-sm cursor-pointer"
+                >
+                  <Book className="h-4 w-4 mr-1" />
+                  {t('plugins.componentName.KnowledgeEngine')}
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="Parser"
+                  aria-label="Parser"
+                  className="text-xs sm:text-sm cursor-pointer"
+                >
+                  <FileText className="h-4 w-4 mr-1" />
+                  {t('plugins.componentName.Parser')}
+                </ToggleGroupItem>
+              </ToggleGroup>
+            </div>
           </div>
 
           {/* Sort dropdown */}

@@ -335,9 +335,9 @@ const BotSessionMonitor = forwardRef<
   );
 
   return (
-    <div className="flex h-full min-h-0 rounded-lg border overflow-hidden">
+    <div className="flex flex-col md:flex-row h-full min-h-0 rounded-lg border overflow-hidden">
       {/* Left Panel: Session List */}
-      <div className="w-60 flex-shrink-0 border-r flex flex-col min-h-0">
+      <div className="max-h-48 md:max-h-none md:w-60 flex-shrink-0 border-b md:border-b-0 md:border-r flex flex-col min-h-0">
         {/* Session List */}
         <ScrollArea className="flex-1 min-h-0">
           {loadingSessions && sessions.length === 0 ? (
