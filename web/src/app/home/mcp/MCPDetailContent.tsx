@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -21,6 +21,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import MCPForm from '@/app/home/mcp/components/mcp-form/MCPForm';
+import type { MCPFormHandle } from '@/app/home/mcp/components/mcp-form/MCPForm';
 import { httpClient, systemInfo } from '@/app/infra/http/HttpClient';
 import { useSidebarData } from '@/app/home/components/home-sidebar/SidebarDataContext';
 import { useTranslation } from 'react-i18next';
@@ -49,6 +50,10 @@ export default function MCPDetailContent({ id }: { id: string }) {
 
   // Track whether the form has unsaved changes
   const [formDirty, setFormDirty] = useState(false);
+
+  // Ref to MCPForm for triggering test from header
+  const formRef = useRef<MCPFormHandle>(null);
+  const [mcpTesting, setMcpTesting] = useState(false);
 
   // Enable state managed here so the header switch works
   const [serverEnabled, setServerEnabled] = useState(true);
@@ -142,26 +147,38 @@ export default function MCPDetailContent({ id }: { id: string }) {
         {/* Header */}
         <div className="flex items-center justify-between pb-4 shrink-0">
           <h1 className="text-xl font-semibold">{t('mcp.createServer')}</h1>
-          <Button
-            type="submit"
-            form="mcp-form"
-            onClick={async (e) => {
-              if (!(await checkExtensionsLimit())) {
-                e.preventDefault();
-              }
-            }}
-          >
-            {t('common.submit')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => formRef.current?.testMcp()}
+              disabled={mcpTesting}
+            >
+              {t('common.test')}
+            </Button>
+            <Button
+              type="submit"
+              form="mcp-form"
+              onClick={async (e) => {
+                if (!(await checkExtensionsLimit())) {
+                  e.preventDefault();
+                }
+              }}
+            >
+              {t('common.submit')}
+            </Button>
+          </div>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto min-h-0">
           <div className="mx-auto max-w-3xl pb-8">
             <MCPForm
+              ref={formRef}
               initServerName={undefined}
               onFormSubmit={handleFormSubmit}
               onNewServerCreated={handleNewServerCreated}
+              onTestingChange={setMcpTesting}
             />
           </div>
         </div>
@@ -193,19 +210,31 @@ export default function MCPDetailContent({ id }: { id: string }) {
               </div>
             )}
           </div>
-          <Button type="submit" form="mcp-form" disabled={!formDirty}>
-            {t('common.save')}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => formRef.current?.testMcp()}
+              disabled={mcpTesting}
+            >
+              {t('common.test')}
+            </Button>
+            <Button type="submit" form="mcp-form" disabled={!formDirty}>
+              {t('common.save')}
+            </Button>
+          </div>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto min-h-0">
           <div className="mx-auto max-w-3xl space-y-6 pb-8">
             <MCPForm
+              ref={formRef}
               initServerName={id}
               onFormSubmit={handleFormSubmit}
               onNewServerCreated={handleNewServerCreated}
               onDirtyChange={setFormDirty}
+              onTestingChange={setMcpTesting}
             />
 
             {/* Card: Danger Zone */}

@@ -1,6 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  forwardRef,
+  useImperativeHandle,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { Resolver, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -215,14 +221,25 @@ interface MCPFormProps {
   onFormSubmit: () => void;
   onNewServerCreated: (serverName: string) => void;
   onDirtyChange?: (dirty: boolean) => void;
+  onTestingChange?: (testing: boolean) => void;
 }
 
-export default function MCPForm({
-  initServerName,
-  onFormSubmit,
-  onNewServerCreated,
-  onDirtyChange,
-}: MCPFormProps) {
+// Handle exposed to parent via ref
+export interface MCPFormHandle {
+  testMcp: () => void;
+  isTesting: boolean;
+}
+
+const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
+  {
+    initServerName,
+    onFormSubmit,
+    onNewServerCreated,
+    onDirtyChange,
+    onTestingChange,
+  },
+  ref,
+) {
   const { t } = useTranslation();
   const formSchema = getFormSchema(t);
   const isEditMode = !!initServerName;
@@ -261,6 +278,21 @@ export default function MCPForm({
   useEffect(() => {
     onDirtyChange?.(isDirty);
   }, [isDirty, onDirtyChange]);
+
+  // Notify parent when testing state changes
+  useEffect(() => {
+    onTestingChange?.(mcpTesting);
+  }, [mcpTesting, onTestingChange]);
+
+  // Expose test action and testing state to parent
+  useImperativeHandle(
+    ref,
+    () => ({
+      testMcp: () => testMcp(),
+      isTesting: mcpTesting,
+    }),
+    [mcpTesting],
+  );
 
   // Load server data
   useEffect(() => {
@@ -647,15 +679,6 @@ export default function MCPForm({
                     <ToolsList tools={runtimeInfo.tools} />
                   </>
                 )}
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => testMcp()}
-                disabled={mcpTesting}
-              >
-                {t('common.test')}
-              </Button>
             </CardContent>
           </Card>
         )}
@@ -895,19 +918,9 @@ export default function MCPForm({
             </FormItem>
           </CardContent>
         </Card>
-
-        {/* Test button (create mode only, edit mode has it in the status card) */}
-        {!isEditMode && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => testMcp()}
-            disabled={mcpTesting}
-          >
-            {t('common.test')}
-          </Button>
-        )}
       </form>
     </Form>
   );
-}
+});
+
+export default MCPForm;
