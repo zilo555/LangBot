@@ -294,6 +294,17 @@ const enUS = {
     log: 'Log',
     configuration: 'Configuration',
     logs: 'Logs',
+    basicInfo: 'Basic Information',
+    basicInfoDescription: 'Set the bot name and description',
+    routingConnection: 'Routing & Connection',
+    routingConnectionDescription:
+      'Bind the pipeline that processes messages for this bot',
+    adapterConfigDescription: 'Configure the selected platform adapter',
+    dangerZone: 'Danger Zone',
+    dangerZoneDescription: 'Irreversible and destructive actions',
+    deleteBotAction: 'Delete this bot',
+    deleteBotHint:
+      'Once deleted, all associated configuration will be permanently removed.',
     webhookUrl: 'Webhook Callback URL',
     webhookUrlCopied: 'Webhook URL copied',
     webhookUrlHint:

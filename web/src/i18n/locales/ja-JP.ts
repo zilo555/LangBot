@@ -299,6 +299,17 @@
     log: 'ログ',
     configuration: '設定',
     logs: 'ログ',
+    basicInfo: '基本情報',
+    basicInfoDescription: 'ボットの名前と説明を設定',
+    routingConnection: 'ルーティングと接続',
+    routingConnectionDescription:
+      'このボットのメッセージを処理するパイプラインを紐付け',
+    adapterConfigDescription: '選択したプラットフォームアダプターを設定',
+    dangerZone: '危険ゾーン',
+    dangerZoneDescription: '元に戻せない操作',
+    deleteBotAction: 'このボットを削除',
+    deleteBotHint:
+      '削除すると、関連する全ての設定が完全に削除され、復元できません。',
     webhookUrl: 'Webhook コールバック URL',
     webhookUrlCopied: 'Webhook URL をコピーしました',
     webhookUrlHint:
