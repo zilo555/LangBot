@@ -53,9 +53,7 @@ import { CustomApiError } from '@/app/infra/entities/common';
 const getFormSchema = (t: (key: string) => string) =>
   z.object({
     name: z.string().min(1, { message: t('bots.botNameRequired') }),
-    description: z
-      .string()
-      .min(1, { message: t('bots.botDescriptionRequired') }),
+    description: z.string().optional().default(''),
     adapter: z.string().min(1, { message: t('bots.adapterRequired') }),
     adapter_config: z.record(z.string(), z.any()),
     enable: z.boolean().optional(),
@@ -80,7 +78,7 @@ export default function BotForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      description: t('bots.defaultDescription'),
+      description: '',
       adapter: '',
       adapter_config: {},
       enable: true,
@@ -427,10 +425,7 @@ export default function BotForm({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {t('bots.botDescription')}
-                    <span className="text-destructive">*</span>
-                  </FormLabel>
+                  <FormLabel>{t('bots.botDescription')}</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>

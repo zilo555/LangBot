@@ -46,9 +46,7 @@ import { UUID } from 'uuidjs';
 const getFormSchema = (t: (key: string) => string) =>
   z.object({
     name: z.string().min(1, { message: t('knowledge.kbNameRequired') }),
-    description: z
-      .string()
-      .min(1, { message: t('knowledge.kbDescriptionRequired') }),
+    description: z.string().optional().default(''),
     emoji: z.string().optional(),
     ragEngineId: z
       .string()
@@ -115,7 +113,7 @@ export default function KBForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: '',
-      description: t('knowledge.defaultDescription'),
+      description: '',
       emoji: '📚',
       ragEngineId: '',
     },
@@ -373,10 +371,7 @@ export default function KBForm({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>
-                    {t('knowledge.kbDescription')}
-                    <span className="text-destructive">*</span>
-                  </FormLabel>
+                  <FormLabel>{t('knowledge.kbDescription')}</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>

@@ -80,9 +80,7 @@ export default function PipelineFormComponent({
     ? z.object({
         basic: z.object({
           name: z.string().min(1, { message: t('pipelines.nameRequired') }),
-          description: z
-            .string()
-            .min(1, { message: t('pipelines.descriptionRequired') }),
+          description: z.string().optional().default(''),
           emoji: z.string().optional(),
         }),
         ai: z.record(z.string(), z.any()),
@@ -93,9 +91,7 @@ export default function PipelineFormComponent({
     : z.object({
         basic: z.object({
           name: z.string().min(1, { message: t('pipelines.nameRequired') }),
-          description: z
-            .string()
-            .min(1, { message: t('pipelines.descriptionRequired') }),
+          description: z.string().optional().default(''),
           emoji: z.string().optional(),
         }),
         ai: z.record(z.string(), z.any()).optional(),
@@ -563,10 +559,7 @@ export default function PipelineFormComponent({
                           name="basic.description"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>
-                                {t('common.description')}
-                                <span className="text-destructive">*</span>
-                              </FormLabel>
+                              <FormLabel>{t('common.description')}</FormLabel>
                               <FormControl>
                                 <Input {...field} />
                               </FormControl>
