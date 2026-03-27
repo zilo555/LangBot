@@ -102,11 +102,13 @@ export default function PipelineDetailContent({ id }: { id: string }) {
           <TabsTrigger value="debug" className="gap-1.5">
             <Bug className="size-3.5" />
             {t('pipelines.debugChat')}
-            <span
-              className={`inline-block size-2 rounded-full ${
-                isWebSocketConnected ? 'bg-green-500' : 'bg-red-500'
-              }`}
-            />
+            {activeTab === 'debug' && (
+              <span
+                className={`inline-block size-2 rounded-full ${
+                  isWebSocketConnected ? 'bg-green-500' : 'bg-red-500'
+                }`}
+              />
+            )}
           </TabsTrigger>
           <TabsTrigger value="monitoring" className="gap-1.5">
             <BarChart3 className="size-3.5" />
