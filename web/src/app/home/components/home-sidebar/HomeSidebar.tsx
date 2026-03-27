@@ -130,13 +130,6 @@ const COLLAPSIBLE_ONLY_CATEGORIES: EntityCategoryId[] = [
   'knowledge',
 ];
 
-// Map creatable category IDs to their i18n "create" keys
-const CREATE_I18N_KEYS: Partial<Record<EntityCategoryId, string>> = {
-  bots: 'bots.createBot',
-  pipelines: 'pipelines.createPipeline',
-  knowledge: 'knowledge.createKnowledgeBase',
-};
-
 function isEntityCategory(id: string): id is EntityCategoryId {
   return (ENTITY_CATEGORY_IDS as readonly string[]).includes(id);
 }
@@ -336,7 +329,7 @@ function NavItems({
           >
             <SidebarMenuItem>
               <SidebarMenuButton
-                isActive={isActive}
+                isActive={false}
                 onClick={() => {
                   if (isCollapseOnly) {
                     onSectionToggle(config.id, !isOpen);
@@ -345,18 +338,33 @@ function NavItems({
                   }
                 }}
                 tooltip={config.name}
+                className="group/category-header"
               >
                 {config.icon}
                 <span>{config.name}</span>
-                <CollapsibleTrigger asChild>
-                  <button
-                    type="button"
-                    className="ml-auto p-1 -mr-1 rounded-sm hover:bg-sidebar-accent"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <ChevronRight className="size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                  </button>
-                </CollapsibleTrigger>
+                <div className="ml-auto flex items-center gap-0.5 -mr-1">
+                  {canCreate && (
+                    <button
+                      type="button"
+                      className="p-1 rounded-sm hover:bg-sidebar-accent opacity-0 group-hover/category-header:opacity-100 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`${routePrefix}?id=new`);
+                      }}
+                    >
+                      <Plus className="size-3.5" />
+                    </button>
+                  )}
+                  <CollapsibleTrigger asChild>
+                    <button
+                      type="button"
+                      className="p-1 rounded-sm hover:bg-sidebar-accent"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <ChevronRight className="size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    </button>
+                  </CollapsibleTrigger>
+                </div>
               </SidebarMenuButton>
               <CollapsibleContent>
                 <SidebarMenuSub>
@@ -469,29 +477,6 @@ function NavItems({
                       </>
                     );
                   })()}
-                  {/* Create new entity entry (only for creatable categories) */}
-                  {canCreate && (
-                    <SidebarMenuSubItem>
-                      <SidebarMenuSubButton
-                        asChild
-                        isActive={
-                          pathname === routePrefix &&
-                          searchParams.get('id') === 'new'
-                        }
-                      >
-                        <a
-                          href={`${routePrefix}?id=new`}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            router.push(`${routePrefix}?id=new`);
-                          }}
-                        >
-                          <Plus className="size-4" />
-                          <span>{t(CREATE_I18N_KEYS[config.id] ?? '')}</span>
-                        </a>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  )}
                 </SidebarMenuSub>
               </CollapsibleContent>
             </SidebarMenuItem>
