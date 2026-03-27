@@ -21,6 +21,8 @@ export interface SidebarEntityItem {
   updatedAt?: string; // ISO timestamp for sorting by most recently edited
   // Bot-specific fields
   enabled?: boolean;
+  // MCP-specific fields
+  runtimeStatus?: 'connecting' | 'connected' | 'error';
   // Plugin-specific fields
   installSource?: string;
   installInfo?: Record<string, unknown>;
@@ -169,6 +171,7 @@ export function SidebarDataProvider({
           id: server.name,
           name: server.name,
           enabled: server.enable,
+          runtimeStatus: server.runtime_info?.status,
         })),
       );
     } catch (error) {

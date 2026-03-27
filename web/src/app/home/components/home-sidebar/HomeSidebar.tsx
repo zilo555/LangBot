@@ -204,6 +204,21 @@ function sortByRecent(items: SidebarEntityItem[]): SidebarEntityItem[] {
   });
 }
 
+// MCP status dot color: disabled → gray, error → red, connecting → yellow, connected → green
+function mcpStatusColor(item: SidebarEntityItem): string {
+  if (item.enabled === false) return 'bg-muted-foreground/40';
+  switch (item.runtimeStatus) {
+    case 'connected':
+      return 'bg-green-500';
+    case 'connecting':
+      return 'bg-yellow-500';
+    case 'error':
+      return 'bg-red-500';
+    default:
+      return 'bg-muted-foreground/40';
+  }
+}
+
 // Plugin operation type enum
 enum PluginOperationType {
   DELETE = 'DELETE',
@@ -412,9 +427,11 @@ function NavItems({
                             <span
                               className={cn(
                                 'absolute -bottom-0.5 -right-0.5 size-2 rounded-full border-2 border-popover',
-                                item.enabled === false
-                                  ? 'bg-muted-foreground/40'
-                                  : 'bg-green-500',
+                                isMCP
+                                  ? mcpStatusColor(item)
+                                  : item.enabled === false
+                                    ? 'bg-muted-foreground/40'
+                                    : 'bg-green-500',
                               )}
                             />
                           )}
@@ -423,9 +440,7 @@ function NavItems({
                         <span
                           className={cn(
                             'size-2 shrink-0 rounded-full',
-                            item.enabled === false
-                              ? 'bg-muted-foreground/40'
-                              : 'bg-green-500',
+                            mcpStatusColor(item),
                           )}
                         />
                       ) : null}
@@ -468,9 +483,11 @@ function NavItems({
                                   <span
                                     className={cn(
                                       'absolute -bottom-0.5 -right-0.5 size-2 rounded-full border-2 border-sidebar',
-                                      item.enabled === false
-                                        ? 'bg-muted-foreground/40'
-                                        : 'bg-green-500',
+                                      isMCP
+                                        ? mcpStatusColor(item)
+                                        : item.enabled === false
+                                          ? 'bg-muted-foreground/40'
+                                          : 'bg-green-500',
                                     )}
                                   />
                                 )}
@@ -479,9 +496,7 @@ function NavItems({
                               <span
                                 className={cn(
                                   'size-2 shrink-0 rounded-full',
-                                  item.enabled === false
-                                    ? 'bg-muted-foreground/40'
-                                    : 'bg-green-500',
+                                  mcpStatusColor(item),
                                 )}
                               />
                             ) : null}
