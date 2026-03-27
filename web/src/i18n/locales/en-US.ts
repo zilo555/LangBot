@@ -145,6 +145,7 @@ const enUS = {
     none: 'None',
     more: 'More ({{count}})',
     less: 'Less',
+    noItems: 'No items',
   },
   notFound: {
     title: 'Page not found',

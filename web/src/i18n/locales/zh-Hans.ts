@@ -136,6 +136,7 @@ const zhHans = {
     none: '无',
     more: '更多 ({{count}})',
     less: '收起',
+    noItems: '暂无内容',
   },
   notFound: {
     title: '页面不存在',

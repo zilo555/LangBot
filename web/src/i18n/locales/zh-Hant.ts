@@ -136,6 +136,7 @@ const zhHant = {
     none: '無',
     more: '更多 ({{count}})',
     less: '收起',
+    noItems: '暫無內容',
   },
   notFound: {
     title: '頁面不存在',

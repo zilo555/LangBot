@@ -82,6 +82,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { useSidebarData, SidebarEntityItem } from './SidebarDataContext';
 
@@ -216,11 +221,14 @@ function NavItems({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const sidebarData = useSidebarData();
+  const { state: sidebarState, isMobile } = useSidebar();
   const { t } = useTranslation();
   // Track which entity categories have their full list expanded
   const [expandedLists, setExpandedLists] = useState<Record<string, boolean>>(
     {},
   );
+  // Track popover open state for collapsed sidebar entity categories
+  const [popoverOpen, setPopoverOpen] = useState<Record<string, boolean>>({});
 
   // Plugin operation state
   const [showPluginOpModal, setShowPluginOpModal] = useState(false);
@@ -324,6 +332,260 @@ function NavItems({
         // Use stored open state if available, otherwise default to active state
         const isOpen = sectionOpenState[config.id] ?? isActive;
 
+        // When sidebar is collapsed on desktop and category is collapse-only,
+        // show a popover flyout instead of the hidden collapsible sub-items
+        const isCollapsed = sidebarState === 'collapsed' && !isMobile;
+        const showPopover = isCollapsed && isCollapseOnly;
+
+        // Shared entity list renderer used by both popover and collapsible
+        const renderEntityList = (inPopover: boolean) => {
+          const sortedItems = sortByRecent(items);
+          const isExpanded = expandedLists[config.id] ?? false;
+          const maxItems = inPopover ? 10 : MAX_VISIBLE_ITEMS;
+          const visibleItems =
+            sortedItems.length > maxItems && !isExpanded
+              ? sortedItems.slice(0, maxItems)
+              : sortedItems;
+          const hiddenCount = sortedItems.length - maxItems;
+
+          if (sortedItems.length === 0) {
+            return (
+              <div
+                className={cn(
+                  'text-muted-foreground text-xs',
+                  inPopover ? 'px-2 py-3 text-center' : 'px-2 py-1.5',
+                )}
+              >
+                {t('common.noItems')}
+              </div>
+            );
+          }
+
+          return (
+            <>
+              {visibleItems.map((item) => {
+                const itemRoute = hasDetailPages
+                  ? `${routePrefix}?id=${encodeURIComponent(item.id)}`
+                  : routePrefix;
+                const isItemActive =
+                  hasDetailPages &&
+                  pathname === routePrefix &&
+                  searchParams.get('id') === item.id;
+
+                if (inPopover) {
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className={cn(
+                        'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-left',
+                        'hover:bg-accent hover:text-accent-foreground transition-colors',
+                        isItemActive &&
+                          'bg-accent text-accent-foreground font-medium',
+                      )}
+                      onClick={() => {
+                        router.push(itemRoute);
+                        setPopoverOpen((prev) => ({
+                          ...prev,
+                          [config.id]: false,
+                        }));
+                      }}
+                    >
+                      {item.emoji ? (
+                        <span className="text-sm shrink-0">{item.emoji}</span>
+                      ) : item.iconURL ? (
+                        <span className="relative shrink-0">
+                          <img
+                            src={item.iconURL}
+                            alt=""
+                            className="size-4 rounded"
+                          />
+                          {isBot && (
+                            <span
+                              className={cn(
+                                'absolute -bottom-0.5 -right-0.5 size-2 rounded-full border-2 border-popover',
+                                item.enabled === false
+                                  ? 'bg-muted-foreground/40'
+                                  : 'bg-green-500',
+                              )}
+                            />
+                          )}
+                        </span>
+                      ) : null}
+                      <span className="truncate">{item.name}</span>
+                    </button>
+                  );
+                }
+
+                // Normal sidebar sub-item rendering
+                return (
+                  <SidebarMenuSubItem
+                    key={item.id}
+                    className={isPlugin ? 'group/plugin-item relative' : ''}
+                  >
+                    <Tooltip delayDuration={500}>
+                      <TooltipTrigger asChild>
+                        <SidebarMenuSubButton asChild isActive={isItemActive}>
+                          <a
+                            href={itemRoute}
+                            className={cn(
+                              isPlugin && !item.debug ? 'pr-6' : '',
+                            )}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              router.push(itemRoute);
+                            }}
+                          >
+                            {item.emoji ? (
+                              <span className="text-sm shrink-0">
+                                {item.emoji}
+                              </span>
+                            ) : item.iconURL ? (
+                              <span className="relative shrink-0">
+                                <img
+                                  src={item.iconURL}
+                                  alt=""
+                                  className="size-4 rounded"
+                                />
+                                {isBot && (
+                                  <span
+                                    className={cn(
+                                      'absolute -bottom-0.5 -right-0.5 size-2 rounded-full border-2 border-sidebar',
+                                      item.enabled === false
+                                        ? 'bg-muted-foreground/40'
+                                        : 'bg-green-500',
+                                    )}
+                                  />
+                                )}
+                              </span>
+                            ) : null}
+                            <span className="truncate">{item.name}</span>
+                            {item.debug && (
+                              <Bug className="size-3.5 shrink-0 text-orange-400" />
+                            )}
+                          </a>
+                        </SidebarMenuSubButton>
+                      </TooltipTrigger>
+                      {item.description && (
+                        <TooltipContent
+                          side="right"
+                          align="center"
+                          className="max-w-64"
+                        >
+                          {item.description.length > 80
+                            ? item.description.slice(0, 80) + '…'
+                            : item.description}
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                    {/* Plugin context menu - shown on hover (not for debug plugins) */}
+                    {isPlugin && !item.debug && (
+                      <PluginItemMenu
+                        item={item}
+                        onUpdate={() => handlePluginUpdate(item)}
+                        onDelete={() => handlePluginDelete(item)}
+                      />
+                    )}
+                  </SidebarMenuSubItem>
+                );
+              })}
+              {/* Show more / less toggle when items exceed limit */}
+              {sortedItems.length > maxItems && !inPopover && (
+                <SidebarMenuSubItem>
+                  <SidebarMenuSubButton
+                    asChild
+                    className="text-muted-foreground"
+                  >
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setExpandedLists((prev) => ({
+                          ...prev,
+                          [config.id]: !isExpanded,
+                        }))
+                      }
+                    >
+                      <span className="text-xs">
+                        {isExpanded
+                          ? t('common.less')
+                          : t('common.more', { count: hiddenCount })}
+                      </span>
+                    </button>
+                  </SidebarMenuSubButton>
+                </SidebarMenuSubItem>
+              )}
+              {hiddenCount > 0 && inPopover && !isExpanded && (
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-center rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-accent transition-colors"
+                  onClick={() =>
+                    setExpandedLists((prev) => ({
+                      ...prev,
+                      [config.id]: true,
+                    }))
+                  }
+                >
+                  {t('common.more', { count: hiddenCount })}
+                </button>
+              )}
+            </>
+          );
+        };
+
+        // Popover flyout for collapsed sidebar
+        if (showPopover) {
+          return (
+            <SidebarMenuItem key={config.id}>
+              <Popover
+                open={popoverOpen[config.id] ?? false}
+                onOpenChange={(open) =>
+                  setPopoverOpen((prev) => ({ ...prev, [config.id]: open }))
+                }
+              >
+                <PopoverTrigger asChild>
+                  <SidebarMenuButton
+                    isActive={isActive}
+                    tooltip={config.name}
+                    className="group/category-header"
+                  >
+                    {config.icon}
+                    <span>{config.name}</span>
+                  </SidebarMenuButton>
+                </PopoverTrigger>
+                <PopoverContent
+                  side="right"
+                  align="start"
+                  sideOffset={8}
+                  className="w-56 p-2"
+                >
+                  <div className="flex items-center justify-between mb-1 px-2">
+                    <span className="text-sm font-medium">{config.name}</span>
+                    {canCreate && (
+                      <button
+                        type="button"
+                        className="p-1 rounded-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                        onClick={() => {
+                          router.push(`${routePrefix}?id=new`);
+                          setPopoverOpen((prev) => ({
+                            ...prev,
+                            [config.id]: false,
+                          }));
+                        }}
+                      >
+                        <Plus className="size-3.5" />
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-0.5 max-h-80 overflow-y-auto">
+                    {renderEntityList(true)}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </SidebarMenuItem>
+          );
+        }
+
+        // Normal expanded sidebar with collapsible sub-items
         return (
           <Collapsible
             key={config.id}
@@ -372,134 +634,7 @@ function NavItems({
                 </div>
               </SidebarMenuButton>
               <CollapsibleContent>
-                <SidebarMenuSub>
-                  {(() => {
-                    const sortedItems = sortByRecent(items);
-                    const isExpanded = expandedLists[config.id] ?? false;
-                    const visibleItems =
-                      sortedItems.length > MAX_VISIBLE_ITEMS && !isExpanded
-                        ? sortedItems.slice(0, MAX_VISIBLE_ITEMS)
-                        : sortedItems;
-                    const hiddenCount = sortedItems.length - MAX_VISIBLE_ITEMS;
-
-                    return (
-                      <>
-                        {visibleItems.map((item) => {
-                          // Plugins navigate to the list page; others use ?id= query param
-                          const itemRoute = hasDetailPages
-                            ? `${routePrefix}?id=${encodeURIComponent(item.id)}`
-                            : routePrefix;
-                          const isItemActive =
-                            hasDetailPages &&
-                            pathname === routePrefix &&
-                            searchParams.get('id') === item.id;
-                          return (
-                            <SidebarMenuSubItem
-                              key={item.id}
-                              className={
-                                isPlugin ? 'group/plugin-item relative' : ''
-                              }
-                            >
-                              <Tooltip delayDuration={500}>
-                                <TooltipTrigger asChild>
-                                  <SidebarMenuSubButton
-                                    asChild
-                                    isActive={isItemActive}
-                                  >
-                                    <a
-                                      href={itemRoute}
-                                      className={cn(
-                                        isPlugin && !item.debug ? 'pr-6' : '',
-                                      )}
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        router.push(itemRoute);
-                                      }}
-                                    >
-                                      {item.emoji ? (
-                                        <span className="text-sm shrink-0">
-                                          {item.emoji}
-                                        </span>
-                                      ) : item.iconURL ? (
-                                        <span className="relative shrink-0">
-                                          <img
-                                            src={item.iconURL}
-                                            alt=""
-                                            className="size-4 rounded"
-                                          />
-                                          {isBot && (
-                                            <span
-                                              className={cn(
-                                                'absolute -bottom-0.5 -right-0.5 size-2 rounded-full border-2 border-sidebar',
-                                                item.enabled === false
-                                                  ? 'bg-muted-foreground/40'
-                                                  : 'bg-green-500',
-                                              )}
-                                            />
-                                          )}
-                                        </span>
-                                      ) : null}
-                                      <span className="truncate">
-                                        {item.name}
-                                      </span>
-                                      {item.debug && (
-                                        <Bug className="size-3.5 shrink-0 text-orange-400" />
-                                      )}
-                                    </a>
-                                  </SidebarMenuSubButton>
-                                </TooltipTrigger>
-                                {item.description && (
-                                  <TooltipContent
-                                    side="right"
-                                    align="center"
-                                    className="max-w-64"
-                                  >
-                                    {item.description.length > 80
-                                      ? item.description.slice(0, 80) + '…'
-                                      : item.description}
-                                  </TooltipContent>
-                                )}
-                              </Tooltip>
-                              {/* Plugin context menu - shown on hover (not for debug plugins) */}
-                              {isPlugin && !item.debug && (
-                                <PluginItemMenu
-                                  item={item}
-                                  onUpdate={() => handlePluginUpdate(item)}
-                                  onDelete={() => handlePluginDelete(item)}
-                                />
-                              )}
-                            </SidebarMenuSubItem>
-                          );
-                        })}
-                        {/* Show more / less toggle when items exceed limit */}
-                        {sortedItems.length > MAX_VISIBLE_ITEMS && (
-                          <SidebarMenuSubItem>
-                            <SidebarMenuSubButton
-                              asChild
-                              className="text-muted-foreground"
-                            >
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setExpandedLists((prev) => ({
-                                    ...prev,
-                                    [config.id]: !isExpanded,
-                                  }))
-                                }
-                              >
-                                <span className="text-xs">
-                                  {isExpanded
-                                    ? t('common.less')
-                                    : t('common.more', { count: hiddenCount })}
-                                </span>
-                              </button>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        )}
-                      </>
-                    );
-                  })()}
-                </SidebarMenuSub>
+                <SidebarMenuSub>{renderEntityList(false)}</SidebarMenuSub>
               </CollapsibleContent>
             </SidebarMenuItem>
           </Collapsible>

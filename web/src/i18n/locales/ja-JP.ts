@@ -147,6 +147,7 @@
     none: 'なし',
     more: 'もっと見る ({{count}})',
     less: '折りたたむ',
+    noItems: '項目がありません',
   },
   notFound: {
     title: 'ページが見つかりません',
