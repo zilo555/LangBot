@@ -452,6 +452,7 @@ const zhHans = {
     assetSize: '大小: {{size}}',
     confirmInstall: '确认安装',
     installFromGithubDesc: '从 GitHub Release 安装插件',
+    goToMarketplace: '前往插件市场',
   },
   market: {
     searchPlaceholder: '搜索插件...',

@@ -24,6 +24,9 @@ import {
   ExternalLink,
   Trash,
   Bug,
+  Upload,
+  Store,
+  Github,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
@@ -135,6 +138,7 @@ const CREATABLE_CATEGORIES: EntityCategoryId[] = [
   'pipelines',
   'knowledge',
   'mcp',
+  'plugins',
 ];
 
 // Categories where clicking the parent only toggles collapse (no list page)
@@ -243,6 +247,7 @@ function NavItems({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const sidebarData = useSidebarData();
+  const { setPendingPluginInstallAction } = sidebarData;
   const { state: sidebarState, isMobile } = useSidebar();
   const { t } = useTranslation();
   // Track which entity categories have their full list expanded
@@ -601,21 +606,78 @@ function NavItems({
                 >
                   <div className="flex items-center justify-between mb-1 px-2">
                     <span className="text-sm font-medium">{config.name}</span>
-                    {canCreate && (
-                      <button
-                        type="button"
-                        className="p-1 rounded-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-                        onClick={() => {
-                          router.push(`${routePrefix}?id=new`);
-                          setPopoverOpen((prev) => ({
-                            ...prev,
-                            [config.id]: false,
-                          }));
-                        }}
-                      >
-                        <Plus className="size-3.5" />
-                      </button>
-                    )}
+                    {canCreate &&
+                      (isPlugin ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              type="button"
+                              className="p-1 rounded-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                            >
+                              <Plus className="size-3.5" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {systemInfo.enable_marketplace && (
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  router.push('/home/market');
+                                  setPopoverOpen((prev) => ({
+                                    ...prev,
+                                    [config.id]: false,
+                                  }));
+                                }}
+                              >
+                                <Store className="size-4" />
+                                {t('plugins.goToMarketplace')}
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPendingPluginInstallAction('local');
+                                router.push('/home/plugins');
+                                setPopoverOpen((prev) => ({
+                                  ...prev,
+                                  [config.id]: false,
+                                }));
+                              }}
+                            >
+                              <Upload className="size-4" />
+                              {t('plugins.uploadLocal')}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPendingPluginInstallAction('github');
+                                router.push('/home/plugins');
+                                setPopoverOpen((prev) => ({
+                                  ...prev,
+                                  [config.id]: false,
+                                }));
+                              }}
+                            >
+                              <Github className="size-4" />
+                              {t('plugins.installFromGithub')}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : (
+                        <button
+                          type="button"
+                          className="p-1 rounded-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                          onClick={() => {
+                            router.push(`${routePrefix}?id=new`);
+                            setPopoverOpen((prev) => ({
+                              ...prev,
+                              [config.id]: false,
+                            }));
+                          }}
+                        >
+                          <Plus className="size-3.5" />
+                        </button>
+                      ))}
                   </div>
                   <div className="flex flex-col gap-0.5 max-h-80 overflow-y-auto">
                     {renderEntityList(true)}
@@ -651,18 +713,64 @@ function NavItems({
                 {config.icon}
                 <span>{config.name}</span>
                 <div className="ml-auto flex items-center gap-0.5 -mr-1">
-                  {canCreate && (
-                    <button
-                      type="button"
-                      className="p-1 rounded-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground opacity-0 group-hover/category-header:opacity-100 transition-all"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        router.push(`${routePrefix}?id=new`);
-                      }}
-                    >
-                      <Plus className="size-3.5" />
-                    </button>
-                  )}
+                  {canCreate &&
+                    (isPlugin ? (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            className="p-1 rounded-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground opacity-0 group-hover/category-header:opacity-100 transition-all"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Plus className="size-3.5" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {systemInfo.enable_marketplace && (
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                router.push('/home/market');
+                              }}
+                            >
+                              <Store className="size-4" />
+                              {t('plugins.goToMarketplace')}
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPendingPluginInstallAction('local');
+                              router.push('/home/plugins');
+                            }}
+                          >
+                            <Upload className="size-4" />
+                            {t('plugins.uploadLocal')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPendingPluginInstallAction('github');
+                              router.push('/home/plugins');
+                            }}
+                          >
+                            <Github className="size-4" />
+                            {t('plugins.installFromGithub')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    ) : (
+                      <button
+                        type="button"
+                        className="p-1 rounded-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground opacity-0 group-hover/category-header:opacity-100 transition-all"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`${routePrefix}?id=new`);
+                        }}
+                      >
+                        <Plus className="size-3.5" />
+                      </button>
+                    ))}
                   <CollapsibleTrigger asChild>
                     <button
                       type="button"

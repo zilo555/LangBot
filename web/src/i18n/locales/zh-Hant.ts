@@ -445,6 +445,7 @@ const zhHant = {
     assetSize: '大小: {{size}}',
     confirmInstall: '確認安裝',
     installFromGithubDesc: '從 GitHub Release 安裝插件',
+    goToMarketplace: '前往外掛市場',
   },
   market: {
     searchPlaceholder: '搜尋插件...',

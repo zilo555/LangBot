@@ -476,6 +476,7 @@ const enUS = {
     assetSize: 'Size: {{size}}',
     confirmInstall: 'Confirm Install',
     installFromGithubDesc: 'Install plugin from GitHub Release',
+    goToMarketplace: 'Go to Marketplace',
   },
   market: {
     searchPlaceholder: 'Search plugins...',

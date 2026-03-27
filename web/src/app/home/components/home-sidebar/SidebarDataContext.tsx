@@ -30,6 +30,9 @@ export interface SidebarEntityItem {
   debug?: boolean;
 }
 
+// Install action types that can be triggered from sidebar
+export type PluginInstallAction = 'local' | 'github' | null;
+
 // Entity lists and refresh functions exposed via context
 export interface SidebarDataContextValue {
   bots: SidebarEntityItem[];
@@ -46,6 +49,9 @@ export interface SidebarDataContextValue {
   // Breadcrumb: entity name shown when viewing a detail page
   detailEntityName: string | null;
   setDetailEntityName: (name: string | null) => void;
+  // Pending plugin install action triggered from sidebar
+  pendingPluginInstallAction: PluginInstallAction;
+  setPendingPluginInstallAction: (action: PluginInstallAction) => void;
 }
 
 const SidebarDataContext = createContext<SidebarDataContextValue | null>(null);
@@ -61,6 +67,8 @@ export function SidebarDataProvider({
   const [plugins, setPlugins] = useState<SidebarEntityItem[]>([]);
   const [mcpServers, setMCPServers] = useState<SidebarEntityItem[]>([]);
   const [detailEntityName, setDetailEntityName] = useState<string | null>(null);
+  const [pendingPluginInstallAction, setPendingPluginInstallAction] =
+    useState<PluginInstallAction>(null);
 
   const refreshBots = useCallback(async () => {
     try {
@@ -216,6 +224,8 @@ export function SidebarDataProvider({
         refreshAll,
         detailEntityName,
         setDetailEntityName,
+        pendingPluginInstallAction,
+        setPendingPluginInstallAction,
       }}
     >
       {children}

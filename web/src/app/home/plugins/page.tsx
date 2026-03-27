@@ -94,7 +94,11 @@ export default function PluginConfigPage() {
 function PluginListView() {
   const { t } = useTranslation();
   const router = useRouter();
-  const { refreshPlugins } = useSidebarData();
+  const {
+    refreshPlugins,
+    pendingPluginInstallAction,
+    setPendingPluginInstallAction,
+  } = useSidebarData();
   const [modalOpen, setModalOpen] = useState(false);
   const [installSource, setInstallSource] = useState<string>('local');
   const [installInfo] = useState<Record<string, any>>({}); // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -408,6 +412,28 @@ function PluginListView() {
     [uploadPluginFile, isPluginSystemReady, t],
   );
 
+  // Auto-trigger install action from sidebar via shared context
+  useEffect(() => {
+    if (!pendingPluginInstallAction || statusLoading || !isPluginSystemReady)
+      return;
+
+    // Consume the action immediately
+    const action = pendingPluginInstallAction;
+    setPendingPluginInstallAction(null);
+
+    if (action === 'local') {
+      // Small delay to ensure file input ref is ready
+      setTimeout(() => fileInputRef.current?.click(), 100);
+    } else if (action === 'github') {
+      setInstallSource('github');
+      setPluginInstallStatus(PluginInstallStatus.WAIT_INPUT);
+      setInstallError(null);
+      resetGithubState();
+      setModalOpen(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingPluginInstallAction, statusLoading, isPluginSystemReady]);
+
   const handleShowDebugInfo = async () => {
     try {
       const info = await httpClient.getPluginDebugInfo();
@@ -627,7 +653,7 @@ function PluginListView() {
                 }}
               >
                 <StoreIcon className="w-4 h-4" />
-                {t('plugins.marketplace')}
+                {t('plugins.goToMarketplace')}
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={handleFileSelect}>

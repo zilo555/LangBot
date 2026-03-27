@@ -476,6 +476,7 @@
     assetSize: 'サイズ: {{size}}',
     confirmInstall: 'インストールを確認',
     installFromGithubDesc: 'GitHubリリースからプラグインをインストール',
+    goToMarketplace: 'マーケットプレイスへ',
   },
   market: {
     searchPlaceholder: 'プラグインを検索...',
