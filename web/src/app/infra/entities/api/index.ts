@@ -117,6 +117,7 @@ export interface Adapter {
   description: I18nObject;
   icon?: string;
   spec: {
+    categories?: string[];
     config: IDynamicFormItemSchema[];
   };
 }

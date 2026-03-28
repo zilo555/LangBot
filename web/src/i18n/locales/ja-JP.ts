@@ -326,6 +326,12 @@
     webhookSaasHint:
       'Webhook には公開アクセス可能なドメインが必要です。LangBot Cloud では、ボット用のパブリックエンドポイントをすぐにご利用いただけます。',
     webhookSaasLink: 'LangBot Cloud の詳細はこちら',
+    adapterCategory: {
+      popular: '人気',
+      china: '中国',
+      global: 'グローバル',
+      protocol: 'プロトコル',
+    },
     logLevel: 'ログレベル',
     allLevels: 'すべてのレベル',
     selectLevel: 'レベルを選択',

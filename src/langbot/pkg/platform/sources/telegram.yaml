@@ -5,16 +5,25 @@ metadata:
   label:
     en_US: Telegram
     zh_Hans: 电报
+    zh_Hant: Telegram
+    ja_JP: Telegram
   description:
     en_US: Telegram Adapter
     zh_Hans: Telegram 适配器，请查看文档了解使用方式
+    zh_Hant: Telegram 適配器，請查看文件了解使用方式
+    ja_JP: Telegram アダプター。使用方法の詳細については、ドキュメントを参照してください。
   icon: telegram.svg
 spec:
+  categories:
+    - popular
+    - global
   config:
     - name: token
       label:
         en_US: Token
         zh_Hans: 令牌
+        zh_Hant: 令牌
+        ja_JP: トークン
       type: string
       required: true
       default: "token_from_botfather"
@@ -22,6 +31,8 @@ spec:
       label:
         en_US: Markdown Card
         zh_Hans: 是否使用 Markdown 卡片
+        zh_Hant: 是否使用 Markdown 卡片
+        ja_JP: Markdown カードを使用
       type: boolean
       required: false
       default: true
@@ -29,9 +40,13 @@ spec:
       label:
         en_US: Enable Stream Reply Mode
         zh_Hans: 启用电报流式回复模式
+        zh_Hant: 啟用 Telegram 串流回覆模式
+        ja_JP: ストリーミング返信モードを有効化
       description:
         en_US: If enabled, the bot will use the stream of telegram reply mode
         zh_Hans: 如果启用，将使用电报流式方式来回复内容
+        zh_Hant: 如果啟用，將使用 Telegram 串流方式來回覆內容
+        ja_JP: 有効にすると、ボットはストリーミングモードでメッセージに返信します
       type: boolean
       required: true
       default: false

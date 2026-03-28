@@ -41,6 +41,10 @@ import {
 import DynamicFormComponent from '@/app/home/components/dynamic-form/DynamicFormComponent';
 import { BotLogListComponent } from '@/app/home/bots/components/bot-log/view/BotLogListComponent';
 import { extractI18nObject } from '@/i18n/I18nProvider';
+import {
+  groupByCategory,
+  getCategoryLabel,
+} from '@/app/infra/entities/adapter-categories';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -490,18 +494,27 @@ export default function WizardPage() {
   const [isSkipping, setIsSkipping] = useState(false);
 
   const handleSkipConfirm = useCallback(async () => {
-    if (systemInfo.wizard_status === 'none') {
-      setIsSkipping(true);
-      try {
+    setIsSkipping(true);
+    try {
+      if (systemInfo.wizard_status === 'none') {
         await httpClient.updateWizardStatus('skipped');
         systemInfo.wizard_status = 'skipped';
-      } catch {
-        toast.error(t('wizard.skipSaveError'));
-        setIsSkipping(false);
-        return; // Dialog stays open — user can retry
       }
+      // Always clear persisted progress so re-entering starts fresh
+      await httpClient.saveWizardProgress({
+        step: 0,
+        selected_adapter: null,
+        created_bot_uuid: null,
+        bot_saved: false,
+        selected_runner: null,
+      });
+      systemInfo.wizard_progress = null;
+    } catch {
+      toast.error(t('wizard.skipSaveError'));
       setIsSkipping(false);
+      return;
     }
+    setIsSkipping(false);
     setShowSkipConfirm(false);
     router.push('/home');
   }, [router, t]);
@@ -727,6 +740,14 @@ function StepPlatform({
 }) {
   const { t } = useTranslation();
 
+  const groupedAdapters = useMemo(() => {
+    const withCategories = adapters.map((a) => ({
+      ...a,
+      categories: a.spec.categories,
+    }));
+    return groupByCategory(withCategories);
+  }, [adapters]);
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <div className="text-center">
@@ -735,45 +756,54 @@ function StepPlatform({
           {t('wizard.platform.description')}
         </p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {adapters.map((adapter) => (
-          <Card
-            key={adapter.name}
-            className={cn(
-              'cursor-pointer transition-all hover:shadow-md',
-              selected === adapter.name
-                ? 'ring-2 ring-primary shadow-md'
-                : 'hover:border-primary/50',
-            )}
-            onClick={() => onSelect(adapter.name)}
-          >
-            <CardHeader className="flex flex-row items-center gap-3 pb-2">
-              <img
-                src={httpClient.getAdapterIconURL(adapter.name)}
-                alt=""
-                className="w-10 h-10 rounded-lg shrink-0"
-              />
-              <div className="min-w-0">
-                <CardTitle className="text-base truncate">
-                  {extractI18nObject(adapter.label)}
-                </CardTitle>
-              </div>
-              {selected === adapter.name && (
-                <div className="ml-auto shrink-0">
-                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                    <Check className="w-3 h-3 text-primary-foreground" />
+      {groupedAdapters.map((group) => (
+        <div key={group.categoryId ?? 'uncategorized'} className="space-y-3">
+          {group.categoryId && (
+            <h3 className="text-sm font-medium text-muted-foreground">
+              {getCategoryLabel(t, group.categoryId)}
+            </h3>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {group.items.map((adapter) => (
+              <Card
+                key={adapter.name}
+                className={cn(
+                  'cursor-pointer transition-all hover:shadow-md',
+                  selected === adapter.name
+                    ? 'ring-2 ring-primary shadow-md'
+                    : 'hover:border-primary/50',
+                )}
+                onClick={() => onSelect(adapter.name)}
+              >
+                <CardHeader className="flex flex-row items-center gap-3 pb-2">
+                  <img
+                    src={httpClient.getAdapterIconURL(adapter.name)}
+                    alt=""
+                    className="w-10 h-10 rounded-lg shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <CardTitle className="text-base truncate">
+                      {extractI18nObject(adapter.label)}
+                    </CardTitle>
                   </div>
-                </div>
-              )}
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground line-clamp-2">
-                {extractI18nObject(adapter.description)}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                  {selected === adapter.name && (
+                    <div className="ml-auto shrink-0">
+                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                        <Check className="w-3 h-3 text-primary-foreground" />
+                      </div>
+                    </div>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {extractI18nObject(adapter.description)}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -1118,18 +1148,27 @@ function StepDone() {
   const [isCompleting, setIsCompleting] = useState(false);
 
   const handleBack = useCallback(async () => {
-    if (systemInfo.wizard_status === 'none') {
-      setIsCompleting(true);
-      try {
+    setIsCompleting(true);
+    try {
+      if (systemInfo.wizard_status === 'none') {
         await httpClient.updateWizardStatus('completed');
         systemInfo.wizard_status = 'completed';
-      } catch {
-        toast.error(t('wizard.completeSaveError'));
-        setIsCompleting(false);
-        return; // Don't navigate — let user retry
       }
+      // Always clear persisted progress so re-entering starts fresh
+      await httpClient.saveWizardProgress({
+        step: 0,
+        selected_adapter: null,
+        created_bot_uuid: null,
+        bot_saved: false,
+        selected_runner: null,
+      });
+      systemInfo.wizard_progress = null;
+    } catch {
+      toast.error(t('wizard.completeSaveError'));
       setIsCompleting(false);
+      return;
     }
+    setIsCompleting(false);
     router.push('/home/bots');
   }, [router, t]);
 

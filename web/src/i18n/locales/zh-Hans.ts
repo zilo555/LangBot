@@ -306,6 +306,12 @@ const zhHans = {
     webhookSaasHint:
       'Webhook 需要公网可访问的域名。LangBot Cloud 为你的机器人提供开箱即用的公网地址。',
     webhookSaasLink: '了解 LangBot Cloud',
+    adapterCategory: {
+      popular: '热门',
+      china: '中国',
+      global: '全球',
+      protocol: '协议',
+    },
     logLevel: '日志级别',
     allLevels: '全部级别',
     selectLevel: '选择级别',

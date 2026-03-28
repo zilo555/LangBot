@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   IChooseAdapterEntity,
   IPipelineEntity,
@@ -35,6 +35,7 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
@@ -47,6 +48,10 @@ import {
 } from '@/components/ui/card';
 import { extractI18nObject } from '@/i18n/I18nProvider';
 import { CustomApiError } from '@/app/infra/entities/common';
+import {
+  groupByCategory,
+  getCategoryLabel,
+} from '@/app/infra/entities/adapter-categories';
 
 const getFormSchema = (t: (key: string) => string) =>
   z.object({
@@ -112,6 +117,12 @@ export default function BotForm({
   // Watch adapter and adapter_config for filtering
   const currentAdapter = form.watch('adapter');
   const currentAdapterConfig = form.watch('adapter_config');
+
+  // Group adapters by category for the Select dropdown
+  const groupedAdapters = useMemo(
+    () => groupByCategory(adapterNameList),
+    [adapterNameList],
+  );
 
   // Notify parent when dirty state changes
   const { isDirty } = form.formState;
@@ -183,6 +194,7 @@ export default function BotForm({
         return {
           label: extractI18nObject(item.label),
           value: item.name,
+          categories: item.spec.categories,
         };
       }),
     );
@@ -483,20 +495,31 @@ export default function BotForm({
                         )}
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectGroup>
-                          {adapterNameList.map((item) => (
-                            <SelectItem key={item.value} value={item.value}>
-                              <div className="flex items-center gap-2">
-                                <img
-                                  src={httpClient.getAdapterIconURL(item.value)}
-                                  alt=""
-                                  className="h-5 w-5 rounded"
-                                />
-                                <span>{item.label}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
+                        {groupedAdapters.map((group) => (
+                          <SelectGroup
+                            key={group.categoryId ?? 'uncategorized'}
+                          >
+                            {group.categoryId && (
+                              <SelectLabel>
+                                {getCategoryLabel(t, group.categoryId)}
+                              </SelectLabel>
+                            )}
+                            {group.items.map((item) => (
+                              <SelectItem key={item.value} value={item.value}>
+                                <div className="flex items-center gap-2">
+                                  <img
+                                    src={httpClient.getAdapterIconURL(
+                                      item.value,
+                                    )}
+                                    alt=""
+                                    className="h-5 w-5 rounded"
+                                  />
+                                  <span>{item.label}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        ))}
                       </SelectContent>
                     </Select>
                   </FormControl>

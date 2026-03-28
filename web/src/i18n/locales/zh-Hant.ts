@@ -305,6 +305,12 @@ const zhHant = {
     webhookSaasHint:
       'Webhook 需要公網可存取的網域。LangBot Cloud 為你的機器人提供即開即用的公網位址。',
     webhookSaasLink: '了解 LangBot Cloud',
+    adapterCategory: {
+      popular: '熱門',
+      china: '中國',
+      global: '全球',
+      protocol: '協定',
+    },
     logLevel: '日誌級別',
     allLevels: '全部級別',
     selectLevel: '選擇級別',

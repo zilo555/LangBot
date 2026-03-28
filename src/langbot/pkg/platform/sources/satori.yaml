@@ -5,36 +5,45 @@ metadata:
   label:
     en_US: Satori
     zh_Hans: Satori
+    zh_Hant: Satori
   description:
     en_US: SatoriAdapter
     zh_Hans: Satori 协议适配器，支持多种平台的接入，请查看文档了解使用方式
+    zh_Hant: Satori 協定適配器，支援多種平台的接入，請查看文件了解使用方式
   icon: satori.png
 spec:
+  categories:
+    - protocol
   config:
     - name: platform
       label:
         en_US: Platform
         zh_Hans: 平台名称
+        zh_Hant: 平台名稱
       type: string
       required: true
       default: "llonebot"
       description:
         en_US: The platform name (e.g., llonebot, discord, telegram)
         zh_Hans: 平台名称（如 llonebot, discord, telegram）
+        zh_Hant: 平台名稱（如 llonebot、discord、telegram）
     - name: host
       label:
         en_US: Host
         zh_Hans: 主机地址
+        zh_Hant: 主機地址
       type: string
       required: true
       default: "127.0.0.1"
       description:
         en_US: The host address of LLOneBot Satori server (e.g., 127.0.0.1, localhost, 192.168.1.100)
         zh_Hans: LLOneBot Satori服务器的主机地址（如 127.0.0.1, localhost, 192.168.1.100）
+        zh_Hant: LLOneBot Satori 伺服器的主機地址（如 127.0.0.1、localhost、192.168.1.100）
     - name: port
       label:
         en_US: Port
         zh_Hans: 监听端口
+        zh_Hant: 監聽連接埠
       type: integer
       required: true
       default: 5600
@@ -42,6 +51,7 @@ spec:
       label:
         en_US: Satori API Endpoint
         zh_Hans: Satori API 终结点
+        zh_Hant: Satori API 端點
       type: string
       required: true
       default: "http://localhost:5600/v1"
@@ -49,6 +59,7 @@ spec:
       label:
         en_US: Satori WebSocket Endpoint
         zh_Hans: Satori WebSocket 终结点
+        zh_Hant: Satori WebSocket 端點
       type: string
       required: true
       default: "ws://localhost:5600/v1/events"
@@ -56,6 +67,7 @@ spec:
       label:
         en_US: Token
         zh_Hans: 令牌
+        zh_Hant: 令牌
       type: string
       required: true
       default: ""

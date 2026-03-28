@@ -321,6 +321,12 @@ const enUS = {
     webhookSaasHint:
       'Webhook requires a publicly accessible domain. LangBot Cloud provides a ready-to-use public endpoint for your bot.',
     webhookSaasLink: 'Learn more about LangBot Cloud',
+    adapterCategory: {
+      popular: 'Popular',
+      china: 'China',
+      global: 'Global',
+      protocol: 'Protocol',
+    },
     logLevel: 'Log Level',
     allLevels: 'All Levels',
     selectLevel: 'Select Level',
