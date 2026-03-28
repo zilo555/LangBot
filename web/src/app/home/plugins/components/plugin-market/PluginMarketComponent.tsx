@@ -589,10 +589,17 @@ function MarketPageContent({
             <LoadingSpinner text={t('market.loading')} />
           </div>
         ) : plugins.length === 0 ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="text-muted-foreground">
-              {searchQuery ? t('market.noResults') : t('market.noPlugins')}
-            </div>
+          <div className="text-center text-muted-foreground py-12">
+            {searchQuery ? t('market.noResults') : t('market.noPlugins')}
+            {' · '}
+            <a
+              href="https://github.com/langbot-app/langbot-plugin-demo/issues/new?template=plugin-request.yml"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              {t('market.requestPlugin')}
+            </a>
           </div>
         ) : (
           <>
