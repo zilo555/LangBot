@@ -1162,7 +1162,7 @@ const esES = {
     loadError: 'Error al cargar los datos del asistente',
     skip: 'Omitir',
     skipConfirmMessage:
-      'Puedes volver a acceder al asistente de inicio rápido desde la barra lateral más tarde, o crear un Bot manualmente.',
+      'Puedes volver a acceder al asistente de inicio rápido desde el menú de cuenta más tarde, o crear un Bot manualmente.',
     skipConfirmOk: 'Aceptar',
     prev: 'Anterior',
     next: 'Siguiente',

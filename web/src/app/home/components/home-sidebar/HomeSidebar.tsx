@@ -27,6 +27,7 @@ import {
   Upload,
   Store,
   Github,
+  Zap,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
@@ -1252,28 +1253,6 @@ export default function HomeSidebar({
 
         {/* Navigation items grouped by section */}
         <SidebarContent>
-          {/* Standalone items (e.g. Quick Start) — rendered before section groups */}
-          {sidebarConfigList
-            .filter((c) => c.section === 'standalone')
-            .map((config) => (
-              <SidebarGroup key={config.id}>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        isActive={selectedChild?.id === config.id}
-                        onClick={() => handleChildClick(config)}
-                        tooltip={config.name}
-                      >
-                        {config.icon}
-                        <span>{config.name}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            ))}
-
           <SidebarGroup>
             <SidebarGroupLabel>{t('sidebar.home')}</SidebarGroupLabel>
             <SidebarGroupContent>
@@ -1423,6 +1402,15 @@ export default function HomeSidebar({
                     >
                       <Settings />
                       {t('account.settings')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        router.push('/wizard');
+                      }}
+                    >
+                      <Zap className="text-blue-500" />
+                      {t('sidebar.quickStart')}
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />

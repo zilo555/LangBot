@@ -5,7 +5,7 @@ const zhHans = {
     installedPlugins: '已安装插件',
     pluginMarket: '插件市场',
     mcpServers: 'MCP 服务器',
-    quickStart: '快速开始',
+    quickStart: '快速开始向导',
   },
   common: {
     login: '登录',
@@ -1078,7 +1078,7 @@ const zhHans = {
     loadError: '加载向导数据失败',
     skip: '跳过',
     skipConfirmMessage:
-      '您之后可以在侧边栏重新进入快速开始向导，或手动创建机器人。',
+      '您之后可以在账户菜单重新进入快速开始向导，或手动创建机器人。',
     skipConfirmOk: '确定',
     prev: '上一步',
     next: '下一步',

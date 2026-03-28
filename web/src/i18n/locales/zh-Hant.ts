@@ -1045,7 +1045,7 @@ const zhHant = {
     loadError: '載入嚮導資料失敗',
     skip: '跳過',
     skipConfirmMessage:
-      '您之後可以在側邊欄重新進入快速開始嚮導，或手動建立機器人。',
+      '您之後可以在帳戶選單重新進入快速開始嚮導，或手動建立機器人。',
     skipConfirmOk: '確定',
     prev: '上一步',
     next: '下一步',

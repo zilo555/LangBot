@@ -1132,7 +1132,7 @@ const viVN = {
     loadError: 'Tải dữ liệu trình hướng dẫn thất bại',
     skip: 'Bỏ qua',
     skipConfirmMessage:
-      'Bạn có thể vào lại trình hướng dẫn Bắt đầu nhanh từ thanh bên sau, hoặc tạo Bot thủ công.',
+      'Bạn có thể vào lại trình hướng dẫn Bắt đầu nhanh từ menu tài khoản sau, hoặc tạo Bot thủ công.',
     skipConfirmOk: 'OK',
     prev: 'Trước',
     next: 'Tiếp',

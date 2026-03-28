@@ -1131,7 +1131,7 @@ const enUS = {
     loadError: 'Failed to load wizard data',
     skip: 'Skip',
     skipConfirmMessage:
-      'You can re-enter the Quick Start wizard from the sidebar later, or create a bot manually.',
+      'You can re-enter the Quick Start wizard from the account menu later, or create a bot manually.',
     skipConfirmOk: 'OK',
     prev: 'Previous',
     next: 'Next',
