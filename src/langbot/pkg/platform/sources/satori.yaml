@@ -37,7 +37,7 @@ spec:
         zh_Hans: 平台名称（如 llonebot, discord, telegram）
         zh_Hant: 平台名稱（如 llonebot、discord、telegram）
         th_TH: ชื่อแพลตฟอร์ม (เช่น llonebot, discord, telegram)
-        vi_VN: Tên nền tảng (ví dụ: llonebot, discord, telegram)
+        vi_VN: "Tên nền tảng (ví dụ: llonebot, discord, telegram)"
         es_ES: El nombre de la plataforma (p. ej., llonebot, discord, telegram)
     - name: host
       label:
@@ -55,7 +55,7 @@ spec:
         zh_Hans: LLOneBot Satori服务器的主机地址（如 127.0.0.1, localhost, 192.168.1.100）
         zh_Hant: LLOneBot Satori 伺服器的主機地址（如 127.0.0.1、localhost、192.168.1.100）
         th_TH: ที่อยู่โฮสต์ของเซิร์ฟเวอร์ LLOneBot Satori (เช่น 127.0.0.1, localhost, 192.168.1.100)
-        vi_VN: Địa chỉ máy chủ LLOneBot Satori (ví dụ: 127.0.0.1, localhost, 192.168.1.100)
+        vi_VN: "Địa chỉ máy chủ LLOneBot Satori (ví dụ: 127.0.0.1, localhost, 192.168.1.100)"
         es_ES: La dirección del host del servidor LLOneBot Satori (p. ej., 127.0.0.1, localhost, 192.168.1.100)
     - name: port
       label:
