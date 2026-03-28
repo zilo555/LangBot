@@ -46,6 +46,7 @@ const enUS = {
     confirmDelete: 'Confirm Delete',
     deleteConfirmation: 'Are you sure you want to delete this?',
     selectOption: 'Select an option',
+    selectPreset: 'Select Preset',
     required: 'Required',
     enable: 'Enable',
     name: 'Name',

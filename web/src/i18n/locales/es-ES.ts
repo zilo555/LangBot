@@ -48,6 +48,7 @@ const esES = {
     confirmDelete: 'Confirmar eliminación',
     deleteConfirmation: '¿Estás seguro de que deseas eliminar esto?',
     selectOption: 'Selecciona una opción',
+    selectPreset: 'Seleccionar preajuste',
     required: 'Obligatorio',
     enable: 'Activar',
     name: 'Nombre',

@@ -46,6 +46,7 @@ const viVN = {
     confirmDelete: 'Xác nhận xóa',
     deleteConfirmation: 'Bạn có chắc chắn muốn xóa mục này không?',
     selectOption: 'Chọn một tùy chọn',
+    selectPreset: 'Chọn mẫu có sẵn',
     required: 'Bắt buộc',
     enable: 'Bật',
     name: 'Tên',

@@ -45,6 +45,7 @@ const zhHant = {
     confirmDelete: '確認刪除',
     deleteConfirmation: '您確定要刪除這個嗎？',
     selectOption: '選擇一個選項',
+    selectPreset: '選擇預設',
     required: '必填',
     enable: '是否啟用',
     name: '名稱',

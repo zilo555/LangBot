@@ -47,6 +47,7 @@
     confirmDelete: '削除の確認',
     deleteConfirmation: '本当に削除しますか？',
     selectOption: 'オプションを選択',
+    selectPreset: 'プリセットを選択',
     required: '必須',
     enable: '有効にする',
     name: '名前',

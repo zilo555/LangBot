@@ -118,6 +118,11 @@ stages:
           zh_Hans: 基础 URL
         type: string
         required: true
+        options:
+          - name: 'https://api.dify.ai/v1'
+            label:
+              en_US: Dify Cloud
+              zh_Hans: Dify 云服务
         default: 'https://api.dify.ai/v1'
       - name: base-prompt
         label:
@@ -341,6 +346,15 @@ stages:
           en_US: The base URL for the Coze API, please use https://api.coze.com for global Coze edition(coze.com).
           zh_Hans: Coze API 的基础 URL，请使用 https://api.coze.com 用于全球 Coze 版（coze.com）
         type: string
+        options:
+          - name: 'https://api.coze.cn'
+            label:
+              en_US: Coze China
+              zh_Hans: Coze 中国版
+          - name: 'https://api.coze.com'
+            label:
+              en_US: Coze Global
+              zh_Hans: Coze 全球版
         default: "https://api.coze.cn"
       - name: auto-save-history
         label:

@@ -46,12 +46,19 @@ import {
   Sparkles,
   Info,
   Settings,
+  ChevronDown,
 } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import ModelsDialog from '@/app/home/components/models-dialog/ModelsDialog';
 
 export default function DynamicFormItemComponent({
@@ -215,6 +222,40 @@ export default function DynamicFormItemComponent({
       );
 
     case DynamicFormItemType.STRING:
+      if (config.options && config.options.length > 0) {
+        return (
+          <div className="flex items-center gap-1.5 max-w-md">
+            <Input className="flex-1" {...field} />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  type="button"
+                  className="h-9 w-9 shrink-0 text-muted-foreground"
+                >
+                  <ChevronDown className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {config.options.map((option) => (
+                  <DropdownMenuItem
+                    key={option.name}
+                    onClick={() => field.onChange(option.name)}
+                  >
+                    <div className="flex flex-col gap-0.5">
+                      <span>{extractI18nObject(option.label)}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {option.name}
+                      </span>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        );
+      }
       return <Input className="max-w-md" {...field} />;
 
     case DynamicFormItemType.TEXT:
@@ -276,7 +317,11 @@ export default function DynamicFormItemComponent({
           <SelectContent>
             <SelectGroup>
               {config.options?.map((option) => (
-                <SelectItem key={option.name} value={option.name}>
+                <SelectItem
+                  key={option.name}
+                  value={option.name}
+                  description={option.name}
+                >
                   {extractI18nObject(option.label)}
                 </SelectItem>
               ))}

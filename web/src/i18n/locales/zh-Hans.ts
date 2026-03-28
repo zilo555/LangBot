@@ -45,6 +45,7 @@ const zhHans = {
     confirmDelete: '确认删除',
     deleteConfirmation: '你确定要删除这个吗？',
     selectOption: '选择一个选项',
+    selectPreset: '选择预设',
     required: '必填',
     enable: '是否启用',
     name: '名称',

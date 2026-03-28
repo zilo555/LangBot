@@ -46,6 +46,7 @@ const thTH = {
     confirmDelete: 'ยืนยันการลบ',
     deleteConfirmation: 'คุณแน่ใจหรือไม่ว่าต้องการลบสิ่งนี้?',
     selectOption: 'เลือกตัวเลือก',
+    selectPreset: 'เลือกค่าที่ตั้งไว้',
     required: 'จำเป็น',
     enable: 'เปิดใช้งาน',
     name: 'ชื่อ',
