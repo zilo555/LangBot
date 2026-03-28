@@ -221,6 +221,10 @@ const zhHant = {
     loginWithSpace: '使用 Space 登入',
     loginToUseModels: '使用 Space 登入以使用雲端模型',
     noModels: '暫無模型',
+    langbotModels: 'LangBot 模型',
+    spaceTrialTooltip:
+      '免費試用積分已就緒！使用 Space 登入即可零設定使用雲端模型。',
+    unlockModels: '登入以使用',
     editProvider: '編輯供應商',
     addProvider: '新增供應商',
     addProviderHint: '新增供應商以使用其他來源的模型',
@@ -298,6 +302,9 @@ const zhHant = {
     webhookUrlHint:
       '點擊輸入框自動全選，然後按 Ctrl+C (Mac: Cmd+C) 複製，或點擊右側按鈕',
     webhookUrlHintEither: '以上兩個地址任選其一填入平台配置即可',
+    webhookSaasHint:
+      'Webhook 需要公網可存取的網域。LangBot Cloud 為你的機器人提供即開即用的公網位址。',
+    webhookSaasLink: '了解 LangBot Cloud',
     logLevel: '日誌級別',
     allLevels: '全部級別',
     selectLevel: '選擇級別',

@@ -236,6 +236,10 @@
     loginWithSpace: 'Space でログイン',
     loginToUseModels: 'Space でログインしてクラウドモデルを使用',
     noModels: 'モデルがありません',
+    langbotModels: 'LangBot モデル',
+    spaceTrialTooltip:
+      '無料トライアルクレジットが利用可能！Space でログインして、設定不要でクラウドモデルを使用できます。',
+    unlockModels: 'ログインして使用',
     editProvider: 'プロバイダーを編集',
     addProvider: 'プロバイダーを追加',
     addProviderHint:
@@ -319,6 +323,9 @@
       '入力ボックスをクリックして全選択し、Ctrl+C (Mac: Cmd+C) でコピーするか、右側のボタンをクリックしてください',
     webhookUrlHintEither:
       '上記の2つのURLのいずれかをプラットフォーム設定に使用してください',
+    webhookSaasHint:
+      'Webhook には公開アクセス可能なドメインが必要です。LangBot Cloud では、ボット用のパブリックエンドポイントをすぐにご利用いただけます。',
+    webhookSaasLink: 'LangBot Cloud の詳細はこちら',
     logLevel: 'ログレベル',
     allLevels: 'すべてのレベル',
     selectLevel: 'レベルを選択',

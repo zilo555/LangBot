@@ -231,6 +231,10 @@ const enUS = {
     loginWithSpace: 'Login with Space',
     loginToUseModels: 'Login with Space to use cloud models',
     noModels: 'No models configured',
+    langbotModels: 'LangBot Models',
+    spaceTrialTooltip:
+      'Free trial credits available! Login with Space to access cloud models with zero configuration.',
+    unlockModels: 'Login to use',
     editProvider: 'Edit Provider',
     addProvider: 'Add Provider',
     addProviderHint: 'Add providers to use models from other sources',
@@ -314,6 +318,9 @@ const enUS = {
       'Click the input to select all, then press Ctrl+C (Mac: Cmd+C) to copy, or click the button',
     webhookUrlHintEither:
       'Use either of the two URLs above in your platform configuration',
+    webhookSaasHint:
+      'Webhook requires a publicly accessible domain. LangBot Cloud provides a ready-to-use public endpoint for your bot.',
+    webhookSaasLink: 'Learn more about LangBot Cloud',
     logLevel: 'Log Level',
     allLevels: 'All Levels',
     selectLevel: 'Select Level',
