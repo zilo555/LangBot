@@ -15,8 +15,13 @@ import {
   useSidebarData,
 } from '@/app/home/components/home-sidebar/SidebarDataContext';
 import { I18nObject } from '@/app/infra/entities/common';
-import { userInfo, initializeUserInfo } from '@/app/infra/http';
-import { usePathname } from 'next/navigation';
+import {
+  userInfo,
+  systemInfo,
+  initializeUserInfo,
+  initializeSystemInfo,
+} from '@/app/infra/http';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { extractI18nObject } from '@/i18n/I18nProvider';
 import { CircleHelp } from 'lucide-react';
@@ -50,12 +55,30 @@ export default function HomeLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const router = useRouter();
+
   // Initialize user info if not already initialized
   useEffect(() => {
     if (!userInfo) {
       initializeUserInfo();
     }
   }, []);
+
+  // Auto-redirect to wizard on first visit (wizard not yet completed on this instance)
+  useEffect(() => {
+    const checkWizard = async () => {
+      try {
+        // Always re-fetch to ensure we have the latest wizard_status from backend
+        await initializeSystemInfo();
+        if (systemInfo.wizard_status === 'none') {
+          router.replace('/wizard');
+        }
+      } catch {
+        // If fetching system info fails, don't redirect
+      }
+    };
+    checkWizard();
+  }, [router]);
 
   return (
     <SidebarDataProvider>
@@ -143,7 +166,9 @@ function HomeLayoutInner({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <div className="flex-1 overflow-hidden p-4 pt-0">{mainContent}</div>
+        <div className="flex-1 overflow-hidden p-4 pt-0 min-w-0">
+          {mainContent}
+        </div>
 
         <SurveyWidget />
       </SidebarInset>

@@ -6,13 +6,27 @@ metadata:
     en_US: LINE
     zh_Hans: LINE
   description:
-    en_US: LINE Adapter
-    zh_Hans: LINE适配器，请查看文档了解使用方式
-    ja_JP: LINEアダプター、ドキュメントを参照してください
-    zh_Hant: LINE適配器，請查看文檔了解使用方式
+    en_US: LINE Adapter, requires a public URL to receive LINE message pushes, please refer to the documentation for usage details
+    zh_Hans: LINE适配器，需要公网地址以接收 LINE 消息推送，请查看文档了解使用方式
+    ja_JP: LINEアダプター、LINEのメッセージプッシュを受信するためにパブリックURLが必要です。使用方法の詳細については、ドキュメントを参照してください。
+    zh_Hant: LINE適配器，需要公网地址以接收 LINE 消息推送，请查看文档了解使用方式
   icon: line.png
 spec:
   config:
+    - name: webhook_url
+      label:
+        en_US: Webhook Callback URL
+        zh_Hans: Webhook 回调地址
+        ja_JP: Webhook コールバック URL
+        zh_Hant: Webhook 回調地址
+      description:
+        en_US: Copy this URL and paste it into your LINE channel's webhook configuration
+        zh_Hans: 复制此地址并粘贴到 LINE 频道的 Webhook 配置中
+        ja_JP: この URL をコピーして LINE チャンネルの Webhook 設定に貼り付けてください
+        zh_Hant: 複製此地址並粘貼到 LINE 頻道的 Webhook 配置中
+      type: webhook-url
+      required: false
+      default: ""
     - name: channel_access_token
       label:
         en_US: Channel access token

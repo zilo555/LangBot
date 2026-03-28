@@ -6,8 +6,9 @@ metadata:
     en_US: Lark
     zh_Hans: 飞书
   description:
-    en_US: Lark Adapter
-    zh_Hans: 飞书适配器，请查看文档了解使用方式
+    en_US: Lark Adapter, supports both long connection and Webhook modes. Please refer to the documentation for usage details.
+    zh_Hans: 飞书适配器，支持长连接和 Webhook 两种接入方式，请查看文档了解使用方式
+    ja_JP: Lark アダプター、長期接続およびWebhookモードの両方をサポートしています。使用方法の詳細については、ドキュメントを参照してください。
   icon: lark.svg
 spec:
   config:
@@ -45,6 +46,20 @@ spec:
       type: boolean
       required: true
       default: false
+    - name: webhook_url
+      label:
+        en_US: Webhook Callback URL
+        zh_Hans: Webhook 回调地址
+      description:
+        en_US: Copy this URL and paste it into your Lark app's webhook configuration
+        zh_Hans: 复制此地址并粘贴到飞书应用的 Webhook 配置中
+      type: webhook-url
+      required: false
+      default: ""
+      show_if:
+        field: enable-webhook
+        operator: eq
+        value: true
     - name: encrypt-key
       label:
         en_US: Encrypt Key
@@ -55,6 +70,10 @@ spec:
       type: string
       required: true
       default: ""
+      show_if:
+        field: enable-webhook
+        operator: eq
+        value: true
     - name: enable-stream-reply
       label:
         en_US: Enable Stream Reply Mode

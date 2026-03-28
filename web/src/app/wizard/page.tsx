@@ -18,6 +18,7 @@ import {
 import { httpClient } from '@/app/infra/http/HttpClient';
 import {
   userInfo,
+  systemInfo,
   initializeUserInfo,
   initializeSystemInfo,
 } from '@/app/infra/http';
@@ -29,6 +30,7 @@ import {
 } from '@/app/infra/entities/pipeline';
 import {
   DynamicFormItemConfig,
+  getDefaultValues,
   parseDynamicFormItemType,
 } from '@/app/home/components/dynamic-form/DynamicFormItemConfig';
 import DynamicFormComponent from '@/app/home/components/dynamic-form/DynamicFormComponent';
@@ -47,62 +49,19 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { cn } from '@/lib/utils';
 import { LanguageSelector } from '@/components/ui/language-selector';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-interface WizardState {
-  currentStep: number;
-  selectedAdapter: string | null;
-  selectedRunner: string | null;
-  botName: string;
-  botDescription: string;
-  adapterConfig: Record<string, unknown>;
-  runnerConfig: Record<string, unknown>;
-  createdBotUuid: string | null;
-}
-
-const WIZARD_STORAGE_KEY = 'langbot_wizard_state';
-
 const TOTAL_STEPS = 4;
-
-// ---------------------------------------------------------------------------
-// Persistence helpers
-// ---------------------------------------------------------------------------
-
-function loadWizardState(): WizardState | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = localStorage.getItem(WIZARD_STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as WizardState;
-  } catch {
-    return null;
-  }
-}
-
-function saveWizardState(state: WizardState): void {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(WIZARD_STORAGE_KEY, JSON.stringify(state));
-  } catch {
-    // localStorage may be full - silently ignore
-  }
-}
-
-function clearWizardState(): void {
-  if (typeof window === 'undefined') return;
-  localStorage.removeItem(WIZARD_STORAGE_KEY);
-}
 
 // ---------------------------------------------------------------------------
 // Main Wizard Page (full-screen, no sidebar)
@@ -113,30 +72,19 @@ export default function WizardPage() {
   const router = useRouter();
 
   // ---- Wizard state ----
-  const restoredState = useRef(loadWizardState());
-  const [currentStep, setCurrentStep] = useState(
-    restoredState.current?.currentStep ?? 0,
-  );
-  const [selectedAdapter, setSelectedAdapter] = useState<string | null>(
-    restoredState.current?.selectedAdapter ?? null,
-  );
-  const [selectedRunner, setSelectedRunner] = useState<string | null>(
-    restoredState.current?.selectedRunner ?? null,
-  );
-  const [botName, setBotName] = useState(restoredState.current?.botName ?? '');
+  const [currentStep, setCurrentStep] = useState(0);
+  const [selectedAdapter, setSelectedAdapter] = useState<string | null>(null);
+  const [selectedRunner, setSelectedRunner] = useState<string | null>(null);
+  const [botName, setBotName] = useState('');
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [botDescription, _setBotDescription] = useState(
-    restoredState.current?.botDescription ?? '',
-  );
+  const [botDescription, _setBotDescription] = useState('');
   const [adapterConfig, setAdapterConfig] = useState<Record<string, unknown>>(
-    restoredState.current?.adapterConfig ?? {},
+    {},
   );
-  const [runnerConfig, setRunnerConfig] = useState<Record<string, unknown>>(
-    restoredState.current?.runnerConfig ?? {},
-  );
-  const [createdBotUuid, setCreatedBotUuid] = useState<string | null>(
-    restoredState.current?.createdBotUuid ?? null,
-  );
+  const [runnerConfig, setRunnerConfig] = useState<Record<string, unknown>>({});
+  const [createdBotUuid, setCreatedBotUuid] = useState<string | null>(null);
+  const [webhookUrl, setWebhookUrl] = useState<string>('');
+  const [extraWebhookUrl, setExtraWebhookUrl] = useState<string>('');
 
   // ---- Remote data ----
   const [adapters, setAdapters] = useState<Adapter[]>([]);
@@ -148,29 +96,6 @@ export default function WizardPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSavingBot, setIsSavingBot] = useState(false);
   const [botSaved, setBotSaved] = useState(false);
-
-  // ---- Persist state on every change ----
-  useEffect(() => {
-    saveWizardState({
-      currentStep,
-      selectedAdapter,
-      selectedRunner,
-      botName,
-      botDescription,
-      adapterConfig,
-      runnerConfig,
-      createdBotUuid,
-    });
-  }, [
-    currentStep,
-    selectedAdapter,
-    selectedRunner,
-    botName,
-    botDescription,
-    adapterConfig,
-    runnerConfig,
-    createdBotUuid,
-  ]);
 
   // ---- Fetch remote data ----
   useEffect(() => {
@@ -300,16 +225,34 @@ export default function WizardPage() {
         : selectedAdapter;
       setBotName(defaultName);
 
+      const defaultConfig = adapter
+        ? getDefaultValues(adapter.spec.config)
+        : {};
+
       const bot: Bot = {
         name: defaultName,
         description: '',
         adapter: selectedAdapter,
-        adapter_config: {},
+        adapter_config: defaultConfig,
         enable: false,
       };
       const resp = await httpClient.createBot(bot);
       setCreatedBotUuid(resp.uuid);
-      toast.success(t('wizard.botCreateSuccess'));
+
+      // Fetch runtime info to get webhook URL(s)
+      try {
+        const botData = await httpClient.getBot(resp.uuid);
+        const runtimeValues = botData.bot.adapter_runtime_values as
+          | Record<string, unknown>
+          | undefined;
+        setWebhookUrl((runtimeValues?.webhook_full_url as string) || '');
+        setExtraWebhookUrl(
+          (runtimeValues?.extra_webhook_full_url as string) || '',
+        );
+      } catch {
+        // Non-critical — webhook URL display is optional
+      }
+
       // Advance to Step 1
       setCurrentStep(1);
     } catch (err) {
@@ -338,6 +281,20 @@ export default function WizardPage() {
         enable: true,
       });
       setBotSaved(true);
+
+      // Re-fetch runtime info to get updated webhook URL(s)
+      try {
+        const botData = await httpClient.getBot(createdBotUuid);
+        const runtimeValues = botData.bot.adapter_runtime_values as
+          | Record<string, unknown>
+          | undefined;
+        setWebhookUrl((runtimeValues?.webhook_full_url as string) || '');
+        setExtraWebhookUrl(
+          (runtimeValues?.extra_webhook_full_url as string) || '',
+        );
+      } catch {
+        // Non-critical
+      }
     } catch (err) {
       const apiErr = err as { msg?: string };
       toast.error(
@@ -403,7 +360,6 @@ export default function WizardPage() {
         use_pipeline_uuid: pipelineResp.uuid,
       });
 
-      toast.success(t('wizard.createSuccess'));
       setCurrentStep(3);
     } catch (err) {
       const apiErr = err as { msg?: string };
@@ -442,11 +398,24 @@ export default function WizardPage() {
 
   // ---- Skip handler ----
   const [showSkipConfirm, setShowSkipConfirm] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
 
-  const handleSkipConfirm = useCallback(() => {
-    clearWizardState();
+  const handleSkipConfirm = useCallback(async () => {
+    if (systemInfo.wizard_status === 'none') {
+      setIsSkipping(true);
+      try {
+        await httpClient.updateWizardStatus('skipped');
+        systemInfo.wizard_status = 'skipped';
+      } catch {
+        toast.error(t('wizard.skipSaveError'));
+        setIsSkipping(false);
+        return; // Dialog stays open — user can retry
+      }
+      setIsSkipping(false);
+    }
+    setShowSkipConfirm(false);
     router.push('/home');
-  }, [router]);
+  }, [router, t]);
 
   // ---- Render ----
 
@@ -563,6 +532,8 @@ export default function WizardPage() {
             isSavingBot={isSavingBot}
             botSaved={botSaved}
             onSaveBot={handleSaveBot}
+            webhookUrl={webhookUrl}
+            extraWebhookUrl={extraWebhookUrl}
           />
         )}
         {currentStep === 2 && (
@@ -623,21 +594,31 @@ export default function WizardPage() {
       )}
 
       {/* Skip confirmation dialog */}
-      <AlertDialog open={showSkipConfirm} onOpenChange={setShowSkipConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('wizard.skip')}</AlertDialogTitle>
-            <AlertDialogDescription>
+      <Dialog open={showSkipConfirm} onOpenChange={setShowSkipConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('wizard.skip')}</DialogTitle>
+            <DialogDescription>
               {t('wizard.skipConfirmMessage')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={handleSkipConfirm}>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowSkipConfirm(false)}
+              disabled={isSkipping}
+            >
+              {t('wizard.prev')}
+            </Button>
+            <Button onClick={handleSkipConfirm} disabled={isSkipping}>
+              {isSkipping && (
+                <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+              )}
               {t('wizard.skipConfirmOk')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -722,6 +703,8 @@ function StepBotConfig({
   isSavingBot,
   botSaved,
   onSaveBot,
+  webhookUrl,
+  extraWebhookUrl,
 }: {
   adapterConfigItems: IDynamicFormItemSchema[];
   adapterConfigValues: Record<string, unknown>;
@@ -732,6 +715,8 @@ function StepBotConfig({
   isSavingBot: boolean;
   botSaved: boolean;
   onSaveBot: () => void;
+  webhookUrl: string;
+  extraWebhookUrl: string;
 }) {
   const { t } = useTranslation();
 
@@ -787,7 +772,11 @@ function StepBotConfig({
                   itemConfigList={adapterConfigItems}
                   initialValues={adapterConfigValues as Record<string, object>}
                   onSubmit={stableAdapterConfigCb}
-                  systemContext={{ is_wizard: true }}
+                  systemContext={{
+                    is_wizard: true,
+                    webhook_url: webhookUrl,
+                    extra_webhook_url: extraWebhookUrl,
+                  }}
                 />
               </CardContent>
             </Card>
@@ -1037,10 +1026,23 @@ function StepDone() {
     })),
   );
 
-  const handleBack = useCallback(() => {
-    clearWizardState();
+  const [isCompleting, setIsCompleting] = useState(false);
+
+  const handleBack = useCallback(async () => {
+    if (systemInfo.wizard_status === 'none') {
+      setIsCompleting(true);
+      try {
+        await httpClient.updateWizardStatus('completed');
+        systemInfo.wizard_status = 'completed';
+      } catch {
+        toast.error(t('wizard.completeSaveError'));
+        setIsCompleting(false);
+        return; // Don't navigate — let user retry
+      }
+      setIsCompleting(false);
+    }
     router.push('/home/bots');
-  }, [router]);
+  }, [router, t]);
 
   return (
     <div className="relative flex flex-col items-center justify-center h-full min-h-[400px]">
@@ -1065,7 +1067,8 @@ function StepDone() {
       <p className="text-muted-foreground mt-2 text-center max-w-md">
         {t('wizard.done.description')}
       </p>
-      <Button className="mt-6" onClick={handleBack}>
+      <Button className="mt-6" onClick={handleBack} disabled={isCompleting}>
+        {isCompleting && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
         {t('wizard.done.backToWorkbench')}
       </Button>
 
