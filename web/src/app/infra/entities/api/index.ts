@@ -299,12 +299,14 @@ export interface AsyncTaskRuntimeInfo {
 export interface AsyncTaskTaskContext {
   current_action: string;
   log: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface AsyncTask {
   id: number;
   kind: string;
   name: string;
+  label: string;
   task_type: string; // system or user
   runtime: AsyncTaskRuntimeInfo;
   task_context: AsyncTaskTaskContext;
