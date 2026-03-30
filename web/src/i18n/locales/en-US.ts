@@ -66,7 +66,7 @@ const enUS = {
     and: 'and',
     dataCollectionPolicy: 'Data Collection Policy',
     dataCollectionPolicyUrl:
-      'https://docs.langbot.app/en/insight/data-collection-policy',
+      'https://link.langbot.app/en/docs/data-policy',
     loading: 'Loading...',
     fieldRequired: 'This field is required',
     or: 'or',

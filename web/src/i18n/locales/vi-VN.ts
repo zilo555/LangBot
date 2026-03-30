@@ -66,7 +66,7 @@ const viVN = {
     and: 'và',
     dataCollectionPolicy: 'Chính sách thu thập dữ liệu',
     dataCollectionPolicyUrl:
-      'https://docs.langbot.app/en/insight/data-collection-policy',
+      'https://link.langbot.app/en/docs/data-policy',
     loading: 'Đang tải...',
     fieldRequired: 'Trường này là bắt buộc',
     or: 'hoặc',

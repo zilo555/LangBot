@@ -66,7 +66,7 @@ const thTH = {
     and: 'และ',
     dataCollectionPolicy: 'นโยบายการเก็บรวบรวมข้อมูล',
     dataCollectionPolicyUrl:
-      'https://docs.langbot.app/en/insight/data-collection-policy',
+      'https://link.langbot.app/en/docs/data-policy',
     loading: 'กำลังโหลด...',
     fieldRequired: 'ช่องนี้จำเป็นต้องกรอก',
     or: 'หรือ',

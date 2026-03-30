@@ -67,7 +67,7 @@
     and: 'および',
     dataCollectionPolicy: 'データ収集ポリシー',
     dataCollectionPolicyUrl:
-      'https://docs.langbot.app/ja/insight/data-collection-policy',
+      'https://link.langbot.app/ja/docs/data-policy',
     loading: '読み込み中...',
     fieldRequired: 'この項目は必須です',
     or: 'または',

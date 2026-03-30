@@ -68,7 +68,7 @@ const esES = {
     and: 'y',
     dataCollectionPolicy: 'Política de recopilación de datos',
     dataCollectionPolicyUrl:
-      'https://docs.langbot.app/en/insight/data-collection-policy',
+      'https://link.langbot.app/en/docs/data-policy',
     loading: 'Cargando...',
     fieldRequired: 'Este campo es obligatorio',
     or: 'o',
