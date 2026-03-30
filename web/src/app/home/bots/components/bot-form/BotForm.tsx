@@ -15,8 +15,13 @@ import DynamicFormComponent from '@/app/home/components/dynamic-form/DynamicForm
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { Bot } from '@/app/infra/entities/api';
 import { getAdapterDocUrl } from '@/app/infra/entities/adapter-docs';
-import { ExternalLink } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -473,89 +478,99 @@ export default function BotForm({
                     <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                        handleAdapterSelect(value);
-                      }}
-                      value={field.value}
-                    >
-                      <SelectTrigger className="w-[240px]">
-                        {field.value ? (
-                          <div className="flex items-center gap-2">
-                            <img
-                              src={httpClient.getAdapterIconURL(field.value)}
-                              alt=""
-                              className="h-5 w-5 rounded"
+                    <div className="flex items-center gap-2">
+                      <Select
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          handleAdapterSelect(value);
+                        }}
+                        value={field.value}
+                      >
+                        <SelectTrigger className="w-[240px]">
+                          {field.value ? (
+                            <div className="flex items-center gap-2">
+                              <img
+                                src={httpClient.getAdapterIconURL(field.value)}
+                                alt=""
+                                className="h-5 w-5 rounded"
+                              />
+                              <span>
+                                {adapterNameList.find(
+                                  (a) => a.value === field.value,
+                                )?.label ?? field.value}
+                              </span>
+                            </div>
+                          ) : (
+                            <SelectValue
+                              placeholder={t('bots.selectAdapter')}
                             />
-                            <span>
-                              {adapterNameList.find(
-                                (a) => a.value === field.value,
-                              )?.label ?? field.value}
-                            </span>
-                          </div>
-                        ) : (
-                          <SelectValue placeholder={t('bots.selectAdapter')} />
-                        )}
-                      </SelectTrigger>
-                      <SelectContent>
-                        {groupedAdapters.map((group) => (
-                          <SelectGroup
-                            key={group.categoryId ?? 'uncategorized'}
-                          >
-                            {group.categoryId && (
-                              <SelectLabel>
-                                {getCategoryLabel(t, group.categoryId)}
-                              </SelectLabel>
-                            )}
-                            {group.items.map((item) => (
-                              <SelectItem key={item.value} value={item.value}>
-                                <div className="flex items-center gap-2">
-                                  <img
-                                    src={httpClient.getAdapterIconURL(
-                                      item.value,
-                                    )}
-                                    alt=""
-                                    className="h-5 w-5 rounded"
-                                  />
-                                  <span>{item.label}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                          )}
+                        </SelectTrigger>
+                        <SelectContent>
+                          {groupedAdapters.map((group) => (
+                            <SelectGroup
+                              key={group.categoryId ?? 'uncategorized'}
+                            >
+                              {group.categoryId && (
+                                <SelectLabel>
+                                  {getCategoryLabel(t, group.categoryId)}
+                                </SelectLabel>
+                              )}
+                              {group.items.map((item) => (
+                                <SelectItem key={item.value} value={item.value}>
+                                  <div className="flex items-center gap-2">
+                                    <img
+                                      src={httpClient.getAdapterIconURL(
+                                        item.value,
+                                      )}
+                                      alt=""
+                                      className="h-5 w-5 rounded"
+                                    />
+                                    <span>{item.label}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {currentAdapter &&
+                        (() => {
+                          const docUrl = getAdapterDocUrl(
+                            currentAdapter,
+                            i18n.language,
+                          );
+                          return docUrl ? (
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-9 w-9 shrink-0"
+                                  asChild
+                                >
+                                  <a
+                                    href={docUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <FileText className="h-4 w-4" />
+                                  </a>
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {t('bots.viewAdapterDocs')}
+                              </TooltipContent>
+                            </Tooltip>
+                          ) : null;
+                        })()}
+                    </div>
                   </FormControl>
                   {currentAdapter && adapterDescriptionList[currentAdapter] && (
                     <FormDescription>
                       {adapterDescriptionList[currentAdapter]}
                     </FormDescription>
                   )}
-                  {currentAdapter &&
-                    (() => {
-                      const docUrl = getAdapterDocUrl(
-                        currentAdapter,
-                        i18n.language,
-                      );
-                      return docUrl ? (
-                        <Button
-                          variant="link"
-                          size="sm"
-                          className="h-auto p-0 text-xs"
-                          asChild
-                        >
-                          <a
-                            href={docUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <ExternalLink className="mr-1 h-3 w-3" />
-                            {t('bots.viewAdapterDocs')}
-                          </a>
-                        </Button>
-                      ) : null;
-                    })()}
                   <FormMessage />
                 </FormItem>
               )}
