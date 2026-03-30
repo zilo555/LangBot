@@ -276,6 +276,7 @@ const zhHans = {
     platformAdapter: '平台/适配器选择',
     selectAdapter: '选择适配器',
     adapterConfig: '适配器配置',
+    viewAdapterDocs: '查看文档',
     bindPipeline: '绑定流水线',
     selectPipeline: '选择流水线',
     selectBot: '请选择机器人',

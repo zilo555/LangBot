@@ -293,6 +293,7 @@
     platformAdapter: 'プラットフォーム/アダプター選択',
     selectAdapter: 'アダプターを選択',
     adapterConfig: 'アダプター設定',
+    viewAdapterDocs: 'ドキュメントを見る',
     bindPipeline: 'パイプラインを紐付け',
     selectPipeline: 'パイプラインを選択',
     selectBot: 'ボットを選択してください',

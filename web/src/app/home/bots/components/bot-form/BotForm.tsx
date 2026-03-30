@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import i18n from 'i18next';
 import {
   IChooseAdapterEntity,
   IPipelineEntity,
@@ -13,6 +14,9 @@ import { UUID } from 'uuidjs';
 import DynamicFormComponent from '@/app/home/components/dynamic-form/DynamicFormComponent';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { Bot } from '@/app/infra/entities/api';
+import { getAdapterDocUrl } from '@/app/infra/entities/adapter-docs';
+import { ExternalLink } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -528,6 +532,30 @@ export default function BotForm({
                       {adapterDescriptionList[currentAdapter]}
                     </FormDescription>
                   )}
+                  {currentAdapter &&
+                    (() => {
+                      const docUrl = getAdapterDocUrl(
+                        currentAdapter,
+                        i18n.language,
+                      );
+                      return docUrl ? (
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="h-auto p-0 text-xs"
+                          asChild
+                        >
+                          <a
+                            href={docUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <ExternalLink className="mr-1 h-3 w-3" />
+                            {t('bots.viewAdapterDocs')}
+                          </a>
+                        </Button>
+                      ) : null;
+                    })()}
                   <FormMessage />
                 </FormItem>
               )}

@@ -275,6 +275,7 @@ const zhHant = {
     platformAdapter: '平台/適配器選擇',
     selectAdapter: '選擇適配器',
     adapterConfig: '適配器設定',
+    viewAdapterDocs: '查看文檔',
     bindPipeline: '綁定流程線',
     selectPipeline: '選擇流程線',
     selectBot: '請選擇機器人',

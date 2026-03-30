@@ -288,6 +288,7 @@ const enUS = {
     platformAdapter: 'Platform/Adapter Selection',
     selectAdapter: 'Select Adapter',
     adapterConfig: 'Adapter Configuration',
+    viewAdapterDocs: 'View Docs',
     bindPipeline: 'Bind Pipeline',
     selectPipeline: 'Select Pipeline',
     selectBot: 'Select Bot',

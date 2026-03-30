@@ -283,6 +283,7 @@ const thTH = {
     platformAdapter: 'การเลือกแพลตฟอร์ม/อะแดปเตอร์',
     selectAdapter: 'เลือกอะแดปเตอร์',
     adapterConfig: 'การกำหนดค่าอะแดปเตอร์',
+    viewAdapterDocs: 'ดูเอกสาร',
     bindPipeline: 'ผูก Pipeline',
     selectPipeline: 'เลือก Pipeline',
     selectBot: 'เลือก Bot',

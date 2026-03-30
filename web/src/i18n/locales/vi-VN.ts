@@ -292,6 +292,7 @@ const viVN = {
     platformAdapter: 'Nền tảng/Lựa chọn Adapter',
     selectAdapter: 'Chọn Adapter',
     adapterConfig: 'Cấu hình Adapter',
+    viewAdapterDocs: 'Xem tài liệu',
     bindPipeline: 'Liên kết Pipeline',
     selectPipeline: 'Chọn Pipeline',
     selectBot: 'Chọn Bot',

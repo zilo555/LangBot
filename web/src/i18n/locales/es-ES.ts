@@ -297,6 +297,7 @@ const esES = {
     platformAdapter: 'Selección de plataforma/adaptador',
     selectAdapter: 'Seleccionar adaptador',
     adapterConfig: 'Configuración del adaptador',
+    viewAdapterDocs: 'Ver documentación',
     bindPipeline: 'Vincular Pipeline',
     selectPipeline: 'Seleccionar Pipeline',
     selectBot: 'Seleccionar Bot',
