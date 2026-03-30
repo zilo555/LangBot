@@ -15,13 +15,7 @@ import DynamicFormComponent from '@/app/home/components/dynamic-form/DynamicForm
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { Bot } from '@/app/infra/entities/api';
 import { getAdapterDocUrl } from '@/app/infra/entities/adapter-docs';
-import { FileText } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { ExternalLink } from 'lucide-react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -541,27 +535,15 @@ export default function BotForm({
                             i18n.language,
                           );
                           return docUrl ? (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  className="h-9 w-9 shrink-0"
-                                  asChild
-                                >
-                                  <a
-                                    href={docUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <FileText className="h-4 w-4" />
-                                  </a>
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                {t('bots.viewAdapterDocs')}
-                              </TooltipContent>
-                            </Tooltip>
+                            <a
+                              href={docUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex shrink-0 items-center gap-1 text-xs text-primary hover:underline"
+                            >
+                              {t('bots.viewAdapterDocs')}
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
                           ) : null;
                         })()}
                     </div>
