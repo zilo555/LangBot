@@ -105,6 +105,9 @@ export default function BotForm({
   const [adapterDescriptionList, setAdapterDescriptionList] = useState<
     Record<string, string>
   >({});
+  const [adapterHelpLinks, setAdapterHelpLinks] = useState<
+    Record<string, Record<string, string>>
+  >({});
 
   const [pipelineNameList, setPipelineNameList] = useState<IPipelineEntity[]>(
     [],
@@ -209,6 +212,18 @@ export default function BotForm({
           return acc;
         },
         {} as Record<string, string>,
+      ),
+    );
+
+    setAdapterHelpLinks(
+      adaptersRes.adapters.reduce(
+        (acc, item) => {
+          if (item.spec.help_links) {
+            acc[item.name] = item.spec.help_links;
+          }
+          return acc;
+        },
+        {} as Record<string, Record<string, string>>,
       ),
     );
 
@@ -531,7 +546,7 @@ export default function BotForm({
                       {currentAdapter &&
                         (() => {
                           const docUrl = getAdapterDocUrl(
-                            currentAdapter,
+                            adapterHelpLinks[currentAdapter],
                             i18n.language,
                           );
                           return docUrl ? (

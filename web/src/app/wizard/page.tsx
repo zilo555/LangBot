@@ -803,7 +803,7 @@ function StepPlatform({
                   </p>
                   {(() => {
                     const docUrl = getAdapterDocUrl(
-                      adapter.name,
+                      adapter.spec.help_links,
                       i18n.language,
                     );
                     return docUrl ? (
@@ -896,8 +896,11 @@ function StepBotConfig({
                   </CardTitle>
                   {selectedAdapterName &&
                     (() => {
+                      const selectedAdapter = adapters.find(
+                        (a) => a.name === selectedAdapterName,
+                      );
                       const docUrl = getAdapterDocUrl(
-                        selectedAdapterName,
+                        selectedAdapter?.spec.help_links,
                         i18n.language,
                       );
                       return docUrl ? (
