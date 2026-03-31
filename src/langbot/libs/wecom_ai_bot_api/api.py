@@ -434,10 +434,10 @@ async def parse_wecom_bot_message(
         }
         if voice_info.get('content'):
             message_data['content'] = voice_info.get('content')
-        if (message_data['voice'].get('filesize') or 0) <= max_inline_file_size:
-            voice_base64 = await _safe_download_as_data_uri(download_url, per_msg_aeskey)
-            if voice_base64:
-                message_data['voice']['base64'] = voice_base64
+        # if (message_data['voice'].get('filesize') or 0) <= max_inline_file_size:
+        #     voice_base64 = await _safe_download_as_data_uri(download_url, per_msg_aeskey)
+        #     if voice_base64:
+        #         message_data['voice']['base64'] = voice_base64
     elif msg_type == 'video':
         video_info = msg_json.get('video', {}) or {}
         download_url = video_info.get('url')
@@ -449,10 +449,12 @@ async def parse_wecom_bot_message(
             'md5sum': video_info.get('md5sum') or video_info.get('md5'),
             'filename': video_info.get('filename') or video_info.get('name'),
         }
-        if (video_data.get('filesize') or 0) <= max_inline_file_size:
-            video_base64 = await _safe_download_as_data_uri(download_url, per_msg_aeskey)
-            if video_base64:
-                video_data['base64'] = video_base64
+        # if (video_data.get('filesize') or 0) <= max_inline_file_size:
+        #     video_base64 = await _safe_download_as_data_uri(download_url, per_msg_aeskey)
+        #     if video_base64:
+        #         video_data['base64'] = video_base64
+        # 应为需要解密，但是目前暂时不能下载到内部进行解密，所以先将下载链接拼接aeskey返回给用户，由插件去处理该链接的下载和解密逻辑
+        video_data['download_url'] = download_url + f'?aeskey={per_msg_aeskey}'
         message_data['video'] = video_data
     elif msg_type == 'file':
         file_info = msg_json.get('file', {}) or {}
@@ -466,12 +468,15 @@ async def parse_wecom_bot_message(
             'download_url': download_url,
             'extra': file_info,
         }
-        if (file_data.get('filesize') or 0) <= max_inline_file_size:
-            file_bytes, dl_filename = await _safe_download(download_url, per_msg_aeskey)
-            if file_bytes:
-                file_data['base64'] = _bytes_to_data_uri(file_bytes)
-                if dl_filename and not file_data.get('filename'):
-                    file_data['filename'] = dl_filename
+        # if (file_data.get('filesize') or 0) <= max_inline_file_size:
+        #     file_bytes, dl_filename = await _safe_download(download_url, per_msg_aeskey)
+        #     if file_bytes:
+        #         file_data['base64'] = _bytes_to_data_uri(file_bytes)
+        #         if dl_filename and not file_data.get('filename'):
+        #             file_data['filename'] = dl_filename
+
+        # 应为需要解密，但是目前暂时不能下载到内部进行解密，所以先将下载链接拼接aeskey返回给用户，由插件去处理该链接的下载和解密逻辑
+        file_data['download_url'] = download_url + f'?aeskey={per_msg_aeskey}'
         message_data['file'] = file_data
     elif msg_type == 'link':
         message_data['link'] = msg_json.get('link', {})
