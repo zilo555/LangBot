@@ -20,6 +20,7 @@ system:
     edition: community
     recovery_key: ''
     allow_modify_login_info: true
+    disabled_adapters: []
     limitation:
         max_bots: -1
         max_pipelines: -1

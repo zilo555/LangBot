@@ -241,11 +241,21 @@ class PlatformManager:
         # delete all bot log images
         await self.ap.storage_mgr.storage_provider.delete_dir_recursive('bot_log_images')
 
+        disabled_adapters = self.ap.instance_config.data.get('system', {}).get('disabled_adapters', []) or []
+
         self.adapter_components = self.ap.discover.get_components_by_kind('MessagePlatformAdapter')
         adapter_dict: dict[str, type[abstract_platform_adapter.AbstractMessagePlatformAdapter]] = {}
         for component in self.adapter_components:
+            if component.metadata.name in disabled_adapters:
+                continue
             adapter_dict[component.metadata.name] = component.get_python_component_class()
         self.adapter_dict = adapter_dict
+
+        # Filter out disabled adapters from components list (for API responses)
+        if disabled_adapters:
+            self.adapter_components = [
+                c for c in self.adapter_components if c.metadata.name not in disabled_adapters
+            ]
 
         # initialize websocket adapter
         websocket_adapter_class = self.adapter_dict['websocket']
