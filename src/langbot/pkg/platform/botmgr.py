@@ -253,9 +253,7 @@ class PlatformManager:
 
         # Filter out disabled adapters from components list (for API responses)
         if disabled_adapters:
-            self.adapter_components = [
-                c for c in self.adapter_components if c.metadata.name not in disabled_adapters
-            ]
+            self.adapter_components = [c for c in self.adapter_components if c.metadata.name not in disabled_adapters]
 
         # initialize websocket adapter
         websocket_adapter_class = self.adapter_dict['websocket']
