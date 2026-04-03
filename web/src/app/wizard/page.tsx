@@ -1,7 +1,5 @@
-'use client';
-
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { UUID } from 'uuidjs';
 import { toast } from 'sonner';
@@ -81,7 +79,7 @@ const TOTAL_STEPS = 4;
 
 export default function WizardPage() {
   const { t } = useTranslation();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   // ---- Wizard state ----
   const [currentStep, setCurrentStep] = useState(0);
@@ -519,8 +517,8 @@ export default function WizardPage() {
     }
     setIsSkipping(false);
     setShowSkipConfirm(false);
-    router.push('/home');
-  }, [router, t]);
+    navigate('/home');
+  }, [navigate, t]);
 
   // ---- Render ----
 
@@ -1169,7 +1167,7 @@ function StepAIEngine({
 
 function StepDone() {
   const { t } = useTranslation();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const [particles] = useState(() =>
     Array.from({ length: 30 }, (_, i) => ({
@@ -1213,8 +1211,8 @@ function StepDone() {
       return;
     }
     setIsCompleting(false);
-    router.push('/home/bots');
-  }, [router, t]);
+    navigate('/home/bots');
+  }, [navigate, t]);
 
   return (
     <div className="relative flex flex-col items-center justify-center h-full min-h-[400px]">
@@ -1244,7 +1242,7 @@ function StepDone() {
         {t('wizard.done.backToWorkbench')}
       </Button>
 
-      <style jsx>{`
+      <style>{`
         @keyframes wizardConfetti {
           0% {
             transform: translateY(100vh) rotate(0deg);

@@ -1,5 +1,3 @@
-'use client';
-
 import { useState, useEffect } from 'react';
 import { Plus, Boxes } from 'lucide-react';
 import { httpClient, systemInfo } from '@/app/infra/http/HttpClient';

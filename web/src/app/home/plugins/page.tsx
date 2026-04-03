@@ -1,4 +1,3 @@
-'use client';
 import PluginInstalledComponent, {
   PluginInstalledComponentRef,
 } from '@/app/home/plugins/components/plugin-installed/PluginInstalledComponent';
@@ -45,7 +44,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
@@ -84,7 +83,7 @@ interface GithubAsset {
 }
 
 export default function PluginConfigPage() {
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
   const detailId = searchParams.get('id');
 
   // Show plugin detail view when ?id= query param is present
@@ -97,7 +96,7 @@ export default function PluginConfigPage() {
 
 function PluginListView() {
   const { t } = useTranslation();
-  const router = useRouter();
+  const navigate = useNavigate();
   const {
     refreshPlugins,
     pendingPluginInstallAction,
@@ -672,7 +671,7 @@ function PluginListView() {
             {systemInfo.enable_marketplace && (
               <DropdownMenuItem
                 onClick={() => {
-                  router.push('/home/market');
+                  navigate('/home/market');
                 }}
               >
                 <StoreIcon className="w-4 h-4" />

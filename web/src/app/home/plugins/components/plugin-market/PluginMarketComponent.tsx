@@ -1,7 +1,5 @@
-'use client';
-
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -47,7 +45,7 @@ function MarketPageContent({
   installPlugin: (plugin: PluginV4) => void;
 }) {
   const { t } = useTranslation();
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
 
   const validCategories = [
     'Tool',
