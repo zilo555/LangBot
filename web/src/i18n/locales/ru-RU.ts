@@ -1199,6 +1199,7 @@ const ruRU = {
       embeddingCalls: 'Вызовы Embedding',
       errors: 'Журнал ошибок',
       sessions: 'Сессии',
+      feedback: 'Отзывы пользователей',
     },
   },
   limitation: {
