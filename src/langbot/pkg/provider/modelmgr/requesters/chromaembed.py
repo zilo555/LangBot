@@ -4,14 +4,14 @@ import typing
 
 from .. import requester
 
-REQUESTER_NAME: str = 'seekdb-embedding'
+REQUESTER_NAME: str = 'chroma-embedding'
 
 
-class SeekDBEmbedding(requester.ProviderAPIRequester):
-    """SeekDB built-in embedding requester.
+class ChromaEmbedding(requester.ProviderAPIRequester):
+    """Chroma built-in embedding requester.
 
-    Uses pyseekdb's local embedding function (all-MiniLM-L6-v2).
-    The base_url config is reserved for future remote embedding support.
+    Uses chromadb's DefaultEmbeddingFunction (all-MiniLM-L6-v2).
+    The embedding function runs locally using ONNX Runtime.
     """
 
     default_config: dict[str, typing.Any] = {
@@ -22,11 +22,11 @@ class SeekDBEmbedding(requester.ProviderAPIRequester):
 
     async def initialize(self):
         try:
-            import pyseekdb
+            from chromadb.utils import embedding_functions
         except ImportError:
-            raise ImportError('pyseekdb is not installed. Install it with: pip install pyseekdb')
+            raise ImportError('chromadb is not installed. Install it with: pip install chromadb')
 
-        self._embedding_function = pyseekdb.get_default_embedding_function()
+        self._embedding_function = embedding_functions.DefaultEmbeddingFunction()
 
     async def invoke_llm(
         self,
@@ -37,7 +37,7 @@ class SeekDBEmbedding(requester.ProviderAPIRequester):
         extra_args: dict[str, typing.Any] = {},
         remove_think: bool = False,
     ):
-        raise NotImplementedError('SeekDB embedding does not support LLM inference')
+        raise NotImplementedError('Chroma embedding does not support LLM inference')
 
     async def invoke_embedding(
         self,
@@ -45,17 +45,17 @@ class SeekDBEmbedding(requester.ProviderAPIRequester):
         input_text: typing.List[str],
         extra_args: dict[str, typing.Any] = {},
     ) -> typing.List[typing.List[float]]:
-        """Generate embeddings using SeekDB's built-in embedding function."""
+        """Generate embeddings using Chroma's DefaultEmbeddingFunction."""
         if self._embedding_function is None:
             await self.initialize()
 
         try:
             result = self._embedding_function(input_text)
-            # Ensure JSON serialization compatibility
+            # DefaultEmbeddingFunction returns list of ndarray, convert for JSON
             if isinstance(result, list):
                 return [item.tolist() if hasattr(item, 'tolist') else item for item in result]
             return result.tolist() if hasattr(result, 'tolist') else result
         except Exception as e:
             from .. import errors
 
-            raise errors.RequesterError(f'SeekDB embedding failed: {str(e)}')
+            raise errors.RequesterError(f'Chroma embedding failed: {str(e)}')
