@@ -179,6 +179,10 @@ const thTH = {
     mustBeValidNumber: 'ต้องเป็นตัวเลขที่ถูกต้อง',
     mustBeTrueOrFalse: 'ต้องเป็น true หรือ false',
     requestURL: 'URL คำขอ',
+    scanURL: 'URL สแกนโมเดล',
+    scanURLPlaceholder: 'เว้นว่างไว้เพื่อใช้ URL คำขอ + /models',
+    scanURLDescription:
+      'กรอกปลายทางรายการโมเดลจริงเมื่อการสแกนโมเดลไม่ได้ใช้ที่อยู่เดียวกับการเรียกใช้โมเดล',
     apiKey: 'API Key',
     abilities: 'ความสามารถ',
     selectModelAbilities: 'เลือกความสามารถของโมเดล',
@@ -221,6 +225,7 @@ const thTH = {
     scanModelsHint:
       'ดึงรายการโมเดลที่ใช้ได้จากผู้ให้บริการปัจจุบัน แล้วเลือกโมเดลที่ต้องการเพิ่ม',
     scannedModels: 'ผลการสแกน',
+    scanDebug: 'ข้อมูลการดีบัก',
     searchScannedModels: 'ค้นหาผลการสแกน',
     noScannedModels: 'ยังไม่มีผลการสแกน กดปุ่มด้านบนเพื่อเริ่มสแกน',
     noScannedModelsMatch: 'ไม่พบโมเดลที่ตรงกัน',

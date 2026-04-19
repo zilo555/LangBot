@@ -184,6 +184,10 @@
     mustBeValidNumber: '有効な数値である必要があります',
     mustBeTrueOrFalse: 'true または false である必要があります',
     requestURL: 'リクエストURL',
+    scanURL: 'モデルスキャンURL',
+    scanURLPlaceholder: '空のままにするとリクエストURL + /modelsを使用します',
+    scanURLDescription:
+      'モデルスキャンがモデル呼び出しと同じアドレスを使用しない場合は、実際のモデルリストのエンドポイントを入力してください。',
     apiKey: 'APIキー',
     abilities: '機能',
     selectModelAbilities: 'モデル機能を選択',
@@ -227,6 +231,7 @@
     scanModelsHint:
       '現在のプロバイダーから利用可能なモデルを取得し、追加するモデルを選択します。',
     scannedModels: 'スキャン結果',
+    scanDebug: 'デバッグ情報',
     searchScannedModels: 'スキャン結果を検索',
     noScannedModels:
       'まだスキャン結果がありません。上のボタンからスキャンしてください。',

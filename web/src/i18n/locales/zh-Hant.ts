@@ -173,6 +173,10 @@ const zhHant = {
     mustBeValidNumber: '必須是有效的數字',
     mustBeTrueOrFalse: '必須是 true 或 false',
     requestURL: '請求URL',
+    scanURL: '掃描模型 URL',
+    scanURLPlaceholder: '留空則使用請求 URL + /models',
+    scanURLDescription:
+      '當模型掃描與模型調用不使用相同地址時，請填寫實際的模型列表端點。',
     apiKey: 'API Key',
     abilities: '能力',
     selectModelAbilities: '選擇模型能力',
@@ -213,6 +217,7 @@ const zhHant = {
     scanModels: '掃描模型',
     scanModelsHint: '從目前供應商介面讀取可用模型，然後勾選要添加的模型。',
     scannedModels: '掃描結果',
+    scanDebug: '調試資訊',
     searchScannedModels: '搜尋掃描結果',
     noScannedModels: '尚無掃描結果，點擊上方按鈕開始掃描。',
     noScannedModelsMatch: '沒有符合的模型',

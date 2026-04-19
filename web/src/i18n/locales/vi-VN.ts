@@ -182,6 +182,10 @@ const viVN = {
     mustBeValidNumber: 'Phải là một số hợp lệ',
     mustBeTrueOrFalse: 'Phải là true hoặc false',
     requestURL: 'URL yêu cầu',
+    scanURL: 'URL quét mô hình',
+    scanURLPlaceholder: 'Để trống để sử dụng URL yêu cầu + /models',
+    scanURLDescription:
+      'Điền điểm cuối danh sách mô hình thực tế khi quét mô hình không sử dụng cùng địa chỉ với việc gọi mô hình.',
     apiKey: 'API Key',
     abilities: 'Khả năng',
     selectModelAbilities: 'Chọn khả năng mô hình',
@@ -228,6 +232,7 @@ const viVN = {
     scanModelsHint:
       'Đọc danh sách mô hình khả dụng từ nhà cung cấp hiện tại rồi chọn mô hình cần thêm.',
     scannedModels: 'Kết quả quét',
+    scanDebug: 'Thông tin gỡ lỗi',
     searchScannedModels: 'Tìm trong kết quả quét',
     noScannedModels: 'Chưa có kết quả quét. Nhấn nút phía trên để bắt đầu.',
     noScannedModelsMatch: 'Không có mô hình phù hợp',

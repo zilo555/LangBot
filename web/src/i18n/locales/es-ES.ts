@@ -185,6 +185,10 @@ const esES = {
     mustBeValidNumber: 'Debe ser un número válido',
     mustBeTrueOrFalse: 'Debe ser verdadero o falso',
     requestURL: 'URL de solicitud',
+    scanURL: 'URL de escaneo de modelos',
+    scanURLPlaceholder: 'Déjalo vacío para usar URL de solicitud + /models',
+    scanURLDescription:
+      'Ingresa el endpoint real de la lista de modelos cuando el escaneo de modelos no utiliza la misma dirección que la invocación del modelo.',
     apiKey: 'Clave API',
     abilities: 'Capacidades',
     selectModelAbilities: 'Seleccionar capacidades del modelo',
@@ -233,6 +237,7 @@ const esES = {
     scanModelsHint:
       'Lee los modelos disponibles del proveedor actual y luego elige cuáles agregar.',
     scannedModels: 'Modelos detectados',
+    scanDebug: 'Información de depuración',
     searchScannedModels: 'Buscar modelos detectados',
     noScannedModels:
       'Todavía no hay resultados. Pulsa el botón superior para escanear.',
