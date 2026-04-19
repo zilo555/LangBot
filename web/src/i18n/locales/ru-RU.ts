@@ -182,7 +182,8 @@ const ruRU = {
     mustBeTrueOrFalse: 'Должно быть true или false',
     requestURL: 'URL запроса',
     scanURL: 'URL сканирования моделей',
-    scanURLPlaceholder: 'Оставьте пустым для использования URL запроса + /models',
+    scanURLPlaceholder:
+      'Оставьте пустым для использования URL запроса + /models',
     scanURLDescription:
       'Укажите фактический эндпоинт списка моделей, если сканирование моделей использует другой адрес, нежели вызов модели.',
     apiKey: 'API-ключ',
@@ -234,7 +235,8 @@ const ruRU = {
     scannedModels: 'Отсканированные модели',
     scanDebug: 'Информация об отладке',
     searchScannedModels: 'Поиск отсканированных моделей',
-    noScannedModels: 'Пока нет результатов. Нажмите кнопку выше для сканирования.',
+    noScannedModels:
+      'Пока нет результатов. Нажмите кнопку выше для сканирования.',
     noScannedModelsMatch: 'Нет подходящих моделей',
     addSelectedModels: 'Добавить выбранные',
     addSelectedModelsSuccess: 'Добавлено моделей: {{count}}',
