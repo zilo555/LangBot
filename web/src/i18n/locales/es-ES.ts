@@ -281,6 +281,11 @@ const esES = {
     loadError: 'Error al cargar datos',
     chat: 'Chat',
     embedding: 'Embedding',
+    rerank: 'Reordenar',
+    rerankUrlTooltip:
+      'URL completa para el endpoint de reordenación (ej: https://dashscope.aliyuncs.com/compatible-api/v1/reranks)',
+    rerankPathTooltip:
+      'Ruta añadida a la URL base (predeterminado: rerank, algunos servicios usan reranks)',
     modelsCount: '{{count}} modelo(s)',
     expandModels: 'Expandir',
     collapseModels: 'Contraer',

@@ -275,6 +275,11 @@
     loadError: 'データの読み込みに失敗しました',
     chat: 'チャット',
     embedding: '埋め込み',
+    rerank: '再順位付け',
+    rerankUrlTooltip:
+      '再順位付けエンドポイントの完全URL（例: https://dashscope.aliyuncs.com/compatible-api/v1/reranks）',
+    rerankPathTooltip:
+      'ベースURLに追加するパス（デフォルト: rerank、一部サービスはreranksを使用）',
     modelsCount: '{{count}} 個のモデル',
     expandModels: '展開',
     collapseModels: '折りたたむ',

@@ -267,6 +267,11 @@ const thTH = {
     loadError: 'โหลดข้อมูลล้มเหลว',
     chat: 'แชท',
     embedding: 'Embedding',
+    rerank: 'จัดลำดับใหม่',
+    rerankUrlTooltip:
+      'URL เต็มสำหรับ endpoint จัดลำดับใหม่ (เช่น: https://dashscope.aliyuncs.com/compatible-api/v1/reranks)',
+    rerankPathTooltip:
+      'พาธที่เพิ่มเข้าไปใน URL ฐาน (ค่าเริ่มต้น: rerank บางบริการใช้ reranks)',
     modelsCount: '{{count}} โมเดล',
     expandModels: 'ขยาย',
     collapseModels: 'ย่อ',

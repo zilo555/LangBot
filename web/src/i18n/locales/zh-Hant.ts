@@ -259,6 +259,11 @@ const zhHant = {
     loadError: '載入資料失敗',
     chat: '對話',
     embedding: '嵌入',
+    rerank: '重排序',
+    rerankUrlTooltip:
+      '完整 URL 覆蓋重排序端點（例如：https://dashscope.aliyuncs.com/compatible-api/v1/reranks）',
+    rerankPathTooltip:
+      '附加到基礎 URL 的路徑（預設：rerank，某些服務使用 reranks）',
     modelsCount: '{{count}} 個模型',
     expandModels: '展開',
     collapseModels: '收起',

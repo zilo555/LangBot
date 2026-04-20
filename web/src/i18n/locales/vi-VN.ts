@@ -275,6 +275,11 @@ const viVN = {
     loadError: 'Tải dữ liệu thất bại',
     chat: 'Trò chuyện',
     embedding: 'Embedding',
+    rerank: 'Sắp xếp lại',
+    rerankUrlTooltip:
+      'URL đầy đủ cho endpoint sắp xếp lại (vd: https://dashscope.aliyuncs.com/compatible-api/v1/reranks)',
+    rerankPathTooltip:
+      'Đường dẫn thêm vào URL cơ sở (mặc định: rerank, một số dịch vụ dùng reranks)',
     modelsCount: '{{count}} mô hình',
     expandModels: 'Mở rộng',
     collapseModels: 'Thu gọn',

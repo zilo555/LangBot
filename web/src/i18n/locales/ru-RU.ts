@@ -278,6 +278,11 @@ const ruRU = {
     loadError: 'Не удалось загрузить данные',
     chat: 'Чат',
     embedding: 'Embedding',
+    rerank: 'Переранжирование',
+    rerankUrlTooltip:
+      'Полный URL для эндпоинта переранжирования (напр.: https://dashscope.aliyuncs.com/compatible-api/v1/reranks)',
+    rerankPathTooltip:
+      'Путь, добавляемый к базовому URL (по умолчанию: rerank, некоторые сервисы используют reranks)',
     modelsCount: '{{count}} модель(ей)',
     expandModels: 'Развернуть',
     collapseModels: 'Свернуть',
