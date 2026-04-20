@@ -3,6 +3,7 @@ import {
   Plus,
   MessageSquareText,
   Cpu,
+  ArrowUpDown,
   Eye,
   Wrench,
   Check,
@@ -265,7 +266,7 @@ export default function AddModelPopover({
         onClick={(e) => e.stopPropagation()}
       >
         <Tabs value={tab} onValueChange={(v) => setTab(v as ModelType)}>
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="llm">
               <MessageSquareText className="h-4 w-4 mr-1" />
               {t('models.chat')}
@@ -273,6 +274,10 @@ export default function AddModelPopover({
             <TabsTrigger value="embedding">
               <Cpu className="h-4 w-4 mr-1" />
               {t('models.embedding')}
+            </TabsTrigger>
+            <TabsTrigger value="rerank">
+              <ArrowUpDown className="h-4 w-4 mr-1" />
+              {t('models.rerank')}
             </TabsTrigger>
           </TabsList>
 
@@ -330,7 +335,11 @@ export default function AddModelPopover({
                   </div>
                 )}
 
-                <ExtraArgsEditor args={extraArgs} onChange={setExtraArgs} />
+                <ExtraArgsEditor
+                  args={extraArgs}
+                  onChange={setExtraArgs}
+                  modelType={tab}
+                />
                 <div className="flex gap-2">
                   <Button
                     className="flex-1"
@@ -467,7 +476,9 @@ export default function AddModelPopover({
                                   ? t('models.alreadyAdded')
                                   : model.type === 'llm'
                                     ? t('models.chat')
-                                    : t('models.embedding')}
+                                    : model.type === 'embedding'
+                                      ? t('models.embedding')
+                                      : t('models.rerank')}
                               </div>
                             </div>
                           </div>
