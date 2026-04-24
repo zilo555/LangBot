@@ -5,6 +5,7 @@ const enUS = {
     installedPlugins: 'Installed Plugins',
     pluginMarket: 'Marketplace',
     mcpServers: 'MCP Servers',
+    pluginPages: 'Extension Pages',
     quickStart: 'Quick Start',
   },
   common: {
@@ -488,6 +489,7 @@ const enUS = {
       Command: 'Command',
       KnowledgeEngine: 'Knowledge Engine',
       Parser: 'Parser',
+      Page: 'Page',
     },
     uploadLocal: 'Upload Local',
     debugging: 'Debugging',
@@ -1290,6 +1292,10 @@ const enUS = {
         'Your bot has been created and connected to the AI pipeline. You can now manage it from the workbench.',
       backToWorkbench: 'Back to Workbench',
     },
+  },
+  pluginPages: {
+    selectFromSidebar: 'Select an extension page from the sidebar',
+    invalidPage: 'Invalid extension page',
   },
 };
 
