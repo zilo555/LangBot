@@ -467,7 +467,7 @@ const zhHans = {
       Command: '命令',
       KnowledgeEngine: '知识引擎',
       Parser: '解析器',
-      Page: '扩展页',
+      Page: '页面',
     },
     uploadLocal: '本地上传',
     debugging: '调试中',
