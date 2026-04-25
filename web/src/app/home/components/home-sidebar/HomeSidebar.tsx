@@ -92,7 +92,6 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { useSidebarData, SidebarEntityItem } from './SidebarDataContext';
-import { LayoutDashboard, Puzzle } from 'lucide-react';
 
 // Compare two version strings, returns true if v1 > v2
 function compareVersions(v1: string, v2: string): boolean {
@@ -1057,12 +1056,16 @@ function PluginPagesNav() {
   // Group pages by plugin (author/name)
   const grouped = new Map<
     string,
-    { label: string; pages: typeof pluginPages }
+    { label: string; iconURL: string; pages: typeof pluginPages }
   >();
   for (const page of pluginPages) {
     const key = `${page.pluginAuthor}/${page.pluginName}`;
     if (!grouped.has(key)) {
-      grouped.set(key, { label: page.pluginLabel, pages: [] });
+      grouped.set(key, {
+        label: page.pluginLabel,
+        iconURL: page.pluginIconURL,
+        pages: [],
+      });
     }
     grouped.get(key)!.pages.push(page);
   }
@@ -1075,8 +1078,19 @@ function PluginPagesNav() {
       <SidebarGroupContent>
         <SidebarMenu>
           {Array.from(grouped.entries()).map(
-            ([pluginKey, { label, pages }]) => {
+            ([pluginKey, { label, iconURL, pages }]) => {
               const hasActivePage = pages.some((p) => p.id === currentId);
+
+              const pluginIcon = (
+                <img
+                  src={iconURL}
+                  alt=""
+                  className="size-4 rounded-sm object-cover shrink-0"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              );
 
               // Single page — render directly without nesting
               if (pages.length === 1) {
@@ -1089,8 +1103,9 @@ function PluginPagesNav() {
                       isActive={isActive}
                       tooltip={page.name}
                       onClick={() => navigate(route)}
+                      className="select-none"
                     >
-                      <LayoutDashboard className="size-4 text-blue-500" />
+                      {pluginIcon}
                       <span>{page.name}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -1106,8 +1121,11 @@ function PluginPagesNav() {
                 >
                   <SidebarMenuItem>
                     <CollapsibleTrigger asChild>
-                      <SidebarMenuButton tooltip={label}>
-                        <Puzzle className="size-4 text-blue-500" />
+                      <SidebarMenuButton
+                        tooltip={label}
+                        className="select-none"
+                      >
+                        {pluginIcon}
                         <span>{label}</span>
                         <ChevronRight className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                       </SidebarMenuButton>
@@ -1122,6 +1140,7 @@ function PluginPagesNav() {
                               <SidebarMenuSubButton
                                 isActive={isActive}
                                 onClick={() => navigate(route)}
+                                className="select-none"
                               >
                                 <span>{page.name}</span>
                               </SidebarMenuSubButton>
