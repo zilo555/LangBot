@@ -5,7 +5,8 @@ const zhHans = {
     installedPlugins: '已安装插件',
     pluginMarket: '插件市场',
     mcpServers: 'MCP 服务器',
-    pluginPages: '扩展页',
+    pluginPages: '插件页面',
+    pluginPagesTooltip: '由已安装的插件提供的可视化页面',
     quickStart: '快速开始向导',
   },
   common: {
@@ -1236,8 +1237,8 @@ const zhHans = {
     },
   },
   pluginPages: {
-    selectFromSidebar: '从侧边栏选择一个扩展页',
-    invalidPage: '无效的扩展页',
+    selectFromSidebar: '从侧边栏选择一个插件页面',
+    invalidPage: '无效的插件页面',
   },
 };
 

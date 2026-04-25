@@ -92,7 +92,7 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { useSidebarData, SidebarEntityItem } from './SidebarDataContext';
-import { LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard, Puzzle } from 'lucide-react';
 
 // Compare two version strings, returns true if v1 > v2
 function compareVersions(v1: string, v2: string): boolean {
@@ -1040,7 +1040,7 @@ function PluginItemMenu({
   );
 }
 
-// Plugin pages navigation section
+// Plugin pages navigation section — grouped by plugin
 function PluginPagesNav() {
   const { pluginPages } = useSidebarData();
   const navigate = useNavigate();
@@ -1054,27 +1054,87 @@ function PluginPagesNav() {
   const currentId =
     pathname === '/home/plugin-pages' ? searchParams.get('id') : null;
 
+  // Group pages by plugin (author/name)
+  const grouped = new Map<
+    string,
+    { label: string; pages: typeof pluginPages }
+  >();
+  for (const page of pluginPages) {
+    const key = `${page.pluginAuthor}/${page.pluginName}`;
+    if (!grouped.has(key)) {
+      grouped.set(key, { label: page.pluginLabel, pages: [] });
+    }
+    grouped.get(key)!.pages.push(page);
+  }
+
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>{t('sidebar.pluginPages')}</SidebarGroupLabel>
+      <SidebarGroupLabel title={t('sidebar.pluginPagesTooltip')}>
+        {t('sidebar.pluginPages')}
+      </SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {pluginPages.map((page) => {
-            const isActive = currentId === page.id;
-            const route = `/home/plugin-pages?id=${encodeURIComponent(page.id)}`;
-            return (
-              <SidebarMenuItem key={page.id}>
-                <SidebarMenuButton
-                  isActive={isActive}
-                  tooltip={page.name}
-                  onClick={() => navigate(route)}
+          {Array.from(grouped.entries()).map(
+            ([pluginKey, { label, pages }]) => {
+              const hasActivePage = pages.some((p) => p.id === currentId);
+
+              // Single page — render directly without nesting
+              if (pages.length === 1) {
+                const page = pages[0];
+                const isActive = currentId === page.id;
+                const route = `/home/plugin-pages?id=${encodeURIComponent(page.id)}`;
+                return (
+                  <SidebarMenuItem key={page.id}>
+                    <SidebarMenuButton
+                      isActive={isActive}
+                      tooltip={page.name}
+                      onClick={() => navigate(route)}
+                    >
+                      <LayoutDashboard className="size-4 text-blue-500" />
+                      <span>{page.name}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              }
+
+              // Multiple pages — collapsible group
+              return (
+                <Collapsible
+                  key={pluginKey}
+                  defaultOpen={hasActivePage}
+                  className="group/collapsible"
                 >
-                  <LayoutDashboard className="size-4 text-blue-500" />
-                  <span>{page.name}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          })}
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton tooltip={label}>
+                        <Puzzle className="size-4 text-blue-500" />
+                        <span>{label}</span>
+                        <ChevronRight className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {pages.map((page) => {
+                          const isActive = currentId === page.id;
+                          const route = `/home/plugin-pages?id=${encodeURIComponent(page.id)}`;
+                          return (
+                            <SidebarMenuSubItem key={page.id}>
+                              <SidebarMenuSubButton
+                                isActive={isActive}
+                                onClick={() => navigate(route)}
+                              >
+                                <span>{page.name}</span>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          );
+                        })}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              );
+            },
+          )}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

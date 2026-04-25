@@ -37,6 +37,7 @@ export interface PluginPageItem {
   name: string; // display label
   pluginAuthor: string;
   pluginName: string;
+  pluginLabel: string; // human-readable plugin display name
   pageId: string;
   path: string; // asset path (HTML file)
   icon?: string; // optional icon name
@@ -191,6 +192,7 @@ export function SidebarDataProvider({
         const meta = plugin.manifest.manifest.metadata;
         const author = meta.author ?? '';
         const name = meta.name;
+        const label = meta.label ? extractI18nObject(meta.label) : name;
         const spec = plugin.manifest.manifest.spec;
         if (spec?.pages && Array.isArray(spec.pages)) {
           for (const page of spec.pages) {
@@ -202,6 +204,7 @@ export function SidebarDataProvider({
                 name: page.label ? extractI18nObject(page.label) : page.id,
                 pluginAuthor: author,
                 pluginName: name,
+                pluginLabel: label,
                 pageId: page.id,
                 path: page.path,
                 icon: page.icon,

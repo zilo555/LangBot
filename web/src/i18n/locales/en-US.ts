@@ -5,7 +5,8 @@ const enUS = {
     installedPlugins: 'Installed Plugins',
     pluginMarket: 'Marketplace',
     mcpServers: 'MCP Servers',
-    pluginPages: 'Extension Pages',
+    pluginPages: 'Plugin Pages',
+    pluginPagesTooltip: 'Visual pages provided by installed plugins',
     quickStart: 'Quick Start',
   },
   common: {
@@ -1294,8 +1295,8 @@ const enUS = {
     },
   },
   pluginPages: {
-    selectFromSidebar: 'Select an extension page from the sidebar',
-    invalidPage: 'Invalid extension page',
+    selectFromSidebar: 'Select a plugin page from the sidebar',
+    invalidPage: 'Invalid plugin page',
   },
 };
 
