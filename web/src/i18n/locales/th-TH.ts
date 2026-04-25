@@ -5,6 +5,8 @@ const thTH = {
     installedPlugins: 'ปลั๊กอินที่ติดตั้ง',
     pluginMarket: 'ตลาดปลั๊กอิน',
     mcpServers: 'เซิร์ฟเวอร์ MCP',
+    pluginPages: 'หน้าปลั๊กอิน',
+    pluginPagesTooltip: 'หน้าเว็บที่จัดทำโดยปลั๊กอินที่ติดตั้ง',
     quickStart: 'เริ่มต้นอย่างรวดเร็ว',
   },
   common: {
@@ -1270,6 +1272,10 @@ const thTH = {
         'Bot ของคุณถูกสร้างและเชื่อมต่อกับ Pipeline AI แล้ว คุณสามารถจัดการได้จากหน้าทำงาน',
       backToWorkbench: 'กลับไปหน้าทำงาน',
     },
+  },
+  pluginPages: {
+    selectFromSidebar: 'เลือกหน้าปลั๊กอินจากแถบด้านข้าง',
+    invalidPage: 'หน้าปลั๊กอินไม่ถูกต้อง',
   },
 };
 

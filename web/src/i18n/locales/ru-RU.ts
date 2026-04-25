@@ -5,6 +5,9 @@ const ruRU = {
     installedPlugins: 'Установленные плагины',
     pluginMarket: 'Маркетплейс',
     mcpServers: 'MCP-серверы',
+    pluginPages: 'Страницы плагинов',
+    pluginPagesTooltip:
+      'Визуальные страницы, предоставляемые установленными плагинами',
     quickStart: 'Быстрый старт',
   },
   common: {
@@ -497,6 +500,7 @@ const ruRU = {
       Command: 'Команда',
       KnowledgeEngine: 'Движок знаний',
       Parser: 'Парсер',
+      Page: 'Страница',
     },
     uploadLocal: 'Загрузить локально',
     debugging: 'Отладка',
@@ -1299,6 +1303,10 @@ const ruRU = {
         'Ваш бот создан и подключён к конвейеру ИИ. Теперь вы можете управлять им из рабочей панели.',
       backToWorkbench: 'Вернуться к рабочей панели',
     },
+  },
+  pluginPages: {
+    selectFromSidebar: 'Выберите страницу плагина на боковой панели',
+    invalidPage: 'Недопустимая страница плагина',
   },
 };
 

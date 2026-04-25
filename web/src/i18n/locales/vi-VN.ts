@@ -5,6 +5,9 @@ const viVN = {
     installedPlugins: 'Plugin đã cài đặt',
     pluginMarket: 'Chợ ứng dụng',
     mcpServers: 'Máy chủ MCP',
+    pluginPages: 'Trang plugin',
+    pluginPagesTooltip:
+      'Các trang trực quan được cung cấp bởi plugin đã cài đặt',
     quickStart: 'Bắt đầu nhanh',
   },
   common: {
@@ -1291,6 +1294,10 @@ const viVN = {
         'Bot của bạn đã được tạo và kết nối với Pipeline AI. Bạn có thể quản lý nó từ bàn làm việc.',
       backToWorkbench: 'Quay lại bàn làm việc',
     },
+  },
+  pluginPages: {
+    selectFromSidebar: 'Chọn một trang plugin từ thanh bên',
+    invalidPage: 'Trang plugin không hợp lệ',
   },
 };
 

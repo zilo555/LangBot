@@ -5,6 +5,8 @@
     installedPlugins: 'インストール済みプラグイン',
     pluginMarket: 'プラグインマーケット',
     mcpServers: 'MCPサーバー',
+    pluginPages: 'プラグインページ',
+    pluginPagesTooltip: 'インストール済みプラグインが提供するビジュアルページ',
     quickStart: 'クイックスタート',
   },
   common: {
@@ -1298,6 +1300,10 @@
         'ボットが作成され、AIパイプラインに接続されました。ワークベンチから管理できます。',
       backToWorkbench: 'ワークベンチに戻る',
     },
+  },
+  pluginPages: {
+    selectFromSidebar: 'サイドバーからプラグインページを選択してください',
+    invalidPage: '無効なプラグインページ',
   },
 };
 

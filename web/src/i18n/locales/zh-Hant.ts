@@ -5,6 +5,8 @@ const zhHant = {
     installedPlugins: '已安裝外掛',
     pluginMarket: '外掛市場',
     mcpServers: 'MCP 伺服器',
+    pluginPages: '插件頁面',
+    pluginPagesTooltip: '由已安裝的插件提供的視覺化頁面',
     quickStart: '快速開始',
   },
   common: {
@@ -1233,6 +1235,10 @@ const zhHant = {
         '機器人已建立並連接到 AI 流水線。你現在可以在工作台中管理它。',
       backToWorkbench: '返回工作台',
     },
+  },
+  pluginPages: {
+    selectFromSidebar: '從側邊欄選擇一個插件頁面',
+    invalidPage: '無效的插件頁面',
   },
 };
 

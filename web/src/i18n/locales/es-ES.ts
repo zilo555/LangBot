@@ -5,6 +5,9 @@ const esES = {
     installedPlugins: 'Plugins instalados',
     pluginMarket: 'Tienda',
     mcpServers: 'Servidores MCP',
+    pluginPages: 'Páginas de plugins',
+    pluginPagesTooltip:
+      'Páginas visuales proporcionadas por los plugins instalados',
     quickStart: 'Inicio rápido',
   },
   common: {
@@ -1328,6 +1331,10 @@ const esES = {
         'Tu Bot ha sido creado y conectado al Pipeline de IA. Ahora puedes gestionarlo desde el panel de trabajo.',
       backToWorkbench: 'Volver al panel de trabajo',
     },
+  },
+  pluginPages: {
+    selectFromSidebar: 'Selecciona una página de plugin en la barra lateral',
+    invalidPage: 'Página de plugin no válida',
   },
 };
 
