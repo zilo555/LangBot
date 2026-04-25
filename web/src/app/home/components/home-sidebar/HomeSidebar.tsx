@@ -1142,6 +1142,7 @@ function PluginPagesNav() {
                                 onClick={() => navigate(route)}
                                 className="select-none"
                               >
+                                {page.icon && <span>{page.icon}</span>}
                                 <span>{page.name}</span>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
