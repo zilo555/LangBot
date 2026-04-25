@@ -1948,7 +1948,7 @@ requires-dist = [
     { name = "ebooklib", specifier = ">=0.18" },
     { name = "gewechat-client", specifier = ">=0.1.5" },
     { name = "html2text", specifier = ">=2024.2.26" },
-    { name = "langbot-plugin", specifier = "==0.3.9" },
+    { name = "langbot-plugin", specifier = "==0.3.10" },
     { name = "langchain", specifier = ">=0.2.0" },
     { name = "langchain-core", specifier = ">=1.2.28" },
     { name = "langchain-text-splitters", specifier = ">=1.1.2" },
@@ -2008,7 +2008,7 @@ dev = [
 
 [[package]]
 name = "langbot-plugin"
-version = "0.3.9"
+version = "0.3.10"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
@@ -2026,9 +2026,9 @@ dependencies = [
     { name = "watchdog" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/98/a1/51b937f6a73b37ab1b9d358b0cebf4d83913d4da1445c9bee2f22897e90b/langbot_plugin-0.3.9.tar.gz", hash = "sha256:54b78e46217e4031dabb0e4921f31aa2c5ae16cbe86b3f8059577553ed49d892", size = 189539 }
+sdist = { url = "https://files.pythonhosted.org/packages/5e/f4/bb952124cbbb1f05d0d0a022ca2481c97fe9c89d088d891b2bb18222ac30/langbot_plugin-0.3.10.tar.gz", hash = "sha256:4ce841469b2cd0ea9df6ebea40b657e62f8b600020d9148c2515af3e12562dc6", size = 189587 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/87/fc/61de53b897e4d86408bf653c649a467f02ed34e4006ee1a97e329a9e0ae6/langbot_plugin-0.3.9-py3-none-any.whl", hash = "sha256:0684fe1f5d7bdf18a2223d0df00fc5e4e0fc10352a6bfcdb220d8178ccaa6baa", size = 164816 },
+    { url = "https://files.pythonhosted.org/packages/94/e1/69bdc0320c7d27dd43b5a4500745c2a64b62c2ce371d9b07074e11cb99fe/langbot_plugin-0.3.10-py3-none-any.whl", hash = "sha256:57cff501a04378b972f85dd9ee7c6d45e5aa20bea557040b2116f9aa462fb0df", size = 164829 },
 ]
 
 [[package]]
