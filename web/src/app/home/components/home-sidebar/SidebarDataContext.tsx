@@ -41,7 +41,6 @@ export interface PluginPageItem {
   pluginIconURL: string; // plugin icon URL
   pageId: string;
   path: string; // asset path (HTML file)
-  icon?: string; // optional per-page icon name from page manifest
 }
 
 // Entity lists and refresh functions exposed via context
@@ -209,7 +208,6 @@ export function SidebarDataProvider({
                 pluginIconURL: httpClient.getPluginIconURL(author, name),
                 pageId: page.id,
                 path: page.path,
-                icon: page.icon,
               });
             }
           }
