@@ -145,8 +145,8 @@ export default function StorageAnalysisDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[86vh] max-w-5xl flex-col p-0">
-        <DialogHeader className="px-6 pt-6">
+      <DialogContent className="!flex h-[86vh] max-h-[86vh] max-w-5xl flex-col gap-0 p-0">
+        <DialogHeader className="shrink-0 px-6 pt-6">
           <DialogTitle className="flex items-center gap-2">
             <HardDrive className="size-5 text-blue-500" />
             {t('storageAnalysis.dialogTitle')}
@@ -156,7 +156,7 @@ export default function StorageAnalysisDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex items-center justify-between gap-3 border-b px-6 pb-4">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b px-6 pb-4">
           <div className="text-sm text-muted-foreground">
             {analysis
               ? t('storageAnalysis.generatedAt', {
@@ -177,7 +177,7 @@ export default function StorageAnalysisDialog({
           </Button>
         </div>
 
-        <ScrollArea className="min-h-0 flex-1">
+        <ScrollArea className="min-h-0 flex-1 overflow-hidden">
           <div className="space-y-5 px-6 py-5">
             {error && (
               <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
