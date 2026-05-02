@@ -26,6 +26,7 @@ import {
   Store,
   Github,
   Zap,
+  HardDrive,
 } from 'lucide-react';
 import { useTheme } from '@/components/providers/theme-provider';
 
@@ -55,6 +56,7 @@ import AccountSettingsDialog from '@/app/home/components/account-settings-dialog
 import ApiIntegrationDialog from '@/app/home/components/api-integration-dialog/ApiIntegrationDialog';
 import NewVersionDialog from '@/app/home/components/new-version-dialog/NewVersionDialog';
 import ModelsDialog from '@/app/home/components/models-dialog/ModelsDialog';
+import StorageAnalysisDialog from '@/app/home/components/storage-analysis-dialog/StorageAnalysisDialog';
 import { GitHubRelease } from '@/app/infra/http/CloudServiceClient';
 import { useAsyncTask, AsyncTaskStatus } from '@/hooks/useAsyncTask';
 import { toast } from 'sonner';
@@ -1185,6 +1187,9 @@ export default function HomeSidebar({
     if (searchParams.get('action') === 'showApiIntegrationSettings') {
       setApiKeyDialogOpen(true);
     }
+    if (searchParams.get('action') === 'showStorageAnalysis') {
+      setStorageAnalysisOpen(true);
+    }
   }, [searchParams]);
 
   const [selectedChild, setSelectedChild] = useState<SidebarChildVO>();
@@ -1200,6 +1205,7 @@ export default function HomeSidebar({
   const [hasNewVersion, setHasNewVersion] = useState(false);
   const [versionDialogOpen, setVersionDialogOpen] = useState(false);
   const [modelsDialogOpen, setModelsDialogOpen] = useState(false);
+  const [storageAnalysisOpen, setStorageAnalysisOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string>('');
   const [starCount, setStarCount] = useState<number | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -1226,6 +1232,24 @@ export default function HomeSidebar({
     if (open) {
       const params = new URLSearchParams(searchParams.toString());
       params.set('action', 'showAccountSettings');
+      navigate(`${pathname}?${params.toString()}`, {
+        preventScrollReset: true,
+      });
+    } else {
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('action');
+      const newUrl = params.toString()
+        ? `${pathname}?${params.toString()}`
+        : pathname;
+      navigate(newUrl, { preventScrollReset: true });
+    }
+  }
+
+  function handleStorageAnalysisChange(open: boolean) {
+    setStorageAnalysisOpen(open);
+    if (open) {
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('action', 'showStorageAnalysis');
       navigate(`${pathname}?${params.toString()}`, {
         preventScrollReset: true,
       });
@@ -1548,6 +1572,15 @@ export default function HomeSidebar({
                     <DropdownMenuItem
                       onClick={() => {
                         setUserMenuOpen(false);
+                        handleStorageAnalysisChange(true);
+                      }}
+                    >
+                      <HardDrive />
+                      {t('storageAnalysis.title')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setUserMenuOpen(false);
                         navigate('/wizard');
                       }}
                     >
@@ -1644,6 +1677,10 @@ export default function HomeSidebar({
       <ModelsDialog
         open={modelsDialogOpen}
         onOpenChange={handleModelsDialogChange}
+      />
+      <StorageAnalysisDialog
+        open={storageAnalysisOpen}
+        onOpenChange={handleStorageAnalysisChange}
       />
     </>
   );
