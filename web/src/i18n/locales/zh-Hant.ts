@@ -1191,7 +1191,6 @@ const zhHant = {
     logRetention: '日誌保留',
     databaseType: '資料庫類型',
     days: '天',
-    exists: '存在',
     missing: '不存在',
     expiredUploads: '過期上傳檔案',
     expiredLogs: '過期日誌',

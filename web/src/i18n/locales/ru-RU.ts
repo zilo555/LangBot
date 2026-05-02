@@ -1254,7 +1254,6 @@ const ruRU = {
     logRetention: 'Хранение журналов',
     databaseType: 'Тип базы данных',
     days: 'дн.',
-    exists: 'Есть',
     missing: 'Нет',
     expiredUploads: 'Просроченные загрузки',
     expiredLogs: 'Просроченные журналы',

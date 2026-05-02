@@ -1280,7 +1280,6 @@ const esES = {
     logRetention: 'Retención de registros',
     databaseType: 'Tipo de base de datos',
     days: 'días',
-    exists: 'Existe',
     missing: 'Falta',
     expiredUploads: 'Subidas caducadas',
     expiredLogs: 'Registros caducados',

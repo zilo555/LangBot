@@ -255,14 +255,13 @@ export default function StorageAnalysisDialog({
                             {section.path || '-'}
                           </div>
                         </div>
-                        <Badge
-                          variant={section.exists ? 'secondary' : 'outline'}
-                          className="self-center"
-                        >
-                          {section.exists
-                            ? t('storageAnalysis.exists')
-                            : t('storageAnalysis.missing')}
-                        </Badge>
+                        {section.exists ? (
+                          <span />
+                        ) : (
+                          <Badge variant="outline" className="self-center">
+                            {t('storageAnalysis.missing')}
+                          </Badge>
+                        )}
                         <div className="self-center tabular-nums">
                           {formatBytes(section.size_bytes)}
                         </div>

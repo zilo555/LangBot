@@ -1250,7 +1250,6 @@
     logRetention: 'ログ保持期間',
     databaseType: 'データベース種別',
     days: '日',
-    exists: '存在',
     missing: 'なし',
     expiredUploads: '期限切れアップロード',
     expiredLogs: '期限切れログ',

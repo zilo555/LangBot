@@ -1191,7 +1191,6 @@ const zhHans = {
     logRetention: '日志保留',
     databaseType: '数据库类型',
     days: '天',
-    exists: '存在',
     missing: '不存在',
     expiredUploads: '过期上传文件',
     expiredLogs: '过期日志',

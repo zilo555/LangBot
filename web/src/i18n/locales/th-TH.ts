@@ -1225,7 +1225,6 @@ const thTH = {
     logRetention: 'ระยะเวลาเก็บบันทึก',
     databaseType: 'ชนิดฐานข้อมูล',
     days: 'วัน',
-    exists: 'มีอยู่',
     missing: 'ไม่มี',
     expiredUploads: 'ไฟล์อัปโหลดที่หมดอายุ',
     expiredLogs: 'บันทึกที่หมดอายุ',

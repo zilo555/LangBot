@@ -1245,7 +1245,6 @@ const enUS = {
     logRetention: 'Log retention',
     databaseType: 'Database type',
     days: 'days',
-    exists: 'Exists',
     missing: 'Missing',
     expiredUploads: 'Expired uploads',
     expiredLogs: 'Expired logs',

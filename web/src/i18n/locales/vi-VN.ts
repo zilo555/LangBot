@@ -1247,7 +1247,6 @@ const viVN = {
     logRetention: 'Thời gian giữ nhật ký',
     databaseType: 'Loại cơ sở dữ liệu',
     days: 'ngày',
-    exists: 'Tồn tại',
     missing: 'Thiếu',
     expiredUploads: 'Tệp tải lên hết hạn',
     expiredLogs: 'Nhật ký hết hạn',
