@@ -82,19 +82,21 @@ docker compose up -d
 
 ## Supported Platforms
 
-| Platform | Status | Notes                                  |
-| -------- | ------ | -------------------------------------- |
-| Discord  | ✅     |                                        |
-| Telegram | ✅     |                                        |
-| Slack    | ✅     |                                        |
-| LINE     | ✅     |                                        |
-| QQ       | ✅     | Personal & Official API                |
-| WeCom    | ✅     | Enterprise WeChat, External CS, AI Bot |
-| WeChat   | ✅     | Personal & Official Account            |
-| Lark     | ✅     |                                        |
-| DingTalk | ✅     |                                        |
-| KOOK     | ✅     |                                        |
-| Satori   | ✅     |                                        |
+| Platform | Status | Notes |
+|----------|--------|-------|
+| Discord | ✅ | Official |
+| Telegram | ✅ | Official |
+| Slack | ✅ | Official |
+| LINE | ✅ | Official |
+| QQ | ✅ | Personal & Official API (Channel, DM, Group) |
+| WeCom | ✅ | Enterprise WeChat, External CS, AI Bot |
+| WeChat | ✅ | Personal & Official Account |
+| Lark | ✅ | Official |
+| DingTalk | ✅ | Official |
+| KOOK | ✅ | Official |
+| Satori | ✅ |  |
+| Email | ✅ | Matrix, Satori |
+| Matrix | ✅ | Supports multiple bridged platforms such as Signal, WhatsApp, Messenger, iMessage, Mattermost, Google Chat, IRC, XMPP, Zulip, and more |
 
 ---
 

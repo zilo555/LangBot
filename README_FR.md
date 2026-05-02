@@ -83,17 +83,19 @@ docker compose up -d
 
 | Plateforme | Statut | Notes |
 |----------|--------|-------|
-| Discord | ✅ |  |
-| Telegram | ✅ |  |
-| Slack | ✅ |  |
-| LINE | ✅ |  |
-| QQ | ✅ | Personnel & API Officielle |
+| Discord | ✅ | Officiel |
+| Telegram | ✅ | Officiel |
+| Slack | ✅ | Officiel |
+| LINE | ✅ | Officiel |
+| QQ | ✅ | Personnel & API Officielle (Canal, DM, Groupe) |
 | WeCom | ✅ | WeChat Entreprise, CS Externe, AI Bot |
 | WeChat | ✅ | Personnel & Compte Officiel |
-| Lark | ✅ |  |
-| DingTalk | ✅ |  |
-| KOOK | ✅ |  |
+| Lark | ✅ | Officiel |
+| DingTalk | ✅ | Officiel |
+| KOOK | ✅ | Officiel |
 | Satori | ✅ |  |
+| Email | ✅ | Matrix, Satori |
+| Matrix | ✅ | Prend en charge plusieurs plateformes via ponts, comme Signal, WhatsApp, Messenger, iMessage, Mattermost, Google Chat, IRC, XMPP, Zulip, etc. |
 
 ---
 

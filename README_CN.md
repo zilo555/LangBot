@@ -87,13 +87,16 @@ docker compose up -d
 | QQ | ✅ | 个人号、官方机器人（频道、私聊、群聊） |
 | 微信 | ✅ | 个人微信、微信公众号 |
 | 企业微信 | ✅ | 应用消息、对外客服、智能机器人 |
-| 飞书 | ✅ |  |
-| 钉钉 | ✅ |  |
-| Discord | ✅ |  |
-| Telegram | ✅ |  |
-| Slack | ✅ |  |
-| LINE | ✅ |  |
-| KOOK | ✅ |  |
+| 飞书 | ✅ | 官方 |
+| 钉钉 | ✅ | 官方 |
+| Satori | ✅ |  |
+| Discord | ✅ | 官方 |
+| Telegram | ✅ | 官方 |
+| Slack | ✅ | 官方 |
+| LINE | ✅ | 官方 |
+| KOOK | ✅ | 官方 |
+| Email | ✅ | 只 Matrix、Satori |
+| Matrix | ✅ | 支持多种桥接平台，如 Signal、WhatsApp、Messenger、iMessage、Mattermost、Google Chat、IRC、XMPP、Zulip 等 |
 
 ---
 
