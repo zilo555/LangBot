@@ -296,39 +296,27 @@ class AiocqhttpMessageConverter(abstract_platform_adapter.AbstractMessageConvert
                 yiri_msg_list.append(platform_message.Face(face_type='dice', face_id=int(face_id), face_name='骰子'))
             elif msg.type == 'json':
                 try:
-                    # `msg.data['data']` may already be a dict in some implementations, or a JSON string in others
                     raw = msg.data.get('data', {})
-                    if isinstance(raw, (dict, list)):
-                        inner_data = raw
-                    else:
-                        try:
-                            inner_data = json.loads(raw or '{}')
-                        except Exception:
-                            inner_data = {}
-
-                    # Try to parse QQ mini-program / Bilibili share cards
-                    app_name = inner_data.get('app', '') if isinstance(inner_data, dict) else ''
-                    if app_name == 'com.tencent.miniapp_01':
-                        detail = inner_data.get('meta', {})
-                        # Some implementations nest details under detail_1
-                        detail_1 = detail.get('detail_1') if isinstance(detail, dict) else None
-                        detail_block = detail_1 if isinstance(detail_1, dict) else detail
-                        title = (
-                            detail_block.get('desc', '分享小程序') if isinstance(detail_block, dict) else '分享小程序'
-                        )
-                        qqdocurl = detail_block.get('qqdocurl', '') if isinstance(detail_block, dict) else ''
-
-                        if qqdocurl:
-                            clean_url = qqdocurl.split('?')[0]
-                            text_content = f'[小程序:{title}] {clean_url}'
-                            yiri_msg_list.append(platform_message.Plain(text=text_content))
+                    if isinstance(raw, str):
+                        raw = json.loads(raw)
+                    if isinstance(raw, dict):
+                        _meta = raw.get('meta', {}) or {}
+                        if isinstance(_meta, dict):
+                            _detail = _meta.get('detail_1') or _meta.get('music') or _meta.get('news') or {}
                         else:
-                            yiri_msg_list.append(platform_message.Plain(text=f'[小程序:{title}]'))
+                            _detail = {}
+                        if isinstance(_detail, dict):
+                            preview = _detail.get('preview', '')
+                            title = _detail.get('desc', '') or _detail.get('title', '')
+                            url = _detail.get('qqdocurl', '') or _detail.get('jumpUrl', '')
+                        else:
+                            preview = title = url = ''
+                        text = ' '.join([f'[{raw.get("app", "")}]', preview, title, url]).strip()
+                        yiri_msg_list.append(platform_message.Plain(text=text or '[收到一张JSON卡片]'))
                     else:
-                        # Fallback for unknown JSON card types
-                        yiri_msg_list.append(platform_message.Plain(text='[收到一张JSON卡片]'))
-                except Exception as e:
-                    print(f'解析 JSON 消息失败: {e}')
+                        yiri_msg_list.append(platform_message.Plain(text=str(raw)))
+                except Exception:
+                    yiri_msg_list.append(platform_message.Plain(text='[收到一张JSON卡片]'))
 
         chain = platform_message.MessageChain(yiri_msg_list)
 
