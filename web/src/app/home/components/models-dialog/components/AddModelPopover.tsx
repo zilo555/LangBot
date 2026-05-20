@@ -83,7 +83,9 @@ export default function AddModelPopover({
   const [abilities, setAbilities] = useState<string[]>([]);
   const [extraArgs, setExtraArgs] = useState<ExtraArg[]>([]);
   const [scanLoading, setScanLoading] = useState(false);
-  const [scannedModels, setScannedModels] = useState<ScannedProviderModel[]>([]);
+  const [scannedModels, setScannedModels] = useState<ScannedProviderModel[]>(
+    [],
+  );
   const [selectedScannedModels, setSelectedScannedModels] = useState<
     Record<string, SelectedScannedModel>
   >({});
