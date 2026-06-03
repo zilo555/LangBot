@@ -22,6 +22,15 @@ function pluginToVO(
   plugin: PluginV4,
   t: (key: string) => string,
 ): PluginMarketCardVO {
+  const cloudClient = getCloudServiceClientSync();
+  // Recommendation lists are mixed-type; resolve the icon per extension type.
+  const iconURL =
+    plugin.type === 'mcp'
+      ? cloudClient.getMCPMarketplaceIconURL(plugin.author, plugin.name)
+      : plugin.type === 'skill'
+        ? cloudClient.getSkillMarketplaceIconURL(plugin.author, plugin.name)
+        : cloudClient.getPluginIconURL(plugin.author, plugin.name);
+
   return new PluginMarketCardVO({
     pluginId: plugin.author + ' / ' + plugin.name,
     author: plugin.author,
@@ -30,14 +39,12 @@ function pluginToVO(
     description:
       extractI18nObject(plugin.description) || t('market.noDescription'),
     installCount: plugin.install_count,
-    iconURL: getCloudServiceClientSync().getPluginIconURL(
-      plugin.author,
-      plugin.name,
-    ),
+    iconURL,
     githubURL: plugin.repository,
     version: plugin.latest_version,
     components: plugin.components,
     tags: plugin.tags || [],
+    type: plugin.type,
   });
 }
 
@@ -49,7 +56,7 @@ function RecommendationListRow({
 }: {
   list: RecommendationList;
   tagNames: Record<string, string>;
-  onInstall: (author: string, pluginName: string) => void;
+  onInstall: (cardVO: PluginMarketCardVO) => void;
   isLast: boolean;
 }) {
   const { t } = useTranslation();
@@ -161,7 +168,7 @@ export function RecommendationLists({
 }: {
   lists: RecommendationList[];
   tagNames: Record<string, string>;
-  onInstall: (author: string, pluginName: string) => void;
+  onInstall: (cardVO: PluginMarketCardVO) => void;
 }) {
   if (!lists || lists.length === 0) return null;
 

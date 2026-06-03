@@ -45,9 +45,10 @@ import {
 
 // Routes that belong to the "Extensions" section
 const EXTENSIONS_ROUTES = [
-  '/home/plugins',
-  '/home/market',
+  '/home/extensions',
+  '/home/add-extension',
   '/home/mcp',
+  '/home/skills',
   '/home/plugin-pages',
 ];
 
@@ -57,12 +58,17 @@ function isExtensionsRoute(pathname: string): boolean {
   );
 }
 
+const HOME_CONTENT_MAX_WIDTH = 'max-w-[1360px]';
+const BACKEND_UNAVAILABLE_RETURN_TO_STORAGE_KEY =
+  'langbot_backend_unavailable_return_to';
+
 export default function HomeLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Initialize user info if not already initialized
   useEffect(() => {
@@ -73,19 +79,35 @@ export default function HomeLayout({
 
   // Auto-redirect to wizard on first visit (wizard not yet completed on this instance)
   useEffect(() => {
+    let cancelled = false;
+
     const checkWizard = async () => {
       try {
         // Always re-fetch to ensure we have the latest wizard_status from backend
-        await initializeSystemInfo();
-        if (systemInfo.wizard_status === 'none') {
-          navigate('/wizard');
+        await initializeSystemInfo({ throwOnError: true });
+        if (!cancelled && systemInfo.wizard_status === 'none') {
+          navigate('/wizard', { replace: true });
         }
       } catch {
-        // If fetching system info fails, don't redirect
+        if (!cancelled) {
+          const returnTo = `${location.pathname}${location.search}${location.hash}`;
+          sessionStorage.setItem(
+            BACKEND_UNAVAILABLE_RETURN_TO_STORAGE_KEY,
+            returnTo,
+          );
+          navigate('/backend-unavailable', {
+            replace: true,
+            state: { from: returnTo },
+          });
+        }
       }
     };
     checkWizard();
-  }, [navigate]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [location.hash, location.pathname, location.search, navigate]);
 
   return (
     <SidebarDataProvider>
@@ -123,7 +145,7 @@ function HomeLayoutInner({ children }: { children: React.ReactNode }) {
   const sectionLabel = isExtensions
     ? t('sidebar.extensions')
     : t('sidebar.home');
-  const sectionLink = isExtensions ? '/home/plugins' : '/home/monitoring';
+  const sectionLink = isExtensions ? '/home/extensions' : '/home/monitoring';
 
   return (
     <SidebarProvider>
@@ -133,7 +155,7 @@ function HomeLayoutInner({ children }: { children: React.ReactNode }) {
 
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
+          <div className="flex w-full items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator
               orientation="vertical"
@@ -177,9 +199,13 @@ function HomeLayoutInner({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <div className="flex-1 overflow-hidden p-4 pt-0 min-w-0">
-          {mainContent}
-        </div>
+        <main className="flex-1 overflow-hidden min-w-0 px-4 pb-4 pt-0">
+          <div
+            className={`mx-auto h-full w-full min-w-0 ${HOME_CONTENT_MAX_WIDTH}`}
+          >
+            {mainContent}
+          </div>
+        </main>
 
         <SurveyWidget />
       </SidebarInset>

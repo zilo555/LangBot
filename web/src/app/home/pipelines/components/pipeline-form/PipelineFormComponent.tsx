@@ -7,6 +7,7 @@ import {
 } from '@/app/infra/entities/pipeline';
 import DynamicFormComponent from '@/app/home/components/dynamic-form/DynamicFormComponent';
 import N8nAuthFormComponent from '@/app/home/components/dynamic-form/N8nAuthFormComponent';
+import { useBoxStatus } from '@/app/infra/hooks/useBoxStatus';
 import { Button } from '@/components/ui/button';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -75,6 +76,7 @@ export default function PipelineFormComponent({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showCopyConfirm, setShowCopyConfirm] = useState(false);
   const [isDefaultPipeline, setIsDefaultPipeline] = useState<boolean>(false);
+  const { available: boxAvailable } = useBoxStatus();
 
   const formSchema = isEditMode
     ? z.object({
@@ -185,6 +187,10 @@ export default function PipelineFormComponent({
     if (!isEditMode || !savedSnapshotRef.current) return false;
     return JSON.stringify(watchedValues) !== savedSnapshotRef.current;
   }, [isEditMode, watchedValues]);
+  // Keep a ref so that non-reactive callbacks (handleDynamicFormEmit) can
+  // read the latest dirty state without stale closures.
+  const hasUnsavedChangesRef = useRef(hasUnsavedChanges);
+  hasUnsavedChangesRef.current = hasUnsavedChanges;
 
   // Notify parent when dirty state changes
   useEffect(() => {
@@ -304,6 +310,9 @@ export default function PipelineFormComponent({
   // Called from DynamicFormComponent/N8nAuthFormComponent onSubmit callbacks.
   // On the first emission for a stage (mount-time default filling), the
   // snapshot is synchronously re-captured so that hasUnsavedChanges stays false.
+  // However, if the form is already dirty (the user has made real changes),
+  // we must NOT re-capture the snapshot — otherwise we would silently absorb
+  // those real changes and flip hasUnsavedChanges back to false.
   function handleDynamicFormEmit(
     formName: keyof FormValues,
     stageName: string,
@@ -322,9 +331,14 @@ export default function PipelineFormComponent({
 
     if (isFirstEmission) {
       initializedStagesRef.current.add(stageKey);
-      // Synchronously re-capture snapshot so that the useMemo comparison
-      // in the same render cycle still returns false.
-      savedSnapshotRef.current = JSON.stringify(form.getValues());
+      // Only re-capture the snapshot when the form has no other pending
+      // changes.  If the user already modified something (e.g. switched
+      // runner), the snapshot must remain at the last-saved state so that
+      // hasUnsavedChanges stays true.
+      const currentSnapshot = JSON.stringify(form.getValues());
+      if (savedSnapshotRef.current === '' || !hasUnsavedChangesRef.current) {
+        savedSnapshotRef.current = currentSnapshot;
+      }
     }
   }
 
@@ -401,6 +415,16 @@ export default function PipelineFormComponent({
       }
     }
 
+    // Box availability is exposed through ``systemContext.__system.box_available``
+    // so individual yaml-driven fields (e.g. ``box-session-id-template``) can
+    // opt-in via ``disable_if`` + ``disabled_tooltip`` rather than every page
+    // hard-coding a banner. Field-level gating keeps unrelated fields
+    // untouched.
+    const stageSystemContext =
+      stage.name === 'local-agent'
+        ? { box_available: boxAvailable }
+        : undefined;
+
     return (
       <Card key={stage.name}>
         <CardHeader>
@@ -421,6 +445,7 @@ export default function PipelineFormComponent({
             onSubmit={(values) => {
               handleDynamicFormEmit(formName, stage.name, values);
             }}
+            systemContext={stageSystemContext}
           />
         </CardContent>
       </Card>

@@ -38,7 +38,49 @@ export class CloudServiceClient extends BaseHttpClient {
     sort_order?: string,
     component_filter?: string,
     tags_filter?: string[],
+    type_filter?: string,
   ): Promise<ApiRespMarketplacePlugins> {
+    // Use different endpoints based on type_filter
+    if (type_filter === 'mcp') {
+      return this.post<{ mcps: PluginV4[]; total: number }>(
+        '/api/v1/marketplace/mcps/search',
+        {
+          query,
+          page,
+          page_size,
+          sort_by,
+          sort_order,
+          tags_filter,
+        },
+      ).then((resp) => ({
+        plugins: (resp?.mcps || []).map((mcp) => ({
+          ...mcp,
+          plugin_id: mcp.mcp_id || mcp.plugin_id,
+          type: 'mcp' as const,
+        })),
+        total: resp?.total || 0,
+      }));
+    } else if (type_filter === 'skill') {
+      return this.post<{ skills: PluginV4[]; total: number }>(
+        '/api/v1/marketplace/skills/search',
+        {
+          query,
+          page,
+          page_size,
+          sort_by,
+          sort_order,
+          tags_filter,
+        },
+      ).then((resp) => ({
+        plugins: (resp?.skills || []).map((skill) => ({
+          ...skill,
+          plugin_id: skill.skill_id || skill.plugin_id,
+          type: 'skill' as const,
+        })),
+        total: resp?.total || 0,
+      }));
+    }
+
     return this.post<ApiRespMarketplacePlugins>(
       '/api/v1/marketplace/plugins/search',
       {
@@ -49,8 +91,111 @@ export class CloudServiceClient extends BaseHttpClient {
         sort_order,
         component_filter,
         tags_filter,
+        type_filter,
       },
     );
+  }
+
+  public searchMarketplaceExtensions(data: {
+    query?: string;
+    page: number;
+    page_size: number;
+    sort_by?: string;
+    sort_order?: string;
+    type_filter?: string;
+    component_filter?: string;
+    tags_filter?: string[];
+  }): Promise<ApiRespMarketplacePlugins> {
+    return this.post<{ extensions: PluginV4[]; total: number }>(
+      '/api/v1/marketplace/extensions/search',
+      data,
+    )
+      .then((resp) => ({
+        plugins: resp?.extensions || [],
+        total: resp?.total || 0,
+      }))
+      .catch(() => this.searchMarketplaceExtensionsLegacy(data));
+  }
+
+  private async searchMarketplaceExtensionsLegacy(data: {
+    query?: string;
+    page: number;
+    page_size: number;
+    sort_by?: string;
+    sort_order?: string;
+    type_filter?: string;
+    component_filter?: string;
+    tags_filter?: string[];
+  }): Promise<ApiRespMarketplacePlugins> {
+    const query = data.query || '';
+
+    if (
+      data.type_filter === 'plugin' ||
+      data.type_filter === 'mcp' ||
+      data.type_filter === 'skill' ||
+      data.component_filter
+    ) {
+      return this.searchMarketplacePlugins(
+        query,
+        data.page,
+        data.page_size,
+        data.sort_by,
+        data.sort_order,
+        data.component_filter,
+        data.tags_filter,
+        data.component_filter ? 'plugin' : data.type_filter,
+      ).catch((error) => {
+        if (data.type_filter === 'mcp' || data.type_filter === 'skill') {
+          return { plugins: [], total: 0 };
+        }
+        throw error;
+      });
+    }
+
+    const [pluginsResp, mcpsResp, skillsResp] = await Promise.all([
+      this.searchMarketplacePlugins(
+        query,
+        data.page,
+        data.page_size,
+        data.sort_by,
+        data.sort_order,
+        undefined,
+        data.tags_filter,
+        'plugin',
+      ).catch(() => ({ plugins: [], total: 0 })),
+      this.searchMarketplacePlugins(
+        query,
+        data.page,
+        data.page_size,
+        data.sort_by,
+        data.sort_order,
+        undefined,
+        data.tags_filter,
+        'mcp',
+      ).catch(() => ({ plugins: [], total: 0 })),
+      this.searchMarketplacePlugins(
+        query,
+        data.page,
+        data.page_size,
+        data.sort_by,
+        data.sort_order,
+        undefined,
+        data.tags_filter,
+        'skill',
+      ).catch(() => ({ plugins: [], total: 0 })),
+    ]);
+
+    return {
+      plugins: [
+        ...(pluginsResp.plugins || []),
+        ...(mcpsResp.plugins || []),
+        ...(skillsResp.plugins || []),
+      ],
+      total:
+        (pluginsResp.total || 0) +
+        (mcpsResp.total || 0) +
+        (skillsResp.total || 0),
+    };
   }
 
   public getPluginDetail(
@@ -75,6 +220,14 @@ export class CloudServiceClient extends BaseHttpClient {
 
   public getPluginIconURL(author: string, name: string): string {
     return `${this.baseURL}/api/v1/marketplace/plugins/${author}/${name}/resources/icon`;
+  }
+
+  public getMCPMarketplaceIconURL(author: string, name: string): string {
+    return `${this.baseURL}/api/v1/marketplace/mcps/${author}/${name}/resources/icon`;
+  }
+
+  public getSkillMarketplaceIconURL(author: string, name: string): string {
+    return `${this.baseURL}/api/v1/marketplace/skills/${author}/${name}/resources/icon`;
   }
 
   public getPluginAssetURL(
