@@ -605,8 +605,8 @@ const zhHans = {
   },
   market: {
     searchPlaceholder: '搜索插件...',
-    searchResults: '搜索到 {{count}} 个插件',
-    totalPlugins: '共 {{count}} 个插件',
+    searchResults: '搜索到 {{count}} 个扩展',
+    totalPlugins: '共 {{count}} 个扩展',
     noPlugins: '暂无插件',
     noResults: '未找到相关插件',
     loadingMore: '加载更多...',

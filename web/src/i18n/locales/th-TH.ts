@@ -623,8 +623,8 @@ const thTH = {
   },
   market: {
     searchPlaceholder: 'ค้นหาปลั๊กอิน...',
-    searchResults: 'พบ {{count}} ปลั๊กอิน',
-    totalPlugins: 'ทั้งหมด {{count}} ปลั๊กอิน',
+    searchResults: 'พบ {{count}} ส่วนขยาย',
+    totalPlugins: 'ทั้งหมด {{count}} ส่วนขยาย',
     noPlugins: 'ไม่มีปลั๊กอินที่พร้อมใช้งาน',
     noResults: 'ไม่พบปลั๊กอินที่เกี่ยวข้อง',
     loadingMore: 'กำลังโหลดเพิ่มเติม...',

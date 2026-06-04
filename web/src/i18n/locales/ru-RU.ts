@@ -642,8 +642,8 @@ const ruRU = {
   },
   market: {
     searchPlaceholder: 'Поиск плагинов...',
-    searchResults: 'Найдено {{count}} плагинов',
-    totalPlugins: 'Всего {{count}} плагинов',
+    searchResults: 'Найдено {{count}} расширений',
+    totalPlugins: 'Всего {{count}} расширений',
     noPlugins: 'Нет доступных плагинов',
     noResults: 'Подходящие плагины не найдены',
     loadingMore: 'Загрузка ещё...',

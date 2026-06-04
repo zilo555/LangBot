@@ -631,8 +631,8 @@ const enUS = {
   },
   market: {
     searchPlaceholder: 'Search plugins...',
-    searchResults: 'Found {{count}} plugins',
-    totalPlugins: 'Total {{count}} plugins',
+    searchResults: 'Found {{count}} extensions',
+    totalPlugins: 'Total {{count}} extensions',
     noPlugins: 'No plugins available',
     noResults: 'No relevant plugins found',
     loadingMore: 'Loading more...',

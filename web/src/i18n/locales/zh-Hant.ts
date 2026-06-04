@@ -605,8 +605,8 @@ const zhHant = {
   },
   market: {
     searchPlaceholder: '搜尋插件...',
-    searchResults: '搜尋到 {{count}} 個插件',
-    totalPlugins: '共 {{count}} 個插件',
+    searchResults: '搜尋到 {{count}} 個擴展',
+    totalPlugins: '共 {{count}} 個擴展',
     noPlugins: '暫無插件',
     noResults: '未找到相關插件',
     loadingMore: '載入更多...',

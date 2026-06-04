@@ -644,8 +644,8 @@ const esES = {
   },
   market: {
     searchPlaceholder: 'Buscar plugins...',
-    searchResults: 'Se encontraron {{count}} plugins',
-    totalPlugins: 'Total {{count}} plugins',
+    searchResults: 'Se encontraron {{count}} extensiones',
+    totalPlugins: 'Total {{count}} extensiones',
     noPlugins: 'No hay plugins disponibles',
     noResults: 'No se encontraron plugins relevantes',
     loadingMore: 'Cargando más...',

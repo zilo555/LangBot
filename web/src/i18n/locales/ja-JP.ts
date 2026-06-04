@@ -636,8 +636,8 @@ const jaJP = {
   },
   market: {
     searchPlaceholder: 'プラグインを検索...',
-    searchResults: '{{count}} 個のプラグインが見つかりました',
-    totalPlugins: '合計 {{count}} 個のプラグイン',
+    searchResults: '{{count}} 個の拡張機能が見つかりました',
+    totalPlugins: '合計 {{count}} 個の拡張機能',
     noPlugins: '利用可能なプラグインがありません',
     noResults: '関連するプラグインが見つかりません',
     loadingMore: 'さらに読み込み中...',

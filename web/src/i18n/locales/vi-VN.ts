@@ -637,8 +637,8 @@ const viVN = {
   },
   market: {
     searchPlaceholder: 'Tìm kiếm plugin...',
-    searchResults: 'Tìm thấy {{count}} plugin',
-    totalPlugins: 'Tổng cộng {{count}} plugin',
+    searchResults: 'Tìm thấy {{count}} tiện ích mở rộng',
+    totalPlugins: 'Tổng cộng {{count}} tiện ích mở rộng',
     noPlugins: 'Không có plugin nào',
     noResults: 'Không tìm thấy plugin liên quan',
     loadingMore: 'Đang tải thêm...',
