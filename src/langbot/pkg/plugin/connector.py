@@ -459,7 +459,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
                                         )
 
                                     file_bytes = download_resp.content
-                                    self._extract_deps_metadata(file_bytes, task_context)
+                                    self._inspect_plugin_package(file_bytes, task_context)
                                     file_key = await self.handler.send_file(file_bytes, 'lbpkg')
                                     install_info['plugin_file_key'] = file_key
                                     self.ap.logger.info(f'Transfered file {file_key} to plugin runtime')
