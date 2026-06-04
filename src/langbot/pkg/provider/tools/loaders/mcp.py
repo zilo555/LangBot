@@ -240,12 +240,13 @@ class RuntimeMCPSession:
                     return
                 if attempt >= self._MAX_RETRIES:
                     self.status = MCPSessionStatus.ERROR
-                    self.error_message = f'Failed after {self._MAX_RETRIES + 1} attempts: {e}'
+                    self.error_message = f'Failed after {self._MAX_RETRIES + 1} attempts: {self._describe_exception(e)}'
                     self._ready_event.set()
                     return
                 delay = self._RETRY_DELAYS[attempt]
                 self.ap.logger.warning(
-                    f'MCP session {self.server_name} failed (attempt {attempt + 1}), retrying in {delay}s: {e}'
+                    f'MCP session {self.server_name} failed (attempt {attempt + 1}), '
+                    f'retrying in {delay}s: {self._describe_exception(e)}'
                 )
                 await self._cleanup_box_stdio_session()
                 # Reset status for retry
@@ -253,6 +254,30 @@ class RuntimeMCPSession:
                 self.error_message = None
                 self.error_phase = None
                 await asyncio.sleep(delay)
+
+    @staticmethod
+    def _describe_exception(exc: BaseException) -> str:
+        """Flatten an exception into its underlying leaf messages.
+
+        anyio / the MCP client wrap real failures in a TaskGroup, whose own
+        message is the unhelpful "unhandled errors in a TaskGroup (N
+        sub-exception)". Recurse into ExceptionGroups so the actual cause
+        (e.g. ``httpx.HTTPStatusError: Client error '410 Gone'``) is surfaced.
+        """
+        leaves: list[str] = []
+
+        def visit(e: BaseException) -> None:
+            sub = getattr(e, 'exceptions', None)
+            if sub:  # ExceptionGroup / BaseExceptionGroup
+                for child in sub:
+                    visit(child)
+            else:
+                leaves.append(f'{type(e).__name__}: {e}')
+
+        visit(exc)
+        seen: set[str] = set()
+        unique = [m for m in leaves if not (m in seen or seen.add(m))]
+        return '; '.join(unique) if unique else f'{type(exc).__name__}: {exc}'
 
     _MONITOR_POLL_INTERVAL = 5
     _MONITOR_MAX_CONSECUTIVE_ERRORS = 3
