@@ -40,6 +40,7 @@ const esES = {
     helpDocs: 'Obtener ayuda',
     featureRequest: 'Solicitar función',
     starOnGitHub: 'Dar estrella en GitHub',
+    joinDiscord: 'Únete a Discord',
     create: 'Crear',
     edit: 'Editar',
     delete: 'Eliminar',

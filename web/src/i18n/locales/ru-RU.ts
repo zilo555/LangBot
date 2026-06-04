@@ -38,6 +38,7 @@ const ruRU = {
     helpDocs: 'Помощь',
     featureRequest: 'Запрос функции',
     starOnGitHub: 'Поставить звезду на GitHub',
+    joinDiscord: 'Присоединиться к Discord',
     create: 'Создать',
     edit: 'Редактировать',
     delete: 'Удалить',

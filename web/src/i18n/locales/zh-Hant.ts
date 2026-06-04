@@ -36,6 +36,7 @@ const zhHant = {
     helpDocs: '輔助說明',
     featureRequest: '需求建議',
     starOnGitHub: '在 GitHub 上 Star',
+    joinDiscord: '加入 Discord 社群',
     create: '建立',
     edit: '編輯',
     delete: '刪除',

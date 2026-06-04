@@ -38,6 +38,7 @@ const viVN = {
     helpDocs: 'Trợ giúp',
     featureRequest: 'Yêu cầu tính năng',
     starOnGitHub: 'Star trên GitHub',
+    joinDiscord: 'Tham gia Discord',
     create: 'Tạo',
     edit: 'Chỉnh sửa',
     delete: 'Xóa',

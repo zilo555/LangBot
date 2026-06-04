@@ -37,6 +37,7 @@ const thTH = {
     helpDocs: 'ขอความช่วยเหลือ',
     featureRequest: 'ขอฟีเจอร์ใหม่',
     starOnGitHub: 'ให้ดาวบน GitHub',
+    joinDiscord: 'เข้าร่วม Discord',
     create: 'สร้าง',
     edit: 'แก้ไข',
     delete: 'ลบ',

@@ -37,6 +37,7 @@ const enUS = {
     helpDocs: 'Get Help',
     featureRequest: 'Feature Request',
     starOnGitHub: 'Star on GitHub',
+    joinDiscord: 'Join our Discord',
     create: 'Create',
     edit: 'Edit',
     delete: 'Delete',

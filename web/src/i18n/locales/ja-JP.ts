@@ -38,6 +38,7 @@ const jaJP = {
     helpDocs: 'ヘルプドキュメント',
     featureRequest: '機能リクエスト',
     starOnGitHub: 'GitHubでStarする',
+    joinDiscord: 'Discord に参加',
     create: '作成',
     edit: '編集',
     delete: '削除',

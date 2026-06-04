@@ -36,6 +36,7 @@ const zhHans = {
     helpDocs: '帮助文档',
     featureRequest: '需求建议',
     starOnGitHub: '在 GitHub 上 Star',
+    joinDiscord: '加入 Discord 社区',
     create: '创建',
     edit: '编辑',
     delete: '删除',
