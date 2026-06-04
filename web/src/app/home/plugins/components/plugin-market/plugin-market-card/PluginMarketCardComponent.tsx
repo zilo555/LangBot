@@ -94,7 +94,7 @@ export default function PluginMarketCardComponent({
       role="button"
       tabIndex={0}
       aria-label={t('market.installCard', { name: cardVO.label })}
-      className="w-[100%] h-[10rem] cursor-pointer bg-white rounded-[10px] shadow-[0px_1px_2px_0_rgba(0,0,0,0.06)] p-3 sm:p-[1rem] hover:shadow-[0px_2px_5px_0_rgba(0,0,0,0.08)] transition-shadow duration-200 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-[#1f1f22] dark:shadow-[0px_1px_2px_0_rgba(255,255,255,0.04)] dark:hover:shadow-[0px_2px_5px_0_rgba(255,255,255,0.07)] relative"
+      className="w-[100%] h-[10rem] cursor-pointer bg-white rounded-[10px] border border-border shadow-[0px_1px_2px_0_rgba(0,0,0,0.06)] p-3 sm:p-[1rem] hover:shadow-[0px_2px_5px_0_rgba(0,0,0,0.08)] transition-shadow duration-200 outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-[#1f1f22] dark:shadow-[0px_1px_2px_0_rgba(255,255,255,0.04)] dark:hover:shadow-[0px_2px_5px_0_rgba(255,255,255,0.07)] relative"
       onClick={handleInstallClick}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') {
