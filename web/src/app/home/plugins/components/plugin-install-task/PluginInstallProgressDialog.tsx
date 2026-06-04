@@ -11,7 +11,7 @@ import {
   Download,
   Package,
   Server,
-  BookOpen,
+  Sparkles,
   CheckCircle2,
   XCircle,
   Loader2,
@@ -176,7 +176,7 @@ function TaskProgressContent({ task }: { task: PluginInstallTask }) {
   // MCP / Skill don't have the plugin's download + dependency-install stages;
   // show a single "installing → done/failed" row instead of plugin steps.
   const isPlugin = task.extensionType === 'plugin';
-  const simpleIcon = task.extensionType === 'mcp' ? Server : BookOpen;
+  const simpleIcon = task.extensionType === 'mcp' ? Server : Sparkles;
   const simpleInstallingLabel =
     task.extensionType === 'mcp'
       ? t('addExtension.installStage.mcpInstalling')

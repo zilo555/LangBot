@@ -9,9 +9,9 @@ import {
   Loader2,
   X,
   ListTodo,
-  Wrench,
-  AudioWaveform,
-  Book,
+  Puzzle,
+  Server,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,9 +35,9 @@ const STAGE_ICONS: Record<string, React.ElementType> = {
 };
 
 const EXTENSION_TYPE_ICONS: Record<string, React.ElementType> = {
-  plugin: Wrench,
-  mcp: AudioWaveform,
-  skill: Book,
+  plugin: Puzzle,
+  mcp: Server,
+  skill: Sparkles,
 };
 
 function TaskQueueItem({
@@ -54,7 +54,7 @@ function TaskQueueItem({
   const isError = task.stage === InstallStage.ERROR;
   const isRunning = !isDone && !isError;
   const StageIcon = STAGE_ICONS[task.stage] || Download;
-  const TypeIcon = EXTENSION_TYPE_ICONS[task.extensionType] || Wrench;
+  const TypeIcon = EXTENSION_TYPE_ICONS[task.extensionType] || Puzzle;
 
   const getTypeBadgeClass = () => {
     switch (task.extensionType) {

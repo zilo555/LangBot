@@ -21,8 +21,7 @@ import { extractI18nObject } from '@/i18n/I18nProvider';
 import { toast } from 'sonner';
 import { useAsyncTask, AsyncTaskStatus } from '@/hooks/useAsyncTask';
 import { useSidebarData } from '@/app/home/components/home-sidebar/SidebarDataContext';
-import { Loader2, Puzzle } from 'lucide-react';
-import { Wrench, AudioWaveform, Book } from 'lucide-react';
+import { Loader2, Puzzle, Server, Sparkles } from 'lucide-react';
 
 export interface PluginInstalledComponentRef {
   refreshPluginList: () => void;
@@ -44,14 +43,18 @@ export const FilterOptions = [
   {
     value: 'plugin' as FilterType,
     labelKey: 'market.typePlugin',
-    icon: Wrench,
+    icon: Puzzle,
   },
   {
     value: 'mcp' as FilterType,
     labelKey: 'market.typeMCP',
-    icon: AudioWaveform,
+    icon: Server,
   },
-  { value: 'skill' as FilterType, labelKey: 'market.typeSkill', icon: Book },
+  {
+    value: 'skill' as FilterType,
+    labelKey: 'market.typeSkill',
+    icon: Sparkles,
+  },
 ];
 
 interface PluginInstalledComponentProps {

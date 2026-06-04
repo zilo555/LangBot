@@ -17,6 +17,9 @@ import { Separator } from '@/components/ui/separator';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import {
   Search,
+  Puzzle,
+  Server,
+  Sparkles,
   Wrench,
   AudioWaveform,
   Hash,
@@ -88,9 +91,9 @@ function MarketPageContent({
 
   const extensionTypeOptions = [
     { value: 'all', label: t('market.filters.allFormats'), icon: null },
-    { value: 'plugin', label: t('market.typePlugin'), icon: Wrench },
-    { value: 'mcp', label: t('market.typeMCP'), icon: AudioWaveform },
-    { value: 'skill', label: t('market.typeSkill'), icon: Book },
+    { value: 'plugin', label: t('market.typePlugin'), icon: Puzzle },
+    { value: 'mcp', label: t('market.typeMCP'), icon: Server },
+    { value: 'skill', label: t('market.typeSkill'), icon: Sparkles },
   ];
 
   const [searchQuery, setSearchQuery] = useState('');
