@@ -145,7 +145,7 @@ function MarketPageContent({
     }
   }, [typeFilter, componentFilter, selectedTags, sortOption]);
 
-  const pageSize = 12; // 每页12个
+  const pageSize = 24; // 每页24个
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const isComposingRef = useRef(false);
