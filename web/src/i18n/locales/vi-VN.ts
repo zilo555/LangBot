@@ -2,7 +2,7 @@ const viVN = {
   sidebar: {
     home: 'Trang chủ',
     extensions: 'Tiện ích mở rộng',
-    installedPlugins: 'Plugin đã cài đặt',
+    installedPlugins: 'Đã cài đặt',
     pluginMarket: 'Chợ ứng dụng',
     mcpServers: 'Máy chủ MCP',
     addExtension: 'Thêm tiện ích mở rộng',
@@ -769,6 +769,9 @@ const viVN = {
     toolsFound: 'công cụ',
     unknownError: 'Lỗi không xác định',
     noToolsFound: 'Không tìm thấy công cụ nào',
+    tabTools: 'Công cụ',
+    tabDocs: 'Tài liệu',
+    noReadme: 'Không có tài liệu',
     parseResultFailed: 'Phân tích kết quả kiểm tra thất bại',
     noResultReturned: 'Kiểm tra không trả về kết quả',
     getTaskFailed: 'Lấy trạng thái tác vụ thất bại',

@@ -2,7 +2,7 @@ const esES = {
   sidebar: {
     home: 'Inicio',
     extensions: 'Extensiones',
-    installedPlugins: 'Plugins instalados',
+    installedPlugins: 'Instalados',
     pluginMarket: 'Tienda',
     mcpServers: 'Servidores MCP',
     addExtension: 'Añadir extensión',
@@ -779,6 +779,9 @@ const esES = {
     toolsFound: 'herramientas',
     unknownError: 'Error desconocido',
     noToolsFound: 'No se encontraron herramientas',
+    tabTools: 'Herramientas',
+    tabDocs: 'Documentación',
+    noReadme: 'No hay documentación disponible',
     parseResultFailed: 'Error al analizar el resultado de la prueba',
     noResultReturned: 'La prueba no devolvió resultados',
     getTaskFailed: 'Error al obtener el estado de la tarea',

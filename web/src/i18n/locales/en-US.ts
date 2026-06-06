@@ -2,7 +2,7 @@ const enUS = {
   sidebar: {
     home: 'Home',
     extensions: 'Extensions',
-    installedPlugins: 'Installed Extensions',
+    installedPlugins: 'Installed',
     pluginMarket: 'Extension Market',
     mcpServers: 'MCP Servers',
     addExtension: 'Add Extension',
@@ -765,6 +765,9 @@ const enUS = {
     toolsFound: 'tools',
     unknownError: 'Unknown error',
     noToolsFound: 'No tools found',
+    tabTools: 'Tools',
+    tabDocs: 'Docs',
+    noReadme: 'No documentation available',
     parseResultFailed: 'Failed to parse test result',
     noResultReturned: 'Test returned no result',
     getTaskFailed: 'Failed to get task status',

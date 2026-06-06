@@ -2,7 +2,7 @@ const zhHans = {
   sidebar: {
     home: '首页',
     extensions: '扩展',
-    installedPlugins: '已安装扩展',
+    installedPlugins: '已安装',
     pluginMarket: '扩展市场',
     mcpServers: 'MCP 服务器',
     addExtension: '添加扩展',
@@ -737,6 +737,9 @@ const zhHans = {
     toolsFound: '个工具',
     unknownError: '未知错误',
     noToolsFound: '未找到任何工具',
+    tabTools: '工具',
+    tabDocs: '文档',
+    noReadme: '暂无文档',
     parseResultFailed: '解析测试结果失败',
     noResultReturned: '测试未返回结果',
     getTaskFailed: '获取任务状态失败',

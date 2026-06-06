@@ -2,7 +2,7 @@ const zhHant = {
   sidebar: {
     home: '首頁',
     extensions: '擴展',
-    installedPlugins: '已安裝外掛',
+    installedPlugins: '已安裝',
     pluginMarket: '外掛市場',
     mcpServers: 'MCP 伺服器',
     addExtension: '添加擴展',
@@ -736,6 +736,9 @@ const zhHant = {
     toolsFound: '個工具',
     unknownError: '未知錯誤',
     noToolsFound: '未找到任何工具',
+    tabTools: '工具',
+    tabDocs: '文件',
+    noReadme: '暫無文件',
     parseResultFailed: '解析測試結果失敗',
     noResultReturned: '測試未返回結果',
     getTaskFailed: '獲取任務狀態失敗',

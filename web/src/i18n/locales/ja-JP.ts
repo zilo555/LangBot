@@ -2,7 +2,7 @@ const jaJP = {
   sidebar: {
     home: 'ホーム',
     extensions: '拡張機能',
-    installedPlugins: 'インストール済みプラグイン',
+    installedPlugins: 'インストール済み',
     pluginMarket: 'プラグインマーケット',
     mcpServers: 'MCPサーバー',
     addExtension: '拡張機能を追加',
@@ -770,6 +770,9 @@ const jaJP = {
     toolsFound: '個のツール',
     unknownError: '不明なエラー',
     noToolsFound: 'ツールが見つかりません',
+    tabTools: 'ツール',
+    tabDocs: 'ドキュメント',
+    noReadme: 'ドキュメントがありません',
     parseResultFailed: 'テスト結果の解析に失敗しました',
     noResultReturned: 'テスト結果が返されませんでした',
     getTaskFailed: 'タスクステータスの取得に失敗しました',

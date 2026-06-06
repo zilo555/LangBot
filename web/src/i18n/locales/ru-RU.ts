@@ -2,7 +2,7 @@ const ruRU = {
   sidebar: {
     home: 'Главная',
     extensions: 'Расширения',
-    installedPlugins: 'Установленные плагины',
+    installedPlugins: 'Установленные',
     pluginMarket: 'Маркетплейс',
     mcpServers: 'MCP-серверы',
     addExtension: 'Добавить расширение',
@@ -775,6 +775,9 @@ const ruRU = {
     toolsFound: 'инструментов',
     unknownError: 'Неизвестная ошибка',
     noToolsFound: 'Инструменты не найдены',
+    tabTools: 'Инструменты',
+    tabDocs: 'Документация',
+    noReadme: 'Документация отсутствует',
     parseResultFailed: 'Не удалось разобрать результат теста',
     noResultReturned: 'Тест не вернул результат',
     getTaskFailed: 'Не удалось получить статус задачи',

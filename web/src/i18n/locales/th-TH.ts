@@ -2,7 +2,7 @@ const thTH = {
   sidebar: {
     home: 'หน้าแรก',
     extensions: 'ส่วนขยาย',
-    installedPlugins: 'ปลั๊กอินที่ติดตั้ง',
+    installedPlugins: 'ที่ติดตั้งแล้ว',
     pluginMarket: 'ตลาดปลั๊กอิน',
     mcpServers: 'เซิร์ฟเวอร์ MCP',
     addExtension: 'เพิ่มส่วนขยาย',
@@ -755,6 +755,9 @@ const thTH = {
     toolsFound: 'เครื่องมือ',
     unknownError: 'ข้อผิดพลาดที่ไม่ทราบสาเหตุ',
     noToolsFound: 'ไม่พบเครื่องมือ',
+    tabTools: 'เครื่องมือ',
+    tabDocs: 'เอกสาร',
+    noReadme: 'ไม่มีเอกสาร',
     parseResultFailed: 'ไม่สามารถแยกวิเคราะห์ผลการทดสอบได้',
     noResultReturned: 'การทดสอบไม่ส่งผลลัพธ์กลับมา',
     getTaskFailed: 'ไม่สามารถดึงสถานะงานได้',
