@@ -47,6 +47,10 @@ stages:
             label:
               en_US: Langflow API
               zh_Hans: Langflow API
+          - name: weknora-api
+            label:
+              en_US: WeKnora API
+              zh_Hans: WeKnora API
       - name: expire-time
         label:
           en_US: Conversation expire time (seconds)
@@ -653,3 +657,97 @@ stages:
         type: json
         required: false
         default: '{}'
+  - name: weknora-api
+    label:
+      en_US: WeKnora API
+      zh_Hans: WeKnora API
+    description:
+      en_US: Configure the WeKnora API of the pipeline
+      zh_Hans: 配置 WeKnora API
+    config:
+      - name: base-url
+        label:
+          en_US: Base URL
+          zh_Hans: 基础 URL
+        description:
+          en_US: The base URL of the WeKnora server (with /api/v1)
+          zh_Hans: WeKnora 服务器的基础 URL（包含 /api/v1）
+        type: string
+        required: true
+        default: 'http://localhost:8080/api/v1'
+      - name: api-key
+        label:
+          en_US: API Key
+          zh_Hans: API 密钥
+        description:
+          en_US: The API key for WeKnora, generated from WeKnora frontend Settings → API Keys
+          zh_Hans: WeKnora 的 API 密钥，从 WeKnora 前端 设置 → API Keys 生成
+        type: string
+        required: true
+        default: ''
+      - name: app-type
+        label:
+          en_US: App Type
+          zh_Hans: 应用类型
+        type: select
+        required: true
+        default: agent
+        options:
+          - name: agent
+            label:
+              en_US: Agent (Smart Reasoning)
+              zh_Hans: Agent（智能推理）
+          - name: chat
+            label:
+              en_US: Chat (Knowledge Base RAG)
+              zh_Hans: 聊天（知识库 RAG）
+      - name: agent-id
+        label:
+          en_US: Agent ID
+          zh_Hans: 智能体 ID
+        description:
+          en_US: The Agent ID to use. Built-in agents include builtin-quick-answer, builtin-smart-reasoning, builtin-data-analyst
+          zh_Hans: 要使用的智能体 ID。内置智能体：builtin-quick-answer、builtin-smart-reasoning、builtin-data-analyst
+        type: string
+        required: true
+        default: 'builtin-smart-reasoning'
+      - name: knowledge-base-ids
+        label:
+          en_US: Knowledge Base IDs
+          zh_Hans: 知识库 ID 列表
+        description:
+          en_US: List of WeKnora knowledge base IDs to use (one per line)
+          zh_Hans: 要使用的 WeKnora 知识库 ID 列表（每行一个）
+        type: array
+        required: false
+        default: []
+      - name: web-search-enabled
+        label:
+          en_US: Enable Web Search
+          zh_Hans: 启用网络搜索
+        description:
+          en_US: Whether to enable web search in agent mode
+          zh_Hans: 在 Agent 模式下是否启用网络搜索
+        type: boolean
+        required: false
+        default: false
+      - name: timeout
+        label:
+          en_US: Timeout
+          zh_Hans: 超时时间
+        description:
+          en_US: Request timeout in seconds
+          zh_Hans: 请求超时时间（秒）
+        type: integer
+        required: false
+        default: 120
+      - name: base-prompt
+        label:
+          en_US: Base Prompt
+          zh_Hans: 基础提示词
+        description:
+          en_US: Default prompt when user message is empty (e.g. only images)
+          zh_Hans: 当用户消息为空（例如仅图片）时使用的默认提示词
+        type: string
+        required: false
+        default: '请回答用户的问题。'
