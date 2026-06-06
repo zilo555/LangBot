@@ -624,6 +624,8 @@ const thTH = {
   },
   market: {
     searchPlaceholder: 'ค้นหาปลั๊กอิน...',
+    searchPlaceholderCount:
+      'ค้นหา {{count}} ส่วนขยาย ความสามารถ หรือกรณีใช้งาน...',
     searchResults: 'พบ {{count}} ส่วนขยาย',
     totalPlugins: 'ทั้งหมด {{count}} ส่วนขยาย',
     noPlugins: 'ไม่มีปลั๊กอินที่พร้อมใช้งาน',
@@ -631,6 +633,7 @@ const thTH = {
     loadingMore: 'กำลังโหลดเพิ่มเติม...',
     loading: 'กำลังโหลด...',
     allLoaded: 'แสดงปลั๊กอินทั้งหมดแล้ว',
+    allLoadedCount: 'แสดงส่วนขยายทั้งหมด {{count}} รายการแล้ว',
     install: 'ติดตั้ง',
     installConfirm:
       'คุณแน่ใจหรือไม่ว่าต้องการติดตั้งปลั๊กอิน "{{name}}" ({{version}})?',

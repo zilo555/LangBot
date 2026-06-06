@@ -643,6 +643,8 @@ const ruRU = {
   },
   market: {
     searchPlaceholder: 'Поиск плагинов...',
+    searchPlaceholderCount:
+      'Поиск среди {{count}} расширений, возможностей или сценариев...',
     searchResults: 'Найдено {{count}} расширений',
     totalPlugins: 'Всего {{count}} расширений',
     noPlugins: 'Нет доступных плагинов',
@@ -650,6 +652,7 @@ const ruRU = {
     loadingMore: 'Загрузка ещё...',
     loading: 'Загрузка...',
     allLoaded: 'Все плагины отображены',
+    allLoadedCount: 'Показаны все {{count}} расширений',
     install: 'Установить',
     installConfirm:
       'Вы уверены, что хотите установить плагин "{{name}}" ({{version}})?',

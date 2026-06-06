@@ -606,6 +606,7 @@ const zhHans = {
   },
   market: {
     searchPlaceholder: '搜索插件...',
+    searchPlaceholderCount: '搜索 {{count}} 个扩展、能力或场景...',
     searchResults: '搜索到 {{count}} 个扩展',
     totalPlugins: '共 {{count}} 个扩展',
     noPlugins: '暂无插件',
@@ -613,6 +614,7 @@ const zhHans = {
     loadingMore: '加载更多...',
     loading: '加载中...',
     allLoaded: '已显示全部插件',
+    allLoadedCount: '已显示全部 {{count}} 个扩展',
     install: '安装',
     installCard: '安装 {{name}}',
     installConfirm: '确定要安装插件 "{{name}}" ({{version}}) 吗？',

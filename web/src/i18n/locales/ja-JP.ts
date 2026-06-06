@@ -637,6 +637,8 @@ const jaJP = {
   },
   market: {
     searchPlaceholder: 'プラグインを検索...',
+    searchPlaceholderCount:
+      '{{count}} 個の拡張機能・機能・ユースケースを検索...',
     searchResults: '{{count}} 個の拡張機能が見つかりました',
     totalPlugins: '合計 {{count}} 個の拡張機能',
     noPlugins: '利用可能なプラグインがありません',
@@ -644,6 +646,7 @@ const jaJP = {
     loadingMore: 'さらに読み込み中...',
     loading: '読み込み中...',
     allLoaded: 'すべてのプラグインが表示されました',
+    allLoadedCount: '{{count}} 個の拡張機能をすべて表示しました',
     install: 'インストール',
     installConfirm:
       'プラグイン "{{name}}" ({{version}}) をインストールしますか？',

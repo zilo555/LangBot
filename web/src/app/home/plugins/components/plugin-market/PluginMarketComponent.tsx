@@ -632,7 +632,11 @@ function MarketPageContent({
           <div className="relative min-w-0 flex-1 lg:max-w-xl">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input
-              placeholder={t('market.searchPlaceholder')}
+              placeholder={
+                total > 0
+                  ? t('market.searchPlaceholderCount', { count: total })
+                  : t('market.searchPlaceholder')
+              }
               value={searchQuery}
               onChange={(e) => handleSearchInputChange(e.target.value)}
               onCompositionStart={() => {
@@ -816,15 +820,6 @@ function MarketPageContent({
             );
           })}
         </div>
-
-        {/* 搜索结果统计 */}
-        {total > 0 && (
-          <div className="text-center text-muted-foreground text-sm">
-            {searchQuery
-              ? t('market.searchResults', { count: total })
-              : t('market.totalPlugins', { count: total })}
-          </div>
-        )}
       </div>
 
       {/* Scrollable extension list section */}
@@ -884,7 +879,9 @@ function MarketPageContent({
             {/* No more data hint */}
             {!hasMore && plugins.length > 0 && (
               <div className="text-center text-muted-foreground py-6">
-                {t('market.allLoaded')}
+                {searchQuery
+                  ? t('market.allLoadedCount', { count: total })
+                  : t('market.allLoaded')}
                 {' · '}
                 <a
                   href="https://github.com/langbot-app/langbot-plugin-demo/issues/new?template=plugin-request.yml"

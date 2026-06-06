@@ -606,6 +606,7 @@ const zhHant = {
   },
   market: {
     searchPlaceholder: '搜尋插件...',
+    searchPlaceholderCount: '搜尋 {{count}} 個擴展、能力或場景...',
     searchResults: '搜尋到 {{count}} 個擴展',
     totalPlugins: '共 {{count}} 個擴展',
     noPlugins: '暫無插件',
@@ -613,6 +614,7 @@ const zhHant = {
     loadingMore: '載入更多...',
     loading: '載入中...',
     allLoaded: '已顯示全部插件',
+    allLoadedCount: '已顯示全部 {{count}} 個擴展',
     install: '安裝',
     installCard: '安裝 {{name}}',
     installConfirm: '確定要安裝插件 "{{name}}" ({{version}}) 嗎？',

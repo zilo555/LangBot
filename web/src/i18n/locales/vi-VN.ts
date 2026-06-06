@@ -638,6 +638,8 @@ const viVN = {
   },
   market: {
     searchPlaceholder: 'Tìm kiếm plugin...',
+    searchPlaceholderCount:
+      'Tìm kiếm {{count}} tiện ích mở rộng, khả năng hoặc tình huống...',
     searchResults: 'Tìm thấy {{count}} tiện ích mở rộng',
     totalPlugins: 'Tổng cộng {{count}} tiện ích mở rộng',
     noPlugins: 'Không có plugin nào',
@@ -645,6 +647,7 @@ const viVN = {
     loadingMore: 'Đang tải thêm...',
     loading: 'Đang tải...',
     allLoaded: 'Đã hiển thị tất cả plugin',
+    allLoadedCount: 'Đã hiển thị tất cả {{count}} tiện ích mở rộng',
     install: 'Cài đặt',
     installConfirm:
       'Bạn có chắc chắn muốn cài đặt plugin "{{name}}" ({{version}}) không?',

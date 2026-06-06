@@ -632,6 +632,8 @@ const enUS = {
   },
   market: {
     searchPlaceholder: 'Search plugins...',
+    searchPlaceholderCount:
+      'Search {{count}} extensions, capabilities, or use cases...',
     searchResults: 'Found {{count}} extensions',
     totalPlugins: 'Total {{count}} extensions',
     noPlugins: 'No plugins available',
@@ -639,6 +641,7 @@ const enUS = {
     loadingMore: 'Loading more...',
     loading: 'Loading...',
     allLoaded: 'All plugins displayed',
+    allLoadedCount: 'All {{count}} extensions displayed',
     install: 'Install',
     installCard: 'Install {{name}}',
     installConfirm:

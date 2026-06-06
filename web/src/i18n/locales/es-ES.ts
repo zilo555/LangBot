@@ -645,6 +645,8 @@ const esES = {
   },
   market: {
     searchPlaceholder: 'Buscar plugins...',
+    searchPlaceholderCount:
+      'Buscar {{count}} extensiones, capacidades o casos de uso...',
     searchResults: 'Se encontraron {{count}} extensiones',
     totalPlugins: 'Total {{count}} extensiones',
     noPlugins: 'No hay plugins disponibles',
@@ -652,6 +654,7 @@ const esES = {
     loadingMore: 'Cargando más...',
     loading: 'Cargando...',
     allLoaded: 'Todos los plugins mostrados',
+    allLoadedCount: 'Se muestran las {{count}} extensiones',
     install: 'Instalar',
     installConfirm:
       '¿Estás seguro de que deseas instalar el plugin "{{name}}" ({{version}})?',
