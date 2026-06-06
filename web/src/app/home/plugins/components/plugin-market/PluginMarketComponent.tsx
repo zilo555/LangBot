@@ -124,6 +124,8 @@ function MarketPageContent({
   const [hasMore, setHasMore] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
+  // Per-format extension counts shown next to the type filter options.
+  const [typeCounts, setTypeCounts] = useState<Record<string, number>>({});
   const [sortOption, setSortOption] = useState<string>(
     () => loadMarketFilters().sortOption ?? 'install_count_desc',
   );
@@ -320,6 +322,7 @@ function MarketPageContent({
       fetchPlugins(1, false, true);
       fetchAvailableTags();
       fetchRecommendationLists();
+      fetchTypeCounts();
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -356,6 +359,32 @@ function MarketPageContent({
       setTagNames(nameMap);
     } catch (error) {
       console.error('Failed to fetch tags:', error);
+    }
+  };
+
+  // 获取各扩展格式的数量（用于筛选器标签上的计数）
+  const fetchTypeCounts = async () => {
+    const types = ['plugin', 'mcp', 'skill'];
+    try {
+      const results = await Promise.all(
+        types.map((type) =>
+          getCloudServiceClientSync()
+            .searchMarketplaceExtensions({
+              page: 1,
+              page_size: 1,
+              type_filter: type,
+            })
+            .then((res) => res.total)
+            .catch(() => 0),
+        ),
+      );
+      const counts: Record<string, number> = {};
+      types.forEach((type, i) => {
+        counts[type] = results[i];
+      });
+      setTypeCounts(counts);
+    } catch (error) {
+      console.error('Failed to fetch extension type counts:', error);
     }
   };
 
@@ -682,6 +711,7 @@ function MarketPageContent({
                   >
                     {extensionTypeOptions.map((option) => {
                       const Icon = option.icon;
+                      const count = typeCounts[option.value];
                       return (
                         <ToggleGroupItem
                           key={option.value}
@@ -691,6 +721,11 @@ function MarketPageContent({
                         >
                           {Icon && <Icon className="mr-1 h-3.5 w-3.5" />}
                           {option.label}
+                          {typeof count === 'number' && (
+                            <span className="ml-1 text-muted-foreground">
+                              ({count})
+                            </span>
+                          )}
                         </ToggleGroupItem>
                       );
                     })}
