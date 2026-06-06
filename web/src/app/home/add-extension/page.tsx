@@ -192,6 +192,13 @@ function AddExtensionContent() {
     );
   })();
 
+  // When the resolved icon URL changes (e.g. the real external icon arrives
+  // after an async fetch), clear any prior load failure so the <img> retries
+  // instead of staying on the placeholder.
+  useEffect(() => {
+    setInstallIconFailed(false);
+  }, [installIconURL]);
+
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [popoverView, setPopoverView] = useState<PopoverView>('menu');
   const [isDragOver, setIsDragOver] = useState(false);
@@ -278,6 +285,23 @@ function AddExtensionContent() {
     setInstallError(null);
     setInstallIconFailed(false);
     setModalOpen(true);
+
+    // The icon is not carried in the URL params, so fetch it from the
+    // marketplace record. Without this the confirm dialog falls back to the
+    // /resources/icon endpoint, which 404s for extensions whose icon is an
+    // external URL (simpleicons / iconify), showing a placeholder.
+    const cloud = getCloudServiceClientSync();
+    cloud
+      .fetchMarketplaceIcon(extType, author, name)
+      .then((icon) => {
+        if (!icon) return;
+        setInstallInfo((prev) =>
+          prev.plugin_author === author && prev.plugin_name === name
+            ? { ...prev, plugin_icon: icon }
+            : prev,
+        );
+      })
+      .catch(() => {});
 
     setSearchParams(
       (current) => {

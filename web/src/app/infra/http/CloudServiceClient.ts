@@ -207,6 +207,52 @@ export class CloudServiceClient extends BaseHttpClient {
     );
   }
 
+  public getMCPDetail(
+    author: string,
+    name: string,
+  ): Promise<{ mcp: PluginV4 }> {
+    return this.get<{ mcp: PluginV4 }>(
+      `/api/v1/marketplace/mcps/${author}/${name}`,
+    );
+  }
+
+  public getSkillDetail(
+    author: string,
+    name: string,
+  ): Promise<{ skill: PluginV4 }> {
+    return this.get<{ skill: PluginV4 }>(
+      `/api/v1/marketplace/skills/${author}/${name}`,
+    );
+  }
+
+  /**
+   * Resolve the marketplace ``icon`` field for an extension by author/name/type.
+   * Used when the icon is not already known locally (e.g. an install confirm
+   * dialog opened from a URL query param carries no icon). Returns the raw
+   * ``icon`` value from the marketplace record (often an absolute external URL),
+   * or an empty string if it cannot be fetched.
+   */
+  public async fetchMarketplaceIcon(
+    type: 'plugin' | 'mcp' | 'skill' | undefined,
+    author: string,
+    name: string,
+  ): Promise<string> {
+    try {
+      if (type === 'mcp') {
+        const resp = await this.getMCPDetail(author, name);
+        return resp?.mcp?.icon || '';
+      }
+      if (type === 'skill') {
+        const resp = await this.getSkillDetail(author, name);
+        return resp?.skill?.icon || '';
+      }
+      const resp = await this.getPluginDetail(author, name);
+      return resp?.plugin?.icon || '';
+    } catch {
+      return '';
+    }
+  }
+
   public getPluginREADME(
     author: string,
     pluginName: string,
