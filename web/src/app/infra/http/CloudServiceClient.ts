@@ -230,6 +230,29 @@ export class CloudServiceClient extends BaseHttpClient {
     return `${this.baseURL}/api/v1/marketplace/skills/${author}/${name}/resources/icon`;
   }
 
+  /**
+   * Resolve the best icon URL for a marketplace extension.
+   *
+   * Many MCP / skill records store their ``icon`` as an absolute external URL
+   * (e.g. simpleicons.org / iconify.design logos) rather than a file uploaded
+   * to Space storage. For those, the ``/resources/icon`` endpoint 404s, so we
+   * must use the external URL directly. Records whose ``icon`` is empty or a
+   * relative path fall back to the ``/resources/icon`` endpoint (real uploads).
+   */
+  public resolveMarketplaceIconURL(
+    type: 'plugin' | 'mcp' | 'skill' | undefined,
+    author: string,
+    name: string,
+    icon?: string,
+  ): string {
+    if (icon && /^https?:\/\//i.test(icon)) {
+      return icon;
+    }
+    if (type === 'mcp') return this.getMCPMarketplaceIconURL(author, name);
+    if (type === 'skill') return this.getSkillMarketplaceIconURL(author, name);
+    return this.getPluginIconURL(author, name);
+  }
+
   public getPluginAssetURL(
     author: string,
     pluginName: string,

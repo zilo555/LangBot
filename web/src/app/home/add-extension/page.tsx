@@ -184,11 +184,12 @@ function AddExtensionContent() {
     const cloud = getCloudServiceClientSync();
     const a = installInfo.plugin_author || '';
     const n = installInfo.plugin_name || '';
-    if (installExtensionType === 'mcp')
-      return cloud.getMCPMarketplaceIconURL(a, n);
-    if (installExtensionType === 'skill')
-      return cloud.getSkillMarketplaceIconURL(a, n);
-    return cloud.getPluginIconURL(a, n);
+    return cloud.resolveMarketplaceIconURL(
+      installExtensionType,
+      a,
+      n,
+      installInfo.plugin_icon,
+    );
   })();
 
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -326,6 +327,7 @@ function AddExtensionContent() {
       plugin_version: plugin.latest_version,
       plugin_label: extractI18nObject(plugin.label) || plugin.name,
       plugin_description: extractI18nObject(plugin.description) || '',
+      plugin_icon: plugin.icon || '',
     });
     setInstallExtensionType(plugin.type || 'plugin');
     setPluginInstallStatus(PluginInstallStatus.ASK_CONFIRM);

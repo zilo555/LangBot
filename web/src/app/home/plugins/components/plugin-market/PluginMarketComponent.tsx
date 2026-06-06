@@ -216,12 +216,12 @@ function MarketPageContent({
   const transformToVO = useCallback(
     (plugin: PluginV4): PluginMarketCardVO => {
       const cloudClient = getCloudServiceClientSync();
-      const iconURL =
-        plugin.type === 'mcp'
-          ? cloudClient.getMCPMarketplaceIconURL(plugin.author, plugin.name)
-          : plugin.type === 'skill'
-            ? cloudClient.getSkillMarketplaceIconURL(plugin.author, plugin.name)
-            : cloudClient.getPluginIconURL(plugin.author, plugin.name);
+      const iconURL = cloudClient.resolveMarketplaceIconURL(
+        plugin.type,
+        plugin.author,
+        plugin.name,
+        plugin.icon,
+      );
 
       return new PluginMarketCardVO({
         pluginId: plugin.author + ' / ' + plugin.name,
