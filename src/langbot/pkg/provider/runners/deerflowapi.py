@@ -9,6 +9,7 @@
 - 支持 streaming/非流式两种输出
 - 处理 values / messages-tuple / custom 三种事件
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -32,6 +33,7 @@ _MAX_VALUES_HISTORY = 200
 @dataclass
 class _StreamState:
     """流式状态跟踪"""
+
     latest_text: str = ''
     prev_text_for_streaming: str = ''
     clarification_text: str = ''
@@ -258,9 +260,7 @@ class DeerFlowAPIRunner(runner.RequestRunner):
         thread = await self.deerflow_client.create_thread(timeout=min(30, self.timeout))
         thread_id = thread.get('thread_id', '')
         if not thread_id:
-            raise errors.DeerFlowAPIError(
-                message=f'DeerFlow create thread 返回数据缺少 thread_id: {thread}'
-            )
+            raise errors.DeerFlowAPIError(message=f'DeerFlow create thread 返回数据缺少 thread_id: {thread}')
 
         query.session.using_conversation.uuid = thread_id
         return thread_id
@@ -298,9 +298,7 @@ class DeerFlowAPIRunner(runner.RequestRunner):
         if new_messages:
             state.run_values_messages.extend(new_messages)
             if len(state.run_values_messages) > _MAX_VALUES_HISTORY:
-                state.run_values_messages = state.run_values_messages[
-                    -_MAX_VALUES_HISTORY:
-                ]
+                state.run_values_messages = state.run_values_messages[-_MAX_VALUES_HISTORY:]
             latest_text = stream_utils.extract_latest_ai_text(state.run_values_messages)
             if latest_text:
                 state.has_values_text = True
@@ -342,17 +340,13 @@ class DeerFlowAPIRunner(runner.RequestRunner):
             text = stream_utils.extract_text(latest_ai.get('content'))
             if text:
                 if state.timed_out:
-                    text += (
-                        f'\n\nDeerFlow stream 在 {self.timeout}s 后超时，返回部分结果。'
-                    )
+                    text += f'\n\nDeerFlow stream 在 {self.timeout}s 后超时，返回部分结果。'
                 return text
 
         if state.latest_text:
             text = state.latest_text
             if state.timed_out:
-                text += (
-                    f'\n\nDeerFlow stream 在 {self.timeout}s 后超时，返回部分结果。'
-                )
+                text += f'\n\nDeerFlow stream 在 {self.timeout}s 后超时，返回部分结果。'
             return text
 
         # 提取任务失败信息作兜底
@@ -401,11 +395,7 @@ class DeerFlowAPIRunner(runner.RequestRunner):
                 if event_type == 'values':
                     new_full = self._handle_values_event(data, state)
                     if new_full and new_full != prev_text:
-                        delta = (
-                            new_full[len(prev_text):]
-                            if new_full.startswith(prev_text)
-                            else new_full
-                        )
+                        delta = new_full[len(prev_text) :] if new_full.startswith(prev_text) else new_full
                         prev_text = new_full
                         if delta:
                             message_idx += 1
@@ -435,16 +425,12 @@ class DeerFlowAPIRunner(runner.RequestRunner):
                     continue
 
                 if event_type == 'error':
-                    raise errors.DeerFlowAPIError(
-                        message=f'DeerFlow stream error event: {data}'
-                    )
+                    raise errors.DeerFlowAPIError(message=f'DeerFlow stream error event: {data}')
 
                 if event_type == 'end':
                     break
         except (asyncio.TimeoutError, TimeoutError):
-            self.ap.logger.warning(
-                f'DeerFlow stream timed out after {self.timeout}s for thread_id={thread_id}'
-            )
+            self.ap.logger.warning(f'DeerFlow stream timed out after {self.timeout}s for thread_id={thread_id}')
             state.timed_out = True
 
         # 最终消息
@@ -495,16 +481,12 @@ class DeerFlowAPIRunner(runner.RequestRunner):
                     continue
 
                 if event_type == 'error':
-                    raise errors.DeerFlowAPIError(
-                        message=f'DeerFlow stream error event: {data}'
-                    )
+                    raise errors.DeerFlowAPIError(message=f'DeerFlow stream error event: {data}')
 
                 if event_type == 'end':
                     break
         except (asyncio.TimeoutError, TimeoutError):
-            self.ap.logger.warning(
-                f'DeerFlow stream timed out after {self.timeout}s for thread_id={thread_id}'
-            )
+            self.ap.logger.warning(f'DeerFlow stream timed out after {self.timeout}s for thread_id={thread_id}')
             state.timed_out = True
 
         final_text = self._build_final_text(state)

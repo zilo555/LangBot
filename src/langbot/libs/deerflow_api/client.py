@@ -2,6 +2,7 @@
 
 参考 astrbot 的 deerflow_api_client 实现，使用 httpx 适配 LangBot 风格。
 """
+
 from __future__ import annotations
 
 import codecs

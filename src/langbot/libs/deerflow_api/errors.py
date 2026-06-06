@@ -26,8 +26,5 @@ class DeerFlowAPIError(Exception):
 
         msg = f'DeerFlow {operation} failed: status={status}, url={url}, body={body}'
         if thread_id is not None:
-            msg = (
-                f'DeerFlow {operation} failed: thread_id={thread_id}, '
-                f'status={status}, url={url}, body={body}'
-            )
+            msg = f'DeerFlow {operation} failed: thread_id={thread_id}, status={status}, url={url}, body={body}'
         super().__init__(msg)

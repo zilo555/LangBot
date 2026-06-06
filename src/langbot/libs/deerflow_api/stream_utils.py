@@ -2,6 +2,7 @@
 
 参考 astrbot 实现的 deerflow_stream_utils。
 """
+
 from __future__ import annotations
 
 import typing
@@ -60,9 +61,7 @@ def is_ai_message(message: dict[str, typing.Any]) -> bool:
     msg_type = str(message.get('type', '')).lower()
     if msg_type in {'ai', 'assistant', 'aimessage', 'aimessagechunk'}:
         return True
-    if 'ai' in msg_type and all(
-        token not in msg_type for token in ('human', 'tool', 'system')
-    ):
+    if 'ai' in msg_type and all(token not in msg_type for token in ('human', 'tool', 'system')):
         return True
     return False
 

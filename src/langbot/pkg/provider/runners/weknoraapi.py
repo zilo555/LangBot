@@ -35,9 +35,7 @@ class WeKnoraAPIRunner(runner.RequestRunner):
 
         base_url = self.pipeline_config['ai']['weknora-api'].get('base-url', '').strip()
         if not base_url:
-            raise errors.WeKnoraAPIError(
-                'WeKnora Base URL 未配置，请填入服务器地址，例如 http://localhost:8080/api/v1'
-            )
+            raise errors.WeKnoraAPIError('WeKnora Base URL 未配置，请填入服务器地址，例如 http://localhost:8080/api/v1')
 
         self.weknora_client = client.AsyncWeKnoraClient(
             api_key=api_key,
@@ -65,9 +63,7 @@ class WeKnoraAPIRunner(runner.RequestRunner):
 
         if not session_id:
             user_tag = f'{query.session.launcher_type.value}_{query.session.launcher_id}'
-            session_id = await self.weknora_client.create_session(
-                title=f'IM Chat - {user_tag}'
-            )
+            session_id = await self.weknora_client.create_session(title=f'IM Chat - {user_tag}')
             query.session.using_conversation.uuid = session_id
 
         return session_id
@@ -343,9 +339,7 @@ class WeKnoraAPIRunner(runner.RequestRunner):
                     msg.msg_sequence = msg_idx
                     yield msg
             else:
-                raise errors.WeKnoraAPIError(
-                    f'不支持的 WeKnora 应用类型: {app_type}'
-                )
+                raise errors.WeKnoraAPIError(f'不支持的 WeKnora 应用类型: {app_type}')
         else:
             if app_type == 'agent':
                 async for msg in self._agent_chat_messages(query):
@@ -354,6 +348,4 @@ class WeKnoraAPIRunner(runner.RequestRunner):
                 async for msg in self._chat_messages(query):
                     yield msg
             else:
-                raise errors.WeKnoraAPIError(
-                    f'不支持的 WeKnora 应用类型: {app_type}'
-                )
+                raise errors.WeKnoraAPIError(f'不支持的 WeKnora 应用类型: {app_type}')
