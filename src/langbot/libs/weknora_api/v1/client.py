@@ -114,9 +114,13 @@ class AsyncWeKnoraClient:
                         continue
                     if chunk.startswith('data:'):
                         try:
-                            yield json.loads(chunk[5:].strip())
+                            data = json.loads(chunk[5:].strip())
                         except json.JSONDecodeError:
                             continue
+                        yield data
+                        # 收到 error 事件后主动结束流，避免上层未 raise 时持续等待
+                        if data.get('response_type') == 'error':
+                            return
 
     async def knowledge_chat(
         self,
@@ -167,6 +171,10 @@ class AsyncWeKnoraClient:
                         continue
                     if chunk.startswith('data:'):
                         try:
-                            yield json.loads(chunk[5:].strip())
+                            data = json.loads(chunk[5:].strip())
                         except json.JSONDecodeError:
                             continue
+                        yield data
+                        # 收到 error 事件后主动结束流，避免上层未 raise 时持续等待
+                        if data.get('response_type') == 'error':
+                            return
