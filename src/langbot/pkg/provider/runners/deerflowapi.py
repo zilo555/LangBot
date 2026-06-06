@@ -52,8 +52,7 @@ class DeerFlowAPIRunner(runner.RequestRunner):
     deerflow_client: client.AsyncDeerFlowClient
 
     def __init__(self, ap: app.Application, pipeline_config: dict):
-        self.ap = ap
-        self.pipeline_config = pipeline_config
+        super().__init__(ap, pipeline_config)
 
         cfg = self.pipeline_config['ai']['deerflow-api']
 

@@ -18,8 +18,7 @@ class WeKnoraAPIRunner(runner.RequestRunner):
     weknora_client: client.AsyncWeKnoraClient
 
     def __init__(self, ap: app.Application, pipeline_config: dict):
-        self.ap = ap
-        self.pipeline_config = pipeline_config
+        super().__init__(ap, pipeline_config)
 
         valid_app_types = ['chat', 'agent']
         if self.pipeline_config['ai']['weknora-api']['app-type'] not in valid_app_types:
