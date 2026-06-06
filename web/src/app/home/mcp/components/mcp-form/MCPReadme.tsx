@@ -52,7 +52,12 @@ export default function MCPReadme({ readme }: { readme?: string }) {
             ol: ({ children }) => <ol className="list-decimal">{children}</ol>,
             li: ({ children }) => <li className="ml-4">{children}</li>,
             a: ({ children, href, ...props }) => (
-              <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
+              <a
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                {...props}
+              >
                 {children}
               </a>
             ),

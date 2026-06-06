@@ -40,12 +40,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { httpClient } from '@/app/infra/http/HttpClient';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import MCPReadme from '@/app/home/mcp/components/mcp-form/MCPReadme';
 import {
   MCPServerRuntimeInfo,
@@ -1071,10 +1066,7 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
           {toolsTabLabel}
         </TabsTrigger>
       </TabsList>
-      <TabsContent
-        value="docs"
-        className="mt-4 min-h-0 flex-1 overflow-y-auto"
-      >
+      <TabsContent value="docs" className="mt-4 min-h-0 flex-1 overflow-y-auto">
         <MCPReadme readme={readme} />
       </TabsContent>
       <TabsContent
