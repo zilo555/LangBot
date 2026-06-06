@@ -551,6 +551,7 @@ export type MCPServer =
       enable: boolean;
       extra_args: MCPServerExtraArgsSSE;
       runtime_info?: MCPServerRuntimeInfo;
+      readme?: string;
       created_at?: string;
       updated_at?: string;
     }
@@ -561,6 +562,7 @@ export type MCPServer =
       enable: boolean;
       extra_args: MCPServerExtraArgsHttp;
       runtime_info?: MCPServerRuntimeInfo;
+      readme?: string;
       created_at?: string;
       updated_at?: string;
     }
@@ -571,6 +573,7 @@ export type MCPServer =
       enable: boolean;
       extra_args: MCPServerExtraArgsStdio;
       runtime_info?: MCPServerRuntimeInfo;
+      readme?: string;
       created_at?: string;
       updated_at?: string;
     };
