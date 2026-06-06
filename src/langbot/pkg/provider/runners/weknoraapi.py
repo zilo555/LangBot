@@ -8,7 +8,7 @@ from langbot.pkg.provider import runner
 from langbot.pkg.core import app
 import langbot_plugin.api.entities.builtin.provider.message as provider_message
 import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
-from langbot.libs.weknora_api.v1 import client, errors
+from langbot.libs.weknora_api import client, errors
 
 
 @runner.runner_class('weknora-api')
