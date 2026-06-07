@@ -1,6 +1,8 @@
 # Kubernetes Deployment for LangBot
 # This file provides Kubernetes deployment manifests for LangBot based on docker-compose.yaml
-# 
+#
+# Full deployment guide (zh/en/ja): https://docs.langbot.app -> Installation -> Kubernetes
+#
 # Usage:
 #   kubectl apply -f kubernetes.yaml
 #
@@ -8,13 +10,15 @@
 #   - A Kubernetes cluster (1.19+)
 #   - kubectl configured to communicate with your cluster
 #   - (Optional) A StorageClass for dynamic volume provisioning
+#   - For the Box sandbox runtime: a node with a reachable Docker daemon
+#     (the box mounts the node's /var/run/docker.sock). See the deployment guide.
 #
 # Components:
 #   - Namespace: langbot
 #   - PersistentVolumeClaims for data persistence
-#   - Deployments for langbot and langbot_plugin_runtime
+#   - Deployments for langbot, langbot-plugin-runtime, and langbot-box (sandbox)
 #   - Services for network access
-#   - ConfigMap for timezone configuration
+#   - ConfigMap for timezone + runtime endpoints
 
 ---
 # Namespace
