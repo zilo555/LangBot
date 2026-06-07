@@ -19,7 +19,7 @@ LangBot/
 ├── main.py                     # Entrypoint shim -> langbot.__main__.main()
 ├── pyproject.toml              # Python project + deps (uv), pins langbot-plugin==<x.y.z>
 ├── src/langbot/
-│   ├── __main__.py             # Real entrypoint, CLI args (e.g. --standalone-runtime)
+│   ├── __main__.py             # Real entrypoint, CLI args (--standalone-runtime, --standalone-box, --debug)
 │   ├── pkg/                    # Core backend package
 │   │   ├── api/                # HTTP API controllers + services (Quart)
 │   │   ├── core/               # App bootstrap, stages, task manager
@@ -98,6 +98,8 @@ This is documented in detail in the **SDK repo's `AGENTS.md`** and in the wiki p
 ### Debugging the Box (sandbox) runtime
 
 The Box subsystem (`src/langbot/pkg/box/`) is the code sandbox. It picks the first available backend among **Docker / nsjail / E2B**. The standalone Box runtime is launched via the SDK CLI: `lbp box`. Backend selection details, the `lbp box` flags, and the SDK-side architecture are documented in the SDK repo's `AGENTS.md`.
+
+Relevant config (`data/config.yaml`, `box:` section): `box.enabled` (master switch — disabling it also disables the native sandbox tools, skill add/edit, and stdio-mode MCP servers), `box.backend` (`'local'` = Docker/nsjail auto-pick, or `'docker'` / `'nsjail'` / `'e2b'`; also settable via `BOX__BACKEND`), and `box.runtime.endpoint` (external Box runtime base URL, e.g. `ws://127.0.0.1:5410`; empty = local auto-managed runtime). Like the plugin runtime, LangBot can connect to an externally-launched Box runtime by setting that endpoint and starting with `--standalone-box`.
 
 > A common false "No supported sandbox backend (Docker / nsjail / E2B) is available" comes from Docker being installed and running but the current user not being in the `docker` group → `docker info` gets `permission denied` on the socket. Fix: `sudo usermod -aG docker <user>` and restart the backend in a shell that has the new group.
 
