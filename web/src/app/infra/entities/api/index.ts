@@ -348,6 +348,10 @@ export interface ApiRespSystemInfo {
   allow_modify_login_info: boolean;
   disable_models_service: boolean;
   limitation: SystemLimitation;
+  /** Public outbound IPs of the deployment (``system.outbound_ips`` in
+   *  config.yaml). Shown on adapter config forms whose platform requires
+   *  trusted-IP / IP-whitelist settings. Empty = not configured. */
+  outbound_ips: string[];
   wizard_status: string; // 'none' | 'skipped' | 'completed'
   wizard_progress: WizardProgress | null;
 }
