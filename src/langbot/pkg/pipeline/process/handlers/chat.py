@@ -13,6 +13,7 @@ from ....provider import runner as runner_module
 
 import langbot_plugin.api.entities.events as events
 from ....utils import importutil, constants, runner as runner_utils
+from ....telemetry import features as telemetry_features
 from ....provider import runners
 import langbot_plugin.api.entities.builtin.provider.session as provider_session
 import langbot_plugin.api.entities.builtin.pipeline.query as pipeline_query
@@ -201,7 +202,12 @@ class ChatMessageHandler(handler.MessageHandler):
                         runner_name, runner, query.pipeline_config
                     )
 
+                    # Feature usage collected during query processing (tool calls,
+                    # knowledge base usage, sandbox executions, activated skills, ...)
+                    features = telemetry_features.collect_features(query)
+
                     payload = {
+                        'event_type': 'query',
                         'query_id': query.query_id,
                         'adapter': adapter_name,
                         'runner': runner_name,
@@ -212,6 +218,7 @@ class ChatMessageHandler(handler.MessageHandler):
                         'instance_id': constants.instance_id,
                         'edition': constants.edition,
                         'pipeline_plugins': pipeline_plugins,
+                        'features': features,
                         'error': locals().get('error_info', None),
                         'timestamp': datetime.utcnow().isoformat(),
                     }
