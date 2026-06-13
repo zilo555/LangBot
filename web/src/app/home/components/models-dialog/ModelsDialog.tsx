@@ -64,6 +64,17 @@ function convertExtraArgsToObject(
   return obj;
 }
 
+function parseContextLength(
+  value: number | null | undefined,
+  invalidMessage: string,
+): number | null {
+  if (value === undefined || value === null) return null;
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new Error(invalidMessage);
+  }
+  return value;
+}
+
 export default function ModelsDialog({
   open,
   onOpenChange,
@@ -90,6 +101,12 @@ export default function ModelsDialog({
   const [editingProviderId, setEditingProviderId] = useState<string | null>(
     null,
   );
+
+  // Map of requester name -> support_type[] (from requester manifests),
+  // used to restrict which model-type tabs are shown when adding models.
+  const [requesterSupportTypes, setRequesterSupportTypes] = useState<
+    Record<string, string[]>
+  >({});
 
   // Popover states
   const [addModelPopoverOpen, setAddModelPopoverOpen] = useState<string | null>(
@@ -122,6 +139,7 @@ export default function ModelsDialog({
     if (open) {
       loadUserInfo();
       loadProviders();
+      loadRequesterSupportTypes();
     }
   }, [open]);
 
@@ -158,6 +176,19 @@ export default function ModelsDialog({
     } catch (err) {
       console.error('Failed to load providers', err);
       toast.error(t('models.loadError'));
+    }
+  }
+
+  async function loadRequesterSupportTypes() {
+    try {
+      const resp = await httpClient.getProviderRequesters();
+      const map: Record<string, string[]> = {};
+      for (const r of resp.requesters) {
+        map[r.name] = r.spec?.support_type ?? [];
+      }
+      setRequesterSupportTypes(map);
+    } catch (err) {
+      console.error('Failed to load requester support types', err);
     }
   }
 
@@ -254,6 +285,7 @@ export default function ModelsDialog({
     name: string,
     abilities: string[],
     extraArgs: ExtraArg[],
+    contextLength?: number | null,
   ) {
     if (!name.trim()) {
       toast.error(t('models.modelNameRequired'));
@@ -268,6 +300,10 @@ export default function ModelsDialog({
           name,
           provider_uuid: providerUuid,
           abilities,
+          context_length: parseContextLength(
+            contextLength,
+            t('models.contextLengthInvalid'),
+          ),
           extra_args: extraArgsObj,
         } as never);
       } else if (modelType === 'embedding') {
@@ -325,6 +361,7 @@ export default function ModelsDialog({
             name: item.model.name,
             provider_uuid: providerUuid,
             abilities: item.abilities,
+            context_length: item.model.context_length ?? null,
             extra_args: {},
           } as never);
         } else if (effectiveType === 'embedding') {
@@ -361,6 +398,7 @@ export default function ModelsDialog({
     name: string,
     abilities: string[],
     extraArgs: ExtraArg[],
+    contextLength?: number | null,
   ) {
     if (!name.trim()) {
       toast.error(t('models.modelNameRequired'));
@@ -375,6 +413,10 @@ export default function ModelsDialog({
           name,
           provider_uuid: providerUuid,
           abilities,
+          context_length: parseContextLength(
+            contextLength,
+            t('models.contextLengthInvalid'),
+          ),
           extra_args: extraArgsObj,
         } as never);
       } else if (modelType === 'embedding') {
@@ -495,6 +537,7 @@ export default function ModelsDialog({
         key={provider.uuid}
         provider={provider}
         isLangBotModels={isLangBotModels}
+        supportTypes={requesterSupportTypes[provider.requester]}
         isExpanded={expandedProviders.has(provider.uuid)}
         isLoading={loadingProviders.has(provider.uuid)}
         models={providerModels[provider.uuid]}
@@ -509,8 +552,15 @@ export default function ModelsDialog({
         onSpaceLogin={handleSpaceLogin}
         onOpenAddModel={() => setAddModelPopoverOpen(provider.uuid)}
         onCloseAddModel={() => setAddModelPopoverOpen(null)}
-        onAddModel={(modelType, name, abilities, extraArgs) =>
-          handleAddModel(provider.uuid, modelType, name, abilities, extraArgs)
+        onAddModel={(modelType, name, abilities, extraArgs, contextLength) =>
+          handleAddModel(
+            provider.uuid,
+            modelType,
+            name,
+            abilities,
+            extraArgs,
+            contextLength,
+          )
         }
         onScanModels={(modelType) => handleScanModels(provider.uuid, modelType)}
         onAddScannedModels={(modelType, models) =>
@@ -518,7 +568,14 @@ export default function ModelsDialog({
         }
         onOpenEditModel={(modelId) => setEditModelPopoverOpen(modelId)}
         onCloseEditModel={() => setEditModelPopoverOpen(null)}
-        onUpdateModel={(modelId, modelType, name, abilities, extraArgs) =>
+        onUpdateModel={(
+          modelId,
+          modelType,
+          name,
+          abilities,
+          extraArgs,
+          contextLength,
+        ) =>
           handleUpdateModel(
             provider.uuid,
             modelId,
@@ -526,6 +583,7 @@ export default function ModelsDialog({
             name,
             abilities,
             extraArgs,
+            contextLength,
           )
         }
         onOpenDeleteConfirm={(modelId) => setDeleteConfirmOpen(modelId)}
