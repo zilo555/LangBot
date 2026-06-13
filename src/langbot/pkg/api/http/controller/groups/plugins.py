@@ -282,9 +282,7 @@ class PluginsRouterGroup(group.RouterGroup):
             except (TypeError, ValueError):
                 limit = 200
             level = quart.request.args.get('level') or None
-            logs = await self.ap.plugin_connector.get_plugin_logs(
-                author, plugin_name, limit=limit, level=level
-            )
+            logs = await self.ap.plugin_connector.get_plugin_logs(author, plugin_name, limit=limit, level=level)
             return self.success(data={'logs': logs})
 
         @self.route(
