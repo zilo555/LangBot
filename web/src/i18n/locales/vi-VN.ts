@@ -1388,6 +1388,9 @@ const viVN = {
     boxSessionCreated: 'Đã tạo',
     boxSessionLastUsed: 'Lần cuối sử dụng',
   },
+  settingsDialog: {
+    title: 'Cài đặt',
+  },
   storageAnalysis: {
     title: 'Phân tích lưu trữ',
     description: 'Kiểm tra dung lượng lưu trữ và các mục có thể dọn dẹp',

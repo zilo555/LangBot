@@ -3,7 +3,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Copy, Check, Trash2, Plus } from 'lucide-react';
-import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import {
   Dialog,
   DialogContent,
@@ -55,20 +54,15 @@ interface Webhook {
   created_at: string;
 }
 
-interface ApiIntegrationDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+interface ApiIntegrationPanelProps {
+  // True when this panel is the active section and the dialog is open.
+  active: boolean;
 }
 
-export default function ApiIntegrationDialog({
-  open,
-  onOpenChange,
-}: ApiIntegrationDialogProps) {
+export default function ApiIntegrationPanel({
+  active,
+}: ApiIntegrationPanelProps) {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const pathname = location.pathname;
-  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('apikeys');
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
@@ -91,33 +85,7 @@ export default function ApiIntegrationDialog({
   );
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  // Sync URL with dialog state
-  useEffect(() => {
-    if (open) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set('action', 'showApiIntegrationSettings');
-      navigate(`${pathname}?${params.toString()}`, {
-        preventScrollReset: true,
-      });
-    }
-  }, [open]);
-
-  const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen && (deleteKeyId || deleteWebhookId)) {
-      return;
-    }
-    if (!newOpen) {
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete('action');
-      const newUrl = params.toString()
-        ? `${pathname}?${params.toString()}`
-        : pathname;
-      navigate(newUrl, { preventScrollReset: true });
-    }
-    onOpenChange(newOpen);
-  };
-
-  // 清理 body 样式，防止对话框关闭后页面无法交互
+  // 清理 body 样式，防止嵌套对话框关闭后页面无法交互
   useEffect(() => {
     if (!deleteKeyId && !deleteWebhookId) {
       const cleanup = () => {
@@ -131,11 +99,11 @@ export default function ApiIntegrationDialog({
   }, [deleteKeyId, deleteWebhookId]);
 
   useEffect(() => {
-    if (open) {
+    if (active) {
       loadApiKeys();
       loadWebhooks();
     }
-  }, [open]);
+  }, [active]);
 
   const loadApiKeys = async () => {
     setLoading(true);
@@ -284,233 +252,216 @@ export default function ApiIntegrationDialog({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="sm:max-w-[800px] h-[26rem] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>{t('common.manageApiIntegration')}</DialogTitle>
-          </DialogHeader>
+      <div className="flex h-full min-h-0 flex-col px-6 py-5">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="flex w-full flex-1 flex-col overflow-hidden"
+        >
+          <TabsList className="shadow-md py-3 bg-[#f0f0f0] dark:bg-[#2a2a2e]">
+            <TabsTrigger className="px-5 py-4 cursor-pointer" value="apikeys">
+              {t('common.apiKeys')}
+            </TabsTrigger>
+            <TabsTrigger className="px-5 py-4 cursor-pointer" value="webhooks">
+              {t('common.webhooks')}
+            </TabsTrigger>
+          </TabsList>
 
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="w-full flex-1 flex flex-col overflow-hidden"
+          {/* API Keys Tab */}
+          <TabsContent
+            value="apikeys"
+            className="flex flex-1 flex-col space-y-4 overflow-hidden"
           >
-            <TabsList className="shadow-md py-3 bg-[#f0f0f0] dark:bg-[#2a2a2e]">
-              <TabsTrigger className="px-5 py-4 cursor-pointer" value="apikeys">
-                {t('common.apiKeys')}
-              </TabsTrigger>
-              <TabsTrigger
-                className="px-5 py-4 cursor-pointer"
-                value="webhooks"
+            <div className="flex items-start gap-2 text-sm text-muted-foreground">
+              {t('common.apiKeyHint')}
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                onClick={() => setShowCreateDialog(true)}
+                size="sm"
+                className="gap-2"
               >
-                {t('common.webhooks')}
-              </TabsTrigger>
-            </TabsList>
+                <Plus className="h-4 w-4" />
+                {t('common.createApiKey')}
+              </Button>
+            </div>
 
-            {/* API Keys Tab */}
-            <TabsContent
-              value="apikeys"
-              className="space-y-4 flex-1 flex flex-col overflow-hidden"
-            >
-              <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                {t('common.apiKeyHint')}
+            {loading ? (
+              <div className="text-center py-8 text-muted-foreground">
+                {t('common.loading')}
               </div>
-
-              <div className="flex justify-end">
-                <Button
-                  onClick={() => setShowCreateDialog(true)}
-                  size="sm"
-                  className="gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  {t('common.createApiKey')}
-                </Button>
+            ) : apiKeys.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                {t('common.noApiKeys')}
               </div>
-
-              {loading ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  {t('common.loading')}
-                </div>
-              ) : apiKeys.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  {t('common.noApiKeys')}
-                </div>
-              ) : (
-                <div className="border rounded-md overflow-auto flex-1">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="min-w-[120px]">
-                          {t('common.name')}
-                        </TableHead>
-                        <TableHead className="min-w-[200px]">
-                          {t('common.apiKeyValue')}
-                        </TableHead>
-                        <TableHead className="w-[100px]">
-                          {t('common.actions')}
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {apiKeys.map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell>
-                            <div>
-                              <div className="font-medium">{item.name}</div>
-                              {item.description && (
-                                <div className="text-sm text-muted-foreground">
-                                  {item.description}
-                                </div>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <code className="text-sm bg-muted px-2 py-1 rounded">
-                              {maskApiKey(item.key)}
-                            </code>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                type="button"
-                                onClick={() => handleCopyKey(item.key)}
-                                title={t('common.copyApiKey')}
-                              >
-                                {copiedKey === item.key ? (
-                                  <Check className="h-4 w-4 text-green-600" />
-                                ) : (
-                                  <Copy className="h-4 w-4" />
-                                )}
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setDeleteKeyId(item.id)}
-                                title={t('common.delete')}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </TabsContent>
-
-            {/* Webhooks Tab */}
-            <TabsContent
-              value="webhooks"
-              className="space-y-4 flex-1 flex flex-col overflow-hidden"
-            >
-              <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                {t('common.webhookHint')}
-              </div>
-
-              <div className="flex justify-end">
-                <Button
-                  onClick={() => setShowCreateWebhookDialog(true)}
-                  size="sm"
-                  className="gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  {t('common.createWebhook')}
-                </Button>
-              </div>
-
-              {loading ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  {t('common.loading')}
-                </div>
-              ) : webhooks.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  {t('common.noWebhooks')}
-                </div>
-              ) : (
-                <div className="border rounded-md overflow-auto flex-1 max-w-full">
-                  <Table className="table-fixed w-full">
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[150px]">
-                          {t('common.name')}
-                        </TableHead>
-                        <TableHead className="w-[380px]">
-                          {t('common.webhookUrl')}
-                        </TableHead>
-                        <TableHead className="w-[80px]">
-                          {t('common.webhookEnabled')}
-                        </TableHead>
-                        <TableHead className="w-[80px]">
-                          {t('common.actions')}
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {webhooks.map((webhook) => (
-                        <TableRow key={webhook.id}>
-                          <TableCell className="truncate">
-                            <div className="truncate">
-                              <div
-                                className="font-medium truncate"
-                                title={webhook.name}
-                              >
-                                {webhook.name}
+            ) : (
+              <div className="flex-1 overflow-auto rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="min-w-[120px]">
+                        {t('common.name')}
+                      </TableHead>
+                      <TableHead className="min-w-[200px]">
+                        {t('common.apiKeyValue')}
+                      </TableHead>
+                      <TableHead className="w-[100px]">
+                        {t('common.actions')}
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {apiKeys.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{item.name}</div>
+                            {item.description && (
+                              <div className="text-sm text-muted-foreground">
+                                {item.description}
                               </div>
-                              {webhook.description && (
-                                <div
-                                  className="text-sm text-muted-foreground truncate"
-                                  title={webhook.description}
-                                >
-                                  {webhook.description}
-                                </div>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="overflow-x-auto max-w-[380px]">
-                              <code className="text-sm bg-muted px-2 py-1 rounded whitespace-nowrap inline-block">
-                                {webhook.url}
-                              </code>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Switch
-                              checked={webhook.enabled}
-                              onCheckedChange={() =>
-                                handleToggleWebhook(webhook)
-                              }
-                            />
-                          </TableCell>
-                          <TableCell>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <code className="text-sm bg-muted px-2 py-1 rounded">
+                            {maskApiKey(item.key)}
+                          </code>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => setDeleteWebhookId(webhook.id)}
+                              type="button"
+                              onClick={() => handleCopyKey(item.key)}
+                              title={t('common.copyApiKey')}
+                            >
+                              {copiedKey === item.key ? (
+                                <Check className="h-4 w-4 text-green-600" />
+                              ) : (
+                                <Copy className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setDeleteKeyId(item.id)}
                               title={t('common.delete')}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </TabsContent>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              {t('common.close')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          {/* Webhooks Tab */}
+          <TabsContent
+            value="webhooks"
+            className="flex flex-1 flex-col space-y-4 overflow-hidden"
+          >
+            <div className="flex items-start gap-2 text-sm text-muted-foreground">
+              {t('common.webhookHint')}
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                onClick={() => setShowCreateWebhookDialog(true)}
+                size="sm"
+                className="gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                {t('common.createWebhook')}
+              </Button>
+            </div>
+
+            {loading ? (
+              <div className="text-center py-8 text-muted-foreground">
+                {t('common.loading')}
+              </div>
+            ) : webhooks.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                {t('common.noWebhooks')}
+              </div>
+            ) : (
+              <div className="max-w-full flex-1 overflow-auto rounded-md border">
+                <Table className="table-fixed w-full">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[150px]">
+                        {t('common.name')}
+                      </TableHead>
+                      <TableHead className="w-[380px]">
+                        {t('common.webhookUrl')}
+                      </TableHead>
+                      <TableHead className="w-[80px]">
+                        {t('common.webhookEnabled')}
+                      </TableHead>
+                      <TableHead className="w-[80px]">
+                        {t('common.actions')}
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {webhooks.map((webhook) => (
+                      <TableRow key={webhook.id}>
+                        <TableCell className="truncate">
+                          <div className="truncate">
+                            <div
+                              className="font-medium truncate"
+                              title={webhook.name}
+                            >
+                              {webhook.name}
+                            </div>
+                            {webhook.description && (
+                              <div
+                                className="text-sm text-muted-foreground truncate"
+                                title={webhook.description}
+                              >
+                                {webhook.description}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="overflow-x-auto max-w-[380px]">
+                            <code className="text-sm bg-muted px-2 py-1 rounded whitespace-nowrap inline-block">
+                              {webhook.url}
+                            </code>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Switch
+                            checked={webhook.enabled}
+                            onCheckedChange={() => handleToggleWebhook(webhook)}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDeleteWebhookId(webhook.id)}
+                            title={t('common.delete')}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
 
       {/* Create API Key Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>

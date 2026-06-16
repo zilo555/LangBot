@@ -1419,6 +1419,9 @@ const esES = {
     boxSessionCreated: 'Creado',
     boxSessionLastUsed: 'Último uso',
   },
+  settingsDialog: {
+    title: 'Configuración',
+  },
   storageAnalysis: {
     title: 'Análisis de almacenamiento',
     description:

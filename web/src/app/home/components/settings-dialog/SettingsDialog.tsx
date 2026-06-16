@@ -1,0 +1,204 @@
+import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { KeyRound, Sparkles, Settings, HardDrive } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+} from '@/components/ui/sidebar';
+import { cn } from '@/lib/utils';
+import AccountSettingsPanel from '@/app/home/components/account-settings-dialog/AccountSettingsPanel';
+import ApiIntegrationPanel from '@/app/home/components/api-integration-dialog/ApiIntegrationPanel';
+import ModelsPanel from '@/app/home/components/models-dialog/ModelsPanel';
+import StorageAnalysisPanel from '@/app/home/components/storage-analysis-dialog/StorageAnalysisPanel';
+
+// The set of settings sections shown in the unified dialog. The string values
+// are also reused as the ?action= query param suffix so deep links keep working.
+export type SettingsSection =
+  | 'account'
+  | 'apiIntegration'
+  | 'models'
+  | 'storageAnalysis';
+
+// Map between a section id and its ?action= query value, so existing deep links
+// (showAccountSettings, showApiIntegrationSettings, showModelSettings,
+// showStorageAnalysis) continue to resolve to the right section.
+export const SETTINGS_ACTION_BY_SECTION: Record<SettingsSection, string> = {
+  account: 'showAccountSettings',
+  apiIntegration: 'showApiIntegrationSettings',
+  models: 'showModelSettings',
+  storageAnalysis: 'showStorageAnalysis',
+};
+
+export const SETTINGS_SECTION_BY_ACTION: Record<string, SettingsSection> =
+  Object.fromEntries(
+    Object.entries(SETTINGS_ACTION_BY_SECTION).map(([section, action]) => [
+      action,
+      section as SettingsSection,
+    ]),
+  );
+
+interface SettingsDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  section: SettingsSection;
+  onSectionChange: (section: SettingsSection) => void;
+}
+
+export default function SettingsDialog({
+  open,
+  onOpenChange,
+  section,
+  onSectionChange,
+}: SettingsDialogProps) {
+  const { t } = useTranslation();
+  // A nested modal (e.g. the provider form) can request that we ignore
+  // outer-close until it is dismissed.
+  const [blocking, setBlocking] = useState(false);
+
+  // Only the Models panel can raise a blocking nested modal. When we navigate
+  // away from it (or close the dialog) the panel unmounts without resetting,
+  // so clear the flag here to avoid getting stuck unable to close.
+  useEffect(() => {
+    if (section !== 'models' || !open) {
+      setBlocking(false);
+    }
+  }, [section, open]);
+
+  const navItems: {
+    id: SettingsSection;
+    label: string;
+    icon: React.ReactNode;
+  }[] = [
+    {
+      id: 'models',
+      label: t('models.title'),
+      icon: <Sparkles className="size-4" />,
+    },
+    {
+      id: 'apiIntegration',
+      label: t('common.apiIntegration'),
+      icon: <KeyRound className="size-4" />,
+    },
+    {
+      id: 'storageAnalysis',
+      label: t('storageAnalysis.title'),
+      icon: <HardDrive className="size-4" />,
+    },
+    {
+      id: 'account',
+      label: t('account.settings'),
+      icon: <Settings className="size-4" />,
+    },
+  ];
+
+  const activeLabel =
+    navItems.find((item) => item.id === section)?.label ??
+    t('settingsDialog.title');
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(newOpen) => {
+        if (!newOpen && blocking) return;
+        onOpenChange(newOpen);
+      }}
+    >
+      <DialogContent
+        className="overflow-hidden p-0 sm:max-w-[56rem] [&>button:last-child]:z-20"
+        // The dialog itself is the scroll boundary; each panel manages its own
+        // internal scrolling.
+      >
+        <DialogTitle className="sr-only">
+          {t('settingsDialog.title')}
+        </DialogTitle>
+        <DialogDescription className="sr-only">{activeLabel}</DialogDescription>
+
+        <SidebarProvider className="items-start">
+          <Sidebar
+            collapsible="none"
+            className="hidden h-[80vh] w-56 shrink-0 border-r md:flex"
+          >
+            <SidebarContent>
+              <SidebarGroup>
+                <SidebarGroupContent>
+                  <div className="px-2 py-3 text-sm font-semibold">
+                    {t('settingsDialog.title')}
+                  </div>
+                  <SidebarMenu>
+                    {navItems.map((item) => (
+                      <SidebarMenuItem key={item.id}>
+                        <SidebarMenuButton
+                          isActive={section === item.id}
+                          onClick={() => onSectionChange(item.id)}
+                        >
+                          {item.icon}
+                          <span>{item.label}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </SidebarContent>
+          </Sidebar>
+
+          <main className="flex h-[80vh] min-w-0 flex-1 flex-col overflow-hidden">
+            {/* Mobile section switcher (sidebar is hidden on small screens) */}
+            <div className="flex shrink-0 items-center gap-1 overflow-x-auto border-b px-3 py-2 md:hidden">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onSectionChange(item.id)}
+                  className={cn(
+                    'flex items-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-sm',
+                    section === item.id
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                      : 'text-muted-foreground',
+                  )}
+                >
+                  {item.icon}
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              {section === 'models' && (
+                <ModelsPanel
+                  active={open && section === 'models'}
+                  onBlockingChange={setBlocking}
+                />
+              )}
+              {section === 'apiIntegration' && (
+                <ApiIntegrationPanel
+                  active={open && section === 'apiIntegration'}
+                />
+              )}
+              {section === 'storageAnalysis' && (
+                <StorageAnalysisPanel
+                  active={open && section === 'storageAnalysis'}
+                />
+              )}
+              {section === 'account' && (
+                <AccountSettingsPanel active={open && section === 'account'} />
+              )}
+            </div>
+          </main>
+        </SidebarProvider>
+      </DialogContent>
+    </Dialog>
+  );
+}

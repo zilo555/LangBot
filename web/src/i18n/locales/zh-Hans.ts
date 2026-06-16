@@ -1328,6 +1328,9 @@ const zhHans = {
     boxSessionCreated: '创建时间',
     boxSessionLastUsed: '最后使用',
   },
+  settingsDialog: {
+    title: '设置',
+  },
   storageAnalysis: {
     title: '存储分析',
     description: '查看存储占用和可清理文件',

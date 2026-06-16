@@ -1386,6 +1386,9 @@ const enUS = {
     boxSessionCreated: 'Created',
     boxSessionLastUsed: 'Last used',
   },
+  settingsDialog: {
+    title: 'Settings',
+  },
   storageAnalysis: {
     title: 'Storage Analysis',
     description: 'Inspect storage usage and cleanup candidates',

@@ -1364,6 +1364,9 @@ const thTH = {
     boxSessionCreated: 'สร้างเมื่อ',
     boxSessionLastUsed: 'ใช้ล่าสุด',
   },
+  settingsDialog: {
+    title: 'การตั้งค่า',
+  },
   storageAnalysis: {
     title: 'วิเคราะห์พื้นที่จัดเก็บ',
     description: 'ตรวจสอบการใช้พื้นที่จัดเก็บและรายการที่สามารถล้างได้',

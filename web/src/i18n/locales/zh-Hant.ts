@@ -1327,6 +1327,9 @@ const zhHant = {
     boxSessionCreated: '建立時間',
     boxSessionLastUsed: '最後使用',
   },
+  settingsDialog: {
+    title: '設定',
+  },
   storageAnalysis: {
     title: '儲存分析',
     description: '查看儲存占用和可清理檔案',

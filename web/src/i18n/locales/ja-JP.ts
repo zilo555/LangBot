@@ -1392,6 +1392,9 @@ const jaJP = {
     boxSessionCreated: '作成日時',
     boxSessionLastUsed: '最終使用',
   },
+  settingsDialog: {
+    title: '設定',
+  },
   storageAnalysis: {
     title: 'ストレージ分析',
     description: 'ストレージ使用量とクリーンアップ候補を確認します',

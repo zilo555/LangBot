@@ -1395,6 +1395,9 @@ const ruRU = {
     boxSessionCreated: 'Создано',
     boxSessionLastUsed: 'Последнее использование',
   },
+  settingsDialog: {
+    title: 'Настройки',
+  },
   storageAnalysis: {
     title: 'Анализ хранилища',
     description: 'Проверьте использование хранилища и кандидатов на очистку',
