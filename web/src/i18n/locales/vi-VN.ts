@@ -123,6 +123,8 @@ const viVN = {
     changePasswordFailed:
       'Đổi mật khẩu thất bại, vui lòng kiểm tra mật khẩu hiện tại',
     apiIntegration: 'Tích hợp API',
+    apiIntegrationDescription:
+      'Quản lý API key và webhook cho truy cập từ bên ngoài',
     apiKeys: 'Khóa API',
     manageApiIntegration: 'Quản lý tích hợp API',
     manageApiKeys: 'Quản lý khóa API',
@@ -1150,6 +1152,7 @@ const viVN = {
   },
   account: {
     settings: 'Cài đặt tài khoản',
+    settingsDescription: 'Quản lý mật khẩu và các tài khoản liên kết của bạn',
     setPassword: 'Đặt mật khẩu',
     passwordSetSuccess: 'Đặt mật khẩu thành công',
     passwordStatus: 'Mật khẩu cục bộ',
@@ -1390,6 +1393,12 @@ const viVN = {
   },
   settingsDialog: {
     title: 'Cài đặt',
+    nav: {
+      models: 'Mô hình',
+      api: 'API',
+      storage: 'Lưu trữ',
+      account: 'Tài khoản',
+    },
   },
   storageAnalysis: {
     title: 'Phân tích lưu trữ',

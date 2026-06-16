@@ -116,6 +116,7 @@ const zhHans = {
     changePasswordSuccess: '密码修改成功',
     changePasswordFailed: '密码修改失败，请检查当前密码是否正确',
     apiIntegration: 'API 集成',
+    apiIntegrationDescription: '管理用于外部访问的 API 密钥和 Webhook',
     apiKeys: 'API 密钥',
     manageApiIntegration: '管理 API 集成',
     manageApiKeys: '管理 API 密钥',
@@ -1096,6 +1097,7 @@ const zhHans = {
   },
   account: {
     settings: '账户设置',
+    settingsDescription: '管理你的密码和关联账户',
     setPassword: '设置密码',
     passwordSetSuccess: '密码设置成功',
     passwordStatus: '本地密码',
@@ -1330,6 +1332,12 @@ const zhHans = {
   },
   settingsDialog: {
     title: '设置',
+    nav: {
+      models: '模型',
+      api: 'API',
+      storage: '存储',
+      account: '账户',
+    },
   },
   storageAnalysis: {
     title: '存储分析',

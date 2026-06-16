@@ -122,6 +122,8 @@ const ruRU = {
     changePasswordFailed:
       'Не удалось изменить пароль, проверьте текущий пароль',
     apiIntegration: 'API-интеграция',
+    apiIntegrationDescription:
+      'Управление API-ключами и вебхуками для внешнего доступа',
     apiKeys: 'API-ключи',
     manageApiIntegration: 'Управление API-интеграцией',
     manageApiKeys: 'Управление API-ключами',
@@ -1156,6 +1158,7 @@ const ruRU = {
   },
   account: {
     settings: 'Настройки аккаунта',
+    settingsDescription: 'Управление паролем и связанными аккаунтами',
     setPassword: 'Установить пароль',
     passwordSetSuccess: 'Пароль успешно установлен',
     passwordStatus: 'Локальный пароль',
@@ -1397,6 +1400,12 @@ const ruRU = {
   },
   settingsDialog: {
     title: 'Настройки',
+    nav: {
+      models: 'Модели',
+      api: 'API',
+      storage: 'Хранилище',
+      account: 'Аккаунт',
+    },
   },
   storageAnalysis: {
     title: 'Анализ хранилища',

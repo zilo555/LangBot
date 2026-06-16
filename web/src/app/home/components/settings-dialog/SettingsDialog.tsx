@@ -79,33 +79,42 @@ export default function SettingsDialog({
   const navItems: {
     id: SettingsSection;
     label: string;
+    title: string;
+    description: string;
     icon: React.ReactNode;
   }[] = [
     {
       id: 'models',
-      label: t('models.title'),
+      label: t('settingsDialog.nav.models'),
+      title: t('models.title'),
+      description: t('models.description'),
       icon: <Sparkles className="size-4" />,
     },
     {
       id: 'apiIntegration',
-      label: t('common.apiIntegration'),
+      label: t('settingsDialog.nav.api'),
+      title: t('common.apiIntegration'),
+      description: t('common.apiIntegrationDescription'),
       icon: <KeyRound className="size-4" />,
     },
     {
       id: 'storageAnalysis',
-      label: t('storageAnalysis.title'),
+      label: t('settingsDialog.nav.storage'),
+      title: t('storageAnalysis.title'),
+      description: t('storageAnalysis.description'),
       icon: <HardDrive className="size-4" />,
     },
     {
       id: 'account',
-      label: t('account.settings'),
+      label: t('settingsDialog.nav.account'),
+      title: t('account.settings'),
+      description: t('account.settingsDescription'),
       icon: <Settings className="size-4" />,
     },
   ];
 
-  const activeLabel =
-    navItems.find((item) => item.id === section)?.label ??
-    t('settingsDialog.title');
+  const activeItem = navItems.find((item) => item.id === section);
+  const activeLabel = activeItem?.title ?? t('settingsDialog.title');
 
   return (
     <Dialog
@@ -175,6 +184,20 @@ export default function SettingsDialog({
                   <span>{item.label}</span>
                 </button>
               ))}
+            </div>
+
+            {/* Unified section header (shared across all tabs). The extra
+                right padding keeps the title clear of the dialog's close X. */}
+            <div className="flex shrink-0 flex-col gap-0.5 border-b px-6 py-4 pr-12">
+              <h2 className="flex items-center gap-2 text-base font-semibold">
+                {activeItem?.icon}
+                {activeItem?.title}
+              </h2>
+              {activeItem?.description && (
+                <p className="text-sm text-muted-foreground">
+                  {activeItem.description}
+                </p>
+              )}
             </div>
 
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden">

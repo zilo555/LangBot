@@ -120,6 +120,8 @@ const thTH = {
     changePasswordSuccess: 'เปลี่ยนรหัสผ่านสำเร็จ',
     changePasswordFailed: 'เปลี่ยนรหัสผ่านล้มเหลว กรุณาตรวจสอบรหัสผ่านปัจจุบัน',
     apiIntegration: 'การเชื่อมต่อ API',
+    apiIntegrationDescription:
+      'จัดการ API key และ webhook สำหรับการเข้าถึงจากภายนอก',
     apiKeys: 'คีย์ API',
     manageApiIntegration: 'จัดการการเชื่อมต่อ API',
     manageApiKeys: 'จัดการคีย์ API',
@@ -1130,6 +1132,7 @@ const thTH = {
   },
   account: {
     settings: 'การตั้งค่าบัญชี',
+    settingsDescription: 'จัดการรหัสผ่านและบัญชีที่เชื่อมโยงของคุณ',
     setPassword: 'ตั้งรหัสผ่าน',
     passwordSetSuccess: 'ตั้งรหัสผ่านสำเร็จ',
     passwordStatus: 'รหัสผ่านท้องถิ่น',
@@ -1366,6 +1369,12 @@ const thTH = {
   },
   settingsDialog: {
     title: 'การตั้งค่า',
+    nav: {
+      models: 'โมเดล',
+      api: 'API',
+      storage: 'พื้นที่จัดเก็บ',
+      account: 'บัญชี',
+    },
   },
   storageAnalysis: {
     title: 'วิเคราะห์พื้นที่จัดเก็บ',

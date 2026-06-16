@@ -124,6 +124,8 @@ const jaJP = {
     changePasswordFailed:
       'パスワードの変更に失敗しました。現在のパスワードを確認してください',
     apiIntegration: 'API統合',
+    apiIntegrationDescription:
+      '外部アクセス用の API キーと Webhook を管理します',
     apiKeys: 'API キー',
     manageApiIntegration: 'API統合の管理',
     manageApiKeys: 'API キーの管理',
@@ -1153,6 +1155,7 @@ const jaJP = {
   },
   account: {
     settings: 'アカウント設定',
+    settingsDescription: 'パスワードと連携アカウントを管理します',
     setPassword: 'パスワードを設定',
     passwordSetSuccess: 'パスワードの設定に成功しました',
     passwordStatus: 'ローカルパスワード',
@@ -1394,6 +1397,12 @@ const jaJP = {
   },
   settingsDialog: {
     title: '設定',
+    nav: {
+      models: 'モデル',
+      api: 'API',
+      storage: 'ストレージ',
+      account: 'アカウント',
+    },
   },
   storageAnalysis: {
     title: 'ストレージ分析',

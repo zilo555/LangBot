@@ -126,6 +126,8 @@ const esES = {
     changePasswordFailed:
       'Error al cambiar la contraseña, por favor verifica tu contraseña actual',
     apiIntegration: 'Integración API',
+    apiIntegrationDescription:
+      'Gestiona las claves API y los webhooks para el acceso externo',
     apiKeys: 'Claves API',
     manageApiIntegration: 'Gestionar integración API',
     manageApiKeys: 'Gestionar claves API',
@@ -1178,6 +1180,7 @@ const esES = {
   },
   account: {
     settings: 'Configuración de la cuenta',
+    settingsDescription: 'Gestiona tu contraseña y las cuentas vinculadas',
     setPassword: 'Establecer contraseña',
     passwordSetSuccess: 'Contraseña establecida correctamente',
     passwordStatus: 'Contraseña local',
@@ -1421,6 +1424,12 @@ const esES = {
   },
   settingsDialog: {
     title: 'Configuración',
+    nav: {
+      models: 'Modelos',
+      api: 'API',
+      storage: 'Almacenamiento',
+      account: 'Cuenta',
+    },
   },
   storageAnalysis: {
     title: 'Análisis de almacenamiento',

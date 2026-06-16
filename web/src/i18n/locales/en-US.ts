@@ -122,6 +122,8 @@ const enUS = {
     changePasswordFailed:
       'Failed to change password, please check your current password',
     apiIntegration: 'API Integration',
+    apiIntegrationDescription:
+      'Manage API keys and webhooks for external access',
     apiKeys: 'API Keys',
     manageApiIntegration: 'Manage API Integration',
     manageApiKeys: 'Manage API Keys',
@@ -1149,6 +1151,7 @@ const enUS = {
   },
   account: {
     settings: 'Account Settings',
+    settingsDescription: 'Manage your password and linked accounts',
     setPassword: 'Set Password',
     passwordSetSuccess: 'Password set successfully',
     passwordStatus: 'Local Password',
@@ -1388,6 +1391,12 @@ const enUS = {
   },
   settingsDialog: {
     title: 'Settings',
+    nav: {
+      models: 'Models',
+      api: 'API',
+      storage: 'Storage',
+      account: 'Account',
+    },
   },
   storageAnalysis: {
     title: 'Storage Analysis',

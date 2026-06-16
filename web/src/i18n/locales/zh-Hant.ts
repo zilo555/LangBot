@@ -116,6 +116,7 @@ const zhHant = {
     changePasswordSuccess: '密碼修改成功',
     changePasswordFailed: '密碼修改失敗，請檢查當前密碼是否正確',
     apiIntegration: 'API 整合',
+    apiIntegrationDescription: '管理用於外部存取的 API 金鑰和 Webhook',
     apiKeys: 'API 金鑰',
     manageApiIntegration: '管理 API 整合',
     manageApiKeys: '管理 API 金鑰',
@@ -1095,6 +1096,7 @@ const zhHant = {
   },
   account: {
     settings: '帳戶設定',
+    settingsDescription: '管理你的密碼和關聯帳戶',
     setPassword: '設定密碼',
     passwordSetSuccess: '密碼設定成功',
     passwordStatus: '本地密碼',
@@ -1329,6 +1331,12 @@ const zhHant = {
   },
   settingsDialog: {
     title: '設定',
+    nav: {
+      models: '模型',
+      api: 'API',
+      storage: '儲存',
+      account: '帳戶',
+    },
   },
   storageAnalysis: {
     title: '儲存分析',
