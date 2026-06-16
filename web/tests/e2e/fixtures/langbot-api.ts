@@ -11,7 +11,68 @@ interface SkillMock {
   updated_at: string;
 }
 
+interface PipelineMock {
+  uuid: string;
+  name: string;
+  description: string;
+  config: JsonRecord;
+  emoji: string;
+  is_default: boolean;
+  updated_at: string;
+}
+
+interface KnowledgeBaseMock {
+  uuid: string;
+  name: string;
+  description: string;
+  emoji: string;
+  knowledge_engine_plugin_id: string;
+  creation_settings: JsonRecord;
+  retrieval_settings: JsonRecord;
+  knowledge_engine: {
+    plugin_id: string;
+    name: {
+      en_US: string;
+      zh_Hans: string;
+    };
+    capabilities: string[];
+  };
+  updated_at: string;
+}
+
+interface MCPServerMock {
+  name: string;
+  mode: 'sse' | 'stdio' | 'http';
+  enable: boolean;
+  extra_args: JsonRecord;
+  runtime_info: {
+    status: 'connected';
+    tool_count: number;
+    tools: unknown[];
+  };
+  readme: string;
+  updated_at: string;
+}
+
+interface BotMock {
+  uuid: string;
+  name: string;
+  description: string;
+  enable: boolean;
+  adapter: string;
+  adapter_config: JsonRecord;
+  use_pipeline_uuid?: string;
+  pipeline_routing_rules: unknown[];
+  adapter_runtime_values: JsonRecord;
+  updated_at: string;
+}
+
 interface LangBotApiMockState {
+  bots: BotMock[];
+  counters: Record<string, number>;
+  knowledgeBases: KnowledgeBaseMock[];
+  mcpServers: MCPServerMock[];
+  pipelines: PipelineMock[];
   skills: SkillMock[];
 }
 
@@ -34,6 +95,19 @@ async function fulfillJson(route: Route, data: unknown) {
 
 function routePath(route: Route) {
   return new URL(route.request().url()).pathname;
+}
+
+function parseJsonBody(route: Route): JsonRecord {
+  return JSON.parse(route.request().postData() || '{}') as JsonRecord;
+}
+
+function now() {
+  return new Date().toISOString();
+}
+
+function nextId(state: LangBotApiMockState, prefix: string) {
+  state.counters[prefix] = (state.counters[prefix] || 0) + 1;
+  return `${prefix}-${state.counters[prefix]}`;
 }
 
 function emptyMonitoringData() {
@@ -93,6 +167,131 @@ function makeSkill(data: JsonRecord): SkillMock {
   };
 }
 
+function makePipeline(
+  state: LangBotApiMockState,
+  data: JsonRecord,
+  uuid = nextId(state, 'pipeline'),
+): PipelineMock {
+  return {
+    uuid,
+    name: String(data.name || ''),
+    description: String(data.description || ''),
+    config: (data.config as JsonRecord | undefined) || {
+      ai: {},
+      trigger: {},
+      safety: {},
+      output: {},
+    },
+    emoji: String(data.emoji || '⚙️'),
+    is_default: false,
+    updated_at: now(),
+  };
+}
+
+function knowledgeEngine() {
+  return {
+    plugin_id: 'builtin/minimal-knowledge',
+    name: {
+      en_US: 'Minimal Knowledge Engine',
+      zh_Hans: '最小知识库引擎',
+    },
+    description: {
+      en_US: 'Minimal mocked engine for frontend smoke tests.',
+      zh_Hans: '用于前端冒烟测试的最小模拟引擎。',
+    },
+    capabilities: ['text_retrieval'],
+    creation_schema: [],
+    retrieval_schema: [],
+  };
+}
+
+function makeKnowledgeBase(
+  state: LangBotApiMockState,
+  data: JsonRecord,
+  uuid = nextId(state, 'knowledge'),
+): KnowledgeBaseMock {
+  const engine = knowledgeEngine();
+  return {
+    uuid,
+    name: String(data.name || ''),
+    description: String(data.description || ''),
+    emoji: String(data.emoji || '📚'),
+    knowledge_engine_plugin_id: String(
+      data.knowledge_engine_plugin_id || engine.plugin_id,
+    ),
+    creation_settings: (data.creation_settings as JsonRecord | undefined) || {},
+    retrieval_settings:
+      (data.retrieval_settings as JsonRecord | undefined) || {},
+    knowledge_engine: {
+      plugin_id: engine.plugin_id,
+      name: engine.name,
+      capabilities: engine.capabilities,
+    },
+    updated_at: now(),
+  };
+}
+
+function makeMCPServer(data: JsonRecord): MCPServerMock {
+  return {
+    name: String(data.name || ''),
+    mode: (data.mode as MCPServerMock['mode']) || 'sse',
+    enable: data.enable !== false,
+    extra_args: (data.extra_args as JsonRecord | undefined) || {},
+    runtime_info: {
+      status: 'connected',
+      tool_count: 0,
+      tools: [],
+    },
+    readme: '',
+    updated_at: now(),
+  };
+}
+
+function makeBot(
+  state: LangBotApiMockState,
+  data: JsonRecord,
+  uuid = nextId(state, 'bot'),
+): BotMock {
+  return {
+    uuid,
+    name: String(data.name || ''),
+    description: String(data.description || ''),
+    enable: data.enable !== false,
+    adapter: String(data.adapter || 'playwright-adapter'),
+    adapter_config: (data.adapter_config as JsonRecord | undefined) || {},
+    use_pipeline_uuid: data.use_pipeline_uuid
+      ? String(data.use_pipeline_uuid)
+      : undefined,
+    pipeline_routing_rules:
+      (data.pipeline_routing_rules as unknown[] | undefined) || [],
+    adapter_runtime_values: {
+      webhook_full_url: `https://playwright.test/bots/${uuid}/webhook`,
+      extra_webhook_full_url: '',
+    },
+    updated_at: now(),
+  };
+}
+
+function mockAdapters() {
+  return [
+    {
+      name: 'playwright-adapter',
+      label: {
+        en_US: 'Playwright Adapter',
+        zh_Hans: 'Playwright 适配器',
+      },
+      description: {
+        en_US: 'Minimal adapter for frontend E2E tests.',
+        zh_Hans: '用于前端 E2E 测试的最小适配器。',
+      },
+      spec: {
+        categories: ['testing'],
+        config: [],
+      },
+    },
+  ];
+}
+
 async function handleBackendApi(route: Route, state: LangBotApiMockState) {
   const request = route.request();
   const url = new URL(request.url());
@@ -147,16 +346,160 @@ async function handleBackendApi(route: Route, state: LangBotApiMockState) {
     return fulfillJson(route, { credits: null });
   }
 
+  if (path === '/api/v1/platform/adapters') {
+    return fulfillJson(route, { adapters: mockAdapters() });
+  }
+
   if (path === '/api/v1/platform/bots') {
-    return fulfillJson(route, { bots: [] });
+    if (method === 'POST') {
+      const bot = makeBot(state, parseJsonBody(route));
+      state.bots = [
+        ...state.bots.filter((item) => item.uuid !== bot.uuid),
+        bot,
+      ];
+      return fulfillJson(route, { uuid: bot.uuid });
+    }
+
+    return fulfillJson(route, { bots: state.bots });
+  }
+
+  const botLogsMatch = path.match(/^\/api\/v1\/platform\/bots\/([^/]+)\/logs$/);
+  if (botLogsMatch) {
+    return fulfillJson(route, { logs: [], total: 0 });
+  }
+
+  const botMatch = path.match(/^\/api\/v1\/platform\/bots\/([^/]+)$/);
+  if (botMatch) {
+    const botId = decodeURIComponent(botMatch[1]);
+
+    if (method === 'PUT') {
+      const bot = makeBot(state, parseJsonBody(route), botId);
+      state.bots = [...state.bots.filter((item) => item.uuid !== botId), bot];
+      return fulfillJson(route, {});
+    }
+
+    if (method === 'DELETE') {
+      state.bots = state.bots.filter((item) => item.uuid !== botId);
+      return fulfillJson(route, {});
+    }
+
+    const bot = state.bots.find((item) => item.uuid === botId);
+    return fulfillJson(route, {
+      bot: bot || makeBot(state, { name: botId }, botId),
+    });
+  }
+
+  if (path === '/api/v1/pipelines/_/metadata') {
+    return fulfillJson(route, { configs: [] });
   }
 
   if (path === '/api/v1/pipelines') {
-    return fulfillJson(route, { pipelines: [] });
+    if (method === 'POST') {
+      const pipeline = makePipeline(state, parseJsonBody(route));
+      state.pipelines = [
+        ...state.pipelines.filter((item) => item.uuid !== pipeline.uuid),
+        pipeline,
+      ];
+      return fulfillJson(route, { uuid: pipeline.uuid });
+    }
+
+    return fulfillJson(route, { pipelines: state.pipelines });
+  }
+
+  const pipelineMatch = path.match(/^\/api\/v1\/pipelines\/([^/]+)$/);
+  if (pipelineMatch) {
+    const pipelineId = decodeURIComponent(pipelineMatch[1]);
+
+    if (method === 'PUT') {
+      const pipeline = makePipeline(state, parseJsonBody(route), pipelineId);
+      state.pipelines = [
+        ...state.pipelines.filter((item) => item.uuid !== pipelineId),
+        pipeline,
+      ];
+      return fulfillJson(route, {});
+    }
+
+    if (method === 'DELETE') {
+      state.pipelines = state.pipelines.filter(
+        (item) => item.uuid !== pipelineId,
+      );
+      return fulfillJson(route, {});
+    }
+
+    const pipeline = state.pipelines.find((item) => item.uuid === pipelineId);
+    return fulfillJson(route, {
+      pipeline:
+        pipeline || makePipeline(state, { name: pipelineId }, pipelineId),
+    });
+  }
+
+  const pipelineExtensionsMatch = path.match(
+    /^\/api\/v1\/pipelines\/([^/]+)\/extensions$/,
+  );
+  if (pipelineExtensionsMatch) {
+    return fulfillJson(route, {
+      enable_all_plugins: true,
+      enable_all_mcp_servers: true,
+      enable_all_skills: true,
+      bound_plugins: [],
+      available_plugins: [],
+      bound_mcp_servers: [],
+      available_mcp_servers: state.mcpServers,
+      bound_skills: [],
+      available_skills: state.skills,
+    });
   }
 
   if (path === '/api/v1/knowledge/bases') {
-    return fulfillJson(route, { bases: [] });
+    if (method === 'POST') {
+      const base = makeKnowledgeBase(state, parseJsonBody(route));
+      state.knowledgeBases = [
+        ...state.knowledgeBases.filter((item) => item.uuid !== base.uuid),
+        base,
+      ];
+      return fulfillJson(route, { uuid: base.uuid });
+    }
+
+    return fulfillJson(route, { bases: state.knowledgeBases });
+  }
+
+  const knowledgeBaseFilesMatch = path.match(
+    /^\/api\/v1\/knowledge\/bases\/([^/]+)\/files$/,
+  );
+  if (knowledgeBaseFilesMatch) {
+    return fulfillJson(route, { files: [] });
+  }
+
+  const knowledgeBaseMatch = path.match(
+    /^\/api\/v1\/knowledge\/bases\/([^/]+)$/,
+  );
+  if (knowledgeBaseMatch) {
+    const baseId = decodeURIComponent(knowledgeBaseMatch[1]);
+
+    if (method === 'PUT') {
+      const base = makeKnowledgeBase(state, parseJsonBody(route), baseId);
+      state.knowledgeBases = [
+        ...state.knowledgeBases.filter((item) => item.uuid !== baseId),
+        base,
+      ];
+      return fulfillJson(route, { uuid: base.uuid });
+    }
+
+    if (method === 'DELETE') {
+      state.knowledgeBases = state.knowledgeBases.filter(
+        (item) => item.uuid !== baseId,
+      );
+      return fulfillJson(route, {});
+    }
+
+    const base = state.knowledgeBases.find((item) => item.uuid === baseId);
+    return fulfillJson(route, {
+      base: base || makeKnowledgeBase(state, { name: baseId }, baseId),
+    });
+  }
+
+  if (path === '/api/v1/knowledge/engines') {
+    return fulfillJson(route, { engines: [knowledgeEngine()] });
   }
 
   if (path === '/api/v1/knowledge/migration/status') {
@@ -176,7 +519,60 @@ async function handleBackendApi(route: Route, state: LangBotApiMockState) {
   }
 
   if (path === '/api/v1/mcp/servers') {
-    return fulfillJson(route, { servers: [] });
+    if (method === 'POST') {
+      const server = makeMCPServer(parseJsonBody(route));
+      state.mcpServers = [
+        ...state.mcpServers.filter((item) => item.name !== server.name),
+        server,
+      ];
+      return fulfillJson(route, { task_id: nextId(state, 'task') });
+    }
+
+    return fulfillJson(route, { servers: state.mcpServers });
+  }
+
+  const mcpTestMatch = path.match(/^\/api\/v1\/mcp\/servers\/([^/]+)\/test$/);
+  if (mcpTestMatch) {
+    return fulfillJson(route, {
+      runtime_info: {
+        status: 'connected',
+        tool_count: 0,
+        tools: [],
+      },
+    });
+  }
+
+  const mcpServerMatch = path.match(/^\/api\/v1\/mcp\/servers\/([^/]+)$/);
+  if (mcpServerMatch) {
+    const serverName = decodeURIComponent(mcpServerMatch[1]);
+
+    if (method === 'PUT') {
+      const existing = state.mcpServers.find(
+        (item) => item.name === serverName,
+      );
+      const server = makeMCPServer({
+        ...(existing || {}),
+        ...parseJsonBody(route),
+        name: serverName,
+      });
+      state.mcpServers = [
+        ...state.mcpServers.filter((item) => item.name !== serverName),
+        server,
+      ];
+      return fulfillJson(route, { task_id: nextId(state, 'task') });
+    }
+
+    if (method === 'DELETE') {
+      state.mcpServers = state.mcpServers.filter(
+        (item) => item.name !== serverName,
+      );
+      return fulfillJson(route, { task_id: nextId(state, 'task') });
+    }
+
+    const server = state.mcpServers.find((item) => item.name === serverName);
+    return fulfillJson(route, {
+      server: server || makeMCPServer({ name: serverName }),
+    });
   }
 
   if (path === '/api/v1/skills') {
@@ -229,6 +625,23 @@ async function handleBackendApi(route: Route, state: LangBotApiMockState) {
   const skillMatch = path.match(/^\/api\/v1\/skills\/([^/]+)$/);
   if (skillMatch) {
     const skillName = decodeURIComponent(skillMatch[1]);
+    if (method === 'PUT') {
+      const skill = makeSkill({
+        ...parseJsonBody(route),
+        name: skillName,
+      });
+      state.skills = [
+        ...state.skills.filter((item) => item.name !== skillName),
+        skill,
+      ];
+      return fulfillJson(route, { skill });
+    }
+
+    if (method === 'DELETE') {
+      state.skills = state.skills.filter((item) => item.name !== skillName);
+      return fulfillJson(route, {});
+    }
+
     const skill = state.skills.find((item) => item.name === skillName) || {
       name: skillName,
       display_name: '',
@@ -389,6 +802,11 @@ export async function installLangBotApiMocks(
 ) {
   const { authenticated = false, storage = {} } = options;
   const state: LangBotApiMockState = {
+    bots: [],
+    counters: {},
+    knowledgeBases: [],
+    mcpServers: [],
+    pipelines: [],
     skills: [],
   };
 
