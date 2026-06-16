@@ -116,7 +116,7 @@ export default function SettingsDialog({
       }}
     >
       <DialogContent
-        className="overflow-hidden p-0 sm:max-w-[56rem] [&>button:last-child]:z-20"
+        className="overflow-hidden p-0 sm:max-w-[52rem] [&>button:last-child]:z-20"
         // The dialog itself is the scroll boundary; each panel manages its own
         // internal scrolling.
       >
@@ -128,7 +128,7 @@ export default function SettingsDialog({
         <SidebarProvider className="items-start">
           <Sidebar
             collapsible="none"
-            className="hidden h-[80vh] w-56 shrink-0 border-r md:flex"
+            className="hidden h-[620px] max-h-[85vh] w-56 shrink-0 border-r md:flex"
           >
             <SidebarContent>
               <SidebarGroup>
@@ -154,7 +154,7 @@ export default function SettingsDialog({
             </SidebarContent>
           </Sidebar>
 
-          <main className="flex h-[80vh] min-w-0 flex-1 flex-col overflow-hidden">
+          <main className="flex h-[620px] max-h-[85vh] min-w-0 flex-1 flex-col overflow-hidden">
             {/* Mobile section switcher (sidebar is hidden on small screens) */}
             <div className="flex shrink-0 items-center gap-1 overflow-x-auto border-b px-3 py-2 md:hidden">
               {navItems.map((item) => (
