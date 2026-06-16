@@ -833,7 +833,7 @@ const viVN = {
     deleteMCPHint: 'Sau khi xóa, cấu hình máy chủ MCP này không thể khôi phục.',
   },
   pipelines: {
-    title: 'Pipeline',
+    title: 'Quy trình',
     description:
       'Pipeline xác định luồng xử lý sự kiện tin nhắn, dùng để liên kết với Bot',
     createPipeline: 'Tạo Pipeline',

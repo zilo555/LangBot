@@ -844,7 +844,7 @@ const esES = {
       'Una vez eliminada, la configuración de este servidor MCP no se podrá recuperar.',
   },
   pipelines: {
-    title: 'Pipelines',
+    title: 'Flujos',
     description:
       'Los Pipelines definen el flujo de procesamiento de eventos de mensajes, se usan para vincular a los Bots',
     createPipeline: 'Crear Pipeline',

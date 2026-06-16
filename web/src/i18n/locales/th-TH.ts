@@ -300,7 +300,7 @@ const thTH = {
     },
   },
   bots: {
-    title: 'Bot',
+    title: 'บอท',
     description:
       'สร้างและจัดการ Bot ซึ่งเป็นจุดเชื่อมต่อของ LangBot กับแพลตฟอร์มต่างๆ',
     createBot: 'สร้าง Bot',
@@ -819,7 +819,7 @@ const thTH = {
       'เมื่อลบแล้ว การกำหนดค่าเซิร์ฟเวอร์ MCP นี้จะไม่สามารถกู้คืนได้',
   },
   pipelines: {
-    title: 'Pipeline',
+    title: 'ไปป์ไลน์',
     description:
       'Pipeline กำหนดกระบวนการประมวลผลเหตุการณ์ข้อความ ใช้เพื่อผูกกับ Bot',
     createPipeline: 'สร้าง Pipeline',
