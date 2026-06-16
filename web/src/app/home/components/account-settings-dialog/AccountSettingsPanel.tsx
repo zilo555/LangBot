@@ -14,6 +14,7 @@ import { httpClient } from '@/app/infra/http/HttpClient';
 import { systemInfo } from '@/app/infra/http';
 import { Loader2, ExternalLink, KeyRound, Layers } from 'lucide-react';
 import PasswordChangeDialog from '../password-change-dialog/PasswordChangeDialog';
+import { PanelBody } from '../settings-dialog/panel-layout';
 
 interface AccountSettingsPanelProps {
   // True when this panel is the active section and the dialog is open.
@@ -86,7 +87,7 @@ export default function AccountSettingsPanel({
   };
 
   return (
-    <div className="px-6 py-5">
+    <PanelBody>
       {userEmail && (
         <p className="mb-4 text-sm text-muted-foreground">{userEmail}</p>
       )}
@@ -165,6 +166,6 @@ export default function AccountSettingsPanel({
         onOpenChange={handlePasswordDialogClose}
         hasPassword={hasPassword}
       />
-    </div>
+    </PanelBody>
   );
 }

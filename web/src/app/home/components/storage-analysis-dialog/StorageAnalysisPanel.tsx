@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { backendClient } from '@/app/infra/http';
+import { PanelToolbar } from '../settings-dialog/panel-layout';
 
 interface StorageSection {
   key: string;
@@ -137,7 +138,7 @@ export default function StorageAnalysisPanel({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex shrink-0 items-center justify-between gap-3 border-b px-6 py-4">
+      <PanelToolbar>
         <div className="text-sm text-muted-foreground">
           {analysis
             ? t('storageAnalysis.generatedAt', {
@@ -156,7 +157,7 @@ export default function StorageAnalysisPanel({
           />
           {t('storageAnalysis.refresh')}
         </Button>
-      </div>
+      </PanelToolbar>
 
       <ScrollArea className="min-h-0 flex-1 overflow-hidden">
         <div className="space-y-5 px-6 py-5">

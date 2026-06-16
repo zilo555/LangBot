@@ -10,7 +10,7 @@ export interface Plugin {
   debug: boolean;
   enabled: boolean;
   install_source: string;
-  install_info: Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+  install_info: Record<string, any>;
   components: PluginComponent[];
 }
 

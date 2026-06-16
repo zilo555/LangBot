@@ -23,6 +23,7 @@ import {
   LANGBOT_MODELS_PROVIDER_REQUESTER,
 } from './types';
 import { CustomApiError } from '@/app/infra/entities/common';
+import { PanelBody } from '../settings-dialog/panel-layout';
 
 interface ModelsPanelProps {
   // True when this panel is the active section and the dialog is open.
@@ -611,12 +612,13 @@ export default function ModelsPanel({
 
   return (
     <>
-      <div className="flex-1 overflow-auto px-6 py-5">
-        {/* LangBot Models Card */}
+      <PanelBody>
+        {/* LangBot Models (Space) provider card is intentionally pinned to the
+            top, above the "add custom provider" action row. */}
         {langbotProvider && renderProviderCard(langbotProvider, true)}
 
-        {/* Add Provider Button */}
-        <div className="mb-3 flex justify-between items-center sticky top-0 bg-background py-2 z-10">
+        {/* Add-provider row: stays below the pinned card by design. */}
+        <div className="mb-3 flex items-center justify-between gap-3">
           <span className="text-sm text-muted-foreground">
             {otherProviders.length === 0
               ? t(
@@ -626,12 +628,10 @@ export default function ModelsPanel({
                 )
               : t('models.providerCount', { count: otherProviders.length })}
           </span>
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={handleCreateProvider}>
-              <Plus className="h-4 w-4 mr-1" />
-              {t('models.addProvider')}
-            </Button>
-          </div>
+          <Button size="sm" variant="outline" onClick={handleCreateProvider}>
+            <Plus className="h-4 w-4 mr-1" />
+            {t('models.addProvider')}
+          </Button>
         </div>
 
         {/* Provider List */}
@@ -643,7 +643,7 @@ export default function ModelsPanel({
         ) : (
           otherProviders.map((p) => renderProviderCard(p))
         )}
-      </div>
+      </PanelBody>
 
       <Dialog open={providerFormOpen} onOpenChange={setProviderFormOpen}>
         <DialogContent className="w-[600px] p-6">
