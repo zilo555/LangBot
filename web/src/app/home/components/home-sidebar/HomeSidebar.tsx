@@ -1883,19 +1883,6 @@ export default function HomeSidebar({
 
         {/* Footer */}
         <SidebarFooter>
-          {/* API Integration entry */}
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={() => openSettings('apiIntegration')}
-                tooltip={t('common.apiIntegration')}
-              >
-                <KeyRound className="size-4 text-blue-500" />
-                <span>{t('common.apiIntegration')}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-
           {/* Models entry */}
           <SidebarMenu>
             <SidebarMenuItem>
@@ -1905,6 +1892,19 @@ export default function HomeSidebar({
               >
                 <Sparkles className="text-blue-500" />
                 <span>{t('models.title')}</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+
+          {/* API Integration entry */}
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={() => openSettings('apiIntegration')}
+                tooltip={t('common.apiIntegration')}
+              >
+                <KeyRound className="size-4 text-blue-500" />
+                <span>{t('common.apiIntegration')}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
