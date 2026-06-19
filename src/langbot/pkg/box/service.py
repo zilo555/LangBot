@@ -1302,11 +1302,19 @@ class BoxService:
     def get_recent_errors(self) -> list[dict]:
         return list(self._recent_errors)
 
-    def get_system_guidance(self) -> str:
+    def get_system_guidance(self, query_id=None) -> str:
         """Return LLM system-prompt guidance for the exec tool.
 
         All execution-specific prompt text is kept here so that callers
         (e.g. LocalAgentRunner) stay free of box domain knowledge.
+
+        ``query_id`` is the current turn's pipeline query id. When provided,
+        the guidance ALWAYS advertises the per-query outbox path so the agent
+        knows how to deliver generated files back to the user — even on turns
+        where the user sent no inbound attachment (e.g. "generate a QR code"),
+        which is exactly when the inbound-attachment note never fires. Outbound
+        collection in the wrapper runs on every turn regardless of inbound
+        files, so without this the file would be produced and silently dropped.
         """
         guidance = (
             'When the exec tool is available, use it for exact calculations, statistics, structured data parsing, '
@@ -1320,6 +1328,13 @@ class BoxService:
                 ' A default workspace is mounted at /workspace for file tasks. When the user asks to read, create, or '
                 'modify local files in the working directory, use exec with /workspace paths directly; do not ask the '
                 'user for directory parameters unless they explicitly need a different directory.'
+            )
+        if query_id is not None:
+            outbox_dir = f'{self.OUTBOX_MOUNT_DIR}/{query_id}'
+            guidance += (
+                f' If you produce any file (image, audio, document, etc.) that should be sent back to the user, '
+                f'write it into {outbox_dir}/ (create the directory if needed). Every file placed there will be '
+                'delivered to the user automatically; do not paste file contents or base64 into your reply.'
             )
         return guidance
 

@@ -546,6 +546,41 @@ async def test_box_service_rejects_host_mount_outside_allowed_roots(tmp_path):
         )
 
 
+class TestGetSystemGuidance:
+    """``get_system_guidance`` must ALWAYS advertise the per-query outbox path
+    when given a ``query_id`` — even with no inbound attachment — so files the
+    agent generates (QR codes, charts, rendered docs) are actually delivered.
+
+    The wrapper collects the outbox on every turn regardless of inbound files;
+    before this, the agent was only told the outbox path inside the
+    inbound-attachment note, so pure-generation turns produced files that were
+    silently dropped.
+    """
+
+    def _service(self, logger=None):
+        logger = logger or Mock()
+        runtime = BoxRuntime(logger=logger, backends=[FakeBackend(logger)], session_ttl_sec=300)
+        return BoxService(make_app(logger), client=_InProcessBoxRuntimeClient(logger, runtime))
+
+    def test_guidance_includes_outbox_when_query_id_given(self):
+        service = self._service()
+        guidance = service.get_system_guidance(42)
+        assert f'{service.OUTBOX_MOUNT_DIR}/42' in guidance
+        assert 'delivered to the user automatically' in guidance
+
+    def test_guidance_omits_outbox_without_query_id(self):
+        service = self._service()
+        guidance = service.get_system_guidance()
+        assert service.OUTBOX_MOUNT_DIR not in guidance
+        # core exec guidance is still present
+        assert 'exec tool' in guidance
+
+    def test_guidance_outbox_independent_of_inbound_attachments(self):
+        # A bare query_id (the pure-generation case) still gets the outbox note.
+        service = self._service()
+        assert f'{service.OUTBOX_MOUNT_DIR}/0' in service.get_system_guidance(0)
+
+
 @pytest.mark.asyncio
 async def test_box_runtime_rejects_host_mount_conflict_in_same_session(tmp_path):
     logger = Mock()
