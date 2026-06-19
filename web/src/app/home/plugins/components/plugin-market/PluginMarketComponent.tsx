@@ -789,12 +789,12 @@ function MarketPageContent({
 
         {/* 用真实标签做快速筛选 —— 始终单行横向滚动，避免标签变多时换行错位 */}
         <div className="relative mx-auto w-full max-w-4xl">
-          <div className="scrollbar-hide flex items-center gap-2 overflow-x-auto pb-1 pr-6">
+          <div className="scrollbar-hide flex items-center gap-1.5 overflow-x-auto pb-1 pr-6">
             <Button
               type="button"
               variant={selectedTags.length === 0 ? 'secondary' : 'ghost'}
               size="sm"
-              className="h-8 shrink-0"
+              className="h-7 shrink-0 px-2.5 text-xs"
               onClick={() => handleTagsChange([])}
             >
               {t('market.allExtensions')}
@@ -807,7 +807,7 @@ function MarketPageContent({
                   type="button"
                   variant={selected ? 'secondary' : 'ghost'}
                   size="sm"
-                  className="h-8 shrink-0"
+                  className="h-7 shrink-0 px-2.5 text-xs"
                   onClick={() => {
                     const newTags = selected
                       ? selectedTags.filter((t) => t !== tag.tag)
@@ -816,7 +816,7 @@ function MarketPageContent({
                   }}
                 >
                   {tagNames[tag.tag] || tag.tag}
-                  {selected && <X className="h-3.5 w-3.5" />}
+                  {selected && <X className="h-3 w-3" />}
                 </Button>
               );
             })}
