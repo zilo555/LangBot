@@ -90,7 +90,7 @@ export default function PluginLogs({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex shrink-0 flex-wrap items-center gap-2 px-6 pb-3">
+      <div className="flex shrink-0 flex-wrap items-center gap-2 px-1 pb-3 sm:px-6">
         <Select value={level} onValueChange={setLevel}>
           <SelectTrigger className="h-8 w-[130px]">
             <SelectValue />
@@ -132,7 +132,7 @@ export default function PluginLogs({
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="min-h-0 flex-1 overflow-auto bg-gray-50 px-6 py-3 font-mono text-xs leading-relaxed dark:bg-gray-900/40"
+        className="min-h-0 flex-1 overflow-auto bg-gray-50 px-3 py-3 font-mono text-xs leading-relaxed dark:bg-gray-900/40 sm:px-6"
       >
         {logs.length === 0 ? (
           <div className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">

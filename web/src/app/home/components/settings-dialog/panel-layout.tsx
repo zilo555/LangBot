@@ -38,7 +38,12 @@ export function PanelBody({
   children: React.ReactNode;
 }) {
   return (
-    <div className={cn('min-h-0 flex-1 overflow-auto px-6 py-5', className)}>
+    <div
+      className={cn(
+        'min-h-0 flex-1 overflow-auto px-3 py-4 sm:px-6 sm:py-5',
+        className,
+      )}
+    >
       {children}
     </div>
   );
