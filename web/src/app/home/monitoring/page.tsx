@@ -270,7 +270,7 @@ function MonitoringPageContent() {
       {/* Filters and Refresh Button - Sticky */}
       <div className="sticky top-0 z-10 -mt-1 pb-5 pt-1 bg-background">
         <div>
-          <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-card rounded-xl border">
+          <div className="flex flex-col gap-3 p-3 bg-card rounded-xl border sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-4 sm:p-4">
             <MonitoringFilters
               selectedBots={filterState.selectedBots}
               selectedPipelines={filterState.selectedPipelines}
@@ -285,7 +285,7 @@ function MonitoringPageContent() {
                 variant="outline"
                 size="sm"
                 onClick={handleRefresh}
-                className="shadow-sm flex-shrink-0"
+                className="flex-1 shadow-sm sm:flex-shrink-0 sm:flex-none"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 {t('monitoring.refreshData')}
@@ -312,27 +312,27 @@ function MonitoringPageContent() {
             onValueChange={setActiveTab}
             className="w-full"
           >
-            <div className="px-6 pt-4">
-              <TabsList className="h-12 p-1">
-                <TabsTrigger value="messages" className="px-6 py-2">
+            <div className="px-3 pt-4 sm:px-6">
+              <TabsList className="h-12 w-full justify-start gap-1 overflow-x-auto p-1 sm:w-auto">
+                <TabsTrigger value="messages" className="px-3 py-2 sm:px-6">
                   {t('monitoring.tabs.messages')}
                 </TabsTrigger>
-                <TabsTrigger value="modelCalls" className="px-6 py-2">
+                <TabsTrigger value="modelCalls" className="px-3 py-2 sm:px-6">
                   {t('monitoring.tabs.modelCalls')}
                 </TabsTrigger>
-                <TabsTrigger value="tokens" className="px-6 py-2">
+                <TabsTrigger value="tokens" className="px-3 py-2 sm:px-6">
                   {t('monitoring.tabs.tokens')}
                 </TabsTrigger>
-                <TabsTrigger value="feedback" className="px-6 py-2">
+                <TabsTrigger value="feedback" className="px-3 py-2 sm:px-6">
                   {t('monitoring.tabs.feedback')}
                 </TabsTrigger>
-                <TabsTrigger value="errors" className="px-6 py-2">
+                <TabsTrigger value="errors" className="px-3 py-2 sm:px-6">
                   {t('monitoring.tabs.errors')}
                 </TabsTrigger>
               </TabsList>
             </div>
 
-            <TabsContent value="messages" className="p-6 m-0">
+            <TabsContent value="messages" className="p-3 m-0 sm:p-6">
               <div>
                 {loading && (
                   <div className="py-12 flex justify-center">
@@ -362,7 +362,7 @@ function MonitoringPageContent() {
                           >
                             {/* Message Header - Always Visible */}
                             <div
-                              className="p-5 cursor-pointer hover:bg-accent transition-colors"
+                              className="p-3 cursor-pointer hover:bg-accent transition-colors sm:p-5"
                               onClick={() => toggleMessageExpand(msg.id)}
                             >
                               <div className="flex items-start justify-between">
@@ -466,7 +466,7 @@ function MonitoringPageContent() {
               </div>
             </TabsContent>
 
-            <TabsContent value="modelCalls" className="p-6 m-0">
+            <TabsContent value="modelCalls" className="p-3 m-0 sm:p-6">
               <div>
                 {loading && (
                   <div className="py-12 flex justify-center">
@@ -482,7 +482,7 @@ function MonitoringPageContent() {
                       {data.modelCalls.map((call) => (
                         <div
                           key={call.id}
-                          className="border rounded-xl p-5 transition-all duration-200"
+                          className="border rounded-xl p-3 transition-all duration-200 sm:p-5"
                         >
                           <div className="flex justify-between items-start mb-3">
                             <div className="flex-1">
@@ -672,7 +672,7 @@ function MonitoringPageContent() {
               </div>
             </TabsContent>
 
-            <TabsContent value="tokens" className="p-6 m-0">
+            <TabsContent value="tokens" className="p-3 m-0 sm:p-6">
               <TokenMonitoring
                 botIds={
                   filterState.selectedBots.length > 0
@@ -690,7 +690,7 @@ function MonitoringPageContent() {
               />
             </TabsContent>
 
-            <TabsContent value="feedback" className="p-6 m-0">
+            <TabsContent value="feedback" className="p-3 m-0 sm:p-6">
               <div>
                 {loading && (
                   <div className="py-12 flex justify-center">
@@ -722,7 +722,7 @@ function MonitoringPageContent() {
               </div>
             </TabsContent>
 
-            <TabsContent value="errors" className="p-6 m-0">
+            <TabsContent value="errors" className="p-3 m-0 sm:p-6">
               <div>
                 {loading && (
                   <div className="py-12 flex justify-center">
@@ -739,7 +739,7 @@ function MonitoringPageContent() {
                       >
                         {/* Error Header - Always Visible */}
                         <div
-                          className="p-5 cursor-pointer hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors bg-red-50/50 dark:bg-red-950/30"
+                          className="p-3 cursor-pointer hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors bg-red-50/50 dark:bg-red-950/30 sm:p-5"
                           onClick={() => toggleErrorExpand(error.id)}
                         >
                           <div className="flex items-start justify-between">
