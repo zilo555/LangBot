@@ -35,6 +35,10 @@
 
 LangBot은 AI 기반 인스턴트 메시징 봇을 구축하기 위한 **오픈소스 프로덕션 등급 플랫폼**입니다. 대규모 언어 모델(LLM)을 모든 채팅 플랫폼에 연결하여 대화, 작업 실행, 기존 워크플로우와의 통합이 가능한 지능형 에이전트를 만들 수 있습니다.
 
+<p align="center">
+<img src="res/dashboard-overview.png" alt="LangBot 웹 관리 패널 대시보드 — 메시지 양, 모델 호출, 성공률, 활성 세션 실시간 모니터링" width="720"/>
+</p>
+
 ### 핵심 기능
 
 - **AI 대화 및 에이전트** — 멀티턴 대화, 도구 호출, 멀티모달 지원, 스트리밍 출력. 내장 RAG(지식 베이스)와 [Dify](https://dify.ai), [Coze](https://coze.com), [n8n](https://n8n.io), [Langflow](https://langflow.org), [Deerflow](https://deerflow.tech), [Weknora](https://weknora.weixin.qq.com) 심층 통합.

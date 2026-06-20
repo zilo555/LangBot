@@ -37,6 +37,10 @@
 
 LangBot 是一個**開源的生產級平台**，用於建構 AI 驅動的即時通訊機器人。它將大語言模型（LLM）連接到各種聊天平台，幫助你創建能夠對話、執行任務、並整合到現有工作流程中的智能 Agent。
 
+<p align="center">
+<img src="res/dashboard-overview.png" alt="LangBot Web 管理面板儀表板 — 即時監控訊息量、模型調用、成功率與活躍工作階段" width="720"/>
+</p>
+
 ### 核心能力
 
 - **AI 對話與 Agent** — 多輪對話、工具調用、多模態、流式輸出。自帶 RAG（知識庫），深度整合 [Dify](https://dify.ai)、[Coze](https://coze.com)、[n8n](https://n8n.io)、[Langflow](https://langflow.org)、 [Deerflow](https://deerflow.tech)、[Weknora](https://weknora.weixin.qq.com)等 LLMOps 平台。

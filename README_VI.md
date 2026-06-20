@@ -35,6 +35,10 @@
 
 LangBot là một **nền tảng mã nguồn mở, cấp sản xuất** để xây dựng bot nhắn tin tức thời được hỗ trợ bởi AI. Nó kết nối các Mô hình Ngôn ngữ Lớn (LLM) với bất kỳ nền tảng chat nào, cho phép bạn tạo các agent thông minh có thể trò chuyện, thực hiện tác vụ và tích hợp với quy trình làm việc hiện có của bạn.
 
+<p align="center">
+<img src="res/dashboard-overview.png" alt="Bảng điều khiển quản lý web LangBot — giám sát thời gian thực khối lượng tin nhắn, lệnh gọi mô hình, tỷ lệ thành công và phiên hoạt động" width="720"/>
+</p>
+
 ### Khả năng chính
 
 - **Hội thoại AI & Agent** — Đối thoại nhiều lượt, gọi công cụ, hỗ trợ đa phương thức, đầu ra streaming. RAG (cơ sở kiến thức) tích hợp sẵn với tích hợp sâu vào [Dify](https://dify.ai), [Coze](https://coze.com), [n8n](https://n8n.io), [Langflow](https://langflow.org), [Deerflow](https://deerflow.tech), [Weknora](https://weknora.weixin.qq.com).

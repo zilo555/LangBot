@@ -35,6 +35,10 @@
 
 LangBot est une **plateforme open-source de niveau production** pour créer des bots de messagerie instantanée alimentés par l'IA. Elle connecte les grands modèles de langage (LLMs) à n'importe quelle plateforme de chat, vous permettant de créer des agents intelligents capables de converser, d'exécuter des tâches et de s'intégrer à vos workflows existants.
 
+<p align="center">
+<img src="res/dashboard-overview.png" alt="Tableau de bord de gestion web LangBot — surveillance en temps réel du volume de messages, des appels de modèles, du taux de réussite et des sessions actives" width="720"/>
+</p>
+
 ### Capacités Clés
 
 - **Conversations IA & Agents** — Dialogues multi-tours, appels d'outils, support multimodal, sortie en streaming. RAG (base de connaissances) intégré avec intégration profonde de [Dify](https://dify.ai), [Coze](https://coze.com), [n8n](https://n8n.io), [Langflow](https://langflow.org), [Deerflow](https://deerflow.tech), [Weknora](https://weknora.weixin.qq.com).
