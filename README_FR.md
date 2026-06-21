@@ -176,6 +176,12 @@ LangBot est **agent-friendly par conception** —— vos agents de codage (Claud
 
 ---
 
+## 😎 Restez à Jour
+
+Cliquez sur les boutons Star et Watch dans le coin supérieur droit du dépôt pour obtenir les dernières mises à jour.
+
+![star gif](https://docs.langbot.app/star.gif)
+
 ## Historique des Stars
 
 [![Star History Chart](https://api.star-history.com/svg?repos=langbot-app/LangBot&type=Date)](https://star-history.com/#langbot-app/LangBot&Date)

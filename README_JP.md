@@ -176,6 +176,12 @@ LangBot は **設計段階からエージェントフレンドリー** です。
 
 ---
 
+## 😎 最新情報を入手
+
+リポジトリの右上にある Star と Watch ボタンをクリックして、最新の更新を取得してください。
+
+![star gif](https://docs.langbot.app/star.gif)
+
 ## Star 推移
 
 [![Star History Chart](https://api.star-history.com/svg?repos=langbot-app/LangBot&type=Date)](https://star-history.com/#langbot-app/LangBot&Date)

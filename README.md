@@ -180,6 +180,12 @@ _Note: Public demo environment. Do not enter sensitive information._
 
 ---
 
+## 😎 Stay Updated
+
+Click the Star and Watch buttons in the top-right corner of the repository to get the latest updates.
+
+![star gif](https://docs.langbot.app/star.gif)
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=langbot-app/LangBot&type=Date)](https://star-history.com/#langbot-app/LangBot&Date)

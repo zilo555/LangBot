@@ -197,6 +197,12 @@ LangBot **从设计上就对 Agent 友好** —— 你的编码 Agent（Claude C
 
 ---
 
+## 😎 保持更新
+
+点击仓库右上角 Star 和 Watch 按钮，获取最新动态。
+
+![star gif](https://docs.langbot.app/star.gif)
+
 ## Star 趋势
 
 [![Star History Chart](https://api.star-history.com/svg?repos=langbot-app/LangBot&type=Date)](https://star-history.com/#langbot-app/LangBot&Date)

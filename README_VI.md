@@ -176,6 +176,12 @@ LangBot **thân thiện với agent ngay từ thiết kế** —— các coding 
 
 ---
 
+## 😎 Cập nhật Mới nhất
+
+Nhấp vào các nút Star và Watch ở góc trên bên phải của kho lưu trữ để nhận các bản cập nhật mới nhất.
+
+![star gif](https://docs.langbot.app/star.gif)
+
 ## Lịch sử Star
 
 [![Star History Chart](https://api.star-history.com/svg?repos=langbot-app/LangBot&type=Date)](https://star-history.com/#langbot-app/LangBot&Date)

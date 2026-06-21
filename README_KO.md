@@ -176,6 +176,12 @@ LangBot은 **설계 단계부터 에이전트 친화적**입니다 —— 코딩
 
 ---
 
+## 😎 최신 정보 받기
+
+리포지토리 오른쪽 상단의 Star 및 Watch 버튼을 클릭하여 최신 업데이트를 받으세요.
+
+![star gif](https://docs.langbot.app/star.gif)
+
 ## Star 추이
 
 [![Star History Chart](https://api.star-history.com/svg?repos=langbot-app/LangBot&type=Date)](https://star-history.com/#langbot-app/LangBot&Date)

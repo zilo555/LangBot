@@ -176,6 +176,12 @@ LangBot es **agent-friendly por diseño** —— tus agentes de codificación (C
 
 ---
 
+## 😎 Manténgase Actualizado
+
+Haga clic en los botones Star y Watch en la esquina superior derecha del repositorio para obtener las últimas actualizaciones.
+
+![star gif](https://docs.langbot.app/star.gif)
+
 ## Historial de Stars
 
 [![Star History Chart](https://api.star-history.com/svg?repos=langbot-app/LangBot&type=Date)](https://star-history.com/#langbot-app/LangBot&Date)
