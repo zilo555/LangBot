@@ -722,6 +722,14 @@ const zhHans = {
     stdio: 'Stdio模式',
     sse: 'SSE模式',
     http: 'HTTP模式',
+    local: '本地（Stdio）',
+    remote: '远程',
+    localModeDescription: '在 Box 沙箱中以子进程方式本地运行 MCP 服务器。',
+    remoteModeDescription:
+      '通过 URL 连接远程 MCP 服务器，传输方式（Streamable HTTP 或 SSE）将自动检测。',
+    remoteUrlPlaceholder: 'https://example.com/mcp',
+    remoteUrlDescription:
+      '粘贴 MCP 服务器链接即可，同时支持 Streamable HTTP 和旧版 SSE 端点。',
     noServerInstalled: '暂未配置任何 MCP 服务器',
     serverNameRequired: '服务器名称不能为空',
     commandRequired: '命令不能为空',

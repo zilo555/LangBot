@@ -758,6 +758,15 @@ const viVN = {
     stdio: 'Chế độ Stdio',
     sse: 'Chế độ SSE',
     http: 'Chế độ HTTP',
+    local: 'Cục bộ (Stdio)',
+    remote: 'Từ xa',
+    localModeDescription:
+      'Chạy máy chủ MCP cục bộ dưới dạng tiến trình con bên trong sandbox Box.',
+    remoteModeDescription:
+      'Kết nối đến máy chủ MCP từ xa bằng URL. Phương thức truyền tải (Streamable HTTP hoặc SSE) được phát hiện tự động.',
+    remoteUrlPlaceholder: 'https://example.com/mcp',
+    remoteUrlDescription:
+      'Dán URL của máy chủ MCP. Hỗ trợ cả endpoint Streamable HTTP và SSE cũ.',
     noServerInstalled: 'Chưa cấu hình máy chủ MCP nào',
     serverNameRequired: 'Tên máy chủ không được để trống',
     commandRequired: 'Lệnh không được để trống',

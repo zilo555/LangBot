@@ -721,6 +721,14 @@ const zhHant = {
     sse: 'SSE模式',
     selectMode: '選擇連接模式',
     http: 'HTTP模式',
+    local: '本機（Stdio）',
+    remote: '遠端',
+    localModeDescription: '在 Box 沙箱中以子程序方式於本機執行 MCP 伺服器。',
+    remoteModeDescription:
+      '透過 URL 連接遠端 MCP 伺服器，傳輸方式（Streamable HTTP 或 SSE）將自動偵測。',
+    remoteUrlPlaceholder: 'https://example.com/mcp',
+    remoteUrlDescription:
+      '貼上 MCP 伺服器連結即可，同時支援 Streamable HTTP 與舊版 SSE 端點。',
     noServerInstalled: '暫未設定任何MCP伺服器',
     serverNameRequired: '伺服器名稱不能為空',
     commandRequired: '命令不能為空',

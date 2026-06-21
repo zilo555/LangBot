@@ -765,6 +765,15 @@ const ruRU = {
     stdio: 'Режим Stdio',
     sse: 'Режим SSE',
     http: 'Режим HTTP',
+    local: 'Локально (Stdio)',
+    remote: 'Удалённо',
+    localModeDescription:
+      'Запуск MCP-сервера локально как подпроцесса внутри песочницы Box.',
+    remoteModeDescription:
+      'Подключение к удалённому MCP-серверу по URL. Транспорт (Streamable HTTP или SSE) определяется автоматически.',
+    remoteUrlPlaceholder: 'https://example.com/mcp',
+    remoteUrlDescription:
+      'Вставьте URL MCP-сервера. Поддерживаются как Streamable HTTP, так и устаревшие SSE-эндпоинты.',
     noServerInstalled: 'MCP-серверы не настроены',
     serverNameRequired: 'Имя сервера не может быть пустым',
     commandRequired: 'Команда не может быть пустой',

@@ -759,6 +759,14 @@ const jaJP = {
     stdio: 'Stdioモード',
     sse: 'SSEモード',
     http: 'HTTPモード',
+    local: 'ローカル（Stdio）',
+    remote: 'リモート',
+    localModeDescription: 'Box サンドボックス内でサブプロセスとして MCP サーバーをローカル実行します。',
+    remoteModeDescription:
+      'URL でリモート MCP サーバーに接続します。トランスポート（Streamable HTTP または SSE）は自動検出されます。',
+    remoteUrlPlaceholder: 'https://example.com/mcp',
+    remoteUrlDescription:
+      'MCP サーバーの URL を貼り付けてください。Streamable HTTP と従来の SSE エンドポイントの両方に対応しています。',
     selectMode: '接続モードを選択',
     noServerInstalled: 'MCPサーバーが設定されていません',
     serverNameRequired: 'サーバー名は必須です',

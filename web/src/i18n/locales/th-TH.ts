@@ -743,6 +743,15 @@ const thTH = {
     stdio: 'โหมด Stdio',
     sse: 'โหมด SSE',
     http: 'โหมด HTTP',
+    local: 'ภายในเครื่อง (Stdio)',
+    remote: 'ระยะไกล',
+    localModeDescription:
+      'รันเซิร์ฟเวอร์ MCP ภายในเครื่องเป็นโปรเซสย่อยภายในแซนด์บ็อกซ์ Box',
+    remoteModeDescription:
+      'เชื่อมต่อกับเซิร์ฟเวอร์ MCP ระยะไกลด้วย URL ระบบจะตรวจจับการขนส่ง (Streamable HTTP หรือ SSE) โดยอัตโนมัติ',
+    remoteUrlPlaceholder: 'https://example.com/mcp',
+    remoteUrlDescription:
+      'วาง URL ของเซิร์ฟเวอร์ MCP รองรับทั้งเอนด์พอยต์ Streamable HTTP และ SSE แบบเดิม',
     noServerInstalled: 'ยังไม่มีเซิร์ฟเวอร์ MCP ที่กำหนดค่า',
     serverNameRequired: 'ชื่อเซิร์ฟเวอร์ต้องไม่ว่างเปล่า',
     commandRequired: 'คำสั่งต้องไม่ว่างเปล่า',

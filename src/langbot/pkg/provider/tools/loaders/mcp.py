@@ -167,6 +167,38 @@ class RuntimeMCPSession:
 
         await self.session.initialize()
 
+    async def _init_remote_server(self):
+        """Connect to a remote MCP server, auto-detecting the transport.
+
+        The user only supplies a URL ("remote" mode); they should not have to
+        know whether the server speaks the modern Streamable HTTP transport or
+        the legacy HTTP+SSE transport. Following the MCP backwards-compatibility
+        guidance, we try Streamable HTTP first and fall back to SSE when it
+        fails (e.g. the endpoint returns 4xx to the initialize POST).
+        """
+        try:
+            await self._init_streamable_http_server()
+            return
+        except Exception as e:
+            self.ap.logger.info(
+                f'MCP server {self.server_name}: Streamable HTTP transport failed '
+                f'({self._describe_exception(e)}), falling back to SSE'
+            )
+
+        # The Streamable HTTP attempt may have partially entered the transport /
+        # session into the exit stack before failing. Tear it down and start
+        # from a clean stack before trying SSE so we do not leak connections.
+        try:
+            await self.exit_stack.aclose()
+        except Exception as cleanup_err:
+            self.ap.logger.debug(
+                f'MCP server {self.server_name}: error cleaning up before SSE fallback: {cleanup_err}'
+            )
+        self.exit_stack = AsyncExitStack()
+        self.session = None
+
+        await self._init_sse_server()
+
     _MAX_RETRIES = 3
     _RETRY_DELAYS = [2, 4, 8]
 
@@ -175,6 +207,8 @@ class RuntimeMCPSession:
         try:
             if self.server_config['mode'] == 'stdio':
                 await self._init_stdio_python_server()
+            elif self.server_config['mode'] == 'remote':
+                await self._init_remote_server()
             elif self.server_config['mode'] == 'sse':
                 await self._init_sse_server()
             elif self.server_config['mode'] == 'http':

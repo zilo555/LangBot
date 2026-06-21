@@ -47,8 +47,7 @@ import {
   MCPTool,
   MCPServer,
   MCPSessionStatus,
-  MCPServerExtraArgsSSE,
-  MCPServerExtraArgsHttp,
+  MCPServerExtraArgsRemote,
   MCPServerExtraArgsStdio,
 } from '@/app/infra/entities/api';
 import { CustomApiError } from '@/app/infra/entities/common';
@@ -246,17 +245,18 @@ function ToolsList({ tools, t }: { tools: MCPTool[]; t: TFunction }) {
 }
 
 function RuntimePanel({
-  isEditMode,
   mcpTesting,
   runtimeInfo,
   t,
 }: {
-  isEditMode: boolean;
   mcpTesting: boolean;
   runtimeInfo: MCPServerRuntimeInfo | null;
   t: TFunction;
 }) {
-  if (!isEditMode || !runtimeInfo) {
+  // Show tools whenever we have runtime info — either an edit-mode server or a
+  // create-mode test result captured from the transient session. Only fall back
+  // to the placeholder when there is genuinely nothing to show.
+  if (!runtimeInfo) {
     return (
       <div className="flex min-h-[280px] items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
         {t('mcp.noToolsFound')}
@@ -293,7 +293,7 @@ const getFormSchema = (t: TFunction) =>
       name: z
         .string({ required_error: t('mcp.nameRequired') })
         .min(1, { message: t('mcp.nameRequired') }),
-      mode: z.enum(['sse', 'stdio', 'http']),
+      mode: z.enum(['stdio', 'remote']),
       timeout: z
         .number({ invalid_type_error: t('mcp.timeoutMustBeNumber') })
         .positive({ message: t('mcp.timeoutMustBePositive') })
@@ -316,7 +316,7 @@ const getFormSchema = (t: TFunction) =>
         .optional(),
     })
     .superRefine((data, ctx) => {
-      if (data.mode === 'sse' || data.mode === 'http') {
+      if (data.mode === 'remote') {
         if (!data.url || data.url.length === 0) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
@@ -391,7 +391,7 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
     resolver: zodResolver(formSchema) as unknown as Resolver<FormValues>,
     defaultValues: {
       name: '',
-      mode: 'sse',
+      mode: 'remote',
       url: '',
       command: '',
       args: [],
@@ -465,7 +465,7 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
     } else {
       form.reset({
         name: '',
-        mode: 'sse',
+        mode: 'remote',
         url: '',
         command: '',
         args: [],
@@ -535,9 +535,15 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
       const resp = await httpClient.getMCPServer(serverName);
       const server = resp.server ?? resp;
 
+      // Transport selection collapsed to two modes: 'stdio' (local) and
+      // 'remote' (URL, auto-detected transport). Servers persisted under the
+      // legacy 'sse'/'http' modes are surfaced as 'remote' so they remain
+      // editable; saving rewrites them to 'remote'.
+      const isRemote = server.mode !== 'stdio';
+
       const formValues: FormValues = {
         name: server.name.replace(/__/g, '/'),
-        mode: server.mode,
+        mode: isRemote ? 'remote' : 'stdio',
         url: '',
         command: '',
         args: [],
@@ -553,12 +559,10 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
       }[] = [];
       let newStdioArgs: { value: string }[] = [];
 
-      if (server.mode === 'sse' || server.mode === 'http') {
+      if (isRemote) {
         formValues.url = server.extra_args.url;
-        formValues.timeout = server.extra_args.timeout;
-
-        if (server.mode === 'sse') {
-          formValues.ssereadtimeout = server.extra_args.ssereadtimeout;
+        if (typeof server.extra_args.timeout === 'number') {
+          formValues.timeout = server.extra_args.timeout;
         }
 
         if (server.extra_args.headers) {
@@ -571,7 +575,7 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
           );
           formValues.extra_args = newExtraArgs;
         }
-      } else if (server.mode === 'stdio') {
+      } else {
         formValues.command = server.extra_args.command;
         newStdioArgs = (server.extra_args.args || []).map((arg: string) => ({
           value: arg,
@@ -611,36 +615,22 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
     try {
       let serverConfig: MCPServer;
 
-      if (value.mode === 'sse' || value.mode === 'http') {
+      if (value.mode === 'remote') {
         const headers: Record<string, string> = {};
         value.extra_args?.forEach((arg) => {
           headers[arg.key] = String(arg.value);
         });
 
-        if (value.mode === 'sse') {
-          serverConfig = {
-            name: value.name,
-            mode: 'sse',
-            enable: true,
-            extra_args: {
-              url: value.url!,
-              headers,
-              timeout: value.timeout,
-              ssereadtimeout: value.ssereadtimeout,
-            },
-          };
-        } else {
-          serverConfig = {
-            name: value.name,
-            mode: 'http',
-            enable: true,
-            extra_args: {
-              url: value.url!,
-              headers,
-              timeout: value.timeout,
-            },
-          };
-        }
+        serverConfig = {
+          name: value.name,
+          mode: 'remote',
+          enable: true,
+          extra_args: {
+            url: value.url!,
+            headers,
+            timeout: value.timeout,
+          },
+        };
       } else {
         const env: Record<string, string> = {};
         value.extra_args?.forEach((arg) => {
@@ -694,21 +684,9 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
       // are always current.
       const formExtraArgs = form.getValues('extra_args') ?? [];
       const formStdioArgs = form.getValues('args') ?? [];
-      let extraArgsData:
-        | MCPServerExtraArgsSSE
-        | MCPServerExtraArgsHttp
-        | MCPServerExtraArgsStdio;
+      let extraArgsData: MCPServerExtraArgsRemote | MCPServerExtraArgsStdio;
 
-      if (mode === 'sse') {
-        extraArgsData = {
-          url: form.getValues('url')!,
-          timeout: form.getValues('timeout'),
-          headers: Object.fromEntries(
-            formExtraArgs.map((arg) => [arg.key, arg.value]),
-          ),
-          ssereadtimeout: form.getValues('ssereadtimeout'),
-        };
-      } else if (mode === 'http') {
+      if (mode === 'remote') {
         extraArgsData = {
           url: form.getValues('url')!,
           timeout: form.getValues('timeout'),
@@ -758,6 +736,17 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
             } else {
               if (isEditMode) {
                 await loadServerForEdit(form.getValues('name'));
+              } else {
+                // Create mode has no persisted server to reload tools from.
+                // The backend stashes the discovered runtime info (status +
+                // tools) in the test task's metadata before tearing the
+                // transient session down — surface it so a successful test
+                // shows the tool list instead of "no tools found".
+                const runtimeInfoFromTest = taskResp.task_context?.metadata
+                  ?.runtime_info as MCPServerRuntimeInfo | undefined;
+                if (runtimeInfoFromTest) {
+                  setRuntimeInfo(runtimeInfoFromTest);
+                }
               }
               toast.success(t('mcp.testSuccess'));
             }
@@ -871,18 +860,22 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="http">{t('mcp.http')}</SelectItem>
+                  <SelectItem value="remote">{t('mcp.remote')}</SelectItem>
                   <SelectItem value="stdio" disabled={!boxAvailable}>
-                    {t('mcp.stdio')}
+                    {t('mcp.local')}
                     {!boxAvailable && (
                       <span className="ml-2 text-xs text-muted-foreground">
                         ({t('mcp.boxRequired')})
                       </span>
                     )}
                   </SelectItem>
-                  <SelectItem value="sse">{t('mcp.sse')}</SelectItem>
                 </SelectContent>
               </Select>
+              <FormDescription>
+                {watchMode === 'stdio'
+                  ? t('mcp.localModeDescription')
+                  : t('mcp.remoteModeDescription')}
+              </FormDescription>
               {stdioBlockedByBox && (
                 <BoxUnavailableNotice
                   hint={boxHint}
@@ -895,7 +888,7 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
           )}
         />
 
-        {(watchMode === 'sse' || watchMode === 'http') && (
+        {watchMode === 'remote' && (
           <>
             <FormField
               control={form.control}
@@ -907,8 +900,14 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
                     <span className="text-destructive">*</span>
                   </FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input
+                      {...field}
+                      placeholder={t('mcp.remoteUrlPlaceholder')}
+                    />
                   </FormControl>
+                  <FormDescription>
+                    {t('mcp.remoteUrlDescription')}
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -932,27 +931,6 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
                 </FormItem>
               )}
             />
-
-            {watchMode === 'sse' && (
-              <FormField
-                control={form.control}
-                name="ssereadtimeout"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('mcp.sseTimeout')}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder={t('mcp.sseTimeoutDescription')}
-                        {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
           </>
         )}
 
@@ -1006,9 +984,7 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
 
         <FormItem>
           <FormLabel>
-            {watchMode === 'sse' || watchMode === 'http'
-              ? t('mcp.headers')
-              : t('mcp.env')}
+            {watchMode === 'remote' ? t('mcp.headers') : t('mcp.env')}
           </FormLabel>
           <div className="space-y-2">
             {extraArgs.map((arg, index) => (
@@ -1037,9 +1013,7 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
               </div>
             ))}
             <Button type="button" variant="outline" onClick={addExtraArg}>
-              {watchMode === 'sse' || watchMode === 'http'
-                ? t('mcp.addHeader')
-                : t('mcp.addEnvVar')}
+              {watchMode === 'remote' ? t('mcp.addHeader') : t('mcp.addEnvVar')}
             </Button>
           </div>
           <FormDescription>
@@ -1052,12 +1026,7 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
   );
 
   const runtimePanel = (
-    <RuntimePanel
-      isEditMode={isEditMode}
-      mcpTesting={mcpTesting}
-      runtimeInfo={runtimeInfo}
-      t={t}
-    />
+    <RuntimePanel mcpTesting={mcpTesting} runtimeInfo={runtimeInfo} t={t} />
   );
 
   // In edit mode the right side shows a tablist switching between the live

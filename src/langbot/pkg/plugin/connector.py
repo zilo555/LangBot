@@ -248,6 +248,15 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
 
         mode = mcp_data.get('mode') or 'stdio'
         extra_args = mcp_data.get('extra_args') or {}
+        # The MCP transport selection was simplified to two modes: 'stdio'
+        # (local, Box-sandboxed) and 'remote' (the runtime auto-detects
+        # Streamable HTTP vs. legacy SSE from the URL). Marketplace records may
+        # still carry the older 'http'/'sse' modes — normalize them to 'remote'
+        # so the installed server shows up correctly in the two-option UI. The
+        # connection args (url/headers/timeout/ssereadtimeout) are preserved and
+        # consumed by the auto-detecting remote transport regardless.
+        if mode in ('http', 'sse'):
+            mode = 'remote'
         # Marketplace records carry the rendered README markdown; persist it so
         # the detail page Docs tab works offline and without a marketplace round-trip.
         readme = mcp_data.get('readme') or ''

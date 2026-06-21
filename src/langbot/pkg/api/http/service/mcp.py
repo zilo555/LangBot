@@ -141,15 +141,25 @@ class MCPService:
 
         runtime_mcp_session: RuntimeMCPSession | None = None
 
+        ctx = taskmgr.TaskContext.new()
+
         if server_name != '_':
             runtime_mcp_session = self.ap.tool_mgr.mcp_tool_loader.get_session(server_name)
             if runtime_mcp_session is None:
                 raise ValueError(f'Server not found: {server_name}')
 
-            if runtime_mcp_session.status == MCPSessionStatus.ERROR:
-                coroutine = runtime_mcp_session.start()
-            else:
-                coroutine = runtime_mcp_session.refresh()
+            persisted_session = runtime_mcp_session
+
+            async def _refresh_and_report() -> None:
+                if persisted_session.status == MCPSessionStatus.ERROR:
+                    await persisted_session.start()
+                else:
+                    await persisted_session.refresh()
+                # Surface the discovered tools so the config page can render them
+                # even for an already-hosted server.
+                ctx.metadata['runtime_info'] = persisted_session.get_runtime_info_dict()
+
+            coroutine = _refresh_and_report()
         else:
             runtime_mcp_session = await self.ap.tool_mgr.mcp_tool_loader.load_mcp_server(server_config=server_data)
 
@@ -160,6 +170,12 @@ class MCPService:
             async def _run_and_cleanup() -> None:
                 try:
                     await test_session.start()
+                    # Capture the runtime info (status + discovered tools) BEFORE
+                    # shutting the transient session down. The create/edit config
+                    # page has no persisted server to reload from, so without this
+                    # a successful test could only show "no tools found". The
+                    # frontend reads ctx.metadata.runtime_info to render the tools.
+                    ctx.metadata['runtime_info'] = test_session.get_runtime_info_dict()
                 finally:
                     try:
                         await test_session.shutdown()
@@ -171,7 +187,6 @@ class MCPService:
 
             coroutine = _run_and_cleanup()
 
-        ctx = taskmgr.TaskContext.new()
         wrapper = self.ap.task_mgr.create_user_task(
             coroutine,
             kind='mcp-operation',

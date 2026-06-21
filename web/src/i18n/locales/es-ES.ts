@@ -768,6 +768,15 @@ const esES = {
     stdio: 'Modo Stdio',
     sse: 'Modo SSE',
     http: 'Modo HTTP',
+    local: 'Local (Stdio)',
+    remote: 'Remoto',
+    localModeDescription:
+      'Ejecuta un servidor MCP localmente como subproceso dentro del sandbox de Box.',
+    remoteModeDescription:
+      'Conéctate a un servidor MCP remoto por URL. El transporte (Streamable HTTP o SSE) se detecta automáticamente.',
+    remoteUrlPlaceholder: 'https://example.com/mcp',
+    remoteUrlDescription:
+      'Pega la URL del servidor MCP. Se admiten tanto endpoints Streamable HTTP como SSE heredados.',
     noServerInstalled: 'No hay servidores MCP configurados',
     serverNameRequired: 'El nombre del servidor no puede estar vacío',
     commandRequired: 'El comando no puede estar vacío',

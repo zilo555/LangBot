@@ -531,6 +531,15 @@ export interface MCPServerExtraArgsHttp {
   timeout: number;
 }
 
+// "remote" mode: the user only supplies a URL; the backend auto-detects the
+// transport (Streamable HTTP first, falling back to legacy SSE). headers /
+// timeout are optional advanced settings.
+export interface MCPServerExtraArgsRemote {
+  url: string;
+  headers?: Record<string, string>;
+  timeout?: number;
+}
+
 export enum MCPSessionStatus {
   CONNECTING = 'connecting',
   CONNECTED = 'connected',
@@ -572,6 +581,17 @@ export type MCPServer =
       mode: 'http';
       enable: boolean;
       extra_args: MCPServerExtraArgsHttp;
+      runtime_info?: MCPServerRuntimeInfo;
+      readme?: string;
+      created_at?: string;
+      updated_at?: string;
+    }
+  | {
+      uuid?: string;
+      name: string;
+      mode: 'remote';
+      enable: boolean;
+      extra_args: MCPServerExtraArgsRemote;
       runtime_info?: MCPServerRuntimeInfo;
       readme?: string;
       created_at?: string;
