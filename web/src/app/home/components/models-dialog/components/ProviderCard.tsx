@@ -150,9 +150,9 @@ export default function ProviderCard({
   return (
     <Card className="mb-2">
       <Collapsible open={isExpanded} onOpenChange={onToggle}>
-        <CardHeader className="py-0 px-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 flex-1">
+        <CardHeader className="py-0 px-4 min-w-0 [&]:grid-cols-[minmax(0,1fr)]">
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
               {isLangBotModels ? (
                 <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0">
                   <img
