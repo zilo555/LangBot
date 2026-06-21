@@ -16,7 +16,7 @@ export interface RecommendationList {
   plugins: PluginV4[];
 }
 
-// Match the main plugin grid: grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4
+// Match the main plugin grid: auto-fill columns with a 24rem minimum width
 
 function pluginToVO(
   plugin: PluginV4,
@@ -144,7 +144,7 @@ function RecommendationListRow({
       </div>
       <div
         ref={gridRef}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-6"
+        className="grid gap-6 [grid-template-columns:repeat(auto-fill,minmax(min(100%,24rem),1fr))]"
       >
         {visiblePlugins.map((plugin) => (
           <PluginMarketCardComponent
