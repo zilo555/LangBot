@@ -680,6 +680,10 @@ const jaJP = {
     loadFailed:
       'プラグインリストの取得に失敗しました。後でもう一度お試しください',
     noDescription: '説明がありません',
+    recommendation: {
+      pause: '自動ローテーションを一時停止',
+      resume: '自動ローテーションを再開',
+    },
     notFound: 'プラグイン情報が見つかりません',
     sortBy: '並び順',
     sort: {
@@ -761,7 +765,8 @@ const jaJP = {
     http: 'HTTPモード',
     local: 'ローカル（Stdio）',
     remote: 'リモート',
-    localModeDescription: 'Box サンドボックス内でサブプロセスとして MCP サーバーをローカル実行します。',
+    localModeDescription:
+      'Box サンドボックス内でサブプロセスとして MCP サーバーをローカル実行します。',
     remoteModeDescription:
       'URL でリモート MCP サーバーに接続します。トランスポート（Streamable HTTP または SSE）は自動検出されます。',
     remoteUrlPlaceholder: 'https://example.com/mcp',

@@ -674,6 +674,10 @@ const enUS = {
     installFailed: 'Installation failed, please try again later',
     loadFailed: 'Failed to get plugin list, please try again later',
     noDescription: 'No description available',
+    recommendation: {
+      pause: 'Pause auto-rotation',
+      resume: 'Resume auto-rotation',
+    },
     notFound: 'Plugin information not found',
     sortBy: 'Sort by',
     sort: {

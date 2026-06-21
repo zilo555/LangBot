@@ -687,6 +687,10 @@ const esES = {
     loadFailed:
       'Error al obtener la lista de plugins, por favor inténtalo más tarde',
     noDescription: 'No hay descripción disponible',
+    recommendation: {
+      pause: 'Pausar rotación automática',
+      resume: 'Reanudar rotación automática',
+    },
     notFound: 'No se encontró la información del plugin',
     sortBy: 'Ordenar por',
     sort: {

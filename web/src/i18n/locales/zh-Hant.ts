@@ -643,6 +643,10 @@ const zhHant = {
     installFailed: '安裝失敗，請稍後重試',
     loadFailed: '取得插件列表失敗，請稍後重試',
     noDescription: '暫無描述',
+    recommendation: {
+      pause: '暫停自動輪播',
+      resume: '繼續自動輪播',
+    },
     notFound: '插件資訊未找到',
     sortBy: '排序方式',
     sort: {

@@ -679,6 +679,10 @@ const viVN = {
     installFailed: 'Cài đặt thất bại, vui lòng thử lại sau',
     loadFailed: 'Lấy danh sách plugin thất bại, vui lòng thử lại sau',
     noDescription: 'Không có mô tả',
+    recommendation: {
+      pause: 'Tạm dừng tự động xoay',
+      resume: 'Tiếp tục tự động xoay',
+    },
     notFound: 'Không tìm thấy thông tin plugin',
     sortBy: 'Sắp xếp theo',
     sort: {

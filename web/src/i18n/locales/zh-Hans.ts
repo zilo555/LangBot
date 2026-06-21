@@ -643,6 +643,10 @@ const zhHans = {
     installFailed: '安装失败，请稍后重试',
     loadFailed: '获取插件列表失败，请稍后重试',
     noDescription: '暂无描述',
+    recommendation: {
+      pause: '暂停自动轮播',
+      resume: '继续自动轮播',
+    },
     notFound: '插件信息未找到',
     sortBy: '排序方式',
     sort: {
