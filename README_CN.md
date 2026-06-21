@@ -80,7 +80,7 @@ uvx langbot
 ```bash
 git clone https://github.com/langbot-app/LangBot
 cd LangBot/docker
-docker compose up -d
+docker compose --profile all up -d
 ```
 
 ### 一键云部署
