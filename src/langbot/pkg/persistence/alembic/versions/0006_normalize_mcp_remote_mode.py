@@ -31,9 +31,7 @@ def upgrade() -> None:
     inspector = sa.inspect(conn)
     if 'mcp_servers' not in inspector.get_table_names():
         return
-    conn.execute(
-        sa.text("UPDATE mcp_servers SET mode = 'remote' WHERE mode IN ('sse', 'http')")
-    )
+    conn.execute(sa.text("UPDATE mcp_servers SET mode = 'remote' WHERE mode IN ('sse', 'http')"))
 
 
 def downgrade() -> None:
@@ -46,6 +44,4 @@ def downgrade() -> None:
     inspector = sa.inspect(conn)
     if 'mcp_servers' not in inspector.get_table_names():
         return
-    conn.execute(
-        sa.text("UPDATE mcp_servers SET mode = 'http' WHERE mode = 'remote'")
-    )
+    conn.execute(sa.text("UPDATE mcp_servers SET mode = 'http' WHERE mode = 'remote'"))

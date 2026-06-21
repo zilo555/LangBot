@@ -191,9 +191,7 @@ class RuntimeMCPSession:
         try:
             await self.exit_stack.aclose()
         except Exception as cleanup_err:
-            self.ap.logger.debug(
-                f'MCP server {self.server_name}: error cleaning up before SSE fallback: {cleanup_err}'
-            )
+            self.ap.logger.debug(f'MCP server {self.server_name}: error cleaning up before SSE fallback: {cleanup_err}')
         self.exit_stack = AsyncExitStack()
         self.session = None
 
