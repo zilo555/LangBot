@@ -55,6 +55,12 @@ LangBot is an **open-source, production-grade platform** for building AI-powered
 
 ---
 
+## 😎 Stay Updated
+
+Click the Star and Watch buttons in the top-right corner of the repository to get the latest updates.
+
+![star gif](https://langbot.app/star.gif)
+
 ## Quick Start
 
 ### ☁️ LangBot Cloud (Recommended)
@@ -179,12 +185,6 @@ _Note: Public demo environment. Do not enter sensitive information._
 - [Discord Community](https://discord.gg/wdNEHETs87)
 
 ---
-
-## 😎 Stay Updated
-
-Click the Star and Watch buttons in the top-right corner of the repository to get the latest updates.
-
-![star gif](https://docs.langbot.app/star.gif)
 
 ## Star History
 

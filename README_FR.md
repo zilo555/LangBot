@@ -54,6 +54,12 @@ LangBot est une **plateforme open-source de niveau production** pour créer des 
 
 ---
 
+## 😎 Restez à Jour
+
+Cliquez sur les boutons Star et Watch dans le coin supérieur droit du dépôt pour obtenir les dernières mises à jour.
+
+![star gif](https://langbot.app/star.gif)
+
 ## Démarrage Rapide
 
 ### ☁️ LangBot Cloud (Recommandé)
@@ -175,12 +181,6 @@ LangBot est **agent-friendly par conception** —— vos agents de codage (Claud
 - [Communauté Discord](https://discord.gg/wdNEHETs87)
 
 ---
-
-## 😎 Restez à Jour
-
-Cliquez sur les boutons Star et Watch dans le coin supérieur droit du dépôt pour obtenir les dernières mises à jour.
-
-![star gif](https://docs.langbot.app/star.gif)
 
 ## Historique des Stars
 

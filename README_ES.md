@@ -54,6 +54,12 @@ LangBot es una **plataforma de código abierto y grado de producción** para con
 
 ---
 
+## 😎 Manténgase Actualizado
+
+Haga clic en los botones Star y Watch en la esquina superior derecha del repositorio para obtener las últimas actualizaciones.
+
+![star gif](https://langbot.app/star.gif)
+
 ## Inicio Rápido
 
 ### ☁️ LangBot Cloud (Recomendado)
@@ -175,12 +181,6 @@ LangBot es **agent-friendly por diseño** —— tus agentes de codificación (C
 - [Comunidad de Discord](https://discord.gg/wdNEHETs87)
 
 ---
-
-## 😎 Manténgase Actualizado
-
-Haga clic en los botones Star y Watch en la esquina superior derecha del repositorio para obtener las últimas actualizaciones.
-
-![star gif](https://docs.langbot.app/star.gif)
 
 ## Historial de Stars
 
