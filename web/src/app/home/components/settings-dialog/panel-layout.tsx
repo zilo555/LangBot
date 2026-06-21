@@ -21,7 +21,7 @@ export function PanelToolbar({
   return (
     <div
       className={cn(
-        'flex shrink-0 items-center justify-between gap-3 border-b px-6 py-3',
+        'flex shrink-0 flex-wrap items-center justify-between gap-2 border-b px-3 py-3 sm:gap-3 sm:px-6',
         className,
       )}
     >

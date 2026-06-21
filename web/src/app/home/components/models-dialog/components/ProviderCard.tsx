@@ -171,9 +171,11 @@ export default function ProviderCard({
                 />
               )}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <CardTitle className="text-base">{provider.name}</CardTitle>
-                  <Badge variant="outline" className="text-xs">
+                <div className="flex items-center gap-2 min-w-0">
+                  <CardTitle className="text-base truncate">
+                    {provider.name}
+                  </CardTitle>
+                  <Badge variant="outline" className="text-xs shrink-0">
                     {t('models.modelsCount', { count: totalModels })}
                   </Badge>
                 </div>
@@ -193,7 +195,7 @@ export default function ProviderCard({
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-1 ml-2">
+            <div className="flex items-center gap-1 ml-2 shrink-0">
               {isLangBotModels && accountType !== 'space' && (
                 <Button
                   variant="outline"
