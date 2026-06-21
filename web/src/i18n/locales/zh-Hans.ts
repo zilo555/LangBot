@@ -566,8 +566,7 @@ const zhHans = {
     tabLogs: '日志',
     logsLevelAll: '全部级别',
     logsRefresh: '刷新',
-    logsAutoRefreshOn: '自动刷新：开',
-    logsAutoRefreshOff: '自动刷新：关',
+    logsAutoRefresh: '自动刷新',
     logsEmpty: '暂无日志。插件通过 logger 打印的日志会显示在这里。',
     fileUpload: {
       tooLarge: '文件大小超过 10MB 限制',

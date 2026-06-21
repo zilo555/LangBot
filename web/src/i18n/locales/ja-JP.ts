@@ -598,8 +598,7 @@ const jaJP = {
     tabLogs: 'ログ',
     logsLevelAll: 'すべてのレベル',
     logsRefresh: '更新',
-    logsAutoRefreshOn: '自動更新：オン',
-    logsAutoRefreshOff: '自動更新：オフ',
+    logsAutoRefresh: '自動更新',
     logsEmpty:
       'ログはまだありません。プラグインが logger で出力したログがここに表示されます。',
     fileUpload: {

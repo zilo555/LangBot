@@ -593,8 +593,7 @@ const enUS = {
     tabLogs: 'Logs',
     logsLevelAll: 'All levels',
     logsRefresh: 'Refresh',
-    logsAutoRefreshOn: 'Auto-refresh: On',
-    logsAutoRefreshOff: 'Auto-refresh: Off',
+    logsAutoRefresh: 'Auto-refresh',
     logsEmpty:
       'No logs yet. Logs printed by the plugin via logger will appear here.',
     fileUpload: {

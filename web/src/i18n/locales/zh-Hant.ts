@@ -566,8 +566,7 @@ const zhHant = {
     tabLogs: '日誌',
     logsLevelAll: '全部級別',
     logsRefresh: '重新整理',
-    logsAutoRefreshOn: '自動重新整理：開',
-    logsAutoRefreshOff: '自動重新整理：關',
+    logsAutoRefresh: '自動重新整理',
     logsEmpty: '暫無日誌。外掛透過 logger 列印的日誌會顯示在這裡。',
     fileUpload: {
       tooLarge: '檔案大小超過 10MB 限制',

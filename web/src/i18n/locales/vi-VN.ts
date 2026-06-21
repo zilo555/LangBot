@@ -599,8 +599,7 @@ const viVN = {
     tabLogs: 'Nhật ký',
     logsLevelAll: 'Tất cả cấp độ',
     logsRefresh: 'Làm mới',
-    logsAutoRefreshOn: 'Tự động làm mới: Bật',
-    logsAutoRefreshOff: 'Tự động làm mới: Tắt',
+    logsAutoRefresh: 'Tự động làm mới',
     logsEmpty:
       'Chưa có nhật ký. Nhật ký do plugin in qua logger sẽ hiển thị ở đây.',
     fileUpload: {

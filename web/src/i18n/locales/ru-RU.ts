@@ -604,8 +604,7 @@ const ruRU = {
     tabLogs: 'Журналы',
     logsLevelAll: 'Все уровни',
     logsRefresh: 'Обновить',
-    logsAutoRefreshOn: 'Автообновление: вкл.',
-    logsAutoRefreshOff: 'Автообновление: выкл.',
+    logsAutoRefresh: 'Автообновление',
     logsEmpty:
       'Журналов пока нет. Здесь появятся логи, выводимые плагином через logger.',
     fileUpload: {

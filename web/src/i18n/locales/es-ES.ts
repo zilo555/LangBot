@@ -605,8 +605,7 @@ const esES = {
     tabLogs: 'Registros',
     logsLevelAll: 'Todos los niveles',
     logsRefresh: 'Actualizar',
-    logsAutoRefreshOn: 'Auto-actualizar: Activado',
-    logsAutoRefreshOff: 'Auto-actualizar: Desactivado',
+    logsAutoRefresh: 'Auto-actualizar',
     logsEmpty:
       'Aún no hay registros. Los registros que el plugin imprima mediante logger aparecerán aquí.',
     fileUpload: {

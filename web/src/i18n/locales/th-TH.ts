@@ -585,8 +585,7 @@ const thTH = {
     tabLogs: 'บันทึก',
     logsLevelAll: 'ทุกระดับ',
     logsRefresh: 'รีเฟรช',
-    logsAutoRefreshOn: 'รีเฟรชอัตโนมัติ: เปิด',
-    logsAutoRefreshOff: 'รีเฟรชอัตโนมัติ: ปิด',
+    logsAutoRefresh: 'รีเฟรชอัตโนมัติ',
     logsEmpty: 'ยังไม่มีบันทึก บันทึกที่ปลั๊กอินพิมพ์ผ่าน logger จะแสดงที่นี่',
     fileUpload: {
       tooLarge: 'ขนาดไฟล์เกินขีดจำกัด 10MB',

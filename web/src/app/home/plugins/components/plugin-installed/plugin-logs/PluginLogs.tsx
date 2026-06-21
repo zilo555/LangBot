@@ -3,6 +3,8 @@ import { httpClient } from '@/app/infra/http/HttpClient';
 import { useTranslation } from 'react-i18next';
 import { PluginLogEntry } from '@/app/infra/entities/plugin';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -116,17 +118,19 @@ export default function PluginLogs({
           />
           {t('plugins.logsRefresh')}
         </Button>
-        <Button
-          type="button"
-          variant={autoRefresh ? 'default' : 'outline'}
-          size="sm"
-          className="h-8"
-          onClick={() => setAutoRefresh((v) => !v)}
-        >
-          {autoRefresh
-            ? t('plugins.logsAutoRefreshOn')
-            : t('plugins.logsAutoRefreshOff')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Switch
+            id="plugin-logs-auto-refresh"
+            checked={autoRefresh}
+            onCheckedChange={setAutoRefresh}
+          />
+          <Label
+            htmlFor="plugin-logs-auto-refresh"
+            className="cursor-pointer text-sm font-normal text-muted-foreground"
+          >
+            {t('plugins.logsAutoRefresh')}
+          </Label>
+        </div>
       </div>
 
       <div
