@@ -1,3 +1,5 @@
+import base64
+
 import quart
 
 from .. import group
@@ -36,8 +38,6 @@ class SurveyRouterGroup(group.RouterGroup):
             json_data = await quart.request.get_json(silent=True) or {}
             content = str(json_data.get('content', '')).strip()
             attachments = json_data.get('attachments', [])
-            page_url = str(json_data.get('page_url', ''))[:2048]
-            user_agent = str(json_data.get('user_agent', ''))[:512]
 
             if not content:
                 return self.fail(1, 'content required')
@@ -57,7 +57,11 @@ class SurveyRouterGroup(group.RouterGroup):
                 name = str(item.get('name', ''))[:255]
                 if not data_url.startswith('data:image/'):
                     continue
-                if len(data_url) > 2_800_000:
+                try:
+                    payload = data_url.split(',', 1)[1]
+                    if len(base64.b64decode(payload, validate=True)) > 1024 * 1024:
+                        return self.fail(5, 'attachment too large')
+                except Exception:
                     return self.fail(5, 'attachment too large')
                 normalized_attachments.append({'name': name, 'mime_type': mime_type, 'data_url': data_url})
 
@@ -65,8 +69,6 @@ class SurveyRouterGroup(group.RouterGroup):
                 ok = await self.ap.survey.submit_feedback(
                     content=content,
                     attachments=normalized_attachments,
-                    page_url=page_url,
-                    user_agent=user_agent,
                     user_email=user_email,
                 )
                 if ok:

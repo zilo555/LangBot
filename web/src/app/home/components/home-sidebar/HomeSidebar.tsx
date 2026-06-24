@@ -1570,6 +1570,7 @@ export default function HomeSidebar({
   );
   const [hasNewVersion, setHasNewVersion] = useState(false);
   const [versionDialogOpen, setVersionDialogOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [userEmail, setUserEmail] = useState<string>('');
   const [starCount, setStarCount] = useState<number | null>(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
@@ -2040,25 +2041,15 @@ export default function HomeSidebar({
                       <CircleHelp />
                       {t('common.helpDocs')}
                     </DropdownMenuItem>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <DropdownMenuItem
-                          onSelect={(event) => event.preventDefault()}
-                        >
-                          <Lightbulb />
-                          {t('common.featureRequest')}
-                        </DropdownMenuItem>
-                      </PopoverTrigger>
-                      <PopoverContent
-                        side={isMobile ? 'bottom' : 'right'}
-                        align="start"
-                        className="w-auto p-3"
-                      >
-                        <FeedbackPopoverContent
-                          onSubmitted={() => setUserMenuOpen(false)}
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        setFeedbackOpen(true);
+                      }}
+                    >
+                      <Lightbulb />
+                      {t('common.featureRequest')}
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
                         window.open(
@@ -2104,6 +2095,18 @@ export default function HomeSidebar({
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
+
+      <Dialog open={feedbackOpen} onOpenChange={setFeedbackOpen}>
+        <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[380px]">
+          <DialogHeader className="sr-only">
+            <DialogTitle>{t('monitoring.feedback.title')}</DialogTitle>
+            <DialogDescription>
+              {t('monitoring.feedback.description')}
+            </DialogDescription>
+          </DialogHeader>
+          <FeedbackPopoverContent onSubmitted={() => setFeedbackOpen(false)} />
+        </DialogContent>
+      </Dialog>
 
       <SettingsDialog
         open={settingsOpen}

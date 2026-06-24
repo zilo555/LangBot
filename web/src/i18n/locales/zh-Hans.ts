@@ -1302,7 +1302,7 @@ const zhHans = {
       platform: '平台',
       exportFeedback: '导出反馈',
       description:
-        '告诉我们遇到的问题或想要的改进。提交时会附带实例 UUID、登录账号和当前页面信息，方便定位。',
+        '告诉我们遇到的问题或想要的改进。提交时会附带实例 UUID 和登录账号，方便定位。',
       placeholder: '请描述你的建议、问题或复现步骤...',
       attachImage: '添加图片',
       screenshot: '截图',
@@ -1310,7 +1310,7 @@ const zhHans = {
       privacyHint: '请勿提交敏感密钥、密码或私人聊天内容。',
       contentRequired: '请先填写反馈内容',
       imageOnly: '仅支持图片附件',
-      imageTooLarge: '单张图片不能超过 2MB',
+      imageTooLarge: '单张图片不能超过 1MB',
       tooManyImages: '最多添加 3 张图片',
       screenshotFailed: '截图失败，请尝试粘贴或上传图片',
       submitSuccess: '反馈已提交，感谢！',

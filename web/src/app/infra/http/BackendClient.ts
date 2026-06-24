@@ -1334,8 +1334,6 @@ export class BackendClient extends BaseHttpClient {
 
   public submitFeedback(data: {
     content: string;
-    page_url?: string;
-    user_agent?: string;
     attachments?: Array<{
       name: string;
       mime_type: string;

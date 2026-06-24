@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Camera, ImagePlus, Loader2, Paperclip, Send, X } from 'lucide-react';
+import { ImagePlus, Loader2, Paperclip, Send, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -7,18 +7,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { httpClient } from '@/app/infra/http/HttpClient';
 
 const MAX_ATTACHMENTS = 3;
-const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 1024 * 1024;
 
 type FeedbackAttachment = {
   name: string;
   mime_type: string;
   data_url: string;
 };
-
-function bytesFromDataUrl(dataUrl: string): number {
-  const payload = dataUrl.split(',')[1] || '';
-  return Math.ceil((payload.length * 3) / 4);
-}
 
 function readImageFile(file: File): Promise<FeedbackAttachment> {
   return new Promise((resolve, reject) => {
@@ -48,38 +43,7 @@ function readImageFile(file: File): Promise<FeedbackAttachment> {
   });
 }
 
-async function captureScreen(): Promise<FeedbackAttachment> {
-  if (!navigator.mediaDevices?.getDisplayMedia) {
-    throw new Error('unsupported');
-  }
-  const stream = await navigator.mediaDevices.getDisplayMedia({
-    video: true,
-    audio: false,
-  });
-  try {
-    const video = document.createElement('video');
-    video.srcObject = stream;
-    await video.play();
-    await new Promise((resolve) => requestAnimationFrame(resolve));
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('canvas_unavailable');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const dataUrl = canvas.toDataURL('image/png');
-    if (bytesFromDataUrl(dataUrl) > MAX_IMAGE_BYTES) {
-      throw new Error('too_large');
-    }
-    return {
-      name: `screenshot-${Date.now()}.png`,
-      mime_type: 'image/png',
-      data_url: dataUrl,
-    };
-  } finally {
-    stream.getTracks().forEach((track) => track.stop());
-  }
-}
+const FEEDBACK_I18N_PREFIX = 'monitoring.feedback';
 
 export function FeedbackPopoverContent({
   onSubmitted,
@@ -87,17 +51,20 @@ export function FeedbackPopoverContent({
   onSubmitted?: () => void;
 }) {
   const { t } = useTranslation();
+  const tf = useCallback(
+    (key: string) => t(`${FEEDBACK_I18N_PREFIX}.${key}`),
+    [t],
+  );
   const [content, setContent] = useState('');
   const [attachments, setAttachments] = useState<FeedbackAttachment[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [capturing, setCapturing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const addFiles = useCallback(
     async (files: File[]) => {
       const slots = MAX_ATTACHMENTS - attachments.length;
       if (slots <= 0) {
-        toast.error(t('feedback.tooManyImages'));
+        toast.error(tf('tooManyImages'));
         return;
       }
       const picked = files.slice(0, slots);
@@ -108,9 +75,7 @@ export function FeedbackPopoverContent({
         } catch (error) {
           const msg = error instanceof Error ? error.message : '';
           toast.error(
-            msg === 'too_large'
-              ? t('feedback.imageTooLarge')
-              : t('feedback.imageOnly'),
+            msg === 'too_large' ? tf('imageTooLarge') : tf('imageOnly'),
           );
         }
       }
@@ -118,7 +83,7 @@ export function FeedbackPopoverContent({
         setAttachments((prev) => [...prev, ...next].slice(0, MAX_ATTACHMENTS));
       }
     },
-    [attachments.length, t],
+    [attachments.length, tf],
   );
 
   useEffect(() => {
@@ -135,31 +100,10 @@ export function FeedbackPopoverContent({
     return () => window.removeEventListener('paste', onPaste);
   }, [addFiles]);
 
-  const handleCapture = async () => {
-    try {
-      if (attachments.length >= MAX_ATTACHMENTS) {
-        toast.error(t('feedback.tooManyImages'));
-        return;
-      }
-      setCapturing(true);
-      const screenshot = await captureScreen();
-      setAttachments((prev) => [...prev, screenshot].slice(0, MAX_ATTACHMENTS));
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : '';
-      toast.error(
-        msg === 'too_large'
-          ? t('feedback.imageTooLarge')
-          : t('feedback.screenshotFailed'),
-      );
-    } finally {
-      setCapturing(false);
-    }
-  };
-
   const handleSubmit = async () => {
     const trimmed = content.trim();
     if (!trimmed) {
-      toast.error(t('feedback.contentRequired'));
+      toast.error(tf('contentRequired'));
       return;
     }
     try {
@@ -167,34 +111,32 @@ export function FeedbackPopoverContent({
       await httpClient.submitFeedback({
         content: trimmed,
         attachments,
-        page_url: window.location.href,
-        user_agent: navigator.userAgent,
       });
-      toast.success(t('feedback.submitSuccess'));
+      toast.success(tf('submitSuccess'));
       setContent('');
       setAttachments([]);
       onSubmitted?.();
     } catch {
-      toast.error(t('feedback.submitFailed'));
+      toast.error(tf('submitFailed'));
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="w-80 space-y-3 p-1" onClick={(e) => e.stopPropagation()}>
+    <div className="space-y-3" onClick={(e) => e.stopPropagation()}>
       <div>
-        <div className="text-sm font-medium">{t('feedback.title')}</div>
+        <div className="text-sm font-medium">{tf('title')}</div>
         <p className="mt-1 text-xs text-muted-foreground">
-          {t('feedback.description')}
+          {tf('description')}
         </p>
       </div>
       <Textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        placeholder={t('feedback.placeholder')}
+        placeholder={tf('placeholder')}
         maxLength={5000}
-        className="min-h-28 resize-none text-sm"
+        className="min-h-32 resize-none text-sm"
       />
       <div className="flex flex-wrap gap-2">
         {attachments.map((item, index) => (
@@ -213,7 +155,7 @@ export function FeedbackPopoverContent({
                 setAttachments((prev) => prev.filter((_, i) => i !== index))
               }
               className="absolute right-1 top-1 rounded-full bg-black/60 p-0.5 text-white"
-              aria-label={t('feedback.removeImage')}
+              aria-label={tf('removeImage')}
             >
               <X className="size-3" />
             </button>
@@ -240,21 +182,7 @@ export function FeedbackPopoverContent({
             onClick={() => fileInputRef.current?.click()}
           >
             <ImagePlus className="mr-1 size-4" />
-            {t('feedback.attachImage')}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={handleCapture}
-            disabled={capturing}
-          >
-            {capturing ? (
-              <Loader2 className="mr-1 size-4 animate-spin" />
-            ) : (
-              <Camera className="mr-1 size-4" />
-            )}
-            {t('feedback.screenshot')}
+            {tf('attachImage')}
           </Button>
         </div>
         <span className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -268,10 +196,10 @@ export function FeedbackPopoverContent({
         ) : (
           <Send className="mr-2 size-4" />
         )}
-        {t('feedback.submit')}
+        {tf('submit')}
       </Button>
       <p className="text-[11px] leading-relaxed text-muted-foreground">
-        {t('feedback.privacyHint')}
+        {tf('privacyHint')}
       </p>
     </div>
   );

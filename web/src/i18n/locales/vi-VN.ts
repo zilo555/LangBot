@@ -1364,6 +1364,22 @@ const viVN = {
       inaccurateReasons: 'Lý do không chính xác',
       platform: 'Nền tảng',
       exportFeedback: 'Xuất phản hồi',
+      description:
+        'Tell us what went wrong or what could be better. Instance UUID and login account are included for diagnosis.',
+      placeholder: 'Describe your suggestion, issue, or reproduction steps...',
+      attachImage: 'Add image',
+      screenshot: 'Screenshot',
+      submit: 'Submit feedback',
+      privacyHint:
+        'Do not include secrets, passwords, or private chat content.',
+      contentRequired: 'Please enter feedback first',
+      imageOnly: 'Only image attachments are supported',
+      imageTooLarge: 'Each image must be under 1MB',
+      tooManyImages: 'You can attach up to 3 images',
+      screenshotFailed: 'Screenshot failed. Try pasting or uploading an image.',
+      submitSuccess: 'Feedback submitted. Thanks!',
+      submitFailed: 'Failed to submit feedback. Please try again later.',
+      removeImage: 'Remove image',
     },
     queries: {
       title: 'Truy vấn',

@@ -200,8 +200,6 @@ class SurveyManager:
         self,
         content: str,
         attachments: list[dict],
-        page_url: str,
-        user_agent: str,
         user_email: str | None = None,
     ) -> bool:
         """Submit an on-demand user feedback item to Space."""
@@ -210,12 +208,6 @@ class SurveyManager:
         try:
             url = f'{self._space_url}/api/v1/survey/feedback'
             metadata = await self._build_base_metadata(user_email)
-            metadata.update(
-                {
-                    'page_url': page_url,
-                    'user_agent': user_agent,
-                }
-            )
             payload = {
                 'instance_id': constants.instance_id,
                 'content': content,
