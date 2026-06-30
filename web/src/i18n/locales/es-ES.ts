@@ -838,7 +838,9 @@ const esES = {
     toolsFound: 'herramientas',
     unknownError: 'Error desconocido',
     noToolsFound: 'No se encontraron herramientas',
+    noResourcesFound: 'No se encontraron recursos',
     tabTools: 'Herramientas',
+    tabResources: 'Recursos',
     tabDocs: 'Documentación',
     noReadme: 'No hay documentación disponible',
     parseResultFailed: 'Error al analizar el resultado de la prueba',
@@ -858,6 +860,12 @@ const esES = {
     toolCount: 'Herramientas: {{count}}',
     parameterCount: 'Parámetros: {{count}}',
     noParameters: 'Sin parámetros',
+    resourceCount: 'Recursos: {{count}}',
+    resourceBinaryContent: 'Contenido binario (no se puede mostrar)',
+    resourceBinaryOmitted:
+      'Contenido binario omitido por la política de seguridad de recursos',
+    resourceTruncated: 'Contenido truncado por límites de bytes o tokens',
+    resourceReadFailed: 'Error al leer el contenido del recurso',
     statusConnected: 'Conectado',
     statusDisconnected: 'Desconectado',
     statusError: 'Error de conexión',
@@ -952,9 +960,12 @@ const esES = {
       selectPlugins: 'Seleccionar plugins',
       pluginsTitle: 'Plugins',
       mcpServersTitle: 'Servidores MCP',
+      mcpResourcesTitle: 'Recursos MCP',
       noMCPServersSelected: 'No hay servidores MCP seleccionados',
+      noMCPResourcesAvailable: 'No hay recursos MCP disponibles',
       addMCPServer: 'Añadir servidor MCP',
       selectMCPServers: 'Seleccionar servidores MCP',
+      enableMCPResourceAgentRead: 'Permitir lectura del modelo',
       toolCount: '{{count}} herramientas',
       noPluginsInstalled: 'No hay plugins instalados',
       noMCPServersConfigured: 'No hay servidores MCP configurados',
@@ -970,6 +981,40 @@ const esES = {
       addSkill: 'Añadir skill',
       selectSkills: 'Seleccionar skills',
       noSkillsAvailable: 'No hay skills disponibles',
+      mcpServersScopeTooltip:
+        'Aquí solo se controla qué servidores MCP se vinculan al Pipeline. Las herramientas y recursos MCP concretos se eligen en AI Feature > Local Agent.',
+      enableAllMCPServersTooltip:
+        'Al activarlo, todos los servidores MCP configurados y habilitados serán candidatos para herramientas y recursos MCP en AI Feature.',
+    },
+    localAgent: {
+      toolsTitle: 'Herramientas',
+      toolsDescription:
+        'Selecciona las herramientas de plugins, MCP e integradas disponibles para este Local Agent.',
+      toolsScopeTooltip:
+        'Las herramientas MCP solo provienen de servidores MCP vinculados en Extensiones. Vincula allí otro servidor para poder seleccionarlo aquí.',
+      enableAllTools: 'Activar todas las herramientas',
+      allToolsEnabled: 'Todas las herramientas disponibles están activadas',
+      noToolsSelected: 'No hay herramientas seleccionadas',
+      editTools: 'Editar herramientas',
+      builtinTools: 'Herramientas integradas',
+      pluginTools: 'Herramientas de plugin',
+      skillTools: 'Herramientas de skill',
+      mcpTools: 'Herramientas MCP',
+      mcpToolsScopeTooltip:
+        'Aquí solo se muestran herramientas de servidores MCP permitidos actualmente en Extensiones.',
+      selectTools: 'Seleccionar herramientas',
+      resourcesTitle: 'Recursos',
+      resourcesDescription:
+        'Selecciona los recursos MCP y bases de conocimiento disponibles para este Local Agent.',
+      knowledgeBases: 'Bases de conocimiento',
+      mcpResources: 'Recursos MCP',
+      mcpResourcesScopeTooltip:
+        'Aquí solo se muestran recursos expuestos por servidores MCP permitidos actualmente en Extensiones.',
+      enableMCPResourceRead: 'Permitir que el modelo lea recursos MCP',
+      mcpResourceReadTooltip:
+        'Si se desactiva, los recursos MCP seleccionados no se inyectarán en el contexto del modelo.',
+      noMCPResourcesAvailable: 'No hay recursos MCP disponibles',
+      selectKnowledgeBases: 'Seleccionar bases de conocimiento',
     },
     debugDialog: {
       title: 'Chat del Pipeline',
