@@ -1,6 +1,6 @@
 """add mcp resource preferences to pipelines
 
-Revision ID: 0008_add_mcp_resource_preferences
+Revision ID: 0008_mcp_resource_prefs
 Revises: 0007_add_bot_admins
 Create Date: 2026-06-30
 """
@@ -13,7 +13,7 @@ from typing import Any
 import sqlalchemy as sa
 from alembic import op
 
-revision = '0008_add_mcp_resource_preferences'
+revision = '0008_mcp_resource_prefs'
 down_revision = '0007_add_bot_admins'
 branch_labels = None
 depends_on = None
