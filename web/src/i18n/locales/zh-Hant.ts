@@ -942,6 +942,8 @@ const zhHant = {
       mcpTools: 'MCP 工具',
       mcpToolsScopeTooltip:
         '這裡僅展示擴展集成目前允許的 MCP 伺服器提供的工具。',
+      skillToolsScopeTooltip:
+        '技能工具會在 LangBot 技能服務和 Box 沙箱後端可用時出現，用於讓 Agent 啟用或註冊技能。',
       selectTools: '選擇工具',
       resourcesTitle: '資源',
       resourcesDescription: '選擇此內建 Agent 可以讀取的 MCP 資源和知識庫。',

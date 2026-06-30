@@ -987,6 +987,8 @@ const viVN = {
       mcpTools: 'Công cụ MCP',
       mcpToolsScopeTooltip:
         'Tại đây chỉ hiển thị công cụ từ máy chủ MCP hiện được cho phép trong Tiện ích mở rộng.',
+      skillToolsScopeTooltip:
+        'Công cụ kỹ năng khả dụng khi dịch vụ kỹ năng LangBot và backend sandbox Box đã sẵn sàng. Chúng cho phép Agent kích hoạt hoặc đăng ký kỹ năng.',
       selectTools: 'Chọn công cụ',
       resourcesTitle: 'Tài nguyên',
       resourcesDescription:

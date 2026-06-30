@@ -989,6 +989,8 @@ const jaJP = {
       mcpTools: 'MCP ツール',
       mcpToolsScopeTooltip:
         '拡張機能で現在許可されている MCP サーバーのツールだけが表示されます。',
+      skillToolsScopeTooltip:
+        'スキルツールは LangBot のスキルサービスと Box サンドボックスバックエンドが利用可能なときに表示され、Agent がスキルを有効化または登録できるようにします。',
       selectTools: 'ツールを選択',
       resourcesTitle: 'リソース',
       resourcesDescription:

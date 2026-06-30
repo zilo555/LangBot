@@ -995,6 +995,8 @@ const ruRU = {
       mcpTools: 'Инструменты MCP',
       mcpToolsScopeTooltip:
         'Здесь показаны только инструменты MCP-серверов, разрешённых сейчас в Расширениях.',
+      skillToolsScopeTooltip:
+        'Инструменты навыков доступны, когда сервис навыков LangBot и backend песочницы Box готовы. Они позволяют агенту активировать или регистрировать навыки.',
       selectTools: 'Выбрать инструменты',
       resourcesTitle: 'Ресурсы',
       resourcesDescription:

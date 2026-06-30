@@ -1002,6 +1002,8 @@ const esES = {
       mcpTools: 'Herramientas MCP',
       mcpToolsScopeTooltip:
         'Aquí solo se muestran herramientas de servidores MCP permitidos actualmente en Extensiones.',
+      skillToolsScopeTooltip:
+        'Las herramientas de skill aparecen cuando el servicio de skills de LangBot y el backend de sandbox Box están disponibles. Permiten al agente activar o registrar skills.',
       selectTools: 'Seleccionar herramientas',
       resourcesTitle: 'Recursos',
       resourcesDescription:

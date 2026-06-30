@@ -971,6 +971,8 @@ const thTH = {
       mcpTools: 'เครื่องมือ MCP',
       mcpToolsScopeTooltip:
         'ที่นี่จะแสดงเฉพาะเครื่องมือจากเซิร์ฟเวอร์ MCP ที่อนุญาตอยู่ในส่วนขยาย',
+      skillToolsScopeTooltip:
+        'เครื่องมือสกิลจะแสดงเมื่อบริการสกิลของ LangBot และแบ็กเอนด์แซนด์บ็อกซ์ Box พร้อมใช้งาน เพื่อให้ Agent เปิดใช้หรือลงทะเบียนสกิลได้',
       selectTools: 'เลือกเครื่องมือ',
       resourcesTitle: 'ทรัพยากร',
       resourcesDescription:
