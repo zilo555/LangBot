@@ -145,8 +145,10 @@ export function useMonitoringData(filterState: FilterState) {
             level: string;
             platform?: string;
             user_id?: string;
+            user_name?: string;
             runner_name?: string;
             variables?: string;
+            role?: string;
           }) => ({
             id: msg.id,
             timestamp: parseUTCTimestamp(msg.timestamp),
@@ -160,8 +162,10 @@ export function useMonitoringData(filterState: FilterState) {
             level: msg.level as 'info' | 'warning' | 'error' | 'debug',
             platform: msg.platform,
             userId: msg.user_id,
+            userName: msg.user_name,
             runnerName: msg.runner_name,
             variables: msg.variables,
+            role: msg.role,
           }),
         ),
         llmCalls: llmCalls.map(
@@ -179,6 +183,7 @@ export function useMonitoringData(filterState: FilterState) {
             bot_name: string;
             pipeline_id: string;
             pipeline_name: string;
+            session_id?: string;
             error_message?: string;
             message_id?: string;
           }) => ({
@@ -197,6 +202,7 @@ export function useMonitoringData(filterState: FilterState) {
             botName: call.bot_name,
             pipelineId: call.pipeline_id,
             pipelineName: call.pipeline_name,
+            sessionId: call.session_id,
             errorMessage: call.error_message,
             messageId: call.message_id,
           }),
@@ -317,6 +323,7 @@ export function useMonitoringData(filterState: FilterState) {
           botName: call.botName,
           pipelineId: call.pipelineId,
           pipelineName: call.pipelineName,
+          sessionId: call.sessionId,
         }),
       );
 

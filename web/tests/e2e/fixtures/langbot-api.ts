@@ -72,6 +72,7 @@ interface LangBotApiMockState {
   counters: Record<string, number>;
   knowledgeBases: KnowledgeBaseMock[];
   mcpServers: MCPServerMock[];
+  monitoringData: unknown;
   pipelines: PipelineMock[];
   skills: SkillMock[];
 }
@@ -689,11 +690,12 @@ async function handleBackendApi(route: Route, state: LangBotApiMockState) {
   }
 
   if (path === '/api/v1/monitoring/data') {
-    return fulfillJson(route, emptyMonitoringData());
+    return fulfillJson(route, state.monitoringData);
   }
 
   if (path === '/api/v1/monitoring/overview') {
-    return fulfillJson(route, emptyMonitoringData().overview);
+    const data = state.monitoringData as { overview?: unknown };
+    return fulfillJson(route, data.overview || emptyMonitoringData().overview);
   }
 
   if (path === '/api/v1/monitoring/token-statistics') {
@@ -798,14 +800,19 @@ async function handleCloudApi(route: Route) {
 
 export async function installLangBotApiMocks(
   page: Page,
-  options: { authenticated?: boolean; storage?: JsonRecord } = {},
+  options: {
+    authenticated?: boolean;
+    monitoringData?: unknown;
+    storage?: JsonRecord;
+  } = {},
 ) {
-  const { authenticated = false, storage = {} } = options;
+  const { authenticated = false, monitoringData, storage = {} } = options;
   const state: LangBotApiMockState = {
     bots: [],
     counters: {},
     knowledgeBases: [],
     mcpServers: [],
+    monitoringData: monitoringData || emptyMonitoringData(),
     pipelines: [],
     skills: [],
   };

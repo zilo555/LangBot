@@ -11,8 +11,10 @@ export interface MonitoringMessage {
   level: 'info' | 'warning' | 'error' | 'debug';
   platform?: string;
   userId?: string;
+  userName?: string;
   runnerName?: string;
   variables?: string;
+  role?: 'user' | 'assistant' | string;
 }
 
 export interface LLMCall {
@@ -31,6 +33,7 @@ export interface LLMCall {
   botName: string;
   pipelineId: string;
   pipelineName: string;
+  sessionId?: string;
   errorMessage?: string;
   messageId?: string;
 }
