@@ -1364,6 +1364,15 @@ const jaJP = {
       avgDuration: '平均期間',
       calls: '呼び出し',
     },
+    toolCalls: {
+      title: 'ツール呼び出し',
+      totalCalls: '呼び出し',
+      duration: 'ツール時間',
+      errorCalls: '失敗した呼び出し',
+      arguments: '引数',
+      result: '結果',
+      noToolCalls: 'ツール呼び出しは記録されていません',
+    },
     tokens: {
       totalTokens: '総トークン数',
       inputTokens: '入力トークン',

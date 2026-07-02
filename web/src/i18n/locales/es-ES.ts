@@ -1391,6 +1391,15 @@ const esES = {
       avgDuration: 'Duración promedio',
       calls: 'Llamadas',
     },
+    toolCalls: {
+      title: 'Llamadas de herramientas',
+      totalCalls: 'Llamadas',
+      duration: 'Duración de herramientas',
+      errorCalls: 'Llamadas fallidas',
+      arguments: 'Argumentos',
+      result: 'Resultado',
+      noToolCalls: 'No se registraron llamadas de herramientas',
+    },
     tokens: {
       totalTokens: 'Tokens totales',
       inputTokens: 'Tokens de entrada',

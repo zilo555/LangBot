@@ -1367,6 +1367,15 @@ const ruRU = {
       avgDuration: 'Средняя длительность',
       calls: 'Вызовы',
     },
+    toolCalls: {
+      title: 'Вызовы инструментов',
+      totalCalls: 'Вызовы',
+      duration: 'Длительность инструментов',
+      errorCalls: 'Неудачные вызовы',
+      arguments: 'Аргументы',
+      result: 'Результат',
+      noToolCalls: 'Вызовы инструментов не записаны',
+    },
     tokens: {
       totalTokens: 'Всего токенов',
       inputTokens: 'Входные токены',

@@ -1360,6 +1360,15 @@ const viVN = {
       avgDuration: 'Thời lượng trung bình',
       calls: 'Cuộc gọi',
     },
+    toolCalls: {
+      title: 'Lượt gọi công cụ',
+      totalCalls: 'Lượt gọi',
+      duration: 'Thời lượng công cụ',
+      errorCalls: 'Lượt gọi thất bại',
+      arguments: 'Tham số',
+      result: 'Kết quả',
+      noToolCalls: 'Chưa ghi nhận lượt gọi công cụ',
+    },
     tokens: {
       totalTokens: 'Tổng số Token',
       inputTokens: 'Token đầu vào',

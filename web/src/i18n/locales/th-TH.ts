@@ -1335,6 +1335,15 @@ const thTH = {
       avgDuration: 'ระยะเวลาเฉลี่ย',
       calls: 'การเรียก',
     },
+    toolCalls: {
+      title: 'การเรียกใช้เครื่องมือ',
+      totalCalls: 'การเรียก',
+      duration: 'ระยะเวลาเครื่องมือ',
+      errorCalls: 'การเรียกที่ล้มเหลว',
+      arguments: 'อาร์กิวเมนต์',
+      result: 'ผลลัพธ์',
+      noToolCalls: 'ยังไม่มีการบันทึกการเรียกใช้เครื่องมือ',
+    },
     tokens: {
       totalTokens: 'Token ทั้งหมด',
       inputTokens: 'Token อินพุต',

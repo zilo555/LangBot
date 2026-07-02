@@ -1292,6 +1292,15 @@ const zhHant = {
       avgDuration: '平均持續時間',
       calls: '呼叫次數',
     },
+    toolCalls: {
+      title: '工具呼叫',
+      totalCalls: '呼叫次數',
+      duration: '工具耗時',
+      errorCalls: '失敗次數',
+      arguments: '參數',
+      result: '結果',
+      noToolCalls: '未記錄工具呼叫',
+    },
     tokens: {
       totalTokens: '總 Token 數',
       inputTokens: '輸入 Token',

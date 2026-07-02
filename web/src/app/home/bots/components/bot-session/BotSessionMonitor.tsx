@@ -534,13 +534,15 @@ const BotSessionMonitor = forwardRef<
         message,
       }),
     );
-    const toolItems: SessionTimelineItem[] = toolCalls.map((toolCall, index) => ({
-      id: `tool-${toolCall.id}`,
-      type: 'tool',
-      timestamp: parseTimestamp(toolCall.timestamp).getTime(),
-      order: index * 2 + 1,
-      toolCall,
-    }));
+    const toolItems: SessionTimelineItem[] = toolCalls.map(
+      (toolCall, index) => ({
+        id: `tool-${toolCall.id}`,
+        type: 'tool',
+        timestamp: parseTimestamp(toolCall.timestamp).getTime(),
+        order: index * 2 + 1,
+        toolCall,
+      }),
+    );
 
     return [...messageItems, ...toolItems].sort(
       (a, b) => a.timestamp - b.timestamp || a.order - b.order,
@@ -813,9 +815,7 @@ const BotSessionMonitor = forwardRef<
                                             )}
                                           </div>
                                           <pre className="whitespace-pre-wrap break-words rounded bg-background/80 p-2 font-mono text-[11px] leading-4 text-muted-foreground">
-                                            {truncateToolDetail(
-                                              call.arguments,
-                                            )}
+                                            {truncateToolDetail(call.arguments)}
                                           </pre>
                                         </div>
                                       )}

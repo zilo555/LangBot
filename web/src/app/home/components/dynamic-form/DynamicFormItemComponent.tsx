@@ -398,17 +398,15 @@ export default function DynamicFormItemComponent({
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              {config.options
-                ?.filter(hasUsableOptionName)
-                .map((option) => (
-                  <SelectItem
-                    key={option.name}
-                    value={option.name}
-                    description={option.name}
-                  >
-                    {extractI18nObject(option.label)}
-                  </SelectItem>
-                ))}
+              {config.options?.filter(hasUsableOptionName).map((option) => (
+                <SelectItem
+                  key={option.name}
+                  value={option.name}
+                  description={option.name}
+                >
+                  {extractI18nObject(option.label)}
+                </SelectItem>
+              ))}
             </SelectGroup>
           </SelectContent>
         </Select>
@@ -1361,9 +1359,7 @@ export default function DynamicFormItemComponent({
                       {engineName}
                     </div>
                     {kbs.map((base) => {
-                      const isSelected = tempSelectedKBIds.includes(
-                        base.uuid,
-                      );
+                      const isSelected = tempSelectedKBIds.includes(base.uuid);
                       return (
                         <div
                           key={base.uuid}
