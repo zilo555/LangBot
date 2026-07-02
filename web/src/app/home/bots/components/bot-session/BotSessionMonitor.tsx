@@ -745,13 +745,13 @@ const BotSessionMonitor = forwardRef<
                         const detailsId = `tool-call-details-${call.id}`;
                         return (
                           <div key={item.id} className="flex justify-start">
-                            <div className="max-w-3xl rounded-2xl rounded-bl-sm border bg-muted px-3 py-2 text-sm">
+                            <div className="max-w-2xl rounded-xl rounded-bl-sm border border-border/60 bg-muted/25 px-2.5 py-1.5 text-xs text-muted-foreground">
                               <button
                                 type="button"
                                 className={cn(
-                                  'flex w-full items-start justify-between gap-3 rounded-lg text-left outline-none transition-colors',
+                                  'flex w-full items-center justify-between gap-3 rounded-md text-left outline-none transition-colors',
                                   hasToolDetails &&
-                                    'cursor-pointer hover:bg-background/50 focus-visible:ring-2 focus-visible:ring-ring',
+                                    'cursor-pointer hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-ring',
                                 )}
                                 aria-expanded={
                                   hasToolDetails ? expandedToolCall : undefined
@@ -768,29 +768,29 @@ const BotSessionMonitor = forwardRef<
                                 <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                                   {hasToolDetails &&
                                     (expandedToolCall ? (
-                                      <ChevronDown className="mt-0.5 h-3.5 w-3.5 text-muted-foreground" />
+                                      <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
                                     ) : (
-                                      <ChevronRight className="mt-0.5 h-3.5 w-3.5 text-muted-foreground" />
+                                      <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
                                     ))}
-                                  <Wrench className="mt-0.5 h-3.5 w-3.5 text-muted-foreground" />
-                                  <span className="min-w-0 max-w-[18rem] truncate font-medium text-foreground">
+                                  <Wrench className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
+                                  <span className="min-w-0 max-w-[18rem] truncate text-[13px] font-medium text-foreground/75">
                                     {call.tool_name}
                                   </span>
-                                  <span className="rounded bg-background px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                                  <span className="rounded border border-border/50 bg-background/60 px-1.5 py-0.5 text-[10px] leading-none text-muted-foreground">
                                     {call.tool_source}
                                   </span>
                                   <span
                                     className={cn(
-                                      'rounded px-1.5 py-0.5 text-[11px] font-medium',
+                                      'rounded px-1.5 py-0.5 text-[10px] font-medium leading-none',
                                       call.status === 'success'
-                                        ? 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300'
-                                        : 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300',
+                                        ? 'bg-green-100/70 text-green-700 dark:bg-green-950/60 dark:text-green-300'
+                                        : 'bg-red-100/70 text-red-700 dark:bg-red-950/60 dark:text-red-300',
                                     )}
                                   >
                                     {call.status}
                                   </span>
                                 </div>
-                                <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground">
+                                <span className="shrink-0 text-[11px] tabular-nums text-muted-foreground/80">
                                   {formatDuration(call.duration)}
                                 </span>
                               </button>
