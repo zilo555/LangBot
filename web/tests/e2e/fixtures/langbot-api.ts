@@ -194,6 +194,102 @@ function makePipeline(
   };
 }
 
+function pipelineMetadata() {
+  return {
+    configs: [
+      {
+        name: 'ai',
+        label: {
+          en_US: 'AI Capabilities',
+          zh_Hans: 'AI 能力',
+        },
+        stages: [
+          {
+            name: 'runner',
+            label: {
+              en_US: 'Runtime',
+              zh_Hans: '运行方式',
+            },
+            config: [
+              {
+                id: 'runner',
+                name: 'runner',
+                label: {
+                  en_US: 'Runner',
+                  zh_Hans: '运行器',
+                },
+                type: 'select',
+                required: true,
+                default: 'local-agent',
+                options: [
+                  {
+                    name: 'local-agent',
+                    label: {
+                      en_US: 'Built-in Agent',
+                      zh_Hans: '内置 Agent',
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            name: 'local-agent',
+            label: {
+              en_US: 'Built-in Agent',
+              zh_Hans: '内置 Agent',
+            },
+            config: [
+              {
+                id: 'model',
+                name: 'model',
+                label: {
+                  en_US: 'Model',
+                  zh_Hans: '模型',
+                },
+                type: 'model-fallback-selector',
+                required: true,
+                default: {
+                  primary: 'llm-valid',
+                  fallbacks: [],
+                },
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+}
+
+function providerModelList() {
+  return {
+    models: [
+      {
+        uuid: '',
+        name: 'Broken Empty UUID Model',
+        provider_uuid: 'provider-empty',
+        provider: {
+          uuid: 'provider-empty',
+          name: 'Broken Provider',
+          requester: 'mock-provider',
+        },
+      },
+      {
+        uuid: 'llm-valid',
+        name: 'Valid Mock Model',
+        provider_uuid: 'provider-valid',
+        provider: {
+          uuid: 'provider-valid',
+          name: 'Mock Provider',
+          requester: 'mock-provider',
+        },
+        abilities: ['func_call'],
+      },
+    ],
+  };
+}
+
 function knowledgeEngine() {
   return {
     plugin_id: 'builtin/minimal-knowledge',
@@ -395,8 +491,20 @@ async function handleBackendApi(route: Route, state: LangBotApiMockState) {
     });
   }
 
+  if (path === '/api/v1/provider/models/llm') {
+    return fulfillJson(route, providerModelList());
+  }
+
+  if (path === '/api/v1/provider/models/embedding') {
+    return fulfillJson(route, { models: [] });
+  }
+
+  if (path === '/api/v1/provider/models/rerank') {
+    return fulfillJson(route, { models: [] });
+  }
+
   if (path === '/api/v1/pipelines/_/metadata') {
-    return fulfillJson(route, { configs: [] });
+    return fulfillJson(route, pipelineMetadata());
   }
 
   if (path === '/api/v1/pipelines') {
