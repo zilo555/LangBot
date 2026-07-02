@@ -1,4 +1,9 @@
-import { ErrorLog, LLMCall, MonitoringMessage } from '../types/monitoring';
+import {
+  ErrorLog,
+  LLMCall,
+  MonitoringMessage,
+  ToolCall,
+} from '../types/monitoring';
 
 type MessageRole = 'user' | 'assistant' | 'unknown';
 
@@ -19,6 +24,7 @@ export interface ConversationTurn {
   assistantMessages: MonitoringMessage[];
   messages: MonitoringMessage[];
   llmCalls: LLMCall[];
+  toolCalls: ToolCall[];
   errors: ErrorLog[];
   status: 'success' | 'error' | 'pending';
   level: 'info' | 'warning' | 'error' | 'debug';
@@ -26,6 +32,7 @@ export interface ConversationTurn {
   outputTokens: number;
   totalTokens: number;
   totalDuration: number;
+  totalToolDuration: number;
 }
 
 function normalizeRole(
@@ -91,6 +98,7 @@ function createTurn(message: MonitoringMessage): ConversationTurn {
     assistantMessages: [],
     messages: [],
     llmCalls: [],
+    toolCalls: [],
     errors: [],
     status: message.status,
     level: message.level,
@@ -98,6 +106,7 @@ function createTurn(message: MonitoringMessage): ConversationTurn {
     outputTokens: 0,
     totalTokens: 0,
     totalDuration: 0,
+    totalToolDuration: 0,
   };
 }
 
@@ -174,12 +183,16 @@ export function buildConversationTurns(
   messages: MonitoringMessage[],
   llmCalls: LLMCall[],
   errors: ErrorLog[],
+  toolCalls: ToolCall[] = [],
 ): ConversationTurn[] {
-  const llmMessageIds = new Set(
-    llmCalls
+  const activityMessageIds = new Set([
+    ...llmCalls
       .map((call) => call.messageId)
       .filter((messageId): messageId is string => Boolean(messageId)),
-  );
+    ...toolCalls
+      .map((call) => call.messageId)
+      .filter((messageId): messageId is string => Boolean(messageId)),
+  ]);
   const visibleMessages = messages
     .filter((message) => hasRenderableMessageContent(message.messageContent))
     .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
@@ -189,7 +202,7 @@ export function buildConversationTurns(
   const messageIdToTurn = new Map<string, ConversationTurn>();
 
   for (const message of visibleMessages) {
-    const role = normalizeRole(message, llmMessageIds);
+    const role = normalizeRole(message, activityMessageIds);
     const previousTurn = lastTurnBySession.get(message.sessionId);
     const shouldStartTurn = role === 'user' || !previousTurn;
     const turn = shouldStartTurn ? createTurn(message) : previousTurn;
@@ -229,6 +242,25 @@ export function buildConversationTurns(
     }
   }
 
+  for (const call of toolCalls) {
+    const turn =
+      (call.messageId ? messageIdToTurn.get(call.messageId) : undefined) ??
+      findTurnBySessionTime(sessionTurns, call.sessionId, call.timestamp);
+
+    if (!turn) {
+      continue;
+    }
+
+    turn.toolCalls.push(call);
+    turn.totalToolDuration += call.duration;
+    updateTurnActivity(turn, call.timestamp);
+
+    if (call.status === 'error') {
+      turn.status = 'error';
+      turn.level = 'error';
+    }
+  }
+
   for (const error of errors) {
     const turn =
       (error.messageId ? messageIdToTurn.get(error.messageId) : undefined) ??
@@ -250,6 +282,9 @@ export function buildConversationTurns(
       (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
     );
     turn.llmCalls.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+    turn.toolCalls.sort(
+      (a, b) => a.timestamp.getTime() - b.timestamp.getTime(),
+    );
     turn.errors.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
   }
 

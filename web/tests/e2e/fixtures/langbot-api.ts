@@ -73,7 +73,10 @@ interface LangBotApiMockState {
   knowledgeBases: KnowledgeBaseMock[];
   mcpServers: MCPServerMock[];
   monitoringData: unknown;
+  monitoringSessions: unknown[];
   pipelines: PipelineMock[];
+  sessionAnalyses: Record<string, unknown>;
+  sessionMessages: Record<string, unknown[]>;
   skills: SkillMock[];
 }
 
@@ -123,12 +126,14 @@ function emptyMonitoringData() {
     },
     messages: [],
     llmCalls: [],
+    toolCalls: [],
     embeddingCalls: [],
     sessions: [],
     errors: [],
     totalCount: {
       messages: 0,
       llmCalls: 0,
+      toolCalls: 0,
       embeddingCalls: 0,
       sessions: 0,
       errors: 0,
@@ -693,6 +698,37 @@ async function handleBackendApi(route: Route, state: LangBotApiMockState) {
     return fulfillJson(route, state.monitoringData);
   }
 
+  if (path === '/api/v1/monitoring/sessions') {
+    return fulfillJson(route, {
+      sessions: state.monitoringSessions,
+      total: state.monitoringSessions.length,
+    });
+  }
+
+  if (path === '/api/v1/monitoring/messages') {
+    const sessionId = url.searchParams.get('sessionId') || '';
+    const messages = state.sessionMessages[sessionId] || [];
+    return fulfillJson(route, {
+      messages,
+      total: messages.length,
+    });
+  }
+
+  const sessionAnalysisMatch = path.match(
+    /^\/api\/v1\/monitoring\/sessions\/([^/]+)\/analysis$/,
+  );
+  if (sessionAnalysisMatch) {
+    const sessionId = decodeURIComponent(sessionAnalysisMatch[1]);
+    return fulfillJson(
+      route,
+      state.sessionAnalyses[sessionId] || {
+        session_id: sessionId,
+        found: true,
+        tool_calls: [],
+      },
+    );
+  }
+
   if (path === '/api/v1/monitoring/overview') {
     const data = state.monitoringData as { overview?: unknown };
     return fulfillJson(route, data.overview || emptyMonitoringData().overview);
@@ -803,17 +839,30 @@ export async function installLangBotApiMocks(
   options: {
     authenticated?: boolean;
     monitoringData?: unknown;
+    monitoringSessions?: unknown[];
+    sessionAnalyses?: Record<string, unknown>;
+    sessionMessages?: Record<string, unknown[]>;
     storage?: JsonRecord;
   } = {},
 ) {
-  const { authenticated = false, monitoringData, storage = {} } = options;
+  const {
+    authenticated = false,
+    monitoringData,
+    monitoringSessions,
+    sessionAnalyses,
+    sessionMessages,
+    storage = {},
+  } = options;
   const state: LangBotApiMockState = {
     bots: [],
     counters: {},
     knowledgeBases: [],
     mcpServers: [],
     monitoringData: monitoringData || emptyMonitoringData(),
+    monitoringSessions: monitoringSessions || [],
     pipelines: [],
+    sessionAnalyses: sessionAnalyses || {},
+    sessionMessages: sessionMessages || {},
     skills: [],
   };
 

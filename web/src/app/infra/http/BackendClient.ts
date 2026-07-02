@@ -1199,8 +1199,10 @@ export class BackendClient extends BaseHttpClient {
       level: string;
       platform?: string;
       user_id?: string;
+      user_name?: string;
       runner_name?: string;
       variables?: string;
+      role?: string;
     }>;
     llmCalls: Array<{
       id: string;
@@ -1216,8 +1218,26 @@ export class BackendClient extends BaseHttpClient {
       bot_name: string;
       pipeline_id: string;
       pipeline_name: string;
+      session_id?: string;
       error_message?: string;
       message_id?: string;
+    }>;
+    toolCalls: Array<{
+      id: string;
+      timestamp: string;
+      tool_name: string;
+      tool_source: string;
+      duration: number;
+      status: string;
+      bot_id: string;
+      bot_name: string;
+      pipeline_id: string;
+      pipeline_name: string;
+      session_id?: string;
+      message_id?: string;
+      arguments?: string;
+      result?: string;
+      error_message?: string;
     }>;
     embeddingCalls: Array<{
       id: string;
@@ -1263,6 +1283,7 @@ export class BackendClient extends BaseHttpClient {
     totalCount: {
       messages: number;
       llmCalls: number;
+      toolCalls?: number;
       embeddingCalls: number;
       sessions: number;
       errors: number;

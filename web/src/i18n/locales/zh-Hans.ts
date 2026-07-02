@@ -1294,6 +1294,15 @@ const zhHans = {
       avgDuration: '平均耗时',
       calls: '调用次数',
     },
+    toolCalls: {
+      title: '工具调用',
+      totalCalls: '调用次数',
+      duration: '工具耗时',
+      errorCalls: '失败次数',
+      arguments: '参数',
+      result: '结果',
+      noToolCalls: '未记录工具调用',
+    },
     tokens: {
       totalTokens: '总 Token 数',
       inputTokens: '输入 Token',

@@ -6,6 +6,7 @@ import {
   ErrorLog,
   LLMCall,
   MonitoringMessage,
+  ToolCall,
 } from '../../src/app/home/monitoring/types/monitoring';
 
 const bot = {
@@ -93,6 +94,34 @@ function errorLog(id: string, minute: number, messageId: string): ErrorLog {
   };
 }
 
+function toolCall(
+  id: string,
+  minute: number,
+  messageId: string | undefined,
+  toolName: string,
+  duration: number,
+  sessionId = 'session-agent',
+  status: 'success' | 'error' = 'success',
+): ToolCall {
+  return {
+    id,
+    timestamp: time(minute),
+    toolName,
+    toolSource: 'native',
+    duration,
+    status,
+    botId: bot.id,
+    botName: bot.name,
+    pipelineId: pipeline.id,
+    pipelineName: pipeline.name,
+    sessionId,
+    messageId,
+    arguments: JSON.stringify({ query: toolName }),
+    result: status === 'success' ? JSON.stringify({ ok: true }) : undefined,
+    errorMessage: status === 'error' ? 'Tool failed' : undefined,
+  };
+}
+
 function rawMessage(message: MonitoringMessage) {
   return {
     id: message.id,
@@ -151,6 +180,26 @@ function rawError(error: ErrorLog) {
   };
 }
 
+function rawToolCall(call: ToolCall) {
+  return {
+    id: call.id,
+    timestamp: call.timestamp.toISOString(),
+    tool_name: call.toolName,
+    tool_source: call.toolSource,
+    duration: call.duration,
+    status: call.status,
+    bot_id: call.botId,
+    bot_name: call.botName,
+    pipeline_id: call.pipelineId,
+    pipeline_name: call.pipelineName,
+    session_id: call.sessionId,
+    message_id: call.messageId,
+    arguments: call.arguments,
+    result: call.result,
+    error_message: call.errorMessage,
+  };
+}
+
 function monitoringScenario() {
   const messages = [
     message(
@@ -179,10 +228,16 @@ function monitoringScenario() {
     llmCall('agent-call-4', 20, 'agent-user-2', 50, 25, 80),
   ];
   const errors = [errorLog('agent-error-1', 12, 'agent-user-1')];
+  const toolCalls = [
+    toolCall('agent-tool-1', 11, 'agent-user-1', 'repo_search', 90),
+    toolCall('agent-tool-2', 12, 'agent-user-1', 'run_tests', 150),
+    toolCall('agent-tool-3', 20, 'agent-user-2', 'rollback_lookup', 70),
+  ];
 
   return {
     messages,
     llmCalls,
+    toolCalls,
     errors,
   };
 }
@@ -201,12 +256,14 @@ function rawMonitoringData() {
     },
     messages: scenario.messages.map(rawMessage),
     llmCalls: scenario.llmCalls.map(rawLlmCall),
+    toolCalls: scenario.toolCalls.map(rawToolCall),
     embeddingCalls: [],
     sessions: [],
     errors: scenario.errors.map(rawError),
     totalCount: {
       messages: scenario.messages.length,
       llmCalls: scenario.llmCalls.length,
+      toolCalls: scenario.toolCalls.length,
       embeddingCalls: 0,
       sessions: 0,
       errors: scenario.errors.length,
@@ -240,6 +297,7 @@ test.describe('monitoring conversation turn grouping', () => {
       scenario.messages,
       scenario.llmCalls,
       scenario.errors,
+      scenario.toolCalls,
     );
 
     const agentTurn = turns.find((turn) => turn.id === 'agent-user-1');
@@ -254,9 +312,11 @@ test.describe('monitoring conversation turn grouping', () => {
       'Final answer: deployment plan ready',
     ]);
     expect(agentTurn?.llmCalls).toHaveLength(3);
+    expect(agentTurn?.toolCalls).toHaveLength(2);
     expect(agentTurn?.errors).toHaveLength(1);
     expect(agentTurn?.totalTokens).toBe(790);
     expect(agentTurn?.totalDuration).toBe(600);
+    expect(agentTurn?.totalToolDuration).toBe(240);
   });
 
   test('starts a new turn for each later user message in the same session', () => {
@@ -314,6 +374,30 @@ test.describe('monitoring conversation turn grouping', () => {
     expect(turns[0].totalTokens).toBe(30);
   });
 
+  test('attaches tool calls without message ids by session time', () => {
+    const user = message('tool-fallback-user', 'user', 1, 'Use tool fallback');
+    const assistant = message(
+      'tool-fallback-assistant',
+      'assistant',
+      2,
+      'Tool fallback reply',
+    );
+    const call = toolCall(
+      'tool-fallback-call',
+      2,
+      undefined,
+      'memory_lookup',
+      45,
+    );
+
+    const turns = buildConversationTurns([user, assistant], [], [], [call]);
+
+    expect(turns).toHaveLength(1);
+    expect(turns[0].toolCalls).toHaveLength(1);
+    expect(turns[0].toolCalls[0].id).toBe(call.id);
+    expect(turns[0].totalToolDuration).toBe(45);
+  });
+
   test('renders user-only, multi-agent, and multi-turn cases in the monitoring page', async ({
     page,
   }) => {
@@ -333,6 +417,7 @@ test.describe('monitoring conversation turn grouping', () => {
     await expect(page.getByText('Agent step 1: inspect repo')).toBeVisible();
     await expect(page.getByText('Assistant +2')).toBeVisible();
     await expect(page.getByText('3 LLM')).toBeVisible();
+    await expect(page.getByText('2 tools')).toBeVisible();
     await expect(page.getByText('790 tokens')).toBeVisible();
     await expect(page.getByText('1 errors')).toBeVisible();
     await expect(page.getByText('Continue with rollback plan')).toBeVisible();
@@ -354,6 +439,15 @@ test.describe('monitoring conversation turn grouping', () => {
     await expect(page.getByText('In: 300')).toBeVisible();
     await expect(page.getByText('Out: 90')).toBeVisible();
     await expect(page.getByText('Total: 390')).toBeVisible();
+    await expect(page.getByText('Tool Calls (2)')).toBeVisible();
+    await expect(page.getByText('#1 repo_search')).toBeVisible();
+    await expect(page.getByText('#2 run_tests')).toBeVisible();
+    await expect(page.getByText('Arguments')).toHaveCount(0);
+    await expect(page.getByText('Result')).toHaveCount(0);
+
+    await page.getByText('#1 repo_search').click();
+    await expect(page.getByText('Arguments').first()).toBeVisible();
+    await expect(page.getByText('Result').first()).toBeVisible();
     await expect(page.getByText('Tool retry failed')).toBeVisible();
   });
 });

@@ -1357,6 +1357,15 @@ const enUS = {
       avgDuration: 'Avg Duration',
       calls: 'Calls',
     },
+    toolCalls: {
+      title: 'Tool Calls',
+      totalCalls: 'Calls',
+      duration: 'Tool Duration',
+      errorCalls: 'Failed Calls',
+      arguments: 'Arguments',
+      result: 'Result',
+      noToolCalls: 'No tool calls recorded',
+    },
     tokens: {
       totalTokens: 'Total Tokens',
       inputTokens: 'Input Tokens',

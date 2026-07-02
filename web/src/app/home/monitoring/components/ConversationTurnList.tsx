@@ -9,6 +9,7 @@ import {
   Cpu,
   Hash,
   User,
+  Wrench,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MessageContentRenderer } from './MessageContentRenderer';
@@ -34,6 +35,11 @@ function formatDuration(ms: number) {
   if (!ms) return '0ms';
   if (ms < 1000) return `${ms}ms`;
   return `${(ms / 1000).toFixed(2)}s`;
+}
+
+function truncateDetail(value?: string) {
+  if (!value) return '';
+  return value.length > 1200 ? `${value.slice(0, 1200)}...` : value;
 }
 
 function roleLabel(message: MonitoringMessage | undefined) {
@@ -147,6 +153,16 @@ export function ConversationTurnList({
   onToggleTurn,
 }: ConversationTurnListProps) {
   const { t } = useTranslation();
+  const [expandedToolCallIds, setExpandedToolCallIds] = React.useState<
+    Record<string, boolean>
+  >({});
+
+  const toggleToolCallDetails = (toolCallKey: string) => {
+    setExpandedToolCallIds((previous) => ({
+      ...previous,
+      [toolCallKey]: !previous[toolCallKey],
+    }));
+  };
 
   return (
     <div className="space-y-4">
@@ -268,6 +284,12 @@ export function ConversationTurnList({
                       icon={<Cpu className="h-3.5 w-3.5" />}
                       label={`${turn.llmCalls.length} LLM`}
                     />
+                    {turn.toolCalls.length > 0 && (
+                      <Metric
+                        icon={<Wrench className="h-3.5 w-3.5" />}
+                        label={`${turn.toolCalls.length} tools`}
+                      />
+                    )}
                     <Metric
                       icon={<Hash className="h-3.5 w-3.5" />}
                       label={`${turn.totalTokens.toLocaleString()} tokens`}
@@ -428,6 +450,157 @@ export function ConversationTurnList({
                         <div className="py-4 text-center text-sm text-muted-foreground">
                           {t('monitoring.messageList.noLlmCalls', {
                             defaultValue: '未记录模型调用',
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </section>
+
+                  <section>
+                    <h4 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <Wrench className="h-4 w-4" />
+                      {t('monitoring.toolCalls.title', {
+                        defaultValue: '工具调用',
+                      })}{' '}
+                      ({turn.toolCalls.length})
+                    </h4>
+
+                    <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
+                      <MetaItem
+                        label={t('monitoring.toolCalls.totalCalls', {
+                          defaultValue: '调用次数',
+                        })}
+                        value={String(turn.toolCalls.length)}
+                      />
+                      <MetaItem
+                        label={t('monitoring.toolCalls.duration', {
+                          defaultValue: '工具耗时',
+                        })}
+                        value={formatDuration(turn.totalToolDuration)}
+                      />
+                      <MetaItem
+                        label={t('monitoring.toolCalls.errorCalls', {
+                          defaultValue: '失败次数',
+                        })}
+                        value={String(
+                          turn.toolCalls.filter(
+                            (call) => call.status === 'error',
+                          ).length,
+                        )}
+                      />
+                    </div>
+
+                    <div className="mt-3 rounded-lg bg-background px-3 py-3">
+                      {turn.toolCalls.length > 0 ? (
+                        turn.toolCalls.map((call, index) => {
+                          const toolCallKey = `${turn.id}:${call.id}`;
+                          const hasToolDetails = Boolean(
+                            call.arguments || call.result || call.errorMessage,
+                          );
+                          const expandedToolCall = Boolean(
+                            expandedToolCallIds[toolCallKey],
+                          );
+                          const detailsId = `monitoring-tool-call-details-${call.id}`;
+
+                          return (
+                            <div
+                              key={call.id}
+                              className="border-t border-border/70 py-2 first:border-t-0 first:pt-0 last:pb-0"
+                            >
+                              <button
+                                type="button"
+                                className={cn(
+                                  'flex w-full items-start justify-between gap-3 rounded-md px-2 py-2 text-left outline-none transition-colors',
+                                  hasToolDetails &&
+                                    'cursor-pointer hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring',
+                                )}
+                                aria-expanded={
+                                  hasToolDetails ? expandedToolCall : undefined
+                                }
+                                aria-controls={
+                                  hasToolDetails ? detailsId : undefined
+                                }
+                                aria-disabled={!hasToolDetails}
+                                onClick={() =>
+                                  hasToolDetails &&
+                                  toggleToolCallDetails(toolCallKey)
+                                }
+                              >
+                                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                                  {hasToolDetails &&
+                                    (expandedToolCall ? (
+                                      <ChevronDown className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                                    ) : (
+                                      <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                                    ))}
+                                  <span className="min-w-0 truncate text-sm font-medium text-foreground">
+                                    #{index + 1} {call.toolName}
+                                  </span>
+                                  <span className="rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
+                                    {call.toolSource}
+                                  </span>
+                                  <span
+                                    className={cn(
+                                      'rounded-md px-2 py-1 text-xs font-medium',
+                                      call.status === 'success'
+                                        ? 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300'
+                                        : 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300',
+                                    )}
+                                  >
+                                    {call.status}
+                                  </span>
+                                  <span className="font-mono text-xs text-muted-foreground">
+                                    ID: {shortId(call.id)}
+                                  </span>
+                                </div>
+                                <span className="shrink-0 text-xs text-muted-foreground">
+                                  {formatDuration(call.duration)}
+                                </span>
+                              </button>
+
+                              {hasToolDetails && expandedToolCall && (
+                                <div
+                                  id={detailsId}
+                                  className="mt-1 grid gap-2 px-2 pb-2 text-xs lg:grid-cols-2"
+                                >
+                                  {call.arguments && (
+                                    <div className="min-w-0 rounded-md bg-muted/50 p-2">
+                                      <div className="mb-1 font-medium text-foreground">
+                                        {t('monitoring.toolCalls.arguments', {
+                                          defaultValue: '参数',
+                                        })}
+                                      </div>
+                                      <pre className="whitespace-pre-wrap break-words font-mono text-muted-foreground">
+                                        {truncateDetail(call.arguments)}
+                                      </pre>
+                                    </div>
+                                  )}
+                                  {call.result && (
+                                    <div className="min-w-0 rounded-md bg-muted/50 p-2">
+                                      <div className="mb-1 font-medium text-foreground">
+                                        {t('monitoring.toolCalls.result', {
+                                          defaultValue: '结果',
+                                        })}
+                                      </div>
+                                      <pre className="whitespace-pre-wrap break-words font-mono text-muted-foreground">
+                                        {truncateDetail(call.result)}
+                                      </pre>
+                                    </div>
+                                  )}
+                                  {call.errorMessage && (
+                                    <div className="min-w-0 whitespace-pre-wrap break-words rounded-md bg-red-50 p-2 text-red-600 dark:bg-red-950/40 dark:text-red-400 lg:col-span-2">
+                                      {call.errorMessage}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="py-4 text-center text-sm text-muted-foreground">
+                          {t('monitoring.toolCalls.noToolCalls', {
+                            defaultValue: '未记录工具调用',
                           })}
                         </div>
                       )}

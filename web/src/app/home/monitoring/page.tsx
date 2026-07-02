@@ -104,8 +104,9 @@ function MonitoringPageContent() {
         data?.messages || [],
         data?.llmCalls || [],
         data?.errors || [],
+        data?.toolCalls || [],
       ),
-    [data?.messages, data?.llmCalls, data?.errors],
+    [data?.messages, data?.llmCalls, data?.errors, data?.toolCalls],
   );
 
   // State for expanded errors
