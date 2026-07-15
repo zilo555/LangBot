@@ -49,12 +49,23 @@ def _model_has_ability(model: modelmgr_requester.RuntimeLLMModel, ability: str) 
 class _StreamAccumulator:
     """Accumulate streamed content and fragmented OpenAI-style tool calls."""
 
-    def __init__(self, msg_sequence: int = 0, initial_content: str | None = None):
+    def __init__(
+        self,
+        msg_sequence: int = 0,
+        initial_content: str | None = None,
+        remove_think: bool = False,
+    ):
         self.tool_calls_map: dict[str, provider_message.ToolCall] = {}
         self.msg_idx = 0
         self.accumulated_content = initial_content or ''
         self.last_role = 'assistant'
         self.msg_sequence = msg_sequence
+        self.remove_think = remove_think
+        self._think_state = None
+        if remove_think:
+            from ..modelmgr.requesters.litellmchat import _ThinkStripState
+
+            self._think_state = _ThinkStripState()
 
     def add(self, msg: provider_message.MessageChunk) -> provider_message.MessageChunk | None:
         self.msg_idx += 1
@@ -63,7 +74,10 @@ class _StreamAccumulator:
             self.last_role = msg.role
 
         if msg.content:
-            self.accumulated_content += msg.content
+            content = msg.content
+            if self._think_state is not None:
+                content = self._think_state.feed(content)
+            self.accumulated_content += content
 
         if msg.tool_calls:
             for tool_call in msg.tool_calls:
@@ -79,11 +93,14 @@ class _StreamAccumulator:
                 if tool_call.function and tool_call.function.arguments:
                     self.tool_calls_map[tool_call.id].function.arguments += tool_call.function.arguments
 
+        if msg.is_final:
+            self._flush_think_state()
+
         if self.msg_idx % 8 == 0 or msg.is_final:
             self.msg_sequence += 1
             return provider_message.MessageChunk(
                 role=self.last_role,
-                content=self.accumulated_content,
+                content=self._maybe_strip_think(self.accumulated_content),
                 tool_calls=list(self.tool_calls_map.values()) if (self.tool_calls_map and msg.is_final) else None,
                 is_final=msg.is_final,
                 msg_sequence=self.msg_sequence,
@@ -92,12 +109,28 @@ class _StreamAccumulator:
         return None
 
     def final_message(self) -> provider_message.MessageChunk:
+        self._flush_think_state()
         return provider_message.MessageChunk(
             role=self.last_role,
-            content=self.accumulated_content,
+            content=self._maybe_strip_think(self.accumulated_content),
             tool_calls=list(self.tool_calls_map.values()) if self.tool_calls_map else None,
             msg_sequence=self.msg_sequence,
         )
+
+    def _maybe_strip_think(self, content: str) -> str:
+        if not self.remove_think or not content:
+            return content
+
+        from ..modelmgr.requesters.litellmchat import LiteLLMRequester
+
+        return LiteLLMRequester._strip_think(content)
+
+    def _flush_think_state(self) -> None:
+        if self._think_state is None:
+            return
+        pending = self._think_state.flush()
+        if pending:
+            self.accumulated_content += pending
 
 
 @runner.runner_class('local-agent')
@@ -448,7 +481,7 @@ class LocalAgentRunner(runner.RequestRunner):
         except AttributeError:
             is_stream = False
 
-        remove_think = query.pipeline_config['output'].get('misc', '').get('remove-think')
+        remove_think = ((query.pipeline_config.get('output') or {}).get('misc') or {}).get('remove-think', False)
 
         # Build ordered candidate list (primary + fallbacks)
         candidates = await self._get_model_candidates(query)
@@ -472,7 +505,7 @@ class LocalAgentRunner(runner.RequestRunner):
             final_msg = msg
         else:
             # Streaming: invoke with fallback
-            stream_accumulator = _StreamAccumulator(msg_sequence=1)
+            stream_accumulator = _StreamAccumulator(msg_sequence=1, remove_think=remove_think)
 
             stream_src, use_llm_model = await self._invoke_stream_with_fallback(
                 query,
@@ -576,6 +609,7 @@ class LocalAgentRunner(runner.RequestRunner):
                 stream_accumulator = _StreamAccumulator(
                     msg_sequence=first_end_sequence,
                     initial_content=first_content,
+                    remove_think=remove_think,
                 )
 
                 tool_stream_src = use_llm_model.provider.invoke_llm_stream(
