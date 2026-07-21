@@ -417,7 +417,7 @@ class TestBuildBoxSessionPayload:
         payload = s._build_box_session_payload('session-123')
         assert payload['image'] == 'node:20'
         assert payload['cpus'] == 2.0
-        assert payload["memory_mb"] == 1024
+        assert payload['memory_mb'] == 1024
         assert payload['pids_limit'] == 256
 
     def test_none_fields_excluded(self, mcp_module):
@@ -679,6 +679,51 @@ class TestGetRuntimeInfoDict:
         assert transient._build_box_session_id() == live._build_box_session_id()
         # ... but are isolated by distinct process_ids within that session.
         assert transient._box_stdio_runtime.process_id != live._box_stdio_runtime.process_id
+
+    def test_different_resource_profiles_use_different_box_sessions(self, mcp_module):
+        ap = _make_ap()
+        ap.box_service.available = True
+        default = _make_session(
+            mcp_module,
+            {
+                'name': 'default',
+                'uuid': 'default-uuid',
+                'mode': 'stdio',
+                'command': 'uvx',
+                'args': ['mcp-server-time'],
+            },
+            ap=ap,
+        )
+        constrained = _make_session(
+            mcp_module,
+            {
+                'name': 'constrained',
+                'uuid': 'constrained-uuid',
+                'mode': 'stdio',
+                'command': 'uvx',
+                'args': ['mcp-server-time'],
+                'box': {'memory_mb': 2048},
+            },
+            ap=ap,
+        )
+
+        assert default._build_box_session_id() == 'mcp-shared'
+        assert constrained._build_box_session_id().startswith('mcp-shared-')
+        assert constrained._build_box_session_id() != default._build_box_session_id()
+
+        writable = _make_session(
+            mcp_module,
+            {
+                'name': 'writable',
+                'uuid': 'writable-uuid',
+                'mode': 'stdio',
+                'command': 'uvx',
+                'args': ['mcp-server-time'],
+                'box': {'host_path_mode': 'rw'},
+            },
+            ap=ap,
+        )
+        assert writable._build_box_session_id() != default._build_box_session_id()
 
     def test_stdio_session_refuses_when_box_unavailable(self, mcp_module):
         """Policy: when Box is configured but unavailable (disabled in config

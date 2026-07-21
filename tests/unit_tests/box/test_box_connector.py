@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -104,3 +104,21 @@ def test_box_runtime_connector_dispose_terminates_subprocess(monkeypatch: pytest
     ctrl_task.cancel.assert_called_once()
     assert connector._handler_task is None
     assert connector._ctrl_task is None
+
+
+@pytest.mark.asyncio
+async def test_box_runtime_connector_cleans_partial_transport_on_connect_failure(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setattr('langbot.pkg.utils.platform.get_platform', lambda: 'linux')
+    monkeypatch.setattr('langbot.pkg.utils.platform.standalone_box', False)
+    connector = BoxRuntimeConnector(make_app(Mock()))
+    connector._start_local_stdio = AsyncMock(side_effect=RuntimeError('bind failed'))
+    connector._stop_transport = AsyncMock()
+    connector._close_managed_subprocess = AsyncMock()
+
+    with pytest.raises(RuntimeError, match='bind failed'):
+        await connector.initialize()
+
+    assert connector._stop_transport.await_count == 2
+    connector._close_managed_subprocess.assert_awaited_once()

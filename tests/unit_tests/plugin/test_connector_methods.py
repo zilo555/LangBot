@@ -63,6 +63,25 @@ class TestListPlugins:
         assert result == []
 
     @pytest.mark.asyncio
+    async def test_returns_empty_while_runtime_is_disconnected(self):
+        connector = create_mock_connector()
+
+        result = await connector.list_plugins()
+
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_returns_empty_after_managed_transport_disconnects(self):
+        connector = create_mock_connector()
+        connector.handler = AsyncMock()
+        connector._transport_task = Mock()
+
+        result = await connector.list_plugins()
+
+        assert result == []
+        connector.handler.list_plugins.assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_calls_handler_list_plugins(self):
         """Test that handler.list_plugins is called."""
         get_connector_module()
@@ -294,6 +313,12 @@ class TestListKnowledgeEngines:
         connector.handler.list_knowledge_engines.assert_called_once()
         assert result == [{'plugin_id': 'author/engine', 'name': 'Engine'}]
 
+    @pytest.mark.asyncio
+    async def test_returns_empty_while_runtime_is_disconnected(self):
+        connector = create_mock_connector()
+
+        assert await connector.list_knowledge_engines() == []
+
 
 class TestListParsers:
     """Tests for list_parsers method."""
@@ -330,6 +355,12 @@ class TestListParsers:
 
         connector.handler.list_parsers.assert_called_once()
         assert result == [{'plugin_id': 'author/parser', 'supported_mime_types': ['text/plain']}]
+
+    @pytest.mark.asyncio
+    async def test_returns_empty_while_runtime_is_disconnected(self):
+        connector = create_mock_connector()
+
+        assert await connector.list_parsers() == []
 
 
 class TestCallParser:
