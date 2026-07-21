@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import signal
 from types import SimpleNamespace
-from unittest.mock import Mock
 
 import pytest
 
@@ -19,60 +18,47 @@ async def test_main_signal_handler_handles_sigint_before_app_created(monkeypatch
     async def fake_make_app(loop):
         captured_handler[signal.SIGINT](signal.SIGINT, None)
 
+    def fake_exit(code):
+        raise SystemExit(code)
+
     monkeypatch.setattr(signal, 'signal', fake_signal)
     monkeypatch.setattr(boot, 'make_app', fake_make_app)
+    monkeypatch.setattr(boot.os, '_exit', fake_exit)
 
-    await boot.main(SimpleNamespace())
+    with pytest.raises(SystemExit) as exc_info:
+        await boot.main(SimpleNamespace())
+
+    assert exc_info.value.code == 0
 
 
 @pytest.mark.asyncio
 async def test_main_signal_handler_disposes_created_app(monkeypatch):
     captured_handler = {}
-    app_inst = SimpleNamespace(shutdown_called=False)
+    app_inst = SimpleNamespace(disposed=False)
 
     def fake_signal(sig, handler):
         captured_handler[sig] = handler
 
-    async def shutdown():
-        app_inst.shutdown_called = True
+    def dispose():
+        app_inst.disposed = True
 
     async def run():
         captured_handler[signal.SIGINT](signal.SIGINT, None)
 
     async def fake_make_app(loop):
-        app_inst.shutdown = shutdown
+        app_inst.dispose = dispose
         app_inst.run = run
         return app_inst
+
+    def fake_exit(code):
+        raise SystemExit(code)
 
     monkeypatch.setattr(signal, 'signal', fake_signal)
     monkeypatch.setattr(boot, 'make_app', fake_make_app)
+    monkeypatch.setattr(boot.os, '_exit', fake_exit)
 
-    await boot.main(SimpleNamespace())
+    with pytest.raises(SystemExit) as exc_info:
+        await boot.main(SimpleNamespace())
 
-    assert app_inst.shutdown_called is True
-
-
-@pytest.mark.asyncio
-async def test_main_reports_app_run_failure_and_still_shuts_down(monkeypatch):
-    app_inst = SimpleNamespace(shutdown_called=False)
-
-    async def shutdown():
-        app_inst.shutdown_called = True
-
-    async def run():
-        raise RuntimeError('run failed')
-
-    async def fake_make_app(loop):
-        app_inst.shutdown = shutdown
-        app_inst.run = run
-        return app_inst
-
-    print_exc = Mock()
-    monkeypatch.setattr(signal, 'signal', lambda *_args: None)
-    monkeypatch.setattr(boot, 'make_app', fake_make_app)
-    monkeypatch.setattr(boot.traceback, 'print_exc', print_exc)
-
-    await boot.main(SimpleNamespace())
-
-    print_exc.assert_called_once()
-    assert app_inst.shutdown_called is True
+    assert exc_info.value.code == 0
+    assert app_inst.disposed is True

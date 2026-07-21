@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+
 from .. import stage, app
 from ...utils import version, proxy
 from ...pipeline import pool, controller, pipelinemgr
@@ -185,16 +187,11 @@ class BuildAppStage(stage.BootingStage):
         ap.maintenance_service = maintenance_service_inst
 
         async def runtime_disconnect_callback(connector: plugin_connector.PluginRuntimeConnector) -> None:
-            connector.schedule_reconnect()
+            await asyncio.sleep(3)
+            await plugin_connector_inst.initialize()
 
         plugin_connector_inst = plugin_connector.PluginRuntimeConnector(ap, runtime_disconnect_callback)
-        try:
-            await plugin_connector_inst.initialize()
-        except Exception as exc:
-            # Keep the API/UI available while an external or managed runtime is
-            # starting, then recover in the background with bounded backoff.
-            ap.logger.warning(f'Plugin runtime unavailable during startup; reconnecting in background: {exc}')
-            plugin_connector_inst.schedule_reconnect()
+        await plugin_connector_inst.initialize()
         ap.plugin_connector = plugin_connector_inst
 
         ctrl = controller.Controller(ap)

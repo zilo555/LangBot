@@ -143,11 +143,6 @@ box:
     backend: 'local'  # 'local' (Docker/nsjail), 'docker', 'nsjail', or 'e2b'. Can be written via BOX__BACKEND.
     runtime:
         endpoint: ''  # External Box Runtime base URL, e.g. 'ws://127.0.0.1:5410'. Leave empty for local auto-managed runtime.
-    limits:
-        max_sessions: 64  # Includes persistent sessions. New sessions fail explicitly when this cap is reached.
-        max_managed_processes: 64  # Maximum concurrently running stdio MCP / managed processes.
-        max_completed_processes: 256  # Global cap for retained exited-process diagnostics.
-        completed_process_retention_sec: 300  # Keep exited-process diagnostics before releasing memory.
     local:
         profile: 'default'
         image: ''  # Custom local sandbox image. Leave empty to use the profile default.

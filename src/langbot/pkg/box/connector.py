@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
 import json
 import os
 import sys
@@ -29,7 +28,6 @@ _DOCKER_BOX_HOST = 'langbot_box'
 _DEFAULT_PORT = 5410
 
 _HEARTBEAT_INTERVAL_SEC = 20
-_HEARTBEAT_FAILURE_THRESHOLD = 3
 
 # Top-level keys under ``box`` that are LangBot-internal and should not be
 # forwarded to the Box runtime.
@@ -115,8 +113,6 @@ class BoxRuntimeConnector(ManagedRuntimeConnector):
         self._handler_task: asyncio.Task | None = None
         self._ctrl_task: asyncio.Task | None = None
         self._heartbeat_task: asyncio.Task | None = None
-        self._ctrl = None
-        self._generation = 0
 
         # Parse the relay URL once for reuse.
         parsed = urlparse(self.ws_relay_base_url)
@@ -149,64 +145,29 @@ class BoxRuntimeConnector(ManagedRuntimeConnector):
         return self.uses_websocket()
 
     async def initialize(self) -> None:
-        async with self._lifecycle_lock:
-            if self._closing:
-                raise BoxRuntimeUnavailableError('box runtime connector is shutting down')
-            await self._stop_transport()
-            self._generation += 1
-            try:
-                if self._uses_websocket():
-                    if platform.get_platform() == 'win32' and not self.configured_runtime_endpoint:
-                        await self._start_subprocess_then_ws()
-                    else:
-                        await self._connect_remote_ws()
-                else:
-                    await self._start_local_stdio()
-            except BaseException:
-                await self._stop_transport()
-                await self._close_managed_subprocess()
-                raise
+        if self._uses_websocket():
+            if platform.get_platform() == 'win32' and not self.configured_runtime_endpoint:
+                await self._start_subprocess_then_ws()
+            else:
+                await self._connect_remote_ws()
+        else:
+            await self._start_local_stdio()
 
-            if self._heartbeat_task is None or self._heartbeat_task.done():
-                self._heartbeat_task = asyncio.create_task(self._heartbeat_loop())
-
-    async def reconnect(self) -> None:
-        async with self._lifecycle_lock:
-            if self._closing:
-                raise BoxRuntimeUnavailableError('box runtime connector is shutting down')
-            await self._stop_transport()
-            self._generation += 1
-            try:
-                if self._uses_websocket():
-                    if platform.get_platform() == 'win32' and not self.configured_runtime_endpoint:
-                        await self._start_subprocess_then_ws()
-                    else:
-                        await self._connect_remote_ws()
-                else:
-                    await self._start_local_stdio()
-            except BaseException:
-                await self._stop_transport()
-                await self._close_managed_subprocess()
-                raise
+        # Start heartbeat after successful connection
+        if self._heartbeat_task is None:
+            self._heartbeat_task = asyncio.create_task(self._heartbeat_loop())
 
     # -- heartbeat -----------------------------------------------------------
 
     async def _heartbeat_loop(self) -> None:
         """Periodically ping the Box runtime to detect silent disconnections."""
-        failures = 0
-        while not self._closing:
+        while True:
             await asyncio.sleep(_HEARTBEAT_INTERVAL_SEC)
             try:
                 await self.ping()
-                failures = 0
                 self.ap.logger.debug('Heartbeat to Box runtime success.')
             except Exception as e:
-                failures += 1
-                self.ap.logger.warning(f'Box runtime heartbeat failed ({failures}/{_HEARTBEAT_FAILURE_THRESHOLD}): {e}')
-                if failures >= _HEARTBEAT_FAILURE_THRESHOLD:
-                    failures = 0
-                    if self.runtime_disconnect_callback is not None:
-                        await self.runtime_disconnect_callback(self)
+                self.ap.logger.debug(f'Failed to heartbeat to Box runtime: {e}')
 
     async def ping(self) -> None:
         if self._handler is None:
@@ -236,9 +197,8 @@ class BoxRuntimeConnector(ManagedRuntimeConnector):
             args=['-m', 'langbot_plugin.cli.__init__', 'box', '-s', '--ws-control-port', str(self._relay_port)],
             env=env,
         )
-        self._ctrl = ctrl
         self._ctrl_task = asyncio.create_task(
-            ctrl.run(self._make_connection_callback('stdio', connected, connect_error, self._generation))
+            ctrl.run(self._make_connection_callback('stdio', connected, connect_error))
         )
 
         try:
@@ -322,9 +282,8 @@ class BoxRuntimeConnector(ManagedRuntimeConnector):
                 await self.runtime_disconnect_callback(self)
 
         ctrl = WebSocketClientController(ws_url=ws_url, make_connection_failed_callback=on_connect_failed)
-        self._ctrl = ctrl
         self._ctrl_task = asyncio.create_task(
-            ctrl.run(self._make_connection_callback(transport_name, connected, connect_error, self._generation))
+            ctrl.run(self._make_connection_callback(transport_name, connected, connect_error))
         )
 
         try:
@@ -340,12 +299,8 @@ class BoxRuntimeConnector(ManagedRuntimeConnector):
         transport_name: str,
         connected: asyncio.Event,
         connect_error: list[Exception],
-        generation: int,
     ):
         async def new_connection_callback(connection: Connection) -> None:
-            if generation != self._generation or self._closing:
-                await connection.close()
-                return
             handler = Handler(connection)
             self._handler = handler
             self.client.set_handler(handler)
@@ -358,8 +313,6 @@ class BoxRuntimeConnector(ManagedRuntimeConnector):
                 self.ap.logger.info(f'Connected to Box runtime via {transport_name}.')
                 connected.set()
                 await self._handler_task
-            except asyncio.CancelledError:
-                raise
             except Exception as exc:
                 if not connected.is_set():
                     connect_error.append(exc)
@@ -369,66 +322,22 @@ class BoxRuntimeConnector(ManagedRuntimeConnector):
             # If we reach here, handler.run() returned normally (connection
             # closed) or raised after the initial handshake succeeded.
             # Either way, treat it as a disconnect.
-            if (
-                connected.is_set()
-                and generation == self._generation
-                and not self._closing
-                and self.runtime_disconnect_callback is not None
-            ):
-                self.ap.logger.error('Disconnected from Box runtime, trying to reconnect...')
-                await self.runtime_disconnect_callback(self)
+            if connected.is_set():
+                if self._uses_websocket():
+                    self.ap.logger.error('Disconnected from Box runtime, trying to reconnect...')
+                    if self.runtime_disconnect_callback is not None:
+                        await self.runtime_disconnect_callback(self)
+                else:
+                    self.ap.logger.error(
+                        'Disconnected from Box runtime via stdio. '
+                        'Cannot automatically reconnect — please restart LangBot.'
+                    )
 
         return new_connection_callback
 
     # -- lifecycle -----------------------------------------------------------
 
-    async def _stop_transport(self) -> None:
-        if self._handler is not None:
-            with contextlib.suppress(Exception):
-                await self._handler.close()
-        self.client.set_handler(None)
-        tasks = [
-            task
-            for task in (self._handler_task, self._ctrl_task)
-            if task is not None and task is not asyncio.current_task()
-        ]
-        for task in tasks:
-            task.cancel()
-        if tasks:
-            await asyncio.gather(*tasks, return_exceptions=True)
-        close_ctrl = getattr(self._ctrl, 'close', None)
-        if close_ctrl is not None:
-            with contextlib.suppress(Exception):
-                await close_ctrl()
-        self._handler = None
-        self._handler_task = None
-        self._ctrl_task = None
-        self._ctrl = None
-
-    async def aclose(self) -> None:
-        self._closing = True
-        if self._heartbeat_task is not None:
-            self._heartbeat_task.cancel()
-            await asyncio.gather(self._heartbeat_task, return_exceptions=True)
-            self._heartbeat_task = None
-        await self._stop_transport()
-
-        process = getattr(self, '_subprocess', None)
-        if process is not None and process.returncode is None:
-            with contextlib.suppress(ProcessLookupError):
-                process.terminate()
-            try:
-                await asyncio.wait_for(process.wait(), timeout=3)
-            except asyncio.TimeoutError:
-                with contextlib.suppress(ProcessLookupError):
-                    process.kill()
-                await process.wait()
-        self._subprocess = None
-        await self._close_managed_subprocess()
-
     def dispose(self) -> None:
-        """Best-effort synchronous compatibility wrapper; prefer ``aclose``."""
-        self._closing = True
         if self._heartbeat_task is not None:
             self._heartbeat_task.cancel()
             self._heartbeat_task = None

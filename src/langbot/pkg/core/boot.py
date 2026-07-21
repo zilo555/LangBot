@@ -46,38 +46,21 @@ async def make_app(loop: asyncio.AbstractEventLoop) -> app.Application:
 
 async def main(loop: asyncio.AbstractEventLoop):
     app_inst: app.Application | None = None
-    runtime_loop = asyncio.get_running_loop()
-    shutdown_requested = asyncio.Event()
-    run_task: asyncio.Task | None = None
     try:
+        # Hang system signal processing
         import signal
 
         def signal_handler(sig, frame):
+            if app_inst is not None:
+                app_inst.dispose()
             print('[Signal] Program exit.')
-            runtime_loop.call_soon_threadsafe(shutdown_requested.set)
+            os._exit(0)
 
         signal.signal(signal.SIGINT, signal_handler)
-        if hasattr(signal, 'SIGTERM'):
-            signal.signal(signal.SIGTERM, signal_handler)
 
         app_inst = await make_app(loop)
-        if app_inst is None:
-            return
-        run_task = asyncio.create_task(app_inst.run())
-        shutdown_task = asyncio.create_task(shutdown_requested.wait())
-        done, pending = await asyncio.wait((run_task, shutdown_task), return_when=asyncio.FIRST_COMPLETED)
-        if shutdown_task in done:
-            await app_inst.shutdown()
-            if not run_task.done():
-                run_task.cancel()
-        for task in pending:
-            task.cancel()
-        results = await asyncio.gather(run_task, shutdown_task, return_exceptions=True)
-        run_result = results[0]
-        if isinstance(run_result, BaseException) and not isinstance(run_result, asyncio.CancelledError):
-            raise run_result
+        await app_inst.run()
     except Exception:
-        traceback.print_exc()
-    finally:
         if app_inst is not None:
-            await app_inst.shutdown()
+            app_inst.dispose()
+        traceback.print_exc()
