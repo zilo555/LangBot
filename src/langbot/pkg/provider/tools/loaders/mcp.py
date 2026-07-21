@@ -11,6 +11,7 @@ import traceback
 from langbot_plugin.api.entities.events import pipeline_query
 import sqlalchemy
 import asyncio
+import hashlib
 import httpx
 
 import uuid as uuid_module
@@ -26,7 +27,13 @@ from ....core import app
 import langbot_plugin.api.entities.builtin.resource.tool as resource_tool
 import langbot_plugin.api.entities.builtin.provider.message as provider_message
 from ....entity.persistence import mcp as persistence_mcp
-from .mcp_stdio import BoxStdioSessionRuntime, MCPServerBoxConfig, MCPSessionErrorPhase, _ColdStartRetry  # noqa: F401
+from .mcp_stdio import (
+    BoxStdioSessionRuntime,
+    MCPServerBoxConfig as MCPServerBoxConfig,  # noqa: F401 - public re-export
+    MCPSessionErrorPhase,
+    _ColdStartRetry,
+    _get_default_memory_mb,
+)  # noqa: F401
 
 # Synthesized LLM tools for MCP resources (not from server tools/list).
 # Dispatched in MCPLoader.invoke_tool; placeholder func on LLMTool is never used.
@@ -1206,15 +1213,34 @@ class RuntimeMCPSession:
         return self._box_stdio_runtime.uses_box_stdio()
 
     def _build_box_session_id(self) -> str:
-        # Both live servers and transient config-page tests share ONE Box
-        # session ('mcp-shared'). A test therefore reuses the already-running
-        # container (and, for an existing server, its live managed process)
-        # instead of paying a full per-test session cold-start + dependency
-        # bootstrap. Isolation between a test and the live servers is provided
-        # at the *process* level: each server/test has its own process_id and a
-        # test only ever stops its own process_id (see cleanup_session), so it
-        # never disturbs another server's process or the shared session itself.
-        return 'mcp-shared'
+        # Compatible MCP servers share a session and remain isolated by
+        # process_id. A server with a different immutable resource profile gets
+        # another session; Docker/E2B cannot change memory/image/etc. after a
+        # session has been created.
+        config = self._box_stdio_runtime.config
+        default_memory = _get_default_memory_mb(self.ap)
+        profile = {
+            'image': config.image,
+            'network': config.network,
+            'host_path_mode': config.host_path_mode,
+            'cpus': config.cpus,
+            'memory_mb': config.memory_mb or default_memory,
+            'pids_limit': config.pids_limit,
+            'read_only_rootfs': (config.read_only_rootfs if config.read_only_rootfs is not None else False),
+        }
+        default_profile = {
+            'image': None,
+            'network': 'on',
+            'host_path_mode': 'ro',
+            'cpus': None,
+            'memory_mb': default_memory,
+            'pids_limit': None,
+            'read_only_rootfs': False,
+        }
+        if profile == default_profile:
+            return 'mcp-shared'
+        digest = hashlib.sha256(json.dumps(profile, sort_keys=True).encode('utf-8')).hexdigest()[:12]
+        return f'mcp-shared-{digest}'
 
     def _rewrite_path(self, path: str, host_path: str | None) -> str:
         return self._box_stdio_runtime.rewrite_path(path, host_path)

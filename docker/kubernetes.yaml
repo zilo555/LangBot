@@ -139,7 +139,8 @@ spec:
             cpu: "1000m"
         # Liveness probe to restart container if it becomes unresponsive
         livenessProbe:
-          tcpSocket:
+          httpGet:
+            path: /healthz
             port: 5400
           initialDelaySeconds: 30
           periodSeconds: 10
@@ -147,7 +148,8 @@ spec:
           failureThreshold: 3
         # Readiness probe to know when container is ready to accept traffic
         readinessProbe:
-          tcpSocket:
+          httpGet:
+            path: /healthz
             port: 5400
           initialDelaySeconds: 10
           periodSeconds: 5
@@ -265,14 +267,16 @@ spec:
             memory: "1Gi"
             cpu: "1000m"
         livenessProbe:
-          tcpSocket:
+          httpGet:
+            path: /healthz
             port: 5410
           initialDelaySeconds: 20
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
         readinessProbe:
-          tcpSocket:
+          httpGet:
+            path: /healthz
             port: 5410
           initialDelaySeconds: 10
           periodSeconds: 5
@@ -319,6 +323,10 @@ metadata:
     app: langbot
 spec:
   replicas: 1
+  # Plugin Runtime has a single active LangBot control owner. Recreate avoids
+  # two LangBot pods fighting over that connection during a rolling update.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: langbot

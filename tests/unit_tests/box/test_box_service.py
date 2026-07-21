@@ -325,8 +325,26 @@ async def test_box_service_dispose_schedules_shutdown_on_event_loop(monkeypatch:
     service.dispose()
     await asyncio.sleep(0)
 
-    connector.dispose.assert_called_once()
+    connector.dispose.assert_not_called()
     service.shutdown.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_box_service_shutdown_reaps_connector_when_runtime_rpc_is_offline(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    connector = Mock()
+    connector.client = Mock()
+    connector.client.shutdown = AsyncMock(side_effect=RuntimeError('offline'))
+    connector.aclose = AsyncMock()
+
+    monkeypatch.setattr('langbot.pkg.box.service.BoxRuntimeConnector', Mock(return_value=connector))
+
+    service = BoxService(make_app(Mock()))
+    await service.shutdown()
+
+    connector.client.shutdown.assert_awaited_once()
+    connector.aclose.assert_awaited_once()
 
 
 @pytest.mark.asyncio

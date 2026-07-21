@@ -4,6 +4,7 @@ import logging
 import asyncio
 import traceback
 import os
+import contextlib
 
 from ..platform import botmgr as im_mgr
 from ..platform.webhook_pusher import WebhookPusher
@@ -166,7 +167,8 @@ class Application:
     maintenance_service: maintenance_service.MaintenanceService = None
 
     def __init__(self):
-        pass
+        self._shutdown_lock = asyncio.Lock()
+        self._shutdown_complete = False
 
     async def initialize(self):
         pass
@@ -318,7 +320,39 @@ class Application:
             return default
         return parsed
 
+    async def shutdown(self):
+        """Stop application work and deterministically release runtime resources."""
+        async with self._shutdown_lock:
+            if self._shutdown_complete:
+                return
+
+            if self.task_mgr is not None:
+                self.task_mgr.cancel_by_scope(core_entities.LifecycleControlScope.APPLICATION)
+            if self.platform_mgr is not None:
+                with contextlib.suppress(Exception):
+                    await self.platform_mgr.shutdown()
+            if self.tool_mgr is not None:
+                with contextlib.suppress(Exception):
+                    await self.tool_mgr.shutdown()
+            if self.box_service is not None:
+                with contextlib.suppress(Exception):
+                    await self.box_service.shutdown()
+            if self.plugin_connector is not None:
+                with contextlib.suppress(Exception):
+                    await self.plugin_connector.aclose()
+
+            if self.task_mgr is not None:
+                tasks = [wrapper.task for wrapper in self.task_mgr.tasks if not wrapper.task.done()]
+                if tasks:
+                    await asyncio.gather(*tasks, return_exceptions=True)
+            self._shutdown_complete = True
+
     def dispose(self):
+        """Compatibility wrapper for callers that cannot await shutdown."""
+        loop = self.event_loop
+        if loop is not None and not loop.is_closed():
+            loop.create_task(self.shutdown())
+            return
         if self.plugin_connector is not None:
             self.plugin_connector.dispose()
         if self.box_service is not None:
