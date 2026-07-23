@@ -152,8 +152,8 @@ class BoxRuntimeConnector(ManagedRuntimeConnector):
         async with self._lifecycle_lock:
             if self._closing:
                 raise BoxRuntimeUnavailableError('box runtime connector is shutting down')
-            await self._stop_transport()
             self._generation += 1
+            await self._stop_transport()
             try:
                 if self._uses_websocket():
                     if platform.get_platform() == 'win32' and not self.configured_runtime_endpoint:
@@ -174,8 +174,8 @@ class BoxRuntimeConnector(ManagedRuntimeConnector):
         async with self._lifecycle_lock:
             if self._closing:
                 raise BoxRuntimeUnavailableError('box runtime connector is shutting down')
-            await self._stop_transport()
             self._generation += 1
+            await self._stop_transport()
             try:
                 if self._uses_websocket():
                     if platform.get_platform() == 'win32' and not self.configured_runtime_endpoint:
@@ -235,6 +235,7 @@ class BoxRuntimeConnector(ManagedRuntimeConnector):
             # mirroring `rt -s`.
             args=['-m', 'langbot_plugin.cli.__init__', 'box', '-s', '--ws-control-port', str(self._relay_port)],
             env=env,
+            capture_stderr=False,
         )
         self._ctrl = ctrl
         self._ctrl_task = asyncio.create_task(
@@ -347,6 +348,22 @@ class BoxRuntimeConnector(ManagedRuntimeConnector):
                 await connection.close()
                 return
             handler = Handler(connection)
+            connection_ready = False
+            disconnect_notified = False
+
+            async def notify_disconnect() -> None:
+                nonlocal disconnect_notified
+                if (
+                    connection_ready
+                    and not disconnect_notified
+                    and generation == self._generation
+                    and not self._closing
+                    and self.runtime_disconnect_callback is not None
+                ):
+                    disconnect_notified = True
+                    self.ap.logger.error('Disconnected from Box runtime, trying to reconnect...')
+                    await self.runtime_disconnect_callback(self)
+
             self._handler = handler
             self.client.set_handler(handler)
             self._handler_task = asyncio.create_task(handler.run())
@@ -356,6 +373,7 @@ class BoxRuntimeConnector(ManagedRuntimeConnector):
                     await handler.call_action(LangBotToBoxAction.INIT, self._filtered_box_config)
                     self.ap.logger.debug('Sent box configuration to Box runtime via INIT.')
                 self.ap.logger.info(f'Connected to Box runtime via {transport_name}.')
+                connection_ready = True
                 connected.set()
                 await self._handler_task
             except asyncio.CancelledError:
@@ -365,18 +383,11 @@ class BoxRuntimeConnector(ManagedRuntimeConnector):
                     connect_error.append(exc)
                     connected.set()
                     return
-
-            # If we reach here, handler.run() returned normally (connection
-            # closed) or raised after the initial handshake succeeded.
-            # Either way, treat it as a disconnect.
-            if (
-                connected.is_set()
-                and generation == self._generation
-                and not self._closing
-                and self.runtime_disconnect_callback is not None
-            ):
-                self.ap.logger.error('Disconnected from Box runtime, trying to reconnect...')
-                await self.runtime_disconnect_callback(self)
+            finally:
+                if getattr(self, '_handler', None) is handler:
+                    self._handler = None
+                    self.client.set_handler(None)
+                await notify_disconnect()
 
         return new_connection_callback
 
@@ -407,6 +418,7 @@ class BoxRuntimeConnector(ManagedRuntimeConnector):
 
     async def aclose(self) -> None:
         self._closing = True
+        self._generation += 1
         if self._heartbeat_task is not None:
             self._heartbeat_task.cancel()
             await asyncio.gather(self._heartbeat_task, return_exceptions=True)

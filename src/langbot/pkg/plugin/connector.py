@@ -125,9 +125,9 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
             if self._connected.is_set() and hasattr(self, 'handler'):
                 return
 
-            await self._stop_transport()
             self._generation += 1
             generation = self._generation
+            await self._stop_transport()
             self._connected = asyncio.Event()
             connect_errors: list[Exception] = []
 
@@ -137,13 +137,25 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
                 if generation != self._generation or self._closing:
                     await connection.close()
                     return
+                connection_ready = False
+                disconnect_notified = False
+
+                async def notify_disconnect() -> None:
+                    nonlocal disconnect_notified
+                    if (
+                        connection_ready
+                        and not disconnect_notified
+                        and generation == self._generation
+                        and not self._closing
+                    ):
+                        disconnect_notified = True
+                        self._connected.clear()
+                        await self.runtime_disconnect_callback(self)
 
                 async def disconnect_callback(
                     rchandler: handler.RuntimeConnectionHandler,
                 ) -> bool:
-                    if generation == self._generation and not self._closing:
-                        self._connected.clear()
-                        await self.runtime_disconnect_callback(self)
+                    await notify_disconnect()
                     return False
 
                 runtime_handler = handler.RuntimeConnectionHandler(connection, disconnect_callback, self.ap)
@@ -155,6 +167,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
                     if space_url:
                         await runtime_handler.set_runtime_config(cloud_service_url=space_url)
                     if generation == self._generation and not self._closing:
+                        connection_ready = True
                         self._connected.set()
                         self.ap.logger.info('Connected to plugin runtime.')
                     await self.handler_task
@@ -169,7 +182,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
                         self._connected.clear()
                         if getattr(self, 'handler', None) is runtime_handler:
                             del self.handler
-                        await self.runtime_disconnect_callback(self)
+                        await notify_disconnect()
 
             task_coro: typing.Coroutine
             if platform.get_platform() == 'docker' or platform.use_websocket_to_connect_plugin_runtime():
@@ -207,6 +220,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
                     command=sys.executable,
                     args=['-m', 'langbot_plugin.cli.__init__', 'rt', '-s'],
                     env=os.environ.copy(),
+                    capture_stderr=False,
                 )
                 task_coro = self.ctrl.run(new_connection_callback)
 
@@ -245,11 +259,13 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
             self._reconnect_task = None
 
     async def _stop_transport(self) -> None:
+        self._connected.clear()
         runtime_handler = getattr(self, 'handler', None)
         if runtime_handler is not None:
             with contextlib.suppress(Exception):
                 await runtime_handler.close()
-            del self.handler
+            if getattr(self, 'handler', None) is runtime_handler:
+                del self.handler
         tasks = [
             task
             for task in (
@@ -272,6 +288,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
 
     async def aclose(self) -> None:
         self._closing = True
+        self._generation += 1
         reconnect_task = self._reconnect_task
         self._reconnect_task = None
         if reconnect_task is not None and reconnect_task is not asyncio.current_task():
