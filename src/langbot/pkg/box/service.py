@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import collections
+import contextlib
 import datetime as _dt
 import enum
 import json
@@ -65,6 +66,8 @@ class BoxService:
         self.workspace_quota_mb = self._load_workspace_quota_mb()
         self._recent_errors: collections.deque[dict] = collections.deque(maxlen=_MAX_RECENT_ERRORS)
         self._shutdown_task = None
+        self._reconnect_task: asyncio.Task | None = None
+        self._closing = False
         self._available = False
         self._connector_error: str = ''
         self._reconnecting = False
@@ -110,6 +113,8 @@ class BoxService:
             self.ap.logger.warning(f'LangBot Box runtime unavailable, sandbox features disabled: {exc}')
             self._available = False
             self._connector_error = str(exc)
+            if self._runtime_connector is not None:
+                await self._on_runtime_disconnect(self._runtime_connector)
 
     async def _on_runtime_disconnect(self, connector: BoxRuntimeConnector) -> None:
         """Called by the connector when the Box runtime connection drops.
@@ -118,29 +123,34 @@ class BoxService:
         Skipped entirely when Box is disabled by config — that path should
         never have connected in the first place.
         """
-        if not self._enabled:
+        if not self._enabled or self._closing:
             return
-        if self._reconnecting:
+        if self._reconnect_task is not None and not self._reconnect_task.done():
             return  # Another reconnect loop is already running
         self._reconnecting = True
         self._available = False
         self._connector_error = 'Disconnected from Box runtime'
         self.ap.logger.warning('Box runtime disconnected, sandbox features temporarily disabled.')
-        asyncio.create_task(self._reconnect_loop(connector))
+        self._reconnect_task = asyncio.create_task(self._reconnect_loop(connector))
 
     async def _reconnect_loop(self, connector: BoxRuntimeConnector) -> None:
         """Retry reconnection with exponential backoff (3s → 60s max)."""
         delay = 3
         max_delay = 60
         try:
-            while True:
+            while not self._closing:
                 self.ap.logger.info(f'Attempting to reconnect to Box runtime in {delay}s...')
                 await asyncio.sleep(delay)
                 try:
-                    connector.dispose()
-                    await connector.initialize()
+                    await connector.reconnect()
+                    self._ensure_default_workspace()
+                    await self._purge_attachment_dirs()
                     self._available = True
                     self._connector_error = ''
+                    skill_mgr = getattr(self.ap, 'skill_mgr', None)
+                    reload_skills = getattr(skill_mgr, 'reload_skills', None)
+                    if callable(reload_skills):
+                        await reload_skills()
                     self.ap.logger.info('Box runtime reconnected, sandbox features restored.')
                     return
                 except Exception as exc:
@@ -149,6 +159,7 @@ class BoxService:
                     delay = min(delay * 2, max_delay)
         finally:
             self._reconnecting = False
+            self._reconnect_task = None
 
     @property
     def available(self) -> bool:
@@ -838,14 +849,28 @@ class BoxService:
         return attachments
 
     async def shutdown(self):
-        await self.client.shutdown()
+        if self._closing:
+            return
+        self._closing = True
+        self._available = False
+        reconnect_task = self._reconnect_task
+        self._reconnect_task = None
+        if reconnect_task is not None and reconnect_task is not asyncio.current_task():
+            reconnect_task.cancel()
+            await asyncio.gather(reconnect_task, return_exceptions=True)
+        # The runtime may already be offline. A failed best-effort SHUTDOWN RPC
+        # must not prevent us from cancelling transports and reaping children.
+        with contextlib.suppress(Exception):
+            await self.client.shutdown()
+        if self._runtime_connector is not None:
+            await self._runtime_connector.aclose()
 
     def dispose(self):
-        if self._runtime_connector is not None:
-            self._runtime_connector.dispose()
         loop = getattr(self.ap, 'event_loop', None)
         if loop is not None and not loop.is_closed() and (self._shutdown_task is None or self._shutdown_task.done()):
             self._shutdown_task = loop.create_task(self.shutdown())
+        elif self._runtime_connector is not None:
+            self._runtime_connector.dispose()
 
     async def get_sessions(self) -> list[dict]:
         if not self._available:

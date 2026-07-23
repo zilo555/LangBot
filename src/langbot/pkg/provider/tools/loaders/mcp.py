@@ -3,14 +3,17 @@ from __future__ import annotations
 import base64
 import enum
 import json
+import math
 import re
 import time
 import typing
 from contextlib import AsyncExitStack, asynccontextmanager
+from datetime import timedelta
 import traceback
 from langbot_plugin.api.entities.events import pipeline_query
 import sqlalchemy
 import asyncio
+import hashlib
 import httpx
 
 import uuid as uuid_module
@@ -26,7 +29,13 @@ from ....core import app
 import langbot_plugin.api.entities.builtin.resource.tool as resource_tool
 import langbot_plugin.api.entities.builtin.provider.message as provider_message
 from ....entity.persistence import mcp as persistence_mcp
-from .mcp_stdio import BoxStdioSessionRuntime, MCPServerBoxConfig, MCPSessionErrorPhase, _ColdStartRetry  # noqa: F401
+from .mcp_stdio import (
+    BoxStdioSessionRuntime,
+    MCPServerBoxConfig as MCPServerBoxConfig,  # noqa: F401 - public re-export
+    MCPSessionErrorPhase,
+    _ColdStartRetry,
+    _get_default_memory_mb,
+)  # noqa: F401
 
 # Synthesized LLM tools for MCP resources (not from server tools/list).
 # Dispatched in MCPLoader.invoke_tool; placeholder func on LLMTool is never used.
@@ -44,6 +53,7 @@ MCP_RESOURCE_CONTEXT_MAX_BYTES = 96 * 1024
 MCP_RESOURCE_TRACE_QUERY_KEY = '_mcp_resource_reads'
 MCP_RESOURCE_LINKS_QUERY_KEY = '_mcp_resource_links'
 MCP_RESOURCE_CONTEXT_QUERY_KEY = '_mcp_resource_context'
+MCP_TOOL_CALL_TIMEOUT_DEFAULT_SECONDS = 300.0
 
 TEXT_LIKE_MIME_TYPES = {
     'application/json',
@@ -206,6 +216,10 @@ class _CallerReconnect(Exception):
     """
 
 
+class MCPToolCallTimeoutError(TimeoutError):
+    """An MCP tool call exceeded its configured per-server deadline."""
+
+
 class RuntimeMCPSession:
     """运行时 MCP 会话"""
 
@@ -255,6 +269,9 @@ class RuntimeMCPSession:
         self.ap = ap
         self.enable = enable
         self.session = None
+        self.tool_call_timeout_sec = self._parse_tool_call_timeout(
+            server_config.get('tool_call_timeout_sec', MCP_TOOL_CALL_TIMEOUT_DEFAULT_SECONDS)
+        )
 
         # Transient test sessions (created from the config page "test" button,
         # which carry no persisted server UUID) must NOT share the live
@@ -295,21 +312,39 @@ class RuntimeMCPSession:
         self._box_stdio_runtime = BoxStdioSessionRuntime(self)
         self.box_config = self._box_stdio_runtime.config
 
+    def _parse_tool_call_timeout(self, value: typing.Any) -> float:
+        """Return a safe tool-call timeout; zero explicitly disables it."""
+        try:
+            timeout = -1 if isinstance(value, bool) else float(value)
+            if timeout > 0:
+                # Validate the exact conversion used for each call here, so a
+                # finite-but-enormous manual config cannot fail at invocation.
+                timedelta(seconds=timeout)
+        except (TypeError, ValueError, OverflowError):
+            timeout = -1
+
+        if not math.isfinite(timeout) or timeout < 0:
+            self.ap.logger.warning(
+                f'Invalid MCP tool call timeout {value!r} for {self.server_name}; '
+                f'using {MCP_TOOL_CALL_TIMEOUT_DEFAULT_SECONDS:g} seconds'
+            )
+            return MCP_TOOL_CALL_TIMEOUT_DEFAULT_SECONDS
+        return timeout
+
     async def _init_stdio_python_server(self):
         if self._uses_box_stdio():
             await self._box_stdio_runtime.initialize()
             return
 
-        # Box is configured (ap.box_service exists) but currently unavailable
-        # (disabled by config or connection failed). Refuse stdio MCP rather
-        # than silently falling through to host-stdio — the operator asked
-        # for the sandbox and the failure mode should be visible.
+        # Box is configured but explicitly disabled. Refuse stdio MCP rather
+        # than silently falling through to host-stdio — the operator asked for
+        # the sandbox and the failure mode should be visible. An enabled Box
+        # that is reconnecting is handled above and waits for availability.
         #
         # Set ``error_phase = BOX_UNAVAILABLE`` BEFORE raising so the retry
-        # wrapper can short-circuit (retrying is pointless when Box is
-        # deliberately off) and the frontend can render a localized,
-        # actionable message instead of this raw RuntimeError. Keep the
-        # message itself short — the frontend ignores it for this phase.
+        # wrapper can distinguish a deliberately disabled Box from an enabled
+        # runtime that is still reconnecting. Keep the message itself short —
+        # the frontend ignores it for this phase.
         box_service = getattr(self.ap, 'box_service', None)
         if box_service is not None and not getattr(box_service, 'available', False):
             self.error_phase = MCPSessionErrorPhase.BOX_UNAVAILABLE
@@ -613,17 +648,29 @@ class RuntimeMCPSession:
                 await asyncio.sleep(2)
                 continue
             except Exception as e:
-                self.retry_count = attempt + 1
                 if self._shutdown_event.is_set():
                     return  # Shutdown requested, don't retry
-                # BOX_UNAVAILABLE is a deliberate refusal, not a transient
-                # failure — retrying produces log spam and a misleading
-                # "Failed after N attempts" message. Surface it immediately.
                 if self.error_phase == MCPSessionErrorPhase.BOX_UNAVAILABLE:
+                    box_service = getattr(self.ap, 'box_service', None)
+                    if box_service is not None and getattr(box_service, 'enabled', True):
+                        # Box is configured and may recover independently of
+                        # this MCP session. Keep retrying without consuming the
+                        # fatal budget; _wait_for_box_runtime() rate-limits the
+                        # loop to one warning per startup timeout.
+                        self.status = MCPSessionStatus.CONNECTING
+                        self.error_message = None
+                        self.error_phase = None
+                        await asyncio.sleep(1)
+                        continue
+                    # Explicitly disabled Box is a deliberate refusal, not a
+                    # transient failure. Surface it immediately without log
+                    # spam or a misleading "Failed after N attempts" message.
+                    self.retry_count = attempt + 1
                     self.status = MCPSessionStatus.ERROR
                     self.error_message = str(e)
                     self._ready_event.set()
                     return
+                self.retry_count = attempt + 1
                 if attempt >= self._MAX_RETRIES:
                     self.status = MCPSessionStatus.ERROR
                     self.error_message = f'Failed after {self._MAX_RETRIES + 1} attempts: {self._describe_exception(e)}'
@@ -950,8 +997,22 @@ class RuntimeMCPSession:
                 raise Exception('MCP session is not connected')
 
             try:
-                result = await self.session.call_tool(tool_name, arguments)
+                read_timeout = timedelta(seconds=self.tool_call_timeout_sec) if self.tool_call_timeout_sec > 0 else None
+                result = await self.session.call_tool(
+                    tool_name,
+                    arguments,
+                    read_timeout_seconds=read_timeout,
+                )
             except Exception as e:
+                if self._is_tool_call_timeout(e):
+                    self.ap.logger.warning(
+                        f'MCP tool {tool_name} on {self.server_name} timed out after '
+                        f'{self.tool_call_timeout_sec:g} seconds'
+                    )
+                    raise MCPToolCallTimeoutError(
+                        f"MCP tool '{tool_name}' on server '{self.server_name}' timed out after "
+                        f'{self.tool_call_timeout_sec:g} seconds'
+                    ) from e
                 if attempt == 0 and self._is_session_terminated(e):
                     self.ap.logger.warning(
                         f'MCP tool {tool_name} on {self.server_name} got session terminated, triggering reconnect...'
@@ -973,6 +1034,16 @@ class RuntimeMCPSession:
             return result_contents
 
         raise Exception('MCP session is not connected')
+
+    @staticmethod
+    def _is_tool_call_timeout(exc: BaseException) -> bool:
+        """Recognize the MCP SDK's per-request timeout without retrying it."""
+        return any(
+            isinstance(leaf, McpError)
+            and leaf.error.code == httpx.codes.REQUEST_TIMEOUT
+            and leaf.error.message.startswith('Timed out while waiting for response')
+            for leaf in RuntimeMCPSession._iter_exception_leaves(exc)
+        )
 
     def get_tools(self) -> list[resource_tool.LLMTool]:
         return self.functions
@@ -1206,15 +1277,34 @@ class RuntimeMCPSession:
         return self._box_stdio_runtime.uses_box_stdio()
 
     def _build_box_session_id(self) -> str:
-        # Both live servers and transient config-page tests share ONE Box
-        # session ('mcp-shared'). A test therefore reuses the already-running
-        # container (and, for an existing server, its live managed process)
-        # instead of paying a full per-test session cold-start + dependency
-        # bootstrap. Isolation between a test and the live servers is provided
-        # at the *process* level: each server/test has its own process_id and a
-        # test only ever stops its own process_id (see cleanup_session), so it
-        # never disturbs another server's process or the shared session itself.
-        return 'mcp-shared'
+        # Compatible MCP servers share a session and remain isolated by
+        # process_id. A server with a different immutable resource profile gets
+        # another session; Docker/E2B cannot change memory/image/etc. after a
+        # session has been created.
+        config = self._box_stdio_runtime.config
+        default_memory = _get_default_memory_mb(self.ap)
+        profile = {
+            'image': config.image,
+            'network': config.network,
+            'host_path_mode': config.host_path_mode,
+            'cpus': config.cpus,
+            'memory_mb': config.memory_mb or default_memory,
+            'pids_limit': config.pids_limit,
+            'read_only_rootfs': (config.read_only_rootfs if config.read_only_rootfs is not None else False),
+        }
+        default_profile = {
+            'image': None,
+            'network': 'on',
+            'host_path_mode': 'ro',
+            'cpus': None,
+            'memory_mb': default_memory,
+            'pids_limit': None,
+            'read_only_rootfs': False,
+        }
+        if profile == default_profile:
+            return 'mcp-shared'
+        digest = hashlib.sha256(json.dumps(profile, sort_keys=True).encode('utf-8')).hexdigest()[:12]
+        return f'mcp-shared-{digest}'
 
     def _rewrite_path(self, path: str, host_path: str | None) -> str:
         return self._box_stdio_runtime.rewrite_path(path, host_path)
@@ -1797,11 +1887,23 @@ class MCPLoader(loader.ToolLoader):
     async def shutdown(self):
         """关闭所有工具"""
         self.ap.logger.info('Shutting down all MCP sessions...')
-        for server_name, session in list(self.sessions.items()):
+
+        hosted_tasks = [task for task in self._hosted_mcp_tasks if not task.done()]
+        for task in hosted_tasks:
+            task.cancel()
+        if hosted_tasks:
+            await asyncio.gather(*hosted_tasks, return_exceptions=True)
+        self._hosted_mcp_tasks.clear()
+
+        async def shutdown_session(server_name: str, session: RuntimeMCPSession) -> None:
             try:
                 await session.shutdown()
                 self.ap.logger.debug(f'Shutdown MCP session: {server_name}')
             except Exception as e:
                 self.ap.logger.error(f'Error shutting down MCP session {server_name}: {e}\n{traceback.format_exc()}')
+
+        await asyncio.gather(
+            *(shutdown_session(server_name, session) for server_name, session in list(self.sessions.items()))
+        )
         self.sessions.clear()
         self.ap.logger.info('All MCP sessions shutdown complete')

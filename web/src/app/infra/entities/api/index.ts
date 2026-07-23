@@ -519,18 +519,21 @@ export interface MCPServerExtraArgsSSE {
   headers: Record<string, string>;
   timeout: number;
   ssereadtimeout: number;
+  tool_call_timeout_sec?: number;
 }
 
 export interface MCPServerExtraArgsStdio {
   command: string;
   args: string[];
   env: Record<string, string>;
+  tool_call_timeout_sec?: number;
 }
 
 export interface MCPServerExtraArgsHttp {
   url: string;
   headers: Record<string, string>;
   timeout: number;
+  tool_call_timeout_sec?: number;
 }
 
 // "remote" mode: the user only supplies a URL; the backend auto-detects the
@@ -540,6 +543,7 @@ export interface MCPServerExtraArgsRemote {
   url: string;
   headers?: Record<string, string>;
   timeout?: number;
+  tool_call_timeout_sec?: number;
 }
 
 export enum MCPSessionStatus {

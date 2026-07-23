@@ -803,6 +803,9 @@ const jaJP = {
     url: 'URL',
     headers: 'ヘッダー',
     timeout: 'タイムアウト',
+    toolCallTimeout: 'ツール呼び出しタイムアウト（秒）',
+    toolCallTimeoutDescription:
+      '1 回のツール呼び出しの最大待機時間です。0 で無制限、既定値は 300 秒です。',
     addArgument: '引数を追加',
     addEnvVar: '環境変数を追加',
     addHeader: 'ヘッダーを追加',

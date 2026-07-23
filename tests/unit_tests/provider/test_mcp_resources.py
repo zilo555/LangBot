@@ -1,20 +1,25 @@
 from __future__ import annotations
 
+import asyncio
 import base64
+from datetime import timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock
 
 import httpx
 import pytest
 from mcp import types as mcp_types
+from mcp.shared.exceptions import McpError
 
 from langbot.pkg.provider.tools.loaders.mcp import (
     MCP_RESOURCE_CONTEXT_QUERY_KEY,
     MCP_RESOURCE_TRACE_QUERY_KEY,
+    MCP_TOOL_CALL_TIMEOUT_DEFAULT_SECONDS,
     MCP_TOOL_LIST_RESOURCES,
     MCP_TOOL_READ_RESOURCE,
     MCPLoader,
     MCPSessionStatus,
+    MCPToolCallTimeoutError,
     RuntimeMCPSession,
 )
 from langbot.pkg.telemetry import features as telemetry_features
@@ -59,6 +64,111 @@ def _http_status_error(status_code: int) -> httpx.HTTPStatusError:
     request = httpx.Request('POST', 'https://example.com/mcp')
     response = httpx.Response(status_code, request=request)
     return httpx.HTTPStatusError(f'HTTP {status_code}', request=request, response=response)
+
+
+def _tool_result(text: str = 'ok') -> mcp_types.CallToolResult:
+    return mcp_types.CallToolResult(
+        content=[mcp_types.TextContent(type='text', text=text)],
+        isError=False,
+    )
+
+
+@pytest.mark.asyncio
+async def test_invoke_mcp_tool_uses_configurable_request_timeout():
+    session = RuntimeMCPSession(
+        'slow-tools',
+        {
+            'uuid': 'srv-1',
+            'mode': 'remote',
+            'tool_call_timeout_sec': 900,
+        },
+        True,
+        _app(),
+    )
+    session.session = SimpleNamespace(call_tool=AsyncMock(return_value=_tool_result()))
+
+    result = await session.invoke_mcp_tool('render_video', {'quality': 'high'})
+
+    assert result[0].text == 'ok'
+    session.session.call_tool.assert_awaited_once_with(
+        'render_video',
+        {'quality': 'high'},
+        read_timeout_seconds=timedelta(seconds=900),
+    )
+
+
+@pytest.mark.asyncio
+async def test_invoke_mcp_tool_zero_timeout_disables_request_deadline():
+    session = RuntimeMCPSession(
+        'unbounded-tools',
+        {
+            'uuid': 'srv-1',
+            'mode': 'remote',
+            'tool_call_timeout_sec': 0,
+        },
+        True,
+        _app(),
+    )
+    session.session = SimpleNamespace(call_tool=AsyncMock(return_value=_tool_result()))
+
+    await session.invoke_mcp_tool('long_job', {})
+
+    session.session.call_tool.assert_awaited_once_with(
+        'long_job',
+        {},
+        read_timeout_seconds=None,
+    )
+
+
+@pytest.mark.asyncio
+async def test_invoke_mcp_tool_timeout_is_not_retried_and_session_remains_usable():
+    session = RuntimeMCPSession(
+        'recoverable-tools',
+        {
+            'uuid': 'srv-1',
+            'mode': 'remote',
+            'tool_call_timeout_sec': 5,
+        },
+        True,
+        _app(),
+    )
+    timeout = McpError(
+        mcp_types.ErrorData(
+            code=httpx.codes.REQUEST_TIMEOUT,
+            message='Timed out while waiting for response to ClientRequest. Waited 5 seconds.',
+        )
+    )
+    call_tool = AsyncMock(side_effect=[timeout, _tool_result('recovered')])
+    session.session = SimpleNamespace(call_tool=call_tool)
+
+    with pytest.raises(
+        MCPToolCallTimeoutError,
+        match="MCP tool 'long_job' on server 'recoverable-tools' timed out after 5 seconds",
+    ):
+        await session.invoke_mcp_tool('long_job', {})
+
+    assert call_tool.await_count == 1
+    second_result = await session.invoke_mcp_tool('health_check', {})
+    assert second_result[0].text == 'recovered'
+    assert call_tool.await_count == 2
+
+
+@pytest.mark.parametrize('invalid_timeout', [-1, float('inf'), 1e300, True, 'not-a-number'])
+def test_invalid_tool_call_timeout_falls_back_to_default(invalid_timeout):
+    ap = _app()
+    session = RuntimeMCPSession(
+        'invalid-timeout',
+        {
+            'uuid': 'srv-1',
+            'mode': 'remote',
+            'tool_call_timeout_sec': invalid_timeout,
+        },
+        True,
+        ap,
+    )
+
+    assert session.tool_call_timeout_sec == MCP_TOOL_CALL_TIMEOUT_DEFAULT_SECONDS
+    ap.logger.warning.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -321,3 +431,42 @@ async def test_build_resource_context_for_query_uses_only_bound_attached_text_re
     assert query.variables[MCP_RESOURCE_CONTEXT_QUERY_KEY]['resource_count'] == 1
     docs.session.read_resource.assert_awaited_once()
     other.session.read_resource.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_mcp_loader_shutdown_cancels_startup_tasks_and_closes_sessions_concurrently():
+    loader = MCPLoader(_app())
+    hosted_cancelled = asyncio.Event()
+
+    async def pending_host():
+        try:
+            await asyncio.Event().wait()
+        finally:
+            hosted_cancelled.set()
+
+    hosted_task = asyncio.create_task(pending_host())
+    await asyncio.sleep(0)
+    loader._hosted_mcp_tasks = [hosted_task]
+
+    started: set[str] = set()
+    all_started = asyncio.Event()
+
+    class Session:
+        def __init__(self, name: str):
+            self.name = name
+
+        async def shutdown(self):
+            started.add(self.name)
+            if len(started) == 2:
+                all_started.set()
+            await all_started.wait()
+
+    loader.sessions = {'one': Session('one'), 'two': Session('two')}
+
+    await asyncio.wait_for(loader.shutdown(), timeout=1)
+
+    assert hosted_cancelled.is_set()
+    assert hosted_task.cancelled()
+    assert started == {'one', 'two'}
+    assert loader._hosted_mcp_tasks == []
+    assert loader.sessions == {}

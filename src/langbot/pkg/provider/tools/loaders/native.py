@@ -57,7 +57,7 @@ class NativeToolLoader(loader.ToolLoader):
         return await is_box_backend_available(self.ap)
 
     async def get_tools(self, bound_plugins: list[str] | None = None) -> list[resource_tool.LLMTool]:
-        if not self._is_sandbox_available():
+        if not await self._is_sandbox_available():
             return []
         if self._tools is None:
             self._tools = [
@@ -71,7 +71,7 @@ class NativeToolLoader(loader.ToolLoader):
         return list(self._tools)
 
     async def has_tool(self, name: str) -> bool:
-        return name in _ALL_TOOL_NAMES and self._is_sandbox_available()
+        return name in _ALL_TOOL_NAMES and await self._is_sandbox_available()
 
     async def invoke_tool(self, name: str, parameters: dict, query: pipeline_query.Query):
         if name == EXEC_TOOL_NAME:
@@ -652,12 +652,9 @@ else:
         if callable(refresh_skill):
             refresh_skill(selected_skill.get('name', ''))
 
-    def _is_sandbox_available(self) -> bool:
-        """Check if sandbox backend is available.
-
-        This checks the cached backend availability from initialization,
-        not just whether the box_service process is running.
-        """
+    async def _is_sandbox_available(self) -> bool:
+        """Refresh backend availability so Box reconnects restore tool exposure."""
+        self._backend_available = await self._check_backend_available()
         return bool(self._backend_available)
 
     def _build_exec_tool(self) -> resource_tool.LLMTool:

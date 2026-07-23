@@ -801,6 +801,9 @@ const viVN = {
     url: 'URL',
     headers: 'Tiêu đề',
     timeout: 'Thời gian chờ',
+    toolCallTimeout: 'Thời gian chờ gọi công cụ (giây)',
+    toolCallTimeoutDescription:
+      'Thời gian chờ tối đa cho một lần gọi công cụ. Đặt 0 để không giới hạn. Mặc định là 300 giây.',
     addArgument: 'Thêm tham số',
     addEnvVar: 'Thêm biến môi trường',
     addHeader: 'Thêm tiêu đề',

@@ -811,6 +811,9 @@ const esES = {
     url: 'URL',
     headers: 'Encabezados',
     timeout: 'Tiempo de espera',
+    toolCallTimeout: 'Tiempo de espera de herramienta (segundos)',
+    toolCallTimeoutDescription:
+      'Espera máxima para una llamada de herramienta. Use 0 para no limitar. El valor predeterminado es 300 segundos.',
     addArgument: 'Añadir argumento',
     addEnvVar: 'Añadir variable de entorno',
     addHeader: 'Añadir encabezado',

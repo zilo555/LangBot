@@ -12,7 +12,7 @@ import pytest
 from aiohttp import web
 from mcp import types as mcp_types
 
-from langbot.pkg.provider.tools.loaders.mcp import RuntimeMCPSession
+from langbot.pkg.provider.tools.loaders.mcp import MCPToolCallTimeoutError, RuntimeMCPSession
 
 
 class _TransportProbe:
@@ -62,6 +62,25 @@ class _TransportProbe:
                                         'inputSchema': {'type': 'object'},
                                     }
                                 ]
+                            },
+                        }
+                    )
+                if method == 'tools/call':
+                    tool_name = message.get('params', {}).get('name')
+                    if tool_name == 'hang':
+                        return web.Response(status=202)
+                    return web.json_response(
+                        {
+                            'jsonrpc': '2.0',
+                            'id': message['id'],
+                            'result': {
+                                'content': [
+                                    {
+                                        'type': 'text',
+                                        'text': 'healthy',
+                                    }
+                                ],
+                                'isError': False,
                             },
                         }
                     )
@@ -126,11 +145,22 @@ async def _transport_server(streamable_status: int | None):
         await runner.cleanup()
 
 
-def _session(url: str, *, timeout: float = 2) -> RuntimeMCPSession:
+def _session(
+    url: str,
+    *,
+    timeout: float = 2,
+    tool_call_timeout_sec: float = 300,
+) -> RuntimeMCPSession:
     app = cast(Any, SimpleNamespace(logger=Mock()))
     return RuntimeMCPSession(
         'remote-transport-test',
-        {'uuid': 'srv-1', 'mode': 'remote', 'url': url, 'timeout': timeout},
+        {
+            'uuid': 'srv-1',
+            'mode': 'remote',
+            'url': url,
+            'timeout': timeout,
+            'tool_call_timeout_sec': tool_call_timeout_sec,
+        },
         True,
         app,
     )
@@ -160,6 +190,24 @@ async def test_remote_transport_real_streamable_http_success_keeps_session_usabl
             assert probe.streamable_messages[:2] == ['initialize', 'notifications/initialized']
             assert 'tools/list' in probe.streamable_messages
             assert probe.sse_gets == 0
+        finally:
+            await _close_session(session)
+
+
+@pytest.mark.asyncio
+async def test_remote_transport_tool_timeout_does_not_poison_session():
+    async with _transport_server(200) as (probe, url):
+        session = _session(url, tool_call_timeout_sec=0.05)
+        try:
+            await session._init_remote_server()
+
+            with pytest.raises(MCPToolCallTimeoutError, match='timed out after 0.05 seconds'):
+                await session.invoke_mcp_tool('hang', {})
+
+            result = await session.invoke_mcp_tool('health_check', {})
+
+            assert result[0].text == 'healthy'
+            assert probe.streamable_messages.count('tools/call') == 2
         finally:
             await _close_session(session)
 

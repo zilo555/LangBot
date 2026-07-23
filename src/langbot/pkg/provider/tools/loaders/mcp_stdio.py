@@ -185,11 +185,10 @@ class BoxStdioSessionRuntime:
         box_service = getattr(self.ap, 'box_service', None)
         if box_service is None:
             return False
-        # When Box is configured but currently unavailable (disabled or
-        # connection failed), do NOT silently fall through to host-stdio —
-        # that would bypass the sandbox the operator asked for. The caller
-        # is expected to refuse the stdio MCP server with a clear error.
-        return bool(getattr(box_service, 'available', False))
+        # An enabled Box service remains the required transport while it is
+        # reconnecting. initialize() waits for availability instead of
+        # permanently failing the MCP server or falling through to host stdio.
+        return bool(getattr(box_service, 'enabled', True))
 
     async def initialize(self) -> None:
         await self._wait_for_box_runtime()
@@ -488,7 +487,7 @@ class BoxStdioSessionRuntime:
                 )
                 warned = True
             if asyncio.get_running_loop().time() >= deadline:
-                self.owner.error_phase = MCPSessionErrorPhase.SESSION_CREATE
+                self.owner.error_phase = MCPSessionErrorPhase.BOX_UNAVAILABLE
                 raise Exception(f'Box runtime is not available after {int(timeout_sec)} seconds')
             await asyncio.sleep(1)
 

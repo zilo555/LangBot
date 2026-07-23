@@ -49,19 +49,27 @@ class SkillToolLoader(loader.ToolLoader):
         return await is_box_backend_available(self.ap)
 
     async def get_tools(self, bound_plugins: list[str] | None = None) -> list[resource_tool.LLMTool]:
-        if not self._is_available():
+        if not await self._is_available():
             return []
+        if not self._tools:
+            self._tools = [
+                self._build_activate_skill_tool(),
+                self._build_register_skill_tool(),
+            ]
         return list(self._tools)
 
     async def has_tool(self, name: str) -> bool:
-        return self._is_available() and name in SKILL_TOOL_NAMES
+        return await self._is_available() and name in SKILL_TOOL_NAMES
 
-    def _is_available(self) -> bool:
+    async def _is_available(self) -> bool:
         """Check if skill tools should be available.
 
         Skill tools require both a skill manager and a sandbox backend.
         """
-        return self._has_skill_manager() and self._sandbox_available
+        if not self._has_skill_manager():
+            return False
+        self._sandbox_available = await self._check_sandbox_available()
+        return self._sandbox_available
 
     async def invoke_tool(self, name: str, parameters: dict, query) -> typing.Any:
         if name == ACTIVATE_SKILL_TOOL_NAME:
