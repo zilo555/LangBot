@@ -313,10 +313,9 @@ class RuntimeMCPSession:
         # that is reconnecting is handled above and waits for availability.
         #
         # Set ``error_phase = BOX_UNAVAILABLE`` BEFORE raising so the retry
-        # wrapper can short-circuit (retrying is pointless when Box is
-        # deliberately off) and the frontend can render a localized,
-        # actionable message instead of this raw RuntimeError. Keep the
-        # message itself short — the frontend ignores it for this phase.
+        # wrapper can distinguish a deliberately disabled Box from an enabled
+        # runtime that is still reconnecting. Keep the message itself short —
+        # the frontend ignores it for this phase.
         box_service = getattr(self.ap, 'box_service', None)
         if box_service is not None and not getattr(box_service, 'available', False):
             self.error_phase = MCPSessionErrorPhase.BOX_UNAVAILABLE
@@ -620,17 +619,29 @@ class RuntimeMCPSession:
                 await asyncio.sleep(2)
                 continue
             except Exception as e:
-                self.retry_count = attempt + 1
                 if self._shutdown_event.is_set():
                     return  # Shutdown requested, don't retry
-                # BOX_UNAVAILABLE is a deliberate refusal, not a transient
-                # failure — retrying produces log spam and a misleading
-                # "Failed after N attempts" message. Surface it immediately.
                 if self.error_phase == MCPSessionErrorPhase.BOX_UNAVAILABLE:
+                    box_service = getattr(self.ap, 'box_service', None)
+                    if box_service is not None and getattr(box_service, 'enabled', True):
+                        # Box is configured and may recover independently of
+                        # this MCP session. Keep retrying without consuming the
+                        # fatal budget; _wait_for_box_runtime() rate-limits the
+                        # loop to one warning per startup timeout.
+                        self.status = MCPSessionStatus.CONNECTING
+                        self.error_message = None
+                        self.error_phase = None
+                        await asyncio.sleep(1)
+                        continue
+                    # Explicitly disabled Box is a deliberate refusal, not a
+                    # transient failure. Surface it immediately without log
+                    # spam or a misleading "Failed after N attempts" message.
+                    self.retry_count = attempt + 1
                     self.status = MCPSessionStatus.ERROR
                     self.error_message = str(e)
                     self._ready_event.set()
                     return
+                self.retry_count = attempt + 1
                 if attempt >= self._MAX_RETRIES:
                     self.status = MCPSessionStatus.ERROR
                     self.error_message = f'Failed after {self._MAX_RETRIES + 1} attempts: {self._describe_exception(e)}'

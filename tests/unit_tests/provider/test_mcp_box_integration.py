@@ -793,6 +793,73 @@ class TestGetRuntimeInfoDict:
 
         assert ap.box_service.available is True
 
+    @pytest.mark.asyncio
+    async def test_enabled_box_timeout_does_not_exhaust_mcp_retry_budget(self, mcp_module, monkeypatch):
+        ap = _make_ap()
+        ap.box_service.available = False
+        ap.box_service.enabled = True
+        session = _make_session(
+            mcp_module,
+            {
+                'name': 'test',
+                'uuid': 'test-uuid',
+                'mode': 'stdio',
+                'command': 'python',
+                'args': [],
+            },
+            ap=ap,
+        )
+        attempts = 0
+
+        async def lifecycle():
+            nonlocal attempts
+            attempts += 1
+            if attempts == 1:
+                session.error_phase = mcp_module.MCPSessionErrorPhase.BOX_UNAVAILABLE
+                raise RuntimeError('Box runtime is not available after 1 seconds')
+
+        session._lifecycle_loop = lifecycle
+        sleep = AsyncMock()
+        monkeypatch.setattr(mcp_module.asyncio, 'sleep', sleep)
+
+        await session._lifecycle_loop_with_retry()
+
+        assert attempts == 2
+        assert session.retry_count == 0
+        sleep.assert_awaited_once_with(1)
+
+    @pytest.mark.asyncio
+    async def test_disabled_box_still_stops_mcp_retry_loop(self, mcp_module):
+        ap = _make_ap()
+        ap.box_service.available = False
+        ap.box_service.enabled = False
+        session = _make_session(
+            mcp_module,
+            {
+                'name': 'test',
+                'uuid': 'test-uuid',
+                'mode': 'stdio',
+                'command': 'python',
+                'args': [],
+            },
+            ap=ap,
+        )
+        attempts = 0
+
+        async def lifecycle():
+            nonlocal attempts
+            attempts += 1
+            session.error_phase = mcp_module.MCPSessionErrorPhase.BOX_UNAVAILABLE
+            raise RuntimeError('box_disabled_in_config')
+
+        session._lifecycle_loop = lifecycle
+
+        await session._lifecycle_loop_with_retry()
+
+        assert attempts == 1
+        assert session.status == mcp_module.MCPSessionStatus.ERROR
+        assert session.retry_count == 1
+
     def test_stdio_session_without_box_service_uses_local_stdio(self, mcp_module):
         ap = _make_ap()
         del ap.box_service
