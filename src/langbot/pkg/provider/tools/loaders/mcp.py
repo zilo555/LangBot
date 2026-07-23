@@ -315,8 +315,12 @@ class RuntimeMCPSession:
     def _parse_tool_call_timeout(self, value: typing.Any) -> float:
         """Return a safe tool-call timeout; zero explicitly disables it."""
         try:
-            timeout = float(value)
-        except (TypeError, ValueError):
+            timeout = -1 if isinstance(value, bool) else float(value)
+            if timeout > 0:
+                # Validate the exact conversion used for each call here, so a
+                # finite-but-enormous manual config cannot fail at invocation.
+                timedelta(seconds=timeout)
+        except (TypeError, ValueError, OverflowError):
             timeout = -1
 
         if not math.isfinite(timeout) or timeout < 0:
@@ -1035,7 +1039,9 @@ class RuntimeMCPSession:
     def _is_tool_call_timeout(exc: BaseException) -> bool:
         """Recognize the MCP SDK's per-request timeout without retrying it."""
         return any(
-            isinstance(leaf, McpError) and leaf.error.code == httpx.codes.REQUEST_TIMEOUT
+            isinstance(leaf, McpError)
+            and leaf.error.code == httpx.codes.REQUEST_TIMEOUT
+            and leaf.error.message.startswith('Timed out while waiting for response')
             for leaf in RuntimeMCPSession._iter_exception_leaves(exc)
         )
 

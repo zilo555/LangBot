@@ -153,7 +153,7 @@ async def test_invoke_mcp_tool_timeout_is_not_retried_and_session_remains_usable
     assert call_tool.await_count == 2
 
 
-@pytest.mark.parametrize('invalid_timeout', [-1, float('inf'), 'not-a-number'])
+@pytest.mark.parametrize('invalid_timeout', [-1, float('inf'), 1e300, True, 'not-a-number'])
 def test_invalid_tool_call_timeout_falls_back_to_default(invalid_timeout):
     ap = _app()
     session = RuntimeMCPSession(
