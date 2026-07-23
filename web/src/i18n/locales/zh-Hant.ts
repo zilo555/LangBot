@@ -762,6 +762,9 @@ const zhHant = {
     url: 'URL位址',
     headers: '請求標頭',
     timeout: '逾時時間',
+    toolCallTimeout: '工具呼叫逾時（秒）',
+    toolCallTimeoutDescription:
+      '單次工具呼叫的最長等待時間。設為 0 表示不限制，預設 300 秒。',
     addArgument: '新增參數',
     addEnvVar: '新增環境變數',
     addHeader: '新增請求標頭',

@@ -763,6 +763,9 @@ const zhHans = {
     url: 'URL地址',
     headers: '请求头',
     timeout: '超时时间',
+    toolCallTimeout: '工具调用超时（秒）',
+    toolCallTimeoutDescription:
+      '单次工具调用的最长等待时间。设为 0 表示不限制，默认 300 秒。',
     addArgument: '添加参数',
     addEnvVar: '添加环境变量',
     addHeader: '添加请求头',

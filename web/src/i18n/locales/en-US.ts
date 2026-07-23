@@ -797,6 +797,9 @@ const enUS = {
     url: 'URL',
     headers: 'Headers',
     timeout: 'Timeout',
+    toolCallTimeout: 'Tool call timeout (seconds)',
+    toolCallTimeoutDescription:
+      'Maximum wait for one tool call. Set to 0 for no timeout. Defaults to 300 seconds.',
     addArgument: 'Add Argument',
     addEnvVar: 'Add Environment Variable',
     addHeader: 'Add Header',

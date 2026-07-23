@@ -3,10 +3,12 @@ from __future__ import annotations
 import base64
 import enum
 import json
+import math
 import re
 import time
 import typing
 from contextlib import AsyncExitStack, asynccontextmanager
+from datetime import timedelta
 import traceback
 from langbot_plugin.api.entities.events import pipeline_query
 import sqlalchemy
@@ -51,6 +53,7 @@ MCP_RESOURCE_CONTEXT_MAX_BYTES = 96 * 1024
 MCP_RESOURCE_TRACE_QUERY_KEY = '_mcp_resource_reads'
 MCP_RESOURCE_LINKS_QUERY_KEY = '_mcp_resource_links'
 MCP_RESOURCE_CONTEXT_QUERY_KEY = '_mcp_resource_context'
+MCP_TOOL_CALL_TIMEOUT_DEFAULT_SECONDS = 300.0
 
 TEXT_LIKE_MIME_TYPES = {
     'application/json',
@@ -213,6 +216,10 @@ class _CallerReconnect(Exception):
     """
 
 
+class MCPToolCallTimeoutError(TimeoutError):
+    """An MCP tool call exceeded its configured per-server deadline."""
+
+
 class RuntimeMCPSession:
     """运行时 MCP 会话"""
 
@@ -262,6 +269,9 @@ class RuntimeMCPSession:
         self.ap = ap
         self.enable = enable
         self.session = None
+        self.tool_call_timeout_sec = self._parse_tool_call_timeout(
+            server_config.get('tool_call_timeout_sec', MCP_TOOL_CALL_TIMEOUT_DEFAULT_SECONDS)
+        )
 
         # Transient test sessions (created from the config page "test" button,
         # which carry no persisted server UUID) must NOT share the live
@@ -301,6 +311,21 @@ class RuntimeMCPSession:
 
         self._box_stdio_runtime = BoxStdioSessionRuntime(self)
         self.box_config = self._box_stdio_runtime.config
+
+    def _parse_tool_call_timeout(self, value: typing.Any) -> float:
+        """Return a safe tool-call timeout; zero explicitly disables it."""
+        try:
+            timeout = float(value)
+        except (TypeError, ValueError):
+            timeout = -1
+
+        if not math.isfinite(timeout) or timeout < 0:
+            self.ap.logger.warning(
+                f'Invalid MCP tool call timeout {value!r} for {self.server_name}; '
+                f'using {MCP_TOOL_CALL_TIMEOUT_DEFAULT_SECONDS:g} seconds'
+            )
+            return MCP_TOOL_CALL_TIMEOUT_DEFAULT_SECONDS
+        return timeout
 
     async def _init_stdio_python_server(self):
         if self._uses_box_stdio():
@@ -968,13 +993,22 @@ class RuntimeMCPSession:
                 raise Exception('MCP session is not connected')
 
             try:
-                async with asyncio.timeout(30):
-                    result = await self.session.call_tool(tool_name, arguments)
-            except TimeoutError as e:
-                raise Exception(
-                    f"MCP tool '{tool_name}' on server '{self.server_name}' timed out after 30 seconds"
-                ) from e
+                read_timeout = timedelta(seconds=self.tool_call_timeout_sec) if self.tool_call_timeout_sec > 0 else None
+                result = await self.session.call_tool(
+                    tool_name,
+                    arguments,
+                    read_timeout_seconds=read_timeout,
+                )
             except Exception as e:
+                if self._is_tool_call_timeout(e):
+                    self.ap.logger.warning(
+                        f'MCP tool {tool_name} on {self.server_name} timed out after '
+                        f'{self.tool_call_timeout_sec:g} seconds'
+                    )
+                    raise MCPToolCallTimeoutError(
+                        f"MCP tool '{tool_name}' on server '{self.server_name}' timed out after "
+                        f'{self.tool_call_timeout_sec:g} seconds'
+                    ) from e
                 if attempt == 0 and self._is_session_terminated(e):
                     self.ap.logger.warning(
                         f'MCP tool {tool_name} on {self.server_name} got session terminated, triggering reconnect...'
@@ -996,6 +1030,14 @@ class RuntimeMCPSession:
             return result_contents
 
         raise Exception('MCP session is not connected')
+
+    @staticmethod
+    def _is_tool_call_timeout(exc: BaseException) -> bool:
+        """Recognize the MCP SDK's per-request timeout without retrying it."""
+        return any(
+            isinstance(leaf, McpError) and leaf.error.code == httpx.codes.REQUEST_TIMEOUT
+            for leaf in RuntimeMCPSession._iter_exception_leaves(exc)
+        )
 
     def get_tools(self) -> list[resource_tool.LLMTool]:
         return self.functions

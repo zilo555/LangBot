@@ -435,6 +435,10 @@ const getFormSchema = (t: TFunction) =>
         .number({ invalid_type_error: t('mcp.timeoutMustBeNumber') })
         .positive({ message: t('mcp.timeoutMustBePositive') })
         .default(30),
+      tool_call_timeout_sec: z
+        .number({ invalid_type_error: t('mcp.timeoutMustBeNumber') })
+        .nonnegative({ message: t('mcp.timeoutNonNegative') })
+        .default(300),
       ssereadtimeout: z
         .number({ invalid_type_error: t('mcp.sseTimeoutMustBeNumber') })
         .positive({ message: t('mcp.timeoutMustBePositive') })
@@ -474,6 +478,7 @@ const getFormSchema = (t: TFunction) =>
 
 type FormValues = z.infer<ReturnType<typeof getFormSchema>> & {
   timeout: number;
+  tool_call_timeout_sec: number;
   ssereadtimeout: number;
 };
 
@@ -535,6 +540,7 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
       command: '',
       args: [],
       timeout: 30,
+      tool_call_timeout_sec: 300,
       ssereadtimeout: 300,
       extra_args: [],
       ...initialDraftRef.current,
@@ -609,6 +615,7 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
         command: '',
         args: [],
         timeout: 30,
+        tool_call_timeout_sec: 300,
         ssereadtimeout: 300,
         extra_args: [],
         ...initialDraftRef.current,
@@ -687,9 +694,15 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
         command: '',
         args: [],
         timeout: 30,
+        tool_call_timeout_sec: 300,
         ssereadtimeout: 300,
         extra_args: [],
       };
+
+      if (typeof server.extra_args.tool_call_timeout_sec === 'number') {
+        formValues.tool_call_timeout_sec =
+          server.extra_args.tool_call_timeout_sec;
+      }
 
       let newExtraArgs: {
         key: string;
@@ -770,6 +783,7 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
             url: value.url!,
             headers,
             timeout: value.timeout,
+            tool_call_timeout_sec: value.tool_call_timeout_sec,
           },
         };
       } else {
@@ -786,6 +800,7 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
             command: value.command!,
             args: value.args?.map((arg) => arg.value) || [],
             env,
+            tool_call_timeout_sec: value.tool_call_timeout_sec,
           },
         };
       }
@@ -835,6 +850,7 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
         extraArgsData = {
           url: form.getValues('url')!,
           timeout: form.getValues('timeout'),
+          tool_call_timeout_sec: form.getValues('tool_call_timeout_sec'),
           headers: Object.fromEntries(
             formExtraArgs.map((arg) => [arg.key, arg.value]),
           ),
@@ -846,6 +862,7 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
           env: Object.fromEntries(
             formExtraArgs.map((arg) => [arg.key, arg.value]),
           ),
+          tool_call_timeout_sec: form.getValues('tool_call_timeout_sec'),
         };
       }
 
@@ -1042,6 +1059,30 @@ const MCPForm = forwardRef<MCPFormHandle, MCPFormProps>(function MCPForm(
                   className="mt-2"
                 />
               )}
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="tool_call_timeout_sec"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>{t('mcp.toolCallTimeout')}</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  min={0}
+                  step={1}
+                  placeholder="300"
+                  {...field}
+                  onChange={(e) => field.onChange(Number(e.target.value))}
+                />
+              </FormControl>
+              <FormDescription>
+                {t('mcp.toolCallTimeoutDescription')}
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
