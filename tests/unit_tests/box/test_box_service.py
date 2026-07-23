@@ -348,6 +348,28 @@ async def test_box_service_shutdown_reaps_connector_when_runtime_rpc_is_offline(
 
 
 @pytest.mark.asyncio
+async def test_box_service_reconnect_restores_workspace_and_runs_cleanup(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    app = make_app(Mock())
+    app.skill_mgr = SimpleNamespace(reload_skills=AsyncMock())
+    service = BoxService(app, client=Mock(spec=BoxRuntimeClient))
+    connector = Mock()
+    connector.reconnect = AsyncMock()
+    service._ensure_default_workspace = Mock()
+    service._purge_attachment_dirs = AsyncMock()
+    monkeypatch.setattr('langbot.pkg.box.service.asyncio.sleep', AsyncMock())
+
+    await service._reconnect_loop(connector)
+
+    connector.reconnect.assert_awaited_once()
+    service._ensure_default_workspace.assert_called_once()
+    service._purge_attachment_dirs.assert_awaited_once()
+    app.skill_mgr.reload_skills.assert_awaited_once()
+    assert service.available is True
+
+
+@pytest.mark.asyncio
 async def test_box_runtime_reuses_request_session():
     logger = Mock()
     backend = FakeBackend(logger)

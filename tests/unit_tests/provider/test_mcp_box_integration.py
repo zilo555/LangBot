@@ -725,14 +725,10 @@ class TestGetRuntimeInfoDict:
         )
         assert writable._build_box_session_id() != default._build_box_session_id()
 
-    def test_stdio_session_refuses_when_box_unavailable(self, mcp_module):
-        """Policy: when Box is configured but unavailable (disabled in config
-        OR connection failed), stdio MCP servers are NOT treated as box-stdio.
-        ``_init_stdio_python_server`` will raise a clear refusal at start
-        time; until then, the runtime info simply omits box_session_id so the
-        UI can render the disabled state cleanly."""
+    def test_stdio_session_waits_for_enabled_box_when_temporarily_unavailable(self, mcp_module):
         ap = _make_ap()
         ap.box_service.available = False
+        ap.box_service.enabled = True
         s = _make_session(
             mcp_module,
             {
@@ -745,8 +741,57 @@ class TestGetRuntimeInfoDict:
             ap=ap,
         )
         info = s.get_runtime_info_dict()
+        assert info['box_session_id'] == 'mcp-shared'
+        assert info['box_enabled'] is True
+
+    def test_stdio_session_refuses_when_box_is_disabled(self, mcp_module):
+        ap = _make_ap()
+        ap.box_service.available = False
+        ap.box_service.enabled = False
+        s = _make_session(
+            mcp_module,
+            {
+                'name': 'test',
+                'uuid': 'test-uuid',
+                'mode': 'stdio',
+                'command': 'python',
+                'args': [],
+            },
+            ap=ap,
+        )
+
+        info = s.get_runtime_info_dict()
+
         assert 'box_session_id' not in info
         assert 'box_enabled' not in info
+
+    @pytest.mark.asyncio
+    async def test_stdio_session_waits_until_box_reconnects(self, mcp_module, monkeypatch):
+        mcp_stdio_module = sys.modules['langbot.pkg.provider.tools.loaders.mcp_stdio']
+        ap = _make_ap()
+        ap.box_service.available = False
+        ap.box_service.enabled = True
+        session = _make_session(
+            mcp_module,
+            {
+                'name': 'test',
+                'uuid': 'test-uuid',
+                'mode': 'stdio',
+                'command': 'python',
+                'args': [],
+                'box': {'startup_timeout_sec': 1},
+            },
+            ap=ap,
+        )
+
+        async def reconnect_box(_delay):
+            ap.box_service.available = True
+
+        monkeypatch.setattr(mcp_stdio_module.asyncio, 'sleep', reconnect_box)
+
+        await session._box_stdio_runtime._wait_for_box_runtime()
+
+        assert ap.box_service.available is True
 
     def test_stdio_session_without_box_service_uses_local_stdio(self, mcp_module):
         ap = _make_ap()

@@ -458,6 +458,25 @@ class TestSkillToolLoader:
         assert await loader.has_tool('activate') is True
         assert await loader.has_tool('register_skill') is True
 
+    @pytest.mark.asyncio
+    async def test_tools_reappear_after_box_backend_recovers(self):
+        from langbot.pkg.provider.tools.loaders.skill_authoring import SkillToolLoader
+
+        ap = _make_ap()
+        ap.skill_mgr = SimpleNamespace(skills={'demo': _make_skill_data(name='demo')})
+        ap.box_service = SimpleNamespace(
+            available=False,
+            get_status=AsyncMock(return_value={'backend': {'available': True}}),
+        )
+
+        loader = SkillToolLoader(ap)
+        await loader.initialize()
+        assert await loader.get_tools() == []
+
+        ap.box_service.available = True
+
+        assert sorted(tool.name for tool in await loader.get_tools()) == ['activate', 'register_skill']
+
 
 class TestNativeToolLoaderSkillPaths:
     @pytest.mark.asyncio

@@ -127,6 +127,29 @@ async def test_box_runtime_connector_cleans_partial_transport_on_connect_failure
 
 
 @pytest.mark.asyncio
+async def test_box_runtime_connector_starts_heartbeat_after_reconnect(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setattr('langbot.pkg.utils.platform.get_platform', lambda: 'linux')
+    monkeypatch.setattr('langbot.pkg.utils.platform.standalone_box', False)
+    connector = BoxRuntimeConnector(make_app(Mock()))
+    connector._start_local_stdio = AsyncMock(side_effect=[RuntimeError('bind failed'), None])
+    connector._stop_transport = AsyncMock()
+    connector._close_managed_subprocess = AsyncMock()
+
+    with pytest.raises(RuntimeError, match='bind failed'):
+        await connector.initialize()
+
+    assert connector._heartbeat_task is None
+
+    await connector.reconnect()
+
+    assert connector._heartbeat_task is not None
+    assert not connector._heartbeat_task.done()
+    await connector.aclose()
+
+
+@pytest.mark.asyncio
 async def test_box_stdio_connection_does_not_capture_unconsumed_stderr(
     monkeypatch: pytest.MonkeyPatch,
 ):

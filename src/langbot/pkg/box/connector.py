@@ -189,6 +189,9 @@ class BoxRuntimeConnector(ManagedRuntimeConnector):
                 await self._close_managed_subprocess()
                 raise
 
+            if self._heartbeat_task is None or self._heartbeat_task.done():
+                self._heartbeat_task = asyncio.create_task(self._heartbeat_loop())
+
     # -- heartbeat -----------------------------------------------------------
 
     async def _heartbeat_loop(self) -> None:

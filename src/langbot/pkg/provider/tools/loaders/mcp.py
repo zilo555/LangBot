@@ -307,10 +307,10 @@ class RuntimeMCPSession:
             await self._box_stdio_runtime.initialize()
             return
 
-        # Box is configured (ap.box_service exists) but currently unavailable
-        # (disabled by config or connection failed). Refuse stdio MCP rather
-        # than silently falling through to host-stdio — the operator asked
-        # for the sandbox and the failure mode should be visible.
+        # Box is configured but explicitly disabled. Refuse stdio MCP rather
+        # than silently falling through to host-stdio — the operator asked for
+        # the sandbox and the failure mode should be visible. An enabled Box
+        # that is reconnecting is handled above and waits for availability.
         #
         # Set ``error_phase = BOX_UNAVAILABLE`` BEFORE raising so the retry
         # wrapper can short-circuit (retrying is pointless when Box is
@@ -1823,11 +1823,23 @@ class MCPLoader(loader.ToolLoader):
     async def shutdown(self):
         """关闭所有工具"""
         self.ap.logger.info('Shutting down all MCP sessions...')
-        for server_name, session in list(self.sessions.items()):
+
+        hosted_tasks = [task for task in self._hosted_mcp_tasks if not task.done()]
+        for task in hosted_tasks:
+            task.cancel()
+        if hosted_tasks:
+            await asyncio.gather(*hosted_tasks, return_exceptions=True)
+        self._hosted_mcp_tasks.clear()
+
+        async def shutdown_session(server_name: str, session: RuntimeMCPSession) -> None:
             try:
                 await session.shutdown()
                 self.ap.logger.debug(f'Shutdown MCP session: {server_name}')
             except Exception as e:
                 self.ap.logger.error(f'Error shutting down MCP session {server_name}: {e}\n{traceback.format_exc()}')
+
+        await asyncio.gather(
+            *(shutdown_session(server_name, session) for server_name, session in list(self.sessions.items()))
+        )
         self.sessions.clear()
         self.ap.logger.info('All MCP sessions shutdown complete')

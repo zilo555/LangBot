@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import base64
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock
@@ -321,3 +322,42 @@ async def test_build_resource_context_for_query_uses_only_bound_attached_text_re
     assert query.variables[MCP_RESOURCE_CONTEXT_QUERY_KEY]['resource_count'] == 1
     docs.session.read_resource.assert_awaited_once()
     other.session.read_resource.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_mcp_loader_shutdown_cancels_startup_tasks_and_closes_sessions_concurrently():
+    loader = MCPLoader(_app())
+    hosted_cancelled = asyncio.Event()
+
+    async def pending_host():
+        try:
+            await asyncio.Event().wait()
+        finally:
+            hosted_cancelled.set()
+
+    hosted_task = asyncio.create_task(pending_host())
+    await asyncio.sleep(0)
+    loader._hosted_mcp_tasks = [hosted_task]
+
+    started: set[str] = set()
+    all_started = asyncio.Event()
+
+    class Session:
+        def __init__(self, name: str):
+            self.name = name
+
+        async def shutdown(self):
+            started.add(self.name)
+            if len(started) == 2:
+                all_started.set()
+            await all_started.wait()
+
+    loader.sessions = {'one': Session('one'), 'two': Session('two')}
+
+    await asyncio.wait_for(loader.shutdown(), timeout=1)
+
+    assert hosted_cancelled.is_set()
+    assert hosted_task.cancelled()
+    assert started == {'one', 'two'}
+    assert loader._hosted_mcp_tasks == []
+    assert loader.sessions == {}

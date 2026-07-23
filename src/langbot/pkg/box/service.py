@@ -143,8 +143,14 @@ class BoxService:
                 await asyncio.sleep(delay)
                 try:
                     await connector.reconnect()
+                    self._ensure_default_workspace()
+                    await self._purge_attachment_dirs()
                     self._available = True
                     self._connector_error = ''
+                    skill_mgr = getattr(self.ap, 'skill_mgr', None)
+                    reload_skills = getattr(skill_mgr, 'reload_skills', None)
+                    if callable(reload_skills):
+                        await reload_skills()
                     self.ap.logger.info('Box runtime reconnected, sandbox features restored.')
                     return
                 except Exception as exc:
