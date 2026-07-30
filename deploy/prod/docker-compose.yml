@@ -79,6 +79,7 @@ services:
       BOX__ADMISSION__MEMORY_MB: "256"
       BOX__ADMISSION__WORKSPACE_QUOTA_MB: "256"
       BOX__LOCAL__HOST_ROOT: /app/data/box
+      BOX__LOCAL__DEFAULT_WORKSPACE: /app/data/box
       BOX__LOCAL__ALLOWED_MOUNT_ROOTS: /app/data/box
       LANGBOT_BOX_CONTROL_TOKEN: ${BOX_CONTROL_TOKEN}
       MCP__STDIO__ENABLED: "false"
@@ -110,7 +111,7 @@ services:
     image: rockchin/langbot:${LANGBOT_IMAGE_TAG}
     container_name: langbot-cloud-box
     restart: unless-stopped
-    command: [uv, run, python, -m, langbot_box.cli, runtime, --host, 0.0.0.0, --port, "5410"]
+    command: [uv, run, lbp, box, --host, 0.0.0.0, --ws-control-port, "5410"]
     environment:
       LANGBOT_BOX_CONTROL_TOKEN: ${BOX_CONTROL_TOKEN}
       LANGBOT_BOX_ROOT: /app/data/box
