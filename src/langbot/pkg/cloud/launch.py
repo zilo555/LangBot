@@ -7,6 +7,7 @@ import datetime
 import hashlib
 import heapq
 import json
+import math
 import os
 import time
 import typing
@@ -124,7 +125,7 @@ class SpaceLaunchService:
         *,
         expected_workspace_uuid: str | None = None,
     ) -> dict[str, str]:
-        claims = self._verify_assertion(assertion)
+        claims, clock_skew_seconds = self._verify_assertion(assertion)
         payload = claims.get('payload')
         if not isinstance(payload, dict):
             raise SpaceLaunchError('Launch assertion payload must be a JSON object')
@@ -139,14 +140,15 @@ class SpaceLaunchService:
             raise SpaceLaunchError('Launch assertion return path is invalid')
         if expected_workspace_uuid is not None and workspace_uuid != expected_workspace_uuid:
             raise SpaceLaunchError('Launch assertion targets another Workspace')
-        await self._consume_jti(_required_string(claims, 'jti'), _required_int(claims, 'exp', minimum=1))
+        replay_retention_expires_at = _required_int(claims, 'exp', minimum=1) + math.ceil(clock_skew_seconds)
+        await self._consume_jti(_required_string(claims, 'jti'), replay_retention_expires_at)
         return {
             'account_uuid': account_uuid,
             'workspace_uuid': workspace_uuid,
             'return_path': return_path,
         }
 
-    def _verify_assertion(self, token: str) -> dict[str, typing.Any]:
+    def _verify_assertion(self, token: str) -> tuple[dict[str, typing.Any], float]:
         if not getattr(getattr(self.ap, 'deployment', None), 'multi_workspace_enabled', False):
             raise SpaceLaunchError('Space direct launch requires verified Cloud mode')
         public_key, key_id, clock_skew_seconds = self._trust_config()
@@ -197,7 +199,7 @@ class SpaceLaunchService:
             raise SpaceLaunchError('Launch assertion is expired')
         if expires_at <= max(issued_at, not_before):
             raise SpaceLaunchError('Launch assertion expiry must follow issue time')
-        return claims
+        return claims, clock_skew_seconds
 
     def _trust_config(self) -> tuple[Ed25519PublicKey, str, float]:
         data = getattr(getattr(self.ap, 'instance_config', None), 'data', {}) or {}

@@ -91,6 +91,22 @@ async def test_consumes_valid_workspace_launch_assertion_once():
         await service.consume_assertion(token, expected_workspace_uuid=WORKSPACE_UUID)
 
 
+async def test_consumed_assertion_remains_blocked_through_clock_skew_window():
+    private_key = Ed25519PrivateKey.generate()
+    now = int(time.time())
+    service = _service(private_key, now=now)
+    claims = _claims(now=now)
+    claims['iat'] = now - 10
+    claims['nbf'] = now - 10
+    claims['exp'] = now - 1
+    token = _sign(private_key, claims)
+
+    await service.consume_assertion(token, expected_workspace_uuid=WORKSPACE_UUID)
+
+    with pytest.raises(SpaceLaunchError, match='already been consumed'):
+        await service.consume_assertion(token, expected_workspace_uuid=WORKSPACE_UUID)
+
+
 async def test_replay_cache_does_not_scan_all_live_assertions(monkeypatch):
     private_key = Ed25519PrivateKey.generate()
     now = int(time.time())
