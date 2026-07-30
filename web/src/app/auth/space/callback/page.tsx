@@ -207,8 +207,16 @@ function SpaceOAuthCallbackContent() {
     const errorDescription = searchParams.get('error_description');
     const mode = searchParams.get('mode');
     const state = searchParams.get('state');
-    const workspaceUuid = searchParams.get('workspace_uuid');
-    const launchAssertion = searchParams.get('launch_assertion');
+    const fragmentParams = new URLSearchParams(
+      window.location.hash.startsWith('#')
+        ? window.location.hash.slice(1)
+        : window.location.hash,
+    );
+    const workspaceUuid =
+      fragmentParams.get('workspace_uuid') ?? searchParams.get('workspace_uuid');
+    const launchAssertion =
+      fragmentParams.get('launch_assertion') ??
+      searchParams.get('launch_assertion');
 
     if (error) {
       setStatus('error');
