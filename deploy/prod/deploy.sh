@@ -6,6 +6,16 @@ TAG=${1:?usage: deploy.sh prod-<40-char-sha>}
 [[ "$TAG" =~ ^prod-[0-9a-f]{40}$ ]] || { echo 'invalid immutable image tag' >&2; exit 2; }
 [[ -s .env ]] || { echo '/opt/langbot-cloud-prod/.env is missing' >&2; exit 3; }
 
+rendered_compose=$(docker compose config)
+grep -Fq 'LANGBOT_SPACE_CONTROL_PLANE_URL: https://space.langbot.app' <<<"$rendered_compose" || {
+  echo 'Cloud control-plane URL must be https://space.langbot.app' >&2
+  exit 4
+}
+grep -Fq 'SPACE__URL: https://space.langbot.app' <<<"$rendered_compose" || {
+  echo 'Cloud user-facing Space URL must be https://space.langbot.app' >&2
+  exit 5
+}
+
 update_env() {
   local key=$1 value=$2
   python3 - "$key" "$value" <<'PY'

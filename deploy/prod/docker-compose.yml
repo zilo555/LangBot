@@ -24,7 +24,7 @@ services:
     volumes:
       - redis-data:/data
     healthcheck:
-      test: [CMD-SHELL, "redis-cli -a '$${REDIS_PASSWORD}' ping | grep PONG"]
+      test: [CMD-SHELL, "redis-cli -a \"$${REDIS_PASSWORD}\" ping | grep PONG"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -55,7 +55,7 @@ services:
       LANGBOT_CLOUD_MIGRATION_DSN: postgresql://langbot_operator:${POSTGRES_OPERATOR_PASSWORD}@postgres:5432/langbot
       VDB__USE: pgvector
       VDB__PGVECTOR__USE_BUSINESS_DATABASE: "true"
-      VDB__PGVECTOR__ALLOWED_DIMENSIONS: "384,512,768,1024,1536"
+      VDB__PGVECTOR__ALLOWED_DIMENSIONS: "[384, 512, 768, 1024, 1536]"
       PLUGIN__ENABLE: "true"
       PLUGIN__RUNTIME_WS_URL: ws://plugin-runtime:5400/control/ws
       PLUGIN__DISPLAY_PLUGIN_DEBUG_URL: wss://cloud.langbot.app/plugin/debug/ws
