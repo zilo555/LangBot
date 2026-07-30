@@ -19,6 +19,11 @@ from urllib.parse import urljoin, urlparse
 from langbot_plugin.api.entities.builtin.pipeline.query import provider_session
 
 from ..core import app
+from ..cloud.quotas import (
+    lock_workspace_for_quota,
+    require_resource_capacity,
+    resolve_workspace_quota,
+)
 from . import handler
 from .archive import inspect_plugin_archive_metadata
 from .github import (
@@ -1295,6 +1300,11 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
         install_info: dict[str, Any],
         artifact_digest: str,
     ) -> tuple[InstallationBinding, str | None, bool]:
+        quota = await resolve_workspace_quota(
+            self.ap,
+            execution_context.workspace_uuid,
+            'plugins.max',
+        )
         safe_install_info = {
             key: value
             for key, value in install_info.items()
@@ -1316,9 +1326,19 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
         )
 
         async def persist(execute):
+            if quota.requires_transaction_lock:
+                await lock_workspace_for_quota(execute, execution_context.workspace_uuid)
             result = await execute(statement)
             setting = result.first()
             if setting is None:
+                await require_resource_capacity(
+                    execute,
+                    workspace_uuid=execution_context.workspace_uuid,
+                    model=persistence_plugin.PluginSetting,
+                    quota=quota,
+                    resource_name='plugins',
+                    workspace_locked=quota.requires_transaction_lock,
+                )
                 installation_uuid = str(uuid.uuid4())
                 runtime_revision = 1
                 previous_digest = None
@@ -1373,6 +1393,8 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
             )
 
         tenant_uow = getattr(self.ap.persistence_mgr, 'tenant_uow', None)
+        if quota.requires_transaction_lock and not callable(tenant_uow):
+            raise RuntimeError('Cloud plugin quota enforcement requires transactional persistence')
         if callable(tenant_uow):
             async with tenant_uow(execution_context.workspace_uuid) as uow:
                 return await persist(uow.execute)

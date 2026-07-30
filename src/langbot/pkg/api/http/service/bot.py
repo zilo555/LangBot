@@ -4,6 +4,7 @@ import uuid
 import sqlalchemy
 
 from ....core import app
+from ....cloud.quotas import require_resource_capacity, resolve_workspace_quota
 from ....entity.persistence import bot as persistence_bot
 from ....entity.persistence import pipeline as persistence_pipeline
 from ....workspace.errors import WorkspaceNotFoundError
@@ -101,20 +102,21 @@ class BotService:
     async def create_bot(self, context: TenantContext, bot_data: dict) -> str:
         """Create bot"""
         workspace_uuid = require_workspace_uuid(context)
-        # Check limitation
         limitation = self.ap.instance_config.data.get('system', {}).get('limitation', {})
-        max_bots = limitation.get('max_bots', -1)
-        if max_bots >= 0:
-            existing_bots = await self.get_bots(context)
-            if len(existing_bots) >= max_bots:
-                raise ValueError(f'Maximum number of bots ({max_bots}) reached')
+        quota = await resolve_workspace_quota(
+            self.ap,
+            workspace_uuid,
+            'bots.max',
+            fallback=limitation.get('max_bots', -1),
+        )
 
         # TODO: 检查配置信息格式
         bot_data = bot_data.copy()
         bot_data['uuid'] = str(uuid.uuid4())
         bot_data['workspace_uuid'] = workspace_uuid
 
-        # bind the most recently updated pipeline if any exist
+        # Preserve the legacy flat-row result shape for this optional lookup;
+        # quota admission and insertion below still share one transaction.
         result = await self.ap.persistence_mgr.execute_async(
             scope_statement(
                 sqlalchemy.select(persistence_pipeline.LegacyPipeline),
@@ -129,7 +131,25 @@ class BotService:
             bot_data['use_pipeline_uuid'] = pipeline.uuid
             bot_data['use_pipeline_name'] = pipeline.name
 
-        await self.ap.persistence_mgr.execute_async(sqlalchemy.insert(persistence_bot.Bot).values(bot_data))
+        async def persist(execute) -> None:
+            await require_resource_capacity(
+                execute,
+                workspace_uuid=workspace_uuid,
+                model=persistence_bot.Bot,
+                quota=quota,
+                resource_name='bots',
+            )
+
+            await execute(sqlalchemy.insert(persistence_bot.Bot).values(bot_data))
+
+        tenant_uow = getattr(self.ap.persistence_mgr, 'tenant_uow', None)
+        if quota.requires_transaction_lock:
+            if not callable(tenant_uow):
+                raise RuntimeError('Cloud bot quota enforcement requires transactional persistence')
+            async with tenant_uow(workspace_uuid) as uow:
+                await persist(uow.execute)
+        else:
+            await persist(self.ap.persistence_mgr.execute_async)
 
         bot = await self.get_bot(context, bot_data['uuid'], include_secret=True)
 

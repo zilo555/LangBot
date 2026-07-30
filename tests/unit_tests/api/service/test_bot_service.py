@@ -311,10 +311,9 @@ class TestBotServiceCreateBot:
         ap.platform_mgr = SimpleNamespace()
         ap.platform_mgr.load_bot = AsyncMock()
 
-        # Mock get_bots to return 2 bots already
-        bot1 = _create_mock_bot(bot_uuid='uuid-1')
-        bot2 = _create_mock_bot(bot_uuid='uuid-2')
-        mock_result = _create_mock_result([bot1, bot2])
+        # Mock the atomic count query to report 2 existing bots.
+        mock_result = _create_mock_result()
+        mock_result.scalar_one = Mock(return_value=2)
         ap.persistence_mgr.execute_async = AsyncMock(return_value=mock_result)
         ap.persistence_mgr.serialize_model = Mock(return_value={'uuid': 'uuid-1', 'name': 'Bot 1'})
 

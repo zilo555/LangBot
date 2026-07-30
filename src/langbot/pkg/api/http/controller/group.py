@@ -14,6 +14,7 @@ from ....utils import bounded_executor
 from ....workspace.collaboration import MembershipPermissionError, WorkspaceCollaborationError
 from ....workspace.errors import WorkspaceNotFoundError
 from ....cloud.entitlements import EntitlementUnavailableError
+from ....cloud.quotas import WorkspaceQuotaExceededError
 from ....core.errors import TaskCapacityError
 from ..authz import AuthorizationError, Permission, permissions_for_role, require_permission
 from ..context import PrincipalContext, PrincipalType, RequestContext, WorkspaceContext
@@ -219,6 +220,8 @@ class RouterGroup(abc.ABC):
                         return self.http_status(403, e.code, str(e))
                     if isinstance(e, WorkspaceCollaborationError):
                         return self.http_status(400, e.code, str(e))
+                    if isinstance(e, WorkspaceQuotaExceededError):
+                        return self.http_status(409, e.error_code, str(e))
                     if isinstance(e, TaskCapacityError):
                         return self.http_status(429, 'task_capacity_exceeded', str(e))
                     if isinstance(

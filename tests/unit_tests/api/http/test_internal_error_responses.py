@@ -9,6 +9,7 @@ import quart
 
 from langbot.pkg.api.http.controller import group
 from langbot.pkg.api.http.controller.groups.webhooks import WebhookRouterGroup
+from langbot.pkg.cloud.quotas import WorkspaceQuotaExceededError
 from langbot.pkg.utils.bounded_executor import (
     BlockingWorkCapacityError,
     current_blocking_work_scope,
@@ -46,6 +47,16 @@ class _BlockingCapacityRouterGroup(group.RouterGroup):
         @self.route('', methods=['GET'], auth_type=group.AuthType.NONE)
         async def _():
             raise BlockingWorkCapacityError('Workspace blocking executor capacity reached')
+
+
+class _QuotaRouterGroup(group.RouterGroup):
+    name = 'quota-test'
+    path = '/quota-test'
+
+    async def initialize(self) -> None:
+        @self.route('', methods=['POST'], auth_type=group.AuthType.NONE)
+        async def _():
+            raise WorkspaceQuotaExceededError('bots', 2)
 
 
 class _InvalidAccountRouterGroup(group.RouterGroup):
@@ -127,6 +138,20 @@ async def test_blocking_work_capacity_maps_to_retryable_http_response():
     assert await response.get_json() == {
         'code': 'blocking_work_capacity_exceeded',
         'msg': 'Workspace blocking executor capacity reached',
+    }
+
+
+async def test_workspace_quota_maps_to_stable_conflict_response():
+    application = SimpleNamespace(logger=Mock())
+    quart_app = quart.Quart(__name__)
+    await _QuotaRouterGroup(application, quart_app).initialize()
+
+    response = await quart_app.test_client().post('/quota-test')
+
+    assert response.status_code == 409
+    assert await response.get_json() == {
+        'code': 'workspace_quota_exceeded',
+        'msg': 'Maximum number of bots (2) reached',
     }
 
 
