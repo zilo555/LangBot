@@ -46,7 +46,7 @@ set -a
 set +a
 
 for attempt in 1 2 3 4 5; do
-  if docker compose pull postgres redis migrate plugin-runtime box core; then
+  if docker compose pull postgres redis migrate plugin-runtime core; then
     break
   fi
   if [ "$attempt" -eq 5 ]; then
@@ -84,7 +84,7 @@ ALTER DEFAULT PRIVILEGES FOR ROLE langbot_operator IN SCHEMA public GRANT SELECT
 ALTER DEFAULT PRIVILEGES FOR ROLE langbot_operator IN SCHEMA public GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO langbot_runtime;
 SQL
 
-docker compose up -d --remove-orphans plugin-runtime box core
+docker compose up -d --remove-orphans plugin-runtime core
 for _ in $(seq 1 90); do
   if docker compose exec -T core python -c 'import urllib.request; urllib.request.urlopen("http://127.0.0.1:5300/healthz", timeout=3)' >/dev/null 2>&1; then
     docker compose ps
@@ -92,5 +92,5 @@ for _ in $(seq 1 90); do
   fi
   sleep 2
 done
-docker compose logs --tail=200 core plugin-runtime box >&2
+docker compose logs --tail=200 core plugin-runtime >&2
 exit 1
