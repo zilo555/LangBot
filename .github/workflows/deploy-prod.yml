@@ -43,6 +43,7 @@ jobs:
         with:
           repository: langbot-app/langbot-space
           ref: ${{ env.SPACE_REF }}
+          token: ${{ secrets.CLA_PAT }}
           path: .space
       - name: Build exact Cloud Core image
         uses: docker/build-push-action@v6
