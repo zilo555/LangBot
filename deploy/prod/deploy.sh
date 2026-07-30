@@ -71,18 +71,14 @@ WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'langbot_runtime')\gexe
 ALTER ROLE langbot_runtime PASSWORD :'runtime_password';
 GRANT CONNECT ON DATABASE langbot TO langbot_runtime;
 REVOKE CREATE ON SCHEMA public FROM PUBLIC, langbot_runtime;
+REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM langbot_runtime;
+REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM langbot_runtime;
+ALTER DEFAULT PRIVILEGES FOR ROLE langbot_operator IN SCHEMA public REVOKE ALL ON TABLES FROM langbot_runtime;
+ALTER DEFAULT PRIVILEGES FOR ROLE langbot_operator IN SCHEMA public REVOKE ALL ON SEQUENCES FROM langbot_runtime;
 GRANT USAGE ON SCHEMA public TO langbot_runtime;
 SQL
 
 docker compose --profile tools run --rm migrate
-
-docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U langbot_operator -d langbot <<'SQL'
-GRANT USAGE ON SCHEMA public TO langbot_runtime;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO langbot_runtime;
-GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO langbot_runtime;
-ALTER DEFAULT PRIVILEGES FOR ROLE langbot_operator IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO langbot_runtime;
-ALTER DEFAULT PRIVILEGES FOR ROLE langbot_operator IN SCHEMA public GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO langbot_runtime;
-SQL
 
 docker compose up -d --remove-orphans plugin-runtime core
 for _ in $(seq 1 90); do
