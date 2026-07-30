@@ -45,7 +45,18 @@ set -a
 . ./.env
 set +a
 
-docker compose pull postgres redis migrate plugin-runtime box core
+for attempt in 1 2 3 4 5; do
+  if docker compose pull postgres redis migrate plugin-runtime box core; then
+    break
+  fi
+  if [ "$attempt" -eq 5 ]; then
+    echo "docker compose pull failed after $attempt attempts" >&2
+    exit 1
+  fi
+  delay=$((attempt * 10))
+  echo "docker compose pull failed (attempt $attempt/5); retrying in ${delay}s" >&2
+  sleep "$delay"
+done
 docker compose up -d postgres redis
 for _ in $(seq 1 60); do
   if docker compose exec -T postgres pg_isready -U langbot_operator -d langbot >/dev/null 2>&1; then break; fi
