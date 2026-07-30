@@ -70,7 +70,8 @@ SELECT format('CREATE ROLE langbot_runtime LOGIN PASSWORD %L', :'runtime_passwor
 WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'langbot_runtime')\gexec
 ALTER ROLE langbot_runtime PASSWORD :'runtime_password';
 GRANT CONNECT ON DATABASE langbot TO langbot_runtime;
-GRANT USAGE, CREATE ON SCHEMA public TO langbot_runtime;
+REVOKE CREATE ON SCHEMA public FROM PUBLIC, langbot_runtime;
+GRANT USAGE ON SCHEMA public TO langbot_runtime;
 SQL
 
 docker compose --profile tools run --rm migrate
