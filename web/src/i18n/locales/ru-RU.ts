@@ -80,7 +80,7 @@ const ruRU = {
     loading: 'Загрузка...',
     fieldRequired: 'Это поле обязательно для заполнения',
     or: 'или',
-    loginWithSpace: 'Войти через Space',
+    loginWithSpace: 'Войти с аккаунтом LangBot',
     spaceLoginRecommended:
       'Рекомендуется: Используйте официальные стабильные API моделей и облачные сервисы',
     loginLocal: 'Войти с локальной учётной записью',
@@ -284,7 +284,7 @@ const ruRU = {
     searchProviders: 'Поиск провайдеров...',
     langbotModelsDescription: 'Облачные модели на базе LangBot Space',
     credits: 'Кредиты',
-    loginWithSpace: 'Войти через Space',
+    loginWithSpace: 'Войти с аккаунтом LangBot',
     loginToUseModels: 'Войдите через Space, чтобы использовать облачные модели',
     noModels: 'Модели не настроены',
     langbotModels: 'Модели LangBot',
@@ -837,6 +837,9 @@ const ruRU = {
     boxStdioRefusedSuggestion:
       'Включите Box (box.enabled = true) и убедитесь, что среда работает, либо переключите этот сервер в режим http/sse.',
     boxRequired: 'требуется Box',
+    disabledByPolicy: 'отключено политикой',
+    stdioDisabledByPolicy:
+      'Stdio MCP отключён в этом развёртывании. Используйте удалённый MCP-сервер.',
     stdioBlockedByBoxToast:
       'Сохранить MCP в режиме stdio нельзя: песочница Box отключена или недоступна. Включите Box либо выберите режим http/sse.',
     toolsFound: 'инструментов',

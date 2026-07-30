@@ -81,7 +81,7 @@ const viVN = {
     loading: 'Đang tải...',
     fieldRequired: 'Trường này là bắt buộc',
     or: 'hoặc',
-    loginWithSpace: 'Đăng nhập với Space',
+    loginWithSpace: 'Đăng nhập bằng tài khoản LangBot',
     spaceLoginRecommended:
       'Khuyến nghị: Sử dụng API mô hình ổn định chính thức và dịch vụ đám mây',
     loginLocal: 'Đăng nhập với tài khoản cục bộ',
@@ -281,7 +281,7 @@ const viVN = {
     searchProviders: 'Tìm kiếm nhà cung cấp...',
     langbotModelsDescription: 'Mô hình đám mây được cung cấp bởi LangBot Space',
     credits: 'Tín dụng',
-    loginWithSpace: 'Đăng nhập với Space',
+    loginWithSpace: 'Đăng nhập bằng tài khoản LangBot',
     loginToUseModels: 'Đăng nhập với Space để sử dụng mô hình đám mây',
     noModels: 'Chưa cấu hình mô hình nào',
     langbotModels: 'Mô hình LangBot',
@@ -830,6 +830,9 @@ const viVN = {
     boxStdioRefusedSuggestion:
       'Hãy bật Box (box.enabled = true) và đảm bảo runtime hoạt động, hoặc chuyển server này sang chế độ http/sse.',
     boxRequired: 'cần Box',
+    disabledByPolicy: 'bị tắt theo chính sách',
+    stdioDisabledByPolicy:
+      'Stdio MCP đã bị tắt trong bản triển khai này. Hãy dùng máy chủ MCP từ xa.',
     stdioBlockedByBoxToast:
       'Không thể lưu MCP ở chế độ stdio khi Sandbox Box bị tắt hoặc không khả dụng. Hãy bật Box hoặc chọn chế độ http/sse.',
     toolsFound: 'công cụ',

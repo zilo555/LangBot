@@ -4,7 +4,11 @@ import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { sidebarConfigList } from '@/app/home/components/home-sidebar/sidbarConfigList';
 import langbotIcon from '@/app/assets/langbot-logo.webp';
 import { systemInfo, httpClient } from '@/app/infra/http/HttpClient';
-import { getCloudServiceClientSync } from '@/app/infra/http';
+import {
+  clearUserInfo,
+  getCloudServiceClientSync,
+  useCurrentWorkspace,
+} from '@/app/infra/http';
 import { useTranslation } from 'react-i18next';
 import {
   Moon,
@@ -32,6 +36,7 @@ import {
   Server,
   Puzzle,
   RefreshCcw,
+  UsersRound,
 } from 'lucide-react';
 import { useTheme } from '@/components/providers/theme-provider';
 
@@ -57,6 +62,9 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { LanguageSelector } from '@/components/ui/language-selector';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import WorkspaceSwitcher, {
+  OPEN_WORKSPACE_SETTINGS_EVENT,
+} from '@/app/home/components/workspace-settings/WorkspaceSwitcher';
 import NewVersionDialog from '@/app/home/components/new-version-dialog/NewVersionDialog';
 import SettingsDialog, {
   SettingsSection,
@@ -380,6 +388,11 @@ function NavItems({
   const sidebarData = useSidebarData();
   const { state: sidebarState, isMobile } = useSidebar();
   const { t } = useTranslation();
+  const currentWorkspace = useCurrentWorkspace();
+  const canManageResources =
+    currentWorkspace?.permissions.includes('resource.manage') ?? false;
+  const canOperateRuntime =
+    currentWorkspace?.permissions.includes('runtime.operate') ?? false;
   // Track which entity categories have their full list expanded
   const [expandedLists, setExpandedLists] = useState<SidebarListExpansionState>(
     loadListExpansionState,
@@ -513,6 +526,9 @@ function NavItems({
     <>
       {sectionItems.map((config) => {
         if (!isEntityCategory(config.id)) {
+          if (config.id === 'add-extension' && !canManageResources) {
+            return null;
+          }
           // Non-entity entries (e.g. monitoring, market, mcp) render as plain links
           return (
             <SidebarMenuItem key={config.id}>
@@ -552,7 +568,8 @@ function NavItems({
           : sidebarData[entityKey];
         const routePrefix = ENTITY_ROUTE_MAP[categoryId];
         const hasDetailPages = DETAIL_PAGE_CATEGORIES.includes(categoryId);
-        const canCreate = CREATABLE_CATEGORIES.includes(categoryId);
+        const canCreate =
+          canManageResources && CREATABLE_CATEGORIES.includes(categoryId);
         const isCollapseOnly = COLLAPSIBLE_ONLY_CATEGORIES.includes(categoryId);
         const isPlugin = categoryId === 'plugins';
         const isSkill = categoryId === 'skills';
@@ -800,6 +817,7 @@ function NavItems({
                 {itemIsPluginType && !item.debug && (
                   <PluginItemMenu
                     item={item}
+                    canManage={canManageResources}
                     onUpdate={() => handlePluginUpdate(item)}
                     onDelete={() => handlePluginDelete(item)}
                   />
@@ -1063,7 +1081,7 @@ function NavItems({
                     {config.name}
                   </span>
                   <div className="ml-auto flex items-center gap-0.5 -mr-1">
-                    {isExtensionsCategory && (
+                    {isExtensionsCategory && canOperateRuntime && (
                       <button
                         type="button"
                         title={t('common.refresh', '刷新')}
@@ -1330,10 +1348,12 @@ function NavItems({
 // Dropdown menu for plugin sidebar sub-items (shown on hover)
 function PluginItemMenu({
   item,
+  canManage,
   onUpdate,
   onDelete,
 }: {
   item: SidebarEntityItem;
+  canManage: boolean;
   onUpdate: () => void;
   onDelete: () => void;
 }) {
@@ -1343,6 +1363,8 @@ function PluginItemMenu({
   const isMarketplace = item.installSource === 'marketplace';
   const isGithub = item.installSource === 'github';
   const hasSourceLink = isMarketplace || isGithub;
+
+  if (!canManage && !hasSourceLink) return null;
 
   function handleViewSource() {
     const slashIdx = item.id.indexOf('/');
@@ -1384,7 +1406,7 @@ function PluginItemMenu({
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="right" align="start">
-        {isMarketplace && (
+        {canManage && isMarketplace && (
           <DropdownMenuItem
             className="cursor-pointer"
             onClick={() => {
@@ -1413,16 +1435,18 @@ function PluginItemMenu({
             <span>{t('plugins.viewSource')}</span>
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem
-          className="cursor-pointer text-red-600 focus:text-red-600"
-          onClick={() => {
-            onDelete();
-            setOpen(false);
-          }}
-        >
-          <Trash className="size-4" />
-          <span>{t('plugins.delete')}</span>
-        </DropdownMenuItem>
+        {canManage && (
+          <DropdownMenuItem
+            className="cursor-pointer text-red-600 focus:text-red-600"
+            onClick={() => {
+              onDelete();
+              setOpen(false);
+            }}
+          >
+            <Trash className="size-4" />
+            <span>{t('plugins.delete')}</span>
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -1612,6 +1636,7 @@ export default function HomeSidebar({
     useState<Record<string, boolean>>(loadSectionState);
   const { theme, setTheme } = useTheme();
   const { t } = useTranslation();
+  const currentWorkspace = useCurrentWorkspace();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsSection, setSettingsSection] =
     useState<SettingsSection>('models');
@@ -1655,6 +1680,19 @@ export default function HomeSidebar({
     });
   }
 
+  useEffect(() => {
+    const openWorkspaceSettings = () => openSettings('workspace');
+    window.addEventListener(
+      OPEN_WORKSPACE_SETTINGS_EVENT,
+      openWorkspaceSettings,
+    );
+    return () =>
+      window.removeEventListener(
+        OPEN_WORKSPACE_SETTINGS_EVENT,
+        openWorkspaceSettings,
+      );
+  });
+
   function handleSettingsSectionChange(section: SettingsSection) {
     setSettingsSection(section);
     const params = new URLSearchParams(searchParams.toString());
@@ -1678,10 +1716,6 @@ export default function HomeSidebar({
 
   useEffect(() => {
     initSelect();
-    if (!localStorage.getItem('token')) {
-      localStorage.setItem('token', 'test-token');
-      localStorage.setItem('userEmail', 'test@example.com');
-    }
 
     const storedEmail = localStorage.getItem('userEmail');
     if (storedEmail) {
@@ -1820,6 +1854,7 @@ export default function HomeSidebar({
   }
 
   function handleLogout() {
+    clearUserInfo();
     localStorage.removeItem('token');
     localStorage.removeItem('userEmail');
     window.location.href = '/login';
@@ -1879,6 +1914,10 @@ export default function HomeSidebar({
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarHeader>
+
+        <div className="px-2 group-data-[collapsible=icon]:px-0">
+          <WorkspaceSwitcher className="w-full group-data-[collapsible=icon]:min-w-0 group-data-[collapsible=icon]:px-2" />
+        </div>
 
         {/* Navigation items grouped by section */}
         <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -1948,18 +1987,20 @@ export default function HomeSidebar({
             </SidebarMenuItem>
           </SidebarMenu>
 
-          {/* API Integration entry */}
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                onClick={() => openSettings('apiIntegration')}
-                tooltip={t('common.apiIntegration')}
-              >
-                <KeyRound className="size-4 text-blue-500" />
-                <span>{t('common.apiIntegration')}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
+          {/* API-key management is available only to authorized Workspace roles. */}
+          {currentWorkspace?.permissions.includes('api_key.manage') && (
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => openSettings('apiIntegration')}
+                  tooltip={t('common.apiIntegration')}
+                >
+                  <KeyRound className="size-4 text-blue-500" />
+                  <span>{t('common.apiIntegration')}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          )}
 
           {/* User menu using sidebar-07 nav-user DropdownMenu pattern */}
           <SidebarMenu>
@@ -2047,6 +2088,15 @@ export default function HomeSidebar({
                     >
                       <Settings />
                       {t('account.settings')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        openSettings('workspace');
+                      }}
+                    >
+                      <UsersRound />
+                      {t('workspace.settings')}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {

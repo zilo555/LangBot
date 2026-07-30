@@ -10,10 +10,12 @@ Run: uv run pytest tests/integration/persistence/test_migrations.py -q
 from __future__ import annotations
 
 import pytest
+import sqlalchemy
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from langbot.pkg.entity.persistence.base import Base
 from langbot.pkg.persistence.alembic_runner import (
+    run_alembic_downgrade,
     run_alembic_upgrade,
     run_alembic_stamp,
     get_alembic_current,
@@ -148,6 +150,45 @@ class TestSQLiteMigrationUpgrade:
 
         rev2 = await get_alembic_current(sqlite_engine)
         assert rev2 == rev1, f'Expected {rev1}, got {rev2}'
+
+    @pytest.mark.asyncio
+    async def test_upgrade_from_0012_adds_knowledge_base_embedding_dimension(self, sqlite_engine):
+        """The PostgreSQL pgvector revision also evolves the OSS ORM schema."""
+
+        async with sqlite_engine.begin() as conn:
+            await conn.exec_driver_sql(
+                'CREATE TABLE knowledge_bases ('
+                'uuid VARCHAR(255) PRIMARY KEY, workspace_uuid VARCHAR(36) NOT NULL, name VARCHAR(255) NOT NULL)'
+            )
+
+        await run_alembic_stamp(sqlite_engine, '0012_plugin_identity')
+        await run_alembic_upgrade(sqlite_engine, 'head')
+
+        async with sqlite_engine.connect() as conn:
+            columns = await conn.run_sync(
+                lambda sync_conn: {
+                    item['name'] for item in sqlalchemy.inspect(sync_conn).get_columns('knowledge_bases')
+                }
+            )
+        assert 'embedding_dimension' in columns
+
+    @pytest.mark.asyncio
+    async def test_directory_projection_upgrade_downgrade_round_trip(self, sqlite_engine):
+        await run_alembic_stamp(sqlite_engine, '0013_tenant_pgvector')
+
+        await run_alembic_upgrade(sqlite_engine, 'head')
+        async with sqlite_engine.connect() as conn:
+            tables = await conn.run_sync(lambda sync_conn: set(sqlalchemy.inspect(sync_conn).get_table_names()))
+        assert {'directory_projection_states', 'directory_projection_inbox'} <= tables
+
+        await run_alembic_downgrade(sqlite_engine, '0013_tenant_pgvector')
+        async with sqlite_engine.connect() as conn:
+            tables = await conn.run_sync(lambda sync_conn: set(sqlalchemy.inspect(sync_conn).get_table_names()))
+        assert 'directory_projection_states' not in tables
+        assert 'directory_projection_inbox' not in tables
+
+        await run_alembic_upgrade(sqlite_engine, 'head')
+        assert await get_alembic_current(sqlite_engine) == _get_script_head()
 
 
 class TestSQLiteMigrationFreshDatabase:

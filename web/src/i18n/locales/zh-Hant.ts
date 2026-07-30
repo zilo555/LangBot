@@ -79,7 +79,7 @@ const zhHant = {
     loading: '載入中...',
     fieldRequired: '此欄位為必填',
     or: '或',
-    loginWithSpace: '透過 Space 登入',
+    loginWithSpace: '使用 LangBot 帳號登入',
     spaceLoginRecommended: '推薦：使用官方提供的穩定模型 API 和雲服務',
     loginLocal: '使用本地帳號登入',
     loginWithPassword: '透過密碼登入',
@@ -263,7 +263,7 @@ const zhHant = {
     searchProviders: '搜尋供應商...',
     langbotModelsDescription: '由 LangBot Space 提供的雲端模型',
     credits: '積分',
-    loginWithSpace: '使用 Space 登入',
+    loginWithSpace: '使用 LangBot 帳號登入',
     loginToUseModels: '使用 Space 登入以使用雲端模型',
     noModels: '暫無模型',
     langbotModels: 'LangBot 模型',
@@ -791,6 +791,8 @@ const zhHant = {
     boxStdioRefusedSuggestion:
       '請啟用 Box（box.enabled = true）並確認執行時連線正常，或將此伺服器切換到 http/sse 模式。',
     boxRequired: '需要 Box',
+    disabledByPolicy: '已被策略停用',
+    stdioDisabledByPolicy: '此部署已停用 Stdio MCP，請改用遠端 MCP 伺服器。',
     stdioBlockedByBoxToast:
       'Box 沙箱已停用或無法使用，無法儲存 stdio 模式的 MCP。請啟用 Box 或改為 http/sse 模式。',
     toolsFound: '個工具',

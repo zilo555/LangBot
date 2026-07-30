@@ -80,7 +80,7 @@ const thTH = {
     loading: 'กำลังโหลด...',
     fieldRequired: 'ช่องนี้จำเป็นต้องกรอก',
     or: 'หรือ',
-    loginWithSpace: 'เข้าสู่ระบบด้วย Space',
+    loginWithSpace: 'เข้าสู่ระบบด้วยบัญชี LangBot',
     spaceLoginRecommended:
       'แนะนำ: ใช้ API โมเดลที่เสถียรอย่างเป็นทางการและบริการคลาวด์',
     loginLocal: 'เข้าสู่ระบบด้วยบัญชีท้องถิ่น',
@@ -273,7 +273,7 @@ const thTH = {
     searchProviders: 'ค้นหาผู้ให้บริการ...',
     langbotModelsDescription: 'โมเดลคลาวด์ขับเคลื่อนโดย LangBot Space',
     credits: 'เครดิต',
-    loginWithSpace: 'เข้าสู่ระบบด้วย Space',
+    loginWithSpace: 'เข้าสู่ระบบด้วยบัญชี LangBot',
     loginToUseModels: 'เข้าสู่ระบบด้วย Space เพื่อใช้โมเดลคลาวด์',
     noModels: 'ยังไม่มีโมเดลที่กำหนดค่า',
     langbotModels: 'โมเดล LangBot',
@@ -815,6 +815,9 @@ const thTH = {
     boxStdioRefusedSuggestion:
       'กรุณาเปิดใช้งาน Box (box.enabled = true) และตรวจสอบว่ารันไทม์ทำงานปกติ หรือเปลี่ยน MCP server เป็นโหมด http/sse',
     boxRequired: 'ต้องใช้ Box',
+    disabledByPolicy: 'ถูกปิดใช้งานโดยนโยบาย',
+    stdioDisabledByPolicy:
+      'การติดตั้งใช้งานนี้ปิด Stdio MCP อยู่ โปรดใช้เซิร์ฟเวอร์ MCP แบบระยะไกล',
     stdioBlockedByBoxToast:
       'ไม่สามารถบันทึก MCP โหมด stdio เนื่องจาก Sandbox Box ถูกปิดใช้งานหรือไม่พร้อมใช้งาน กรุณาเปิดใช้งาน Box หรือเลือกโหมด http/sse',
     toolsFound: 'เครื่องมือ',
