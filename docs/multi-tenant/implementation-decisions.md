@@ -81,10 +81,10 @@ This log records implementation choices made while delivering the Workspace arch
 - Decision: The MCP ASGI mount authenticates the API key once, binds an immutable per-request `RequestContext`, and every tool checks a fixed permission before calling tenant services with that same context.
 - Reason: Authenticating the transport without propagating Workspace identity into tool calls would leave the direct service path globally scoped.
 
-### Unreleased SDK protocol is pinned reproducibly without publishing
+### Released SDK protocol is pinned from PyPI
 
-- Decision: The SDK tenancy protocol is versioned as 0.4.18. This task does not create a GitHub release or publish PyPI because the user authorized pushing code, not a package release. After the SDK feature branch is final, LangBot's feature branch temporarily pins the exact pushed SDK Git commit. Before merging to master, the release gate is to publish `langbot-plugin==0.4.18` and replace the Git pin with the registry pin.
-- Reason: The current registry release does not contain the complete tenant action context and shared Runtime hardening. An exact Git commit is reproducible and keeps the feature branch testable without expanding release authority.
+- Decision: The SDK tenancy protocol is released as `langbot-plugin==0.5.0` and LangBot pins that exact registry version.
+- Reason: The final PyPI release contains the complete tenant action context and shared Runtime hardening, while the exact version pin keeps production installs reproducible.
 
 ### Cloud directory writes stay outside Core
 
