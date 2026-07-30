@@ -67,7 +67,10 @@ services:
       PLUGIN__WORKER__MAX_TOTAL_MEMORY_MB: "4096"
       PLUGIN__WORKER__REQUIRE_HARD_LIMITS: "true"
       LANGBOT_PLUGIN_RUNTIME_CONTROL_TOKEN: ${PLUGIN_RUNTIME_CONTROL_TOKEN}
-      BOX__ENABLED: "true"
+      # Cloud v2 currently grants no managed Box capability. Keep the shared
+      # runtime deployed but disable Core integration until a hard-quota-capable
+      # backend can satisfy the fail-closed Cloud readiness contract.
+      BOX__ENABLED: "false"
       BOX__BACKEND: nsjail
       BOX__RUNTIME__ENDPOINT: ws://box:5410
       BOX__ADMISSION__REQUIRED: "true"
