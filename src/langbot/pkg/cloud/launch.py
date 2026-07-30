@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import base64
 import binascii
+import datetime
 import hashlib
 import heapq
 import json
@@ -14,6 +15,10 @@ from collections.abc import Callable, Iterable
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+import sqlalchemy
+from sqlalchemy.dialects.postgresql import insert as pg_insert
+
+from ..entity.persistence.cloud_directory import SpaceLaunchAssertionConsumption
 
 if typing.TYPE_CHECKING:
     from ..core.app import Application
@@ -125,12 +130,20 @@ class SpaceLaunchService:
             raise SpaceLaunchError('Launch assertion payload must be a JSON object')
         account_uuid = _required_string(payload, 'account_uuid')
         workspace_uuid = _required_string(payload, 'workspace_uuid')
+        return_path = _required_string(payload, 'return_path')
+        if (
+            not return_path.startswith('/')
+            or return_path.startswith('//')
+            or any(character in return_path for character in ('\\', '\r', '\n', '\t'))
+        ):
+            raise SpaceLaunchError('Launch assertion return path is invalid')
         if expected_workspace_uuid is not None and workspace_uuid != expected_workspace_uuid:
             raise SpaceLaunchError('Launch assertion targets another Workspace')
         await self._consume_jti(_required_string(claims, 'jti'), _required_int(claims, 'exp', minimum=1))
         return {
             'account_uuid': account_uuid,
             'workspace_uuid': workspace_uuid,
+            'return_path': return_path,
         }
 
     def _verify_assertion(self, token: str) -> dict[str, typing.Any]:
@@ -214,19 +227,39 @@ class SpaceLaunchService:
     async def _consume_jti(self, jti: str, expires_at: int) -> None:
         digest = hashlib.sha256(jti.encode('utf-8')).hexdigest()
         now = int(self._wall_time())
+        persistence_mgr = getattr(self.ap, 'persistence_mgr', None)
+        instance_uuid = str(self.ap.workspace_service.instance_uuid)
+        if persistence_mgr is not None:
+            expires_at_datetime = datetime.datetime.fromtimestamp(expires_at, tz=datetime.timezone.utc)
+            now_datetime = datetime.datetime.fromtimestamp(now, tz=datetime.timezone.utc)
+            async with persistence_mgr.directory_projection_uow(instance_uuid) as uow:
+                await uow.session.execute(
+                    sqlalchemy.delete(SpaceLaunchAssertionConsumption).where(
+                        SpaceLaunchAssertionConsumption.instance_uuid == instance_uuid,
+                        SpaceLaunchAssertionConsumption.expires_at < now_datetime,
+                    )
+                )
+                statement = (
+                    pg_insert(SpaceLaunchAssertionConsumption)
+                    .values(instance_uuid=instance_uuid, jti=digest, expires_at=expires_at_datetime)
+                    .on_conflict_do_nothing(index_elements=['instance_uuid', 'jti'])
+                    .returning(SpaceLaunchAssertionConsumption.jti)
+                )
+                result = await uow.session.execute(statement)
+                if result.scalar_one_or_none() is None:
+                    raise SpaceLaunchError('Launch assertion has already been consumed')
+            return
+
+        # Lightweight unit-test and OSS compatibility fallback. Verified Cloud
+        # runtime always supplies the durable PostgreSQL persistence manager.
         async with self._replay_lock:
             self._prune_consumed_jtis(now)
             if digest in self._consumed_jtis:
                 raise SpaceLaunchError('Launch assertion has already been consumed')
             if len(self._consumed_jtis) >= _CONSUMED_JTI_MAX_ENTRIES:
-                # Evicting a still-valid digest would make a signed launch
-                # assertion replayable. Bound memory by failing closed instead.
                 raise SpaceLaunchError('Launch assertion replay cache capacity reached')
             self._consumed_jtis[digest] = expires_at
-            heapq.heappush(
-                self._consumed_jti_expiry_heap,
-                (expires_at, digest),
-            )
+            heapq.heappush(self._consumed_jti_expiry_heap, (expires_at, digest))
 
     def _prune_consumed_jtis(self, now: int) -> None:
         while self._consumed_jti_expiry_heap:

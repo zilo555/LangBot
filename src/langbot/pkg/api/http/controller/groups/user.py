@@ -410,6 +410,7 @@ class UserRouterGroup(group.RouterGroup):
                     'token': token,
                     'user': account.user,
                     'workspace_uuid': access.workspace.uuid,
+                    'return_path': launch.get('return_path', '/home'),
                 }
             )
         except SpaceLaunchError:

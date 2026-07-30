@@ -75,6 +75,7 @@ TENANT_TABLE_COLUMNS: dict[str, str] = {
 DIRECTORY_PROJECTION_TABLE_COLUMNS: dict[str, str] = {
     'directory_projection_states': 'instance_uuid',
     'directory_projection_inbox': 'instance_uuid',
+    'space_launch_assertion_consumptions': 'instance_uuid',
 }
 
 DIRECTORY_PROJECTED_TENANT_TABLES = frozenset(

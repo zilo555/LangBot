@@ -67,3 +67,26 @@ class DirectoryProjectionInbox(Base):
             name='ck_directory_projection_inbox_fingerprint',
         ),
     )
+
+
+class SpaceLaunchAssertionConsumption(Base):
+    """Durable, instance-scoped replay ledger for signed Space launch assertions."""
+
+    __tablename__ = 'space_launch_assertion_consumptions'
+
+    instance_uuid = sqlalchemy.Column(sqlalchemy.String(255), primary_key=True)
+    jti = sqlalchemy.Column(sqlalchemy.String(255), primary_key=True)
+    expires_at = sqlalchemy.Column(sqlalchemy.DateTime(timezone=True), nullable=False)
+    consumed_at = sqlalchemy.Column(
+        sqlalchemy.DateTime(timezone=True),
+        nullable=False,
+        server_default=sqlalchemy.func.now(),
+    )
+
+    __table_args__ = (
+        sqlalchemy.Index(
+            'ix_space_launch_assertion_consumptions_expiry',
+            'instance_uuid',
+            'expires_at',
+        ),
+    )

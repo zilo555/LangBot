@@ -48,6 +48,7 @@ def _claims(*, now: int, jti: str | None = None, workspace_uuid: str = WORKSPACE
         'payload': {
             'account_uuid': ACCOUNT_UUID,
             'workspace_uuid': workspace_uuid,
+            'return_path': '/',
         },
     }
 
@@ -81,7 +82,11 @@ async def test_consumes_valid_workspace_launch_assertion_once():
 
     launch = await service.consume_assertion(token, expected_workspace_uuid=WORKSPACE_UUID)
 
-    assert launch == {'account_uuid': ACCOUNT_UUID, 'workspace_uuid': WORKSPACE_UUID}
+    assert launch == {
+        'account_uuid': ACCOUNT_UUID,
+        'workspace_uuid': WORKSPACE_UUID,
+        'return_path': '/',
+    }
     with pytest.raises(SpaceLaunchError, match='already been consumed'):
         await service.consume_assertion(token, expected_workspace_uuid=WORKSPACE_UUID)
 
@@ -162,3 +167,15 @@ async def test_rejects_invalid_signature_and_non_cloud_mode():
     oss_service.ap.deployment.multi_workspace_enabled = False
     with pytest.raises(SpaceLaunchError, match='verified Cloud mode'):
         await oss_service.consume_assertion(token, expected_workspace_uuid=WORKSPACE_UUID)
+
+
+@pytest.mark.asyncio
+async def test_rejects_unsafe_signed_return_path() -> None:
+    private_key = Ed25519PrivateKey.generate()
+    now = int(time.time())
+    service = _service(private_key, now=now)
+    claims = _claims(now=now)
+    claims['payload']['return_path'] = '//evil.example'
+
+    with pytest.raises(SpaceLaunchError, match='return path'):
+        await service.consume_assertion(_sign(private_key, claims))
