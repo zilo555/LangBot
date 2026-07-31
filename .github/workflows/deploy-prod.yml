@@ -1,0 +1,78 @@
+name: Build and deploy production
+
+on:
+  push:
+    branches: [deploy/prod]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: langbot-production
+  cancel-in-progress: false
+
+env:
+  CORE_IMAGE: ${{ secrets.DOCKER_USERNAME }}/langbot
+  CLOUD_IMAGE: ${{ secrets.DOCKER_USERNAME }}/langbot-cloud-core
+  SPACE_REF: ec9ece010bb5f3ffd6e400b9992ca436454b12e2
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build exact Core image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.CORE_IMAGE }}:prod-${{ github.sha }}
+            ${{ env.CORE_IMAGE }}:deploy-prod
+          cache-from: type=gha,scope=core-prod
+          cache-to: type=gha,mode=max,scope=core-prod
+      - name: Checkout production Cloud adapter
+        uses: actions/checkout@v4
+        with:
+          repository: langbot-app/langbot-space
+          ref: ${{ env.SPACE_REF }}
+          token: ${{ secrets.CLA_PAT }}
+          path: .space
+      - name: Build exact Cloud Core image
+        uses: docker/build-push-action@v6
+        with:
+          context: .space
+          file: .space/Dockerfile.cloud
+          push: true
+          build-args: LANGBOT_CORE_IMAGE=${{ env.CORE_IMAGE }}:prod-${{ github.sha }}
+          tags: |
+            ${{ env.CLOUD_IMAGE }}:prod-${{ github.sha }}
+            ${{ env.CLOUD_IMAGE }}:deploy-prod
+          cache-from: type=gha,scope=cloud-core-prod
+          cache-to: type=gha,mode=max,scope=cloud-core-prod
+      - name: Configure SSH
+        env:
+          SSH_KEY: ${{ secrets.JP09_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.JP09_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          install -m 600 /dev/null ~/.ssh/id_ed25519
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+      - name: Upload release manifest and deploy
+        env:
+          HOST: ${{ secrets.JP09_HOST }}
+          USER: ${{ secrets.JP09_USER }}
+          PORT: ${{ secrets.JP09_PORT }}
+        run: |
+          remote="$USER@$HOST"
+          ssh -p "$PORT" "$remote" 'install -d -m 700 /opt/langbot-cloud-prod'
+          scp -P "$PORT" deploy/prod/docker-compose.yml deploy/prod/deploy.sh "$remote:/opt/langbot-cloud-prod/"
+          ssh -p "$PORT" "$remote" "chmod 700 /opt/langbot-cloud-prod/deploy.sh && /opt/langbot-cloud-prod/deploy.sh prod-${GITHUB_SHA}"
