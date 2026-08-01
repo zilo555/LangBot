@@ -66,6 +66,10 @@ function SpaceOAuthCallbackContent() {
   const [searchParams] = useSearchParams();
   const { t } = useTranslation();
   const isMountedRef = useRef(true);
+  const directLaunchFragmentRef = useRef<{
+    workspaceUuid: string | null;
+    launchAssertion: string | null;
+  } | null>(null);
 
   const [status, setStatus] = useState<
     'loading' | 'confirm' | 'success' | 'error'
@@ -220,8 +224,29 @@ function SpaceOAuthCallbackContent() {
     const errorDescription = searchParams.get('error_description');
     const mode = searchParams.get('mode');
     const state = searchParams.get('state');
-    const workspaceUuid = searchParams.get('workspace_uuid');
-    const launchAssertion = searchParams.get('launch_assertion');
+    if (directLaunchFragmentRef.current === null) {
+      const fragmentParams = new URLSearchParams(
+        window.location.hash.startsWith('#')
+          ? window.location.hash.slice(1)
+          : window.location.hash,
+      );
+      directLaunchFragmentRef.current = {
+        workspaceUuid: fragmentParams.get('workspace_uuid'),
+        launchAssertion: fragmentParams.get('launch_assertion'),
+      };
+      if (window.location.hash) {
+        window.history.replaceState(
+          null,
+          '',
+          `${window.location.pathname}${window.location.search}`,
+        );
+      }
+    }
+    const workspaceUuid =
+      directLaunchFragmentRef.current.workspaceUuid ??
+      searchParams.get('workspace_uuid');
+    const launchAssertion =
+      directLaunchFragmentRef.current.launchAssertion;
 
     if (error) {
       setStatus('error');
