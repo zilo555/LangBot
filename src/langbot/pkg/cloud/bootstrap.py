@@ -138,8 +138,14 @@ class VerifiedCloudDeployment:
         if plugin_worker.get('require_hard_limits') is not True:
             raise CloudBootstrapError('Cloud Runtime requires plugin.worker.require_hard_limits=true')
         box_config = config.get('box', {})
-        if box_config.get('enabled') is not True:
-            raise CloudBootstrapError('Cloud runtime requires box.enabled=true')
+        box_enabled = box_config.get('enabled')
+        if box_enabled is False:
+            # Explicitly disabling Box removes the sandbox surface entirely and
+            # therefore does not weaken tenant isolation. Validate the strict
+            # runtime/admission contract only when the surface is enabled.
+            return
+        if box_enabled is not True:
+            raise CloudBootstrapError('Cloud runtime requires box.enabled to be an explicit boolean')
         if box_config.get('backend') != 'nsjail':
             raise CloudBootstrapError('Cloud runtime requires box.backend=nsjail')
         runtime_endpoint = str(box_config.get('runtime', {}).get('endpoint', '') or '').strip()

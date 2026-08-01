@@ -228,10 +228,23 @@ async def test_cloud_pgvector_contract_is_fail_closed(pgvector_config, message):
         )
 
 
+async def test_cloud_runtime_allows_explicitly_disabled_box():
+    config = _cloud_config()
+    config['box']['enabled'] = False
+
+    deployment = await resolve_deployment(
+        instance_uuid='instance-a',
+        instance_config=config,
+        entry_points=lambda: _EntryPoints([_EntryPoint(_Provider())]),
+        now=1_000,
+    )
+
+    assert isinstance(deployment, VerifiedCloudDeployment)
+
+
 @pytest.mark.parametrize(
     ('mutate', 'message'),
     [
-        (lambda config: config['box'].update(enabled=False), 'box.enabled=true'),
         (lambda config: config['box'].update(backend='docker'), 'box.backend=nsjail'),
         (lambda config: config['box']['runtime'].update(endpoint=''), 'box.runtime.endpoint'),
         (

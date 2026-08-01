@@ -57,22 +57,3 @@ jobs:
             ${{ env.CLOUD_IMAGE }}:deploy-prod
           cache-from: type=gha,scope=cloud-core-prod
           cache-to: type=gha,mode=max,scope=cloud-core-prod
-      - name: Configure SSH
-        env:
-          SSH_KEY: ${{ secrets.JP09_SSH_KEY }}
-          KNOWN_HOSTS: ${{ secrets.JP09_KNOWN_HOSTS }}
-        run: |
-          install -m 700 -d ~/.ssh
-          install -m 600 /dev/null ~/.ssh/id_ed25519
-          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
-          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
-      - name: Upload release manifest and deploy
-        env:
-          HOST: ${{ secrets.JP09_HOST }}
-          USER: ${{ secrets.JP09_USER }}
-          PORT: ${{ secrets.JP09_PORT }}
-        run: |
-          remote="$USER@$HOST"
-          ssh -p "$PORT" "$remote" 'install -d -m 700 /opt/langbot-cloud-prod'
-          scp -P "$PORT" deploy/prod/docker-compose.yml deploy/prod/deploy.sh "$remote:/opt/langbot-cloud-prod/"
-          ssh -p "$PORT" "$remote" "chmod 700 /opt/langbot-cloud-prod/deploy.sh && /opt/langbot-cloud-prod/deploy.sh prod-${GITHUB_SHA}"
