@@ -306,8 +306,17 @@ def test_box_runtime_connector_rejects_relay_context_from_other_instance(
         )
 
 
-def test_external_box_runtime_fails_closed_without_control_token(monkeypatch: pytest.MonkeyPatch):
+def test_external_box_runtime_control_headers_are_tokenless_when_secret_is_unset(
+    monkeypatch: pytest.MonkeyPatch,
+):
     monkeypatch.delenv(BOX_CONTROL_TOKEN_ENV, raising=False)
+    connector = BoxRuntimeConnector(make_app(Mock(), runtime_endpoint='http://box-runtime:5410'))
+
+    assert connector.get_control_headers() == {BOX_INSTANCE_HEADER: 'instance-a'}
+
+
+def test_external_box_runtime_rejects_invalid_configured_control_token(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv(BOX_CONTROL_TOKEN_ENV, 'too-short')
     connector = BoxRuntimeConnector(make_app(Mock(), runtime_endpoint='http://box-runtime:5410'))
 
     with pytest.raises(BoxRuntimeUnavailableError, match=BOX_CONTROL_TOKEN_ENV):
