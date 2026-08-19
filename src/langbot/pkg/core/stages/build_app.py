@@ -292,6 +292,16 @@ class BuildAppStage(stage.BootingStage):
         async def runtime_disconnect_callback(connector: plugin_connector.PluginRuntimeConnector) -> None:
             connector.schedule_reconnect()
 
+        if ap.directory_projection_service is not None:
+            # Keep the projection fresh while shared Runtime cold restore runs.
+            # BuildApp initializes the connector before Application.run() starts
+            # its long-lived tasks, so start the single refresh task here.
+            ap.directory_projection_task = ap.task_mgr.create_task(
+                ap.directory_projection_service.run(),
+                name="cloud-directory-projection",
+                scopes=[core_entities.LifecycleControlScope.APPLICATION],
+            )
+
         plugin_connector_inst = plugin_connector.PluginRuntimeConnector(ap, runtime_disconnect_callback)
         try:
             await plugin_connector_inst.initialize()

@@ -304,10 +304,10 @@ class Application:
     async def run(self):
         self.event_loop_monitor.start()
         try:
-            if self.directory_projection_service is not None:
-                self.task_mgr.create_task(
+            if self.directory_projection_service is not None and getattr(self, "directory_projection_task", None) is None:
+                self.directory_projection_task = self.task_mgr.create_task(
                     self.directory_projection_service.run(),
-                    name='cloud-directory-projection',
+                    name="cloud-directory-projection",
                     scopes=[core_entities.LifecycleControlScope.APPLICATION],
                 )
             if self.cloud_model_catalog_service is not None:
