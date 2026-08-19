@@ -147,15 +147,36 @@ async def test_runtime_resource_stats_are_aggregate_and_constant_time() -> None:
 
 
 @pytest.mark.asyncio
-async def test_start_plugin_runtime_initialization_is_scheduled() -> None:
+async def test_start_plugin_runtime_initialization_bypasses_after_commit_gate() -> None:
     app = Application()
     app.plugin_connector = SimpleNamespace(initialize=AsyncMock())
-    captured = {}
-    app.task_mgr = SimpleNamespace(create_task=lambda coro, **kwargs: captured.update(coro=coro, kwargs=kwargs))
+    app.task_mgr = SimpleNamespace(create_task=AsyncMock())
 
-    app._start_plugin_runtime_initialization()
+    task = app._start_plugin_runtime_initialization()
+    await task
 
-    assert captured['kwargs']['name'] == 'plugin-runtime-initialization'
-    assert captured['kwargs']['scopes']
-    await captured['coro']
     app.plugin_connector.initialize.assert_awaited_once_with()
+    app.task_mgr.create_task.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_shutdown_cancels_plugin_runtime_initialization_task() -> None:
+    app = Application()
+    app._plugin_runtime_initialization_task = asyncio.create_task(asyncio.sleep(60))
+    app.task_mgr = SimpleNamespace(cancel_by_scope=lambda *_: None, tasks=[])
+    app.event_loop_monitor = SimpleNamespace(stop=AsyncMock())
+    app.http_ctrl = SimpleNamespace(mcp_mount=None)
+    app.platform_mgr = None
+    app.tool_mgr = None
+    app.model_mgr = None
+    app.box_service = None
+    app.plugin_connector = None
+    app.telemetry = None
+    app.vector_db_mgr = None
+    app.storage_mgr = None
+    app.persistence_mgr = SimpleNamespace(db=SimpleNamespace(engine=SimpleNamespace(dispose=AsyncMock())))
+    app.deployment = None
+
+    await app.shutdown()
+
+    assert app._plugin_runtime_initialization_task.cancelled()
