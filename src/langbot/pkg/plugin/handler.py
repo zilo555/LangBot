@@ -1677,13 +1677,15 @@ class RuntimeConnectionHandler(handler.Handler):
     async def reconcile_plugin_installations(
         self,
         installations: tuple[PluginInstallationDesiredState, ...],
+        *,
+        timeout: float = 300,
     ) -> dict[str, Any]:
         request = ReconcilePluginInstallationsRequest(installations=installations)
         with self.installation_scope(None):
             return await self.call_action(
                 LangBotToRuntimeAction.RECONCILE_PLUGIN_INSTALLATIONS,
                 request.model_dump(),
-                timeout=300,
+                timeout=timeout,
             )
 
     async def apply_plugin_installation(
