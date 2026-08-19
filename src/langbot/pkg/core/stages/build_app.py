@@ -303,13 +303,6 @@ class BuildAppStage(stage.BootingStage):
             )
 
         plugin_connector_inst = plugin_connector.PluginRuntimeConnector(ap, runtime_disconnect_callback)
-        try:
-            await plugin_connector_inst.initialize()
-        except Exception as exc:
-            # Keep the API/UI available while an external or managed runtime is
-            # starting, then recover in the background with bounded backoff.
-            ap.logger.warning(f'Plugin runtime unavailable during startup; reconnecting in background: {exc}')
-            plugin_connector_inst.schedule_reconnect()
         ap.plugin_connector = plugin_connector_inst
         workspace_service_inst.release_startup_execution_bindings()
 

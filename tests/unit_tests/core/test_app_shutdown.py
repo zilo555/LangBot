@@ -144,3 +144,18 @@ async def test_runtime_resource_stats_are_aggregate_and_constant_time() -> None:
     assert stats['models']['providers'] == 1
     assert stats['runtimes']['plugin_installations'] == 1
     assert stats['runtimes']['plugin_runtime_connected'] is True
+
+
+@pytest.mark.asyncio
+async def test_start_plugin_runtime_initialization_is_scheduled() -> None:
+    app = Application()
+    app.plugin_connector = SimpleNamespace(initialize=AsyncMock())
+    captured = {}
+    app.task_mgr = SimpleNamespace(create_task=lambda coro, **kwargs: captured.update(coro=coro, kwargs=kwargs))
+
+    app._start_plugin_runtime_initialization()
+
+    assert captured['kwargs']['name'] == 'plugin-runtime-initialization'
+    assert captured['kwargs']['scopes']
+    await captured['coro']
+    app.plugin_connector.initialize.assert_awaited_once_with()

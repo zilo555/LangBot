@@ -301,6 +301,22 @@ class Application:
     async def initialize(self):
         pass
 
+    async def _initialize_plugin_runtime(self) -> None:
+        try:
+            await self.plugin_connector.initialize()
+        except asyncio.CancelledError:
+            raise
+        except Exception as exc:
+            self.logger.warning(f'Plugin runtime unavailable during startup; reconnecting in background: {exc}')
+            self.plugin_connector.schedule_reconnect()
+
+    def _start_plugin_runtime_initialization(self):
+        return self.task_mgr.create_task(
+            self._initialize_plugin_runtime(),
+            name='plugin-runtime-initialization',
+            scopes=[core_entities.LifecycleControlScope.APPLICATION],
+        )
+
     async def run(self):
         self.event_loop_monitor.start()
         try:
@@ -322,8 +338,6 @@ class Application:
                     name='cloud-manifest-refresh',
                     scopes=[core_entities.LifecycleControlScope.APPLICATION],
                 )
-            await self.plugin_connector.initialize_plugins()
-
             # 后续可能会允许动态重启其他任务
             # 故为了防止程序在非 Ctrl-C 情况下退出，这里创建一个不会结束的协程
             async def never_ending():
@@ -348,6 +362,7 @@ class Application:
                 name='http-api-controller',
                 scopes=[core_entities.LifecycleControlScope.APPLICATION],
             )
+            self._start_plugin_runtime_initialization()
 
             # Telemetry instance heartbeat (startup + daily); respects
             # space.disable_telemetry via TelemetryManager.send().
