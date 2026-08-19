@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .. import stage, app
+from .. import stage, app, entities as core_entities
 from ...utils import version, proxy, constants
 from ...pipeline import pool, controller, pipelinemgr
 from ...pipeline import aggregator as message_aggregator
