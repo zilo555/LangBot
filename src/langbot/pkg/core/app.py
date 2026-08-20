@@ -326,10 +326,13 @@ class Application:
     async def run(self):
         self.event_loop_monitor.start()
         try:
-            if self.directory_projection_service is not None and getattr(self, "directory_projection_task", None) is None:
+            if (
+                self.directory_projection_service is not None
+                and getattr(self, 'directory_projection_task', None) is None
+            ):
                 self.directory_projection_task = self.task_mgr.create_task(
                     self.directory_projection_service.run(),
-                    name="cloud-directory-projection",
+                    name='cloud-directory-projection',
                     scopes=[core_entities.LifecycleControlScope.APPLICATION],
                 )
             if self.cloud_model_catalog_service is not None:
@@ -344,6 +347,7 @@ class Application:
                     name='cloud-manifest-refresh',
                     scopes=[core_entities.LifecycleControlScope.APPLICATION],
                 )
+
             # 后续可能会允许动态重启其他任务
             # 故为了防止程序在非 Ctrl-C 情况下退出，这里创建一个不会结束的协程
             async def never_ending():

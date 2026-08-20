@@ -701,7 +701,9 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
             }
             self._known_desired_states.update({state.binding.installation_uuid: state for state in desired_states})
 
-        reconcile_timeout_seconds = max(300.0, self._runtime_connect_timeout(self.ap.instance_config.data.get("plugin", {})))
+        reconcile_timeout_seconds = max(
+            300.0, self._runtime_connect_timeout(self.ap.instance_config.data.get('plugin', {}))
+        )
         result = await runtime_handler.reconcile_plugin_installations(
             tuple(self._known_desired_states.values()),
             timeout=reconcile_timeout_seconds,
@@ -740,7 +742,9 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
                     if state.binding.installation_uuid in all_states:
                         raise ValueError('Duplicate plugin installation UUID across projected Workspaces')
                     all_states[state.binding.installation_uuid] = state
-            reconcile_timeout_seconds = max(300.0, self._runtime_connect_timeout(self.ap.instance_config.data.get("plugin", {})))
+            reconcile_timeout_seconds = max(
+                300.0, self._runtime_connect_timeout(self.ap.instance_config.data.get('plugin', {}))
+            )
             result = await runtime_handler.reconcile_plugin_installations(
                 tuple(all_states.values()),
                 timeout=reconcile_timeout_seconds,

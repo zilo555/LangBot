@@ -298,7 +298,7 @@ class BuildAppStage(stage.BootingStage):
             # its long-lived tasks, so start the single refresh task here.
             ap.directory_projection_task = ap.task_mgr.create_task(
                 ap.directory_projection_service.run(),
-                name="cloud-directory-projection",
+                name='cloud-directory-projection',
                 scopes=[core_entities.LifecycleControlScope.APPLICATION],
             )
 
