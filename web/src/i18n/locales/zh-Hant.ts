@@ -1584,11 +1584,13 @@ const zhHant = {
       saveBot: '儲存並啟用',
       resaveBot: '重新儲存配置',
       botSaved: '機器人配置已儲存並啟用，請查看日誌確認連接正常。',
+      messageReceivedLocalAccountWarning:
+        '機器人側已配置正常並成功收到 IM 訊息。目前未透過 LangBot Account 登入，模型呼叫可能報錯；可以進入下一步新增自己的模型。',
       logsTitle: '機器人日誌',
       logsDescription: '監控機器人活動，確認平台連接是否正常運作。',
     },
     aiEngine: {
-      title: '選擇 AI 引擎',
+      title: '配置 AI 引擎',
       description: '選擇驅動機器人智慧的 AI 引擎。',
     },
     config: {
