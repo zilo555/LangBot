@@ -242,6 +242,22 @@ class TestMonitoringSessionsEndpoint:
 
         assert response.status_code == 200
 
+    @pytest.mark.asyncio
+    async def test_get_sessions_forwards_user_search_and_page_window(self, quart_test_client, fake_monitoring_app):
+        fake_monitoring_app.monitoring_service.get_sessions.reset_mock()
+
+        response = await quart_test_client.get(
+            '/api/v1/monitoring/sessions?botId=bot-1&userQuery=alice&limit=20&offset=40',
+            headers={'Authorization': 'Bearer test_token'},
+        )
+
+        assert response.status_code == 200
+        kwargs = fake_monitoring_app.monitoring_service.get_sessions.await_args.kwargs
+        assert kwargs['bot_ids'] == ['bot-1']
+        assert kwargs['user_query'] == 'alice'
+        assert kwargs['limit'] == 20
+        assert kwargs['offset'] == 40
+
 
 @pytest.mark.usefixtures('mock_circular_import_chain')
 class TestMonitoringErrorsEndpoint:
@@ -278,13 +294,19 @@ class TestMonitoringDetailsEndpoints:
     """Tests for detail endpoints."""
 
     @pytest.mark.asyncio
-    async def test_get_session_analysis(self, quart_test_client):
+    async def test_get_session_analysis(self, quart_test_client, fake_monitoring_app):
         """GET /api/v1/monitoring/sessions/{id}/analysis."""
         response = await quart_test_client.get(
-            '/api/v1/monitoring/sessions/sess-1/analysis', headers={'Authorization': 'Bearer test_token'}
+            '/api/v1/monitoring/sessions/sess-1/analysis'
+            '?startTime=2026-08-31T16%3A00%3A00.000Z'
+            '&endTime=2026-09-01T15%3A59%3A59.999Z',
+            headers={'Authorization': 'Bearer test_token'},
         )
 
         assert response.status_code == 200
+        kwargs = fake_monitoring_app.monitoring_service.get_session_analysis.await_args.kwargs
+        assert kwargs['start_time'].isoformat() == '2026-08-31T16:00:00'
+        assert kwargs['end_time'].isoformat() == '2026-09-01T15:59:59.999000'
 
     @pytest.mark.asyncio
     async def test_get_message_details(self, quart_test_client):

@@ -1257,6 +1257,7 @@ class MonitoringService:
         pipeline_ids: list[str] | None = None,
         start_time: datetime.datetime | None = None,
         end_time: datetime.datetime | None = None,
+        user_query: str | None = None,
         is_active: bool | None = None,
         limit: int = 100,
         offset: int = 0,
@@ -1274,6 +1275,14 @@ class MonitoringService:
             conditions.append(persistence_monitoring.MonitoringSession.start_time >= start_time)
         if end_time:
             conditions.append(persistence_monitoring.MonitoringSession.start_time <= end_time)
+        if user_query and user_query.strip():
+            user_pattern = f'%{user_query.strip()}%'
+            conditions.append(
+                sqlalchemy.or_(
+                    persistence_monitoring.MonitoringSession.user_id.ilike(user_pattern),
+                    persistence_monitoring.MonitoringSession.user_name.ilike(user_pattern),
+                )
+            )
         if is_active is not None:
             conditions.append(persistence_monitoring.MonitoringSession.is_active == is_active)
 
@@ -1365,6 +1374,8 @@ class MonitoringService:
         self,
         context: TenantContext,
         session_id: str,
+        start_time: datetime.datetime | None = None,
+        end_time: datetime.datetime | None = None,
     ) -> dict:
         """Get bounded session details with full statistics computed in SQL."""
         workspace_uuid = require_workspace_uuid(context)
@@ -1478,12 +1489,17 @@ class MonitoringService:
             )
         )
         tool_stats = tool_stats_result.one()
+        tool_conditions = [
+            persistence_monitoring.MonitoringToolCall.workspace_uuid == workspace_uuid,
+            persistence_monitoring.MonitoringToolCall.session_id == session_id,
+        ]
+        if start_time is not None:
+            tool_conditions.append(persistence_monitoring.MonitoringToolCall.timestamp >= start_time)
+        if end_time is not None:
+            tool_conditions.append(persistence_monitoring.MonitoringToolCall.timestamp <= end_time)
         tool_query = (
             sqlalchemy.select(persistence_monitoring.MonitoringToolCall)
-            .where(
-                persistence_monitoring.MonitoringToolCall.workspace_uuid == workspace_uuid,
-                persistence_monitoring.MonitoringToolCall.session_id == session_id,
-            )
+            .where(*tool_conditions)
             .order_by(persistence_monitoring.MonitoringToolCall.timestamp.asc())
             .limit(detail_limit + 1)
         )
