@@ -95,7 +95,9 @@ class TestSpaceServiceGetOAuthAuthorizeUrl:
         result = service.get_oauth_authorize_url('http://localhost/callback')
 
         # Verify
-        assert parse_qs(urlsplit(result).query)['redirect_uri'] == ['http://localhost/callback']
+        query = parse_qs(urlsplit(result).query)
+        assert query['redirect_uri'] == ['http://localhost/callback']
+        assert query['code_contract'] == ['redirect-v1']
         assert 'https://space.langbot.app/auth/authorize' in result
 
     def test_get_oauth_authorize_url_with_state(self):
@@ -578,12 +580,14 @@ class TestSpaceServiceExchangeOAuthCode:
                 'auth_code',
                 ['workspace-1'],
                 {'workspace-1': 1_700_000_000},
+                redirect_uri='https://oss.example/auth/space/callback',
             )
 
         # Verify
         assert result['access_token'] == 'new_access_token'
         assert mock_session_obj.post.call_args.kwargs['json'] == {
             'code': 'auth_code',
+            'redirect_uri': 'https://oss.example/auth/space/callback',
             'instance_id': constants.instance_id,
             'workspace_uuids': ['workspace-1'],
             'workspace_created_ats': {'workspace-1': 1_700_000_000},
@@ -846,10 +850,7 @@ class TestSpaceServiceGetModelSelection:
         if response_shape == 'models-envelope':
             data = {'models': models}
         elif response_shape == 'availability-wrapper':
-            data = [
-                {'model': model, 'latency_ms': index + 10, 'http_code': 200}
-                for index, model in enumerate(models)
-            ]
+            data = [{'model': model, 'latency_ms': index + 10, 'http_code': 200} for index, model in enumerate(models)]
         else:
             data = models
         payload = {'code': 0, 'data': data}
