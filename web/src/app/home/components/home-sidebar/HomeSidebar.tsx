@@ -739,7 +739,7 @@ function NavItems({
           > = {
             agent: 'agents.kindBadgeAgent',
             pipeline: 'agents.kindBadgePipeline',
-            event_processor: 'agents.eventProcessor.type',
+            event_processor: 'agents.eventProcessor.configurations',
           };
 
           const groupOrder: Array<'plugin' | 'mcp' | 'skill'> = [
@@ -893,7 +893,7 @@ function NavItems({
                             className="ml-auto flex shrink-0 items-center text-muted-foreground"
                             title={
                               item.kind === 'event_processor'
-                                ? t('agents.eventProcessor.type')
+                                ? t('agents.eventProcessor.configurations')
                                 : item.kind === 'pipeline'
                                   ? t('agents.kindBadgePipeline')
                                   : t('agents.kindBadgeAgent')

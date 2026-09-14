@@ -354,6 +354,25 @@ const enUS = {
     },
   },
   bots: {
+    pluginSubscriptions: {
+      description:
+        'Automatically receive events declared by the plugin, independently of the routes above.',
+      empty: 'No plugin processors are bound.',
+      add: 'Add plugin processor',
+      existing: 'Choose configuration',
+      new: 'New configuration',
+      noExisting: 'No configurations available. Create one.',
+      shared:
+        'Bots using the same configuration share settings and runtime state.',
+      saveHint:
+        'Save the bot after adding a processor to activate the binding.',
+      createAndBind: 'Create and bind',
+      created: 'Configuration created. Save the bot to activate the binding.',
+      enable: 'Enable {{name}}',
+      remove: 'Unbind {{name}}',
+      configure: 'Configure',
+      logs: 'View logs',
+    },
     applyFailed: 'Configuration saved, but could not be applied',
     internalErrorHint:
       'An unexpected error occurred. Check the backend logs using the reference below.',
@@ -723,6 +742,7 @@ const enUS = {
   },
   agents: {
     eventProcessor: {
+      configurations: 'Plugin processor configurations',
       configTab: 'Configuration',
       logsTab: 'Logs',
       noSettings: 'This plugin processor requires no configuration.',
@@ -750,14 +770,15 @@ const enUS = {
       loadError: 'Unable to load processor details.',
       refresh: 'Refresh',
       runs: 'Runs',
-      noRuns: 'No runs yet. Bind a Bot event to start.',
-      bindBot: 'Bind Bot events',
+      noRuns: 'No runs yet. Bind this processor to a bot to start.',
+      bindBot: 'Bind to a bot',
       trace: 'Logs and message flow',
       selectRun: 'Select a run to view details.',
       input: 'Incoming event',
       destination: 'Delivery destination',
       loadMore: 'Load more',
-      activation: 'Install a plugin, create an instance, then bind Bot events.',
+      activation:
+        'Install a plugin, create a processor configuration, then bind a bot.',
       status_pending: 'Pending',
       status_running: 'Running',
       status_completed: 'Completed',

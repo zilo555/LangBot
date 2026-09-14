@@ -16,6 +16,7 @@ from .tenant import TenantContext, require_workspace_uuid, scope_statement
 from ....utils import httpclient
 from ....platform.sources import http_bot_signing
 from ....platform.adapter_names import canonical_adapter_name
+from ....agent.runner.errors import RunnerNotFoundError
 
 
 class BotService:
@@ -36,6 +37,7 @@ class BotService:
         'adapter_config',
         'enable',
         'event_bindings',
+        'plugin_processors',
     }
 
     def __init__(self, ap: app.Application) -> None:
@@ -517,7 +519,7 @@ class BotService:
                 )
                 if result.first() is None:
                     raise ValueError('Pipeline not found')
-            elif target_type in {'agent', 'event_processor'}:
+            elif target_type == 'agent':
                 result = await self.ap.persistence_mgr.execute_async(
                     scope_statement(
                         sqlalchemy.select(persistence_agent.Agent).where(persistence_agent.Agent.uuid == target_uuid),
@@ -551,6 +553,37 @@ class BotService:
 
         return normalized
 
+    async def _normalize_plugin_processors(self, context: TenantContext, subscriptions: typing.Any) -> list[dict]:
+        """Validate explicit subscriptions within this Workspace; events come from the Runner."""
+        if not isinstance(subscriptions, list):
+            raise ValueError('plugin_processors must be an array')
+        normalized = []
+        seen = set()
+        for subscription in subscriptions:
+            if not isinstance(subscription, dict):
+                raise ValueError('Each plugin processor binding must be an object')
+            processor_uuid = subscription.get('processor_uuid')
+            if not isinstance(processor_uuid, str) or not processor_uuid.strip():
+                raise ValueError('Plugin processor UUID is required')
+            if processor_uuid in seen:
+                raise ValueError('A plugin processor can only be bound once per bot')
+            enabled = subscription.get('enabled', True)
+            if not isinstance(enabled, bool):
+                raise ValueError('Plugin processor enabled must be a boolean')
+            agent = await self._get_agent_entity(context, processor_uuid)
+            if agent is None or agent.kind != 'event_processor':
+                raise ValueError('Plugin processor not found')
+            if enabled:
+                try:
+                    descriptor = await self.ap.runner_registry.get(context, agent.component_ref)
+                except RunnerNotFoundError as exc:
+                    raise ValueError('Runner component is unavailable') from exc
+                if 'event' not in descriptor.usages or not descriptor.supported_event_patterns:
+                    raise ValueError('Select an available Runner that declares event usage')
+            seen.add(processor_uuid)
+            normalized.append({'processor_uuid': processor_uuid, 'enabled': enabled})
+        return normalized
+
     async def _prepare_bot_data(self, context: TenantContext, bot_data: dict, *, include_uuid: bool) -> dict:
         """Normalize Bot write payloads to the current event-routing model."""
         update_data = bot_data.copy()
@@ -563,6 +596,10 @@ class BotService:
         if 'event_bindings' in update_data:
             update_data['event_bindings'] = await self._normalize_event_bindings(
                 context, update_data.get('event_bindings')
+            )
+        if 'plugin_processors' in update_data:
+            update_data['plugin_processors'] = await self._normalize_plugin_processors(
+                context, update_data['plugin_processors']
             )
         return update_data
 
@@ -660,6 +697,7 @@ class BotService:
         bot_data['uuid'] = str(uuid.uuid4())
         bot_data['workspace_uuid'] = workspace_uuid
         bot_data.setdefault('event_bindings', [])
+        bot_data.setdefault('plugin_processors', [])
 
         await self.ap.persistence_mgr.execute_async(sqlalchemy.insert(persistence_bot.Bot).values(bot_data))
 
@@ -688,7 +726,7 @@ class BotService:
         if getattr(result, 'rowcount', None) == 0:
             raise WorkspaceNotFoundError('Bot not found')
 
-        runtime_fields = {'adapter', 'adapter_config', 'enable', 'event_bindings'}
+        runtime_fields = {'adapter', 'adapter_config', 'enable', 'event_bindings', 'plugin_processors'}
         if not runtime_fields.intersection(update_data):
             runtime_bot = await self.ap.platform_mgr.get_bot_by_uuid(context, bot_uuid)
             if runtime_bot is not None:

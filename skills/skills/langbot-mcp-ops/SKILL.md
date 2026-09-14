@@ -119,8 +119,16 @@ already have a default pipeline.
 Create a processor with `kind: "event_processor"` and basic information. Without
 a component it supports no events. Discover installed components with
 `get_processor_metadata`, then use `update_processor` with `component_ref` and
-optional `parameters`. API callers may also supply these when creating an instance. Bind bot events to this instance with `target_type: "event_processor"`
-and `target_id` equal to its UUID. Installation alone never activates a handler.
+optional `parameters`. API callers may also supply these when creating an instance.
+Bind an instance by updating the bot's `plugin_processors` array with
+`{"processor_uuid": "<instance UUID>", "enabled": true}`. This replaces the full
+subscription list; preserve bindings you want to keep. Do not add plugin processors
+to `event_bindings`, which remains exclusive Agent/Pipeline routing.
+Each enabled subscription independently receives the installed Runner's declared
+events. Slow or failed subscribers do not prevent other subscribers or the primary
+route from executing. Installation alone never activates a handler. Reusing an
+instance shares its configuration and runtime state. Use a separate instance for
+independent settings. Optional plugin behavior belongs in the Runner config schema.
 `debug_agent` accepts the complete typed event in `payload.data` for this kind.
 Legacy EventListener plugins remain in the Pipeline lifecycle.
 

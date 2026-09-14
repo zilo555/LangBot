@@ -118,6 +118,7 @@ Pipeline components are registered by decorators and package import side effects
 Platform code lives under `pkg/platform/`.
 
 - `botmgr.py` owns runtime bots, routing rules, event logging, webhook pushing, and adapter lifecycle.
+- Bots store exclusive Agent/Pipeline routes in `event_bindings` and independent plugin subscriptions in `plugin_processors` (`processor_uuid`, `enabled`). Subscriptions resolve event patterns from the installed Runner and fan out alongside the primary route. Configuration, state, debug and run logs belong to the reusable processor instance.
 - `sources/` contains adapter implementations. Each adapter subclasses `langbot_plugin.api.definition.abstract.platform.adapter.AbstractMessagePlatformAdapter` from the SDK.
 - Platform entities such as `MessageChain`, `Image`, `At`, `Voice`, and events come from `langbot-plugin-sdk`, not from this repo.
 

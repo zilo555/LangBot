@@ -280,6 +280,8 @@ class RuntimeBot:
         diagnostic_steps: list[dict[str, typing.Any]] = []
 
         for index, binding in enumerate(bindings):
+            if binding.get('target_type') == 'event_processor':
+                continue
             event_pattern = str(binding.get('event_pattern') or '')
             priority = int(binding.get('priority') or 0)
             order = int(binding.get('order', index))
@@ -841,22 +843,72 @@ class RuntimeBot:
         event.bot_uuid = self.bot_entity.uuid
         await self._record_adapter_event(event, adapter)
 
-        if isinstance(event, platform_events.PlatformSpecificEvent) and event.action == 'interaction.submitted':
-            await self._handle_interaction_submission(event, adapter)
-            return
+        primary = (
+            self._handle_interaction_submission(event, adapter)
+            if isinstance(event, platform_events.PlatformSpecificEvent) and event.action == 'interaction.submitted'
+            else self._dispatch_eba_event_to_processor(event, adapter)
+        )
+        subscriptions = self._get_event_bindings_from_value(getattr(self.bot_entity, 'plugin_processors', []))
+        seen = set()
+        tasks = [primary]
+        for subscription in subscriptions:
+            processor_uuid = subscription.get('processor_uuid')
+            if not processor_uuid or processor_uuid in seen or not subscription.get('enabled', True):
+                continue
+            seen.add(processor_uuid)
+            tasks.append(self._dispatch_plugin_subscription(event, adapter, processor_uuid))
+        # Start all deliveries together. A slow or failed subscriber cannot block
+        # another subscriber or the primary route from receiving the event.
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for result in results:
+            if isinstance(result, BaseException):
+                await self.logger.error(f'Event delivery failed: {result}')
 
-        # Legacy listeners run inside Pipeline stages. EBA handlers require an
-        # explicitly created and routed plugin processor instance.
-        await self._dispatch_eba_event_to_processor(event, adapter)
+    async def _dispatch_plugin_subscription(self, event, adapter, processor_uuid):
+        event_type = event.type
+        event_binding = {
+            'id': f'plugin_processor:{processor_uuid}',
+            'target_type': 'event_processor',
+            'target_uuid': processor_uuid,
+            'event_pattern': event_type,
+        }
+        try:
+            agent = await self.ap.agent_service.get_agent(self.execution_context, processor_uuid)
+            if not agent or agent.get('kind') != 'event_processor':
+                raise ValueError('Plugin processor not found')
+            descriptor = await self.ap.runner_registry.get(self.execution_context, agent.get('component_ref'))
+            if 'event' not in descriptor.usages:
+                raise ValueError('Runner does not support event processing')
+            # Resolve the installed declaration each time, including after plugin updates.
+            patterns = descriptor.supported_event_patterns
+            if not patterns or not self._agent_supports_event_type(patterns, event_type):
+                return
+            agent = {**agent, 'supported_event_patterns': patterns}
+            return await self._dispatch_eba_event_to_processor(event, adapter, event_binding, agent)
+        except Exception as exc:
+            return await self._record_event_route_trace(
+                event_type=event_type,
+                status='failed',
+                level='error',
+                binding=event_binding,
+                target_type='event_processor',
+                target_uuid=processor_uuid,
+                failure_code='runner_failed',
+                reason=str(exc),
+                text=f'Plugin processor {processor_uuid} failed: {exc}',
+            )
 
     async def _dispatch_eba_event_to_processor(
         self,
         event: platform_events.EBAEvent,
         adapter: abstract_platform_adapter.AbstractMessagePlatformAdapter,
+        event_binding: dict | None = None,
+        agent: dict | None = None,
     ) -> dict[str, typing.Any]:
         event_type = getattr(event, 'type', None) or event.__class__.__name__
 
-        event_binding = self._resolve_eba_event_binding(event, event_type)
+        if event_binding is None:
+            event_binding = self._resolve_eba_event_binding(event, event_type)
         if event_binding is None:
             return await self._record_event_route_trace(
                 event_type=event_type,
@@ -938,7 +990,8 @@ class RuntimeBot:
             )
 
         target_uuid = event_binding.get('target_uuid')
-        agent = await self.ap.agent_service.get_agent(self.execution_context, target_uuid)
+        if agent is None:
+            agent = await self.ap.agent_service.get_agent(self.execution_context, target_uuid)
         if not agent or agent.get('kind') != target_type:
             return await self._record_event_route_trace(
                 event_type=event_type,

@@ -363,6 +363,24 @@ const esES = {
       "Uses the Workspace owner's LangBot Account billing and credits.",
   },
   bots: {
+    pluginSubscriptions: {
+      description:
+        'Recibe automáticamente los eventos declarados por el plugin, de forma independiente de las rutas anteriores.',
+      empty: 'No hay procesadores vinculados.',
+      add: 'Añadir procesador de plugin',
+      existing: 'Elegir configuración',
+      new: 'Nueva configuración',
+      noExisting: 'No hay configuraciones disponibles. Crea una.',
+      shared:
+        'Los bots que usan la misma configuración comparten ajustes y estado de ejecución.',
+      saveHint: 'Guarda el bot para activar el vínculo.',
+      createAndBind: 'Crear y vincular',
+      created: 'Configuración creada. Guarda el bot para activar el vínculo.',
+      enable: 'Activar {{name}}',
+      remove: 'Desvincular {{name}}',
+      configure: 'Configurar',
+      logs: 'Ver registros',
+    },
     applyFailed: 'Configuración guardada, pero no se pudo aplicar',
     internalErrorHint:
       'Se produjo un error interno. Consulta los registros del servidor con esta referencia.',
@@ -528,6 +546,7 @@ const esES = {
   },
   agents: {
     eventProcessor: {
+      configurations: 'Configuraciones de procesadores de plugins',
       configTab: 'Configuración',
       logsTab: 'Registros',
       noSettings: 'Este procesador de plugin no requiere configuración.',
@@ -555,15 +574,15 @@ const esES = {
       loadError: 'No se pudieron cargar los detalles.',
       refresh: 'Actualizar',
       runs: 'Ejecuciones',
-      noRuns: 'Sin ejecuciones. Vincula eventos de un Bot para empezar.',
-      bindBot: 'Vincular eventos del Bot',
+      noRuns: 'Sin ejecuciones. Vincula este procesador a un bot para empezar.',
+      bindBot: 'Vincular a un bot',
       trace: 'Registros y flujo de mensajes',
       selectRun: 'Selecciona una ejecución para ver los detalles.',
       input: 'Evento recibido',
       destination: 'Destino de entrega',
       loadMore: 'Cargar más',
       activation:
-        'Instala un plugin, crea una instancia y vincula eventos del Bot.',
+        'Instala un plugin, crea una configuración de procesador y vincula un bot.',
       status_pending: 'Pendiente',
       status_running: 'En ejecución',
       status_completed: 'Completado',

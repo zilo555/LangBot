@@ -329,9 +329,15 @@ export interface Bot {
   adapter: string;
   adapter_config: object;
   event_bindings?: EventBinding[];
+  plugin_processors?: PluginProcessorBinding[];
   created_at?: string;
   updated_at?: string;
   adapter_runtime_values?: object;
+}
+
+export interface PluginProcessorBinding {
+  processor_uuid: string;
+  enabled: boolean;
 }
 
 export interface EventBinding {

@@ -64,6 +64,7 @@ interface BotMock {
   adapter_config: JsonRecord;
   use_pipeline_uuid?: string;
   event_bindings: unknown[];
+  plugin_processors: unknown[];
   pipeline_routing_rules: unknown[];
   adapter_runtime_values: JsonRecord;
   updated_at: string;
@@ -505,6 +506,7 @@ function makeBot(
       ? String(data.use_pipeline_uuid)
       : undefined,
     event_bindings: (data.event_bindings as unknown[] | undefined) || [],
+    plugin_processors: (data.plugin_processors as unknown[] | undefined) || [],
     pipeline_routing_rules:
       (data.pipeline_routing_rules as unknown[] | undefined) || [],
     adapter_runtime_values: {

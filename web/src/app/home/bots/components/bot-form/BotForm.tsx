@@ -24,6 +24,7 @@ import { getAdapterDocUrl } from '@/app/infra/entities/adapter-docs';
 import { ExternalLink, ChevronDown, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import EventBindingsEditor from './EventBindingsEditor';
+import PluginProcessorBindings from './PluginProcessorBindings';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -71,6 +72,9 @@ const getFormSchema = (t: (key: string) => string) =>
     adapter: z.string().min(1, { message: t('bots.adapterRequired') }),
     adapter_config: z.record(z.string(), z.any()),
     enable: z.boolean().optional(),
+    plugin_processors: z
+      .array(z.object({ processor_uuid: z.string(), enabled: z.boolean() }))
+      .optional(),
     event_bindings: z
       .array(
         z.object({
@@ -127,6 +131,7 @@ const BotForm = forwardRef<BotFormHandle, BotFormProps>(function BotForm(
       adapter_config: {},
       enable: true,
       event_bindings: [],
+      plugin_processors: [],
     },
   });
 
@@ -237,6 +242,7 @@ const BotForm = forwardRef<BotFormHandle, BotFormProps>(function BotForm(
               adapter_config: val.adapter_config,
               enable: val.enable,
               event_bindings: val.event_bindings || [],
+              plugin_processors: val.plugin_processors || [],
             });
             handleAdapterSelect(val.adapter);
 
@@ -360,6 +366,7 @@ const BotForm = forwardRef<BotFormHandle, BotFormProps>(function BotForm(
             adapter_config: bot.adapter_config,
             enable: bot.enable ?? true,
             event_bindings: bot.event_bindings ?? [],
+            plugin_processors: bot.plugin_processors ?? [],
             webhook_full_url: runtimeValues?.webhook_full_url as
               | string
               | undefined,
@@ -404,6 +411,7 @@ const BotForm = forwardRef<BotFormHandle, BotFormProps>(function BotForm(
         adapter_config: form.getValues().adapter_config,
         enable: form.getValues().enable,
         event_bindings: form.getValues().event_bindings ?? [],
+        plugin_processors: form.getValues().plugin_processors ?? [],
       };
       httpClient
         .updateBot(initBotId, updateBot)
@@ -427,6 +435,7 @@ const BotForm = forwardRef<BotFormHandle, BotFormProps>(function BotForm(
         adapter_config: form.getValues().adapter_config,
         enable: form.getValues().enable,
         event_bindings: form.getValues().event_bindings ?? [],
+        plugin_processors: form.getValues().plugin_processors ?? [],
       };
       httpClient
         .createBot(newBot)
@@ -752,7 +761,21 @@ const BotForm = forwardRef<BotFormHandle, BotFormProps>(function BotForm(
                   form={form}
                   botId={initBotId}
                   supportedEvents={adapterSupportedEvents[currentAdapter] || []}
-                  agentOptions={agentNameList}
+                  agentOptions={agentNameList.filter(
+                    (agent) => agent.kind !== 'event_processor',
+                  )}
+                />
+                <PluginProcessorBindings
+                  value={form.watch('plugin_processors') ?? []}
+                  onChange={(value) =>
+                    form.setValue('plugin_processors', value, {
+                      shouldDirty: true,
+                    })
+                  }
+                  agents={agentNameList}
+                  onCreated={(agent) =>
+                    setAgentNameList((items) => [...items, agent])
+                  }
                 />
               </CardContent>
             </Card>

@@ -109,14 +109,22 @@ class LangBotMCPServer:
             description=(
                 'Create a bot. `bot_data` is a JSON object matching the LangBot '
                 'POST /api/v1/platform/bots body (e.g. name, adapter, config). '
-                'Returns the new bot UUID.'
+                'Use event_bindings for exclusive Agent/Pipeline routes; plugin_processors is an array '
+                'of {processor_uuid, enabled} subscriptions that automatically match Runner-declared events. '
+                'Subscriptions run independently of each other and of event_bindings. Returns the new bot UUID.'
             )
         )
         async def create_bot(bot_data: dict) -> str:
             context = _authorized(Permission.RESOURCE_MANAGE)
             return _dump({'uuid': await ap.bot_service.create_bot(context, bot_data)})
 
-        @mcp.tool(description='Update a bot by UUID. `bot_data` matches the PUT bot body.')
+        @mcp.tool(
+            description=(
+                'Update a bot by UUID. `bot_data` matches the PUT bot body. '
+                'plugin_processors replaces the bot subscriptions with [{processor_uuid, enabled}]. '
+                'Do not put event_processor targets in event_bindings; those are exclusive Agent/Pipeline routes.'
+            )
+        )
         async def update_bot(bot_uuid: str, bot_data: dict) -> str:
             context = _authorized(Permission.RESOURCE_MANAGE)
             await ap.bot_service.update_bot(context, bot_uuid, bot_data)

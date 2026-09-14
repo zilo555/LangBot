@@ -712,19 +712,8 @@ async def test_installed_event_processor_never_receives_unbound_events():
 async def test_bound_event_processor_receives_one_complete_typed_event():
     from langbot_plugin.api.entities.builtin.platform.events import MemberJoinedEvent
 
-    bot = TestEventRouteTrace._make_bot(
-        [
-            {
-                'id': 'binding',
-                'enabled': True,
-                'event_pattern': 'group.member_joined',
-                'target_type': 'event_processor',
-                'target_uuid': 'processor-1',
-                'priority': 0,
-                'order': 0,
-            }
-        ]
-    )
+    bot = TestEventRouteTrace._make_bot([])
+    bot.bot_entity.plugin_processors = [{'processor_uuid': 'processor-1', 'enabled': True}]
     calls = []
 
     async def run(envelope, binding, adapter_context=None):
@@ -747,6 +736,9 @@ async def test_bound_event_processor_receives_one_complete_typed_event():
         ),
         agent_run_orchestrator=SimpleNamespace(run=run),
         plugin_connector=SimpleNamespace(emit_event=AsyncMock()),
+    )
+    bot.ap.runner_registry = SimpleNamespace(
+        get=AsyncMock(return_value=SimpleNamespace(usages=['event'], supported_event_patterns=['group.member_joined']))
     )
     bot._record_adapter_event = AsyncMock()
     await bot._handle_platform_event(
@@ -836,7 +828,9 @@ async def test_processor_outputs_require_explicit_platform_actions(kind, output_
         chat_type=entities.ChatType.PRIVATE,
         chat_id='user-1',
     )
-    trace = await bot._dispatch_eba_event_to_processor(event, adapter)
+    trace = await bot._dispatch_eba_event_to_processor(
+        event, adapter, bot.bot_entity.event_bindings[0] if kind == 'event_processor' else None
+    )
 
     assert trace['status'] == ('failed' if runner_fails else 'delivered')
     if runner_fails:

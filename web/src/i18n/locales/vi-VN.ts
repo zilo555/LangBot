@@ -356,6 +356,24 @@ const viVN = {
       "Uses the Workspace owner's LangBot Account billing and credits.",
   },
   bots: {
+    pluginSubscriptions: {
+      description:
+        'Tự động nhận sự kiện do plugin khai báo, hoạt động độc lập với các tuyến ở trên.',
+      empty: 'Chưa liên kết bộ xử lý plugin.',
+      add: 'Thêm bộ xử lý plugin',
+      existing: 'Chọn cấu hình',
+      new: 'Cấu hình mới',
+      noExisting: 'Chưa có cấu hình khả dụng. Hãy tạo mới.',
+      shared:
+        'Các bot dùng chung cấu hình sẽ chia sẻ thiết lập và trạng thái chạy.',
+      saveHint: 'Lưu bot để kích hoạt liên kết.',
+      createAndBind: 'Tạo và liên kết',
+      created: 'Đã tạo cấu hình. Lưu bot để kích hoạt liên kết.',
+      enable: 'Bật {{name}}',
+      remove: 'Hủy liên kết {{name}}',
+      configure: 'Cấu hình',
+      logs: 'Xem nhật ký',
+    },
     applyFailed: 'Đã lưu cấu hình nhưng không thể áp dụng',
     internalErrorHint:
       'Đã xảy ra lỗi nội bộ. Hãy kiểm tra nhật ký máy chủ bằng mã lỗi.',
@@ -520,6 +538,7 @@ const viVN = {
   },
   agents: {
     eventProcessor: {
+      configurations: 'Cấu hình bộ xử lý plugin',
       configTab: 'Cấu hình',
       logsTab: 'Nhật ký',
       noSettings: 'Bộ xử lý plugin này không cần cấu hình.',
@@ -546,14 +565,14 @@ const viVN = {
       loadError: 'Không thể tải chi tiết.',
       refresh: 'Làm mới',
       runs: 'Lịch sử chạy',
-      noRuns: 'Chưa có lần chạy nào. Liên kết sự kiện Bot để bắt đầu.',
-      bindBot: 'Liên kết sự kiện Bot',
+      noRuns: 'Chưa có lần chạy nào. Liên kết bộ xử lý với bot để bắt đầu.',
+      bindBot: 'Liên kết với bot',
       trace: 'Nhật ký và luồng tin nhắn',
       selectRun: 'Chọn một lần chạy để xem chi tiết.',
       input: 'Sự kiện đầu vào',
       destination: 'Đích gửi',
       loadMore: 'Tải thêm',
-      activation: 'Cài plugin, tạo phiên bản rồi liên kết sự kiện Bot.',
+      activation: 'Cài plugin, tạo cấu hình bộ xử lý rồi liên kết bot.',
       status_pending: 'Đang chờ',
       status_running: 'Đang chạy',
       status_completed: 'Hoàn tất',

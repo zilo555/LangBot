@@ -360,6 +360,23 @@ const jaJP = {
     },
   },
   bots: {
+    pluginSubscriptions: {
+      description:
+        'プラグインが宣言したイベントを自動で受信し、上のルートとは独立して実行します。',
+      empty: 'プラグインプロセッサーは未登録です。',
+      add: 'プラグインプロセッサーを追加',
+      existing: '既存の設定を選択',
+      new: '設定を新規作成',
+      noExisting: '追加できる設定がありません。新しく作成してください。',
+      shared: '同じ設定を使用するボットは設定内容と実行状態を共有します。',
+      saveHint: '追加後にボットを保存すると有効になります。',
+      createAndBind: '作成して紐付け',
+      created: '設定を作成しました。ボットを保存すると紐付けが有効になります。',
+      enable: '{{name}} を有効化',
+      remove: '{{name}} の紐付けを解除',
+      configure: '設定',
+      logs: 'ログを表示',
+    },
     applyFailed: '設定を保存しましたが、適用に失敗しました',
     internalErrorHint:
       '内部エラーが発生しました。エラー番号でバックエンドのログを確認してください。',
@@ -736,6 +753,7 @@ const jaJP = {
   },
   agents: {
     eventProcessor: {
+      configurations: 'プラグインプロセッサー設定',
       configTab: '設定',
       logsTab: 'ログ',
       noSettings: 'このプラグインプロセッサーに設定項目はありません。',
@@ -764,15 +782,15 @@ const jaJP = {
       loadError: '詳細を読み込めません。',
       refresh: '更新',
       runs: '実行履歴',
-      noRuns: '実行履歴はありません。Bot イベントを紐付けて開始します。',
-      bindBot: 'Bot イベントを紐付ける',
+      noRuns: '実行履歴はありません。ボットに紐付けて開始します。',
+      bindBot: 'ボットに紐付ける',
       trace: 'ログとメッセージの流れ',
       selectRun: '実行履歴を選択して詳細を表示します。',
       input: '受信イベント',
       destination: '送信先',
       loadMore: 'さらに読み込む',
       activation:
-        'プラグインをインストールし、インスタンスを作成して Bot イベントを紐付けます。',
+        'プラグインをインストールし、プロセッサー設定を作成してボットに紐付けます。',
       status_pending: '待機中',
       status_running: '実行中',
       status_completed: '完了',

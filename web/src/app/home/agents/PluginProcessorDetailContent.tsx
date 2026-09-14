@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { eventPatternLabel } from '@/app/home/components/event-patterns/event-pattern-groups';
 import { RefreshCw, Trash2, ScrollText, Settings2 } from 'lucide-react';
 import isEqual from 'lodash/isEqual';
@@ -48,7 +48,10 @@ export default function PluginProcessorDetailContent({
   onSaved: () => void;
 }) {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState('config');
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(
+    searchParams.get('tab') === 'logs' ? 'logs' : 'config',
+  );
   const [platformTools, setPlatformTools] = useState<AgentPlatformTool[]>([]);
   const toolLabels = Object.fromEntries(
     platformTools.map((tool) => [tool.name, extractI18nObject(tool.label)]),

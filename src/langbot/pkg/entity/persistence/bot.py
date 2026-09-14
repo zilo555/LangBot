@@ -53,6 +53,7 @@ class Bot(Base):
     adapter_config = sqlalchemy.Column(sqlalchemy.JSON, nullable=False)
     enable = sqlalchemy.Column(sqlalchemy.Boolean, nullable=False, default=False)
     event_bindings = sqlalchemy.Column(sqlalchemy.JSON, nullable=False, server_default='[]')
+    plugin_processors = sqlalchemy.Column(sqlalchemy.JSON, nullable=False, server_default='[]')
     created_at = sqlalchemy.Column(sqlalchemy.DateTime, nullable=False, server_default=sqlalchemy.func.now())
     updated_at = sqlalchemy.Column(
         sqlalchemy.DateTime,
