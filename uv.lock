@@ -1999,7 +1999,7 @@ wheels = [
 
 [[package]]
 name = "langbot"
-version = "4.11.0"
+version = "4.11.0b1"
 source = { editable = "." }
 dependencies = [
     { name = "aiocqhttp" },
@@ -2119,7 +2119,7 @@ requires-dist = [
     { name = "ebooklib", specifier = ">=0.18" },
     { name = "gewechat-client", specifier = ">=0.1.5" },
     { name = "html2text", specifier = ">=2024.2.26" },
-    { name = "langbot-plugin", git = "https://github.com/langbot-app/langbot-plugin-sdk?rev=c67e6c85a0cde8ae2b20cbd89e33805a68382563" },
+    { name = "langbot-plugin", specifier = "==0.6.0b1" },
     { name = "langchain", specifier = ">=1.3.9" },
     { name = "langchain-core", specifier = ">=1.3.3" },
     { name = "langchain-text-splitters", specifier = ">=1.1.2" },
@@ -2171,7 +2171,6 @@ requires-dist = [
     { name = "valkey-glide", marker = "sys_platform != 'win32'", specifier = ">=2.4.1,<3.0.0" },
     { name = "websockets", specifier = ">=15.0.1" },
 ]
-provides-extras = ["seekdb"]
 
 [package.metadata.requires-dev]
 dev = [
@@ -2185,8 +2184,8 @@ dev = [
 
 [[package]]
 name = "langbot-plugin"
-version = "0.5.5"
-source = { git = "https://github.com/langbot-app/langbot-plugin-sdk?rev=c67e6c85a0cde8ae2b20cbd89e33805a68382563#c67e6c85a0cde8ae2b20cbd89e33805a68382563" }
+version = "0.6.0b1"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
     { name = "aiohttp" },
@@ -2205,6 +2204,10 @@ dependencies = [
     { name = "types-pyyaml" },
     { name = "watchdog" },
     { name = "websockets" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a4/6b/f4dcf44a681ea2bd02cab1a52ffd2599f7a423d7df29d3340e418c64d6ef/langbot_plugin-0.6.0b1.tar.gz", hash = "sha256:8bd100992acc10d80176588221b97e213f9d845d62b2e07847070ec5548c7921", size = 600194 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/3e/ef/8d25a218cd05edf2d35a7985e1552226898e226ddb79aff8731f9073bf82/langbot_plugin-0.6.0b1-py3-none-any.whl", hash = "sha256:6a1282294cd991ea552ceaf563c0e4050e55821bb8333d3687df5fd3ec33983a", size = 400116 },
 ]
 
 [[package]]
