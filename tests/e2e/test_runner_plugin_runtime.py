@@ -114,6 +114,7 @@ def _write_qa_runner_plugin(plugin_root: Path) -> None:
                 en_US: Echoes input and exercises run-scoped state APIs.
                 zh_Hans: 回显输入并验证运行级状态 API。
             spec:
+              usages: [agent]
               config: []
               capabilities:
                 streaming: false
