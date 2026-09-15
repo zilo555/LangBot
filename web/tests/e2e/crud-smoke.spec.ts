@@ -1187,7 +1187,6 @@ test.describe('agent runner resource selectors', () => {
 
     await page.goto('/home/agents?id=agent-scope');
     await page.getByRole('tab', { name: /^Runner$/ }).click();
-    await page.getByRole('tab', { name: 'Local Agent' }).click();
     await page.getByRole('button', { name: 'Edit tools' }).click();
 
     const dialog = page.getByRole('dialog');

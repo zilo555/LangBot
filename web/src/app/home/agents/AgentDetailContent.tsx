@@ -261,7 +261,7 @@ export default function AgentDetailContent({ id }: { id: string }) {
                 hasUnsavedChanges={formDirty}
                 beforeRun={async () => agentFormRef.current?.save() ?? false}
                 onOpenRunnerConfig={() =>
-                  agentFormRef.current?.openSection('runner_config')
+                  agentFormRef.current?.openSection('runner')
                 }
                 supportedEventPatterns={supportedEventPatterns}
                 availableEventTypes={availableEventTypes}

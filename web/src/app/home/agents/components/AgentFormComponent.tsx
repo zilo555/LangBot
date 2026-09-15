@@ -14,7 +14,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { Bot, Loader2, SlidersHorizontal, Wrench } from 'lucide-react';
+import { Bot, Loader2, Wrench } from 'lucide-react';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import {
   Agent,
@@ -72,10 +72,7 @@ interface AgentFormComponentProps {
   onPlatformToolsChange?: (tools: AgentPlatformTool[]) => void;
 }
 
-export type AgentConfigSection =
-  | 'runner'
-  | 'runner_config'
-  | 'events_and_tools';
+export type AgentConfigSection = 'runner' | 'events_and_tools';
 
 export interface AgentFormHandle {
   openSection: (section: AgentConfigSection) => void;
@@ -383,13 +380,6 @@ function AgentFormComponent(
       icon: Bot,
     },
     {
-      name: 'runner_config',
-      label: selectedRunnerOption
-        ? extractI18nObject(selectedRunnerOption.label)
-        : t('pipelines.configuration'),
-      icon: SlidersHorizontal,
-    },
-    {
       name: 'events_and_tools',
       label: t('agents.eventsAndTools'),
       icon: Wrench,
@@ -678,7 +668,7 @@ function AgentFormComponent(
               }
             >
               <div className="min-w-0">
-                <TabsList className="grid h-auto w-full min-w-0 grid-cols-3">
+                <TabsList className="grid h-auto w-full min-w-0 grid-cols-2">
                   {primarySections.map((section) => {
                     const Icon = section.icon;
                     return (
@@ -713,11 +703,6 @@ function AgentFormComponent(
                           </CardHeader>
                         </Card>
                       )}
-                </div>
-              )}
-
-              {activeSection === 'runner_config' && (
-                <div className="space-y-6">
                   {runnerInstallRecovering ? (
                     <Card>
                       <CardHeader>
@@ -730,7 +715,7 @@ function AgentFormComponent(
                     </Card>
                   ) : activeRunnerStage ? (
                     renderDynamicStage(activeRunnerStage)
-                  ) : (
+                  ) : runnerConfigSchema ? (
                     <Card>
                       <CardHeader>
                         <CardTitle>{t('agents.runnerSettings')}</CardTitle>
@@ -739,7 +724,7 @@ function AgentFormComponent(
                         </CardDescription>
                       </CardHeader>
                     </Card>
-                  )}
+                  ) : null}
                 </div>
               )}
 

@@ -78,9 +78,24 @@ test.describe('processor detail workbench', () => {
 
     const flow = configPanel.getByRole('tablist');
     await expect(flow.getByRole('tab').nth(0)).toContainText('Runner');
-    await expect(flow.getByRole('tab').nth(1)).toContainText('Local Agent');
-    await expect(flow.getByRole('tab').nth(2)).toContainText('Events & tools');
-    await expect(flow.getByRole('tab')).toHaveCount(3);
+    await expect(flow.getByRole('tab').nth(1)).toContainText('Events & tools');
+    await expect(flow.getByRole('tab')).toHaveCount(2);
+    const selectorCard = configPanel.locator('[data-slot="card"]').filter({
+      has: page.getByRole('combobox', { name: 'Runner', exact: true }),
+    });
+    const configCard = configPanel.locator('[data-slot="card"]').filter({
+      has: page
+        .locator('[data-slot="card-title"]')
+        .getByText('Local Agent', { exact: true }),
+    });
+    await expect(selectorCard).toBeVisible();
+    await expect(configCard).toBeVisible();
+    const selectorCardBox = await selectorCard.boundingBox();
+    const configCardBox = await configCard.boundingBox();
+    expect(configCardBox!.y).toBeGreaterThan(
+      selectorCardBox!.y + selectorCardBox!.height,
+    );
+
     await expect(flow.getByText('Management')).toHaveCount(0);
 
     await page.setViewportSize({ width: 1024, height: 900 });
@@ -122,7 +137,7 @@ test.describe('processor detail workbench', () => {
         .last(),
     ).toBeVisible();
 
-    await flow.getByRole('tab').nth(2).click();
+    await flow.getByRole('tab').nth(1).click();
     await expect(
       configPanel.getByText('Events & tools', { exact: true }).last(),
     ).toBeVisible();
@@ -171,7 +186,7 @@ test.describe('processor detail workbench', () => {
     await page.getByRole('option').filter({ hasText: 'All events' }).click();
     await page.keyboard.press('Escape');
 
-    await flow.getByRole('tab').nth(1).click();
+    await flow.getByRole('tab').nth(0).click();
     await expect(
       configPanel.getByText('Local Agent', { exact: true }).last(),
     ).toBeVisible();
@@ -277,7 +292,7 @@ test.describe('processor detail workbench', () => {
       .getByRole('button', { name: 'Review runner configuration' })
       .click();
     await expect(
-      page.getByRole('tab', { name: 'Local Agent', exact: true }),
+      page.getByRole('tab', { name: 'Runner', exact: true }),
     ).toHaveAttribute('data-state', 'active');
   });
 
@@ -484,4 +499,118 @@ test.describe('processor detail workbench', () => {
       configPanel.getByText('Runtime', { exact: true }).last(),
     ).toBeVisible();
   });
+});
+
+test('merged runner page preserves both runner configurations when switching and saving', async ({
+  page,
+}) => {
+  await installLangBotApiMocks(page, { authenticated: true });
+  const first = 'plugin:qa/first/default';
+  const second = 'plugin:qa/second/default';
+  const agent = {
+    uuid: 'agent-switch',
+    kind: 'agent',
+    name: 'Runner switch',
+    supported_event_patterns: ['*'],
+    config: {
+      runner: { id: first },
+      runner_config: {
+        [first]: { greeting: 'First saved value' },
+        [second]: { greeting: 'Second saved value' },
+      },
+    },
+  };
+  let saved: Record<string, unknown> | undefined;
+  await page.route('**/api/v1/agents/agent-switch', async (route) => {
+    if (route.request().method() === 'PUT') {
+      saved = route.request().postDataJSON();
+      await route.fulfill({ json: { code: 0, data: {} } });
+    } else await route.fulfill({ json: { code: 0, data: { agent } } });
+  });
+  await page.route('**/api/v1/agents/_/metadata', (route) =>
+    route.fulfill({
+      json: {
+        code: 0,
+        data: {
+          platform_tools: [],
+          host_tools: [],
+          runner_config: {
+            name: 'ai',
+            label: { en_US: 'AI' },
+            stages: [
+              {
+                name: 'runner',
+                label: { en_US: 'Execution mode' },
+                config: [
+                  {
+                    name: 'id',
+                    label: { en_US: 'Runner' },
+                    type: 'select',
+                    required: true,
+                    options: [
+                      { name: first, label: { en_US: 'First runner' } },
+                      { name: second, label: { en_US: 'Second runner' } },
+                    ],
+                  },
+                ],
+              },
+              ...[first, second].map((name, index) => ({
+                name,
+                label: {
+                  en_US: index === 0 ? 'First settings' : 'Second settings',
+                },
+                config: [
+                  {
+                    name: 'greeting',
+                    label: { en_US: 'Greeting' },
+                    type: 'string',
+                    required: true,
+                  },
+                ],
+              })),
+            ],
+          },
+        },
+      },
+    }),
+  );
+  await page.goto('/home/agents?id=agent-switch');
+  const config = page.getByRole('region', {
+    name: 'Configuration',
+    exact: true,
+  });
+  const runner = config.getByRole('combobox', { name: 'Runner', exact: true });
+  const greeting = config.getByRole('textbox');
+  await expect(greeting).toHaveValue('First saved value');
+  await greeting.fill('First edited value');
+  await runner.click();
+  await page
+    .getByRole('option', { name: `Second runner ${second}`, exact: true })
+    .click();
+  await expect(greeting).toHaveValue('Second saved value');
+  await greeting.fill('Second edited value');
+  await runner.click();
+  await page
+    .getByRole('option', { name: `First runner ${first}`, exact: true })
+    .click();
+  await expect(greeting).toHaveValue('First edited value');
+  await expect(
+    config.getByRole('tab', { name: 'Runner', exact: true }),
+  ).toHaveAttribute('data-state', 'active');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect
+    .poll(() => saved)
+    .toMatchObject({
+      config: {
+        runner: { id: first },
+        runner_config: {
+          [first]: { greeting: 'First edited value' },
+          [second]: { greeting: 'Second edited value' },
+        },
+      },
+    });
+  await expect(
+    page.getByRole('button', { name: 'Save', exact: true }),
+  ).toBeDisabled();
+  await page.screenshot({ path: '../../.codex-run/agent-merged-config.png' });
 });
