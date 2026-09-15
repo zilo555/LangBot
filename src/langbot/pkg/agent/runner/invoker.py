@@ -48,12 +48,15 @@ class RunnerInvoker:
                 context=context,
             )
 
-            while True:
-                try:
-                    result_dict = await self._next_with_deadline(gen, descriptor, context)
-                except StopAsyncIteration:
-                    break
-                yield result_dict
+            try:
+                while True:
+                    try:
+                        result_dict = await self._next_with_deadline(gen, descriptor, context)
+                    except StopAsyncIteration:
+                        break
+                    yield result_dict
+            finally:
+                await self._close_generator(gen, descriptor)
 
         except asyncio.TimeoutError as e:
             raise RunnerExecutionError(
@@ -128,4 +131,4 @@ class RunnerInvoker:
         try:
             await gen.aclose()
         except Exception as e:
-            self.ap.logger.warning(f'Failed to close timed-out runner {descriptor.id}: {e}')
+            self.ap.logger.warning(f'Failed to close runner {descriptor.id}: {e}')

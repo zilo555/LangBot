@@ -2237,12 +2237,12 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
             include_plugins=bound_plugins,
         )
         runtime_handler = self._runtime_handler()
-        with runtime_handler.installation_scope(binding):
-            gen = runtime_handler.execute_command(
-                command_ctx.model_dump(serialize_as_any=True),
-                include_plugins=bound_plugins,
-            )
-            async for ret in gen:
+        gen = runtime_handler.execute_command(
+            command_ctx.model_dump(serialize_as_any=True),
+            include_plugins=bound_plugins,
+        )
+        async with contextlib.aclosing(self._installation_scoped_stream(runtime_handler, binding, gen)) as scoped:
+            async for ret in scoped:
                 yield command_context.CommandReturn.model_validate(ret)
 
     # Runner methods
@@ -2308,14 +2308,30 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
             require_enabled=True,
         )
         runtime_handler = self._runtime_handler()
-        with runtime_handler.installation_scope(binding):
-            async for ret in runtime_handler.run_runner(
-                plugin_author,
-                plugin_name,
-                runner_name,
-                context,
-            ):
+        gen = runtime_handler.run_runner(plugin_author, plugin_name, runner_name, context)
+        async with contextlib.aclosing(self._installation_scoped_stream(runtime_handler, binding, gen)) as scoped:
+            async for ret in scoped:
                 yield ret
+
+    @staticmethod
+    async def _installation_scoped_stream(runtime_handler, binding, gen):
+        """Keep ContextVar tokens inside a single resume, never across yields.
+
+        Consumers may use a different Task for each anext (e.g. wait_for).
+        Reset the installation before exposing a result to the consumer, and
+        re-enter the same immutable binding for transport cleanup.
+        """
+        try:
+            while True:
+                with runtime_handler.installation_scope(binding):
+                    try:
+                        result = await anext(gen)
+                    except StopAsyncIteration:
+                        return
+                yield result
+        finally:
+            with runtime_handler.installation_scope(binding):
+                await gen.aclose()
 
     async def retrieve_knowledge(
         self,

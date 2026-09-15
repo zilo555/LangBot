@@ -2933,8 +2933,9 @@ class RuntimeConnectionHandler(handler.Handler):
             timeout=timeout,
         )
 
-        async for ret in gen:
-            yield ret
+        async with contextlib.aclosing(gen):
+            async for ret in gen:
+                yield ret
 
     def _get_runner_action_timeout(self, context: dict[str, Any]) -> float:
         """Use the run deadline as the transport idle timeout when available."""
@@ -3143,8 +3144,9 @@ class RuntimeConnectionHandler(handler.Handler):
             timeout=180,
         )
 
-        async for ret in gen:
-            yield ret
+        async with contextlib.aclosing(gen):
+            async for ret in gen:
+                yield ret
 
     async def retrieve_knowledge(
         self,
