@@ -782,6 +782,7 @@ const BotForm = forwardRef<BotFormHandle, BotFormProps>(function BotForm(
                   )}
                 />
                 <PluginProcessorBindings
+                  supportedEvents={adapterSupportedEvents[currentAdapter] || []}
                   value={form.watch('plugin_processors') ?? []}
                   onChange={(value) =>
                     form.setValue('plugin_processors', value, {

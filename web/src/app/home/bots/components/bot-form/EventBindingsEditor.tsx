@@ -118,6 +118,7 @@ import { backendClient } from '@/app/infra/http';
 import {
   eventGroupLabel,
   eventNamespaces,
+  eventPatternCovers,
   groupEventPatterns,
 } from '@/app/home/components/event-patterns/event-pattern-groups';
 import EventSelectOptionContent from '@/app/home/components/event-patterns/EventSelectOptionContent';
@@ -218,17 +219,6 @@ const BEHAVIOR_PRESETS = [
 
 function isMessageEventPattern(p: string) {
   return p === 'message.*' || p.startsWith('message.');
-}
-
-function eventPatternCovers(sup: string, bind: string) {
-  if (sup === '*') return true;
-  if (sup === bind) return true;
-  if (bind === '*') return false;
-  if (sup.endsWith('.*')) {
-    const ns = sup.replace('.*', '');
-    return bind === `${ns}.*` || bind.startsWith(`${ns}.`);
-  }
-  return false;
 }
 
 interface RouteConflict {
@@ -1753,45 +1743,46 @@ export default function EventBindingsEditor({
                 </DropdownMenuItem>
               );
             })}
-            <DropdownMenuSeparator />
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger
-                className="items-start gap-2 py-2"
-                disabled={otherEventGroups.length === 0}
-              >
-                <Workflow className="mt-0.5 h-4 w-4 shrink-0" />
-                <span className="flex min-w-0 flex-col gap-0.5 pr-2">
-                  <span>{t('bots.behaviorCustom')}</span>
-                  <span className="text-xs font-normal text-muted-foreground">
-                    {t('bots.behaviorCustomDescription')}
-                  </span>
-                </span>
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="max-h-[min(70vh,32rem)] w-[320px] max-w-[90vw] overflow-y-auto">
-                {otherEventGroups.map((group, groupIndex) => (
-                  <Fragment key={group.namespace}>
-                    {groupIndex > 0 && <DropdownMenuSeparator />}
-                    <DropdownMenuLabel className="px-2 py-1 text-xs font-normal text-muted-foreground">
-                      {eventGroupLabel(group.namespace, t)}
-                    </DropdownMenuLabel>
-                    {group.patterns.map((event) => (
-                      <DropdownMenuItem
-                        key={event}
-                        className="items-start py-2"
-                        onClick={() => addBinding(event)}
-                      >
-                        <span className="flex min-w-0 flex-col gap-0.5">
-                          <span>{eventLabel(event, t)}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {eventDescription(event, t)}
-                          </span>
-                        </span>
-                      </DropdownMenuItem>
+            {otherEventGroups.length > 0 && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="items-start gap-2 py-2">
+                    <Workflow className="mt-0.5 h-4 w-4 shrink-0" />
+                    <span className="flex min-w-0 flex-col gap-0.5 pr-2">
+                      <span>{t('bots.behaviorCustom')}</span>
+                      <span className="text-xs font-normal text-muted-foreground">
+                        {t('bots.behaviorCustomDescription')}
+                      </span>
+                    </span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="max-h-[min(70vh,32rem)] w-[320px] max-w-[90vw] overflow-y-auto">
+                    {otherEventGroups.map((group, groupIndex) => (
+                      <Fragment key={group.namespace}>
+                        {groupIndex > 0 && <DropdownMenuSeparator />}
+                        <DropdownMenuLabel className="px-2 py-1 text-xs font-normal text-muted-foreground">
+                          {eventGroupLabel(group.namespace, t)}
+                        </DropdownMenuLabel>
+                        {group.patterns.map((event) => (
+                          <DropdownMenuItem
+                            key={event}
+                            className="items-start py-2"
+                            onClick={() => addBinding(event)}
+                          >
+                            <span className="flex min-w-0 flex-col gap-0.5">
+                              <span>{eventLabel(event, t)}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {eventDescription(event, t)}
+                              </span>
+                            </span>
+                          </DropdownMenuItem>
+                        ))}
+                      </Fragment>
                     ))}
-                  </Fragment>
-                ))}
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
         <RouteDryRunDialog

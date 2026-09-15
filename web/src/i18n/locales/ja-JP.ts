@@ -362,6 +362,8 @@ const jaJP = {
   },
   bots: {
     pluginSubscriptions: {
+      incompleteEvents:
+        'このボットは次の監視イベントに完全には対応していません：{{events}}。一部の機能が動作しない可能性がありますが、選択して登録できます。',
       description:
         'プラグインが宣言したイベントを自動で受信し、上のルートとは独立して実行します。',
       empty: 'プラグインプロセッサーは未登録です。',

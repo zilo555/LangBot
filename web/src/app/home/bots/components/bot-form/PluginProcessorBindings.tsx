@@ -1,7 +1,14 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { Check, Plus, Settings2, ScrollText, X } from 'lucide-react';
+import {
+  Check,
+  Plus,
+  Settings2,
+  ScrollText,
+  TriangleAlert,
+  X,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { useSidebarData } from '@/app/home/components/home-sidebar/SidebarDataContext';
 import type {
@@ -11,7 +18,10 @@ import type {
 } from '@/app/infra/entities/api';
 import { httpClient } from '@/app/infra/http';
 import { extractI18nObject } from '@/i18n/I18nProvider';
-import { eventPatternLabel } from '@/app/home/components/event-patterns/event-pattern-groups';
+import {
+  eventPatternCovers,
+  eventPatternLabel,
+} from '@/app/home/components/event-patterns/event-pattern-groups';
 import DynamicFormComponent from '@/app/home/components/dynamic-form/DynamicFormComponent';
 import { AuthenticatedPluginIcon } from '@/components/AuthenticatedPluginIcon';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -35,16 +45,52 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
+function EventCompatibilityWarning({
+  patterns = [],
+  supportedEvents,
+}: {
+  patterns?: string[];
+  supportedEvents: string[];
+}) {
+  const { t } = useTranslation();
+  // Legacy adapters only emit message.received when no events are declared.
+  const supported = supportedEvents.length
+    ? supportedEvents
+    : ['message.received'];
+  const unsupported = [...new Set(patterns)].filter(
+    (pattern) => !supported.some((event) => eventPatternCovers(event, pattern)),
+  );
+  if (!unsupported.length) return null;
+
+  return (
+    <span
+      role="status"
+      className="mt-2 flex items-start gap-1.5 whitespace-normal text-xs text-amber-700 dark:text-amber-400"
+    >
+      <TriangleAlert className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+      <span>
+        {t('bots.pluginSubscriptions.incompleteEvents', {
+          events: unsupported
+            .map((pattern) => eventPatternLabel(pattern, t))
+            .join(' · '),
+        })}
+      </span>
+    </span>
+  );
+}
+
 export default function PluginProcessorBindings({
   value,
   onChange,
   agents,
   onCreated,
+  supportedEvents,
 }: {
   value: PluginProcessorBinding[];
   onChange: (value: PluginProcessorBinding[]) => void;
   agents: Agent[];
   onCreated: (agent: Agent) => void;
+  supportedEvents: string[];
 }) {
   const { t } = useTranslation();
   const { refreshPipelines } = useSidebarData();
@@ -189,6 +235,10 @@ export default function PluginProcessorBindings({
                     .map((pattern) => eventPatternLabel(pattern, t))
                     .join(' · ') || t('agents.eventProcessor.unavailable')}
                 </p>
+                <EventCompatibilityWarning
+                  patterns={agent?.supported_event_patterns}
+                  supportedEvents={supportedEvents}
+                />
               </div>
               <div className="flex shrink-0 items-center gap-1">
                 {agent &&
@@ -329,6 +379,10 @@ export default function PluginProcessorBindings({
                           .map((pattern) => eventPatternLabel(pattern, t))
                           .join(' · ')}
                       </span>
+                      <EventCompatibilityWarning
+                        patterns={agent.supported_event_patterns}
+                        supportedEvents={supportedEvents}
+                      />
                     </span>
                   </label>
                 ))}
@@ -392,6 +446,10 @@ export default function PluginProcessorBindings({
                               .map((pattern) => eventPatternLabel(pattern, t))
                               .join(' · ')}
                           </span>
+                          <EventCompatibilityWarning
+                            patterns={descriptor.supported_event_patterns}
+                            supportedEvents={supportedEvents}
+                          />
                         </span>
                         {componentRef === descriptor.id && (
                           <Check className="size-4 shrink-0" />

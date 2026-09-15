@@ -356,6 +356,8 @@ const enUS = {
   },
   bots: {
     pluginSubscriptions: {
+      incompleteEvents:
+        'This bot cannot fully cover these subscribed events: {{events}}. The processor may work only partially; you can still select and bind it.',
       description:
         'Automatically receive events declared by the plugin, independently of the routes above.',
       empty: 'No plugin processors are bound.',

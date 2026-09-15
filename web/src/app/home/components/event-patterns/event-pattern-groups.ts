@@ -5,6 +5,13 @@ export interface EventPatternGroup {
   patterns: string[];
 }
 
+export function eventPatternCovers(supported: string, required: string) {
+  if (supported === '*' || supported === required) return true;
+  return (
+    supported.endsWith('.*') && required.startsWith(supported.slice(0, -1))
+  );
+}
+
 function eventPatternNamespace(pattern: string) {
   if (pattern === '*') return '*';
   return pattern.split('.')[0] || pattern;
