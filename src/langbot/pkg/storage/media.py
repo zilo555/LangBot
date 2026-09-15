@@ -4,17 +4,12 @@ import asyncio
 import base64
 import copy
 import datetime
-import hashlib
 import mimetypes
 import os
 import re
+import xxhash
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
-
-try:
-    import xxhash
-except ImportError:
-    xxhash = None
 
 if TYPE_CHECKING:
     from ...core import app
@@ -29,7 +24,7 @@ SAFE_MEDIA_FILENAME = re.compile(r'^[a-f0-9]{32,64}(\.[a-zA-Z0-9]{1,10})?$')
 class MediaCache:
     """Content-addressable storage cache for images and media attachments.
 
-    Deduplicates media files using xxHash3-128 (with sha256 fallback),
+    Deduplicates media files using xxHash3-128,
     offloads payloads from SQLite to StorageProvider, and implements LRU
     and age-based retention cleanup.
     """
@@ -41,9 +36,7 @@ class MediaCache:
     @staticmethod
     def hash_bytes(data: bytes) -> str:
         """Compute content-addressable hash for binary data."""
-        if xxhash is not None:
-            return xxhash.xxh3_128_hexdigest(data)
-        return hashlib.sha256(data).hexdigest()[:32]
+        return xxhash.xxh3_128_hexdigest(data)
 
     @staticmethod
     def parse_data_url(data_url: str) -> tuple[bytes, str] | None:
