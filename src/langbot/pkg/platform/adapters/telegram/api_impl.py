@@ -6,6 +6,7 @@ Implements optional API methods defined in AbstractPlatformAdapter.
 from __future__ import annotations
 
 from langbot.pkg.telemetry import diagnostics
+from langbot.pkg.telemetry.adapter_diagnostics import record_api_result
 
 import typing
 
@@ -52,7 +53,7 @@ class TelegramAPIMixin:
                 }
                 if self.config.get('markdown_card', False):
                     args['parse_mode'] = 'MarkdownV2'
-                await self.bot.edit_message_text(**args)
+                record_api_result(await self.bot.edit_message_text(**args), edited_content=new_content)
                 return
 
     @diagnostics.observe('api', 'delete_message', source='platform', stage='accepted')
@@ -63,7 +64,7 @@ class TelegramAPIMixin:
         message_id: typing.Union[int, str],
     ) -> None:
         """Delete / recall a message."""
-        await self.bot.delete_message(chat_id=chat_id, message_id=message_id)
+        record_api_result(await self.bot.delete_message(chat_id=chat_id, message_id=message_id))
 
     @diagnostics.observe('api', 'forward_message', source='platform', stage='accepted')
     async def forward_message(
@@ -223,7 +224,7 @@ class TelegramAPIMixin:
         }
         if duration > 0:
             kwargs['until_date'] = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=duration)
-        await self.bot.restrict_chat_member(**kwargs)
+        record_api_result(await self.bot.restrict_chat_member(**kwargs))
 
     @diagnostics.observe('api', 'unmute_member', source='platform', stage='accepted')
     async def unmute_member(
@@ -243,10 +244,12 @@ class TelegramAPIMixin:
             can_send_video_notes=True,
             can_send_voice_notes=True,
         )
-        await self.bot.restrict_chat_member(
-            chat_id=group_id,
-            user_id=user_id,
-            permissions=permissions,
+        record_api_result(
+            await self.bot.restrict_chat_member(
+                chat_id=group_id,
+                user_id=user_id,
+                permissions=permissions,
+            )
         )
 
     @diagnostics.observe('api', 'kick_member', source='platform', stage='accepted')
@@ -256,7 +259,7 @@ class TelegramAPIMixin:
         user_id: typing.Union[int, str],
     ) -> None:
         """Kick a member from the group."""
-        await self.bot.ban_chat_member(chat_id=group_id, user_id=user_id)
+        record_api_result(await self.bot.ban_chat_member(chat_id=group_id, user_id=user_id))
 
     @diagnostics.observe('api', 'leave_group', source='platform', stage='accepted')
     async def leave_group(
@@ -264,4 +267,4 @@ class TelegramAPIMixin:
         group_id: typing.Union[int, str],
     ) -> None:
         """Make the bot leave a group."""
-        await self.bot.leave_chat(chat_id=group_id)
+        record_api_result(await self.bot.leave_chat(chat_id=group_id))

@@ -7,6 +7,7 @@ Preserves all existing functionality (messaging, streaming output, markdown card
 from __future__ import annotations
 
 from langbot.pkg.telemetry import diagnostics
+from langbot.pkg.telemetry.adapter_diagnostics import record_api_result
 
 import typing
 import traceback
@@ -238,20 +239,20 @@ class TelegramAdapter(TelegramAPIMixin, abstract_platform_adapter.AbstractPlatfo
                     text = telegramify_markdown.markdownify(content=text)
                     args['parse_mode'] = 'MarkdownV2'
                 args['text'] = text
-                await self.bot.send_message(**args)
+                record_api_result(await self.bot.send_message(**args))
             elif component_type == 'photo':
                 photo = component.get('photo')
                 if photo is None:
                     continue
                 args['photo'] = telegram.InputFile(photo)
-                await self.bot.send_photo(**args)
+                record_api_result(await self.bot.send_photo(**args))
             elif component_type == 'document':
                 doc = component.get('document')
                 if doc is None:
                     continue
                 filename = component.get('filename', 'file')
                 args['document'] = telegram.InputFile(doc, filename=filename)
-                await self.bot.send_document(**args)
+                record_api_result(await self.bot.send_document(**args))
 
     @diagnostics.observe('api', 'reply_message', source='platform', stage='accepted')
     async def reply_message(
@@ -285,20 +286,20 @@ class TelegramAdapter(TelegramAPIMixin, abstract_platform_adapter.AbstractPlatfo
                 if self.config['markdown_card'] is True:
                     args['parse_mode'] = 'MarkdownV2'
                 args['text'] = content
-                await self.bot.send_message(**args)
+                record_api_result(await self.bot.send_message(**args))
             elif component_type == 'photo':
                 photo = component.get('photo')
                 if photo is None:
                     continue
                 args['photo'] = telegram.InputFile(photo)
-                await self.bot.send_photo(**args)
+                record_api_result(await self.bot.send_photo(**args))
             elif component_type == 'document':
                 doc = component.get('document')
                 if doc is None:
                     continue
                 filename = component.get('filename', 'file')
                 args['document'] = telegram.InputFile(doc, filename=filename)
-                await self.bot.send_document(**args)
+                record_api_result(await self.bot.send_document(**args))
 
     # ---- Streaming Output (preserving original logic) ----
 

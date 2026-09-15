@@ -186,6 +186,9 @@ class Span:
         self.operation = operation
         self.fields = dict(fields)
         self.adapter_api_active = bool(self.fields.pop('_adapter_api_active', False))
+        self.adapter_void_ack = bool(self.fields.pop('_adapter_void_ack', False))
+        self.adapter_read_ack = bool(self.fields.pop('_adapter_read_ack', False))
+        self.adapter_api_result = None
         if (
             parent
             and parent.fields.get('workspace_uuid')
@@ -264,13 +267,21 @@ def result_outcome(value):
         if not isinstance(value, EBAEvent) and span.fields.get('attributes', {}).get('adapter_evidence'):
             span.fields['attributes']['adapter_evidence'] = False
     if span is not None and span.kind == 'api' and span.fields.get('attributes', {}).get('adapter_evidence'):
-        # Common adapter response contracts expose status without inspecting content.
-        if isinstance(value, dict) and (
-            value.get('ok') is False
-            or value.get('status') == 'failed'
-            or (type(value.get('retcode')) is int and value['retcode'] != 0)
-        ):
-            set_outcome('failed', reason_code='response_error')
+        from .adapter_diagnostics import response_outcome
+
+        # A normal return is not an acknowledgement. Fail closed for acceptance
+        # (but never for the business call) even if result inspection raises.
+        if span.outcome is None:
+            set_outcome('skipped')
+            outcome = span.adapter_api_result
+            if outcome is None:
+                if (value is None and span.adapter_void_ack) or (
+                    span.adapter_read_ack and value is not None and value != ''
+                ):
+                    outcome = 'succeeded'
+                else:
+                    outcome = response_outcome(value, span.fields.get('adapter'))
+            set_outcome(outcome, **({'reason_code': 'response_error'} if outcome == 'failed' else {}))
     if isinstance(value, ActionResponse):
         if value.code != 0:
             set_outcome('failed', reason_code='response_error')
