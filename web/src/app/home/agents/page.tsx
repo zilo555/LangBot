@@ -8,7 +8,7 @@ export default function AgentsPage() {
   const detailId = searchParams.get('id');
 
   if (detailId) {
-    return <AgentDetailContent id={detailId} />;
+    return <AgentDetailContent key={detailId} id={detailId} />;
   }
 
   return (

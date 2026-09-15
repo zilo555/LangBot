@@ -1,3 +1,4 @@
+import EntityLoadState from '@/components/EntityLoadState';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -94,6 +95,9 @@ export default function KBForm({
     Record<string, unknown>
   >({});
   const [isEditing, setIsEditing] = useState(Boolean(initKbId));
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
 
   // Dirty tracking: snapshot of saved state for comparison
@@ -144,12 +148,15 @@ export default function KBForm({
   };
 
   useEffect(() => {
-    loadRagEngines().then(() => {
-      if (initKbId) {
-        loadKbConfig(initKbId);
-      }
-    });
-  }, []);
+    setInitialDataLoaded(false);
+    setLoadFailed(false);
+    loadRagEngines()
+      .then(() => {
+        if (initKbId) return loadKbConfig(initKbId);
+      })
+      .catch(() => setLoadFailed(true))
+      .finally(() => setInitialDataLoaded(true));
+  }, [initKbId, loadAttempt]);
 
   // Auto-select first engine when engines are loaded and no selection
   useEffect(() => {
@@ -178,7 +185,7 @@ export default function KBForm({
       const resp = await httpClient.getKnowledgeEngines();
       setRagEngines(resp.engines);
     } catch (err) {
-      console.error('Failed to load Knowledge Engines:', err);
+      throw err;
     } finally {
       setLoading(false);
     }
@@ -211,8 +218,8 @@ export default function KBForm({
         isInitializing.current = false;
       }, 500);
     } catch (err) {
-      console.error('Failed to load KB config:', err);
       isInitializing.current = false;
+      throw err;
     }
   };
 
@@ -320,6 +327,12 @@ export default function KBForm({
     () => parseCreationSchema(selectedEngine?.retrieval_schema),
     [selectedEngine?.retrieval_schema],
   );
+
+  if (loadFailed)
+    return (
+      <EntityLoadState error onRetry={() => setLoadAttempt((n) => n + 1)} />
+    );
+  if (!initialDataLoaded) return <EntityLoadState />;
 
   return (
     <Form {...form}>

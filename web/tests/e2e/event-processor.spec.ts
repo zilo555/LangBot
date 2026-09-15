@@ -222,9 +222,7 @@ test('create first, select a plugin in the header, debug beside scrollable logs'
   await page
     .getByRole('textbox', { name: 'Name', exact: false })
     .fill('Welcome processor');
-  await page
-    .getByRole('button', { name: 'Create plugin processor', exact: true })
-    .click();
+  await page.getByRole('button', { name: 'Submit', exact: true }).click();
   await expect(page).toHaveURL(/id=processor-qa/);
   expect(creations).toHaveLength(1);
   expect(creations[0]).toMatchObject({

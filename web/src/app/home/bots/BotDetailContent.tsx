@@ -1,3 +1,4 @@
+import EntityLoadState from '@/components/EntityLoadState';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -59,6 +60,8 @@ export default function BotDetailContent({ id }: { id: string }) {
   const [adapterLabel, setAdapterLabel] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [basicInfoOpen, setBasicInfoOpen] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [bot, setBot] = useState<Bot | null>(null);
   const [isRefreshingSessions, setIsRefreshingSessions] = useState(false);
   const sessionMonitorRef = useRef<BotSessionMonitorHandle>(null);
@@ -74,13 +77,17 @@ export default function BotDetailContent({ id }: { id: string }) {
   // Fetch bot enable state
   useEffect(() => {
     if (!isCreateMode) {
-      httpClient.getBot(id).then((res) => {
-        setBot(res.bot);
-        setBotEnabled(res.bot.enable ?? true);
-        setEnableLoaded(true);
-      });
+      setLoadFailed(false);
+      httpClient
+        .getBot(id)
+        .then((res) => {
+          setBot(res.bot);
+          setBotEnabled(res.bot.enable ?? true);
+          setEnableLoaded(true);
+        })
+        .catch(() => setLoadFailed(true));
     }
-  }, [id, isCreateMode]);
+  }, [id, isCreateMode, loadAttempt]);
 
   const handleEnableToggle = useCallback(
     async (checked: boolean) => {
@@ -177,6 +184,12 @@ export default function BotDetailContent({ id }: { id: string }) {
       </div>
     );
   }
+
+  if (loadFailed)
+    return (
+      <EntityLoadState error onRetry={() => setLoadAttempt((n) => n + 1)} />
+    );
+  if (!enableLoaded) return <EntityLoadState />;
 
   // ==================== Edit Mode ====================
   return (

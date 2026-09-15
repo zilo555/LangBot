@@ -1,3 +1,4 @@
+import EntityLoadState from '@/components/EntityLoadState';
 import { showBotError } from '../../bot-error';
 import React, {
   forwardRef,
@@ -137,6 +138,9 @@ const BotForm = forwardRef<BotFormHandle, BotFormProps>(function BotForm(
 
   // Track whether initial data loading is complete.
   // setValue calls during init should NOT mark the form as dirty.
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
   const isInitializing = useRef(true);
 
   const [adapterNameToDynamicConfigMap, setAdapterNameToDynamicConfigMap] =
@@ -225,49 +229,55 @@ const BotForm = forwardRef<BotFormHandle, BotFormProps>(function BotForm(
 
   useEffect(() => {
     setBotFormValues();
-  }, []);
+  }, [initBotId, loadAttempt]);
 
   function setBotFormValues() {
+    setInitialDataLoaded(false);
+    setLoadFailed(false);
     isInitializing.current = true;
-    initBotFormComponent().then(() => {
-      if (initBotId) {
-        getBotConfig(initBotId)
-          .then((val) => {
-            // Use form.reset() to set values AND update the dirty baseline,
-            // so isDirty stays false after initial load.
-            form.reset({
-              name: val.name,
-              description: val.description,
-              adapter: val.adapter,
-              adapter_config: val.adapter_config,
-              enable: val.enable,
-              event_bindings: val.event_bindings || [],
-              plugin_processors: val.plugin_processors || [],
-            });
-            handleAdapterSelect(val.adapter);
+    initBotFormComponent()
+      .then(() => {
+        if (initBotId) {
+          return getBotConfig(initBotId)
+            .then((val) => {
+              // Use form.reset() to set values AND update the dirty baseline,
+              // so isDirty stays false after initial load.
+              form.reset({
+                name: val.name,
+                description: val.description,
+                adapter: val.adapter,
+                adapter_config: val.adapter_config,
+                enable: val.enable,
+                event_bindings: val.event_bindings || [],
+                plugin_processors: val.plugin_processors || [],
+              });
+              handleAdapterSelect(val.adapter);
 
-            if (val.webhook_full_url) {
-              setWebhookUrl(val.webhook_full_url);
-            } else {
-              setWebhookUrl('');
-            }
-            setExtraWebhookUrl(val.extra_webhook_full_url || '');
-          })
-          .catch((err) => {
-            toast.error(
-              t('bots.getBotConfigError') + (err as CustomApiError).msg,
-            );
-          })
-          .finally(() => {
-            isInitializing.current = false;
-          });
-      } else {
-        form.reset();
-        setWebhookUrl('');
-        setExtraWebhookUrl('');
-        isInitializing.current = false;
-      }
-    });
+              if (val.webhook_full_url) {
+                setWebhookUrl(val.webhook_full_url);
+              } else {
+                setWebhookUrl('');
+              }
+              setExtraWebhookUrl(val.extra_webhook_full_url || '');
+            })
+            .catch((err) => {
+              setLoadFailed(true);
+              toast.error(
+                t('bots.getBotConfigError') + (err as CustomApiError).msg,
+              );
+            })
+            .finally(() => {
+              isInitializing.current = false;
+            });
+        } else {
+          form.reset();
+          setWebhookUrl('');
+          setExtraWebhookUrl('');
+          isInitializing.current = false;
+        }
+      })
+      .catch(() => setLoadFailed(true))
+      .finally(() => setInitialDataLoaded(true));
   }
 
   async function initBotFormComponent() {
@@ -459,6 +469,12 @@ const BotForm = forwardRef<BotFormHandle, BotFormProps>(function BotForm(
         });
     }
   }
+
+  if (loadFailed)
+    return (
+      <EntityLoadState error onRetry={() => setLoadAttempt((n) => n + 1)} />
+    );
+  if (!initialDataLoaded) return <EntityLoadState />;
 
   return (
     <Form {...form}>

@@ -1,3 +1,4 @@
+import EntityLoadState from '@/components/EntityLoadState';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -52,6 +53,8 @@ export default function PipelineDetailContent({
   const [formDirty, setFormDirty] = useState(false);
   const [formSaving, setFormSaving] = useState(false);
   const [basicInfoOpen, setBasicInfoOpen] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [pipelineDetails, setPipelineDetails] = useState<Pipeline | null>(null);
   const pipelineFormRef = useRef<PipelineFormHandle>(null);
   const sidebarPipeline = pipelines.find((item) => item.id === id);
@@ -59,13 +62,17 @@ export default function PipelineDetailContent({
   useEffect(() => {
     if (isCreateMode) return;
     let cancelled = false;
-    httpClient.getPipeline(id).then((response) => {
-      if (!cancelled) setPipelineDetails(response.pipeline);
-    });
+    setLoadFailed(false);
+    httpClient
+      .getPipeline(id)
+      .then((response) => {
+        if (!cancelled) setPipelineDetails(response.pipeline);
+      })
+      .catch(() => setLoadFailed(true));
     return () => {
       cancelled = true;
     };
-  }, [id, isCreateMode]);
+  }, [id, isCreateMode, loadAttempt]);
 
   function handleFinish() {
     refreshPipelines();
@@ -136,6 +143,12 @@ export default function PipelineDetailContent({
     refreshPipelines();
     navigate(routeBase);
   }
+
+  if (loadFailed)
+    return (
+      <EntityLoadState error onRetry={() => setLoadAttempt((n) => n + 1)} />
+    );
+  if (!pipelineDetails) return <EntityLoadState />;
 
   // ==================== Edit Mode ====================
   const pipelineName =

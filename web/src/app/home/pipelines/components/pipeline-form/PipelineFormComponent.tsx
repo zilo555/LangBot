@@ -1,3 +1,4 @@
+import EntityLoadState from '@/components/EntityLoadState';
 import {
   forwardRef,
   useCallback,
@@ -211,6 +212,8 @@ const PipelineFormComponent = forwardRef<
     useState<PipelineConfigTab>();
   const [outputConfigTabSchema, setOutputConfigTabSchema] =
     useState<PipelineConfigTab>();
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [metadataLoaded, setMetadataLoaded] = useState(false);
   const [pipelineLoaded, setPipelineLoaded] = useState(!isEditMode);
 
@@ -257,28 +260,37 @@ const PipelineFormComponent = forwardRef<
   }, [hasUnsavedChanges, onDirtyChange]);
 
   useEffect(() => {
+    let cancelled = false;
+    setLoadFailed(false);
     setMetadataLoaded(false);
     setPipelineLoaded(!isEditMode);
     // get config schema from metadata
-    httpClient.getGeneralPipelineMetadata().then((resp) => {
-      for (const config of resp.configs) {
-        if (config.name === 'ai') {
-          setAIConfigTabSchema(config);
-        } else if (config.name === 'trigger') {
-          setTriggerConfigTabSchema(config);
-        } else if (config.name === 'safety') {
-          setSafetyConfigTabSchema(config);
-        } else if (config.name === 'output') {
-          setOutputConfigTabSchema(config);
+    httpClient
+      .getGeneralPipelineMetadata()
+      .then((resp) => {
+        if (cancelled) return;
+        for (const config of resp.configs) {
+          if (config.name === 'ai') {
+            setAIConfigTabSchema(config);
+          } else if (config.name === 'trigger') {
+            setTriggerConfigTabSchema(config);
+          } else if (config.name === 'safety') {
+            setSafetyConfigTabSchema(config);
+          } else if (config.name === 'output') {
+            setOutputConfigTabSchema(config);
+          }
         }
-      }
-      setMetadataLoaded(true);
-    });
+        setMetadataLoaded(true);
+      })
+      .catch(() => {
+        if (!cancelled) setLoadFailed(true);
+      });
 
     if (isEditMode) {
       httpClient
         .getPipeline(pipelineId || '')
         .then((resp: GetPipelineResponseData) => {
+          if (cancelled) return;
           setIsDefaultPipeline(resp.pipeline.is_default ?? false);
 
           const loadedValues = {
@@ -296,9 +308,15 @@ const PipelineFormComponent = forwardRef<
           savedSnapshotRef.current = JSON.stringify(loadedValues);
           initializedStagesRef.current.clear();
           setPipelineLoaded(true);
+        })
+        .catch(() => {
+          if (!cancelled) setLoadFailed(true);
         });
     }
-  }, [form, isEditMode, pipelineId]);
+    return () => {
+      cancelled = true;
+    };
+  }, [form, isEditMode, pipelineId, loadAttempt]);
 
   useEffect(() => {
     if (
@@ -692,6 +710,12 @@ const PipelineFormComponent = forwardRef<
         });
     }
   };
+
+  if (loadFailed)
+    return (
+      <EntityLoadState error onRetry={() => setLoadAttempt((n) => n + 1)} />
+    );
+  if (!metadataLoaded || !pipelineLoaded) return <EntityLoadState />;
 
   return (
     <>

@@ -1,3 +1,4 @@
+import EntityLoadState from '@/components/EntityLoadState';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -79,6 +80,7 @@ export default function PluginProcessorDetailContent({
   const [events, setEvents] = useState<ProcessorRunEvent[]>([]);
   const [eventCursor, setEventCursor] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pagingRuns, setPagingRuns] = useState(false);
   const [pagingEvents, setPagingEvents] = useState(false);
@@ -89,6 +91,7 @@ export default function PluginProcessorDetailContent({
   const available = Boolean(component);
 
   const load = useCallback(async () => {
+    setLoading(true);
     setFailed(false);
     try {
       const [metadata, page] = await Promise.all([
@@ -99,6 +102,7 @@ export default function PluginProcessorDetailContent({
       setPlatformTools(metadata.platform_tools ?? []);
       setRuns(page.items);
       setCursor(page.has_more ? page.next_cursor : null);
+      setInitialLoadComplete(true);
     } catch {
       setFailed(true);
     } finally {
@@ -384,6 +388,9 @@ export default function PluginProcessorDetailContent({
       </ScrollArea>
     </div>
   );
+
+  if (!initialLoadComplete)
+    return <EntityLoadState error={failed} onRetry={() => void load()} />;
 
   return (
     <ProcessorDetailWorkbench

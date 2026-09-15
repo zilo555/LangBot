@@ -121,11 +121,7 @@ export default function AgentCreateContent({
           form="agent-create-form"
           disabled={form.formState.isSubmitting}
         >
-          {t(
-            kind === 'event_processor'
-              ? 'agents.eventProcessor.create'
-              : 'common.submit',
-          )}
+          {t('common.submit')}
         </Button>
       </div>
 

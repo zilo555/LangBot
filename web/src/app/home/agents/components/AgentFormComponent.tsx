@@ -1,3 +1,4 @@
+import EntityLoadState from '@/components/EntityLoadState';
 import {
   forwardRef,
   type ForwardedRef,
@@ -145,6 +146,8 @@ function AgentFormComponent(
     useState<ApiRespPluginSystemStatus | null>(null);
   const [pluginStatusLoading, setPluginStatusLoading] = useState(true);
   const [pluginStatusError, setPluginStatusError] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
   const [runnerInstallRecovering, setRunnerInstallRecovering] = useState(false);
   const [activeSection, setActiveSection] =
@@ -208,6 +211,8 @@ function AgentFormComponent(
 
   useEffect(() => {
     let cancelled = false;
+    setInitialDataLoaded(false);
+    setLoadFailed(false);
     Promise.all([httpClient.getAgentMetadata(), httpClient.getAgent(agentId)])
       .then(([metadata, resp]) => {
         if (cancelled) return;
@@ -274,12 +279,14 @@ function AgentFormComponent(
         setInitialDataLoaded(true);
       })
       .catch((err) => {
+        if (cancelled) return;
+        setLoadFailed(true);
         toast.error(t('agents.loadError') + err.msg);
       });
     return () => {
       cancelled = true;
     };
-  }, [agentId, form, t]);
+  }, [agentId, form, t, loadAttempt]);
 
   useEffect(() => {
     if (!initialDataLoaded || !readPendingRunnerInstall(runnerInstallScope)) {
@@ -390,7 +397,8 @@ function AgentFormComponent(
   ];
 
   const runnerStatus = useMemo<RunnerStatus>(() => {
-    if (pluginStatusLoading) {
+    if (loadFailed) return { label: t('common.loadFailed'), tone: 'error' };
+    if (!initialDataLoaded || pluginStatusLoading) {
       return {
         label: t('agents.runnerStatusLoading'),
         tone: 'neutral',
@@ -459,6 +467,8 @@ function AgentFormComponent(
       tone: 'success',
     };
   }, [
+    initialDataLoaded,
+    loadFailed,
     currentRunner,
     pluginStatusError,
     pluginStatusLoading,
@@ -635,6 +645,7 @@ function AgentFormComponent(
         }
       },
       async save() {
+        if (!initialDataLoaded || loadFailed) return false;
         if (!hasUnsavedChangesRef.current) return true;
         if (isSavingRef.current) return false;
         const valid = await form.trigger();
@@ -642,8 +653,14 @@ function AgentFormComponent(
         return (await saveValues(form.getValues())) ?? false;
       },
     }),
-    [form, saveValues],
+    [form, initialDataLoaded, loadFailed, saveValues],
   );
+
+  if (loadFailed)
+    return (
+      <EntityLoadState error onRetry={() => setLoadAttempt((n) => n + 1)} />
+    );
+  if (!initialDataLoaded) return <EntityLoadState />;
 
   return (
     <div className="h-full p-0 flex flex-col">

@@ -1,3 +1,4 @@
+import EntityLoadState from '@/components/EntityLoadState';
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -57,16 +58,20 @@ export default function KBDetailContent({ id }: { id: string }) {
   const [activeTab, setActiveTab] = useState('metadata');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showBasicInfoDialog, setShowBasicInfoDialog] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [kbInfo, setKbInfo] = useState<KnowledgeBase | null>(null);
   const [formDirty, setFormDirty] = useState(false);
   const [formVersion, setFormVersion] = useState(0);
 
   const loadKbInfo = useCallback(
     async (kbId: string) => {
+      setLoadFailed(false);
       try {
         const resp = await httpClient.getKnowledgeBase(kbId);
         setKbInfo(resp.base);
       } catch (e) {
+        setLoadFailed(true);
         console.error('Failed to load KB info:', e);
         toast.error(
           t('knowledge.loadKnowledgeBaseFailed') + (e as CustomApiError).msg,
@@ -81,7 +86,7 @@ export default function KBDetailContent({ id }: { id: string }) {
     if (!isCreateMode) {
       loadKbInfo(id);
     }
-  }, [id, isCreateMode, loadKbInfo]);
+  }, [id, isCreateMode, loadKbInfo, loadAttempt]);
 
   const hasDocumentCapability = (): boolean => {
     if (!kbInfo || !kbInfo.knowledge_engine) return false;
@@ -178,6 +183,12 @@ export default function KBDetailContent({ id }: { id: string }) {
       </div>
     );
   }
+
+  if (loadFailed)
+    return (
+      <EntityLoadState error onRetry={() => setLoadAttempt((n) => n + 1)} />
+    );
+  if (!kbInfo) return <EntityLoadState />;
 
   // ==================== Edit Mode ====================
   return (

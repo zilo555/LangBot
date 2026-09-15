@@ -1,3 +1,4 @@
+import EntityLoadState from '@/components/EntityLoadState';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -43,6 +44,8 @@ export default function AgentDetailContent({ id }: { id: string }) {
   const { refreshPipelines, pipelines, setDetailEntityName } = useSidebarData();
   const [agent, setAgent] = useState<Agent | null>(null);
   const [platformTools, setPlatformTools] = useState<AgentPlatformTool[]>([]);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [loading, setLoading] = useState(!isCreateMode);
   const [formDirty, setFormDirty] = useState(false);
   const [formSaving, setFormSaving] = useState(false);
@@ -77,6 +80,7 @@ export default function AgentDetailContent({ id }: { id: string }) {
     if (isCreateMode) return;
     let cancelled = false;
     setLoading(true);
+    setLoadFailed(false);
     Promise.all([
       httpClient.getAgent(id),
       httpClient.getAdapters().catch(() => ({ adapters: [] })),
@@ -97,13 +101,16 @@ export default function AgentDetailContent({ id }: { id: string }) {
         );
         setAgent(resp.agent);
       })
+      .catch(() => {
+        if (!cancelled) setLoadFailed(true);
+      })
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
     };
-  }, [id, isCreateMode]);
+  }, [id, isCreateMode, loadAttempt]);
 
   if (isCreateMode) {
     return (
@@ -116,13 +123,11 @@ export default function AgentDetailContent({ id }: { id: string }) {
     );
   }
 
-  if (loading || !agent) {
+  if (loadFailed)
     return (
-      <div className="flex h-full items-center justify-center text-muted-foreground">
-        {t('common.loading')}
-      </div>
+      <EntityLoadState error onRetry={() => setLoadAttempt((n) => n + 1)} />
     );
-  }
+  if (loading || !agent) return <EntityLoadState />;
 
   if (agent.kind === 'pipeline') {
     return <PipelineDetailContent id={id} routeBase="/home/agents" />;

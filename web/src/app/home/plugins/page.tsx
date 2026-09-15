@@ -36,7 +36,7 @@ export default function PluginConfigPage() {
   const detailId = searchParams.get('id');
 
   if (detailId) {
-    return <PluginDetailContent id={detailId} />;
+    return <PluginDetailContent key={detailId} id={detailId} />;
   }
 
   return <PluginListView />;

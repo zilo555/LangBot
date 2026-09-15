@@ -8,7 +8,7 @@ export default function PipelineConfigPage() {
   const detailId = searchParams.get('id');
 
   if (detailId) {
-    return <PipelineDetailContent id={detailId} />;
+    return <PipelineDetailContent key={detailId} id={detailId} />;
   }
 
   return (

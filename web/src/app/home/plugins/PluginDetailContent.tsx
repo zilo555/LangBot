@@ -1,3 +1,4 @@
+import EntityLoadState from '@/components/EntityLoadState';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PluginForm from '@/app/home/plugins/components/plugin-installed/plugin-form/PluginForm';
@@ -40,6 +41,8 @@ export default function PluginDetailContent({ id }: { id: string }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { plugins, setDetailEntityName, refreshPlugins } = useSidebarData();
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [pluginInfo, setPluginInfo] = useState<Plugin | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteData, setDeleteData] = useState(false);
@@ -76,15 +79,19 @@ export default function PluginDetailContent({ id }: { id: string }) {
 
   useEffect(() => {
     let cancelled = false;
-    httpClient.getPlugin(pluginAuthor, pluginName).then((res) => {
-      if (!cancelled) {
-        setPluginInfo(res.plugin);
-      }
-    });
+    setLoadFailed(false);
+    httpClient
+      .getPlugin(pluginAuthor, pluginName)
+      .then((res) => {
+        if (!cancelled) {
+          setPluginInfo(res.plugin);
+        }
+      })
+      .catch(() => setLoadFailed(true));
     return () => {
       cancelled = true;
     };
-  }, [pluginAuthor, pluginName]);
+  }, [pluginAuthor, pluginName, loadAttempt]);
 
   function handleFormSubmit(timeout?: number) {
     if (timeout) {
@@ -188,6 +195,12 @@ export default function PluginDetailContent({ id }: { id: string }) {
       </CardContent>
     </Card>
   );
+
+  if (loadFailed)
+    return (
+      <EntityLoadState error onRetry={() => setLoadAttempt((n) => n + 1)} />
+    );
+  if (!pluginInfo) return <EntityLoadState />;
 
   return (
     <>

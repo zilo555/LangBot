@@ -1,3 +1,4 @@
+import EntityLoadState from '@/components/EntityLoadState';
 import { useSearchParams } from 'react-router-dom';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { useEffect, useRef, useState, useCallback } from 'react';
@@ -78,11 +79,7 @@ export default function PluginPagesPage() {
         </div>
       );
     }
-    return (
-      <div className="flex items-center justify-center h-full text-muted-foreground">
-        Loading...
-      </div>
-    );
+    return <EntityLoadState />;
   }
 
   const assetPath = page.path;
@@ -209,9 +206,7 @@ function PluginPageIframe({
           {t('plugins.loadFailed')}
         </div>
       ) : loading || !assetUrl ? (
-        <div className="flex items-center justify-center h-full text-muted-foreground">
-          Loading...
-        </div>
+        <EntityLoadState />
       ) : null}
       {!assetError && assetUrl && (
         <iframe
