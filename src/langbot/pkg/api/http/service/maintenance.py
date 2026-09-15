@@ -80,6 +80,25 @@ class MaintenanceService:
             DEFAULT_LOG_RETENTION_DAYS,
             'storage.cleanup.log_retention_days',
         )
+        media_cfg = self.ap.instance_config.data.get('storage', {}).get('media_cache', {})
+        media_retention_days = self._positive_int(
+            media_cfg.get('retention_days'),
+            30,
+            'storage.media_cache.retention_days',
+        )
+        media_max_size_mb = self._non_negative_int(
+            media_cfg.get('max_size_mb'),
+            0,
+            'storage.media_cache.max_size_mb',
+        )
+        media_cleanup = (
+            await self.ap.storage_mgr.media_cache.cleanup(
+                media_retention_days,
+                media_max_size_mb,
+            )
+            if hasattr(self.ap.storage_mgr, 'media_cache') and await self._is_oss_singleton(context)
+            else {}
+        )
 
         return {
             'uploaded_files': await self._cleanup_expired_uploaded_files(context, upload_retention_days),
@@ -89,6 +108,7 @@ class MaintenanceService:
             )
             if await self._is_oss_singleton(context)
             else 0,
+            'media_files': media_cleanup.get('expired_deleted', 0) + media_cleanup.get('size_deleted', 0),
         }
 
     async def get_storage_analysis(self, context: TenantContext) -> dict[str, Any]:
@@ -465,6 +485,17 @@ class MaintenanceService:
         for _, _, files in os.walk(path):
             count += len(files)
         return count
+
+    def _non_negative_int(self, value: Any, default: int, name: str) -> int:
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            self.ap.logger.warning(f'Invalid {name}: {value!r}, using {default}')
+            return default
+        if parsed < 0:
+            self.ap.logger.warning(f'{name} must be non-negative: {value!r}, using {default}')
+            return default
+        return parsed
 
     def _positive_int(self, value: Any, default: int, name: str) -> int:
         try:
