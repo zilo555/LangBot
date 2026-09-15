@@ -1,14 +1,14 @@
 import { expect, test, type Page } from '@playwright/test';
 import { installLangBotApiMocks } from './fixtures/langbot-api';
 
-const warning = /This bot cannot fully cover these subscribed events:/;
+const warning = /This bot only supports some of the subscribed events/;
 const definitions = [
   { name: 'Messages only', patterns: ['message.received'] },
   {
     name: 'Community helper',
     patterns: [
-      'message.received',
       'group.member_joined',
+      'message.received',
       'friend.request_received',
     ],
   },
@@ -102,11 +102,28 @@ test('partial support warns in existing choices and saved bindings, and changes 
   const community = dialog
     .locator('label')
     .filter({ hasText: 'Community helper' });
-  await expect(community.getByRole('status')).toContainText('Member joined');
-  await expect(community.getByRole('status')).toContainText('Friend request');
-  await expect(community.getByRole('status')).not.toContainText(
-    'Message received',
+  await expect(community.getByRole('status')).toContainText(
+    '(Message received)',
   );
+  await expect(community.getByRole('status')).not.toContainText(
+    'Member joined',
+  );
+  await expect(community.getByRole('listitem')).toHaveText([
+    'Message received',
+    'Member joined group',
+    'Friend request received',
+  ]);
+  for (const pattern of ['group.member_joined', 'friend.request_received']) {
+    const event = community.getByTitle(pattern, { exact: true });
+    await expect(event).toHaveClass(/text-amber-/);
+    await expect(event.locator('svg')).toHaveCount(1);
+  }
+  await expect(
+    community.getByTitle('message.received', { exact: true }),
+  ).not.toHaveClass(/text-amber-/);
+  await expect(
+    community.getByTitle('message.received', { exact: true }).locator('svg'),
+  ).toHaveCount(0);
   await expect(
     dialog
       .locator('label')
@@ -122,6 +139,15 @@ test('partial support warns in existing choices and saved bindings, and changes 
   ).toHaveCount(1);
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await page.reload();
+  await expect(
+    page
+      .getByRole('region', { name: 'Plugin processor', exact: true })
+      .getByRole('listitem'),
+  ).toHaveText([
+    'Message received',
+    'Member joined group',
+    'Friend request received',
+  ]);
   await expect(
     page.getByRole('status').filter({ hasText: warning }),
   ).toHaveCount(1);
@@ -159,6 +185,21 @@ test('new component choices warn for missing and wildcard events but allow creat
         .getByRole('status'),
     ).toContainText(warning);
   }
+  await expect(
+    dialog.getByRole('button', { name: /Group observer/ }).getByRole('status'),
+  ).toContainText('(None)');
+  await expect(
+    dialog.getByRole('button', { name: /All observer/ }).getByRole('status'),
+  ).toContainText('(Message received)');
+  const community = dialog.getByRole('button', { name: /Community helper/ });
+  await expect(community.getByRole('listitem')).toHaveText([
+    'Message received',
+    'Member joined group',
+    'Friend request received',
+  ]);
+  await expect(
+    community.getByTitle('group.member_joined', { exact: true }).locator('svg'),
+  ).toHaveCount(1);
   await expect(
     dialog.getByRole('button', { name: /Messages only/ }).getByRole('status'),
   ).toHaveCount(0);

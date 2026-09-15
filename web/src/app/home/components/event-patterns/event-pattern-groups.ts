@@ -12,6 +12,34 @@ export function eventPatternCovers(supported: string, required: string) {
   );
 }
 
+export function processorEventCompatibility(
+  patterns: string[],
+  supportedEvents: string[],
+) {
+  // Legacy adapters only emit message.received when no events are declared.
+  const supported = supportedEvents.length
+    ? supportedEvents
+    : ['message.received'];
+  const entries = [...new Set(patterns)]
+    .map((pattern) => ({
+      pattern,
+      supported: supported.some((event) => eventPatternCovers(event, pattern)),
+    }))
+    .sort((left, right) => Number(right.supported) - Number(left.supported));
+  const matchingEvents = [
+    ...new Set(
+      patterns.flatMap((pattern) =>
+        supported.flatMap((event) => {
+          if (eventPatternCovers(pattern, event)) return [event];
+          if (eventPatternCovers(event, pattern)) return [pattern];
+          return [];
+        }),
+      ),
+    ),
+  ];
+  return { entries, matchingEvents };
+}
+
 function eventPatternNamespace(pattern: string) {
   if (pattern === '*') return '*';
   return pattern.split('.')[0] || pattern;

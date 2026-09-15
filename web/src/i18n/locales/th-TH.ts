@@ -347,7 +347,28 @@ const thTH = {
       "Uses the Workspace owner's LangBot Account billing and credits.",
   },
   bots: {
+    eventWildcard: 'ทุกเหตุการณ์',
+    eventNamespaceWildcard: '{{namespace}}.*',
+    eventNames: {
+      message_received: 'ได้รับข้อความ',
+      message_edited: 'แก้ไขข้อความ',
+      message_deleted: 'ลบข้อความ',
+      message_reaction: 'การแสดงความรู้สึกต่อข้อความ',
+      feedback_received: 'ได้รับข้อเสนอแนะ',
+      friend_request_received: 'ได้รับคำขอเป็นเพื่อน',
+      friend_added: 'เพิ่มเพื่อน',
+      group_member_joined: 'สมาชิกเข้าร่วมกลุ่ม',
+      group_member_left: 'สมาชิกออกจากกลุ่ม',
+      group_member_banned: 'สมาชิกถูกแบน',
+      bot_invited_to_group: 'บอตได้รับเชิญเข้ากลุ่ม',
+      bot_removed_from_group: 'บอตถูกนำออกจากกลุ่ม',
+      bot_muted: 'บอตถูกปิดสิทธิ์ส่งข้อความ',
+      bot_unmuted: 'บอตได้รับสิทธิ์ส่งข้อความคืน',
+      platform_specific: 'เหตุการณ์เฉพาะแพลตฟอร์ม',
+    },
     pluginSubscriptions: {
+      incompleteEvents:
+        'บอตนี้รองรับเพียงบางเหตุการณ์ที่ตัวประมวลผลติดตาม ({{events}}) ตัวประมวลผลอาจทำงานได้ไม่ครบถ้วน',
       description:
         'รับเหตุการณ์ที่ปลั๊กอินประกาศไว้โดยอัตโนมัติ และทำงานแยกจากเส้นทางด้านบน',
       empty: 'ยังไม่ได้เชื่อมโยงตัวประมวลผลปลั๊กอิน',

@@ -342,7 +342,7 @@ const zhHans = {
   bots: {
     pluginSubscriptions: {
       incompleteEvents:
-        '当前机器人无法完整支持以下监听事件：{{events}}。处理器的表现可能不完整。',
+        '当前机器人仅支持部分事件（{{events}}），处理器表现可能不完整。',
       description: '自动接收插件声明的事件，与上方事件路由独立执行。',
       empty: '尚未绑定插件处理器。',
       add: '添加插件处理器',

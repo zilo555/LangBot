@@ -356,7 +356,28 @@ const viVN = {
       "Uses the Workspace owner's LangBot Account billing and credits.",
   },
   bots: {
+    eventWildcard: 'Tất cả sự kiện',
+    eventNamespaceWildcard: '{{namespace}}.*',
+    eventNames: {
+      message_received: 'Nhận tin nhắn',
+      message_edited: 'Tin nhắn được chỉnh sửa',
+      message_deleted: 'Tin nhắn bị xóa',
+      message_reaction: 'Cảm xúc cho tin nhắn',
+      feedback_received: 'Nhận phản hồi',
+      friend_request_received: 'Nhận lời mời kết bạn',
+      friend_added: 'Đã thêm bạn',
+      group_member_joined: 'Thành viên tham gia nhóm',
+      group_member_left: 'Thành viên rời nhóm',
+      group_member_banned: 'Thành viên bị cấm tham gia nhóm',
+      bot_invited_to_group: 'Bot được mời vào nhóm',
+      bot_removed_from_group: 'Bot bị xóa khỏi nhóm',
+      bot_muted: 'Bot bị cấm gửi tin nhắn',
+      bot_unmuted: 'Bot được phép gửi tin nhắn trở lại',
+      platform_specific: 'Sự kiện riêng của nền tảng',
+    },
     pluginSubscriptions: {
+      incompleteEvents:
+        'Bot hiện chỉ hỗ trợ một số sự kiện mà bộ xử lý theo dõi ({{events}}). Bộ xử lý có thể không hoạt động đầy đủ trong mọi trường hợp.',
       description:
         'Tự động nhận sự kiện do plugin khai báo, hoạt động độc lập với các tuyến ở trên.',
       empty: 'Chưa liên kết bộ xử lý plugin.',

@@ -19,8 +19,8 @@ import type {
 import { httpClient } from '@/app/infra/http';
 import { extractI18nObject } from '@/i18n/I18nProvider';
 import {
-  eventPatternCovers,
   eventPatternLabel,
+  processorEventCompatibility,
 } from '@/app/home/components/event-patterns/event-pattern-groups';
 import DynamicFormComponent from '@/app/home/components/dynamic-form/DynamicFormComponent';
 import { AuthenticatedPluginIcon } from '@/components/AuthenticatedPluginIcon';
@@ -45,7 +45,7 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
-function EventCompatibilityWarning({
+function ProcessorEvents({
   patterns = [],
   supportedEvents,
 }: {
@@ -53,28 +53,45 @@ function EventCompatibilityWarning({
   supportedEvents: string[];
 }) {
   const { t } = useTranslation();
-  // Legacy adapters only emit message.received when no events are declared.
-  const supported = supportedEvents.length
-    ? supportedEvents
-    : ['message.received'];
-  const unsupported = [...new Set(patterns)].filter(
-    (pattern) => !supported.some((event) => eventPatternCovers(event, pattern)),
+  const { entries, matchingEvents } = processorEventCompatibility(
+    patterns,
+    supportedEvents,
   );
-  if (!unsupported.length) return null;
+  const incomplete = entries.some((entry) => !entry.supported);
 
   return (
-    <span
-      role="status"
-      className="mt-2 flex items-start gap-1.5 whitespace-normal text-xs text-amber-700 dark:text-amber-400"
-    >
-      <TriangleAlert className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-      <span>
-        {t('bots.pluginSubscriptions.incompleteEvents', {
-          events: unsupported
-            .map((pattern) => eventPatternLabel(pattern, t))
-            .join(' · '),
-        })}
+    <span className="block text-xs">
+      <span
+        role="list"
+        className="flex flex-wrap gap-x-2 gap-y-1 whitespace-normal"
+      >
+        {entries.map(({ pattern, supported }) => (
+          <span
+            role="listitem"
+            key={pattern}
+            title={pattern}
+            className={`inline-flex items-center gap-1 ${supported ? 'text-muted-foreground' : 'text-amber-700 dark:text-amber-400'}`}
+          >
+            {!supported && (
+              <TriangleAlert className="size-3.5 shrink-0" aria-hidden="true" />
+            )}
+            {eventPatternLabel(pattern, t)}
+          </span>
+        ))}
       </span>
+      {incomplete && (
+        <span
+          role="status"
+          className="mt-2 block whitespace-normal text-amber-700 dark:text-amber-400"
+        >
+          {t('bots.pluginSubscriptions.incompleteEvents', {
+            events:
+              matchingEvents
+                .map((pattern) => eventPatternLabel(pattern, t))
+                .join(' · ') || t('common.none'),
+          })}
+        </span>
+      )}
     </span>
   );
 }
@@ -225,17 +242,7 @@ export default function PluginProcessorBindings({
                 >
                   {agent?.component_ref?.replace('plugin:', '')}
                 </p>
-                <p
-                  className="truncate text-xs text-muted-foreground"
-                  title={(agent?.supported_event_patterns ?? [])
-                    .map((pattern) => eventPatternLabel(pattern, t))
-                    .join(' · ')}
-                >
-                  {(agent?.supported_event_patterns ?? [])
-                    .map((pattern) => eventPatternLabel(pattern, t))
-                    .join(' · ') || t('agents.eventProcessor.unavailable')}
-                </p>
-                <EventCompatibilityWarning
+                <ProcessorEvents
                   patterns={agent?.supported_event_patterns}
                   supportedEvents={supportedEvents}
                 />
@@ -374,12 +381,7 @@ export default function PluginProcessorBindings({
                       <span className="block truncate text-sm text-muted-foreground">
                         {agent.component_ref?.replace('plugin:', '')}
                       </span>
-                      <span className="block truncate text-xs text-muted-foreground">
-                        {(agent.supported_event_patterns ?? [])
-                          .map((pattern) => eventPatternLabel(pattern, t))
-                          .join(' · ')}
-                      </span>
-                      <EventCompatibilityWarning
+                      <ProcessorEvents
                         patterns={agent.supported_event_patterns}
                         supportedEvents={supportedEvents}
                       />
@@ -441,12 +443,7 @@ export default function PluginProcessorBindings({
                           <span className="block truncate text-sm text-muted-foreground">
                             {descriptor.plugin_author}/{descriptor.plugin_name}
                           </span>
-                          <span className="block truncate text-xs text-muted-foreground">
-                            {descriptor.supported_event_patterns
-                              .map((pattern) => eventPatternLabel(pattern, t))
-                              .join(' · ')}
-                          </span>
-                          <EventCompatibilityWarning
+                          <ProcessorEvents
                             patterns={descriptor.supported_event_patterns}
                             supportedEvents={supportedEvents}
                           />

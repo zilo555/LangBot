@@ -363,7 +363,28 @@ const esES = {
       "Uses the Workspace owner's LangBot Account billing and credits.",
   },
   bots: {
+    eventWildcard: 'Todos los eventos',
+    eventNamespaceWildcard: '{{namespace}}.*',
+    eventNames: {
+      message_received: 'Mensaje recibido',
+      message_edited: 'Mensaje editado',
+      message_deleted: 'Mensaje eliminado',
+      message_reaction: 'Reacción a un mensaje',
+      feedback_received: 'Comentarios recibidos',
+      friend_request_received: 'Solicitud de amistad recibida',
+      friend_added: 'Amigo añadido',
+      group_member_joined: 'Miembro unido al grupo',
+      group_member_left: 'Miembro salió del grupo',
+      group_member_banned: 'Miembro bloqueado',
+      bot_invited_to_group: 'Bot invitado al grupo',
+      bot_removed_from_group: 'Bot eliminado del grupo',
+      bot_muted: 'Bot silenciado',
+      bot_unmuted: 'Bot ya no silenciado',
+      platform_specific: 'Evento específico de la plataforma',
+    },
     pluginSubscriptions: {
+      incompleteEvents:
+        'Este bot solo admite algunos de los eventos suscritos ({{events}}). El procesador podría no comportarse como se espera en todos los casos.',
       description:
         'Recibe automáticamente los eventos declarados por el plugin, de forma independiente de las rutas anteriores.',
       empty: 'No hay procesadores vinculados.',

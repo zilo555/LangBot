@@ -360,7 +360,28 @@ const ruRU = {
       "Uses the Workspace owner's LangBot Account billing and credits.",
   },
   bots: {
+    eventWildcard: 'Все события',
+    eventNamespaceWildcard: '{{namespace}}.*',
+    eventNames: {
+      message_received: 'Получено сообщение',
+      message_edited: 'Сообщение изменено',
+      message_deleted: 'Сообщение удалено',
+      message_reaction: 'Реакция на сообщение',
+      feedback_received: 'Получен отзыв',
+      friend_request_received: 'Получен запрос в друзья',
+      friend_added: 'Друг добавлен',
+      group_member_joined: 'Участник вступил в группу',
+      group_member_left: 'Участник покинул группу',
+      group_member_banned: 'Участник заблокирован',
+      bot_invited_to_group: 'Бот приглашён в группу',
+      bot_removed_from_group: 'Бот удалён из группы',
+      bot_muted: 'Боту запрещено отправлять сообщения',
+      bot_unmuted: 'Боту разрешено отправлять сообщения',
+      platform_specific: 'Событие конкретной платформы',
+    },
     pluginSubscriptions: {
+      incompleteEvents:
+        'Этот бот поддерживает только часть отслеживаемых событий ({{events}}). Обработчик может работать не во всех случаях так, как ожидается.',
       description:
         'Автоматически получает события, объявленные плагином, независимо от маршрутов выше.',
       empty: 'Обработчики плагинов не привязаны.',

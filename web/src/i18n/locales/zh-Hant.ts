@@ -336,7 +336,28 @@ const zhHant = {
       "Uses the Workspace owner's LangBot Account billing and credits.",
   },
   bots: {
+    eventWildcard: '全部事件',
+    eventNamespaceWildcard: '{{namespace}}.*',
+    eventNames: {
+      message_received: '收到訊息',
+      message_edited: '訊息已編輯',
+      message_deleted: '訊息已刪除',
+      message_reaction: '訊息表情回應',
+      feedback_received: '收到回饋',
+      friend_request_received: '收到好友請求',
+      friend_added: '新增好友',
+      group_member_joined: '成員加入群組',
+      group_member_left: '成員離開群組',
+      group_member_banned: '成員被封禁',
+      bot_invited_to_group: '機器人被邀請加入群組',
+      bot_removed_from_group: '機器人被移出群組',
+      bot_muted: '機器人被禁言',
+      bot_unmuted: '機器人被解除禁言',
+      platform_specific: '平台特定事件',
+    },
     pluginSubscriptions: {
+      incompleteEvents:
+        '目前機器人僅支援部分事件（{{events}}），處理器表現可能不完整。',
       description: '自動接收外掛宣告的事件，與上方事件路由獨立執行。',
       empty: '尚未綁定外掛處理器。',
       add: '新增外掛處理器',
