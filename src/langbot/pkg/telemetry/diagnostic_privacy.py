@@ -32,8 +32,12 @@ VOCABULARY: dict[str, set[str]] = {
     'arch': {'x86_64', 'aarch64', 'arm64', 'amd64'},
     'database': {'sqlite', 'postgresql'},
     'edition': {'community', 'cloud', 'enterprise'},
+    'chat_type': {'person', 'group', 'unknown'},
+    'content_type': {'text', 'image', 'audio', 'video', 'file', 'mixed', 'other', 'unknown'},
 }
-BOOLS = frozenset('stream synthetic configured available previous_session_unclean recovered supported'.split())
+BOOLS = frozenset(
+    'stream synthetic configured available previous_session_unclean recovered supported adapter_evidence listener_registered'.split()
+)
 NUMBERS = frozenset(
     'attempts successes failures cancellations timeouts partial unknown generated queued acked dropped retried failed queue_size capacity result_count input_tokens output_tokens'.split()
 )

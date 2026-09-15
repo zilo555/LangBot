@@ -1549,7 +1549,6 @@ class RuntimeBot:
 
         from ..telemetry.diagnostic_catalog import snapshot_bot
 
-        snapshot_bot(self)
         get_supported_events = getattr(self.adapter, 'get_supported_events', None)
         supported_events: list[str] = []
         if callable(get_supported_events):
@@ -1621,6 +1620,8 @@ class RuntimeBot:
             platform_events.EBAEvent,
             tenant_scoped_listener(on_eba_event),
         )
+        # Registration is evidence of an installed listener, not a live connection.
+        snapshot_bot(self, listener_registered=True)
 
     async def run(self):
         async def exception_wrapper():

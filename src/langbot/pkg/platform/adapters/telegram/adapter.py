@@ -482,6 +482,7 @@ class TelegramAdapter(TelegramAPIMixin, abstract_platform_adapter.AbstractPlatfo
 
     async def _dispatch_eba_event(self, event: platform_events.EBAEvent):
         """Dispatch once, preferring the most specific registered listener."""
+        diagnostics.adapter_event_received(self, event)
         for event_type in (type(event), platform_events.EBAEvent, platform_events.Event):
             callback = self.listeners.get(event_type)
             if callback:

@@ -34,6 +34,43 @@ def annotate(**fields):
         span.fields.update(fields)
 
 
+def adapter_event_received(owner, event):
+    """Record one converted event before dispatch, including native callback paths."""
+    with contextlib.suppress(Exception):
+        manager = _manager(owner)
+        if manager is None:
+            return
+        from langbot_plugin.api.entities.builtin.platform.events import EBAEvent
+        from .adapter_diagnostics import message_scenario
+
+        if not isinstance(event, EBAEvent) or not _context_matches(manager, owner, _owner_context(owner)):
+            return
+        fields = _context_fields(owner, {'event': event})
+        fields['attributes'] = {
+            **fields.get('attributes', {}),
+            'adapter_evidence': True,
+            **message_scenario({'event': event}),
+        }
+        parent = current_span()
+        if (
+            parent
+            and parent.manager is manager
+            and not (
+                fields.get('workspace_uuid')
+                and parent.fields.get('workspace_uuid')
+                and fields['workspace_uuid'] != parent.fields['workspace_uuid']
+            )
+        ):
+            fields['trace_id'] = parent.fields['trace_id']
+            fields['parent_span_id'] = parent.fields['span_id']
+            if parent.fields.get('source') in ('webui_debug', 'synthetic'):
+                fields['source'] = parent.fields['source']
+                fields['attributes']['synthetic'] = True
+        fields.setdefault('source', 'platform')
+        privacy.code_value('operation', 'platform.adapter_event')
+        manager.emit('event', 'platform.adapter_event', 'succeeded', stage='accepted', **fields)
+
+
 def _owner_app(owner):
     """An explicit owner (even absent/disabled) is an inheritance barrier."""
     if owner is None:
@@ -148,6 +185,7 @@ class Span:
         self.kind = kind
         self.operation = operation
         self.fields = dict(fields)
+        self.adapter_api_active = bool(self.fields.pop('_adapter_api_active', False))
         if (
             parent
             and parent.fields.get('workspace_uuid')
@@ -167,6 +205,7 @@ class Span:
         )
         self.fields['span_id'] = str(uuid4())
         if parent and parent.manager is manager:
+            self.adapter_api_active = self.adapter_api_active or parent.adapter_api_active
             self.fields['parent_span_id'] = parent.fields['span_id']
             for key in ('workspace_uuid', 'adapter', 'processor_type', 'platform_event_type', 'run_id'):
                 if not self.fields.get(key) and parent.fields.get(key):
@@ -213,8 +252,25 @@ def result_outcome(value):
     if span is not None and span.fields.get('stage') == 'convert':
         if isinstance(value, EBAEvent):
             annotate(platform_event_type=value.type)
+            if span.fields.get('attributes', {}).get('adapter_evidence'):
+                from .adapter_diagnostics import message_scenario
+
+                annotate(attributes={**span.fields['attributes'], **message_scenario({'event': value})})
+                # Successful conversion is counted once at dispatch, which also
+                # covers adapters constructing EBA events in native callbacks.
+                span.fields['attributes']['adapter_evidence'] = False
         elif value is None:
             set_outcome('skipped', reason_code='not_matched')
+        if not isinstance(value, EBAEvent) and span.fields.get('attributes', {}).get('adapter_evidence'):
+            span.fields['attributes']['adapter_evidence'] = False
+    if span is not None and span.kind == 'api' and span.fields.get('attributes', {}).get('adapter_evidence'):
+        # Common adapter response contracts expose status without inspecting content.
+        if isinstance(value, dict) and (
+            value.get('ok') is False
+            or value.get('status') == 'failed'
+            or (type(value.get('retcode')) is int and value['retcode'] != 0)
+        ):
+            set_outcome('failed', reason_code='response_error')
     if isinstance(value, ActionResponse):
         if value.code != 0:
             set_outcome('failed', reason_code='response_error')
@@ -261,6 +317,24 @@ def observe(kind, operation, *, source='internal', stage='execute', ap=None, fie
                     extra = fields(bound)
                     extra['attributes'] = {**metadata.get('attributes', {}), **extra.get('attributes', {})}
                     metadata.update(extra)
+                from .adapter_diagnostics import boundary_fields
+
+                if parent and (
+                    parent.manager is not manager
+                    or (
+                        metadata.get('workspace_uuid')
+                        and parent.fields.get('workspace_uuid')
+                        and metadata['workspace_uuid'] != parent.fields['workspace_uuid']
+                    )
+                ):
+                    parent = None
+                evidence = (
+                    boundary_fields(fn.__module__, kind, operation, bound, parent)
+                    if metadata.get('attributes', {}).get('adapter_evidence') is not False
+                    else {}
+                )
+                metadata['attributes'] = {**metadata.get('attributes', {}), **evidence.pop('attributes', {})}
+                metadata.update(evidence)
                 return Span(manager, kind, operation, metadata)
             except Exception:
                 return None

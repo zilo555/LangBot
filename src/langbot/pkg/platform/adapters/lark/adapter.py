@@ -765,6 +765,7 @@ class LarkAdapter(LarkAPIMixin, abstract_platform_adapter.AbstractPlatformAdapte
             await self.logger.error(f'Error in lark message event: {traceback.format_exc()}')
 
     async def _dispatch_eba_event(self, event: platform_events.Event):
+        diagnostics.adapter_event_received(self, event)
         for event_type in (type(event), platform_events.EBAEvent, platform_events.Event):
             callback = self.listeners.get(event_type)
             if callback:

@@ -387,7 +387,13 @@ class LegacyEventConverter(abstract_platform_adapter.AbstractEventConverter):
         return event.source_platform_object
 
     @staticmethod
-    @diagnostics.observe('event', 'platform.target2yiri', source='platform', stage='convert')
+    @diagnostics.observe(
+        'event',
+        'platform.target2yiri',
+        source='platform',
+        stage='convert',
+        fields=lambda _: {'attributes': {'adapter_evidence': False}},
+    )
     async def target2yiri(event: Update, bot: telegram.Bot, bot_account_id: str):
         """Convert to legacy format (FriendMessage / GroupMessage)."""
         import langbot_plugin.api.entities.builtin.platform.events as legacy_events
