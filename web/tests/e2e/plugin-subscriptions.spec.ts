@@ -4,6 +4,7 @@ import { installLangBotApiMocks } from './fixtures/langbot-api';
 test('creates a configured processor, persists subscriptions separately and reuses an instance', async ({
   page,
 }) => {
+  test.setTimeout(60_000);
   await installLangBotApiMocks(page, {
     authenticated: true,
     withAdapterEvents: true,
@@ -84,6 +85,11 @@ test('creates a configured processor, persists subscriptions separately and reus
     await page.getByRole('button', { name: /^Save$/ }).click();
     const body = (await request).postDataJSON();
     await expect(page.getByRole('button', { name: /^Save$/ })).toBeDisabled();
+    // Move away so hovering the next control does not pause an overlapping toast.
+    await page.mouse.move(0, 0);
+    await expect(
+      page.locator('[data-sonner-toast][data-visible="true"]'),
+    ).toHaveCount(0);
     return body;
   };
   const body = await save();
