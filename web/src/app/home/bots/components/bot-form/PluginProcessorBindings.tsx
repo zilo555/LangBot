@@ -82,14 +82,20 @@ function ProcessorEvents({
       {incomplete && (
         <span
           role="status"
-          className="mt-2 block whitespace-normal text-amber-700 dark:text-amber-400"
+          className="mt-2 flex items-start gap-1.5 whitespace-normal text-amber-700 dark:text-amber-400"
         >
-          {t('bots.pluginSubscriptions.incompleteEvents', {
-            events:
-              matchingEvents
-                .map((pattern) => eventPatternLabel(pattern, t))
-                .join(' · ') || t('common.none'),
-          })}
+          <TriangleAlert
+            className="mt-0.5 size-3.5 shrink-0"
+            aria-hidden="true"
+          />
+          <span>
+            {t('bots.pluginSubscriptions.incompleteEvents', {
+              events:
+                matchingEvents
+                  .map((pattern) => eventPatternLabel(pattern, t))
+                  .join(' · ') || t('common.none'),
+            })}
+          </span>
         </span>
       )}
     </span>
