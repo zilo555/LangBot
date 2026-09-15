@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ...telemetry import diagnostics
+
 import typing
 import asyncio
 
@@ -119,7 +121,7 @@ class RunnerRegistry:
         typed_manifest = RunnerManifest.model_validate(manifest)
         config_schema = [item.model_dump(mode='json') for item in typed_manifest.config_schema]
 
-        return RunnerDescriptor(
+        descriptor = RunnerDescriptor(
             id=runner_id,
             component_kind=typed_manifest.component_kind,
             usages=typed_manifest.usages,
@@ -136,6 +138,10 @@ class RunnerRegistry:
             permissions=typed_manifest.permissions,
             raw_manifest=manifest,
         )
+        manager = getattr(self.ap, 'diagnostics', None)
+        if isinstance(manager, diagnostics.DiagnosticsManager) and manager.enabled:
+            diagnostics.declare_runner(descriptor)
+        return descriptor
 
     async def refresh(self, context: TenantContext) -> None:
         """Refresh runner cache.

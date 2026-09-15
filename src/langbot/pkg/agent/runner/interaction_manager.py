@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from langbot.pkg.telemetry import diagnostics
+
 import json
 import time
 import typing
@@ -91,6 +93,7 @@ class InteractionManager:
         self.ap = ap
         self.store = store or InteractionStore(ap.persistence_mgr.get_db_engine())
 
+    @diagnostics.observe('interaction', 'interaction.request', source='agent', stage='execute')
     async def handle_result(
         self,
         *,
@@ -198,14 +201,17 @@ class InteractionManager:
         except Exception as exc:
             await self.store.mark_delivery_failed(run_id, request.interaction_id, str(exc))
             raise
+        diagnostics.set_outcome('waiting', reason_code='waiting')
         return True
 
+    @diagnostics.observe('interaction', 'interaction.acknowledge', source='platform', stage='ack')
     async def acknowledge_submission(self, record: dict[str, typing.Any], adapter: typing.Any) -> None:
         """Best-effort transition of submitted controls into a read-only state."""
         delivery_result = record.get('delivery_result')
         if not isinstance(delivery_result, dict) or not self._supports_platform_api(
             adapter, INTERACTION_ACKNOWLEDGE_API
         ):
+            diagnostics.set_outcome('skipped')
             return
         try:
             delivery_result = await adapter.call_platform_api(
@@ -223,6 +229,8 @@ class InteractionManager:
                     delivery_result,
                 )
         except Exception as exc:
+            diagnostics.set_outcome('failed', reason_code='response_error')
+            diagnostics.annotate(error=exc)
             self._warning(f'Failed to acknowledge interaction submission: {exc}')
 
     async def _find_update_target(
@@ -273,6 +281,7 @@ class InteractionManager:
                     f'interaction field {field.id} has duplicate option values',
                 )
 
+    @diagnostics.observe('interaction', 'interaction.consume', source='platform', stage='dispatch')
     async def consume_callback(
         self,
         *,

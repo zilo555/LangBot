@@ -7,6 +7,7 @@ import contextlib
 import json
 
 import quart
+from .... import management_diagnostics as diagnostics
 
 from .....agent.runner.errors import (
     RunnerError,
@@ -29,6 +30,9 @@ def debug_stream_response(service, context, agent_uuid: str, payload: dict) -> q
                 result = await service.debug_agent(context, agent_uuid, payload, on_result=on_result)
                 await queue.put({'kind': 'completed', 'data': result})
             except Exception as exc:
+                # The stream still uses HTTP 200 when execution returns an
+                # error frame. Mark the inherited request, not its contents.
+                diagnostics.outcome('failed')
                 if isinstance(exc, RunnerExecutionError):
                     code, message = exc.error_code or 'runner_execution_failed', exc.message
                 elif isinstance(exc, RunnerNotFoundError):

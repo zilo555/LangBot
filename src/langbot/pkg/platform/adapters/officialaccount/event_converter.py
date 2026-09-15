@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from langbot.pkg.telemetry import diagnostics
+
 import time
 import typing
 
@@ -16,6 +18,7 @@ class OfficialAccountEventConverter(abstract_platform_adapter.AbstractEventConve
     async def yiri2target(event: platform_events.Event) -> typing.Any:
         return getattr(event, 'source_platform_object', None)
 
+    @diagnostics.observe('event', 'platform.target2legacy', source='platform', stage='convert')
     async def target2legacy(self, event: OAEvent) -> platform_events.FriendMessage | None:
         eba_event = await self.target2yiri(event)
         if not isinstance(eba_event, platform_events.MessageReceivedEvent):
@@ -31,6 +34,7 @@ class OfficialAccountEventConverter(abstract_platform_adapter.AbstractEventConve
             source_platform_object=event,
         )
 
+    @diagnostics.observe('event', 'platform.target2yiri', source='platform', stage='convert')
     async def target2yiri(self, event: OAEvent) -> platform_events.Event | None:
         if event.type in {'text', 'image', 'voice'}:
             return await self.message_to_eba(event)

@@ -1999,7 +1999,7 @@ wheels = [
 
 [[package]]
 name = "langbot"
-version = "4.11.0b1"
+version = "4.11.0b2"
 source = { editable = "." }
 dependencies = [
     { name = "aiocqhttp" },

@@ -72,15 +72,25 @@ test('processor forms expose their primary orchestration flow horizontally', () 
     'src/app/home/pipelines/components/pipeline-form/PipelineFormComponent.tsx',
   );
 
-  assert.match(
-    agentForm,
-    /name: 'runner'[\s\S]*name: 'runner_config'[\s\S]*name: 'events_and_tools'/,
+  const agentSections = agentForm.slice(
+    agentForm.indexOf('const primarySections:'),
+    agentForm.indexOf('const runnerStatus ='),
   );
+  assert.deepEqual(
+    [...agentSections.matchAll(/name: '([^']+)'/g)].map((match) => match[1]),
+    ['runner', 'events_and_tools'],
+  );
+  const runnerPanel = agentForm.slice(
+    agentForm.indexOf("{activeSection === 'runner' &&"),
+    agentForm.indexOf("{activeSection === 'events_and_tools' &&"),
+  );
+  assert.match(runnerPanel, /renderDynamicStage\(runnerSelectorStage\)/);
+  assert.match(runnerPanel, /renderDynamicStage\(activeRunnerStage\)/);
   assert.match(
     pipelineForm,
     /const primarySectionNames = \['trigger', 'ai', 'output'\]/,
   );
-  assert.match(agentForm, /<TabsList[^>]*grid-cols-3/);
+  assert.match(agentForm, /<TabsList[^>]*grid-cols-2/);
   assert.match(pipelineForm, /<TabsList[^>]*grid-cols-3/);
   assert.doesNotMatch(agentForm, /<ol className=/);
   assert.doesNotMatch(pipelineForm, /<ol className=/);

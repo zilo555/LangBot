@@ -24,6 +24,7 @@ from mcp.server.fastmcp import FastMCP
 
 from ..http.authz import Permission, require_permission
 from .context import get_request_context
+from .. import management_diagnostics as diagnostics
 
 if typing.TYPE_CHECKING:
     from ...core import app as app_module
@@ -52,6 +53,7 @@ def _dump(value: typing.Any) -> str:
 def _authorized(permission: Permission):
     context = get_request_context()
     require_permission(context, permission)
+    diagnostics.workspace(context)
     return context
 
 
@@ -76,7 +78,7 @@ class LangBotMCPServer:
     # ------------------------------------------------------------------ #
     def _register_tools(self) -> None:
         ap = self.ap
-        mcp = self.mcp
+        mcp = self
 
         # ----- System (read-only) -------------------------------------- #
         @mcp.tool(description='Get basic LangBot system/runtime information (version, edition).')
@@ -321,6 +323,15 @@ class LangBotMCPServer:
         async def get_skill(skill_name: str) -> str:
             context = _authorized(Permission.RESOURCE_VIEW)
             return _dump(await ap.skill_service.get_skill(context, skill_name))
+
+    def tool(self, **options):
+        """Register a tool boundary before its authorization and service call."""
+
+        def register(fn):
+            observed = diagnostics.observe(diagnostics.operation_id('mcp', fn), source='mcp', ap=self.ap)(fn)
+            return self.mcp.tool(**options)(observed)
+
+        return register
 
     # ------------------------------------------------------------------ #
     # ASGI app

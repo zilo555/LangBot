@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from langbot.pkg.telemetry import diagnostics
+
 import typing
 
 from langbot.libs.dingtalk_api.dingtalkevent import DingTalkEvent
@@ -16,6 +18,7 @@ class DingTalkEventConverter(abstract_platform_adapter.AbstractEventConverter):
         return getattr(event, 'source_platform_object', None)
 
     @staticmethod
+    @diagnostics.observe('event', 'platform.target2yiri', source='platform', stage='convert')
     async def target2yiri(event: DingTalkEvent, bot_name: str) -> platform_events.Event | None:
         if event.conversation in {'FriendMessage', 'GroupMessage'}:
             return await DingTalkEventConverter.message_to_eba(event, bot_name)
@@ -27,6 +30,7 @@ class DingTalkEventConverter(abstract_platform_adapter.AbstractEventConverter):
         return DingTalkEventConverter.platform_specific(event, f'message.{event.conversation or "unknown"}')
 
     @staticmethod
+    @diagnostics.observe('event', 'platform.target2legacy', source='platform', stage='convert')
     async def target2legacy(
         event: DingTalkEvent,
         bot_name: str,

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from langbot.pkg.telemetry import diagnostics
+
 import asyncio
 import time
 import traceback
@@ -92,6 +94,7 @@ class WecomCSAdapter(WecomCSAPIMixin, abstract_platform_adapter.AbstractPlatform
             'call_platform_api',
         ]
 
+    @diagnostics.observe('api', 'send_message', source='platform', stage='accepted')
     async def send_message(
         self,
         target_type: str,
@@ -110,6 +113,7 @@ class WecomCSAdapter(WecomCSAPIMixin, abstract_platform_adapter.AbstractPlatform
             )
         return platform_events.MessageResult(raw={'results': raw_results})
 
+    @diagnostics.observe('api', 'reply_message', source='platform', stage='accepted')
     async def reply_message(
         self,
         message_source: platform_events.MessageEvent,
@@ -132,6 +136,7 @@ class WecomCSAdapter(WecomCSAPIMixin, abstract_platform_adapter.AbstractPlatform
             )
         return platform_events.MessageResult(message_id=wecom_event.message_id, raw={'results': raw_results})
 
+    @diagnostics.observe('api', 'call_platform_api', source='platform', stage='accepted')
     async def call_platform_api(self, action: str, params: dict = {}) -> dict:
         handler = PLATFORM_API_MAP.get(action)
         if handler is None:
@@ -186,6 +191,7 @@ class WecomCSAdapter(WecomCSAPIMixin, abstract_platform_adapter.AbstractPlatform
         for msg_type in ('text', 'image', 'file', 'voice'):
             self.bot.on_message(msg_type)(on_message)
 
+    @diagnostics.observe('event', 'platform.native_receive', source='platform', stage='convert')
     async def _handle_native_event(self, event: WecomCSEvent):
         self.bot_account_id = event.receiver_id or self.bot_account_id
         try:

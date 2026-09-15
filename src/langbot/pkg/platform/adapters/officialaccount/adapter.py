@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from langbot.pkg.telemetry import diagnostics
+
 import asyncio
 import traceback
 import typing
@@ -94,6 +96,7 @@ class OfficialAccountAdapter(OfficialAccountAPIMixin, abstract_platform_adapter.
             'call_platform_api',
         ]
 
+    @diagnostics.observe('api', 'send_message', source='platform', stage='accepted')
     async def send_message(
         self,
         target_type: str,
@@ -102,6 +105,7 @@ class OfficialAccountAdapter(OfficialAccountAPIMixin, abstract_platform_adapter.
     ) -> platform_events.MessageResult:
         raise NotSupportedError('send_message:official_account_requires_inbound_webhook_reply')
 
+    @diagnostics.observe('api', 'reply_message', source='platform', stage='accepted')
     async def reply_message(
         self,
         message_source: platform_events.MessageEvent,
@@ -118,6 +122,7 @@ class OfficialAccountAdapter(OfficialAccountAPIMixin, abstract_platform_adapter.
             await self.bot.set_message(source.message_id, content)
         return platform_events.MessageResult(message_id=source.message_id, raw={'queued': True})
 
+    @diagnostics.observe('api', 'call_platform_api', source='platform', stage='accepted')
     async def call_platform_api(self, action: str, params: dict = {}) -> dict:
         handler = PLATFORM_API_MAP.get(action)
         if handler is None:
@@ -170,6 +175,7 @@ class OfficialAccountAdapter(OfficialAccountAPIMixin, abstract_platform_adapter.
         for msg_type in ('text', 'image', 'voice', 'event'):
             self.bot.on_message(msg_type)(self._handle_native_event)
 
+    @diagnostics.observe('event', 'platform.native_receive', source='platform', stage='convert')
     async def _handle_native_event(self, event: OAEvent):
         self.bot_account_id = event.receiver_id or self.bot_account_id
         try:

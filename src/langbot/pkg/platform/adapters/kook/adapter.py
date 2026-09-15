@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from langbot.pkg.telemetry import diagnostics
+
 from langbot.pkg.platform.sources.kook import _decode_gateway_message
 
 import asyncio
@@ -99,6 +101,7 @@ class KookAdapter(KookAPIMixin, BasePlatformAdapter):
             'call_platform_api',
         ]
 
+    @diagnostics.observe('api', 'call_platform_api', source='platform', stage='accepted')
     async def call_platform_api(self, action: str, params: dict = {}) -> dict:
         handler = PLATFORM_API_MAP.get(action)
         if handler is None:
@@ -168,6 +171,7 @@ class KookAdapter(KookAPIMixin, BasePlatformAdapter):
         self.session_id = str(data.get('session_id') or '')
         await self.logger.info(f'KOOK WebSocket HELLO received, session_id: {self.session_id}')
 
+    @diagnostics.observe('event', 'platform.receive', source='platform', stage='accepted')
     async def _handle_event(self, data: dict, sn: int):
         self.current_sn = max(self.current_sn, sn)
 
@@ -192,7 +196,9 @@ class KookAdapter(KookAPIMixin, BasePlatformAdapter):
             if eba_event:
                 self._cache_event(eba_event)
                 await self._dispatch_eba_event(eba_event)
-        except Exception:
+        except Exception as exc:
+            diagnostics.annotate(error=exc)
+            diagnostics.set_outcome('failed')
             await self.logger.error(f'Error handling KOOK event: {traceback.format_exc()}')
 
     async def _dispatch_eba_event(self, event: platform_events.EBAEvent):

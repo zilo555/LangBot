@@ -1,6 +1,8 @@
 # For connect to plugin runtime.
 from __future__ import annotations
 
+from langbot.pkg.telemetry import diagnostics
+
 import asyncio
 import contextlib
 import contextvars
@@ -668,6 +670,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
                         }
                     )
 
+    @diagnostics.observe('lifecycle', 'runtime.prepare_connected_runtime', source='runtime', stage='execute')
     async def _prepare_connected_runtime(self) -> None:
         """Handshake follow-up: pin OSS compatibility, then replay authority."""
 
@@ -853,6 +856,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
                     self.schedule_reconnect()
                     failures = 0
 
+    @diagnostics.observe('lifecycle', 'runtime.initialize', source='runtime', stage='execute')
     async def initialize(self):
         if not self.is_enable_plugin:
             self.ap.logger.info('Plugin system is disabled.')
@@ -1705,6 +1709,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
             )
             return plugin_package, latest_version
 
+    @diagnostics.observe('lifecycle', 'runtime.install_plugin', source='runtime', stage='execute')
     async def install_plugin(
         self,
         install_source: PluginInstallSource,
@@ -1820,6 +1825,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
             task_context.set_current_action('plugin updated' if operation == 'upgrade' else 'plugin installed')
             task_context.metadata['progress_percent'] = 100
 
+    @diagnostics.observe('lifecycle', 'runtime.upgrade_plugin', source='runtime', stage='execute')
     async def upgrade_plugin(
         self,
         plugin_author: str,
@@ -1846,6 +1852,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
         )
         return {}
 
+    @diagnostics.observe('lifecycle', 'runtime.delete_plugin', source='runtime', stage='execute')
     async def delete_plugin(
         self,
         plugin_author: str,

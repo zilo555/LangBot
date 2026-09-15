@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from langbot.pkg.telemetry import diagnostics
+
 import typing
 
 import aiocqhttp
@@ -15,6 +17,7 @@ from langbot_plugin.api.entities.builtin.platform.errors import NotSupportedErro
 class AiocqhttpAPIMixin:
     bot: aiocqhttp.CQHttp
 
+    @diagnostics.observe('api', 'send_message', source='platform', stage='accepted')
     async def send_message(
         self,
         target_type: str,
@@ -35,6 +38,7 @@ class AiocqhttpAPIMixin:
             raise ValueError(f'Unsupported aiocqhttp target_type: {target_type}')
         return platform_events.MessageResult(message_id=(raw or {}).get('message_id'), raw=raw or {})
 
+    @diagnostics.observe('api', 'reply_message', source='platform', stage='accepted')
     async def reply_message(
         self,
         message_source: platform_events.MessageEvent,
@@ -49,6 +53,7 @@ class AiocqhttpAPIMixin:
         raw = await self.bot.send(message_source.source_platform_object, aiocq_msg)
         return platform_events.MessageResult(message_id=(raw or {}).get('message_id'), raw=raw or {})
 
+    @diagnostics.observe('api', 'delete_message', source='platform', stage='accepted')
     async def delete_message(
         self,
         chat_type: str,
@@ -57,6 +62,7 @@ class AiocqhttpAPIMixin:
     ) -> None:
         await self.bot.delete_msg(message_id=int(message_id))
 
+    @diagnostics.observe('api', 'forward_message', source='platform', stage='accepted')
     async def forward_message(
         self,
         from_chat_type: str,
@@ -75,6 +81,7 @@ class AiocqhttpAPIMixin:
             raise ValueError(f'Unsupported aiocqhttp to_chat_type: {to_chat_type}')
         return platform_events.MessageResult(message_id=(raw or {}).get('message_id'), raw=raw or {})
 
+    @diagnostics.observe('api', 'get_message', source='platform', stage='accepted')
     async def get_message(
         self,
         chat_type: str,
@@ -100,6 +107,7 @@ class AiocqhttpAPIMixin:
         )
         return await AiocqhttpEventConverter.message_to_eba(event, self.bot)
 
+    @diagnostics.observe('api', 'get_group_info', source='platform', stage='accepted')
     async def get_group_info(self, group_id: typing.Union[int, str]) -> platform_entities.UserGroup:
         raw = await self.bot.get_group_info(group_id=int(group_id))
         return platform_entities.UserGroup(
@@ -108,6 +116,7 @@ class AiocqhttpAPIMixin:
             member_count=raw.get('member_count'),
         )
 
+    @diagnostics.observe('api', 'get_group_list', source='platform', stage='accepted')
     async def get_group_list(self) -> list[platform_entities.UserGroup]:
         raw_list = await self.bot.get_group_list()
         return [
@@ -119,6 +128,7 @@ class AiocqhttpAPIMixin:
             for item in raw_list
         ]
 
+    @diagnostics.observe('api', 'get_group_member_list', source='platform', stage='accepted')
     async def get_group_member_list(
         self,
         group_id: typing.Union[int, str],
@@ -126,6 +136,7 @@ class AiocqhttpAPIMixin:
         raw_list = await self.bot.get_group_member_list(group_id=int(group_id))
         return [self._member_to_entity(item, group_id) for item in raw_list]
 
+    @diagnostics.observe('api', 'get_group_member_info', source='platform', stage='accepted')
     async def get_group_member_info(
         self,
         group_id: typing.Union[int, str],
@@ -134,9 +145,11 @@ class AiocqhttpAPIMixin:
         raw = await self.bot.get_group_member_info(group_id=int(group_id), user_id=int(user_id), no_cache=True)
         return self._member_to_entity(raw, group_id)
 
+    @diagnostics.observe('api', 'set_group_name', source='platform', stage='accepted')
     async def set_group_name(self, group_id: typing.Union[int, str], name: str) -> None:
         await self.bot.set_group_name(group_id=int(group_id), group_name=name)
 
+    @diagnostics.observe('api', 'mute_member', source='platform', stage='accepted')
     async def mute_member(
         self,
         group_id: typing.Union[int, str],
@@ -145,15 +158,19 @@ class AiocqhttpAPIMixin:
     ) -> None:
         await self.bot.set_group_ban(group_id=int(group_id), user_id=int(user_id), duration=int(duration))
 
+    @diagnostics.observe('api', 'unmute_member', source='platform', stage='accepted')
     async def unmute_member(self, group_id: typing.Union[int, str], user_id: typing.Union[int, str]) -> None:
         await self.bot.set_group_ban(group_id=int(group_id), user_id=int(user_id), duration=0)
 
+    @diagnostics.observe('api', 'kick_member', source='platform', stage='accepted')
     async def kick_member(self, group_id: typing.Union[int, str], user_id: typing.Union[int, str]) -> None:
         await self.bot.set_group_kick(group_id=int(group_id), user_id=int(user_id), reject_add_request=False)
 
+    @diagnostics.observe('api', 'leave_group', source='platform', stage='accepted')
     async def leave_group(self, group_id: typing.Union[int, str]) -> None:
         await self.bot.set_group_leave(group_id=int(group_id), is_dismiss=False)
 
+    @diagnostics.observe('api', 'get_user_info', source='platform', stage='accepted')
     async def get_user_info(self, user_id: typing.Union[int, str]) -> platform_entities.User:
         raw = await self.bot.get_stranger_info(user_id=int(user_id), no_cache=True)
         return platform_entities.User(
@@ -162,6 +179,7 @@ class AiocqhttpAPIMixin:
             avatar_url=raw.get('avatar_url'),
         )
 
+    @diagnostics.observe('api', 'get_friend_list', source='platform', stage='accepted')
     async def get_friend_list(self) -> list[platform_entities.User]:
         raw_list = await self.bot.get_friend_list()
         return [
@@ -173,6 +191,7 @@ class AiocqhttpAPIMixin:
             for item in raw_list
         ]
 
+    @diagnostics.observe('api', 'approve_friend_request', source='platform', stage='accepted')
     async def approve_friend_request(
         self,
         request_id: typing.Union[int, str],
@@ -181,12 +200,15 @@ class AiocqhttpAPIMixin:
     ) -> None:
         await self.bot.set_friend_add_request(flag=str(request_id), approve=approve, remark=remark or '')
 
+    @diagnostics.observe('api', 'approve_group_invite', source='platform', stage='accepted')
     async def approve_group_invite(self, request_id: typing.Union[int, str], approve: bool = True) -> None:
         await self.bot.set_group_add_request(flag=str(request_id), sub_type='invite', approve=approve, reason='')
 
+    @diagnostics.observe('api', 'upload_file', source='platform', stage='accepted')
     async def upload_file(self, file_data: bytes, filename: str) -> str:
         raise NotSupportedError('upload_file')
 
+    @diagnostics.observe('api', 'get_file_url', source='platform', stage='accepted')
     async def get_file_url(self, file_id: str) -> str:
         raise NotSupportedError('get_file_url')
 

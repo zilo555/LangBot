@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from langbot.pkg.telemetry import diagnostics
+
 import asyncio
 import traceback
 import typing
@@ -94,6 +96,7 @@ class AiocqhttpAdapter(AiocqhttpAPIMixin, abstract_platform_adapter.AbstractPlat
             'call_platform_api',
         ]
 
+    @diagnostics.observe('api', 'call_platform_api', source='platform', stage='accepted')
     async def call_platform_api(self, action: str, params: dict = {}) -> dict:
         handler = PLATFORM_API_MAP.get(action)
         if handler is None:
@@ -146,6 +149,7 @@ class AiocqhttpAdapter(AiocqhttpAPIMixin, abstract_platform_adapter.AbstractPlat
             await self.logger.info(f'WebSocket connection established, bot id: {self.bot_account_id}')
             await self._dispatch_native_event(event)
 
+    @diagnostics.observe('event', 'platform.native_receive', source='platform', stage='convert')
     async def _handle_native_event(self, event: aiocqhttp.Event):
         self.bot_account_id = str(getattr(event, 'self_id', '') or self.bot_account_id)
         if getattr(event, 'type', None) == 'message' and str(getattr(event, 'user_id', '')) == self.bot_account_id:
@@ -163,6 +167,7 @@ class AiocqhttpAdapter(AiocqhttpAPIMixin, abstract_platform_adapter.AbstractPlat
         except Exception:
             await self.logger.error(f'Error in aiocqhttp native event: {traceback.format_exc()}')
 
+    @diagnostics.observe('event', 'platform.native_receive', source='platform', stage='convert')
     async def _dispatch_native_event(self, event: aiocqhttp.Event):
         eba_event = await self.event_converter.target2yiri(event, self.bot, self.bot_account_id, self._lookup)
         if eba_event:

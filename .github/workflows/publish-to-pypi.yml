@@ -70,6 +70,7 @@ jobs:
 
       - name: Build package
         run: |
+          python3 scripts/stamp_build_revision.py
           uv build
 
       - name: Publish to PyPI

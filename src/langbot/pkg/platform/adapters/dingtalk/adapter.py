@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from langbot.pkg.telemetry import diagnostics
+
 import traceback
 import typing
 
@@ -133,6 +135,7 @@ class DingTalkAdapter(DingTalkAPIMixin, abstract_platform_adapter.AbstractPlatfo
     def _plain_message(text: str) -> platform_message.MessageChain:
         return platform_message.MessageChain([platform_message.Plain(text=text)])
 
+    @diagnostics.observe('api', 'send_message', source='platform', stage='accepted')
     async def send_message(
         self,
         target_type: str,
@@ -149,6 +152,7 @@ class DingTalkAdapter(DingTalkAPIMixin, abstract_platform_adapter.AbstractPlatfo
             raise ValueError(f'Unsupported dingtalk target_type: {target_type}')
         return platform_events.MessageResult(raw=raw if isinstance(raw, dict) else {'result': raw})
 
+    @diagnostics.observe('api', 'reply_message', source='platform', stage='accepted')
     async def reply_message(
         self,
         message_source: platform_events.MessageEvent,
@@ -165,6 +169,7 @@ class DingTalkAdapter(DingTalkAPIMixin, abstract_platform_adapter.AbstractPlatfo
             raw=raw if isinstance(raw, dict) else {'result': raw},
         )
 
+    @diagnostics.observe('api', 'reply_message_chunk', source='platform', stage='accepted')
     async def reply_message_chunk(
         self,
         message_source: platform_events.MessageEvent,
@@ -188,6 +193,7 @@ class DingTalkAdapter(DingTalkAPIMixin, abstract_platform_adapter.AbstractPlatfo
         if is_final and bot_message.tool_calls is None:
             self.card_instance_id_dict.pop(message_id)
 
+    @diagnostics.observe('api', 'create_message_card', source='platform', stage='accepted')
     async def create_message_card(self, message_id, event):
         while len(self.card_instance_id_dict) >= 1000:
             self.card_instance_id_dict.pop(next(iter(self.card_instance_id_dict)), None)
@@ -205,6 +211,7 @@ class DingTalkAdapter(DingTalkAPIMixin, abstract_platform_adapter.AbstractPlatfo
     async def is_stream_output_supported(self) -> bool:
         return bool(self.config.get('enable-stream-reply', False))
 
+    @diagnostics.observe('api', 'call_platform_api', source='platform', stage='accepted')
     async def call_platform_api(self, action: str, params: dict = {}) -> dict:
         if action == 'interaction.request' and action in self.get_supported_apis():
             return await send_interaction(self, params)
@@ -260,6 +267,7 @@ class DingTalkAdapter(DingTalkAPIMixin, abstract_platform_adapter.AbstractPlatfo
             DingTalkCardCallbackHandler(self),
         )
 
+    @diagnostics.observe('event', 'platform.native_receive', source='platform', stage='convert')
     async def _handle_native_event(self, event: DingTalkEvent):
         try:
             interaction_event = interaction_event_from_native(event, self.interaction_callback_contexts)

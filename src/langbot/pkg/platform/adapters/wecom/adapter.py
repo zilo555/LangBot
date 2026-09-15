@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from langbot.pkg.telemetry import diagnostics
+
 import asyncio
 import traceback
 import typing
@@ -90,6 +92,7 @@ class WecomAdapter(WecomAPIMixin, abstract_platform_adapter.AbstractPlatformAdap
             'call_platform_api',
         ]
 
+    @diagnostics.observe('api', 'send_message', source='platform', stage='accepted')
     async def send_message(
         self,
         target_type: str,
@@ -106,6 +109,7 @@ class WecomAdapter(WecomAPIMixin, abstract_platform_adapter.AbstractPlatformAdap
             raw_results.append(await self._send_content(user_id, agent_id, content))
         return platform_events.MessageResult(raw={'results': raw_results})
 
+    @diagnostics.observe('api', 'reply_message', source='platform', stage='accepted')
     async def reply_message(
         self,
         message_source: platform_events.MessageEvent,
@@ -121,6 +125,7 @@ class WecomAdapter(WecomAPIMixin, abstract_platform_adapter.AbstractPlatformAdap
             raw_results.append(await self._send_content(wecom_event.user_id, int(wecom_event.agent_id), content))
         return platform_events.MessageResult(message_id=wecom_event.message_id, raw={'results': raw_results})
 
+    @diagnostics.observe('api', 'call_platform_api', source='platform', stage='accepted')
     async def call_platform_api(self, action: str, params: dict = {}) -> dict:
         handler = PLATFORM_API_MAP.get(action)
         if handler is None:
@@ -174,6 +179,7 @@ class WecomAdapter(WecomAPIMixin, abstract_platform_adapter.AbstractPlatformAdap
         self.bot.on_message('text')(on_message)
         self.bot.on_message('image')(on_message)
 
+    @diagnostics.observe('event', 'platform.native_receive', source='platform', stage='convert')
     async def _handle_native_event(self, event: WecomEvent):
         self.bot_account_id = event.receiver_id or self.bot_account_id
         try:

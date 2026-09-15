@@ -6,6 +6,8 @@ Preserves all existing functionality (messaging, streaming output, markdown card
 
 from __future__ import annotations
 
+from langbot.pkg.telemetry import diagnostics
+
 import typing
 import traceback
 
@@ -68,6 +70,16 @@ class TelegramAdapter(TelegramAPIMixin, abstract_platform_adapter.AbstractPlatfo
         arbitrary_types_allowed = True
 
     def __init__(self, config: dict, logger: abstract_platform_logger.AbstractEventLogger):
+        @diagnostics.observe(
+            'event',
+            'platform.native_callback',
+            source='platform',
+            stage='convert',
+            ap=lambda: getattr(logger, 'ap', None),
+            fields=lambda b: {
+                'workspace_uuid': getattr(getattr(logger, 'execution_context', None), 'workspace_uuid', '')
+            },
+        )
         async def telegram_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if (
                 not update.message
@@ -206,6 +218,7 @@ class TelegramAdapter(TelegramAPIMixin, abstract_platform_adapter.AbstractPlatfo
 
     # ---- Message Send / Reply (preserving original logic) ----
 
+    @diagnostics.observe('api', 'send_message', source='platform', stage='accepted')
     async def send_message(self, target_type: str, target_id: str, message: platform_message.MessageChain):
         components = await TelegramMessageConverter.yiri2target(message, self.bot)
 
@@ -240,6 +253,7 @@ class TelegramAdapter(TelegramAPIMixin, abstract_platform_adapter.AbstractPlatfo
                 args['document'] = telegram.InputFile(doc, filename=filename)
                 await self.bot.send_document(**args)
 
+    @diagnostics.observe('api', 'reply_message', source='platform', stage='accepted')
     async def reply_message(
         self,
         message_source: platform_events.MessageEvent,
@@ -317,6 +331,7 @@ class TelegramAdapter(TelegramAPIMixin, abstract_platform_adapter.AbstractPlatfo
         cleaned = text.replace('\u200b', '').replace('\u200c', '').replace('\u200d', '').replace('\ufeff', '').strip()
         return cleaned == ''
 
+    @diagnostics.observe('api', 'create_message_card', source='platform', stage='accepted')
     async def create_message_card(self, message_id, event):
         assert isinstance(event.source_platform_object, Update)
         update = event.source_platform_object
@@ -331,6 +346,7 @@ class TelegramAdapter(TelegramAPIMixin, abstract_platform_adapter.AbstractPlatfo
 
         return True
 
+    @diagnostics.observe('api', 'reply_message_chunk', source='platform', stage='accepted')
     async def reply_message_chunk(
         self,
         message_source: platform_events.MessageEvent,
@@ -492,6 +508,7 @@ class TelegramAdapter(TelegramAPIMixin, abstract_platform_adapter.AbstractPlatfo
 
     # ---- Pass-through API ----
 
+    @diagnostics.observe('api', 'call_platform_api', source='platform', stage='accepted')
     async def call_platform_api(
         self,
         action: str,

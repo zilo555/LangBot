@@ -5,6 +5,8 @@ Implements optional API methods defined in AbstractPlatformAdapter.
 
 from __future__ import annotations
 
+from langbot.pkg.telemetry import diagnostics
+
 import typing
 
 import telegram
@@ -25,6 +27,7 @@ class TelegramAPIMixin:
 
     bot: telegram.Bot
 
+    @diagnostics.observe('api', 'edit_message', source='platform', stage='accepted')
     async def edit_message(
         self,
         chat_type: str,
@@ -52,6 +55,7 @@ class TelegramAPIMixin:
                 await self.bot.edit_message_text(**args)
                 return
 
+    @diagnostics.observe('api', 'delete_message', source='platform', stage='accepted')
     async def delete_message(
         self,
         chat_type: str,
@@ -61,6 +65,7 @@ class TelegramAPIMixin:
         """Delete / recall a message."""
         await self.bot.delete_message(chat_id=chat_id, message_id=message_id)
 
+    @diagnostics.observe('api', 'forward_message', source='platform', stage='accepted')
     async def forward_message(
         self,
         from_chat_type: str,
@@ -80,6 +85,7 @@ class TelegramAPIMixin:
             raw={'message_id': result.message_id},
         )
 
+    @diagnostics.observe('api', 'get_group_info', source='platform', stage='accepted')
     async def get_group_info(
         self,
         group_id: typing.Union[int, str],
@@ -100,6 +106,7 @@ class TelegramAPIMixin:
         except Exception:
             return None
 
+    @diagnostics.observe('api', 'get_group_member_list', source='platform', stage='accepted')
     async def get_group_member_list(
         self,
         group_id: typing.Union[int, str],
@@ -134,6 +141,7 @@ class TelegramAPIMixin:
             )
         return members
 
+    @diagnostics.observe('api', 'get_group_member_info', source='platform', stage='accepted')
     async def get_group_member_info(
         self,
         group_id: typing.Union[int, str],
@@ -160,6 +168,7 @@ class TelegramAPIMixin:
             display_name=member.custom_title if hasattr(member, 'custom_title') else None,
         )
 
+    @diagnostics.observe('api', 'get_user_info', source='platform', stage='accepted')
     async def get_user_info(
         self,
         user_id: typing.Union[int, str],
@@ -172,6 +181,7 @@ class TelegramAPIMixin:
             username=chat.username,
         )
 
+    @diagnostics.observe('api', 'upload_file', source='platform', stage='accepted')
     async def upload_file(
         self,
         file_data: bytes,
@@ -186,6 +196,7 @@ class TelegramAPIMixin:
 
         raise NotSupportedError('upload_file')
 
+    @diagnostics.observe('api', 'get_file_url', source='platform', stage='accepted')
     async def get_file_url(
         self,
         file_id: str,
@@ -194,6 +205,7 @@ class TelegramAPIMixin:
         file = await self.bot.get_file(file_id)
         return file.file_path
 
+    @diagnostics.observe('api', 'mute_member', source='platform', stage='accepted')
     async def mute_member(
         self,
         group_id: typing.Union[int, str],
@@ -213,6 +225,7 @@ class TelegramAPIMixin:
             kwargs['until_date'] = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=duration)
         await self.bot.restrict_chat_member(**kwargs)
 
+    @diagnostics.observe('api', 'unmute_member', source='platform', stage='accepted')
     async def unmute_member(
         self,
         group_id: typing.Union[int, str],
@@ -236,6 +249,7 @@ class TelegramAPIMixin:
             permissions=permissions,
         )
 
+    @diagnostics.observe('api', 'kick_member', source='platform', stage='accepted')
     async def kick_member(
         self,
         group_id: typing.Union[int, str],
@@ -244,6 +258,7 @@ class TelegramAPIMixin:
         """Kick a member from the group."""
         await self.bot.ban_chat_member(chat_id=group_id, user_id=user_id)
 
+    @diagnostics.observe('api', 'leave_group', source='platform', stage='accepted')
     async def leave_group(
         self,
         group_id: typing.Union[int, str],
