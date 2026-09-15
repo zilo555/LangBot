@@ -91,25 +91,29 @@ class MaintenanceService:
             0,
             'storage.media_cache.max_size_mb',
         )
+        media_cache = getattr(getattr(self.ap, 'storage_mgr', None), 'media_cache', None)
+        is_singleton = await self._is_oss_singleton(context)
         media_cleanup = (
-            await self.ap.storage_mgr.media_cache.cleanup(
+            await media_cache.cleanup(
                 media_retention_days,
                 media_max_size_mb,
             )
-            if hasattr(self.ap.storage_mgr, 'media_cache') and await self._is_oss_singleton(context)
+            if media_cache is not None and is_singleton
             else {}
         )
 
-        return {
+        result = {
             'uploaded_files': await self._cleanup_expired_uploaded_files(context, upload_retention_days),
             'log_files': await asyncio.to_thread(
                 self._cleanup_expired_log_files,
                 log_retention_days,
             )
-            if await self._is_oss_singleton(context)
+            if is_singleton
             else 0,
-            'media_files': media_cleanup.get('expired_deleted', 0) + media_cleanup.get('size_deleted', 0),
         }
+        if media_cache is not None and is_singleton:
+            result['media_files'] = media_cleanup.get('expired_deleted', 0) + media_cleanup.get('size_deleted', 0)
+        return result
 
     async def get_storage_analysis(self, context: TenantContext) -> dict[str, Any]:
         require_workspace_uuid(context)

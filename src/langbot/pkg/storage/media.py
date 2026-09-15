@@ -120,6 +120,7 @@ class MediaCache:
                 try:
                     await asyncio.to_thread(os.utime, full_path, (now, now))
                 except Exception:
+                    # Failures to update mtime are intentionally ignored because LRU touch is opportunistic.
                     pass
 
     async def cleanup(
@@ -166,6 +167,7 @@ class MediaCache:
                     expired_deleted += 1
                     bytes_freed += stat.st_size
                 except OSError:
+                    # Best-effort cleanup; file may already be gone or temporarily inaccessible.
                     pass
             else:
                 remaining.append((entry, stat.st_size, stat.st_mtime))
@@ -184,7 +186,8 @@ class MediaCache:
                         bytes_freed += size
                         total_bytes -= size
                     except OSError:
-                        pass
+                        # Best-effort cleanup; file may already be gone or temporarily inaccessible.
+                        continue
 
         return {
             'expired_deleted': expired_deleted,
