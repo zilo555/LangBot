@@ -1,4 +1,27 @@
 const zhHans = {
+  assistant: {
+    title: '工作区助手 · 实验版',
+    subtitle: '使用 Space 模型构建应用',
+    newChat: '新对话',
+    close: '关闭',
+    welcome:
+      '告诉我你想构建什么应用。我可以查看当前工作区，并提出知识库和 Pipeline 配置方案，由你确认后执行。',
+    discover: '当前有哪些可用的模型、知识库和 Pipeline？',
+    build: '帮我创建一个知识库问答应用。',
+    toolResult: '操作结果',
+    review: '请检查具体操作及参数，确认后执行',
+    confirm: '确认执行',
+    decline: '拒绝',
+    working: '正在处理…',
+    modelUnavailable:
+      'Space 模型暂不可用。请在设置中检查 Space 登录和模型权限，然后开启新对话。',
+    error:
+      '本轮未完成。请先检查资源和操作结果，再开启新对话；系统不会自动重试变更。',
+    running:
+      '本轮仍在执行，或执行结果尚未保存时发生了中断。重新打开助手可刷新；重新开始前请检查资源。',
+    placeholder: '描述你想构建的应用…',
+    send: '发送',
+  },
   sidebar: {
     home: '首页',
     extensions: '扩展',

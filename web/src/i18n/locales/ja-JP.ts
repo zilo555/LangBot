@@ -1,4 +1,27 @@
 const jaJP = {
+  assistant: {
+    title: 'ワークスペースアシスタント · 実験版',
+    subtitle: 'Space モデルでアプリを構築',
+    newChat: '新しい会話',
+    close: '閉じる',
+    welcome:
+      '作りたいアプリを教えてください。現在のリソースを確認し、承認後にナレッジベースや Pipeline を設定します。',
+    discover: '利用できるモデル、ナレッジベース、Pipeline は？',
+    build: 'ナレッジベースを使う質問応答アプリを作りたい。',
+    toolResult: '操作結果',
+    review: '実行する操作とパラメータを確認してください',
+    confirm: '承認して実行',
+    decline: '拒否',
+    working: '処理中…',
+    modelUnavailable:
+      'Space モデルを利用できません。設定でログインとモデルの権限を確認して、新しい会話を開始してください。',
+    error:
+      '処理が完了しませんでした。新しい会話の前にリソースを確認してください。変更は自動で再試行されません。',
+    running:
+      '処理中、または結果の保存前に中断されました。アシスタントを開き直して更新してください。',
+    placeholder: '作りたいアプリを説明…',
+    send: '送信',
+  },
   sidebar: {
     home: 'ホーム',
     extensions: '拡張機能',

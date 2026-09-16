@@ -1,4 +1,27 @@
 const enUS = {
+  assistant: {
+    title: 'Workspace assistant · Experimental',
+    subtitle: 'Build with your Space model',
+    newChat: 'New conversation',
+    close: 'Close',
+    welcome:
+      'Tell me what you want to build. I can inspect this Workspace and propose knowledge-base and Pipeline changes for you to confirm.',
+    discover: 'What models, knowledge bases and Pipelines are available?',
+    build: 'Help me create a knowledge-base question-answering application.',
+    toolResult: 'Operation result',
+    review: 'Review the exact operations before executing',
+    confirm: 'Confirm and execute',
+    decline: 'Decline',
+    working: 'Working…',
+    modelUnavailable:
+      'The Space model is unavailable. Check your Space account and model access in Settings, then start a new conversation.',
+    error:
+      'This turn did not complete. Check the resource results before starting a new conversation; changes are not retried automatically.',
+    running:
+      'This turn is running, or was interrupted before its result was saved. Reopen the assistant to refresh; check resources before starting over.',
+    placeholder: 'Describe your application…',
+    send: 'Send',
+  },
   sidebar: {
     home: 'Home',
     extensions: 'Extensions',
