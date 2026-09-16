@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { MessageCircle, Plus, Send, X, LoaderCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { backendClient, useCurrentWorkspace, userInfo } from '@/app/infra/http';
 import { Button } from '@/components/ui/button';
 import {
@@ -230,6 +231,7 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
                   className={`rounded-xl p-3 text-sm break-words ${message.role === 'user' ? 'ml-6 bg-primary/10' : 'bg-muted'}`}
                 >
                   <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
                     components={{
                       img: () => null,
                       a: ({ href, children }) => (

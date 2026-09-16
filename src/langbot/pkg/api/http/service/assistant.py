@@ -253,7 +253,8 @@ class AssistantService:
                 await self._save(context, conversation, 'running')
                 try:
                     result = await execute_tool(self.ap, context, func['name'], json.loads(func['arguments'] or '{}'))
-                except Exception:
+                except Exception as exc:
+                    self.ap.logger.warning('Management assistant tool %s failed (%s)', func['name'], type(exc).__name__)
                     self._append_result(
                         conversation,
                         call,

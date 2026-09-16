@@ -3,7 +3,7 @@
 import asyncio
 import logging
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, create_autospec
 
 import pytest
 import sqlalchemy as sa
@@ -13,7 +13,7 @@ from langbot_plugin.api.entities.builtin.provider.message import Message
 from langbot.pkg.api.http.authz import Permission
 from langbot.pkg.api.http.context import RequestContext, PrincipalContext, PrincipalType, WorkspaceContext
 from langbot.pkg.api.http.service.assistant import AssistantError, AssistantService
-from langbot.pkg.api.http.service.assistant_tools import validate_call
+from langbot.pkg.api.http.service.assistant_tools import execute_tool, validate_call
 from langbot.pkg.entity.persistence.assistant import AssistantConversation
 
 
@@ -145,3 +145,33 @@ def test_tool_arguments_cannot_select_identity_or_shell():
         validate_call(context(), 'create_pipeline', {'name': 'test', 'workspace_uuid': 'other'})
     with pytest.raises(ValueError):
         validate_call(context(), 'exec', {'command': 'echo unsafe'})
+
+
+@pytest.mark.asyncio
+async def test_resource_readers_match_application_services():
+    from langbot.pkg.core.app import Application
+    from langbot.pkg.api.http.service.model import LLMModelsService, EmbeddingModelsService
+    from langbot.pkg.api.http.service.pipeline import PipelineService
+    from langbot.pkg.api.http.service.knowledge import KnowledgeService
+
+    ap = create_autospec(Application, instance=True, spec_set=True)
+    ap.llm_model_service = create_autospec(LLMModelsService, instance=True)
+    ap.embedding_models_service = create_autospec(EmbeddingModelsService, instance=True)
+    ap.pipeline_service = create_autospec(PipelineService, instance=True)
+    ap.knowledge_service = create_autospec(KnowledgeService, instance=True)
+    ctx = context()
+    for kind, reader in (
+        ('models', ap.llm_model_service.get_llm_models),
+        ('embedding_models', ap.embedding_models_service.get_embedding_models),
+        ('pipelines', ap.pipeline_service.get_pipelines),
+        ('knowledge_bases', ap.knowledge_service.get_knowledge_bases),
+        ('knowledge_engines', ap.knowledge_service.list_knowledge_engines),
+    ):
+        reader.return_value = [{'name': kind}]
+        if kind != 'knowledge_engines':
+            reader.return_value[0]['config'] = {'large_or_private': 'omitted from discovery'}
+        assert await execute_tool(ap, ctx, 'list_resources', {'kind': kind}) == {
+            'total': 1,
+            'items': [{'name': kind}],
+        }
+        reader.assert_awaited_once_with(ctx)

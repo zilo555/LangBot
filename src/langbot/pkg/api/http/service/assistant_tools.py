@@ -89,13 +89,18 @@ async def execute_tool(ap, context, name: str, arguments: dict):
     args = validate_call(context, name, arguments).model_dump(mode='json')
     if name == 'list_resources':
         readers = {
-            'models': ap.model_service.get_llm_models,
-            'embedding_models': ap.model_service.get_embedding_models,
+            'models': ap.llm_model_service.get_llm_models,
+            'embedding_models': ap.embedding_models_service.get_embedding_models,
             'pipelines': ap.pipeline_service.get_pipelines,
             'knowledge_bases': ap.knowledge_service.get_knowledge_bases,
             'knowledge_engines': ap.knowledge_service.list_knowledge_engines,
         }
-        return redact_secrets(await readers[args['kind']](context))
+        resources = await readers[args['kind']](context)
+        if args['kind'] != 'knowledge_engines':
+            # Lists discover resources; get_pipeline / get_knowledge_schema supply configuration details.
+            fields = ('uuid', 'name', 'description', 'abilities', 'knowledge_engine_plugin_id')
+            resources = [{key: item[key] for key in fields if key in item} for item in resources]
+        return {'total': len(resources), 'items': redact_secrets(resources)}
     if name == 'get_pipeline':
         return await ap.pipeline_service.get_pipeline(context, args['pipeline_uuid'])
     if name == 'get_knowledge_schema':
