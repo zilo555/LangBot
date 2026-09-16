@@ -1295,6 +1295,9 @@ export async function installLangBotApiMocks(
     ({ authenticated, language, storage }) => {
       localStorage.setItem('langbot_language', language);
       localStorage.setItem('extensions_group_by_type', 'false');
+      if (!Object.hasOwn(storage, 'langbot_sidebar_guide_v1')) {
+        localStorage.setItem('langbot_sidebar_guide_v1', 'completed');
+      }
 
       if (authenticated) {
         localStorage.setItem('token', 'playwright-token');

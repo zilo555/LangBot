@@ -1,4 +1,48 @@
 const zhHans = {
+  sidebarGuide: {
+    label: '工作台导览',
+    progress: '第 {{current}} 项，共 {{total}} 项',
+    confirm: '我知道了',
+    finish: '完成引导',
+    steps: {
+      monitoring: {
+        title: '仪表盘',
+        description: '集中查看机器人活动、模型调用、消息量和系统运行情况。',
+      },
+      bots: {
+        title: '机器人',
+        description: '连接聊天平台，并在这里创建和管理每一个机器人。',
+      },
+      pipelines: {
+        title: '处理器',
+        description:
+          '创建可复用的 AI 流水线、智能体和事件处理器，为机器人提供能力。',
+      },
+      knowledge: {
+        title: '知识库',
+        description:
+          '管理文档和外部知识源，帮助模型生成更准确、更贴合业务的回复。',
+      },
+      plugins: {
+        title: '已安装扩展',
+        description: '管理已安装的插件、MCP 服务和技能，并查看它们的运行状态。',
+      },
+      'add-extension': {
+        title: '添加扩展',
+        description: '从扩展市场、GitHub 或本地安装包为 LangBot 添加新能力。',
+      },
+      models: {
+        title: '模型配置',
+        description:
+          '配置模型供应商，以及 LangBot 使用的语言模型、嵌入模型等。',
+      },
+      'api-integration': {
+        title: 'API 集成',
+        description:
+          '创建 API 密钥，并配置外部系统访问 LangBot 服务和 MCP 的方式。',
+      },
+    },
+  },
   sidebar: {
     home: '首页',
     extensions: '扩展',

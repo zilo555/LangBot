@@ -1,4 +1,52 @@
 const jaJP = {
+  sidebarGuide: {
+    label: 'ワークスペースツアー',
+    progress: '{{current}} / {{total}}',
+    confirm: '確認しました',
+    finish: 'ツアーを完了',
+    steps: {
+      monitoring: {
+        title: 'ダッシュボード',
+        description:
+          'ボットの稼働状況、モデルの使用量、メッセージ数、システムの状態をまとめて確認できます。',
+      },
+      bots: {
+        title: 'ボット',
+        description:
+          'チャットプラットフォームに接続し、各ボットを作成・管理します。',
+      },
+      pipelines: {
+        title: 'プロセッサー',
+        description:
+          'ボットを動かす AI パイプライン、エージェント、イベントプロセッサーを作成します。',
+      },
+      knowledge: {
+        title: 'ナレッジベース',
+        description:
+          'ドキュメントや外部ナレッジを管理し、モデルの回答精度を高めます。',
+      },
+      plugins: {
+        title: 'インストール済み拡張機能',
+        description:
+          'プラグイン、MCP サーバー、スキルと、それぞれの実行状態を管理します。',
+      },
+      'add-extension': {
+        title: '拡張機能を追加',
+        description:
+          'マーケット、GitHub、ローカルパッケージから新しい機能を追加します。',
+      },
+      models: {
+        title: 'モデル設定',
+        description:
+          'モデルプロバイダーと、LangBot が使用する言語・埋め込みモデルなどを設定します。',
+      },
+      'api-integration': {
+        title: 'API 連携',
+        description:
+          'API キーを作成し、LangBot サービスや MCP への外部アクセスを設定します。',
+      },
+    },
+  },
   sidebar: {
     home: 'ホーム',
     extensions: '拡張機能',

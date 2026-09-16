@@ -1,4 +1,52 @@
 const enUS = {
+  sidebarGuide: {
+    label: 'Workspace tour',
+    progress: '{{current}} of {{total}}',
+    confirm: 'Got it',
+    finish: 'Finish tour',
+    steps: {
+      monitoring: {
+        title: 'Dashboard',
+        description:
+          'Review bot activity, model usage, message volume, and system performance at a glance.',
+      },
+      bots: {
+        title: 'Bots',
+        description:
+          'Connect LangBot to chat platforms and manage each bot connection from here.',
+      },
+      pipelines: {
+        title: 'Processors',
+        description:
+          'Build reusable AI pipelines, agents, and event processors that power your bots.',
+      },
+      knowledge: {
+        title: 'Knowledge bases',
+        description:
+          'Organize documents and external knowledge sources used to improve model responses.',
+      },
+      plugins: {
+        title: 'Installed extensions',
+        description:
+          'Manage installed plugins, MCP servers, and skills, including their runtime status.',
+      },
+      'add-extension': {
+        title: 'Add extensions',
+        description:
+          'Install capabilities from the marketplace, GitHub, or a local extension package.',
+      },
+      models: {
+        title: 'Model configuration',
+        description:
+          'Configure model providers and choose the language, embedding, and other models LangBot uses.',
+      },
+      'api-integration': {
+        title: 'API integration',
+        description:
+          'Create API keys and configure external access to LangBot services and MCP.',
+      },
+    },
+  },
   sidebar: {
     home: 'Home',
     extensions: 'Extensions',

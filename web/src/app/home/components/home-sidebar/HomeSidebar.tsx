@@ -123,6 +123,7 @@ import {
   useWorkspaceQuotaStatus,
 } from '@/app/home/components/workspace-quota/useWorkspaceQuotaStatus';
 import { WorkspaceQuotaTooltip } from '@/app/home/components/workspace-quota/WorkspaceQuotaTooltip';
+import { SidebarGuide } from './SidebarGuide';
 
 // Compare two version strings, returns true if v1 > v2
 function compareVersions(v1: string, v2: string): boolean {
@@ -588,7 +589,7 @@ function NavItems({
           }
           // Non-entity entries (e.g. monitoring and the extension market) render as plain links.
           return (
-            <SidebarMenuItem key={config.id}>
+            <SidebarMenuItem key={config.id} data-sidebar-guide={config.id}>
               <SidebarMenuButton
                 isActive={selectedChild?.id === config.id}
                 onClick={() => onChildClick(config)}
@@ -1017,7 +1018,7 @@ function NavItems({
         // Popover flyout for collapsed sidebar
         if (showPopover) {
           return (
-            <SidebarMenuItem key={config.id}>
+            <SidebarMenuItem key={config.id} data-sidebar-guide={config.id}>
               <Popover
                 open={popoverOpen[config.id] ?? false}
                 onOpenChange={(open) =>
@@ -1199,7 +1200,7 @@ function NavItems({
             onOpenChange={(open) => onSectionToggle(config.id, open)}
             className="group/collapsible"
           >
-            <SidebarMenuItem>
+            <SidebarMenuItem data-sidebar-guide={config.id}>
               <SidebarMenuButton
                 asChild
                 isActive={false}
@@ -2210,7 +2211,7 @@ export default function HomeSidebar({
         <SidebarFooter>
           {/* Models entry */}
           <SidebarMenu>
-            <SidebarMenuItem>
+            <SidebarMenuItem data-sidebar-guide="models">
               <SidebarMenuButton
                 onClick={() => openSettings('models')}
                 tooltip={t('models.title')}
@@ -2224,7 +2225,7 @@ export default function HomeSidebar({
           {/* API-key management is available only to authorized Workspace roles. */}
           {currentWorkspace?.permissions.includes('api_key.manage') && (
             <SidebarMenu>
-              <SidebarMenuItem>
+              <SidebarMenuItem data-sidebar-guide="api-integration">
                 <SidebarMenuButton
                   onClick={() => openSettings('apiIntegration')}
                   tooltip={t('common.apiIntegration')}
@@ -2456,6 +2457,7 @@ export default function HomeSidebar({
         onOpenChange={setVersionDialogOpen}
         release={latestRelease}
       />
+      <SidebarGuide />
     </>
   );
 }

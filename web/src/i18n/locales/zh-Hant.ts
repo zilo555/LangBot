@@ -1,4 +1,48 @@
 const zhHant = {
+  sidebarGuide: {
+    label: '工作台導覽',
+    progress: '第 {{current}} 項，共 {{total}} 項',
+    confirm: '我知道了',
+    finish: '完成導覽',
+    steps: {
+      monitoring: {
+        title: '儀表板',
+        description: '集中查看機器人活動、模型呼叫、訊息量和系統運行情況。',
+      },
+      bots: {
+        title: '機器人',
+        description: '連接聊天平台，並在這裡建立和管理每一個機器人。',
+      },
+      pipelines: {
+        title: '處理器',
+        description:
+          '建立可重複使用的 AI 流程、代理和事件處理器，為機器人提供能力。',
+      },
+      knowledge: {
+        title: '知識庫',
+        description:
+          '管理文件和外部知識來源，協助模型產生更準確、更符合業務的回覆。',
+      },
+      plugins: {
+        title: '已安裝擴充功能',
+        description: '管理已安裝的外掛、MCP 服務和技能，並查看它們的運行狀態。',
+      },
+      'add-extension': {
+        title: '新增擴充功能',
+        description: '從擴充功能市集、GitHub 或本機安裝包為 LangBot 新增能力。',
+      },
+      models: {
+        title: '模型設定',
+        description:
+          '設定模型供應商，以及 LangBot 使用的語言模型、嵌入模型等。',
+      },
+      'api-integration': {
+        title: 'API 整合',
+        description:
+          '建立 API 金鑰，並設定外部系統存取 LangBot 服務和 MCP 的方式。',
+      },
+    },
+  },
   sidebar: {
     home: '首頁',
     extensions: '擴展',
