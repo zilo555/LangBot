@@ -249,6 +249,7 @@ function PluginListView() {
                   <Input
                     value={debugInfo?.debug_url || ''}
                     readOnly
+                    aria-label={t('plugins.debugUrl')}
                     className="flex-1 min-w-0 font-mono text-xs h-8"
                   />
                   <Button
@@ -277,6 +278,7 @@ function PluginListView() {
                         debugInfo?.plugin_debug_key || t('plugins.noDebugKey')
                       }
                       readOnly
+                      aria-label={t('plugins.debugKey')}
                       className="w-[220px] font-mono text-xs h-8"
                     />
                     <Button
