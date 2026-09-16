@@ -1,6 +1,6 @@
 const zhHans = {
   assistant: {
-    modelHint: '助手模型 · 默认使用 Space 推荐模型，切换从下一条消息生效',
+    modelHint: '切换助手模型，从下一条消息生效',
     details: '查看原始数据',
     found: '找到 {{count}} 项',
     completed: '已完成',
@@ -26,8 +26,8 @@ const zhHans = {
       knowledge_bases: '查询知识库',
       knowledge_engines: '查询知识引擎',
     },
-    title: '工作区助手 · 实验版',
-    subtitle: '使用 Space 模型构建应用',
+    title: '工作区助手',
+    subtitle: '构建和管理你的应用',
     newChat: '新对话',
     close: '关闭',
     welcome:
@@ -40,7 +40,7 @@ const zhHans = {
     decline: '拒绝',
     working: '正在处理…',
     modelUnavailable:
-      'Space 模型暂不可用。请在设置中检查 Space 登录和模型权限，然后开启新对话。',
+      '模型暂不可用。请检查模型配置和访问权限，然后开启新对话。',
     error:
       '本轮未完成。请先检查资源和操作结果，再开启新对话；系统不会自动重试变更。',
     running:

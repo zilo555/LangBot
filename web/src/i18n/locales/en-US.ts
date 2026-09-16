@@ -1,7 +1,6 @@
 const enUS = {
   assistant: {
-    modelHint:
-      'Assistant model · Space recommendation by default; changes apply to your next message',
+    modelHint: 'Switch assistant model for your next message',
     details: 'View raw data',
     found: 'Found {{count}} items',
     completed: 'Completed',
@@ -29,8 +28,8 @@ const enUS = {
       knowledge_bases: 'Find knowledge bases',
       knowledge_engines: 'Find knowledge engines',
     },
-    title: 'Workspace assistant · Experimental',
-    subtitle: 'Build with your Space model',
+    title: 'Workspace assistant',
+    subtitle: 'Build and manage your apps',
     newChat: 'New conversation',
     close: 'Close',
     welcome:
@@ -43,7 +42,7 @@ const enUS = {
     decline: 'Decline',
     working: 'Working…',
     modelUnavailable:
-      'The Space model is unavailable. Check your Space account and model access in Settings, then start a new conversation.',
+      'Model unavailable. Check its configuration and access, then start a new conversation.',
     error:
       'This turn did not complete. Check the resource results before starting a new conversation; changes are not retried automatically.',
     running:

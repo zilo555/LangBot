@@ -1,7 +1,6 @@
 const jaJP = {
   assistant: {
-    modelHint:
-      'アシスタントモデル · 既定は Space 推奨。変更は次のメッセージから適用',
+    modelHint: '次のメッセージからモデルを切り替え',
     details: '元のデータを見る',
     found: '{{count}} 件見つかりました',
     completed: '完了',
@@ -29,8 +28,8 @@ const jaJP = {
       knowledge_bases: 'ナレッジベース検索',
       knowledge_engines: 'エンジン検索',
     },
-    title: 'ワークスペースアシスタント · 実験版',
-    subtitle: 'Space モデルでアプリを構築',
+    title: 'ワークスペースアシスタント',
+    subtitle: 'アプリを構築・管理',
     newChat: '新しい会話',
     close: '閉じる',
     welcome:
@@ -43,7 +42,7 @@ const jaJP = {
     decline: '拒否',
     working: '処理中…',
     modelUnavailable:
-      'Space モデルを利用できません。設定でログインとモデルの権限を確認して、新しい会話を開始してください。',
+      'モデルを利用できません。設定と権限を確認して、新しい会話を開始してください。',
     error:
       '処理が完了しませんでした。新しい会話の前にリソースを確認してください。変更は自動で再試行されません。',
     running:

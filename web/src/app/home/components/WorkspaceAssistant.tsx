@@ -205,14 +205,44 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
           <header className="flex items-center gap-2 border-b p-3">
             <MessageCircle className="size-5 text-primary" />
             <div className="min-w-0 flex-1">
-              <h2 className="font-semibold">{t('assistant.title')}</h2>
+              <h2 className="truncate font-semibold">{t('assistant.title')}</h2>
               <p className="truncate text-xs text-muted-foreground">
                 {t('assistant.subtitle')}
               </p>
             </div>
+            {open && (
+              <div
+                className="w-28 min-w-0 shrink-0"
+                title={t('assistant.modelHint')}
+              >
+                <DynamicFormItemComponent
+                  config={{
+                    id: 'assistant-model',
+                    name: 'assistant-model',
+                    type: DynamicFormItemType.LLM_MODEL_SELECTOR,
+                    default: '',
+                    required: false,
+                    label: { en_US: 'Assistant model', zh_Hans: '助手模型' },
+                  }}
+                  field={{
+                    name: 'assistant-model',
+                    value: modelUuid,
+                    onChange: setModelUuid,
+                    onBlur: () => {},
+                    ref: () => {},
+                    disabled:
+                      busy ||
+                      (!!conversation && conversation.status !== 'ready'),
+                  }}
+                  requiredModelAbility="func_call"
+                  compactModelSelector
+                />
+              </div>
+            )}
             <Button
               variant="ghost"
               size="icon"
+              className="size-7 shrink-0"
               disabled={busy}
               onClick={reset}
               aria-label={t('assistant.newChat')}
@@ -222,39 +252,13 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
             <Button
               variant="ghost"
               size="icon"
+              className="size-7 shrink-0"
               onClick={() => setOpen(false)}
               aria-label={t('assistant.close')}
             >
               <X />
             </Button>
           </header>
-          {open && (
-            <div className="space-y-1 border-b px-3 py-2">
-              <span className="text-xs text-muted-foreground">
-                {t('assistant.modelHint')}
-              </span>
-              <DynamicFormItemComponent
-                config={{
-                  id: 'assistant-model',
-                  name: 'assistant-model',
-                  type: DynamicFormItemType.LLM_MODEL_SELECTOR,
-                  default: '',
-                  required: false,
-                  label: { en_US: 'Assistant model', zh_Hans: '助手模型' },
-                }}
-                field={{
-                  name: 'assistant-model',
-                  value: modelUuid,
-                  onChange: setModelUuid,
-                  onBlur: () => {},
-                  ref: () => {},
-                  disabled:
-                    busy || (!!conversation && conversation.status !== 'ready'),
-                }}
-                requiredModelAbility="func_call"
-              />
-            </div>
-          )}
           <div
             className="flex-1 space-y-3 overflow-y-auto p-4"
             aria-live="polite"

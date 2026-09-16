@@ -89,6 +89,7 @@ export default function DynamicFormItemComponent({
   setFormValue,
   systemContext,
   requiredModelAbility,
+  compactModelSelector = false,
 }: {
   config: IDynamicFormItemSchema;
   field: ControllerRenderProps<any, any>;
@@ -97,6 +98,7 @@ export default function DynamicFormItemComponent({
   setFormValue?: (name: string, value: unknown) => void;
   systemContext?: Record<string, unknown>;
   requiredModelAbility?: string;
+  compactModelSelector?: boolean;
 }) {
   const [llmModels, setLlmModels] = useState<LLMModel[]>([]);
   const [embeddingModels, setEmbeddingModels] = useState<EmbeddingModel[]>([]);
@@ -468,7 +470,14 @@ export default function DynamicFormItemComponent({
               onValueChange={field.onChange}
               disabled={field.disabled}
             >
-              <SelectTrigger className="min-w-0 bg-[#ffffff] dark:bg-[#2a2a2e]">
+              <SelectTrigger
+                aria-label={t('models.selectModel')}
+                className={
+                  compactModelSelector
+                    ? 'w-full min-w-0 gap-1 border-0 bg-transparent px-1 text-xs text-muted-foreground shadow-none hover:bg-muted data-[size=default]:h-7 [&_[data-slot=select-value]_svg]:hidden'
+                    : 'min-w-0 bg-[#ffffff] dark:bg-[#2a2a2e]'
+                }
+              >
                 <SelectValue placeholder={t('models.selectModel')} />
               </SelectTrigger>
               <SelectContent>
@@ -605,7 +614,7 @@ export default function DynamicFormItemComponent({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 shrink-0"
+                className={compactModelSelector ? 'hidden' : 'h-9 w-9 shrink-0'}
                 onClick={() => {
                   setSettingsSection('models');
                   setModelsDialogOpen(true);
