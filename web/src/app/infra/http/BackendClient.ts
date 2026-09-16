@@ -1,4 +1,8 @@
 import { BaseHttpClient, type RequestConfig } from './BaseHttpClient';
+import type {
+  PipelineMigrationPreview,
+  PipelineMigrationRequest,
+} from '@/app/infra/entities/api/pipeline-migration';
 import type { DebugExecutionEvent } from '@/app/infra/entities/api/agent-debug';
 import type {
   CodexAuthStatus,
@@ -439,6 +443,19 @@ export class BackendClient extends BaseHttpClient {
 
   public getPipeline(uuid: string): Promise<GetPipelineResponseData> {
     return this.get(`/api/v1/pipelines/${uuid}`);
+  }
+
+  public getPipelineMigrationPreview(
+    config?: RequestConfig,
+  ): Promise<PipelineMigrationPreview> {
+    return this.get('/api/v1/pipelines/_/migration/preview', undefined, config);
+  }
+
+  public executePipelineMigration(
+    body: PipelineMigrationRequest,
+    config?: RequestConfig,
+  ): Promise<AsyncTaskCreatedResp> {
+    return this.post('/api/v1/pipelines/_/migration/execute', body, config);
   }
 
   public createPipeline(pipeline: Pipeline): Promise<{
@@ -1344,8 +1361,8 @@ export class BackendClient extends BaseHttpClient {
     return this.get(`/api/v1/system/tasks${qs ? `?${qs}` : ''}`);
   }
 
-  public getAsyncTask(id: number): Promise<AsyncTask> {
-    return this.get(`/api/v1/system/tasks/${id}`);
+  public getAsyncTask(id: number, config?: RequestConfig): Promise<AsyncTask> {
+    return this.get(`/api/v1/system/tasks/${id}`, undefined, config);
   }
 
   public getPluginSystemStatus(): Promise<ApiRespPluginSystemStatus> {

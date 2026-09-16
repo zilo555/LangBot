@@ -1,4 +1,7 @@
+import pipelineMigration from './pipeline-migration/ru-RU';
+
 const ruRU = {
+  pipelineMigration,
   sidebar: {
     home: 'Главная',
     extensions: 'Расширения',
@@ -257,6 +260,7 @@ const ruRU = {
     reasoningAbility: 'Рассуждение',
     reasoningLevel: 'Уровень рассуждений',
     reasoningLevels: {
+      useModelSetting: 'Настройка модели',
       providerDefault: 'По умолчанию провайдера',
       disabled: 'Выключено',
       enabled: 'Включено',

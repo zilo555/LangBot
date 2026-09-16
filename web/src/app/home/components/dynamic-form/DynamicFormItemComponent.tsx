@@ -3,6 +3,8 @@ import {
   IDynamicFormItemSchema,
   IFileConfig,
 } from '@/app/infra/entities/form/dynamic';
+import StructuredFieldEditor from './StructuredFieldEditor';
+import { isSimplePrompt } from './StructuredFieldValue';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -490,14 +492,7 @@ export default function DynamicFormItemComponent({
       );
 
     case DynamicFormItemType.JSON:
-      return (
-        <Textarea
-          {...field}
-          value={field.value ?? ''}
-          className="min-h-[200px] font-mono text-sm"
-          placeholder='{"key": "value"}'
-        />
-      );
+      return <StructuredFieldEditor field={field} />;
 
     case DynamicFormItemType.BOOLEAN:
       return (
@@ -1261,11 +1256,11 @@ export default function DynamicFormItemComponent({
 
       const updateModelReasoning = (
         modelUuid: string,
-        level: ReasoningLevel,
+        level: ReasoningLevel | undefined,
       ) => {
         if (!modelUuid) return;
         const updated = { ...modelValue.reasoning };
-        if (level === 'provider_default') {
+        if (level === undefined) {
           delete updated[modelUuid];
         } else {
           updated[modelUuid] = level;
@@ -1311,6 +1306,8 @@ export default function DynamicFormItemComponent({
           <ReasoningLevelPicker
             value={currentLevel}
             levels={levels}
+            inherited={!Object.hasOwn(modelValue.reasoning, modelUuid)}
+            onInherit={() => updateModelReasoning(modelUuid, undefined)}
             onChange={(level) => updateModelReasoning(modelUuid, level)}
           />
         );
@@ -1872,6 +1869,9 @@ export default function DynamicFormItemComponent({
       );
 
     case DynamicFormItemType.PROMPT_EDITOR: {
+      if (!isSimplePrompt(field.value)) {
+        return <StructuredFieldEditor field={field} prompt />;
+      }
       // Guard: field.value may be undefined when the form resets or
       // initialValues haven't propagated yet. Fall back to a default
       // single system-prompt entry to prevent the .map() crash.

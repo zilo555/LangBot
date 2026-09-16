@@ -6,6 +6,7 @@ import {
 import { useForm } from 'react-hook-form';
 import type { ControllerRenderProps } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { isJsonValue, isPromptValue } from './StructuredFieldValue';
 import { z } from 'zod';
 import {
   Form,
@@ -133,13 +134,10 @@ function getValueSchema(spec: DynamicFormValueSpec) {
         fallbacks: z.array(z.string()),
         reasoning: z.record(z.string()),
       });
+    case DynamicFormItemType.JSON:
+      return z.custom(isJsonValue);
     case DynamicFormItemType.PROMPT_EDITOR:
-      return z.array(
-        z.object({
-          content: z.string(),
-          role: z.string(),
-        }),
-      );
+      return z.custom(isPromptValue);
     default:
       return z.string();
   }
@@ -656,6 +654,7 @@ export default function DynamicFormComponent({
           };
           const fieldKey = config.id || config.name || `field-${index}`;
 
+          let isHiddenByCondition = false;
           if (config.show_if) {
             const dependValue = resolveShowIfValue(
               config.show_if.field,
@@ -668,22 +667,31 @@ export default function DynamicFormComponent({
               config.show_if.operator === 'eq' &&
               dependValue !== config.show_if.value
             ) {
-              return null;
+              isHiddenByCondition = true;
             }
             if (
               config.show_if.operator === 'neq' &&
               dependValue === config.show_if.value
             ) {
-              return null;
+              isHiddenByCondition = true;
             }
             if (
               config.show_if.operator === 'in' &&
               Array.isArray(config.show_if.value) &&
               !config.show_if.value.includes(dependValue)
             ) {
-              return null;
+              isHiddenByCondition = true;
             }
           }
+
+          // Keep structured drafts mounted across conditional hiding so invalid
+          // JSON cannot disappear from validation when Advanced Settings closes.
+          if (
+            isHiddenByCondition &&
+            normalizedConfig.type !== DynamicFormItemType.JSON &&
+            normalizedConfig.type !== DynamicFormItemType.PROMPT_EDITOR
+          )
+            return null;
 
           // Keep locked fields visible and resolve only the applicable reason.
           const { isDisabledByCondition, disabledTooltip: tooltip } =
@@ -957,7 +965,10 @@ export default function DynamicFormComponent({
                   setFormValue,
                 });
                 return (
-                  <FormItem className="min-w-0">
+                  <FormItem
+                    className={cn('min-w-0', isHiddenByCondition && 'hidden')}
+                    hidden={isHiddenByCondition}
+                  >
                     <FormLabel className="flex min-w-0 items-center gap-1.5">
                       <span className="min-w-0 break-words">
                         {extractI18nObject(config.label)}{' '}

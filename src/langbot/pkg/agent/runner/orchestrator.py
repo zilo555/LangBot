@@ -29,6 +29,7 @@ from .execution_context import (
 )
 from .host_models import AgentBinding, AgentEventEnvelope
 from .invoker import RunnerInvoker
+from .model_reasoning import extract_model_reasoning_overrides
 from .interaction_manager import InteractionManager
 from .query_bridge import QueryRunBridge
 from .registry import RunnerRegistry
@@ -121,6 +122,12 @@ class AgentRunOrchestrator:
             project_mcp_resource_config(execution_query, binding.runner_config)
         object.__setattr__(execution_query, '_execution_context', execution_context)
 
+        if event.event_type == 'interaction.submitted' and binding.runner_config.get('user-id-source') in (
+            'legacy-session',
+            'legacy-bot',
+        ):
+            await self.interaction_manager.restore_legacy_identity(event, binding)
+
         execution_event = event
         resource_addition = await build_mcp_resource_context_addition(self.ap, execution_query)
         if resource_addition:
@@ -133,6 +140,7 @@ class AgentRunOrchestrator:
             binding=binding,
             descriptor=descriptor,
         )
+        model_reasoning_overrides = extract_model_reasoning_overrides(descriptor, binding.runner_config, resources)
 
         context = await self.context_builder.build_context_from_event(
             event=execution_event,
@@ -192,6 +200,7 @@ class AgentRunOrchestrator:
                 'state_scopes': list(binding.state_policy.state_scopes),
             },
             'state_context': state_context,
+            'model_reasoning_overrides': model_reasoning_overrides,
         }
 
         seen_sequences: set[int] = set()
@@ -228,6 +237,7 @@ class AgentRunOrchestrator:
                 execution_query=execution_query,
                 platform_context=freeze_platform_context(event),
                 reply_streams=reply_streams,
+                model_reasoning_overrides=model_reasoning_overrides,
             )
 
             event_log_id = await self.journal.write_event_log(
@@ -412,6 +422,10 @@ class AgentRunOrchestrator:
         plan = self.query_bridge.build_plan(query)
         adapter_context = dict(plan.adapter_context)
         adapter_context['_query'] = query
+        import copy
+
+        adapter_context['_pipeline_expected_config'] = copy.deepcopy(query.pipeline_config)
+        adapter_context['_pipeline_conversation'] = getattr(getattr(query, 'session', None), 'using_conversation', None)
         adapter_context['_execution_context'] = get_query_execution_context(query)
 
         # Inbound files and subsequent runner tools must share one Host scope.

@@ -171,14 +171,18 @@ class TestPersistentStateStore:
         engine = create_async_engine(f'sqlite+aiosqlite:///{db_path}', echo=False)
 
         from langbot.pkg.entity.persistence.base import Base
+        from langbot.pkg.entity.persistence.runner_state import RunnerState
 
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
+        try:
+            async with engine.begin() as conn:
+                # This unit fixture owns one table, not the application's entire
+                # schema. Unrelated DDL/fsync work must not scale every test.
+                await conn.run_sync(Base.metadata.create_all, tables=[RunnerState.__table__])
 
-        yield engine
-
-        await engine.dispose()
-        os.unlink(db_path)
+            yield engine
+        finally:
+            await engine.dispose()
+            os.unlink(db_path)
 
     @pytest.fixture
     async def persistent_store(self, db_engine):

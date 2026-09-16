@@ -1,8 +1,10 @@
 import EntityLoadState from '@/components/EntityLoadState';
+import { isCurrentPipelineConfig } from './pipeline-config-safety';
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import PipelineFormComponent, {
   PipelineFormHandle,
 } from '@/app/home/pipelines/components/pipeline-form/PipelineFormComponent';
@@ -150,6 +152,25 @@ export default function PipelineDetailContent({
     );
   if (!pipelineDetails) return <EntityLoadState />;
 
+  // Never hydrate plugin defaults or mount debug autosave for legacy bindings.
+  if (!isCurrentPipelineConfig(pipelineDetails.config)) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-xl font-semibold">
+          {pipelineDetails.emoji || '⚙️'} {pipelineDetails.name}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {pipelineDetails.description}
+        </p>
+        <Alert>
+          <AlertDescription>
+            {t('pipelineMigration.legacyGate')}
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   // ==================== Edit Mode ====================
   const pipelineName =
     pipelineDetails?.name ||
@@ -178,6 +199,7 @@ export default function PipelineDetailContent({
           <fieldset className="contents" disabled={!canManage}>
             <PipelineFormComponent
               ref={pipelineFormRef}
+              onLegacyPipeline={setPipelineDetails}
               pipelineId={id}
               isEditMode={true}
               disableForm={!canManage}

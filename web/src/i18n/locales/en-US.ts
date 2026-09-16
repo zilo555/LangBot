@@ -1,4 +1,7 @@
+import pipelineMigration from './pipeline-migration/en-US';
+
 const enUS = {
+  pipelineMigration,
   sidebar: {
     home: 'Home',
     extensions: 'Extensions',
@@ -260,6 +263,7 @@ const enUS = {
     reasoningAbility: 'Reasoning',
     reasoningLevel: 'Reasoning level',
     reasoningLevels: {
+      useModelSetting: 'Use model setting',
       providerDefault: 'Provider default',
       disabled: 'Off',
       enabled: 'On',

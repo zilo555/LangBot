@@ -56,7 +56,6 @@ export function parseDynamicFormItemType(value: string): DynamicFormItemType {
     [DynamicFormItemType.SELECT_KNOWLEDGE_BASES]:
       DynamicFormItemType.KNOWLEDGE_BASE_MULTI_SELECTOR,
     [DynamicFormItemType.NUMBER]: DynamicFormItemType.FLOAT,
-    [DynamicFormItemType.JSON]: DynamicFormItemType.TEXT,
   };
   if (value in typeMap) {
     return typeMap[value];

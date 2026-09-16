@@ -1,4 +1,8 @@
 import EntityLoadState from '@/components/EntityLoadState';
+import { preserveRunnerConfig } from './RunnerConfigPreservation';
+import type { ComponentProps } from 'react';
+import { isCurrentPipelineConfig } from '../../pipeline-config-safety';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   forwardRef,
   useCallback,
@@ -67,6 +71,35 @@ import {
   type InstalledRunner,
 } from '@/app/home/agents/runner-marketplace';
 
+/** A mount-scoped editing session: normalized defaults are UI state, not edits. */
+function PersistedRunnerForm(
+  props: ComponentProps<typeof DynamicFormComponent>,
+) {
+  const initialValues = useRef(props.initialValues);
+  const previous = useRef<Record<string, unknown> | undefined>(undefined);
+  const current = useRef(props.initialValues || {});
+  current.current = props.initialValues || {};
+  return (
+    <DynamicFormComponent
+      {...props}
+      initialValues={initialValues.current}
+      onSubmit={(values) => {
+        const emitted = values as Record<string, unknown>;
+        const next = preserveRunnerConfig(
+          current.current,
+          previous.current,
+          emitted,
+        );
+        previous.current = structuredClone(emitted);
+        if (JSON.stringify(next) !== JSON.stringify(current.current)) {
+          current.current = next;
+          props.onSubmit?.(next);
+        }
+      }}
+    />
+  );
+}
+
 interface PipelineFormComponentProps {
   pipelineId?: string;
   isEditMode: boolean;
@@ -78,6 +111,7 @@ interface PipelineFormComponentProps {
   onCancel?: () => void;
   onDirtyChange?: (dirty: boolean) => void;
   onSavingChange?: (saving: boolean) => void;
+  onLegacyPipeline?: (pipeline: Pipeline) => void;
 }
 
 export interface PipelineFormHandle {
@@ -103,6 +137,7 @@ const PipelineFormComponent = forwardRef<
     onCancel,
     onDirtyChange,
     onSavingChange,
+    onLegacyPipeline,
   },
   ref,
 ) {
@@ -111,7 +146,10 @@ const PipelineFormComponent = forwardRef<
   const [showCopyConfirm, setShowCopyConfirm] = useState(false);
   const [isDefaultPipeline, setIsDefaultPipeline] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState(false);
+  const pipelineFormElement = useRef<HTMLFormElement>(null);
   const isSavingRef = useRef(false);
+  const legacyConfigRef = useRef(false);
+  const [legacyConfig, setLegacyConfig] = useState(false);
 
   const formSchema = isEditMode
     ? z.object({
@@ -291,6 +329,12 @@ const PipelineFormComponent = forwardRef<
         .getPipeline(pipelineId || '')
         .then((resp: GetPipelineResponseData) => {
           if (cancelled) return;
+          if (!isCurrentPipelineConfig(resp.pipeline.config)) {
+            legacyConfigRef.current = true;
+            setLegacyConfig(true);
+            onLegacyPipeline?.(resp.pipeline);
+            return;
+          }
           setIsDefaultPipeline(resp.pipeline.is_default ?? false);
 
           const loadedValues = {
@@ -316,7 +360,7 @@ const PipelineFormComponent = forwardRef<
     return () => {
       cancelled = true;
     };
-  }, [form, isEditMode, pipelineId, loadAttempt]);
+  }, [form, isEditMode, pipelineId, loadAttempt, onLegacyPipeline]);
 
   useEffect(() => {
     if (
@@ -404,7 +448,15 @@ const PipelineFormComponent = forwardRef<
   }
 
   async function handleModify(values: FormValues): Promise<boolean> {
-    if (isSavingRef.current) return false;
+    // Imperative saves bypass native form submission validation. In particular,
+    // never save an old structured value while its visible JSON draft is invalid.
+    if (
+      pipelineFormElement.current &&
+      !pipelineFormElement.current.checkValidity()
+    )
+      return false;
+    if (isSavingRef.current || legacyConfigRef.current || !pipelineLoaded)
+      return false;
     const submittedSnapshot = JSON.stringify(values);
     const realConfig = {
       ai: values.ai,
@@ -468,6 +520,7 @@ const PipelineFormComponent = forwardRef<
       }
     },
     async save() {
+      if (legacyConfigRef.current || !pipelineLoaded) return false;
       if (!hasUnsavedChangesRef.current) return true;
       if (isSavingRef.current || !isEditMode) return false;
       const valid = await form.trigger();
@@ -488,7 +541,9 @@ const PipelineFormComponent = forwardRef<
     values: object,
   ) {
     const stageKey = `${String(formName)}.${stageName}`;
-    const isFirstEmission = !initializedStagesRef.current.has(stageKey);
+    const isFirstEmission =
+      !initializedStagesRef.current.has(stageKey) &&
+      !(formName === 'output' && stageName === 'misc');
 
     const currentValues =
       (form.getValues(formName) as Record<string, unknown>) || {};
@@ -524,6 +579,29 @@ const PipelineFormComponent = forwardRef<
     }
 
     form.setValue(formName, nextValues);
+    if (formName === 'output' && stageName === 'misc') {
+      const removeThink = (values as Record<string, unknown>)['remove-think'];
+      const previousThink = (
+        currentValues.misc as Record<string, unknown> | undefined
+      )?.['remove-think'];
+      const runnerId = form.getValues('ai.runner.id') as string;
+      const supported = aiConfigTabSchema?.stages.some(
+        (stage) =>
+          stage.name === runnerId &&
+          stage.config.some((item) => item.name === 'remove-think'),
+      );
+      if (
+        supported &&
+        typeof removeThink === 'boolean' &&
+        removeThink !== previousThink
+      ) {
+        const configs = form.getValues('ai.runner_config') || {};
+        form.setValue('ai.runner_config', {
+          ...configs,
+          [runnerId]: { ...configs[runnerId], 'remove-think': removeThink },
+        });
+      }
+    }
 
     if (isFirstEmission) {
       initializedStagesRef.current.add(stageKey);
@@ -539,22 +617,23 @@ const PipelineFormComponent = forwardRef<
   }
 
   function handleRunnerConfigEmit(stageName: string, values: object) {
-    const stageKey = `ai.runner_config.${stageName}`;
-    const isFirstEmission = !initializedStagesRef.current.has(stageKey);
-
     const currentRunnerConfigs =
-      (form.getValues('ai.runner_config') as Record<string, unknown>) || {};
+      (form.getValues('ai.runner_config') as Record<
+        string,
+        Record<string, unknown>
+      >) || {};
+    const removeThink = (values as Record<string, unknown>)['remove-think'];
+    const previousThink = currentRunnerConfigs[stageName]?.['remove-think'];
     form.setValue('ai.runner_config', {
       ...currentRunnerConfigs,
       [stageName]: values,
     });
-
-    if (isFirstEmission) {
-      initializedStagesRef.current.add(stageKey);
-      const currentSnapshot = JSON.stringify(form.getValues());
-      if (savedSnapshotRef.current === '' || !hasUnsavedChangesRef.current) {
-        savedSnapshotRef.current = currentSnapshot;
-      }
+    if (typeof removeThink === 'boolean' && removeThink !== previousThink) {
+      const output = form.getValues('output') || {};
+      form.setValue('output', {
+        ...output,
+        misc: { ...output.misc, 'remove-think': removeThink },
+      });
     }
   }
 
@@ -631,7 +710,7 @@ const PipelineFormComponent = forwardRef<
               )}
             </CardHeader>
             <CardContent className="space-y-6">
-              <DynamicFormComponent
+              <PersistedRunnerForm
                 itemConfigList={stage.config}
                 initialValues={stageInitialValues}
                 systemContext={dynamicFormSystemContext}
@@ -645,6 +724,10 @@ const PipelineFormComponent = forwardRef<
       }
     }
 
+    const StageForm =
+      formName === 'output' && stage.name === 'misc'
+        ? PersistedRunnerForm
+        : DynamicFormComponent;
     const stageInitialValues: Record<string, any> =
       (form.watch(formName) as Record<string, any>)?.[stage.name] || {};
 
@@ -659,7 +742,7 @@ const PipelineFormComponent = forwardRef<
           )}
         </CardHeader>
         <CardContent className="space-y-6">
-          <DynamicFormComponent
+          <StageForm
             itemConfigList={stage.config}
             initialValues={stageInitialValues}
             systemContext={dynamicFormSystemContext}
@@ -711,6 +794,12 @@ const PipelineFormComponent = forwardRef<
     }
   };
 
+  if (legacyConfig)
+    return (
+      <Alert>
+        <AlertDescription>{t('pipelineMigration.legacyGate')}</AlertDescription>
+      </Alert>
+    );
   if (loadFailed)
     return (
       <EntityLoadState error onRetry={() => setLoadAttempt((n) => n + 1)} />
@@ -723,6 +812,7 @@ const PipelineFormComponent = forwardRef<
         <Form {...form}>
           <form
             id="pipeline-form"
+            ref={pipelineFormElement}
             onSubmit={form.handleSubmit(handleFormSubmit)}
             className="h-full flex flex-col flex-1 min-h-0 mb-2"
           >
@@ -920,8 +1010,11 @@ const PipelineFormComponent = forwardRef<
                 {/* Dynamic config sections (edit mode only) */}
                 {isEditMode && (
                   <>
-                    {activeSection === 'ai' && aiConfigTabSchema && (
-                      <div className="space-y-6">
+                    {aiConfigTabSchema && (
+                      <div
+                        className="space-y-6"
+                        hidden={activeSection !== 'ai'}
+                      >
                         {aiConfigTabSchema.stages.map((stage) =>
                           renderDynamicForms(stage, 'ai'),
                         )}

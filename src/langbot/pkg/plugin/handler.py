@@ -52,6 +52,7 @@ from ..entity.persistence import model as persistence_model
 from ..core import app
 from ..utils import constants
 from ..agent.runner.session_registry import get_session_registry
+from ..agent.runner.model_reasoning import model_with_reasoning_override
 from ..agent.runner.config_resolver import RunnerConfigResolver
 from ..agent.runner import config_schema
 from ..agent.runner.platform_tools import execute_platform_tool, get_platform_tool_detail, resolve_platform_api_call
@@ -204,6 +205,7 @@ async def _validate_run_authorization(
     ap: app.Application,
     caller_plugin_identity: str | None = None,
     operation: str | None = None,
+    workspace_uuid: str | None = None,
 ) -> Union[tuple[None, handler.ActionResponse], tuple[Any, None]]:
     """Validate run_id authorization for a resource access.
 
@@ -249,6 +251,9 @@ async def _validate_run_authorization(
         return None, handler.ActionResponse.error(
             message=f'Plugin identity mismatch: caller {caller_plugin_identity} is not authorized for run_id {run_id}',
         )
+
+    if workspace_uuid is not None and session['authorization'].get('workspace_id') not in (None, workspace_uuid):
+        return None, handler.ActionResponse.error(message='Run session belongs to another Workspace')
 
     if not session_registry.is_resource_allowed(session, resource_type, resource_id, operation):
         ap.logger.warning(
@@ -1341,11 +1346,19 @@ class RuntimeConnectionHandler(handler.Handler):
             caller_plugin_identity = data.get('caller_plugin_identity')
 
             if run_id:
-                _session, error = await _validate_run_authorization(
-                    run_id, 'model', llm_model_uuid, self.ap, caller_plugin_identity, operation='count_tokens'
+                session, error = await _validate_run_authorization(
+                    run_id,
+                    'model',
+                    llm_model_uuid,
+                    self.ap,
+                    caller_plugin_identity,
+                    operation='count_tokens',
+                    workspace_uuid=action_context.workspace_uuid,
                 )
                 if error:
                     return error
+            else:
+                session = None
 
             if not await self._resource_exists(
                 persistence_model.LLMModel,
@@ -1366,6 +1379,9 @@ class RuntimeConnectionHandler(handler.Handler):
                     message=f'LLM model with llm_model_uuid {llm_model_uuid} not found',
                 )
 
+            if getattr(llm_model.model_entity, 'workspace_uuid', None) not in (None, action_context.workspace_uuid):
+                return handler.ActionResponse.error(message='LLM model belongs to another Workspace')
+            llm_model = model_with_reasoning_override(llm_model, llm_model_uuid, session)
             messages_obj = [provider_message.Message.model_validate(message) for message in messages]
 
             async def _placeholder_func(**kwargs):
@@ -1407,7 +1423,13 @@ class RuntimeConnectionHandler(handler.Handler):
             # Permission validation for Runner calls
             if run_id:
                 session, error = await _validate_run_authorization(
-                    run_id, 'model', llm_model_uuid, self.ap, caller_plugin_identity, operation='invoke'
+                    run_id,
+                    'model',
+                    llm_model_uuid,
+                    self.ap,
+                    caller_plugin_identity,
+                    operation='invoke',
+                    workspace_uuid=action_context.workspace_uuid,
                 )
                 if error:
                     return error
@@ -1441,6 +1463,7 @@ class RuntimeConnectionHandler(handler.Handler):
                     message=f'LLM model with llm_model_uuid {llm_model_uuid} not found',
                 )
 
+            llm_model = model_with_reasoning_override(llm_model, llm_model_uuid, session)
             messages_obj = [provider_message.Message.model_validate(message) for message in messages]
 
             # The func field is excluded during model_dump() in plugin side (marked as exclude=True),
@@ -1500,7 +1523,13 @@ class RuntimeConnectionHandler(handler.Handler):
             # Permission validation for Runner calls
             if run_id:
                 session, error = await _validate_run_authorization(
-                    run_id, 'model', llm_model_uuid, self.ap, caller_plugin_identity, operation='stream'
+                    run_id,
+                    'model',
+                    llm_model_uuid,
+                    self.ap,
+                    caller_plugin_identity,
+                    operation='stream',
+                    workspace_uuid=action_context.workspace_uuid,
                 )
                 if error:
                     yield error
@@ -1528,6 +1557,10 @@ class RuntimeConnectionHandler(handler.Handler):
                 )
                 return
 
+            if getattr(llm_model.model_entity, 'workspace_uuid', None) not in (None, action_context.workspace_uuid):
+                yield handler.ActionResponse.error(message='LLM model belongs to another Workspace')
+                return
+            llm_model = model_with_reasoning_override(llm_model, llm_model_uuid, session)
             messages_obj = [provider_message.Message.model_validate(message) for message in messages]
 
             # The func field is excluded during model_dump() in plugin side

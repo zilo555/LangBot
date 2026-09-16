@@ -6,6 +6,7 @@ from types import SimpleNamespace
 import time
 
 import pytest
+import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from langbot_plugin.api.entities.builtin.runner.delivery import DeliveryContext
@@ -26,6 +27,27 @@ from langbot.pkg.agent.runner.host_models import (
 from langbot.pkg.agent.runner.interaction_manager import InteractionManager
 from langbot.pkg.agent.runner.interaction_store import InteractionStore
 from langbot.pkg.entity.persistence.base import Base
+from langbot.pkg.entity.persistence.pipeline import LegacyPipeline
+
+CONFIG = {
+    'ai': {
+        'runner': {'id': 'plugin:test/ApprovalRunner/default'},
+        'runner_config': {'plugin:test/ApprovalRunner/default': {}},
+    }
+}
+
+
+def _context(adapter):
+    conversation = SimpleNamespace(pipeline_uuid='pipeline-1')
+    query = SimpleNamespace(
+        pipeline_uuid='pipeline-1', pipeline_config=CONFIG, session=SimpleNamespace(using_conversation=conversation)
+    )
+    return {
+        '_delivery_adapter': adapter,
+        '_query': query,
+        '_pipeline_expected_config': CONFIG,
+        '_pipeline_conversation': conversation,
+    }
 
 
 class FakeAdapter:
@@ -63,6 +85,18 @@ async def store(tmp_path):
     engine = create_async_engine(f'sqlite+aiosqlite:///{tmp_path / "manager.db"}', echo=False)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.execute(
+            sa.insert(LegacyPipeline).values(
+                uuid='pipeline-1',
+                workspace_uuid='workspace-1',
+                name='test',
+                description='',
+                for_version='4.11',
+                stages=[],
+                config=CONFIG,
+                extensions_preferences={},
+            )
+        )
     yield InteractionStore(engine)
     await engine.dispose()
 
@@ -74,6 +108,7 @@ def event():
         event_type='message.received',
         source='platform',
         bot_id='bot-1',
+        workspace_id='workspace-1',
         conversation_id='group_chat-1',
         actor=ActorContext(actor_type='user', actor_id='user-1'),
         input=AgentInput(text='start'),
@@ -135,7 +170,7 @@ async def test_structured_delivery_uses_frozen_target_and_persists_request(store
         binding=binding,
         descriptor=_descriptor(),
         run_id='run-1',
-        adapter_context={'_delivery_adapter': adapter},
+        adapter_context=_context(adapter),
     )
 
     assert consumed is True
@@ -167,7 +202,7 @@ async def test_continuous_interaction_reuses_submitted_platform_presentation(sto
         binding=binding,
         descriptor=_descriptor(),
         run_id='run-1',
-        adapter_context={'_delivery_adapter': adapter},
+        adapter_context=_context(adapter),
     )
     first_token = adapter.actions[0][1]['callback_token']
     submitted = await manager.consume_callback(
@@ -192,7 +227,7 @@ async def test_continuous_interaction_reuses_submitted_platform_presentation(sto
         binding=binding,
         descriptor=_descriptor(),
         run_id='run-2',
-        adapter_context={'_delivery_adapter': adapter},
+        adapter_context=_context(adapter),
     )
 
     assert [action for action, _ in adapter.actions] == [
@@ -221,7 +256,7 @@ async def test_interaction_update_failure_falls_back_to_new_presentation(store, 
         binding=binding,
         descriptor=_descriptor(),
         run_id='run-1',
-        adapter_context={'_delivery_adapter': adapter},
+        adapter_context=_context(adapter),
     )
     first_token = adapter.actions[0][1]['callback_token']
     await manager.consume_callback(
@@ -241,7 +276,7 @@ async def test_interaction_update_failure_falls_back_to_new_presentation(store, 
         binding=binding,
         descriptor=_descriptor(),
         run_id='run-2',
-        adapter_context={'_delivery_adapter': adapter},
+        adapter_context=_context(adapter),
     )
 
     update_attempt = adapter.actions[-2][1]
@@ -263,7 +298,7 @@ async def test_callback_scope_uses_frozen_delivery_conversation(store, event, bi
         binding=binding,
         descriptor=_descriptor(),
         run_id='run-1',
-        adapter_context={'_delivery_adapter': adapter},
+        adapter_context=_context(adapter),
     )
 
     record = await store.get_request('run-1', 'form-1')
@@ -281,7 +316,7 @@ async def test_adapter_without_interactions_receives_fallback_text(store, event,
         binding=binding,
         descriptor=_descriptor(),
         run_id='run-1',
-        adapter_context={'_delivery_adapter': adapter},
+        adapter_context=_context(adapter),
     )
 
     assert adapter.actions == []
@@ -301,7 +336,7 @@ async def test_runner_without_interaction_permission_is_rejected(store, event, b
             binding=binding,
             descriptor=_descriptor(permitted=False),
             run_id='run-1',
-            adapter_context={'_delivery_adapter': FakeAdapter(supports_interactions=True)},
+            adapter_context=_context(FakeAdapter(supports_interactions=True)),
         )
 
     assert await store.get_request('run-1', 'form-1') is None
@@ -319,7 +354,7 @@ async def test_binding_policy_can_disable_interactions(store, event, binding):
             binding=binding,
             descriptor=_descriptor(),
             run_id='run-1',
-            adapter_context={'_delivery_adapter': FakeAdapter(supports_interactions=True)},
+            adapter_context=_context(FakeAdapter(supports_interactions=True)),
         )
 
 
@@ -344,7 +379,7 @@ async def test_interaction_expiry_is_bounded(store, event, binding, expires_at, 
             binding=binding,
             descriptor=_descriptor(),
             run_id='run-1',
-            adapter_context={'_delivery_adapter': FakeAdapter(supports_interactions=True)},
+            adapter_context=_context(FakeAdapter(supports_interactions=True)),
         )
 
 
@@ -361,7 +396,7 @@ async def test_interaction_rejects_duplicate_protocol_ids(store, event, binding)
             binding=binding,
             descriptor=_descriptor(),
             run_id='run-1',
-            adapter_context={'_delivery_adapter': FakeAdapter(supports_interactions=True)},
+            adapter_context=_context(FakeAdapter(supports_interactions=True)),
         )
 
 
@@ -392,7 +427,7 @@ async def test_interaction_request_payload_is_bounded(store, event, binding):
             binding=binding,
             descriptor=_descriptor(),
             run_id='run-1',
-            adapter_context={'_delivery_adapter': FakeAdapter(supports_interactions=True)},
+            adapter_context=_context(FakeAdapter(supports_interactions=True)),
         )
 
 
@@ -408,7 +443,7 @@ async def test_non_interaction_action_is_not_consumed(store, event, binding):
         binding=binding,
         descriptor=_descriptor(),
         run_id='run-1',
-        adapter_context={'_delivery_adapter': FakeAdapter(supports_interactions=True)},
+        adapter_context=_context(FakeAdapter(supports_interactions=True)),
     )
 
 
@@ -421,7 +456,7 @@ async def _deliver_interaction(store, event, binding, result=None):
         binding=binding,
         descriptor=_descriptor(),
         run_id='run-1',
-        adapter_context={'_delivery_adapter': adapter},
+        adapter_context=_context(adapter),
     )
     return manager, adapter.actions[0][1]['callback_token']
 

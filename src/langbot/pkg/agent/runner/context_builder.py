@@ -249,6 +249,20 @@ class RunnerContextBuilder:
             'timestamp': event.event_time or int(time.time()),
         }
 
+        # A legacy Tbox resume must use the persisted original bot, not a
+        # newly reconstructed callback envelope. Ordinary sender mode is unchanged.
+        bot_id = event.bot_id
+        if event.event_type == 'interaction.submitted' and binding.runner_config.get('user-id-source') == 'legacy-bot':
+            identity = event.legacy_identity
+            bot_id = (
+                identity.bot_id
+                if identity is not None
+                and identity.workspace_id == event.workspace_id
+                and identity.bot_id == event.bot_id
+                and identity.pipeline_id == (binding.processor_id or binding.agent_id)
+                else None
+            )
+
         # Build conversation context from event
         conversation: ConversationContext | None = None
         if event.conversation_id:
@@ -256,12 +270,38 @@ class RunnerContextBuilder:
                 'session_id': None,
                 'conversation_id': event.conversation_id,
                 'thread_id': event.thread_id,
-                'launcher_type': None,  # Will be filled from actor/subject if needed
+                'launcher_type': None,
                 'launcher_id': None,
                 'sender_id': event.actor.actor_id if event.actor else None,
-                'bot_id': event.bot_id,
+                'bot_id': bot_id,
                 'workspace_id': event.workspace_id,
             }
+
+            identity = event.legacy_identity
+            if (
+                binding.runner_config.get('user-id-source') == 'legacy-session'
+                and identity is not None
+                and identity.workspace_id == event.workspace_id
+                and identity.bot_id == event.bot_id
+                and identity.pipeline_id == (binding.processor_id or binding.agent_id)
+                and binding.processor_type == 'pipeline'
+            ):
+                # Coze used Query itself; Dify/n8n used Query.session, which may
+                # deliberately differ (e.g. group per-member session isolation).
+                if binding.runner_id == 'plugin:langbot-team/CozeAgent/default':
+                    launcher_type = identity.query_launcher_type
+                    launcher_id = identity.query_launcher_id
+                elif binding.runner_id in {
+                    'plugin:langbot-team/DifyAgent/default',
+                    'plugin:langbot-team/N8nAgent/default',
+                }:
+                    launcher_type = identity.session_launcher_type
+                    launcher_id = identity.session_launcher_id
+                else:
+                    launcher_type = launcher_id = None
+                if launcher_type in ('group', 'person') and launcher_id:
+                    conversation['launcher_type'] = launcher_type
+                    conversation['launcher_id'] = launcher_id
 
         # Build event context (Protocol v1 event-first)
         event_context = {
@@ -322,7 +362,7 @@ class RunnerContextBuilder:
             'trace_id': run_id,
             'deadline_at': self._build_deadline_from_binding(binding),
             'metadata': {
-                'bot_id': event.bot_id,
+                'bot_id': bot_id,
                 'workspace_id': event.workspace_id,
                 'streaming_supported': event.delivery.supports_streaming,
                 'model_context_window_tokens': model_context_window_tokens,

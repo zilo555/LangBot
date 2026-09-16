@@ -1,4 +1,7 @@
+import pipelineMigration from './pipeline-migration/vi-VN';
+
 const viVN = {
+  pipelineMigration,
   sidebar: {
     home: 'Trang chủ',
     extensions: 'Tiện ích mở rộng',
@@ -256,6 +259,7 @@ const viVN = {
     reasoningAbility: 'Khả năng suy luận',
     reasoningLevel: 'Mức độ suy luận',
     reasoningLevels: {
+      useModelSetting: 'Dùng cài đặt mô hình',
       providerDefault: 'Mặc định của nhà cung cấp',
       disabled: 'Tắt',
       enabled: 'Bật',

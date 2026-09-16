@@ -71,6 +71,7 @@ _ALEMBIC_TENANT_TABLES = {
     'rerank_models',
     'legacy_pipelines',
     'pipeline_run_records',
+    'pipeline_migration_snapshots',
     'plugin_settings',
     'knowledge_bases',
     'knowledge_base_files',

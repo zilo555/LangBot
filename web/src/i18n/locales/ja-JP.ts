@@ -1,4 +1,7 @@
+import pipelineMigration from './pipeline-migration/ja-JP';
+
 const jaJP = {
+  pipelineMigration,
   sidebar: {
     home: 'ホーム',
     extensions: '拡張機能',
@@ -265,6 +268,7 @@ const jaJP = {
     reasoningAbility: '推論',
     reasoningLevel: '推論レベル',
     reasoningLevels: {
+      useModelSetting: 'モデル設定を使用',
       providerDefault: 'Provider デフォルト',
       disabled: 'オフ',
       enabled: 'オン',

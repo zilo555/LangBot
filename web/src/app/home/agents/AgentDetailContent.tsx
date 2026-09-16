@@ -32,7 +32,13 @@ import AgentFormComponent, {
   RunnerStatus,
 } from './components/AgentFormComponent';
 
-export default function AgentDetailContent({ id }: { id: string }) {
+export default function AgentDetailContent({
+  id,
+  pipelineRevision,
+}: {
+  id: string;
+  pipelineRevision?: string;
+}) {
   const isCreateMode = id === 'new';
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -130,7 +136,13 @@ export default function AgentDetailContent({ id }: { id: string }) {
   if (loading || !agent) return <EntityLoadState />;
 
   if (agent.kind === 'pipeline') {
-    return <PipelineDetailContent id={id} routeBase="/home/agents" />;
+    return (
+      <PipelineDetailContent
+        key={pipelineRevision}
+        id={id}
+        routeBase="/home/agents"
+      />
+    );
   }
 
   async function saveBasicInfo(values: EntityBasicInfoValues) {

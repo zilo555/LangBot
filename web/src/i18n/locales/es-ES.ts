@@ -1,4 +1,7 @@
+import pipelineMigration from './pipeline-migration/es-ES';
+
 const esES = {
+  pipelineMigration,
   sidebar: {
     home: 'Inicio',
     extensions: 'Extensiones',
@@ -261,6 +264,7 @@ const esES = {
     reasoningAbility: 'Razonamiento',
     reasoningLevel: 'Nivel de razonamiento',
     reasoningLevels: {
+      useModelSetting: 'Usar ajuste del modelo',
       providerDefault: 'Predeterminado del proveedor',
       disabled: 'Desactivado',
       enabled: 'Activado',

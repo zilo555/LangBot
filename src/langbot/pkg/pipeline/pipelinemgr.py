@@ -638,6 +638,16 @@ class PipelineManager:
     async def load_pipeline(
         self,
         context: ExecutionContext | RequestContext,
+        pipeline_entity,
+        *,
+        _binding_validated: bool = False,
+    ):
+        candidate = await self.prepare_pipeline(context, pipeline_entity, _binding_validated=_binding_validated)
+        self.publish_pipeline(candidate)
+
+    async def prepare_pipeline(
+        self,
+        context: ExecutionContext | RequestContext,
         pipeline_entity: persistence_pipeline.LegacyPipeline
         | sqlalchemy.Row[persistence_pipeline.LegacyPipeline]
         | dict,
@@ -657,8 +667,6 @@ class PipelineManager:
                 execution_context.workspace_uuid,
                 expected_generation=execution_context.placement_generation,
             )
-        self._observe_execution_context(execution_context)
-
         coerce_pipeline_config(
             pipeline_entity.config,
             getattr(self.ap, 'pipeline_config_meta_trigger', {'name': 'trigger', 'stages': []}),
@@ -685,17 +693,25 @@ class PipelineManager:
                 execution_context.workspace_uuid,
                 expected_generation=execution_context.placement_generation,
             )
-        self._observe_execution_context(execution_context)
-        runtime_pipeline = RuntimePipeline(
+        return RuntimePipeline(
             self.ap,
             pipeline_entity,
             stage_containers,
             execution_context,
         )
+
+    def publish_pipeline(self, runtime_pipeline: RuntimePipeline) -> None:
+        """Publish a prepared candidate without yielding.
+
+        Callers preparing before a database commit must recheck the committed
+        source and execution binding before invoking this synchronous seam.
+        """
+        execution_context = runtime_pipeline.execution_context
+        self._observe_execution_context(execution_context)
         key = (
             execution_context.instance_uuid,
             execution_context.workspace_uuid,
-            pipeline_entity.uuid,
+            runtime_pipeline.pipeline_entity.uuid,
         )
         self._pipelines_by_key[key] = runtime_pipeline
         self._pipeline_keys_by_scope.setdefault(key[:2], set()).add(key)

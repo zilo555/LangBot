@@ -469,6 +469,23 @@ async def test_orchestrator_consumes_interaction_request_before_message_output(c
         call_platform_api=AsyncMock(return_value={'ok': True}),
     )
 
+    import sqlalchemy as sa
+    from langbot.pkg.entity.persistence.pipeline import LegacyPipeline
+
+    async with db_engine.begin() as conn:
+        await conn.execute(
+            sa.insert(LegacyPipeline).values(
+                uuid=query.pipeline_uuid,
+                workspace_uuid=TEST_CONTEXT.workspace_uuid,
+                name='test',
+                description='',
+                for_version='4.11',
+                stages=[],
+                config=query.pipeline_config,
+                extensions_preferences={},
+            )
+        )
+
     messages = [message async for message in orchestrator.run_from_query(query)]
 
     assert [message.content for message in messages] == ['Waiting for approval']

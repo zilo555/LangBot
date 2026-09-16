@@ -1,4 +1,7 @@
+import pipelineMigration from './pipeline-migration/zh-Hant';
+
 const zhHant = {
+  pipelineMigration,
   sidebar: {
     home: '首頁',
     extensions: '擴展',
@@ -244,6 +247,7 @@ const zhHant = {
     reasoningAbility: '思考能力',
     reasoningLevel: '思考等級',
     reasoningLevels: {
+      useModelSetting: '使用模型設定',
       providerDefault: '供應商預設',
       disabled: '關閉',
       enabled: '開啟',

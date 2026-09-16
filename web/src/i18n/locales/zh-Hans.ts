@@ -1,4 +1,7 @@
+import pipelineMigration from './pipeline-migration/zh-Hans';
+
 const zhHans = {
+  pipelineMigration,
   sidebar: {
     home: '首页',
     extensions: '扩展',
@@ -250,6 +253,7 @@ const zhHans = {
     reasoningAbility: '思考能力',
     reasoningLevel: '思考档位',
     reasoningLevels: {
+      useModelSetting: '使用模型设置',
       providerDefault: 'Provider 默认',
       disabled: '关闭',
       enabled: '开启',

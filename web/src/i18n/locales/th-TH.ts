@@ -1,4 +1,7 @@
+import pipelineMigration from './pipeline-migration/th-TH';
+
 const thTH = {
+  pipelineMigration,
   sidebar: {
     home: 'หน้าแรก',
     extensions: 'ส่วนขยาย',
@@ -252,6 +255,7 @@ const thTH = {
     reasoningAbility: 'ความสามารถในการให้เหตุผล',
     reasoningLevel: 'ระดับการให้เหตุผล',
     reasoningLevels: {
+      useModelSetting: 'ใช้การตั้งค่าโมเดล',
       providerDefault: 'ค่าเริ่มต้นของผู้ให้บริการ',
       disabled: 'ปิด',
       enabled: 'เปิด',

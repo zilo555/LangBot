@@ -13,6 +13,7 @@ import threading
 from langbot_plugin.api.entities.builtin.pipeline import query as pipeline_query
 
 from .context_builder import AgentResources
+from .model_reasoning import ModelReasoningOverrides
 from ...provider.tools.toolmgr import ToolSourceRef
 
 
@@ -52,6 +53,7 @@ class RunAuthorizationSnapshot(typing.TypedDict):
     platform_context: dict[str, typing.Any]
     authorized_ids: dict[str, set[str]]
     authorized_operations: dict[str, dict[str, set[str]]]
+    model_reasoning_overrides: ModelReasoningOverrides
 
 
 SteeringQueueItem = dict[str, typing.Any]
@@ -119,6 +121,7 @@ class AgentRunSessionRegistry:
         execution_query: pipeline_query.Query | None = None,
         platform_context: dict[str, typing.Any] | None = None,
         reply_streams: typing.Any = None,
+        model_reasoning_overrides: ModelReasoningOverrides | None = None,
     ) -> None:
         """Register a new agent run session.
 
@@ -164,6 +167,7 @@ class AgentRunSessionRegistry:
             'platform_context': copy.deepcopy(platform_context or {}),
             'authorized_ids': self._build_authorized_ids(resources_snapshot),
             'authorized_operations': self._build_authorized_operations(resources_snapshot),
+            'model_reasoning_overrides': copy.deepcopy(model_reasoning_overrides or {}),
         }
 
         session: AgentRunSession = {
