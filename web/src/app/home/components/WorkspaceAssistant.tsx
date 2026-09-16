@@ -5,6 +5,9 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { backendClient, useCurrentWorkspace, userInfo } from '@/app/infra/http';
 import { Button } from '@/components/ui/button';
+import DynamicFormItemComponent from './dynamic-form/DynamicFormItemComponent';
+import { DynamicFormItemType } from '@/app/infra/entities/form/dynamic';
+import AssistantToolResult, { AssistantTool } from './AssistantToolResult';
 import {
   Popover,
   PopoverContent,
@@ -15,10 +18,11 @@ type Conversation = {
   uuid: string;
   revision: number;
   status: 'ready' | 'running' | 'approval' | 'failed';
-  messages: { role: string; content: string }[];
+  messages: { role: string; content: string; tool?: AssistantTool }[];
   pending: { name: string; arguments: Record<string, unknown> }[];
   error: string | null;
   model_name: string | null;
+  model_uuid: string | null;
 };
 
 export default function WorkspaceAssistant() {
@@ -42,10 +46,18 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
   const [open, setOpen] = useState(false);
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [text, setText] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [sending, setBusy] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const busy = sending || loading;
   const [error, setError] = useState(false);
+  const [modelUuid, setModelUuid] = useState('');
+  const [pendingText, setPendingText] = useState<string | null>(null);
   const controller = useRef(new AbortController());
   const end = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (conversation?.model_uuid) setModelUuid(conversation.model_uuid);
+  }, [conversation?.model_uuid]);
 
   useEffect(() => {
     const abort = new AbortController();
@@ -59,7 +71,7 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
     const id = localStorage.getItem(storageKey);
     if (!id) return;
     let active = true;
-    setBusy(true);
+    setLoading(true);
     backendClient
       .request<Conversation>({
         method: 'GET',
@@ -76,11 +88,11 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
         }
       })
       .finally(() => {
-        if (active) setBusy(false);
+        if (active) setLoading(false);
       });
     return () => {
       active = false;
-      setBusy(false);
+      setLoading(false);
     };
     // Load only when opening; turn requests own subsequent state updates.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -88,10 +100,21 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
 
   useEffect(() => {
     end.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, [conversation, busy]);
+  }, [conversation, busy, pendingText]);
 
   async function submit(approved?: boolean) {
-    if (busy || (approved === undefined && !text.trim())) return;
+    if (
+      busy ||
+      (approved === undefined &&
+        (!text.trim() || (conversation && conversation.status !== 'ready')))
+    )
+      return;
+    const sentText = approved === undefined ? text.trim() : null;
+    const sentRevision = conversation?.revision ?? 0;
+    if (sentText) {
+      setPendingText(sentText);
+      setText('');
+    }
     setBusy(true);
     setError(false);
     try {
@@ -110,13 +133,18 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
         url: `/api/v1/assistant/conversations/${current.uuid}/turn`,
         data: {
           revision: current.revision,
-          ...(approved === undefined ? { text: text.trim() } : { approved }),
+          ...(approved === undefined
+            ? {
+                text: sentText,
+                ...(modelUuid ? { model_uuid: modelUuid } : {}),
+              }
+            : { approved }),
         },
         timeout: 130000,
         signal: controller.current.signal,
       });
       setConversation(updated);
-      if (approved === undefined) setText('');
+      if (sentText) setPendingText(null);
     } catch {
       setError(true);
       // A lost response may already have executed a write. Refresh, never replay.
@@ -129,6 +157,15 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
             signal: controller.current.signal,
           });
           setConversation(latest);
+          if (
+            sentText &&
+            latest.revision > sentRevision &&
+            latest.messages.some(
+              (message) =>
+                message.role === 'user' && message.content === sentText,
+            )
+          )
+            setPendingText(null);
         } catch {
           /* Keep the error visible; do not retry a turn. */
         }
@@ -143,6 +180,7 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
     setConversation(null);
     setText('');
     setError(false);
+    setPendingText(null);
   }
 
   return (
@@ -169,7 +207,7 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
             <div className="min-w-0 flex-1">
               <h2 className="font-semibold">{t('assistant.title')}</h2>
               <p className="truncate text-xs text-muted-foreground">
-                {conversation?.model_name || t('assistant.subtitle')}
+                {t('assistant.subtitle')}
               </p>
             </div>
             <Button
@@ -190,11 +228,38 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
               <X />
             </Button>
           </header>
+          {open && (
+            <div className="space-y-1 border-b px-3 py-2">
+              <span className="text-xs text-muted-foreground">
+                {t('assistant.modelHint')}
+              </span>
+              <DynamicFormItemComponent
+                config={{
+                  id: 'assistant-model',
+                  name: 'assistant-model',
+                  type: DynamicFormItemType.LLM_MODEL_SELECTOR,
+                  default: '',
+                  required: false,
+                  label: { en_US: 'Assistant model', zh_Hans: '助手模型' },
+                }}
+                field={{
+                  name: 'assistant-model',
+                  value: modelUuid,
+                  onChange: setModelUuid,
+                  onBlur: () => {},
+                  ref: () => {},
+                  disabled:
+                    busy || (!!conversation && conversation.status !== 'ready'),
+                }}
+                requiredModelAbility="func_call"
+              />
+            </div>
+          )}
           <div
             className="flex-1 space-y-3 overflow-y-auto p-4"
             aria-live="polite"
           >
-            {!conversation?.messages.length && (
+            {!conversation?.messages.length && !pendingText && (
               <>
                 <p className="text-sm text-muted-foreground">
                   {t('assistant.welcome')}
@@ -214,17 +279,11 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
             )}
             {conversation?.messages.map((message, index) =>
               message.role === 'tool' ? (
-                <details
+                <AssistantToolResult
                   key={index}
-                  className="rounded-lg border p-2 text-xs text-muted-foreground"
-                >
-                  <summary className="cursor-pointer">
-                    {t('assistant.toolResult')}
-                  </summary>
-                  <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap break-all">
-                    {message.content}
-                  </pre>
-                </details>
+                  tool={message.tool}
+                  content={message.content}
+                />
               ) : (
                 <div
                   key={index}
@@ -250,6 +309,16 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
                   </ReactMarkdown>
                 </div>
               ),
+            )}
+            {pendingText && (
+              <div className="ml-6 rounded-xl bg-primary/10 p-3 text-sm whitespace-pre-wrap break-words">
+                {pendingText}
+                {error && (
+                  <p className="mt-1 text-xs text-destructive">
+                    {t('assistant.sendUnconfirmed')}
+                  </p>
+                )}
+              </div>
             )}
             {conversation?.status === 'approval' && (
               <div className="space-y-3 rounded-xl border border-primary/30 p-3">
@@ -313,11 +382,20 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
               onChange={(event) => setText(event.target.value)}
               maxLength={8000}
               rows={2}
-              disabled={
-                busy || (!!conversation && conversation.status !== 'ready')
-              }
               aria-label={t('assistant.placeholder')}
-              placeholder={t('assistant.placeholder')}
+              placeholder={t(
+                busy ? 'assistant.draftPlaceholder' : 'assistant.placeholder',
+              )}
+              onKeyDown={(event) => {
+                if (
+                  event.key === 'Enter' &&
+                  !event.shiftKey &&
+                  !event.nativeEvent.isComposing
+                ) {
+                  event.preventDefault();
+                  void submit();
+                }
+              }}
               className="min-w-0 flex-1 resize-none rounded-lg border bg-background p-2 text-sm focus-visible:outline-2 focus-visible:outline-primary"
             />
             <Button

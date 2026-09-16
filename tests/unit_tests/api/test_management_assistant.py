@@ -107,6 +107,12 @@ async def test_confirmation_is_exact_once_and_private(assistant):
     assert saved['messages'][1]['provider_specific_fields']['thought_signature'] == 'preserved'
     assert provider.invoke_llm.call_args.kwargs['query'] is None
     assert provider.invoke_llm.call_args.kwargs['execution_context'].workspace_uuid == ctx.workspace_uuid
+    tool_message = next(message for message in service.public_view(saved)['messages'] if message['role'] == 'tool')
+    assert tool_message['tool'] == {
+        'name': 'create_pipeline',
+        'arguments': {'name': 'Demo', 'description': 'Test draft'},
+        'result': {'uuid': 'created-pipeline', 'url': '/home/pipelines?id=created-pipeline', 'configured': False},
+    }
 
 
 @pytest.mark.asyncio
@@ -147,6 +153,23 @@ def test_tool_arguments_cannot_select_identity_or_shell():
         validate_call(context(), 'exec', {'command': 'echo unsafe'})
 
 
+def test_rejected_malformed_tool_call_remains_readable():
+    message = proposal().model_dump(mode='json')
+    message['tool_calls'][0]['function']['arguments'] = '{invalid'
+    conversation = dict(
+        uuid='chat',
+        revision=1,
+        status='ready',
+        error=None,
+        model_name=None,
+        model_uuid=None,
+        messages=[message, {'role': 'tool', 'tool_call_id': 'call-1', 'content': '{"error":"Invalid arguments"}'}],
+    )
+    visible = AssistantService.public_view(conversation)['messages'][-1]['tool']
+    assert visible['result']['error'] == 'Invalid arguments'
+    assert visible['arguments'] == {'unparsed': '{invalid'}
+
+
 @pytest.mark.asyncio
 async def test_resource_readers_match_application_services():
     from langbot.pkg.core.app import Application
@@ -175,3 +198,39 @@ async def test_resource_readers_match_application_services():
             'items': [{'name': kind}],
         }
         reader.assert_awaited_once_with(ctx)
+
+
+@pytest.mark.asyncio
+async def test_model_switch_preserves_history_and_rejects_invalid_selection(assistant):
+    service, ap, provider = assistant
+    ctx = context()
+    conversation = await service.create(ctx)
+    cid = conversation['uuid']
+    await service.turn(ctx, cid, 0, text='Create')
+    with pytest.raises(AssistantError, match='invalid_input'):
+        await service.turn(ctx, cid, 1, approved=True, model_uuid='other')
+    ap.pipeline_service.create_pipeline.assert_not_awaited()
+    await service.turn(ctx, cid, 1, approved=True)
+    for invalid in (ValueError('not in workspace'), SimpleNamespace(model_entity=SimpleNamespace(abilities=[]))):
+        ap.model_mgr.get_model_by_uuid.side_effect = [invalid]
+        with pytest.raises(AssistantError, match='model_unavailable'):
+            await service.turn(ctx, cid, 2, text='Continue', model_uuid='invalid')
+        saved = await service.get(ctx, cid)
+        assert saved['revision'] == 2 and saved['status'] == 'ready'
+    next_provider = SimpleNamespace(invoke_llm=AsyncMock(return_value=Message(role='assistant', content='Switched')))
+    ap.model_mgr.get_model_by_uuid.side_effect = None
+    ap.model_mgr.get_model_by_uuid.return_value = SimpleNamespace(
+        provider=next_provider,
+        model_entity=SimpleNamespace(name='second-model', abilities=['func_call'], extra_args={}),
+    )
+    switched = await service.turn(ctx, cid, 2, text='Continue', model_uuid='second')
+    assert switched['status'] == 'ready'
+    assert service.public_view(switched)['model_uuid'] == 'second'
+    assert switched['model_name'] == 'second-model'
+    history = next_provider.invoke_llm.call_args.kwargs['messages']
+    assert [m.content for m in history if m.role == 'user'] == ['Create', 'Continue']
+    assert any(m.role == 'tool' for m in history)
+    assert all(m.provider_specific_fields is None for m in history)
+    ap.model_mgr.get_model_by_uuid.assert_awaited_with(
+        next_provider.invoke_llm.call_args.kwargs['execution_context'], 'second'
+    )

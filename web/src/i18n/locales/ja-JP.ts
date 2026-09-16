@@ -1,5 +1,34 @@
 const jaJP = {
   assistant: {
+    modelHint:
+      'アシスタントモデル · 既定は Space 推奨。変更は次のメッセージから適用',
+    details: '元のデータを見る',
+    found: '{{count}} 件見つかりました',
+    completed: '完了',
+    failed: '失敗',
+    denied: '未実行',
+    partial: '結果が不完全です',
+    operationFailed:
+      '操作に失敗しました。変更を再試行する前に詳細とリソースを確認してください。',
+    operationDenied: '拒否されました。この操作は実行されていません。',
+    openResource: 'リソースを開く',
+    sendUnconfirmed:
+      '送信を確認できません。接続を確認して会話を開き直してください。',
+    draftPlaceholder: '待機中に次のメッセージを入力できます…',
+    operations: {
+      create_pipeline: 'Pipeline 作成',
+      configure_pipeline: 'Pipeline 設定',
+      create_knowledge_base: 'ナレッジベース作成',
+      get_pipeline: 'Pipeline 参照',
+      get_knowledge_schema: 'エンジン設定の参照',
+    },
+    resources: {
+      models: 'チャットモデル検索',
+      embedding_models: '埋め込みモデル検索',
+      pipelines: 'Pipeline 検索',
+      knowledge_bases: 'ナレッジベース検索',
+      knowledge_engines: 'エンジン検索',
+    },
     title: 'ワークスペースアシスタント · 実験版',
     subtitle: 'Space モデルでアプリを構築',
     newChat: '新しい会話',

@@ -86,12 +86,26 @@ class AssistantService:
     @staticmethod
     def public_view(conversation):
         messages = []
+        calls = {}
         for message in conversation['messages']:
+            calls.update({call['id']: call['function'] for call in message.get('tool_calls') or []})
             content = message.get('content') or ''
             if isinstance(content, list):
                 content = '\n'.join(item.get('text') or '' for item in content if item.get('type') == 'text')
             if content:
-                messages.append({'role': message['role'], 'content': content})
+                visible = {'role': message['role'], 'content': content}
+                if message['role'] == 'tool':
+                    function = calls.get(message.get('tool_call_id'), {})
+                    try:
+                        arguments = json.loads(function.get('arguments') or '{}')
+                    except json.JSONDecodeError:
+                        arguments = {'unparsed': function['arguments']}
+                    visible['tool'] = {
+                        'name': function.get('name', ''),
+                        'arguments': arguments,
+                        'result': json.loads(content),
+                    }
+                messages.append(visible)
         pending = []
         if conversation['status'] == 'approval':
             for call in conversation['messages'][-1].get('tool_calls') or []:
@@ -109,6 +123,7 @@ class AssistantService:
             'pending': pending,
             'error': conversation['error'],
             'model_name': conversation['model_name'],
+            'model_uuid': conversation['model_uuid'],
         }
 
     async def _save(self, context, conversation, status, error=None):
@@ -131,8 +146,10 @@ class AssistantService:
             raise AssistantError('stale_turn')
         conversation.update(status=status, error=error)
 
-    async def turn(self, context, conversation_id, revision, text=None, approved=None):
+    async def turn(self, context, conversation_id, revision, text=None, approved=None, model_uuid=None):
         require_permission(context, Permission.RUNTIME_OPERATE)
+        if model_uuid is not None and text is None:
+            raise AssistantError('invalid_input', 400)
         if self._slots.locked():
             raise AssistantError('busy', 429)
         async with self._slots:
@@ -142,6 +159,16 @@ class AssistantService:
                 raise AssistantError('stale_turn')
             if text is not None and len(conversation['messages']) >= 100:
                 raise AssistantError('conversation_full')
+            selected_model = None
+            if model_uuid is not None:
+                try:
+                    selected_model = await self.ap.model_mgr.get_model_by_uuid(
+                        ExecutionContext.from_request(context), model_uuid
+                    )
+                    if 'func_call' not in (selected_model.model_entity.abilities or []):
+                        raise ValueError('Model does not support tool calls')
+                except Exception as exc:
+                    raise AssistantError('model_unavailable', 400) from exc
             result = await self.ap.persistence_mgr.execute_async(
                 sa.update(Conversation)
                 .where(
@@ -156,6 +183,15 @@ class AssistantService:
             conversation['revision'] += 1
             try:
                 async with asyncio.timeout(120):
+                    if model_uuid is not None and model_uuid != conversation['model_uuid']:
+                        # Provider signatures and response IDs belong to the previous model.
+                        for message in conversation['messages']:
+                            message['provider_specific_fields'] = None
+                            message['resp_message_id'] = None
+                            for call in message.get('tool_calls') or []:
+                                call['provider_specific_fields'] = None
+                        conversation['model_uuid'] = model_uuid
+                        conversation['model_name'] = selected_model.model_entity.name
                     if text is not None:
                         conversation['messages'].append(Message(role='user', content=text).model_dump(mode='json'))
                     await self._save(context, conversation, 'running')
@@ -164,7 +200,9 @@ class AssistantService:
                             recommended = await self.ap.space_service.get_recommended_chat_model(context)
                             conversation['model_uuid'] = recommended['uuid']
                         execution = ExecutionContext.from_request(context)
-                        model = await self.ap.model_mgr.get_model_by_uuid(execution, conversation['model_uuid'])
+                        model = selected_model or await self.ap.model_mgr.get_model_by_uuid(
+                            execution, conversation['model_uuid']
+                        )
                         if 'func_call' not in (model.model_entity.abilities or []):
                             raise ValueError('Recommended model does not support tool calls')
                         conversation['model_name'] = model.model_entity.name

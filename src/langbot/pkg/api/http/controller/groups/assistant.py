@@ -1,6 +1,7 @@
 """Web-session-only assistant endpoints; resource tools use the existing service layer."""
 
 import quart
+from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from .. import group
@@ -14,6 +15,7 @@ class TurnInput(BaseModel):
     revision: int = Field(ge=0, strict=True)
     text: str | None = Field(default=None, min_length=1, max_length=8000)
     approved: bool | None = Field(default=None, strict=True)
+    model_uuid: UUID | None = None
 
 
 @group.group_class('assistant', '/api/v1/assistant')
@@ -47,6 +49,7 @@ class AssistantRouterGroup(group.RouterGroup):
                     body.revision,
                     body.text,
                     body.approved,
+                    str(body.model_uuid) if body.model_uuid else None,
                 )
                 return self.success(data=service.public_view(conversation))
             except ValidationError:

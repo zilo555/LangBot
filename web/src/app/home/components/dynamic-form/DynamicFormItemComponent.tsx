@@ -88,6 +88,7 @@ export default function DynamicFormItemComponent({
   onFileUploaded,
   setFormValue,
   systemContext,
+  requiredModelAbility,
 }: {
   config: IDynamicFormItemSchema;
   field: ControllerRenderProps<any, any>;
@@ -95,6 +96,7 @@ export default function DynamicFormItemComponent({
   onFileUploaded?: (fileKey: string) => void;
   setFormValue?: (name: string, value: unknown) => void;
   systemContext?: Record<string, unknown>;
+  requiredModelAbility?: string;
 }) {
   const [llmModels, setLlmModels] = useState<LLMModel[]>([]);
   const [embeddingModels, setEmbeddingModels] = useState<EmbeddingModel[]>([]);
@@ -412,11 +414,16 @@ export default function DynamicFormItemComponent({
       );
 
     case DynamicFormItemType.LLM_MODEL_SELECTOR:
+      const selectableModels = llmModels.filter(
+        (model) =>
+          !requiredModelAbility ||
+          model.abilities?.includes(requiredModelAbility),
+      );
       // Separate space models from regular models
-      const spaceModels = llmModels.filter(
+      const spaceModels = selectableModels.filter(
         (m) => m.provider?.requester === LANGBOT_MODELS_PROVIDER_REQUESTER,
       );
-      const regularModels = llmModels.filter(
+      const regularModels = selectableModels.filter(
         (m) => m.provider?.requester !== LANGBOT_MODELS_PROVIDER_REQUESTER,
       );
 
@@ -456,7 +463,11 @@ export default function DynamicFormItemComponent({
       return (
         <div className="flex w-full max-w-md min-w-0 items-center gap-1.5">
           <div className="min-w-0 flex-1">
-            <Select value={field.value} onValueChange={field.onChange}>
+            <Select
+              value={field.value}
+              onValueChange={field.onChange}
+              disabled={field.disabled}
+            >
               <SelectTrigger className="min-w-0 bg-[#ffffff] dark:bg-[#2a2a2e]">
                 <SelectValue placeholder={t('models.selectModel')} />
               </SelectTrigger>

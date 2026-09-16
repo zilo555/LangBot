@@ -1,5 +1,34 @@
 const enUS = {
   assistant: {
+    modelHint:
+      'Assistant model · Space recommendation by default; changes apply to your next message',
+    details: 'View raw data',
+    found: 'Found {{count}} items',
+    completed: 'Completed',
+    failed: 'Failed',
+    denied: 'Not executed',
+    partial: 'Partial result',
+    operationFailed:
+      'Operation failed. Check the details and resource state before retrying a change.',
+    operationDenied: 'Declined. Nothing in this batch was executed.',
+    openResource: 'Open resource',
+    sendUnconfirmed:
+      'Delivery is unconfirmed. Check your connection and reopen the conversation.',
+    draftPlaceholder: 'Draft your next message while waiting…',
+    operations: {
+      create_pipeline: 'Create Pipeline',
+      configure_pipeline: 'Configure Pipeline',
+      create_knowledge_base: 'Create knowledge base',
+      get_pipeline: 'Read Pipeline',
+      get_knowledge_schema: 'Read knowledge engine schema',
+    },
+    resources: {
+      models: 'Find chat models',
+      embedding_models: 'Find embedding models',
+      pipelines: 'Find Pipelines',
+      knowledge_bases: 'Find knowledge bases',
+      knowledge_engines: 'Find knowledge engines',
+    },
     title: 'Workspace assistant · Experimental',
     subtitle: 'Build with your Space model',
     newChat: 'New conversation',
