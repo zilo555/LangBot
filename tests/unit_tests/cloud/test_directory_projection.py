@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import asyncio
 import datetime
 import logging
 from types import SimpleNamespace
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 import sqlalchemy
@@ -212,6 +213,88 @@ async def test_directory_delta_requests_model_catalog_sync_after_commit(projecti
     await service.sync_once()
 
     request_sync.assert_called_once_with()
+
+
+async def test_targeted_reconciliation_projects_new_workspace_without_advancing_event_cursor(projection_context):
+    application, session_factory = projection_context
+    provider = _Provider(
+        [_snapshot(7, workspaces=[])],
+        deltas=[_delta(workspaces=[_workspace(revision=8, name='JIT Workspace')])],
+    )
+    service = DirectoryProjectionService(application, provider, INSTANCE_UUID)
+    await service.initialize()
+
+    await service.reconcile_workspaces((WORKSPACE_UUID,))
+
+    async with session_factory() as session:
+        account = await session.scalar(sqlalchemy.select(User).where(User.uuid == ACCOUNT_UUID))
+        workspace = await session.get(Workspace, WORKSPACE_UUID)
+        membership = await session.scalar(
+            sqlalchemy.select(WorkspaceMembership).where(
+                WorkspaceMembership.workspace_uuid == WORKSPACE_UUID,
+                WorkspaceMembership.account_uuid == ACCOUNT_UUID,
+            )
+        )
+        state = await session.get(DirectoryProjectionState, INSTANCE_UUID)
+    assert account is not None
+    assert workspace is not None and workspace.name == 'JIT Workspace'
+    assert membership is not None and membership.status == 'active'
+    assert state is not None and state.cursor == 7
+    assert provider.delta_calls == 1
+    assert provider.after_cursors == []
+
+
+async def test_targeted_reconciliation_preserves_existing_account_until_ordered_event_projection(projection_context):
+    application, session_factory = projection_context
+    targeted_workspace = _workspace(revision=8, name='Renamed Workspace').model_copy(
+        update={
+            'members': [
+                _member(revision=8).model_copy(update={'display_name': 'Changed Account Name'})
+            ]
+        }
+    )
+    provider = _Provider(
+        [_snapshot(7)],
+        deltas=[_delta(workspaces=[targeted_workspace])],
+    )
+    service = DirectoryProjectionService(application, provider, INSTANCE_UUID)
+    await service.initialize()
+
+    await service.reconcile_workspaces((WORKSPACE_UUID,))
+
+    async with session_factory() as session:
+        account = await session.scalar(sqlalchemy.select(User).where(User.uuid == ACCOUNT_UUID))
+        workspace = await session.get(Workspace, WORKSPACE_UUID)
+        state = await session.get(DirectoryProjectionState, INSTANCE_UUID)
+    assert account is not None and account.user == 'Workspace Owner'
+    assert account.projection_revision == 7
+    assert workspace is not None and workspace.name == 'Renamed Workspace'
+    assert state is not None and state.cursor == 7
+
+
+async def test_targeted_reconciliation_only_updates_requested_workspace_side_effects(projection_context):
+    application, _session_factory = projection_context
+    provider = _Provider(
+        [_snapshot(7, workspaces=[])],
+        deltas=[_delta(workspaces=[_workspace(revision=8, name='JIT Workspace')])],
+    )
+    service = DirectoryProjectionService(application, provider, INSTANCE_UUID)
+    await service.initialize()
+    service._reconcile_entitlement_snapshot_set = AsyncMock()
+    service._update_entitlement_workspace_activity = AsyncMock()
+    service._publish_runtime_execution_projection = Mock()
+
+    await service.reconcile_workspaces((WORKSPACE_UUID,))
+
+    service._reconcile_entitlement_snapshot_set.assert_not_awaited()
+    service._update_entitlement_workspace_activity.assert_awaited_once()
+    assert service._update_entitlement_workspace_activity.await_args.kwargs == {
+        'requested_workspace_uuids': {WORKSPACE_UUID},
+    }
+    service._publish_runtime_execution_projection.assert_called_once()
+    assert service._publish_runtime_execution_projection.call_args.kwargs == {
+        'affected_workspace_uuids': {WORKSPACE_UUID},
+    }
 
 
 async def test_initial_snapshot_projects_core_owned_rows(projection_context):
@@ -733,6 +816,72 @@ async def test_each_replica_consumes_events_with_its_own_cursor(projection_conte
     assert len(inbox_rows) == 1
     assert first_provider.after_cursors == [1]
     assert second_provider.after_cursors == [1, 2]
+
+
+async def test_concurrent_sync_once_calls_are_serialized_per_service(projection_context):
+    application, _session_factory = projection_context
+
+    class _ConcurrentProvider(_Provider):
+        def __init__(self) -> None:
+            super().__init__([_snapshot(1)])
+            self.first_fetch_started = asyncio.Event()
+            self.release_first_fetch = asyncio.Event()
+            self.active_fetches = 0
+            self.max_active_fetches = 0
+
+        async def fetch_events(
+            self,
+            instance_uuid: str,
+            after_cursor: int,
+            limit: int,
+        ) -> DirectoryEventBatch:
+            assert instance_uuid == INSTANCE_UUID
+            assert limit == 100
+            self.after_cursors.append(after_cursor)
+            self.active_fetches += 1
+            self.max_active_fetches = max(self.max_active_fetches, self.active_fetches)
+            try:
+                if len(self.after_cursors) == 1:
+                    self.first_fetch_started.set()
+                    await self.release_first_fetch.wait()
+                cursor = after_cursor + 1
+                return DirectoryEventBatch(
+                    instance_uuid=instance_uuid,
+                    after_cursor=after_cursor,
+                    cursor=cursor,
+                    high_water_cursor=cursor,
+                    events=(
+                        DirectoryEvent(
+                            cursor=cursor,
+                            uuid=f'40000000-0000-4000-8000-{cursor:012d}',
+                            aggregate_uuid=WORKSPACE_UUID,
+                            event_type='entitlement.changed',
+                            revision=cursor,
+                            payload={
+                                'workspace_uuid': WORKSPACE_UUID,
+                                'entitlement_revision': cursor,
+                            },
+                            created_at=datetime.datetime(2026, 7, 24, 12, cursor, tzinfo=datetime.UTC),
+                        ),
+                    ),
+                )
+            finally:
+                self.active_fetches -= 1
+
+    provider = _ConcurrentProvider()
+    service = DirectoryProjectionService(application, provider, INSTANCE_UUID)
+    await service.initialize()
+
+    first = asyncio.create_task(service.sync_once())
+    await provider.first_fetch_started.wait()
+    second = asyncio.create_task(service.sync_once())
+    await asyncio.sleep(0)
+    provider.release_first_fetch.set()
+    await asyncio.gather(first, second)
+
+    assert provider.max_active_fetches == 1
+    assert provider.after_cursors == [1, 2]
+    assert service._consumer_cursor == 3
 
 
 async def test_snapshot_coverage_allows_lagging_replica_to_replay_receipts(projection_context):

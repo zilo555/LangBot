@@ -2675,7 +2675,7 @@ class RuntimeConnectionHandler(handler.Handler):
         return None
 
     def require_outbound_installation_context(self) -> InstallationBinding:
-        binding = self._outbound_installation_context.get()
+        binding = self._outbound_installation_context.get(None)
         if not isinstance(binding, InstallationBinding):
             raise ValueError('Host plugin action requires an InstallationBinding scope')
         return binding

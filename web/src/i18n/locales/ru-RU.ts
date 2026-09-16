@@ -76,7 +76,8 @@ const ruRU = {
     privacyPolicy: 'Политикой конфиденциальности',
     and: 'и',
     dataCollectionPolicy: 'Политикой сбора данных',
-    dataCollectionPolicyUrl: 'https://link.langbot.app/en/docs/data-policy',
+    dataCollectionPolicyUrl:
+      'https://langbot.app/docs/en/insight/data-collection-policy',
     loading: 'Загрузка...',
     fieldRequired: 'Это поле обязательно для заполнения',
     or: 'или',
@@ -85,6 +86,11 @@ const ruRU = {
       'Рекомендуется: Используйте официальные стабильные API моделей и облачные сервисы',
     loginLocal: 'Войти с локальной учётной записью',
     loginWithPassword: 'Войти с паролем',
+    loginWithPasskey: 'Войти с помощью Passkey',
+    passkeyLoginSuccess: 'Passkey успешно подтверждён, вход...',
+    passkeyLoginFailed: 'Не удалось войти с помощью Passkey',
+    passkeyNotSupported:
+      'Passkey не поддерживается в этом браузере или на устройстве',
     spaceLoginTitle: 'Войти с аккаунтом LangBot',
     spaceLoginDescription:
       'Отсканируйте QR-код или перейдите по ссылке ниже для авторизации',
@@ -183,6 +189,37 @@ const ruRU = {
     help: 'Помощь',
   },
   models: {
+    codex: {
+      account: 'Подписка ChatGPT',
+      description:
+        'Войдите в аккаунт ChatGPT. Подписка не связана с оплатой API OpenAI; доступные модели и лимиты зависят от тарифа.',
+      disconnected: 'Не подключено',
+      loading: 'Проверка подключения…',
+      starting: 'Начало входа…',
+      pending: 'Ожидание авторизации',
+      connected: 'Подключено',
+      expired: 'Срок входа истёк. Получите новый код.',
+      error: 'Не удалось войти. Проверьте подключение и повторите попытку.',
+      canceling: 'Отмена входа…',
+      saveAndSignIn: 'Сохранить и войти',
+      done: 'Готово',
+      instructions:
+        'Введите этот код на странице OpenAI. Не закрывайте это окно до завершения входа.',
+      copyCode: 'Копировать код',
+      copied: 'Скопировано',
+      copyManually: 'Выделите и скопируйте код вручную.',
+      continueAtOpenAI: 'Продолжить в OpenAI',
+      expiresAt: 'Код действителен до {{time}}.',
+      retrying: 'Соединение прервано. Автоматическая повторная попытка…',
+      cancelSignIn: 'Отменить вход',
+      tryAgain: 'Повторить',
+      signIn: 'Войти',
+      reconnect: 'Переподключить',
+      disconnect: 'Отключить',
+      disconnectConfirm:
+        'Отключить этого провайдера? Его модели перестанут работать до повторного входа. Подписка ChatGPT не будет отменена.',
+      confirmDisconnect: 'Подтвердить отключение',
+    },
     title: 'Модели',
     description: 'Настройка и управление моделями, используемыми в конвейерах',
     createModel: 'Создать модель',
@@ -335,6 +372,8 @@ const ruRU = {
     providerSaveError: 'Ошибка сохранения провайдера: ',
     providerDeleted: 'Провайдер удалён',
     providerDeleteError: 'Ошибка удаления провайдера: ',
+    deleteProviderCascadeConfirmation:
+      'Удалить этого провайдера и ВСЕ содержащиеся в нём модели? Это действие необратимо, его нельзя отменить.',
     deleteProviderConfirmation:
       'Вы уверены, что хотите удалить этого провайдера?',
     loadError: 'Не удалось загрузить данные',
@@ -1044,6 +1083,15 @@ const ruRU = {
     connectionSuccess: 'Подключение успешно',
     connectionFailed: 'Не удалось подключиться, проверьте URL',
     connectionFailedStatus: 'Ошибка подключения',
+    connectionUnreachable:
+      'Сервер MCP недоступен. Проверьте, запущен ли он и доступен ли по сети.',
+    connectionTimeout:
+      'Время ожидания ответа MCP истекло. Проверьте сервис или увеличьте тайм-аут.',
+    connectionHttpError:
+      'Сервер MCP вернул HTTP {{status}}. Проверьте требования доступа и журналы сервера.',
+    oauthAuthorizationRequired: 'Требуется авторизация OAuth',
+    oauthAuthorizationRequiredSuggestion:
+      'Для этого MCP-сервера требуется вход через OAuth. OAuth-вход пока не поддерживается; если сервер это позволяет, добавьте заголовок Authorization вручную.',
     boxDisabledStdioRefused:
       'MCP-серверы в режиме stdio требуют песочницу Box, которая отключена в конфигурации (box.enabled = false).',
     boxUnavailableStdioRefused:
@@ -1501,6 +1549,20 @@ const ruRU = {
     bindSpaceWarning:
       'После привязки ваш email для входа будет изменён с {{localEmail}} на email аккаунта LangBot.',
     bindSpaceSuccess: 'Аккаунт LangBot успешно привязан',
+    passkeySectionTitle: 'Ключи доступа (Passkey)',
+    passkeySectionDesc:
+      'Безопасный вход без пароля с помощью биометрии или аппаратного ключа',
+    addPasskey: 'Добавить ключ доступа',
+    passkeyName: 'Название ключа',
+    passkeyNamePlaceholder: 'например, MacBook Touch ID, YubiKey',
+    passkeyCreated: 'Создан {{date}}',
+    passkeyLastUsed: 'Последнее использование: {{date}}',
+    noPasskeys: 'Нет зарегистрированных ключей доступа',
+    deletePasskeyConfirm:
+      'Вы уверены, что хотите удалить этот ключ доступа? Вы больше не сможете использовать его для входа.',
+    passkeyAddedSuccess: 'Ключ доступа успешно добавлен',
+    passkeyDeleteSuccess: 'Ключ доступа удален',
+    passkeyRenameSuccess: 'Ключ доступа успешно переименован',
     bindSpaceFailed: 'Не удалось привязать аккаунт LangBot',
     bindSpaceInvalidState:
       'Недействительный запрос привязки. Повторите попытку из настроек аккаунта.',
@@ -1725,7 +1787,16 @@ const ruRU = {
     queryVariables: {
       title: 'Переменные запроса',
     },
+    loadError: 'Не удалось загрузить данные мониторинга',
+    partialMessages:
+      'Показано {{shown}} из {{total}} сообщений. Трассировки диалогов могут быть неполными.',
+    partialModelCalls: 'Показано {{shown}} из {{total}} вызовов модели.',
+    partialToolCalls:
+      'Показано {{shown}} из {{total}} вызовов инструментов. Трассировки диалогов могут быть неполными.',
+    partialErrors: 'Показано {{shown}} из {{total}} ошибок.',
     trafficChart: {
+      unavailable: 'Агрегированные данные трафика недоступны',
+      truncated: 'Диапазон трафика обрезан. Выберите более короткий период.',
       title: 'Обзор трафика',
       messages: 'Сообщения',
       llmCalls: 'Вызовы LLM',

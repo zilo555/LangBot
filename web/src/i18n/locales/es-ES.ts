@@ -79,7 +79,8 @@ const esES = {
     privacyPolicy: 'Política de privacidad',
     and: 'y',
     dataCollectionPolicy: 'Política de recopilación de datos',
-    dataCollectionPolicyUrl: 'https://link.langbot.app/en/docs/data-policy',
+    dataCollectionPolicyUrl:
+      'https://langbot.app/docs/en/insight/data-collection-policy',
     loading: 'Cargando...',
     fieldRequired: 'Este campo es obligatorio',
     or: 'o',
@@ -88,6 +89,11 @@ const esES = {
       'Recomendado: Usa API de modelos oficiales estables y servicios en la nube',
     loginLocal: 'Iniciar sesión con cuenta local',
     loginWithPassword: 'Iniciar sesión con contraseña',
+    loginWithPasskey: 'Iniciar sesión con Passkey',
+    passkeyLoginSuccess: 'Passkey verificada con éxito, iniciando sesión...',
+    passkeyLoginFailed: 'Error al iniciar sesión con Passkey',
+    passkeyNotSupported:
+      'Passkey no es compatible en este navegador o dispositivo',
     spaceLoginTitle: 'Iniciar sesión con una cuenta de LangBot',
     spaceLoginDescription:
       'Escanea el código QR o visita el enlace para autorizar',
@@ -186,6 +192,38 @@ const esES = {
     help: 'Obtener ayuda',
   },
   models: {
+    codex: {
+      account: 'Suscripción de ChatGPT',
+      description:
+        'Inicia sesión con tu cuenta de ChatGPT. La suscripción es independiente de la facturación de la API de OpenAI; los modelos y límites dependen de tu plan.',
+      disconnected: 'Sin conexión',
+      loading: 'Comprobando conexión…',
+      starting: 'Iniciando sesión…',
+      pending: 'Esperando autorización',
+      connected: 'Conectado',
+      expired: 'El inicio de sesión ha caducado. Solicita un nuevo código.',
+      error:
+        'No se pudo iniciar sesión. Comprueba la conexión e inténtalo de nuevo.',
+      canceling: 'Cancelando inicio de sesión…',
+      saveAndSignIn: 'Guardar e iniciar sesión',
+      done: 'Listo',
+      instructions:
+        'Introduce este código en la página de OpenAI. Mantén este diálogo abierto hasta completar el inicio de sesión.',
+      copyCode: 'Copiar código',
+      copied: 'Copiado',
+      copyManually: 'Selecciona y copia el código manualmente.',
+      continueAtOpenAI: 'Continuar en OpenAI',
+      expiresAt: 'El código caduca a las {{time}}.',
+      retrying: 'Conexión interrumpida. Reintentando automáticamente…',
+      cancelSignIn: 'Cancelar inicio de sesión',
+      tryAgain: 'Reintentar',
+      signIn: 'Iniciar sesión',
+      reconnect: 'Reconectar',
+      disconnect: 'Desconectar',
+      disconnectConfirm:
+        '¿Desconectar este proveedor? Sus modelos dejarán de funcionar hasta que vuelvas a iniciar sesión. Esto no cancela tu suscripción de ChatGPT.',
+      confirmDisconnect: 'Confirmar desconexión',
+    },
     title: 'Modelos',
     description:
       'Configura y gestiona los modelos que se pueden usar en los Pipelines',
@@ -338,6 +376,8 @@ const esES = {
     providerSaveError: 'Error al guardar el proveedor: ',
     providerDeleted: 'Proveedor eliminado',
     providerDeleteError: 'Error al eliminar el proveedor: ',
+    deleteProviderCascadeConfirmation:
+      '¿Eliminar este proveedor y TODOS los modelos que contiene? Esta acción es irreversible y no se puede deshacer.',
     deleteProviderConfirmation:
       '¿Estás seguro de que deseas eliminar este proveedor?',
     loadError: 'Error al cargar datos',
@@ -1053,6 +1093,15 @@ const esES = {
     connectionSuccess: 'Conexión exitosa',
     connectionFailed: 'Error de conexión, por favor verifica la URL',
     connectionFailedStatus: 'Conexión fallida',
+    connectionUnreachable:
+      'No se puede acceder al servidor MCP. Compruebe que esté iniciado y accesible.',
+    connectionTimeout:
+      'El servidor MCP no respondió a tiempo. Compruebe el servicio o aumente el tiempo de espera.',
+    connectionHttpError:
+      'El servidor MCP devolvió HTTP {{status}}. Compruebe los requisitos de acceso y los registros del servidor.',
+    oauthAuthorizationRequired: 'Se requiere autorización OAuth',
+    oauthAuthorizationRequiredSuggestion:
+      'Este servidor MCP requiere inicio de sesión con OAuth. Aún no está disponible; agregue manualmente un encabezado Authorization si el servidor lo permite.',
     boxDisabledStdioRefused:
       'Los servidores MCP en modo stdio requieren el sandbox de Box, desactivado en la configuración (box.enabled = false).',
     boxUnavailableStdioRefused:
@@ -1529,6 +1578,20 @@ const esES = {
     bindSpaceWarning:
       'Después de vincular, tu correo de inicio de sesión se cambiará de {{localEmail}} al correo de la cuenta de LangBot.',
     bindSpaceSuccess: 'Cuenta de LangBot vinculada correctamente',
+    passkeySectionTitle: 'Llaves de acceso (Passkeys)',
+    passkeySectionDesc:
+      'Inicia sesión de forma segura sin contraseñas usando biometría o llaves de seguridad',
+    addPasskey: 'Añadir llave de acceso',
+    passkeyName: 'Nombre de la llave',
+    passkeyNamePlaceholder: 'p. ej., MacBook Touch ID, YubiKey',
+    passkeyCreated: 'Creada el {{date}}',
+    passkeyLastUsed: 'Último uso: {{date}}',
+    noPasskeys: 'No hay llaves de acceso registradas',
+    deletePasskeyConfirm:
+      '¿Seguro que deseas eliminar esta llave de acceso? Ya no podrás usarla para iniciar sesión.',
+    passkeyAddedSuccess: 'Llave de acceso añadida con éxito',
+    passkeyDeleteSuccess: 'Llave de acceso eliminada',
+    passkeyRenameSuccess: 'Nombre de llave de acceso modificado con éxito',
     bindSpaceFailed: 'Error al vincular la cuenta de LangBot',
     bindSpaceInvalidState:
       'Solicitud de vinculación no válida. Por favor, inténtalo de nuevo desde la configuración de la cuenta.',
@@ -1755,7 +1818,17 @@ const esES = {
     queryVariables: {
       title: 'Variables de consulta',
     },
+    loadError: 'No se pudieron cargar los datos de monitoreo',
+    partialMessages:
+      'Se muestran {{shown}} de {{total}} mensajes. Las trazas de conversación pueden estar incompletas.',
+    partialModelCalls: 'Se muestran {{shown}} de {{total}} llamadas al modelo.',
+    partialToolCalls:
+      'Se muestran {{shown}} de {{total}} llamadas a herramientas. Las trazas de conversación pueden estar incompletas.',
+    partialErrors: 'Se muestran {{shown}} de {{total}} errores.',
     trafficChart: {
+      unavailable: 'Agregación de tráfico no disponible',
+      truncated:
+        'Rango de tráfico truncado. Selecciona un intervalo más corto.',
       title: 'Resumen de tráfico',
       messages: 'Mensajes',
       llmCalls: 'Llamadas LLM',

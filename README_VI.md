@@ -19,9 +19,9 @@
 [![GitHub stars](https://img.shields.io/github/stars/langbot-app/LangBot?style=social)](https://github.com/langbot-app/LangBot/stargazers)
 
 <a href="https://langbot.app">Trang chủ</a> ｜
-<a href="https://link.langbot.app/en/docs/features">Tính năng</a> ｜
-<a href="https://link.langbot.app/en/docs/guide">Tài liệu</a> ｜
-<a href="https://link.langbot.app/en/docs/api">API</a> ｜
+<a href="https://langbot.app/docs/en/insight/features">Tính năng</a> ｜
+<a href="https://langbot.app/docs/en/insight/guide">Tài liệu</a> ｜
+<a href="https://langbot.app/docs/en/tags/readme">API</a> ｜
 <a href="https://space.langbot.app">Chợ Plugin</a> ｜
 <a href="https://langbot.featurebase.app/roadmap">Lộ trình</a>
 
@@ -48,7 +48,7 @@ LangBot là một **nền tảng mã nguồn mở, cấp sản xuất** để x�
 - **Bảng quản lý Web** — Cấu hình, quản lý và giám sát bot thông qua giao diện trình duyệt trực quan. Không cần chỉnh sửa YAML.
 - **Kiến trúc đa Pipeline** — Các bot khác nhau cho các kịch bản khác nhau, với giám sát toàn diện và xử lý ngoại lệ.
 
-[→ Tìm hiểu thêm về tất cả tính năng](https://link.langbot.app/en/docs/features)
+[→ Tìm hiểu thêm về tất cả tính năng](https://langbot.app/docs/en/insight/features)
 
 📍 Hướng dẫn thực hành: [triển khai bot AI đa nền tảng trong 5 phút](https://langbot.app/en/blog/deploy-ai-bot-in-5-minutes/), [kết nối DeepSeek với WeChat, Discord và Telegram](https://langbot.app/en/blog/connect-deepseek-to-wechat/), [chạy Dify Agent trên Discord, Telegram và Slack](https://langbot.app/en/blog/dify-agent-discord-telegram-slack/) và [xây dựng chatbot với n8n](https://langbot.app/en/blog/n8n-multi-platform-ai-chatbot/).
 
@@ -88,17 +88,7 @@ docker compose --profile all up -d
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/en-US/templates/ZKTBDH)
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.app/template/yRrAyL?referralCode=vogKPF)
 
-**Thêm tùy chọn:** [Docker](https://link.langbot.app/en/docs/docker) · [Thủ công](https://link.langbot.app/en/docs/manual-deploy) · [BTPanel](https://link.langbot.app/en/docs/bt-panel) · [Kubernetes](https://docs.langbot.app/en/deploy/langbot/kubernetes)
-
----
-
-## Demo trực tuyến
-
-**Thử ngay:** https://demo.langbot.dev/
-- Email: `demo@langbot.app`
-- Mật khẩu: `langbot123456`
-
-*Lưu ý: Môi trường demo công khai. Không nhập thông tin nhạy cảm.*
+**Thêm tùy chọn:** [Docker](https://langbot.app/docs/en/deploy/langbot/docker) · [Thủ công](https://langbot.app/docs/en/deploy/langbot/manual) · [BTPanel](https://langbot.app/docs/en/deploy/langbot/one-click/bt) · [Kubernetes](https://langbot.app/docs/en/deploy/langbot/kubernetes)
 
 ---
 
@@ -149,7 +139,7 @@ docker compose --profile all up -d
 | [302.AI](https://share.302ai.cn/SuTG99) | Cổng | ✅ |
 | [Qiniu](https://www.qiniu.com/ai/agent) | Cổng | ✅ |
 
-[→ Xem tất cả tích hợp](https://link.langbot.app/en/docs/features)
+[→ Xem tất cả tích hợp](https://langbot.app/docs/en/insight/features)
 
 ---
 

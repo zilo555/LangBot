@@ -76,7 +76,8 @@ const thTH = {
     privacyPolicy: 'นโยบายความเป็นส่วนตัว',
     and: 'และ',
     dataCollectionPolicy: 'นโยบายการเก็บรวบรวมข้อมูล',
-    dataCollectionPolicyUrl: 'https://link.langbot.app/en/docs/data-policy',
+    dataCollectionPolicyUrl:
+      'https://langbot.app/docs/en/insight/data-collection-policy',
     loading: 'กำลังโหลด...',
     fieldRequired: 'ช่องนี้จำเป็นต้องกรอก',
     or: 'หรือ',
@@ -85,6 +86,10 @@ const thTH = {
       'แนะนำ: ใช้ API โมเดลที่เสถียรอย่างเป็นทางการและบริการคลาวด์',
     loginLocal: 'เข้าสู่ระบบด้วยบัญชีท้องถิ่น',
     loginWithPassword: 'เข้าสู่ระบบด้วยรหัสผ่าน',
+    loginWithPasskey: 'เข้าสู่ระบบด้วย Passkey',
+    passkeyLoginSuccess: 'ยืนยัน Passkey สำเร็จ กำลังเข้าสู่ระบบ...',
+    passkeyLoginFailed: 'เข้าสู่ระบบด้วย Passkey ล้มเหลว',
+    passkeyNotSupported: 'เบราว์เซอร์หรืออุปกรณ์นี้ไม่รองรับ Passkey',
     spaceLoginTitle: 'เข้าสู่ระบบด้วยบัญชี LangBot',
     spaceLoginDescription:
       'สแกน QR code หรือเข้าชมลิงก์ด้านล่างเพื่อยืนยันสิทธิ์',
@@ -180,6 +185,37 @@ const thTH = {
     help: 'ขอความช่วยเหลือ',
   },
   models: {
+    codex: {
+      account: 'การสมัครสมาชิก ChatGPT',
+      description:
+        'ลงชื่อเข้าใช้ด้วยบัญชี ChatGPT การใช้งานผ่านการสมัครสมาชิกแยกจากการเรียกเก็บเงิน OpenAI API รุ่นโมเดลและขีดจำกัดการใช้งานขึ้นอยู่กับแพ็กเกจของคุณ',
+      disconnected: 'ยังไม่ได้เชื่อมต่อ',
+      loading: 'กำลังตรวจสอบการเชื่อมต่อ…',
+      starting: 'กำลังเริ่มลงชื่อเข้าใช้…',
+      pending: 'กำลังรอการอนุญาต',
+      connected: 'เชื่อมต่อแล้ว',
+      expired: 'การลงชื่อเข้าใช้หมดอายุ เริ่มใหม่เพื่อรับรหัสใหม่',
+      error: 'ไม่สามารถลงชื่อเข้าใช้ได้ ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง',
+      canceling: 'กำลังยกเลิกการลงชื่อเข้าใช้…',
+      saveAndSignIn: 'บันทึกและลงชื่อเข้าใช้',
+      done: 'เสร็จสิ้น',
+      instructions:
+        'ป้อนรหัสนี้บนหน้า OpenAI เปิดกล่องโต้ตอบนี้ไว้จนกว่าจะลงชื่อเข้าใช้เสร็จ',
+      copyCode: 'คัดลอกรหัส',
+      copied: 'คัดลอกแล้ว',
+      copyManually: 'เลือกรหัสและคัดลอกด้วยตนเอง',
+      continueAtOpenAI: 'ดำเนินการต่อที่ OpenAI',
+      expiresAt: 'รหัสหมดอายุเวลา {{time}}',
+      retrying: 'การเชื่อมต่อขัดข้อง กำลังลองใหม่โดยอัตโนมัติ…',
+      cancelSignIn: 'ยกเลิกการลงชื่อเข้าใช้',
+      tryAgain: 'ลองอีกครั้ง',
+      signIn: 'ลงชื่อเข้าใช้',
+      reconnect: 'เชื่อมต่อใหม่',
+      disconnect: 'ยกเลิกการเชื่อมต่อ',
+      disconnectConfirm:
+        'ยกเลิกการเชื่อมต่อผู้ให้บริการนี้หรือไม่? โมเดลจะหยุดทำงานจนกว่าคุณจะลงชื่อเข้าใช้อีกครั้ง การดำเนินการนี้ไม่ได้ยกเลิกการสมัครสมาชิก ChatGPT',
+      confirmDisconnect: 'ยืนยันการยกเลิกการเชื่อมต่อ',
+    },
     title: 'โมเดล',
     description: 'กำหนดค่าและจัดการโมเดลที่สามารถใช้ใน Pipeline',
     createModel: 'สร้างโมเดล',
@@ -323,6 +359,8 @@ const thTH = {
     providerSaveError: 'บันทึกผู้ให้บริการล้มเหลว: ',
     providerDeleted: 'ลบผู้ให้บริการแล้ว',
     providerDeleteError: 'ลบผู้ให้บริการล้มเหลว: ',
+    deleteProviderCascadeConfirmation:
+      'ลบผู้ให้บริการนี้และโมเดลทั้งหมดที่อยู่ภายในหรือไม่? การดำเนินการนี้ไม่สามารถย้อนกลับหรือยกเลิกได้',
     deleteProviderConfirmation: 'คุณแน่ใจหรือไม่ว่าต้องการลบผู้ให้บริการนี้?',
     loadError: 'โหลดข้อมูลล้มเหลว',
     chat: 'แชท',
@@ -1020,6 +1058,15 @@ const thTH = {
     connectionSuccess: 'เชื่อมต่อสำเร็จ',
     connectionFailed: 'เชื่อมต่อล้มเหลว กรุณาตรวจสอบ URL',
     connectionFailedStatus: 'เชื่อมต่อล้มเหลว',
+    connectionUnreachable:
+      'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ MCP ได้ โปรดตรวจสอบว่าบริการทำงานและเข้าถึงได้',
+    connectionTimeout:
+      'เซิร์ฟเวอร์ MCP ไม่ตอบกลับภายในเวลาที่กำหนด โปรดตรวจสอบบริการหรือเพิ่มเวลารอ',
+    connectionHttpError:
+      'เซิร์ฟเวอร์ MCP ส่งคืน HTTP {{status}} โปรดตรวจสอบข้อกำหนดการเข้าถึงและบันทึกของเซิร์ฟเวอร์',
+    oauthAuthorizationRequired: 'ต้องมีการอนุญาต OAuth',
+    oauthAuthorizationRequiredSuggestion:
+      'MCP server นี้ต้องเข้าสู่ระบบด้วย OAuth ซึ่งยังไม่รองรับในขณะนี้ หาก server อนุญาต คุณสามารถเพิ่ม Authorization header ด้วยตนเองได้',
     boxDisabledStdioRefused:
       'MCP server แบบ stdio ต้องใช้ Sandbox Box ซึ่งถูกปิดใช้งานในการตั้งค่า (box.enabled = false)',
     boxUnavailableStdioRefused:
@@ -1469,6 +1516,20 @@ const thTH = {
     bindSpaceWarning:
       'หลังจากผูกแล้ว อีเมลเข้าสู่ระบบของคุณจะเปลี่ยนจาก {{localEmail}} เป็นอีเมลบัญชี LangBot',
     bindSpaceSuccess: 'ผูกบัญชี LangBot สำเร็จ',
+    passkeySectionTitle: 'พาสคีย์ (Passkey)',
+    passkeySectionDesc:
+      'เข้าสู่ระบบอย่างปลอดภัยโดยไม่ต้องใช้รหัสผ่านด้วยไบโอเมตริกซ์หรือคีย์ความปลอดภัย',
+    addPasskey: 'เพิ่มพาสคีย์',
+    passkeyName: 'ชื่อคีย์',
+    passkeyNamePlaceholder: 'เช่น MacBook Touch ID, YubiKey',
+    passkeyCreated: 'สร้างเมื่อ {{date}}',
+    passkeyLastUsed: 'ใช้งานล่าสุด: {{date}}',
+    noPasskeys: 'ยังไม่มีพาสคีย์ที่ลงทะเบียน',
+    deletePasskeyConfirm:
+      'คุณแน่ใจหรือไม่ว่าต้องการลบพาสคีย์นี้? คุณจะไม่สามารถใช้คีย์นี้เข้าสู่ระบบได้อีก',
+    passkeyAddedSuccess: 'เพิ่มพาสคีย์สำเร็จ',
+    passkeyDeleteSuccess: 'ลบพาสคีย์แล้ว',
+    passkeyRenameSuccess: 'เปลี่ยนชื่อพาสคีย์สำเร็จ',
     bindSpaceFailed: 'ผูกบัญชี LangBot ล้มเหลว',
     bindSpaceInvalidState: 'คำขอผูกไม่ถูกต้อง กรุณาลองใหม่จากการตั้งค่าบัญชี',
     setPasswordHint: 'ตั้งรหัสผ่านเพื่อเข้าสู่ระบบด้วยอีเมลและรหัสผ่าน',
@@ -1691,7 +1752,17 @@ const thTH = {
     queryVariables: {
       title: 'ตัวแปรคำค้นหา',
     },
+    loadError: 'โหลดข้อมูลการตรวจสอบไม่สำเร็จ',
+    partialMessages:
+      'แสดง {{shown}} จาก {{total}} ข้อความ ประวัติการสนทนาอาจไม่ครบถ้วน',
+    partialModelCalls: 'แสดง {{shown}} จาก {{total}} การเรียกโมเดล',
+    partialToolCalls:
+      'แสดง {{shown}} จาก {{total}} การเรียกเครื่องมือ ประวัติการสนทนาอาจไม่ครบถ้วน',
+    partialErrors: 'แสดง {{shown}} จาก {{total}} ข้อผิดพลาด',
     trafficChart: {
+      unavailable: 'ไม่มีข้อมูลสรุปปริมาณการใช้งาน',
+      truncated:
+        'ช่วงข้อมูลปริมาณการใช้งานถูกตัดทอน โปรดเลือกช่วงเวลาที่สั้นลง',
       title: 'ภาพรวมปริมาณการใช้งาน',
       messages: 'ข้อความ',
       llmCalls: 'การเรียก LLM',

@@ -12,6 +12,7 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from types import SimpleNamespace
 import json
+import sqlalchemy
 import uuid
 
 from langbot.pkg.api.http.service.bot import BotService
@@ -455,6 +456,87 @@ class TestBotServiceCreateBot:
         assert 'use_pipeline_uuid' not in insert_values
         assert 'use_pipeline_name' not in insert_values
         assert bot_uuid is not None  # Verify UUID was returned
+
+    async def test_failed_apply_keeps_bot_saved_visible_and_retryable(self, tmp_path):
+        """A saved UUID remains editable after create/update runtime failures."""
+        from sqlalchemy.ext.asyncio import create_async_engine
+
+        from langbot.pkg.api.http.service.bot_errors import BotApplyError
+        from langbot.pkg.entity.persistence.user import User
+        from langbot.pkg.entity.persistence.workspace import Workspace
+        from langbot.pkg.persistence.mgr import PersistenceManager
+
+        engine = create_async_engine(f'sqlite+aiosqlite:///{tmp_path / "bots.db"}')
+        runtime_bot = SimpleNamespace(enable=True, run=AsyncMock())
+        ap = SimpleNamespace(
+            instance_config=SimpleNamespace(data={'system': {'limitation': {'max_bots': -1}}}),
+            platform_mgr=SimpleNamespace(
+                load_bot=AsyncMock(
+                    side_effect=[
+                        RuntimeError('Invalid token: original-secret'),
+                        RuntimeError('Invalid token: corrected-secret'),
+                        runtime_bot,
+                    ]
+                ),
+                remove_bot=AsyncMock(),
+            ),
+            sess_mgr=SimpleNamespace(session_list=[]),
+        )
+        ap.persistence_mgr = PersistenceManager(ap)
+        ap.persistence_mgr.db = SimpleNamespace(get_engine=lambda: engine)
+        service = BotService(ap)
+        try:
+            async with engine.begin() as connection:
+                await connection.execute(sqlalchemy.text('PRAGMA foreign_keys=ON'))
+                await connection.run_sync(User.__table__.create)
+                await connection.run_sync(Workspace.__table__.create)
+                await connection.run_sync(Bot.__table__.create)
+                await connection.execute(
+                    sqlalchemy.insert(Workspace).values(
+                        uuid=WORKSPACE_UUID, instance_uuid='instance-a', name='Test', slug='test'
+                    )
+                )
+
+            with pytest.raises(BotApplyError) as create_error:
+                await service.create_bot(
+                    WORKSPACE_UUID,
+                    {
+                        'name': 'Saved bot',
+                        'description': 'Editable after an adapter failure',
+                        'adapter': 'telegram',
+                        'adapter_config': {'token': 'original-secret'},
+                        'enable': True,
+                    },
+                )
+
+            bot_uuid = create_error.value.bot_uuid
+            assert str(uuid.UUID(bot_uuid)) == bot_uuid
+            assert 'original-secret' not in str(create_error.value)
+            assert 'Invalid token' in str(create_error.value)
+            saved = await service.get_bot(WORKSPACE_UUID, bot_uuid, include_secret=True)
+            assert saved['uuid'] == bot_uuid
+            assert saved['adapter_config'] == {'token': 'original-secret'}
+            assert await service.get_bot('workspace-b', bot_uuid) is None
+            assert [bot['uuid'] for bot in await service.get_bots(WORKSPACE_UUID)] == [bot_uuid]
+
+            with pytest.raises(BotApplyError) as update_error:
+                await service.update_bot(WORKSPACE_UUID, bot_uuid, {'adapter_config': {'token': 'corrected-secret'}})
+            assert update_error.value.bot_uuid == bot_uuid
+            assert 'corrected-secret' not in str(update_error.value)
+            saved = await service.get_bot(WORKSPACE_UUID, bot_uuid, include_secret=True)
+            assert saved['adapter_config'] == {'token': 'corrected-secret'}
+
+            await service.update_bot(WORKSPACE_UUID, bot_uuid, {'adapter_config': {'token': 'working-token'}})
+            saved = await service.get_bot(WORKSPACE_UUID, bot_uuid, include_secret=True)
+            assert saved['adapter_config'] == {'token': 'working-token'}
+            assert [bot['uuid'] for bot in await service.get_bots(WORKSPACE_UUID)] == [bot_uuid]
+            async with engine.connect() as connection:
+                assert await connection.scalar(sqlalchemy.select(sqlalchemy.func.count()).select_from(Bot)) == 1
+            assert ap.platform_mgr.load_bot.await_count == 3
+            assert {call.args[1]['uuid'] for call in ap.platform_mgr.load_bot.await_args_list} == {bot_uuid}
+            runtime_bot.run.assert_awaited_once()
+        finally:
+            await engine.dispose()
 
 
 class TestBotServiceUpdateBot:

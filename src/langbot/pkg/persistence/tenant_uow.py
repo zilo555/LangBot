@@ -52,6 +52,7 @@ TENANT_TABLE_COLUMNS: dict[str, str] = {
     'binary_storages': 'workspace_uuid',
     'mcp_servers': 'workspace_uuid',
     'model_providers': 'workspace_uuid',
+    'codex_credentials': 'workspace_uuid',
     'llm_models': 'workspace_uuid',
     'embedding_models': 'workspace_uuid',
     'rerank_models': 'workspace_uuid',
@@ -207,6 +208,8 @@ _SYNC_PROXY_CAPABILITY: contextvars.ContextVar[_ScopedSessionGuardState | None] 
 _ALLOWED_SCOPED_BUILTIN_FUNCTION_TYPES = {
     'coalesce': sqlalchemy.sql.functions.coalesce,
     'count': sqlalchemy.sql.functions.count,
+    'min': sqlalchemy.sql.functions.min,
+    'max': sqlalchemy.sql.functions.max,
     'now': sqlalchemy.sql.functions.now,
     'sum': sqlalchemy.sql.functions.sum,
 }
@@ -853,7 +856,30 @@ class TenantScopedAsyncSession(sqlalchemy_asyncio.AsyncSession):
         self._require_owner_task()
         self._enter_internal_access()
         try:
-            await transaction.commit()
+            # Retain the actual connection before COMMIT: after a failed SQLite
+            # COMMIT the logical transaction is inactive, but the DBAPI writer
+            # can still hold PENDING/RESERVED locks. Session.close()/rollback()
+            # alone can then return that poisoned connection to the pool.
+            connection = await super().connection()
+            try:
+                await transaction.commit()
+            except BaseException as exc:
+                cleanup = asyncio.create_task(connection.invalidate())
+                # Invalidation does not access the task-owned Session. Shield
+                # physical cleanup, including against repeated cancellation,
+                # before the owner closes the Session and releases its scope.
+                while not cleanup.done():
+                    try:
+                        await asyncio.shield(cleanup)
+                    except asyncio.CancelledError:
+                        continue
+                    except BaseException:
+                        break
+                try:
+                    cleanup.result()
+                except BaseException as cleanup_error:
+                    exc.add_note(f'Failed to invalidate transaction connection: {cleanup_error!r}')
+                raise
         finally:
             self._exit_internal_access()
 
@@ -1370,6 +1396,7 @@ class TenantUnitOfWork:
             state.mark_rollback_only(exc_value)
         rollback_only = state.rollback_only
         committed = False
+        transaction_error: BaseException | None = None
         try:
             if exc_type is None and not rollback_only:
                 await typing.cast(TenantScopedAsyncSession, session)._commit_owned_transaction(
@@ -1382,6 +1409,9 @@ class TenantUnitOfWork:
                     _UOW_SESSION_CONTROL_CAPABILITY,
                     transaction,
                 )
+        except BaseException as exc:
+            transaction_error = exc
+            raise
         finally:
             try:
                 if self._active_transaction is not None and self._context_token is not None:
@@ -1389,6 +1419,10 @@ class TenantUnitOfWork:
                 await typing.cast(TenantScopedAsyncSession, session)._close_owned_session(
                     _UOW_SESSION_CONTROL_CAPABILITY
                 )
+            except BaseException as cleanup_error:
+                if transaction_error is None:
+                    raise
+                transaction_error.add_note(f'Failed to close transaction Session: {cleanup_error!r}')
             finally:
                 if self._database_operation_token is not None:
                     _DATABASE_OPERATION_TRANSACTION.reset(self._database_operation_token)

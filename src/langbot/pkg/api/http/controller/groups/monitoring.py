@@ -5,6 +5,7 @@ import quart
 
 from ...authz import Permission
 from ...context import RequestContext
+from ...service.monitoring_traffic import get_traffic_series
 from .. import group
 
 
@@ -218,6 +219,7 @@ class MonitoringRouterGroup(group.RouterGroup):
             pipeline_ids = quart.request.args.getlist('pipelineId')
             start_time_str = quart.request.args.get('startTime')
             end_time_str = quart.request.args.get('endTime')
+            user_query = quart.request.args.get('userQuery')
             is_active_str = quart.request.args.get('isActive')
             limit = int(quart.request.args.get('limit', 100))
             offset = int(quart.request.args.get('offset', 0))
@@ -237,6 +239,7 @@ class MonitoringRouterGroup(group.RouterGroup):
                 pipeline_ids=pipeline_ids if pipeline_ids else None,
                 start_time=start_time,
                 end_time=end_time,
+                user_query=user_query,
                 is_active=is_active,
                 limit=limit,
                 offset=offset,
@@ -375,6 +378,14 @@ class MonitoringRouterGroup(group.RouterGroup):
 
             return self.success(
                 data={
+                    'traffic': await get_traffic_series(
+                        self.ap,
+                        request_context,
+                        bot_ids=bot_ids or None,
+                        pipeline_ids=pipeline_ids or None,
+                        start_time=start_time,
+                        end_time=end_time,
+                    ),
                     'overview': overview,
                     'messages': messages,
                     'llmCalls': llm_calls,
@@ -396,7 +407,15 @@ class MonitoringRouterGroup(group.RouterGroup):
         @self.route('/sessions/<session_id>/analysis', methods=['GET'], permission=Permission.RESOURCE_VIEW)
         async def get_session_analysis(session_id: str, request_context: RequestContext) -> str:
             """Get detailed analysis for a specific session"""
-            analysis = await self.ap.monitoring_service.get_session_analysis(request_context, session_id)
+            start_time = parse_iso_datetime(quart.request.args.get('startTime'))
+            end_time = parse_iso_datetime(quart.request.args.get('endTime'))
+            analysis = await self.ap.monitoring_service.get_session_analysis(
+                request_context,
+                session_id,
+                start_time=start_time,
+                end_time=end_time,
+                bot_id=quart.request.args.get('botId'),
+            )
 
             # Always return success with the analysis data
             # The frontend will handle the 'found: false' case

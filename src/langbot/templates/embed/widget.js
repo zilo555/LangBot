@@ -645,9 +645,10 @@
               .replace(/\s+/g, " ")
               .trim();
             if (
-              prevContent === content ||
-              prevContent.indexOf(content) >= 0 ||
-              content.indexOf(prevContent) >= 0
+              prevContent &&
+              (prevContent === content ||
+                prevContent.indexOf(content) >= 0 ||
+                content.indexOf(prevContent) >= 0)
             )
               return;
           }

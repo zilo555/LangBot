@@ -119,7 +119,7 @@ class SpaceService:
 
         space_config = self._get_space_config()
         authorize_url = space_config['oauth_authorize_url']
-        params = {'redirect_uri': redirect_uri}
+        params = {'redirect_uri': redirect_uri, 'code_contract': 'redirect-v1'}
         if state:
             params['state'] = state
         return f'{authorize_url}?{urlencode(params)}'
@@ -129,6 +129,8 @@ class SpaceService:
         code: str,
         workspace_uuids: list[str] | None = None,
         workspace_created_ats: dict[str, int] | None = None,
+        *,
+        redirect_uri: str = '',
     ) -> typing.Dict:
         """Exchange OAuth authorization code for tokens"""
         from langbot.pkg.utils import constants
@@ -141,6 +143,7 @@ class SpaceService:
             f'{space_url}/api/v1/accounts/oauth/token',
             json={
                 'code': code,
+                'redirect_uri': redirect_uri,
                 'instance_id': constants.instance_id,
                 # Sending an explicit empty list tells new Space servers not to
                 # synthesize a legacy instance-derived Workspace binding.

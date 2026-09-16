@@ -75,7 +75,8 @@ const zhHant = {
     privacyPolicy: '隱私政策',
     and: '和',
     dataCollectionPolicy: '數據收集政策',
-    dataCollectionPolicyUrl: 'https://link.langbot.app/zh/docs/data-policy',
+    dataCollectionPolicyUrl:
+      'https://langbot.app/docs/zh/insight/data-collection-policy',
     loading: '載入中...',
     fieldRequired: '此欄位為必填',
     or: '或',
@@ -83,6 +84,10 @@ const zhHant = {
     spaceLoginRecommended: '推薦：使用官方提供的穩定模型 API 和雲服務',
     loginLocal: '使用本地帳號登入',
     loginWithPassword: '透過密碼登入',
+    loginWithPasskey: '使用 Passkey 登入',
+    passkeyLoginSuccess: 'Passkey 驗證成功，正在登入...',
+    passkeyLoginFailed: 'Passkey 登入失敗',
+    passkeyNotSupported: '目前瀏覽器或裝置不支援 Passkey',
     spaceLoginTitle: '透過 LangBot 帳號登入',
     spaceLoginDescription: '掃描二維碼或訪問下方連結進行授權',
     spaceLoginUserCode: '您的驗證碼',
@@ -172,6 +177,37 @@ const zhHant = {
     help: '查看說明文件',
   },
   models: {
+    codex: {
+      account: 'ChatGPT 訂閱',
+      description:
+        '使用 ChatGPT 帳號登入。訂閱權限與 OpenAI API 計費相互獨立，可用模型和使用額度取決於你的訂閱方案。',
+      disconnected: '未連線',
+      loading: '正在檢查連線…',
+      starting: '正在開始登入…',
+      pending: '等待授權',
+      connected: '已連線',
+      expired: '登入已過期，請重試以取得新驗證碼。',
+      error: '無法登入，請檢查網路連線後重試。',
+      canceling: '正在取消登入…',
+      saveAndSignIn: '儲存並登入',
+      done: '完成',
+      instructions:
+        '在 OpenAI 頁面輸入此驗證碼，登入完成前請保持此對話框開啟。',
+      copyCode: '複製驗證碼',
+      copied: '已複製',
+      copyManually: '請選取並手動複製驗證碼。',
+      continueAtOpenAI: '前往 OpenAI 繼續',
+      expiresAt: '驗證碼將於 {{time}} 過期。',
+      retrying: '連線中斷，正在自動重試…',
+      cancelSignIn: '取消登入',
+      tryAgain: '重試',
+      signIn: '登入',
+      reconnect: '重新連線',
+      disconnect: '中斷連線',
+      disconnectConfirm:
+        '中斷此供應商的連線？重新登入前，其模型將無法使用。此操作不會取消你的 ChatGPT 訂閱。',
+      confirmDisconnect: '確認中斷',
+    },
     title: '模型設定',
     description: '設定和管理可在流程線中使用的模型',
     createModel: '建立模型',
@@ -312,6 +348,8 @@ const zhHant = {
     providerSaveError: '儲存供應商失敗：',
     providerDeleted: '供應商已刪除',
     providerDeleteError: '刪除供應商失敗：',
+    deleteProviderCascadeConfirmation:
+      '確定刪除此供應商及其包含的所有模型嗎？此操作不可逆，無法復原。',
     deleteProviderConfirmation: '您確定要刪除這個供應商嗎？',
     loadError: '載入資料失敗',
     chat: '對話',
@@ -991,6 +1029,14 @@ const zhHant = {
     connectionSuccess: '連接成功',
     connectionFailed: '連接失敗，請檢查URL',
     connectionFailedStatus: '連接失敗',
+    connectionUnreachable:
+      '無法連接到 MCP 伺服器，請確認服務已啟動且網路可達。',
+    connectionTimeout: 'MCP 伺服器回應逾時，請檢查服務狀態或增加逾時時間。',
+    connectionHttpError:
+      'MCP 伺服器回傳 HTTP {{status}}，請檢查存取要求和伺服器日誌。',
+    oauthAuthorizationRequired: '需要 OAuth 授權',
+    oauthAuthorizationRequiredSuggestion:
+      '此 MCP 伺服器需要 OAuth 登入。目前尚不支援 OAuth 登入；如果伺服器允許，可以手動新增 Authorization 請求標頭。',
     boxDisabledStdioRefused:
       'Stdio 模式的 MCP 伺服器依賴 Box 沙箱，目前已在設定中停用（box.enabled = false）。',
     boxUnavailableStdioRefused:
@@ -1420,6 +1466,19 @@ const zhHant = {
     bindSpaceWarning:
       '綁定後，您的登入電子郵件將從 {{localEmail}} 更改為 LangBot 帳號的電子郵件。',
     bindSpaceSuccess: 'LangBot 帳號綁定成功',
+    passkeySectionTitle: '通行密鑰 (Passkey)',
+    passkeySectionDesc: '使用指紋、面容或硬體安全金鑰免密安全登入',
+    addPasskey: '新增通行密鑰',
+    passkeyName: '金鑰名稱',
+    passkeyNamePlaceholder: '例如：MacBook Touch ID、YubiKey',
+    passkeyCreated: '建立於 {{date}}',
+    passkeyLastUsed: '上次使用: {{date}}',
+    noPasskeys: '尚未綁定任何通行密鑰',
+    deletePasskeyConfirm:
+      '確定要刪除此通行密鑰嗎？刪除後將無法使用該金鑰登入。',
+    passkeyAddedSuccess: '通行密鑰新增成功',
+    passkeyDeleteSuccess: '通行密鑰已刪除',
+    passkeyRenameSuccess: '通行密鑰重新命名成功',
     bindSpaceFailed: '綁定 LangBot 帳號失敗',
     bindSpaceInvalidState: '無效的綁定請求，請從帳戶設定重新發起',
     setPasswordHint: '設定密碼後可使用電子郵件密碼登入',
@@ -1640,7 +1699,16 @@ const zhHant = {
     queryVariables: {
       title: '查詢變數',
     },
+    loadError: '監控資料載入失敗',
+    partialMessages:
+      '顯示 {{total}} 則訊息中的 {{shown}} 則，對話軌跡可能不完整。',
+    partialModelCalls: '顯示 {{total}} 次模型呼叫中的 {{shown}} 次。',
+    partialToolCalls:
+      '顯示 {{total}} 次工具呼叫中的 {{shown}} 次，對話軌跡可能不完整。',
+    partialErrors: '顯示 {{total}} 筆錯誤中的 {{shown}} 筆。',
     trafficChart: {
+      unavailable: '流量彙總資料無法使用',
+      truncated: '流量時間範圍已截斷，請選擇較短的時間範圍。',
       title: '流量概覽',
       messages: '訊息',
       llmCalls: 'LLM呼叫',

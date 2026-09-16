@@ -763,6 +763,7 @@ export enum MCPSessionStatus {
 }
 
 export interface MCPServerRuntimeInfo {
+  error_code?: string;
   status: MCPSessionStatus;
   error_message?: string;
   /** Stage at which the session failed. Frontends key off this to render

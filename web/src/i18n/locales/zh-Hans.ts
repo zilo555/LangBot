@@ -82,7 +82,8 @@ const zhHans = {
     privacyPolicy: '隐私政策',
     and: '和',
     dataCollectionPolicy: '数据收集政策',
-    dataCollectionPolicyUrl: 'https://link.langbot.app/zh/docs/data-policy',
+    dataCollectionPolicyUrl:
+      'https://langbot.app/docs/zh/insight/data-collection-policy',
     loading: '加载中...',
     fieldRequired: '此字段为必填项',
     or: '或',
@@ -90,6 +91,10 @@ const zhHans = {
     spaceLoginRecommended: '推荐：使用官方提供的稳定模型 API 和云服务',
     loginLocal: '使用本地账号登录',
     loginWithPassword: '通过密码登录',
+    loginWithPasskey: '使用 Passkey 登录',
+    passkeyLoginSuccess: 'Passkey 验证成功，正在登录...',
+    passkeyLoginFailed: 'Passkey 登录失败',
+    passkeyNotSupported: '当前浏览器或设备不支持 Passkey',
     spaceLoginTitle: '通过 LangBot 账号登录',
     spaceLoginDescription: '扫描二维码或访问下方链接进行授权',
     spaceLoginUserCode: '您的验证码',
@@ -178,6 +183,37 @@ const zhHans = {
     help: '查看帮助文档',
   },
   models: {
+    codex: {
+      account: 'ChatGPT 订阅',
+      description:
+        '使用 ChatGPT 账号登录。订阅权限与 OpenAI API 计费相互独立，可用模型和使用额度取决于你的订阅方案。',
+      disconnected: '未连接',
+      loading: '正在检查连接…',
+      starting: '正在开始登录…',
+      pending: '等待授权',
+      connected: '已连接',
+      expired: '登录已过期，请重试以获取新验证码。',
+      error: '无法登录，请检查网络连接后重试。',
+      canceling: '正在取消登录…',
+      saveAndSignIn: '保存并登录',
+      done: '完成',
+      instructions:
+        '在 OpenAI 页面输入此验证码，登录完成前请保持此对话框打开。',
+      copyCode: '复制验证码',
+      copied: '已复制',
+      copyManually: '请选中并手动复制验证码。',
+      continueAtOpenAI: '前往 OpenAI 继续',
+      expiresAt: '验证码将于 {{time}} 过期。',
+      retrying: '连接中断，正在自动重试…',
+      cancelSignIn: '取消登录',
+      tryAgain: '重试',
+      signIn: '登录',
+      reconnect: '重新连接',
+      disconnect: '断开连接',
+      disconnectConfirm:
+        '断开此供应商的连接？重新登录前，其模型将无法使用。此操作不会取消你的 ChatGPT 订阅。',
+      confirmDisconnect: '确认断开',
+    },
     title: '模型配置',
     description: '配置和管理可在流水线中使用的模型',
     createModel: '创建对话模型',
@@ -322,6 +358,8 @@ const zhHans = {
     providerSaveError: '保存供应商失败：',
     providerDeleted: '供应商已删除',
     providerDeleteError: '删除供应商失败：',
+    deleteProviderCascadeConfirmation:
+      '确定删除此供应商及其包含的所有模型吗？此操作不可逆，无法撤销。',
     deleteProviderConfirmation: '你确定要删除这个供应商吗？',
     loadError: '加载数据失败',
     chat: '对话',
@@ -1333,6 +1371,14 @@ const zhHans = {
     connectionSuccess: '连接成功',
     connectionFailed: '连接失败，请检查URL',
     connectionFailedStatus: '连接失败',
+    connectionUnreachable:
+      '无法连接到 MCP 服务器，请确认服务已启动且网络可达。',
+    connectionTimeout: 'MCP 服务器响应超时，请检查服务状态或增加超时时间。',
+    connectionHttpError:
+      'MCP 服务器返回 HTTP {{status}}，请检查访问要求和服务器日志。',
+    oauthAuthorizationRequired: '需要 OAuth 授权',
+    oauthAuthorizationRequiredSuggestion:
+      '此 MCP 服务器需要 OAuth 登录。当前尚不支持 OAuth 登录；如果服务器允许，可以手动添加 Authorization 请求头。',
     boxDisabledStdioRefused:
       'Stdio 模式的 MCP 服务器依赖 Box 沙箱，目前已在配置中禁用（box.enabled = false）。',
     boxUnavailableStdioRefused:
@@ -1777,6 +1823,19 @@ const zhHans = {
     bindSpaceWarning:
       '绑定后，您的登录邮箱将从 {{localEmail}} 更改为 LangBot 账号的邮箱。',
     bindSpaceSuccess: 'LangBot 账号绑定成功',
+    passkeySectionTitle: '通行密钥 (Passkey)',
+    passkeySectionDesc: '使用指纹、面容或硬件安全密钥免密安全登录',
+    addPasskey: '添加通行密钥',
+    passkeyName: '密钥名称',
+    passkeyNamePlaceholder: '例如：MacBook Touch ID、YubiKey',
+    passkeyCreated: '创建于 {{date}}',
+    passkeyLastUsed: '上次使用: {{date}}',
+    noPasskeys: '暂未绑定任何通行密钥',
+    deletePasskeyConfirm:
+      '确定要删除此通行密钥吗？删除后将无法使用该密钥登录。',
+    passkeyAddedSuccess: '通行密钥添加成功',
+    passkeyDeleteSuccess: '通行密钥已删除',
+    passkeyRenameSuccess: '通行密钥重命名成功',
     bindSpaceFailed: '绑定 LangBot 账号失败',
     bindSpaceInvalidState: '无效的绑定请求，请从账户设置重新发起',
     setPasswordHint: '设置密码后可使用邮箱密码登录',
@@ -2075,7 +2134,16 @@ const zhHans = {
     queryVariables: {
       title: '查询变量',
     },
+    loadError: '监控数据加载失败',
+    partialMessages:
+      '显示 {{total}} 条消息中的 {{shown}} 条，对话轨迹可能不完整。',
+    partialModelCalls: '显示 {{total}} 次模型调用中的 {{shown}} 次。',
+    partialToolCalls:
+      '显示 {{total}} 次工具调用中的 {{shown}} 次，对话轨迹可能不完整。',
+    partialErrors: '显示 {{total}} 条错误中的 {{shown}} 条。',
     trafficChart: {
+      unavailable: '流量聚合数据不可用',
+      truncated: '流量时间范围已截断，请选择更短的时间范围。',
       title: '流量概览',
       messages: '消息数',
       llmCalls: 'LLM调用',
