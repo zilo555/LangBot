@@ -585,6 +585,8 @@ class BoxService:
         from .runner import binding_for
 
         binding = binding_for(query)
+        if spec_payload.get('session_id') not in (None, '', binding.session_id):
+            raise BoxValidationError('session_id must match the bound Box')
         spec_payload = {**binding.spec, **spec_payload, 'session_id': binding.session_id}
         execution_context = await self._validated_execution_context(self._query_execution_context(query))
         spec_payload = self._managed_policy_payload(execution_context, spec_payload)

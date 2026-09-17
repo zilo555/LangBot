@@ -670,7 +670,7 @@ async def test_box_service_allows_host_mount_under_configured_root(tmp_path):
             'cmd': 'pwd',
             'host_path': str(host_dir),
             'host_path_mode': BoxHostMountMode.READ_WRITE.value,
-            'session_id': '11',
+            'session_id': 'person_test_user',
         },
         make_query(11),
     )
@@ -962,7 +962,7 @@ async def test_profile_unlocked_field_can_be_overridden():
     await service.initialize()
 
     result = await service.execute_spec_payload(
-        {'cmd': 'echo hi', 'timeout_sec': 60, 'network': 'on', 'session_id': '31'},
+        {'cmd': 'echo hi', 'timeout_sec': 60, 'network': 'on', 'session_id': 'person_test_user'},
         make_query(31),
     )
 
@@ -984,7 +984,7 @@ async def test_profile_locked_field_cannot_be_overridden():
     await service.initialize()
 
     result = await service.execute_spec_payload(
-        {'cmd': 'echo hi', 'network': 'on', 'host_path_mode': 'rw', 'session_id': '32'},
+        {'cmd': 'echo hi', 'network': 'on', 'host_path_mode': 'rw', 'session_id': 'person_test_user'},
         make_query(32),
     )
 
@@ -1193,7 +1193,7 @@ async def test_profile_offline_readonly_locks_read_only_rootfs():
     await service.initialize()
 
     await service.execute_spec_payload(
-        {'cmd': 'echo hi', 'read_only_rootfs': False, 'session_id': '41'}, make_query(41)
+        {'cmd': 'echo hi', 'read_only_rootfs': False, 'session_id': 'person_test_user'}, make_query(41)
     )
 
     spec = backend.start_specs[0]
@@ -2372,3 +2372,17 @@ class TestAttachmentHostPath:
         service.default_workspace = None
         # Must not raise.
         await service._purge_attachment_dirs()
+
+
+@pytest.mark.asyncio
+async def test_execution_cannot_override_runner_bound_session():
+    logger = Mock()
+    backend = FakeBackend(logger)
+    runtime = BoxRuntime(logger=logger, backends=[backend], session_ttl_sec=300)
+    service = BoxService(make_app(logger), client=_InProcessBoxRuntimeClient(logger, runtime))
+    await service.initialize()
+
+    with pytest.raises(BoxValidationError, match='session_id must match the bound Box'):
+        await service.execute_spec_payload({'cmd': 'true', 'session_id': 'other-box'}, make_query())
+
+    assert backend.start_calls == []
