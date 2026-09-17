@@ -371,6 +371,7 @@ class RunnerContextBuilder:
 
         # Build delivery context
         delivery_context = {
+            'automatic_reply': binding.processor_type == 'pipeline',
             'surface': event.delivery.surface,
             'reply_target': event.delivery.reply_target,
             'supports_streaming': event.delivery.supports_streaming,
@@ -520,6 +521,7 @@ class RunnerContextBuilder:
                 'reason': 'current_event_only',
             },
             'available_apis': {
+                'box': True,
                 'prompt_get': False,
                 'history_page': history_page_enabled,
                 'history_search': history_search_enabled,

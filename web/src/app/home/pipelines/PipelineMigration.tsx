@@ -1,19 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AlertTriangle, ChevronDown, Loader2 } from 'lucide-react';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { getCurrentWorkspaceSnapshot } from '@/app/infra/http/currentWorkspaceStore';
 import { migrationIssueKey } from './pipeline-migration-issues';
 import type { CurrentWorkspace } from '@/app/infra/entities/workspace';
 import type {
   PipelineMigrationIssue,
-  PipelineMigrationItem,
   PipelineMigrationPreview,
   PipelineMigrationResult,
 } from '@/app/infra/entities/api/pipeline-migration';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -22,18 +21,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 export function migrationWorkspaceKey(workspace: CurrentWorkspace | null) {
   return workspace
     ? `${workspace.workspace.instance_uuid}:${workspace.workspace.uuid}:${workspace.placement_generation}:${workspace.permissions.join(',')}`
     : '';
-}
-
-function safeField(field?: string | null) {
-  return field && field.length <= 180 && /^[a-zA-Z0-9_.\-[\]]+$/.test(field)
-    ? field
-    : null;
 }
 
 const resultStates = new Set([
@@ -69,8 +67,8 @@ export default function PipelineMigration({
   const [loading, setLoading] = useState(false);
   const [previewError, setPreviewError] = useState(false);
   const [valid, setValid] = useState(false);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [confirmed, setConfirmed] = useState(false);
+  const [phase, setPhase] = useState('migrating');
+  const [dataOnly, setDataOnly] = useState(false);
   const [status, setStatus] = useState<Status>('idle');
   const [results, setResults] = useState<PipelineMigrationResult[]>([]);
   const active = useRef(false);
@@ -91,8 +89,6 @@ export default function PipelineMigration({
     async (allowSelection = true) => {
       if (!isCurrent()) return;
       const generation = ++previewGeneration.current;
-      setSelected([]);
-      setConfirmed(false);
       setValid(false);
       setLoading(true);
       setPreviewError(false);
@@ -139,9 +135,6 @@ export default function PipelineMigration({
   }, [refresh]);
 
   const busy = status === 'submitting' || status === 'running';
-  const eligible = (item: PipelineMigrationItem) =>
-    ['ready', 'activation_pending'].includes(item.state) &&
-    !!item.preview_token;
   const rows = preview?.items ?? [];
   const count = rows.filter(
     (item) => !['already_current', 'not_legacy'].includes(item.state),
@@ -149,6 +142,8 @@ export default function PipelineMigration({
 
   function renderIssue(issue: PipelineMigrationIssue, warning = false) {
     // Unknown server codes use localized fallbacks, never raw upstream messages.
+    if (issue.code === 'plugin_install_failed')
+      return <span>{t('pipelineMigration.installFailed')}</span>;
     const key = migrationIssueKey(issue.code);
     const fallback = t(
       warning
@@ -158,44 +153,28 @@ export default function PipelineMigration({
     const message = key
       ? t(`pipelineMigration.notices.${key}`, { defaultValue: fallback })
       : fallback;
-    const field = safeField(issue.field);
-    return (
-      <span>
-        {message}
-        {field && (
-          <>
-            {' '}
-            — <code className="text-xs">{field}</code>
-          </>
-        )}
-      </span>
-    );
+    return <span>{message}</span>;
   }
 
-  async function execute() {
+  async function execute(installPlugins: boolean) {
     if (
       submitting.current ||
       !isCurrent() ||
       !canManage ||
       !valid ||
       loading ||
-      !confirmed ||
-      selected.length === 0 ||
-      selected.length > 50
+      count === 0
     )
       return;
-    const items = rows
-      .filter((item) => selected.includes(item.pipeline_uuid) && eligible(item))
-      .map((item) => ({
-        pipeline_uuid: item.pipeline_uuid,
-        preview_token: item.preview_token!,
-      }));
-    if (items.length !== selected.length) return;
+    let items = rows.filter(
+      (item) => !['already_current', 'not_legacy'].includes(item.state),
+    );
+    setDataOnly(!installPlugins);
+    setPhase(installPlugins ? 'installing' : 'migrating');
     submitting.current = true;
     ++previewGeneration.current;
     setStatus('submitting');
     setValid(false);
-    setConfirmed(false);
     setResults(
       items.map((item) => ({
         pipeline_uuid: item.pipeline_uuid,
@@ -212,11 +191,37 @@ export default function PipelineMigration({
       onCompleteRef.current();
     };
     try {
-      const { task_id } = await httpClient.executePipelineMigration(
-        { confirmed: true, items },
-        { signal: controller.current?.signal },
-      );
+      const { task_id, pipeline_uuids } =
+        await httpClient.executePipelineMigration(
+          { confirmed: true, all: true, install_plugins: installPlugins },
+          { signal: controller.current?.signal },
+        );
       if (!isCurrent()) return;
+      if (
+        !Array.isArray(pipeline_uuids) ||
+        !pipeline_uuids.length ||
+        pipeline_uuids.some((id) => typeof id !== 'string' || !id) ||
+        new Set(pipeline_uuids).size !== pipeline_uuids.length
+      ) {
+        loseObservation();
+        return;
+      }
+      // The server captures the complete workspace set at admission.
+      items = pipeline_uuids.map(
+        (id) =>
+          rows.find((row) => row.pipeline_uuid === id) ?? {
+            pipeline_uuid: id,
+            name: id,
+            state: 'ready' as const,
+            legacy_runner: null,
+            target_runner_id: null,
+            target_plugin: null,
+            changed_paths: [],
+            warnings: [],
+            blockers: [],
+            preview_token: null,
+          },
+      );
       setStatus('running');
       const poll = async () => {
         if (!isCurrent()) return;
@@ -262,6 +267,8 @@ export default function PipelineMigration({
               },
           );
           setResults(scopedResults);
+          if (metadata.phase === 'installing' || metadata.phase === 'migrating')
+            setPhase(metadata.phase);
           if (task.runtime.done) {
             if (
               !task.runtime.exception &&
@@ -272,7 +279,7 @@ export default function PipelineMigration({
             }
             submitting.current = false;
             setStatus(task.runtime.exception ? 'failed' : 'finished');
-            void refresh(false);
+            void refresh(!task.runtime.exception);
             onCompleteRef.current();
           } else {
             timer.current = setTimeout(() => {
@@ -296,15 +303,12 @@ export default function PipelineMigration({
       }
       submitting.current = false;
       setStatus('requestError');
-      setSelected([]);
     }
   }
 
   function changeOpen(next: boolean) {
     setOpen(next);
     if (!submitting.current) {
-      setSelected([]);
-      setConfirmed(false);
       if (next) void refresh(status === 'idle');
     }
   }
@@ -312,9 +316,10 @@ export default function PipelineMigration({
   return (
     <>
       {(count > 0 || previewError || results.length > 0) && (
-        <Alert className="mb-4 shrink-0">
+        <Alert className="mb-4 shrink-0 border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200">
+          <AlertTriangle aria-hidden="true" />
           <AlertTitle>{t('pipelineMigration.title')}</AlertTitle>
-          <AlertDescription className="flex items-center justify-between gap-3">
+          <AlertDescription className="flex items-center justify-between gap-3 text-amber-800 dark:text-amber-200">
             <span>
               {previewError
                 ? t('pipelineMigration.previewError')
@@ -331,206 +336,178 @@ export default function PipelineMigration({
         </Alert>
       )}
       <Dialog open={open} onOpenChange={changeOpen}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
-          <DialogHeader>
+        <DialogContent className="flex max-h-[90dvh] flex-col overflow-hidden sm:max-w-md">
+          <DialogHeader className="shrink-0 pr-5">
             <DialogTitle>{t('pipelineMigration.title')}</DialogTitle>
             <DialogDescription>
-              {t('pipelineMigration.description')}
+              {t('pipelineMigration.autoDescription')}
             </DialogDescription>
           </DialogHeader>
-          {!canManage && (
-            <Alert>
-              <AlertDescription>
+          <div className="min-h-0 space-y-3 overflow-y-auto py-2">
+            {!canManage && (
+              <p className="text-sm text-muted-foreground">
                 {t('pipelineMigration.readOnly')}
-              </AlertDescription>
-            </Alert>
-          )}
-          {previewError && (
-            <Alert variant="destructive">
-              <AlertDescription>
+              </p>
+            )}
+            {previewError && (
+              <p className="text-sm text-destructive">
                 {t('pipelineMigration.previewError')}
-              </AlertDescription>
-            </Alert>
-          )}
-          {status !== 'idle' && (
-            <Alert
-              variant={
-                status === 'failed' || status === 'requestError'
-                  ? 'destructive'
-                  : 'default'
-              }
-            >
-              <AlertDescription role="status">
-                {t(`pipelineMigration.${status}`)}
-              </AlertDescription>
-            </Alert>
-          )}
-          <ScrollArea className="min-h-0 flex-1 overflow-y-auto">
-            <div className="space-y-3 pr-3">
-              {rows.map((item) => (
-                <div
-                  key={item.pipeline_uuid}
-                  className="rounded-md border p-3 space-y-2"
-                >
-                  <div className="flex items-start gap-3">
-                    <Checkbox
-                      aria-label={item.name}
-                      checked={selected.includes(item.pipeline_uuid)}
-                      disabled={
-                        !canManage ||
-                        busy ||
-                        loading ||
-                        !valid ||
-                        !eligible(item) ||
-                        (selected.length >= 50 &&
-                          !selected.includes(item.pipeline_uuid))
-                      }
-                      onCheckedChange={(checked) => {
-                        setConfirmed(false);
-                        setSelected((current) =>
-                          checked
-                            ? [...current, item.pipeline_uuid]
-                            : current.filter((id) => id !== item.pipeline_uuid),
-                        );
-                      }}
-                    />
-                    <div className="min-w-0 flex-1 space-y-1">
-                      <p className="font-medium text-sm break-words">
-                        {item.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground break-words">
-                        {item.legacy_runner ?? '—'} →{' '}
-                        {item.target_plugin?.name ?? '—'}
-                      </p>
+              </p>
+            )}
+            {busy ? (
+              <div className="flex items-center gap-2 text-sm" role="status">
+                <Loader2 className="size-4 shrink-0 animate-spin" />
+                {t(`pipelineMigration.${phase}`)}
+              </div>
+            ) : status !== 'idle' ? (
+              <div className="space-y-2" role="status">
+                <p className="text-sm">{t(`pipelineMigration.${status}`)}</p>
+                {results.length > 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    {t('pipelineMigration.summary', {
+                      migrated: results.filter((r) =>
+                        ['migrated', 'already_current'].includes(r.state),
+                      ).length,
+                      remaining: results.filter(
+                        (r) =>
+                          !['migrated', 'already_current'].includes(r.state),
+                      ).length,
+                    })}
+                  </p>
+                )}
+                {dataOnly && results.some((r) => r.state === 'migrated') && (
+                  <p className="text-sm text-muted-foreground">
+                    {t('pipelineMigration.dataOnlyHint')}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {t('pipelineMigration.detected', { count })}
+              </p>
+            )}
+            {!busy && (count > 0 || results.length > 0) && (
+              <Collapsible>
+                <CollapsibleTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="group px-0 text-muted-foreground hover:bg-transparent"
+                  >
+                    <ChevronDown className="size-4 group-data-[state=open]:rotate-180" />
+                    {t('pipelineMigration.viewPipelines')}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <ScrollArea
+                    className="h-[min(35dvh,16rem)]"
+                    data-testid="migration-scroll-area"
+                  >
+                    <div className="space-y-3 pr-3">
+                      {rows
+                        .filter(
+                          (item) =>
+                            !['already_current', 'not_legacy'].includes(
+                              item.state,
+                            ) ||
+                            results.some(
+                              (r) => r.pipeline_uuid === item.pipeline_uuid,
+                            ),
+                        )
+                        .map((item) => {
+                          const result = results.find(
+                            (r) => r.pipeline_uuid === item.pipeline_uuid,
+                          );
+                          return (
+                            <div
+                              key={item.pipeline_uuid}
+                              className="space-y-1 border-b pb-3 text-sm"
+                              data-testid={`migration-result-${item.pipeline_uuid}`}
+                            >
+                              <div className="flex items-start justify-between gap-2">
+                                <span className="min-w-0 break-words font-medium">
+                                  {item.name}
+                                </span>
+                                <Badge variant="secondary" className="shrink-0">
+                                  {t(
+                                    `pipelineMigration.states.${result?.state ?? item.state}`,
+                                  )}
+                                </Badge>
+                              </div>
+                              {item.target_plugin && (
+                                <p className="text-xs text-muted-foreground">
+                                  {item.target_plugin.name}
+                                </p>
+                              )}
+                              {result?.code && result.code !== 'data_only' ? (
+                                <p className="text-xs text-destructive">
+                                  {renderIssue({ code: result.code })}
+                                </p>
+                              ) : (
+                                !result &&
+                                item.blockers
+                                  .filter(
+                                    (b) =>
+                                      ![
+                                        'plugin_missing',
+                                        'plugin_disabled',
+                                      ].includes(b.code),
+                                  )
+                                  .map((issue, index) => (
+                                    <p
+                                      key={index}
+                                      className="text-xs text-destructive"
+                                    >
+                                      {renderIssue(issue)}
+                                    </p>
+                                  ))
+                              )}
+                            </div>
+                          );
+                        })}
                     </div>
-                    <Badge variant="secondary">
-                      {t(`pipelineMigration.states.${item.state}`)}
-                    </Badge>
-                  </div>
-                  {item.blockers.map((issue, index) => (
-                    <p className="text-sm text-destructive" key={`b-${index}`}>
-                      {renderIssue(issue)}
-                    </p>
-                  ))}
-                  {item.warnings.map((issue, index) => (
-                    <p
-                      className="text-sm text-muted-foreground"
-                      key={`w-${index}`}
-                    >
-                      {renderIssue(issue, true)}
-                    </p>
-                  ))}
-                  {item.changed_paths.filter((path) => safeField(path)).length >
-                    0 && (
-                    <p className="text-xs text-muted-foreground">
-                      {t('pipelineMigration.changedFields')}:{' '}
-                      {item.changed_paths
-                        .filter((path) => safeField(path))
-                        .join(', ')}
-                    </p>
-                  )}
-                  {item.state === 'activation_pending' && (
-                    <p className="text-sm text-muted-foreground">
-                      {t(
-                        item.preview_token
-                          ? 'pipelineMigration.activationRetryHint'
-                          : 'pipelineMigration.activationHint',
-                      )}
-                    </p>
-                  )}
-                </div>
-              ))}
-              {rows.some((item) => item.state === 'needs_plugin') && (
-                <Alert>
-                  <AlertDescription className="space-y-2">
-                    <p>{t('pipelineMigration.pluginHint')}</p>
-                    <Button variant="link" asChild className="h-auto p-0">
-                      <a
-                        href="/home/extensions"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {t('pipelineMigration.extensions')}
-                      </a>
-                    </Button>
-                  </AlertDescription>
-                </Alert>
-              )}
-              {results.length > 0 && (
-                <div
-                  className="space-y-2"
-                  aria-label={t('pipelineMigration.results')}
+                  </ScrollArea>
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+          </div>
+          <DialogFooter className="shrink-0 flex-col gap-2 sm:flex-col">
+            {!busy && (
+              <>
+                <Button
+                  disabled={!canManage || loading || !valid || !count}
+                  className="w-full"
+                  onClick={() => void execute(true)}
                 >
-                  <h3 className="text-sm font-medium">
-                    {t('pipelineMigration.results')}
-                  </h3>
-                  {results.map((result) => (
-                    <div
-                      className="rounded-md border p-3 text-sm"
-                      key={result.pipeline_uuid}
-                      data-testid={`migration-result-${result.pipeline_uuid}`}
-                    >
-                      <p>
-                        {rows.find(
-                          (item) => item.pipeline_uuid === result.pipeline_uuid,
-                        )?.name ?? result.pipeline_uuid}{' '}
-                        — {t(`pipelineMigration.states.${result.state}`)}
-                      </p>
-                      {result.code && (
-                        <p className="text-muted-foreground">
-                          {renderIssue({ code: result.code })}
-                        </p>
-                      )}
-                      {result.state === 'activation_pending' && (
-                        <p>{t('pipelineMigration.activationHint')}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </ScrollArea>
-          <p className="text-xs text-muted-foreground">
-            {t('pipelineMigration.selection', { count: selected.length })}
-          </p>
-          <label className="flex items-center gap-2 text-sm">
-            <Checkbox
-              checked={confirmed}
-              onCheckedChange={(checked) => setConfirmed(checked === true)}
-              disabled={
-                !canManage || busy || loading || !valid || !selected.length
-              }
-            />
-            {t('pipelineMigration.confirm')}
-          </label>
-          <DialogFooter>
+                  {t('pipelineMigration.autoInstall')}
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={!canManage || loading || !valid || !count}
+                  className="w-full"
+                  onClick={() => void execute(false)}
+                >
+                  {t('pipelineMigration.dataOnly')}
+                </Button>
+                <p className="text-center text-xs text-muted-foreground">
+                  {t('pipelineMigration.dataOnlyHint')}
+                </p>
+                {(status !== 'idle' || previewError) && (
+                  <Button
+                    variant="outline"
+                    disabled={loading}
+                    onClick={() => {
+                      setStatus('idle');
+                      void refresh();
+                    }}
+                  >
+                    {t('pipelineMigration.refresh')}
+                  </Button>
+                )}
+              </>
+            )}
             <Button variant="ghost" onClick={() => changeOpen(false)}>
-              {t('common.cancel')}
-            </Button>
-            <Button
-              variant="outline"
-              disabled={busy || loading}
-              onClick={() => {
-                setStatus('idle');
-                void refresh();
-              }}
-            >
-              {t('pipelineMigration.refresh')}
-            </Button>
-            <Button
-              disabled={
-                !canManage ||
-                busy ||
-                loading ||
-                !valid ||
-                !selected.length ||
-                !confirmed
-              }
-              onClick={() => {
-                void execute();
-              }}
-            >
-              {t('pipelineMigration.execute')}
+              {t('common.close')}
             </Button>
           </DialogFooter>
         </DialogContent>

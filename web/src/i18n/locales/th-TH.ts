@@ -17,6 +17,7 @@ const thTH = {
     editionCloud: 'Cloud',
   },
   common: {
+    customValue: 'กำหนดเอง',
     login: 'เข้าสู่ระบบ',
     logout: 'ออกจากระบบ',
     accountOptions: 'การตั้งค่า',

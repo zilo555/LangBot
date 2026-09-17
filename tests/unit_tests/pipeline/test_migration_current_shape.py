@@ -48,20 +48,18 @@ def test_sdk_valid_omitted_prompt_content_is_preserved_exactly():
     assert 'content' not in migrated[0]
 
 
-@pytest.mark.parametrize('template', ['', '{launcher_type}_{launcher_id}'])
-def test_standard_box_template_is_explicit_reset_not_custom_scope_block(template):
+@pytest.mark.parametrize('template', ['{global}', '{launcher_type}_{launcher_id}', '{launcher_id}', '{workspace}'])
+def test_box_reuse_template_is_preserved_for_runner(template):
     source = {'ai': {'runner': {'runner': 'local-agent'}, 'local-agent': copy.deepcopy(FIXTURES['local-agent'])}}
     source['ai']['local-agent']['box-session-id-template'] = template
     result = plan_legacy_pipeline(source)
     assert result['state'] == 'ready', result['blockers']
-    assert {'code': 'local.box_state_reset', 'field': 'ai.local-agent.box-session-id-template'} in result['warnings']
-    assert 'box-session-id-template' not in result['config']['ai']['runner_config'][result['target_runner_id']]
+    assert result['config']['ai']['runner_config'][result['target_runner_id']]['box-session-id-template'] == template
 
 
-@pytest.mark.parametrize('template', ['global', '{launcher_id}', '{workspace}', ' {launcher_type}_{launcher_id}'])
-def test_custom_box_sharing_stays_blocked(template):
+def test_empty_box_template_requires_correction():
     source = {'ai': {'runner': {'runner': 'local-agent'}, 'local-agent': copy.deepcopy(FIXTURES['local-agent'])}}
-    source['ai']['local-agent']['box-session-id-template'] = template
+    source['ai']['local-agent']['box-session-id-template'] = ''
     result = plan_legacy_pipeline(source)
     assert result['state'] == 'blocked'
-    assert {'code': 'local.box_scope', 'field': 'ai.local-agent.box-session-id-template'} in result['blockers']
+    assert {'code': 'invalid_type', 'field': 'ai.local-agent.box-session-id-template'} in result['blockers']

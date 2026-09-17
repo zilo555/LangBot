@@ -1,4 +1,6 @@
 const issueKeys: Record<string, string> = {
+  plugin_missing: 'pluginRequired',
+  plugin_disabled: 'pluginRequired',
   'local.context_defaults': 'contextDefaults',
   'local.model_reasoning': 'modelReasoning',
   'local.serial_tools_preserved': 'serialTools',

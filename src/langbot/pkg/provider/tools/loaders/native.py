@@ -264,6 +264,9 @@ class NativeToolLoader(loader.ToolLoader):
         return name in _ALL_TOOL_NAMES and await self._is_sandbox_available()
 
     async def invoke_tool(self, name: str, parameters: dict, query: pipeline_query.Query):
+        from ....box.runner import binding_for
+
+        binding_for(query)
         require_sandbox = getattr(
             getattr(self.ap, 'box_service', None),
             'require_workspace_sandbox',

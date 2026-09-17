@@ -1,7 +1,23 @@
 export default {
+  autoDescription:
+    'Legacy runners are now plugins. Migrate all pipelines while keeping your settings. Original configurations are backed up; conversations start fresh.',
+  viewPipelines: 'View pipelines',
+  autoInstall: 'Install plugins and migrate',
+  dataOnly: 'Migrate data only',
+  dataOnlyHint:
+    'For offline or private networks. Install the corresponding runner plugins yourself after migration.',
+  installing: 'Installing required plugins…',
+  migrating: 'Migrating pipelines…',
+  summary: '{{migrated}} migrated; {{remaining}} need attention.',
+  installFailed:
+    'Plugin installation failed. Check your network and extension quota, then retry, or migrate data only.',
+
   activationRetryHint:
     'After checking the runtime, refresh, select this pipeline and confirm to retry activation only. Its saved configuration will not be migrated again.',
+  details: 'Migration details',
   notices: {
+    pluginRequired:
+      'Install or enable the runner plugin shown above, then refresh the preview.',
     legacyArchive:
       'The active configuration will contain only the selected runner. All original runner settings, including inactive ones, are kept in the migration backup.',
     contextDefaults:
@@ -44,7 +60,7 @@ export default {
   },
   title: 'Pipeline migration',
   description:
-    'Nothing changes until you select pipelines and explicitly confirm. Migration preserves pipeline identity and unrelated settings.',
+    'Select pipelines to migrate. Original settings are backed up; conversations start fresh after migration.',
   detected: '{{count}} pipelines need migration review.',
   review: 'Review migration',
   readOnly: 'Only workspace managers can migrate pipelines.',
@@ -64,7 +80,7 @@ export default {
   activationHint:
     'Configuration was saved, but activation is pending. Ask a workspace administrator to check runtime availability, then refresh. Do not rerun migration blindly.',
   pluginHint:
-    'Install or enable the required runner plugin through Extensions / Extension Market. Review your workspace extension quota there; this assistant never installs plugins. Return here and refresh the preview.',
+    'Missing a plugin? Install or enable its runner in Extensions, then refresh the preview.',
   extensions: 'Open Extensions',
   results: 'Per-pipeline results',
   selection: '{{count}} selected (maximum 50)',

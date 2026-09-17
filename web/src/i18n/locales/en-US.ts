@@ -17,6 +17,7 @@ const enUS = {
     editionCloud: 'Cloud',
   },
   common: {
+    customValue: 'Custom',
     loadFailed: 'Failed to load. Please try again.',
     login: 'Login',
     logout: 'Logout',

@@ -18,6 +18,7 @@ const viVN = {
     editionCloud: 'Cloud',
   },
   common: {
+    customValue: 'Tùy chỉnh',
     login: 'Đăng nhập',
     logout: 'Đăng xuất',
     accountOptions: 'Cài đặt',

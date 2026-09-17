@@ -1,7 +1,20 @@
 export default {
+  autoDescription:
+    '旧版运行方式已改为插件。迁移全部流水线并保留现有设置，原配置会自动备份；迁移后开始新会话。',
+  viewPipelines: '查看流水线',
+  autoInstall: '自动安装插件并迁移',
+  dataOnly: '仅迁移数据',
+  dataOnlyHint: '适合离线或内网环境，迁移后请自行安装对应的运行器插件。',
+  installing: '正在安装所需插件…',
+  migrating: '正在迁移流水线…',
+  summary: '已迁移 {{migrated}} 条，{{remaining}} 条需要处理。',
+  installFailed: '插件安装失败，请检查网络和扩展配额后重试，或选择仅迁移数据。',
+
   activationRetryHint:
     '检查运行环境后刷新，选中此流水线并确认，即可仅重试激活，不会再次迁移已保存的配置。',
+  details: '迁移详情',
   notices: {
+    pluginRequired: '请先安装或启用上方所示的运行器插件，再刷新预览。',
     legacyArchive:
       '活动配置仅保留所选 Runner；全部旧 Runner 配置（包括未启用的配置）保存在迁移备份中。',
     contextDefaults:
@@ -31,8 +44,7 @@ export default {
     pendingInteraction: '有会话正在等待输入，请完成或取消后再迁移。',
   },
   title: '流水线迁移',
-  description:
-    '仅在选择流水线并明确确认后才会更改配置。迁移保留流水线身份及无关设置。',
+  description: '选择要迁移的流水线。原配置会备份，迁移后将开始新会话。',
   detected: '{{count}} 条流水线需要检查迁移。',
   review: '检查迁移',
   readOnly: '只有工作空间管理者可以迁移流水线。',
@@ -48,8 +60,7 @@ export default {
   changedFields: '变更字段',
   activationHint:
     '配置已保存，但尚未激活。请工作空间管理员检查运行环境后刷新，不要盲目重复迁移。',
-  pluginHint:
-    '请通过「扩展 / 扩展市场」安装或启用所需的运行器插件，并自行检查工作空间扩展配额。本助手不会安装插件。返回此处后请刷新预览。',
+  pluginHint: '缺少插件？前往扩展安装或启用对应运行器，然后刷新预览。',
   extensions: '打开扩展',
   results: '逐条迁移结果',
   selection: '已选择 {{count}} 条（最多 50 条）',

@@ -340,6 +340,7 @@ class TestResponseWrapperAssistant:
         assistant_resp = Mock()
         assistant_resp.role = 'assistant'
         assistant_resp.content = None
+        assistant_resp.attachments = None
         assistant_resp.tool_calls = None
         query.resp_messages = [assistant_resp]
 

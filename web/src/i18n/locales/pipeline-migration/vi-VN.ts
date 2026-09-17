@@ -1,7 +1,23 @@
 export default {
+  autoDescription:
+    'Các runner cũ đã chuyển thành plugin. Chuyển đổi tất cả pipeline và giữ lại thiết lập. Cấu hình cũ sẽ được sao lưu; hội thoại sẽ bắt đầu lại.',
+  viewPipelines: 'Xem pipeline',
+  autoInstall: 'Cài plugin và chuyển đổi',
+  dataOnly: 'Chỉ chuyển đổi dữ liệu',
+  dataOnlyHint:
+    'Dành cho mạng nội bộ hoặc ngoại tuyến. Tự cài các plugin runner tương ứng sau khi chuyển đổi.',
+  installing: 'Đang cài plugin cần thiết…',
+  migrating: 'Đang chuyển đổi pipeline…',
+  summary: 'Đã chuyển {{migrated}}; {{remaining}} cần xử lý.',
+  installFailed:
+    'Cài plugin thất bại. Kiểm tra mạng và hạn mức tiện ích rồi thử lại, hoặc chỉ chuyển đổi dữ liệu.',
+
   activationRetryHint:
     'Sau khi kiểm tra môi trường chạy, làm mới, chọn pipeline này và xác nhận để chỉ thử kích hoạt lại. Cấu hình đã lưu sẽ không được di chuyển lần nữa.',
+  details: 'Chi tiết chuyển đổi',
   notices: {
+    pluginRequired:
+      'Cài đặt hoặc bật plugin runner ở trên, rồi làm mới bản xem trước.',
     legacyArchive:
       'Cấu hình hoạt động chỉ giữ Runner đã chọn. Tất cả thiết lập Runner cũ, kể cả các thiết lập không dùng, được giữ trong bản sao lưu di chuyển.',
     contextDefaults:
@@ -44,7 +60,7 @@ export default {
   },
   title: 'Di chuyển pipeline',
   description:
-    'Chỉ thay đổi sau khi bạn chọn pipeline và xác nhận rõ ràng. Danh tính và các cài đặt không liên quan được giữ nguyên.',
+    'Chọn các pipeline cần chuyển đổi. Cấu hình cũ sẽ được sao lưu; các cuộc trò chuyện sẽ bắt đầu lại.',
   detected: '{{count}} pipeline cần xem xét di chuyển.',
   review: 'Xem xét di chuyển',
   readOnly:
@@ -63,7 +79,7 @@ export default {
   activationHint:
     'Cấu hình đã lưu nhưng đang chờ kích hoạt. Nhờ quản trị viên kiểm tra môi trường rồi làm mới. Không chạy lại di chuyển một cách mù quáng.',
   pluginHint:
-    'Cài hoặc bật plugin runner cần thiết qua Tiện ích / Chợ tiện ích và kiểm tra hạn mức không gian. Trợ lý này không cài plugin. Khi quay lại, hãy làm mới bản xem trước.',
+    'Thiếu plugin? Cài đặt hoặc bật runner trong Tiện ích mở rộng, rồi làm mới bản xem trước.',
   extensions: 'Mở Tiện ích',
   results: 'Kết quả từng pipeline',
   selection: 'Đã chọn {{count}} (tối đa 50)',

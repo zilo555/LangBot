@@ -21,7 +21,7 @@ from urllib.parse import urlsplit
 PLANNER_VERSION = '3'
 
 _TARGETS = {
-    'local-agent': ('LocalAgent', '0.1.6'),
+    'local-agent': ('LocalAgent', '0.1.7'),
     'dify-service-api': ('DifyAgent', '0.1.7'),
     'coze-api': ('CozeAgent', '0.1.7'),
     'dashscope-app-api': ('DashScopeAgent', '0.1.7'),
@@ -339,11 +339,12 @@ def _validate_local(result, section):
         _block(result, 'invalid_type', f'{prefix}.model')
     if not _valid_prompt(section.get('prompt')):
         _block(result, 'local.prompt_shape', f'{prefix}.prompt')
-    if section.get('box-session-id-template') not in (None, '', '{launcher_type}_{launcher_id}'):
-        _block(result, 'local.box_scope', f'{prefix}.box-session-id-template')
     _warn(result, 'local.context_defaults', f'{prefix}.max-round')
     _warn(result, 'local.serial_tools_preserved', f'{prefix}.tools')
     _warn(result, 'local.retrieval_defaults', f'{prefix}.knowledge-bases')
+    template = section.get('box-session-id-template', '{launcher_type}_{launcher_id}')
+    if type(template) is not str or not template.strip():
+        _block(result, 'invalid_type', f'{prefix}.box-session-id-template')
     _warn(result, 'local.box_state_reset', f'{prefix}.box-session-id-template')
 
 
@@ -543,7 +544,6 @@ def _assemble(result, legacy, section, config, preferences):
         selected['user-id-source'] = _IDENTITY_SOURCES[legacy]
     if legacy == 'local-agent':
         selected.pop('max-round', None)
-        selected.pop('box-session-id-template', None)
         singular = selected.pop('knowledge-base', '')
         if not selected['knowledge-bases'] and singular and singular != '__none__':
             selected['knowledge-bases'] = [singular]

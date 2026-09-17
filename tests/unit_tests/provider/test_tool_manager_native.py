@@ -1,4 +1,5 @@
 from __future__ import annotations
+from langbot.pkg.box.runner import RunBoxBinding
 
 import base64
 import contextlib
@@ -236,6 +237,7 @@ async def test_native_tool_loader_rechecks_admission_at_the_final_invoke_boundar
         query_uuid=None,
     )
 
+    query._box_binding = RunBoxBinding('run', 'box', {}, 'run')
     with pytest.raises(RuntimeError, match='entitlement expired'):
         await loader.invoke_tool('read', {'path': '/workspace/private.txt'}, query)
 
@@ -260,6 +262,7 @@ def _make_loader_with_workspace(tmpdir: str) -> tuple[NativeToolLoader, Mock]:
 
 def _make_query() -> SimpleNamespace:
     return SimpleNamespace(
+        _box_binding=RunBoxBinding('run', 'box', {}, 'run'),
         query_id='test-query-1',
         query_uuid='test-query-1',
         instance_uuid=_CONTEXT.instance_uuid,
@@ -510,7 +513,9 @@ async def test_path_escape_blocked():
     ],
 )
 @pytest.mark.asyncio
-@pytest.mark.skipif(not native_loader._SECURE_HOST_FILE_OPS_AVAILABLE, reason='Requires POSIX descriptor-relative host APIs')
+@pytest.mark.skipif(
+    not native_loader._SECURE_HOST_FILE_OPS_AVAILABLE, reason='Requires POSIX descriptor-relative host APIs'
+)
 async def test_host_workspace_operations_do_not_follow_a_swapped_ancestor(
     monkeypatch,
     tool_name: str,

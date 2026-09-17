@@ -79,6 +79,7 @@ async function setup(
     taskException: false,
     results: [
       { pipeline_uuid: 'one', state: 'migrated', code: null },
+      { pipeline_uuid: 'two', state: 'migrated', code: null },
     ] as PipelineMigrationResult[],
     holdExecute: null as Promise<void> | null,
     holdPreview: null as Promise<void> | null,
@@ -118,7 +119,12 @@ async function setup(
         status: state.executeStatus,
         json: { code: state.executeStatus, msg: 'unsafe-upstream-secret' },
       });
-    await reply(route, { task_id: 411 });
+    await reply(route, {
+      task_id: 411,
+      pipeline_uuids: state.items
+        .filter((r) => !['already_current', 'not_legacy'].includes(r.state))
+        .map((r) => r.pipeline_uuid),
+    });
   });
   await page.route('**/api/v1/system/tasks/411', async (route) => {
     state.polls++;
@@ -178,229 +184,6 @@ async function open(page: Page, detail = false) {
     .click();
   return page.getByRole('dialog', { name: 'Pipeline migration' });
 }
-async function selectAndConfirm(page: Page) {
-  const dialog = page.getByRole('dialog', { name: 'Pipeline migration' });
-  await dialog
-    .getByRole('checkbox', { name: 'Legacy one', exact: true })
-    .check();
-  await dialog
-    .getByRole('checkbox', {
-      name: 'I confirm migration of the selected pipelines.',
-    })
-    .check();
-  return dialog.getByRole('button', { name: 'Migrate selected', exact: true });
-}
-
-test('opening, refreshing and cancelling never execute; selection starts empty', async ({
-  page,
-}) => {
-  const state = await setup(page);
-  const dialog = await open(page);
-  await expect(
-    dialog.getByRole('checkbox', { name: 'Legacy one', exact: true }),
-  ).not.toBeChecked();
-  await expect(
-    dialog.getByRole('button', { name: 'Migrate selected', exact: true }),
-  ).toBeDisabled();
-  await dialog.getByRole('button', { name: 'Refresh preview' }).click();
-  await expect.poll(() => state.previews).toBeGreaterThan(1);
-  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
-  await page
-    .getByRole('button', { name: 'Review migration', exact: true })
-    .click();
-  await expect(
-    dialog.getByRole('checkbox', { name: 'Legacy one', exact: true }),
-  ).not.toBeChecked();
-  expect(state.posts).toEqual([]);
-  await page.screenshot({ path: 'test-results/pipeline-migration-review.png' });
-});
-
-test('explicit selection plus confirmation sends only IDs/tokens and suppresses double submit', async ({
-  page,
-}) => {
-  const state = await setup(page);
-  let release!: () => void;
-  state.holdExecute = new Promise((resolve) => {
-    release = resolve;
-  });
-  const dialog = await open(page);
-  await dialog
-    .getByRole('checkbox', { name: 'Legacy one', exact: true })
-    .check();
-  await expect(
-    dialog.getByRole('button', { name: 'Migrate selected', exact: true }),
-  ).toBeDisabled();
-  await dialog
-    .getByRole('checkbox', {
-      name: 'I confirm migration of the selected pipelines.',
-    })
-    .check();
-  await dialog
-    .getByRole('button', { name: 'Migrate selected', exact: true })
-    .evaluate((button: HTMLButtonElement) => {
-      button.click();
-      button.click();
-    });
-  await expect.poll(() => state.posts.length).toBe(1);
-  await expect(
-    dialog.getByRole('button', { name: 'Migrate selected', exact: true }),
-  ).toBeDisabled();
-  expect(state.posts).toEqual([
-    {
-      confirmed: true,
-      items: [{ pipeline_uuid: 'one', preview_token: 'token-one' }],
-    },
-  ]);
-  release();
-  await expect(dialog.getByTestId('migration-result-one')).toContainText(
-    'Migrated',
-  );
-});
-
-test('view-only workspace can inspect but cannot select or execute', async ({
-  page,
-}) => {
-  const state = await setup(page, { viewer: true, cloud: true });
-  const dialog = await open(page);
-  await expect(
-    dialog.getByText('Only workspace managers can migrate pipelines.'),
-  ).toBeVisible();
-  await expect(
-    dialog.getByRole('checkbox', { name: 'Legacy one', exact: true }),
-  ).toBeDisabled();
-  await expect(
-    dialog.getByRole('button', { name: 'Migrate selected', exact: true }),
-  ).toBeDisabled();
-  expect(state.posts).toEqual([]);
-});
-
-test('missing plugins and blocked rows stay unselectable; existing Extensions flow and safe fields', async ({
-  page,
-}) => {
-  const state = await setup(page);
-  state.items = [
-    row('one', 'needs_plugin'),
-    {
-      ...row('two', 'blocked'),
-      blockers: [
-        { code: 'unsupported_field', field: 'ai.local-agent.max-round' },
-      ],
-    },
-  ];
-  const dialog = await open(page);
-  for (const name of ['Legacy one', 'Legacy two'])
-    await expect(
-      dialog.getByRole('checkbox', { name, exact: true }),
-    ).toBeDisabled();
-  await expect(dialog.getByText('ai.local-agent.max-round')).toBeVisible();
-  await expect(dialog.getByText(/quota/)).toBeVisible();
-  await expect(
-    dialog.getByRole('link', { name: 'Open Extensions' }),
-  ).toHaveAttribute('href', '/home/extensions');
-  await expect(dialog).not.toContainText('fixture-not-a-secret');
-  state.items = [row('one')];
-  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
-  await expect(
-    dialog.getByRole('checkbox', { name: 'Legacy one', exact: true }),
-  ).toBeEnabled();
-  expect(state.posts).toEqual([]);
-});
-
-test('stale execute requires a fresh preview and new explicit selection', async ({
-  page,
-}) => {
-  const state = await setup(page);
-  state.executeStatus = 409;
-  const dialog = await open(page);
-  await (await selectAndConfirm(page)).click();
-  await expect(
-    dialog.getByText(
-      'Request not completed. Refresh the preview before selecting again.',
-    ),
-  ).toBeVisible();
-  await expect(
-    dialog.getByRole('button', { name: 'Migrate selected', exact: true }),
-  ).toBeDisabled();
-  await expect(dialog).not.toContainText('unsafe-upstream-secret');
-  await dialog.getByRole('button', { name: 'Refresh preview' }).click();
-  await expect(
-    dialog.getByRole('checkbox', { name: 'Legacy one', exact: true }),
-  ).not.toBeChecked();
-  expect(state.posts).toHaveLength(1);
-});
-
-test('partial task results are shown per row without a global success claim', async ({
-  page,
-}) => {
-  const state = await setup(page, { cloud: true });
-  state.results = [
-    { pipeline_uuid: 'one', state: 'migrated', code: null },
-    {
-      pipeline_uuid: 'two',
-      state: 'failed',
-      code: 'runtime_unavailable',
-    },
-  ];
-  const dialog = await open(page);
-  const submit = await selectAndConfirm(page);
-  await dialog
-    .getByRole('checkbox', { name: 'Legacy two', exact: true })
-    .check();
-  await expect(submit).toBeDisabled();
-  await dialog
-    .getByRole('checkbox', {
-      name: 'I confirm migration of the selected pipelines.',
-    })
-    .check();
-  await submit.click();
-  await expect(dialog.getByTestId('migration-result-one')).toContainText(
-    'Migrated',
-  );
-  await expect(dialog.getByTestId('migration-result-two')).toContainText(
-    'Failed',
-  );
-  await expect(
-    dialog.getByText('Task finished. Check each pipeline result below.'),
-  ).toBeVisible();
-  await page.screenshot({
-    path: 'test-results/pipeline-migration-partial.png',
-  });
-});
-
-test('task failure stays distinct from polling loss and never displays raw exceptions', async ({
-  page,
-}) => {
-  const state = await setup(page);
-  state.taskException = true;
-  state.results = [{ pipeline_uuid: 'one', state: 'failed', code: null }];
-  const dialog = await open(page);
-  await (await selectAndConfirm(page)).click();
-  await expect(
-    dialog.getByText('Task failed. Check each pipeline result below.'),
-  ).toBeVisible();
-  await expect(dialog).not.toContainText('unsafe-upstream-secret');
-});
-
-test('lost polling is observation lost, refreshes read-only preview and never retries execute', async ({
-  page,
-}) => {
-  const state = await setup(page);
-  state.pollLost = true;
-  const dialog = await open(page);
-  const before = state.previews;
-  await (await selectAndConfirm(page)).click();
-  await expect(
-    dialog.getByText(
-      'Task observation lost. Its outcome is unknown; refresh the preview before any further action.',
-    ),
-  ).toBeVisible();
-  await expect.poll(() => state.previews).toBeGreaterThan(before);
-  expect(state.posts).toHaveLength(1);
-  await expect(
-    dialog.getByRole('button', { name: 'Migrate selected', exact: true }),
-  ).toBeDisabled();
-});
-
 test('legacy detail never mounts editable runner defaults or debug autosave, metadata stays available', async ({
   page,
 }) => {
@@ -422,26 +205,195 @@ test('legacy detail never mounts editable runner defaults or debug autosave, met
   expect(state.posts).toEqual([]);
 });
 
-test('completion reloads detail and runner metadata; current pipeline keeps normal editor', async ({
+const installButton = (page: Page) =>
+  page.getByRole('button', {
+    name: 'Install plugins and migrate',
+    exact: true,
+  });
+const dataButton = (page: Page) =>
+  page.getByRole('button', { name: 'Migrate data only', exact: true });
+
+test('compact assistant hides details, has no checkboxes and does not execute on open or close', async ({
   page,
 }) => {
   const state = await setup(page);
-  const dialog = await open(page, true);
-  const before = state.pipelineReads;
-  await (await selectAndConfirm(page)).click();
-  await expect(dialog.getByTestId('migration-result-one')).toContainText(
-    'Migrated',
-  );
-  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
-  await expect(
-    page.getByRole('tab', { name: 'AI', exact: true }),
-  ).toBeVisible();
-  await expect.poll(() => state.pipelineReads).toBeGreaterThan(before);
-  await expect.poll(() => state.metadataReads).toBeGreaterThan(0);
-  expect(state.writes).toEqual([]);
+  const dialog = await open(page);
+  await expect(dialog.getByRole('checkbox')).toHaveCount(0);
+  await expect(dialog.getByText('Legacy one', { exact: true })).toHaveCount(0);
+  await expect(installButton(page)).toBeEnabled();
+  await expect(dataButton(page)).toBeEnabled();
+  await dialog.getByRole('button', { name: 'View pipelines' }).click();
+  await expect(dialog.getByText('Legacy one', { exact: true })).toBeVisible();
+  await expect(dialog).not.toContainText('ai.runner.id');
+  await dialog
+    .getByRole('button', { name: 'Close', exact: true })
+    .first()
+    .click();
+  expect(state.posts).toEqual([]);
 });
 
-test('workspace change resets selection and ignores an old polling response', async ({
+for (const install of [true, false]) {
+  test(`one click migrates all pipelines, install_plugins=${install}`, async ({
+    page,
+  }) => {
+    const state = await setup(page);
+    state.items.push(row('missing', 'needs_plugin'));
+    state.results.push({
+      pipeline_uuid: 'missing',
+      state: 'migrated',
+      code: install ? null : 'data_only',
+    });
+    const dialog = await open(page);
+    await (install ? installButton(page) : dataButton(page)).click();
+    await expect(dialog).toContainText('3 migrated; 0 need attention.');
+    expect(state.posts).toEqual([
+      { confirmed: true, all: true, install_plugins: install },
+    ]);
+    expect(state.writes).toEqual([]);
+    if (!install)
+      await expect(dialog).toContainText(
+        'Install the corresponding runner plugins yourself',
+      );
+  });
+}
+
+test('read-only users can inspect but cannot migrate', async ({ page }) => {
+  const state = await setup(page, { viewer: true });
+  await open(page);
+  await expect(installButton(page)).toBeDisabled();
+  await expect(dataButton(page)).toBeDisabled();
+  expect(state.posts).toEqual([]);
+});
+
+test('double clicks do not submit duplicate tasks; close does not cancel running task', async ({
+  page,
+}) => {
+  const state = await setup(page);
+  state.done = false;
+  const dialog = await open(page);
+  await installButton(page).dblclick();
+  await expect(dialog.getByRole('status')).toContainText(
+    'Installing required plugins',
+  );
+  await expect(installButton(page)).toHaveCount(0);
+  await dialog
+    .getByRole('button', { name: 'Close', exact: true })
+    .first()
+    .click();
+  await page
+    .getByRole('button', { name: 'Review migration', exact: true })
+    .click();
+  await expect(dialog.getByRole('status')).toContainText(
+    'Installing required plugins',
+  );
+  expect(state.posts).toHaveLength(1);
+  state.done = true;
+  await expect(dialog).toContainText('2 migrated; 0 need attention.');
+});
+
+test('partial failures are reported without exposing upstream errors, and refresh allows retry', async ({
+  page,
+}) => {
+  const state = await setup(page);
+  state.results = [
+    { pipeline_uuid: 'one', state: 'migrated', code: null },
+    { pipeline_uuid: 'two', state: 'blocked', code: 'plugin_install_failed' },
+  ];
+  const dialog = await open(page);
+  await installButton(page).click();
+  await expect(dialog).toContainText('1 migrated; 1 need attention.');
+  await dialog.getByRole('button', { name: 'View pipelines' }).click();
+  await expect(dialog.getByTestId('migration-result-two')).toContainText(
+    'Plugin installation failed',
+  );
+  await expect(dialog).not.toContainText('unsafe-upstream-secret');
+  await expect(installButton(page)).toBeEnabled();
+  await dialog.getByRole('button', { name: 'Refresh preview' }).click();
+  await expect(installButton(page)).toBeEnabled();
+  expect(state.posts).toHaveLength(1);
+});
+
+test('all pipelines including more than fifty can be migrated, expanded list scrolls without moving actions', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1024, height: 650 });
+  const state = await setup(page);
+  state.items = Array.from({ length: 65 }, (_, i) => row(`many-${i}`));
+  state.results = state.items.map((r) => ({
+    pipeline_uuid: r.pipeline_uuid,
+    state: 'migrated',
+    code: null,
+  }));
+  const dialog = await open(page);
+  await dialog.getByRole('button', { name: 'View pipelines' }).click();
+  const viewport = dialog
+    .getByTestId('migration-scroll-area')
+    .locator('[data-slot="scroll-area-viewport"]');
+  const before = await installButton(page).boundingBox();
+  const bounds = await viewport.boundingBox();
+  await page.mouse.move(
+    bounds!.x + bounds!.width / 2,
+    bounds!.y + bounds!.height / 2,
+  );
+  await page.mouse.wheel(0, 20000);
+  await expect
+    .poll(() =>
+      viewport.evaluate(
+        (el) => el.scrollTop + el.clientHeight >= el.scrollHeight - 2,
+      ),
+    )
+    .toBe(true);
+  await expect(
+    dialog.getByText('Legacy many-64', { exact: true }),
+  ).toBeInViewport();
+  expect((await installButton(page).boundingBox())!.y).toBeCloseTo(
+    before!.y,
+    0,
+  );
+  await expect(installButton(page)).toBeInViewport();
+  await dataButton(page).click();
+  await expect(dialog).toContainText('65 migrated; 0 need attention.');
+  expect(state.posts).toEqual([
+    { confirmed: true, all: true, install_plugins: false },
+  ]);
+});
+
+for (const failure of [
+  'missing',
+  'extra',
+  'duplicate',
+  'invalid-state',
+  'pending',
+  'poll-lost',
+  'task-error',
+]) {
+  test(`task result boundary: ${failure}`, async ({ page }) => {
+    const state = await setup(page);
+    if (failure === 'missing') state.results.pop();
+    if (failure === 'extra')
+      state.results.push({
+        pipeline_uuid: 'foreign',
+        state: 'migrated',
+        code: null,
+      });
+    if (failure === 'duplicate') state.results.push(state.results[0]);
+    if (failure === 'invalid-state')
+      state.results[0].state = 'bogus' as PipelineMigrationResult['state'];
+    if (failure === 'pending') state.results[0].state = 'pending';
+    if (failure === 'poll-lost') state.pollLost = true;
+    if (failure === 'task-error') state.taskException = true;
+    const dialog = await open(page);
+    await installButton(page).click();
+    await expect(dialog).toContainText(
+      failure === 'task-error' ? 'Task failed' : 'Task observation lost',
+    );
+    await expect(installButton(page)).toBeDisabled();
+    await expect(dialog).not.toContainText('unsafe-upstream-secret');
+    expect(state.posts).toHaveLength(1);
+  });
+}
+
+test('workspace changes discard previous task results and stop polling', async ({
   page,
 }) => {
   const state = await setup(page);
@@ -450,224 +402,45 @@ test('workspace change resets selection and ignores an old polling response', as
     release = resolve;
   });
   await open(page);
-  await (await selectAndConfirm(page)).click();
+  await installButton(page).click();
   await expect.poll(() => state.polls).toBe(1);
   await page.evaluate(async () => {
     const path = '/src/app/infra/http/currentWorkspaceStore.ts';
     const store = await import(path);
-    const old = store.getCurrentWorkspaceSnapshot();
-    store.setCurrentWorkspaceSnapshot({ ...old, placement_generation: 2 });
+    const current = store.getCurrentWorkspaceSnapshot();
+    store.setCurrentWorkspaceSnapshot({ ...current, placement_generation: 2 });
   });
+  release();
   await expect(
     page.getByRole('dialog', { name: 'Pipeline migration' }),
   ).toHaveCount(0);
-  release();
-  await page
-    .getByRole('button', { name: 'Review migration', exact: true })
-    .click();
-  const dialog = page.getByRole('dialog', { name: 'Pipeline migration' });
-  await expect(
-    dialog.getByRole('checkbox', { name: 'Legacy one', exact: true }),
-  ).not.toBeChecked();
-  await expect(dialog.getByTestId('migration-result-one')).toHaveCount(0);
   expect(state.posts).toHaveLength(1);
 });
 
-test('at most fifty rows can be selected in the bounded dialog', async ({
-  page,
-}) => {
-  test.setTimeout(60_000);
-  const state = await setup(page);
-  state.items = Array.from({ length: 51 }, (_, index) => row(String(index)));
-  const dialog = await open(page);
-  for (let index = 0; index < 50; index++)
-    await dialog
-      .getByRole('checkbox', { name: `Legacy ${index}`, exact: true })
-      .check();
-  await expect(
-    dialog.getByRole('checkbox', { name: 'Legacy 50', exact: true }),
-  ).toBeDisabled();
-  await expect(dialog.getByText('50 selected (maximum 50)')).toBeVisible();
-  const bounds = await dialog.boundingBox();
-  expect(bounds!.y).toBeGreaterThanOrEqual(0);
-  expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(
-    page.viewportSize()!.height,
-  );
-  expect(state.posts).toEqual([]);
-});
-
-test('all non-ready preview states are unselectable and activation is not reported as migrated', async ({
-  page,
-}) => {
-  const state = await setup(page);
-  state.items = [
-    row('one'),
-    row('two', 'activation_pending'),
-    row('three', 'already_current'),
-    row('four', 'not_legacy'),
-  ];
-  state.results = [
-    { pipeline_uuid: 'one', state: 'activation_pending', code: null },
-  ];
-  const dialog = await open(page);
-  for (const name of ['Legacy two', 'Legacy three', 'Legacy four'])
+for (const [language, title, review, action] of [
+  ['zh-Hans', '流水线迁移', '检查迁移', '自动安装插件并迁移'],
+  [
+    'ja-JP',
+    'パイプライン移行',
+    '移行を確認',
+    'プラグインを自動インストールして移行',
+  ],
+]) {
+  test(`localized automatic assistant (${language})`, async ({ page }) => {
+    await setup(page);
+    await page.addInitScript(
+      (locale) => localStorage.setItem('langbot_language', locale),
+      language,
+    );
+    await page.goto('/home/pipelines');
+    await page.getByRole('button', { name: review, exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: title });
     await expect(
-      dialog.getByRole('checkbox', { name, exact: true }),
-    ).toBeDisabled();
-  await (await selectAndConfirm(page)).click();
-  await expect(dialog.getByTestId('migration-result-one')).toContainText(
-    'Activation pending',
-  );
-  await expect(dialog.getByTestId('migration-result-one')).not.toContainText(
-    'Migrated',
-  );
-});
-
-test('stale per-item result requires refreshed selection, never silently retries', async ({
-  page,
-}) => {
-  const state = await setup(page);
-  state.results = [
-    { pipeline_uuid: 'one', state: 'stale', code: 'stale_preview' },
-  ];
-  const dialog = await open(page);
-  await (await selectAndConfirm(page)).click();
-  await expect(dialog.getByTestId('migration-result-one')).toContainText(
-    'Stale preview',
-  );
-  await expect(
-    dialog.getByRole('button', { name: 'Migrate selected', exact: true }),
-  ).toBeDisabled();
-  await dialog.getByRole('button', { name: 'Refresh preview' }).click();
-  await expect(
-    dialog.getByRole('checkbox', { name: 'Legacy one', exact: true }),
-  ).not.toBeChecked();
-  expect(state.posts).toHaveLength(1);
-});
-
-test('late preview from a previous workspace cannot populate the new workspace', async ({
-  page,
-}) => {
-  const state = await setup(page);
-  const dialog = await open(page);
-  let release!: () => void;
-  state.holdPreview = new Promise((resolve) => {
-    release = resolve;
+      dialog.getByRole('button', { name: action, exact: true }),
+    ).toBeEnabled();
+    await expect(dialog).not.toContainText('pipelineMigration.');
   });
-  const before = state.previews;
-  await dialog.getByRole('button', { name: 'Refresh preview' }).click();
-  await expect.poll(() => state.previews).toBeGreaterThan(before);
-  state.items = [row('other')];
-  state.holdPreview = null;
-  await page.evaluate(async () => {
-    const storePath = '/src/app/infra/http/currentWorkspaceStore.ts';
-    const contextPath = '/src/app/infra/http/workspaceContext.ts';
-    const store = await import(storePath);
-    const context = await import(contextPath);
-    const old = store.getCurrentWorkspaceSnapshot();
-    context.setActiveWorkspaceUuid('workspace-other');
-    store.setCurrentWorkspaceSnapshot({
-      ...old,
-      workspace: { ...old.workspace, uuid: 'workspace-other' },
-    });
-  });
-  release();
-  await page
-    .getByRole('button', { name: 'Review migration', exact: true })
-    .click();
-  await expect(
-    dialog.getByRole('checkbox', { name: 'Legacy other', exact: true }),
-  ).not.toBeChecked();
-  await expect(
-    dialog.getByRole('checkbox', { name: 'Legacy one', exact: true }),
-  ).toHaveCount(0);
-  expect(state.posts).toEqual([]);
-});
-
-test('late execute admission after a workspace switch never polls in the new scope', async ({
-  page,
-}) => {
-  const state = await setup(page);
-  let release!: () => void;
-  state.holdExecute = new Promise((resolve) => {
-    release = resolve;
-  });
-  await open(page);
-  await (await selectAndConfirm(page)).click();
-  await expect.poll(() => state.posts.length).toBe(1);
-  await page.evaluate(async () => {
-    const path = '/src/app/infra/http/currentWorkspaceStore.ts';
-    const store = await import(path);
-    const old = store.getCurrentWorkspaceSnapshot();
-    store.setCurrentWorkspaceSnapshot({ ...old, placement_generation: 2 });
-  });
-  release();
-  await page
-    .getByRole('button', { name: 'Review migration', exact: true })
-    .click();
-  await expect(
-    page.getByRole('checkbox', { name: 'Legacy one', exact: true }),
-  ).not.toBeChecked();
-  expect(state.polls).toBe(0);
-});
-
-test('network loss during execute is an unknown outcome with read-only refresh', async ({
-  page,
-}) => {
-  const state = await setup(page);
-  await page.route(`**${root}/execute`, (route) => {
-    state.posts.push(route.request().postDataJSON());
-    return route.abort('connectionreset');
-  });
-  const dialog = await open(page);
-  const before = state.previews;
-  await (await selectAndConfirm(page)).click();
-  await expect(
-    dialog.getByText(
-      'Task observation lost. Its outcome is unknown; refresh the preview before any further action.',
-    ),
-  ).toBeVisible();
-  await expect.poll(() => state.previews).toBeGreaterThan(before);
-  expect(state.posts).toHaveLength(1);
-});
-
-test('legacy data returned on the editor second read cannot hydrate defaults or autosave', async ({
-  page,
-}) => {
-  const state = await setup(page, { current: true });
-  let reads = 0;
-  await page.route('**/api/v1/pipelines/one', async (route) => {
-    if (route.request().method() !== 'GET')
-      state.writes.push(route.request().postDataJSON());
-    reads++;
-    await reply(route, {
-      pipeline: {
-        uuid: 'one',
-        name: 'Legacy one',
-        description: '',
-        emoji: '⚙️',
-        config:
-          reads <= 2
-            ? {
-                ai: {
-                  runner: { id: 'plugin:langbot-team/LocalAgent/default' },
-                },
-              }
-            : { ai: { runner: { runner: 'local-agent' } } },
-      },
-    });
-  });
-  await page.goto('/home/pipelines?id=one');
-  await expect(
-    page.getByText(
-      'Legacy configuration is read-only until migration. Save and debug are unavailable to prevent implicit conversion.',
-    ),
-  ).toBeVisible();
-  await expect(page.getByRole('tab', { name: 'AI', exact: true })).toHaveCount(
-    0,
-  );
-  expect(state.writes).toEqual([]);
-});
+}
 
 async function actualAgentRoute(page: Page) {
   const state = await setup(page);
@@ -697,64 +470,6 @@ async function clickSidebarPipeline(page: Page) {
   await entry.click();
   await expect(page).toHaveURL(/\/home\/agents\?id=one$/);
 }
-
-test('SPEC sidebar navigation discovers migration and completion refreshes the actual detail', async ({
-  page,
-}) => {
-  const { state, listReads } = await actualAgentRoute(page);
-  await page.goto('/home');
-  await clickSidebarPipeline(page);
-  await expect(
-    page.getByText(
-      'Legacy configuration is read-only until migration. Save and debug are unavailable to prevent implicit conversion.',
-    ),
-  ).toBeVisible();
-  const review = page.getByRole('button', {
-    name: 'Review migration',
-    exact: true,
-  });
-  await expect(review).toHaveCount(1);
-  await review.click();
-  const dialog = page.getByRole('dialog', { name: 'Pipeline migration' });
-  const before = listReads();
-  await (await selectAndConfirm(page)).click();
-  await expect(
-    dialog.getByText('Task finished. Check each pipeline result below.'),
-  ).toBeVisible();
-  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
-  await expect(
-    page.getByRole('tab', { name: 'AI', exact: true }),
-  ).toBeVisible();
-  await expect.poll(listReads).toBeGreaterThan(before);
-  expect(state.polls).toBe(1);
-  expect(state.posts).toHaveLength(1);
-});
-
-test('SPEC agents list exposes one assistant that survives list to detail navigation', async ({
-  page,
-}) => {
-  const { state } = await actualAgentRoute(page);
-  await page.goto('/home/agents');
-  const review = page.getByRole('button', {
-    name: 'Review migration',
-    exact: true,
-  });
-  await expect(review).toHaveCount(1);
-  await review.click();
-  await (await selectAndConfirm(page)).click();
-  const dialog = page.getByRole('dialog', { name: 'Pipeline migration' });
-  await expect(dialog.getByTestId('migration-result-one')).toContainText(
-    'Migrated',
-  );
-  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
-  await clickSidebarPipeline(page);
-  await review.click();
-  await expect(dialog.getByTestId('migration-result-one')).toContainText(
-    'Migrated',
-  );
-  expect(state.polls).toBe(1);
-  expect(state.posts).toHaveLength(1);
-});
 
 test('SPEC canonical empty current detail allows selecting and saving a runner', async ({
   page,
@@ -837,174 +552,3 @@ test('SPEC actual legacy on second read remains guarded on the sidebar route', a
   ).toHaveCount(0);
   expect(state.writes).toEqual([]);
 });
-
-for (const defect of [
-  'extra',
-  'wrong-result',
-  'missing',
-  'duplicate',
-  'wrong-task',
-  'wrong-kind',
-  'missing-failed',
-  'extra-running',
-] as const) {
-  test(`SPEC task identity mismatch ${defect} loses observation without subset success or retry`, async ({
-    page,
-  }) => {
-    const state = await setup(page);
-    const migrated = { pipeline_uuid: 'one', state: 'migrated', code: null };
-    const outcomes =
-      defect === 'missing' || defect === 'missing-failed'
-        ? []
-        : defect === 'wrong-result'
-          ? [{ ...migrated, pipeline_uuid: 'other' }]
-          : defect === 'duplicate'
-            ? [migrated, migrated]
-            : defect === 'extra' || defect === 'extra-running'
-              ? [
-                  migrated,
-                  { ...migrated, pipeline_uuid: 'other', state: 'failed' },
-                ]
-              : [migrated];
-    await page.route('**/api/v1/system/tasks/411', async (route) => {
-      state.polls++;
-      await reply(route, {
-        id: defect === 'wrong-task' ? 999 : 411,
-        runtime: {
-          done: defect !== 'extra-running',
-          exception: defect === 'missing-failed' ? 'failure' : null,
-        },
-        task_context: {
-          metadata: {
-            kind:
-              defect === 'wrong-kind' ? 'plugin_install' : 'pipeline_migration',
-            results: outcomes,
-          },
-        },
-      });
-    });
-    const dialog = await open(page);
-    await (await selectAndConfirm(page)).click();
-    await expect(
-      dialog.getByText(
-        'Task observation lost. Its outcome is unknown; refresh the preview before any further action.',
-      ),
-    ).toBeVisible();
-    await expect(
-      dialog.getByText('Task finished. Check each pipeline result below.'),
-    ).toHaveCount(0);
-    await expect(dialog.getByTestId('migration-result-one')).not.toContainText(
-      'Migrated',
-    );
-    await expect(
-      dialog.getByRole('button', { name: 'Migrate selected', exact: true }),
-    ).toBeDisabled();
-    await page.waitForTimeout(1100);
-    expect(state.posts).toHaveLength(1);
-    expect(state.polls).toBe(1);
-  });
-}
-
-test('SPEC actual agents workspace change discards old polling and selection', async ({
-  page,
-}) => {
-  const { state } = await actualAgentRoute(page);
-  let release!: () => void;
-  state.holdPoll = new Promise((resolve) => {
-    release = resolve;
-  });
-  await page.goto('/home/agents');
-  await page
-    .getByRole('button', { name: 'Review migration', exact: true })
-    .click();
-  await (await selectAndConfirm(page)).click();
-  await expect.poll(() => state.polls).toBe(1);
-  await page.evaluate(async () => {
-    const path = '/src/app/infra/http/currentWorkspaceStore.ts';
-    const store = await import(path);
-    const old = store.getCurrentWorkspaceSnapshot();
-    store.setCurrentWorkspaceSnapshot({ ...old, placement_generation: 2 });
-  });
-  const dialog = page.getByRole('dialog', { name: 'Pipeline migration' });
-  await expect(dialog).toHaveCount(0);
-  release();
-  await page
-    .getByRole('button', { name: 'Review migration', exact: true })
-    .click();
-  await expect(
-    dialog.getByRole('checkbox', { name: 'Legacy one', exact: true }),
-  ).not.toBeChecked();
-  await expect(dialog.getByTestId('migration-result-one')).toHaveCount(0);
-  await page.waitForTimeout(1100);
-  expect(state.polls).toBe(1);
-  expect(state.posts).toHaveLength(1);
-});
-
-test('completion specific migration warnings explain changed defaults without upstream text', async ({
-  page,
-}) => {
-  const state = await setup(page);
-  state.items[0].warnings = [
-    { code: 'local.context_defaults', field: 'ai.local-agent.max-round' },
-    { code: 'dify.timeout_default' },
-    { code: 'secret-upstream-text' },
-  ];
-  const dialog = await open(page);
-  await expect(dialog).toContainText(
-    'new context budget and summarization defaults',
-  );
-  await expect(dialog).toContainText('30-second request timeout');
-  await expect(dialog).toContainText('Review this setting before migration.');
-  await expect(dialog).not.toContainText('secret-upstream-text');
-  expect(state.posts).toHaveLength(0);
-});
-
-test('completion activation retry requires a fresh token, selection and explicit confirmation', async ({
-  page,
-}) => {
-  const state = await setup(page);
-  state.items = [
-    { ...row('one', 'activation_pending'), preview_token: 'activation-one' },
-  ];
-  const dialog = await open(page);
-  expect(state.posts).toHaveLength(0);
-  await expect(
-    dialog.getByRole('checkbox', { name: 'Legacy one', exact: true }),
-  ).toBeEnabled();
-  const submit = await selectAndConfirm(page);
-  await submit.click();
-  await expect(dialog.getByTestId('migration-result-one')).toContainText(
-    'Migrated',
-  );
-  expect(state.posts).toEqual([
-    {
-      confirmed: true,
-      items: [{ pipeline_uuid: 'one', preview_token: 'activation-one' }],
-    },
-  ]);
-  await page.waitForTimeout(1100);
-  expect(state.posts).toHaveLength(1);
-  expect(state.writes).toHaveLength(0);
-});
-
-for (const [language, title, review] of [
-  ['zh-Hans', '流水线迁移', '检查迁移'],
-  ['ja-JP', 'パイプライン移行', '移行を確認'],
-]) {
-  test(`localized migration dialog (${language})`, async ({ page }) => {
-    await setup(page);
-    await page.addInitScript(
-      (locale) => localStorage.setItem('langbot_language', locale),
-      language,
-    );
-    await page.goto('/home/pipelines');
-    await page.getByRole('button', { name: review, exact: true }).click();
-    const dialog = page.getByRole('dialog', { name: title });
-    await expect(dialog).toBeVisible();
-    await expect(dialog).not.toContainText('pipelineMigration.');
-    await expect(dialog).not.toContainText('Migrate selected');
-    await page.screenshot({
-      path: `test-results/pipeline-migration-${language}.png`,
-    });
-  });
-}

@@ -15,6 +15,8 @@ import secrets
 import sys
 import uuid
 
+from langbot_plugin.runtime.plugin.mgr import PluginInstallSource
+
 import sqlalchemy as sa
 
 from ..authz import Permission, permissions_for_role, require_permission
@@ -86,6 +88,7 @@ class PipelineMigrationService:
         self.pm = ap.persistence_mgr
         # Loss of this process key only invalidates previews, never snapshots.
         self._token_key = secrets.token_bytes(32)
+        self._all_tasks: set[str] = set()
 
     async def _binding(self, ctx, session=None):
         binding = await self.ap.workspace_service.get_execution_binding(
@@ -296,21 +299,33 @@ class PipelineMigrationService:
                 'total': len(items),
             }
 
-    async def _selected(self, ctx, selection):
+    async def _selected(self, ctx, selection, *, data_only=False):
         rows = await self._rows(ctx, selection['pipeline_uuid'])
         if not rows:
             raise MigrationError('pipeline_not_found', 404)
         row = rows[0]
-        plan, facts, pending, state, _ = await self._plan(ctx, row)
+        plan, facts, pending, state, blockers = await self._plan(ctx, row)
         token = self._token(ctx, row, plan, facts, pending)
         if not hmac.compare_digest(token, selection['preview_token']):
             raise MigrationError('preview_stale')
-        if state not in ('ready', 'activation_pending'):
+        if state not in ('ready', 'activation_pending') and not (
+            data_only
+            and plan['state'] == 'ready'
+            and all(b['code'] in ('plugin_missing', 'plugin_disabled') for b in blockers)
+        ):
             raise MigrationError('migration_blocked')
         return row, plan, facts, pending
 
     async def execute(self, ctx: RequestContext, body):
         require_permission(ctx, Permission.RESOURCE_MANAGE)
+        if isinstance(body, dict) and body.get('all') is True:
+            if (
+                set(body) != {'confirmed', 'all', 'install_plugins'}
+                or body['confirmed'] is not True
+                or not isinstance(body['install_plugins'], bool)
+            ):
+                raise MigrationError('confirmation_required', 400)
+            return await self._execute_all(ctx, install_plugins=body['install_plugins'])
         items = validate_execute_request(body)
         async with self.pm.tenant_scope(ctx.workspace_uuid):
             await self._authorize(ctx)
@@ -332,6 +347,140 @@ class PipelineMigrationService:
             placement_generation=ctx.placement_generation,
         )
         return {'task_id': task.id}
+
+    async def _execute_all(self, ctx, *, install_plugins):
+        # Capture all sources on admission. Plugin installation must not silently
+        # include later edits or pipelines created while the task is running.
+        if ctx.workspace_uuid in self._all_tasks:
+            raise MigrationError('migration_running')
+        self._all_tasks.add(ctx.workspace_uuid)
+        try:
+            async with self.pm.tenant_scope(ctx.workspace_uuid):
+                await self._authorize(ctx)
+                sources = []
+                for row in await self._rows(ctx):
+                    _, _, _, state, _ = await self._plan(ctx, row)
+                    if state not in ('already_current', 'not_legacy'):
+                        sources.append(row)
+            if not sources:
+                raise MigrationError('nothing_to_migrate')
+            task_context = TaskContext.new()
+            task_context.metadata = {
+                'kind': 'pipeline_migration',
+                'phase': 'installing' if install_plugins else 'migrating',
+                'results': [{'pipeline_uuid': row['uuid'], 'state': 'pending', 'code': None} for row in sources],
+            }
+            task = self.ap.task_mgr.create_user_task(
+                self._run_all(
+                    ctx, ExecutionContext.from_request(ctx), sources, task_context, install_plugins=install_plugins
+                ),
+                kind='pipeline_migration',
+                name='pipeline_migration',
+                context=task_context,
+                instance_uuid=ctx.instance_uuid,
+                workspace_uuid=ctx.workspace_uuid,
+                placement_generation=ctx.placement_generation,
+            )
+            return {'task_id': task.id, 'pipeline_uuids': [row['uuid'] for row in sources]}
+        except BaseException:
+            self._all_tasks.discard(ctx.workspace_uuid)
+            raise
+
+    async def _run_all(self, ctx, execution, sources, task_context, *, install_plugins):
+        installed = {}
+        try:
+            async with self.pm.tenant_scope(execution.workspace_uuid):
+                for source, result in zip(sources, task_context.metadata['results']):
+                    if result['state'] != 'pending':
+                        continue
+                    try:
+                        await self._authorize(ctx)
+                        current = await self._rows(ctx, source['uuid'])
+                        if not current or _fingerprint(current[0]) != _fingerprint(source):
+                            raise MigrationError('preview_stale')
+                        plan, facts, pending, state, blockers = await self._plan(ctx, current[0])
+                        hard_blockers = [b for b in blockers if b['code'] not in ('plugin_missing', 'plugin_disabled')]
+                        if hard_blockers:
+                            raise MigrationError(hard_blockers[0]['code'])
+                        if state in ('already_current', 'not_legacy'):
+                            result.update(state='already_current', code=None)
+                            continue
+                        target = plan.get('target_plugin')
+                        if not target:
+                            raise MigrationError('migration_blocked')
+                        if not install_plugins:
+                            selection = {
+                                'pipeline_uuid': source['uuid'],
+                                'preview_token': self._token(ctx, current[0], plan, facts, pending),
+                            }
+                            await self._run(ctx, execution, [selection], task_context, results=[result], data_only=True)
+                            continue
+                        key = (target['author'], target['name'], target['version'])
+                        if key not in installed:
+                            runners = await self.ap.runner_registry.list_runners(
+                                execution, use_cache=False, usage='agent'
+                            )
+                            descriptor = next((r for r in runners if r.id == plan['target_runner_id']), None)
+                            ready = (
+                                facts
+                                and facts['enabled']
+                                and descriptor
+                                and descriptor.plugin_version == target['version']
+                            )
+                            if not ready:
+                                task_context.metadata['phase'] = 'installing'
+                                try:
+                                    await self._authorize(ctx)
+                                    await self.ap.plugin_connector.require_workspace_context(execution)
+                                    # Keep installer diagnostics out of the user task: upstream
+                                    # errors may contain credentials. Reuse normal quota and
+                                    # runtime-readiness checks in the connector.
+                                    await self.ap.plugin_connector.install_plugin(
+                                        PluginInstallSource.MARKETPLACE,
+                                        {
+                                            'plugin_author': target['author'],
+                                            'plugin_name': target['name'],
+                                            'plugin_version': target['version'],
+                                        },
+                                        task_context=TaskContext.new(),
+                                    )
+                                    installed[key] = None
+                                except Exception:
+                                    installed[key] = 'plugin_install_failed'
+                            else:
+                                installed[key] = None
+                        if installed[key]:
+                            raise MigrationError(installed[key])
+                        await self._authorize(ctx)
+                        current = await self._rows(ctx, source['uuid'])
+                        if not current or _fingerprint(current[0]) != _fingerprint(source):
+                            raise MigrationError('preview_stale')
+                        plan, facts, pending, state, blockers = await self._plan(ctx, current[0])
+                        if state not in ('ready', 'activation_pending'):
+                            raise MigrationError(blockers[0]['code'] if blockers else 'migration_blocked')
+                        selection = {
+                            'pipeline_uuid': source['uuid'],
+                            'preview_token': self._token(ctx, current[0], plan, facts, pending),
+                        }
+                        task_context.metadata['phase'] = 'migrating'
+                        await self._run(ctx, execution, [selection], task_context, results=[result])
+                    except Exception as exc:
+                        result.update(
+                            state='blocked' if isinstance(exc, MigrationError) else 'failed',
+                            code=exc.code if isinstance(exc, MigrationError) else 'migration_failed',
+                        )
+                    if any(
+                        r['code'] in ('operation_cancelled', 'commit_outcome_unknown')
+                        for r in task_context.metadata['results']
+                    ):
+                        break
+        finally:
+            for result in task_context.metadata['results']:
+                if result['state'] == 'pending':
+                    result.update(state='failed', code='operation_cancelled')
+            task_context.metadata['phase'] = 'finished'
+            self._all_tasks.discard(ctx.workspace_uuid)
+        return task_context.metadata
 
     async def _verify_runtime(self, execution, plan):
         runners = await self.ap.runner_registry.list_runners(execution, use_cache=False, usage='agent')
@@ -528,11 +677,11 @@ class PipelineMigrationService:
         ]:
             await session.execute(sa.select(model.__table__).where(condition).with_for_update())
 
-    async def _commit(self, ctx, selection, expected_facts, candidate):
+    async def _commit(self, ctx, selection, expected_facts, candidate, *, data_only=False):
         async with self.pm.tenant_uow(ctx.workspace_uuid) as uow:
             await self._lock(ctx, selection['pipeline_uuid'], uow.session)
             await self._authorize(ctx, uow.session)
-            row, plan, facts, pending = await self._selected(ctx, selection)
+            row, plan, facts, pending = await self._selected(ctx, selection, data_only=data_only)
             if facts != expected_facts:
                 raise MigrationError('plugin_changed')
             if pending:
@@ -595,27 +744,30 @@ class PipelineMigrationService:
                 .values(state='active')
             )
 
-    async def _run(self, ctx, execution, items, task_context):
+    async def _run(self, ctx, execution, items, task_context, results=None, *, data_only=False):
         async with self.pm.tenant_scope(execution.workspace_uuid):
-            for selection, result in zip(items, task_context.metadata['results']):
+            for selection, result in zip(items, results if results is not None else task_context.metadata['results']):
                 committed = False
                 commit_attempted = False
                 try:
                     await self._authorize(ctx)
-                    row, plan, facts, pending = await self._selected(ctx, selection)
-                    runtime_schema = await self._verify_runtime(execution, plan)
+                    row, plan, facts, pending = await self._selected(ctx, selection, data_only=data_only)
+                    runtime_schema = None if data_only else await self._verify_runtime(execution, plan)
+                    RunnerConfigResolver.validate_pipeline_config(plan['config'])
                     candidate_entity = {k: copy.deepcopy(v) for k, v in row.items() if not k.startswith('_')}
                     candidate_entity['config'] = copy.deepcopy(plan['config'])
                     runtime = await self.ap.pipeline_mgr.prepare_pipeline(execution, copy.deepcopy(candidate_entity))
-                    if await self._verify_runtime(execution, plan) != runtime_schema:
+                    if not data_only and await self._verify_runtime(execution, plan) != runtime_schema:
                         raise MigrationError('runner_schema_changed')
                     # Runtime awaits are over. Recheck authorization/source/plugin
                     # facts under database locks, then atomically journal and CAS.
                     commit_attempted = True
-                    snapshot_uuid, target_fingerprint = await self._commit(ctx, selection, facts, candidate_entity)
+                    snapshot_uuid, target_fingerprint = await self._commit(
+                        ctx, selection, facts, candidate_entity, **({'data_only': True} if data_only else {})
+                    )
                     committed = True
                     await self._activate(ctx, selection, snapshot_uuid, target_fingerprint, runtime, plan, facts)
-                    result.update(state='migrated', code=None)
+                    result.update(state='migrated', code='data_only' if data_only else None)
                 except (Exception, asyncio.CancelledError) as exc:
                     cancelled = isinstance(exc, asyncio.CancelledError)
                     reconciliation_cancel = None

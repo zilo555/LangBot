@@ -18,6 +18,7 @@ const esES = {
     editionCloud: 'Cloud',
   },
   common: {
+    customValue: 'Personalizado',
     login: 'Iniciar sesión',
     logout: 'Cerrar sesión',
     accountOptions: 'Configuración',

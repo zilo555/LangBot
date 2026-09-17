@@ -17,6 +17,7 @@ const jaJP = {
     editionCloud: 'Cloud',
   },
   common: {
+    customValue: 'カスタム',
     loadFailed: '読み込みに失敗しました。再試行してください。',
     login: 'ログイン',
     logout: 'ログアウト',

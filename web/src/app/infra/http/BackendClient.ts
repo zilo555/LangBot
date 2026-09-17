@@ -454,7 +454,7 @@ export class BackendClient extends BaseHttpClient {
   public executePipelineMigration(
     body: PipelineMigrationRequest,
     config?: RequestConfig,
-  ): Promise<AsyncTaskCreatedResp> {
+  ): Promise<AsyncTaskCreatedResp & { pipeline_uuids?: string[] }> {
     return this.post('/api/v1/pipelines/_/migration/execute', body, config);
   }
 

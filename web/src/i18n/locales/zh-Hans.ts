@@ -17,6 +17,7 @@ const zhHans = {
     editionCloud: 'Cloud',
   },
   common: {
+    customValue: '自定义',
     loadFailed: '加载失败，请重试。',
     login: '登录',
     logout: '退出登录',

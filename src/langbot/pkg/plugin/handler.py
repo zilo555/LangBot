@@ -1188,7 +1188,18 @@ class RuntimeConnectionHandler(handler.Handler):
             )
             if error:
                 return error
+            output_lock = None
+            output_lock_acquired = False
             try:
+                if data.get('file_ids') is not None:
+                    from ..box.runner import exported_message, binding_for
+
+                    query = _resolve_action_query(data, session, self.ap, action_context)
+                    output_lock = binding_for(query).lock
+                    await output_lock.acquire()
+                    output_lock_acquired = True
+                    files = exported_message(query, data['file_ids'])
+                    data = {**data, 'params': {**(data.get('params') or {}), 'message': files.model_dump(mode='json')}}
                 tool_name, parameters, message = resolve_platform_api_call(
                     session, data.get('bot_uuid'), data['action'], data.get('params') or {}, data.get('context_tool')
                 )
@@ -1208,9 +1219,14 @@ class RuntimeConnectionHandler(handler.Handler):
                     parameters,
                     message_chain=message,
                 )
+                if data.get('file_ids') is not None:
+                    exported_message(query, data['file_ids'], consume=True)
                 return handler.ActionResponse.success(data={'result': _serialize_plugin_api_result(result)})
             except (ValueError, KeyError, TypeError) as exc:
                 return handler.ActionResponse.error(message=str(exc))
+            finally:
+                if output_lock_acquired:
+                    output_lock.release()
 
         @self.action(PluginToRuntimeAction.SEND_MESSAGE)
         async def send_message(data: dict[str, Any]) -> handler.ActionResponse:
@@ -2634,6 +2650,9 @@ class RuntimeConnectionHandler(handler.Handler):
 
         agent_pull_actions.register(self)
         runner_actions.register(self)
+        from . import box_actions
+
+        box_actions.register(self)
         agent_state_actions.register(self)
 
         @self.action(CommonAction.PING)

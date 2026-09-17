@@ -1,7 +1,20 @@
 export default {
+  autoDescription:
+    '舊版執行方式已改為外掛。遷移全部流水線並保留現有設定，原設定會自動備份；遷移後開始新對話。',
+  viewPipelines: '查看流水線',
+  autoInstall: '自動安裝外掛並遷移',
+  dataOnly: '僅遷移資料',
+  dataOnlyHint: '適合離線或內網環境，遷移後請自行安裝對應的執行器外掛。',
+  installing: '正在安裝所需外掛…',
+  migrating: '正在遷移流水線…',
+  summary: '已遷移 {{migrated}} 條，{{remaining}} 條需要處理。',
+  installFailed: '外掛安裝失敗，請檢查網路和擴充配額後重試，或選擇僅遷移資料。',
+
   activationRetryHint:
     '檢查執行環境後重新整理，選取此流水線並確認，即可只重試啟用，不會再次遷移已儲存的設定。',
+  details: '遷移詳情',
   notices: {
+    pluginRequired: '請先安裝或啟用上方所示的執行器外掛，再重新整理預覽。',
     legacyArchive:
       '作用中的設定僅保留所選 Runner；全部舊 Runner 設定（包括未啟用的設定）保存在遷移備份中。',
     contextDefaults:
@@ -31,8 +44,7 @@ export default {
     pendingInteraction: '有對話正在等待輸入，請完成或取消後再遷移。',
   },
   title: '流水線遷移',
-  description:
-    '僅在選擇流水線並明確確認後才會變更設定。遷移保留流水線身分及無關設定。',
+  description: '選擇要遷移的流水線。原設定會備份，遷移後將開始新對話。',
   detected: '{{count}} 條流水線需要檢查遷移。',
   review: '檢查遷移',
   readOnly: '只有工作空間管理者可以遷移流水線。',
@@ -48,8 +60,7 @@ export default {
   changedFields: '變更欄位',
   activationHint:
     '設定已儲存，但尚未啟用。請工作空間管理員檢查執行環境後重新整理，不要盲目重複遷移。',
-  pluginHint:
-    '請透過「擴充功能 / 擴充功能市場」安裝或啟用所需執行器外掛，並自行檢查工作空間配額。本助手不會安裝外掛。返回後請重新整理預覽。',
+  pluginHint: '缺少外掛？前往擴充功能安裝或啟用對應執行器，再重新整理預覽。',
   extensions: '開啟擴充功能',
   results: '逐條遷移結果',
   selection: '已選擇 {{count}} 條（最多 50 條）',

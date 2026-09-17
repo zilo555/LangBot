@@ -11,7 +11,7 @@ import pytest
 
 FIXTURES = json.loads((Path(__file__).parents[2] / 'fixtures/pipeline_migration/synthetic_legacy.json').read_text())
 TARGETS = {
-    'local-agent': ('LocalAgent', '0.1.6', None),
+    'local-agent': ('LocalAgent', '0.1.7', None),
     'dify-service-api': ('DifyAgent', '0.1.7', None),
     'coze-api': ('CozeAgent', '0.1.7', None),
     'dashscope-app-api': ('DashScopeAgent', '0.1.7', None),
@@ -411,7 +411,6 @@ def test_local_rounds_are_never_translated_into_transcript_item_counts(rounds):
         ('prompt', [{'role': 'system', 'content': 42}], 'local.prompt_shape'),
         ('prompt', [{'role': 'system', 'content': 'text', 'SECRET-key': 'SECRET-value'}], 'local.prompt_shape'),
         ('prompt', [{'role': 'system', 'content': [{'type': 'text', 'text': 42}]}], 'local.prompt_shape'),
-        ('box-session-id-template', '{global}', 'local.box_scope'),
     ],
 )
 def test_local_unsupported_behaviors_have_specific_safe_blockers(field, value, code):
@@ -980,7 +979,16 @@ def test_default_local_agent_blocks_instead_of_inventing_round_translation():
     assert planner().PLANNER_VERSION == '3'
     assert result['state'] == 'blocked'
     assert result['target_runner_id'] == 'plugin:langbot-team/LocalAgent/default'
-    assert result['target_plugin'] == {'author': 'langbot-team', 'name': 'LocalAgent', 'version': '0.1.6'}
+    assert result['target_plugin'] == {'author': 'langbot-team', 'name': 'LocalAgent', 'version': '0.1.7'}
     assert {'code': 'missing_field', 'field': 'ai.local-agent.prompt'} in result['blockers']
     assert result['config'] is None
     assert source == original
+
+
+@pytest.mark.parametrize('template', ['{global}', '{launcher_type}_{launcher_id}', '{sender_id}', '{project}'])
+def test_local_box_reuse_templates_are_preserved_for_plugin(template):
+    source = source_for('local-agent')
+    source['ai']['local-agent']['box-session-id-template'] = template
+    result = plan(source)
+    assert result['state'] != 'blocked', result
+    assert result['config']['ai']['runner_config'][result['target_runner_id']]['box-session-id-template'] == template

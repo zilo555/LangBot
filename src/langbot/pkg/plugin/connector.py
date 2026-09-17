@@ -1631,6 +1631,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
         plugin_author: str,
         plugin_name: str,
         task_context: taskmgr.TaskContext | None,
+        version: str | None = None,
     ) -> tuple[bytes | None, str | None]:
         """Return a plugin package, or install an MCP/skill and return none."""
 
@@ -1640,6 +1641,22 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
             timeout=15,
             event_hooks=httpclient.httpx_response_limit_hooks(_MARKETPLACE_PLUGIN_DOWNLOAD_MAX_BYTES),
         ) as client:
+            if version is not None:
+                if (
+                    not isinstance(version, str)
+                    or not version
+                    or any(
+                        c not in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._+-' for c in version
+                    )
+                ):
+                    raise ValueError('Invalid plugin version')
+                _status, package = await _marketplace_get(
+                    client,
+                    f'{space_url}/api/v1/marketplace/plugins/download/{plugin_author}/{plugin_name}/{version}',
+                    max_bytes=_MARKETPLACE_PLUGIN_DOWNLOAD_MAX_BYTES,
+                )
+                return package, version
+
             mcp_status, mcp_body = await _marketplace_get(
                 client,
                 f'{space_url}/api/v1/marketplace/mcps/{plugin_author}/{plugin_name}',
@@ -1726,11 +1743,13 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
             if task_context is not None:
                 task_context.set_current_action('downloading plugin package')
                 task_context.metadata['progress_percent'] = 15
+            version_options = {'version': install_info['plugin_version']} if install_info.get('plugin_version') else {}
             file_bytes, version = await self._download_marketplace_package(
                 execution_context,
                 plugin_author,
                 plugin_name,
                 task_context,
+                **version_options,
             )
             if file_bytes is None:
                 return

@@ -31,10 +31,12 @@ export interface PipelineMigrationPreview {
   total: number;
 }
 
-export interface PipelineMigrationRequest {
-  confirmed: true;
-  items: { pipeline_uuid: string; preview_token: string }[];
-}
+export type PipelineMigrationRequest =
+  | { confirmed: true; all: true; install_plugins: boolean }
+  | {
+      confirmed: true;
+      items: { pipeline_uuid: string; preview_token: string }[];
+    };
 
 export interface PipelineMigrationResult {
   pipeline_uuid: string;
@@ -51,5 +53,6 @@ export interface PipelineMigrationResult {
 
 export interface PipelineMigrationTaskMetadata {
   kind: 'pipeline_migration';
+  phase?: 'installing' | 'migrating' | 'finished';
   results: PipelineMigrationResult[];
 }

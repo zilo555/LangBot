@@ -27,6 +27,8 @@ export interface IDynamicFormItemSchema {
   type: DynamicFormItemType;
   description?: I18nObject;
   options?: IDynamicFormItemOption[];
+  /** Allow an editable value in addition to the declared select options. */
+  allow_custom?: boolean;
   /** When the condition matches, the field is rendered. Same evaluator as
    *  ``disable_if`` — supports the ``__system.*`` namespace via
    *  ``DynamicFormComponent.systemContext``. */

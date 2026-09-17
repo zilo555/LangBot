@@ -231,7 +231,7 @@ export default function PluginProcessorBindings({
         return (
           <Card
             key={binding.processor_uuid}
-            className="gap-0 rounded-lg py-0 shadow-none hover:bg-accent"
+            className="gap-0 rounded-lg py-0 shadow-none"
           >
             <CardContent className="flex items-center gap-3 p-3">
               <span

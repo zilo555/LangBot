@@ -18,6 +18,7 @@ const ruRU = {
     editionCloud: 'Cloud',
   },
   common: {
+    customValue: 'Свой вариант',
     login: 'Войти',
     logout: 'Выйти',
     accountOptions: 'Настройки',

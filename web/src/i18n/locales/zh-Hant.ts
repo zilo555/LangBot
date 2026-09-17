@@ -17,6 +17,7 @@ const zhHant = {
     editionCloud: 'Cloud',
   },
   common: {
+    customValue: '自訂',
     login: '登入',
     logout: '登出',
     accountOptions: '系統設定',

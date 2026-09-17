@@ -1,7 +1,23 @@
 export default {
+  autoDescription:
+    'Los ejecutores antiguos ahora son plugins. Migra todos los pipelines conservando sus ajustes. Se guardará una copia de la configuración y las conversaciones empezarán de nuevo.',
+  viewPipelines: 'Ver pipelines',
+  autoInstall: 'Instalar plugins y migrar',
+  dataOnly: 'Migrar solo los datos',
+  dataOnlyHint:
+    'Para redes privadas o sin conexión. Instala los plugins de ejecución correspondientes después de la migración.',
+  installing: 'Instalando los plugins necesarios…',
+  migrating: 'Migrando pipelines…',
+  summary: '{{migrated}} migrados; {{remaining}} requieren atención.',
+  installFailed:
+    'No se pudieron instalar los plugins. Comprueba la red y la cuota de extensiones y reintenta, o migra solo los datos.',
+
   activationRetryHint:
     'Tras comprobar el entorno, actualiza, selecciona esta canalización y confirma para reintentar solo la activación. No se volverá a migrar la configuración guardada.',
+  details: 'Detalles de migración',
   notices: {
+    pluginRequired:
+      'Instala o activa el plugin de ejecución indicado arriba y actualiza la vista previa.',
     legacyArchive:
       'La configuración activa contendrá solo el Runner seleccionado. Todos los ajustes anteriores, incluidos los inactivos, se conservan en la copia de seguridad de migración.',
     contextDefaults:
@@ -50,7 +66,7 @@ export default {
   },
   title: 'Migración de pipelines',
   description:
-    'No se cambia nada hasta seleccionar pipelines y confirmar explícitamente. Se conservan su identidad y los ajustes no relacionados.',
+    'Selecciona los pipelines que deseas migrar. Se guardará una copia de la configuración y las conversaciones empezarán de nuevo.',
   detected: '{{count}} pipelines requieren revisión.',
   review: 'Revisar migración',
   readOnly: 'Solo los gestores del espacio pueden migrar pipelines.',
@@ -69,7 +85,7 @@ export default {
   activationHint:
     'Configuración guardada, pero activación pendiente. Pida al administrador que compruebe el entorno y actualice. No repita la migración a ciegas.',
   pluginHint:
-    'Instale o active el plugin requerido desde Extensiones / Mercado de extensiones y compruebe la cuota del espacio. Este asistente nunca instala plugins. Al volver, actualice la vista previa.',
+    '¿Falta un plugin? Instala o activa su ejecutor en Extensiones y actualiza la vista previa.',
   extensions: 'Abrir Extensiones',
   results: 'Resultados por pipeline',
   selection: '{{count}} seleccionados (máximo 50)',

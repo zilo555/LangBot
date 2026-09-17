@@ -4,6 +4,7 @@ import {
   IFileConfig,
 } from '@/app/infra/entities/form/dynamic';
 import StructuredFieldEditor from './StructuredFieldEditor';
+import PresetSelect from './PresetSelect';
 import { isSimplePrompt } from './StructuredFieldValue';
 import { Input } from '@/components/ui/input';
 import {
@@ -544,6 +545,9 @@ export default function DynamicFormItemComponent({
       );
 
     case DynamicFormItemType.SELECT:
+      if (config.allow_custom) {
+        return <PresetSelect config={config} field={field} />;
+      }
       const selectedOption = config.options?.find(
         (option) => option.name === field.value,
       );

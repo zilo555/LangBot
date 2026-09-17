@@ -732,3 +732,135 @@ async def test_cancel_during_prepare_keeps_original_and_stops_batch(env):
     )
     env.ap.pipeline_mgr.prepare_pipeline.assert_awaited_once()
     env.ap.pipeline_mgr.publish_pipeline.assert_not_called()
+
+
+async def execute_all(env, install_plugins=True):
+    response = await env.svc.execute(context(), {'confirmed': True, 'all': True, 'install_plugins': install_plugins})
+    task = env.ap.task_mgr.get_task_by_id(response['task_id'])
+    await task.task
+    return response, task.task_context.metadata
+
+
+@pytest.mark.asyncio
+async def test_all_mode_migrates_workspace_and_skips_completed_on_retry(env):
+    response, metadata = await execute_all(env)
+    assert response['pipeline_uuids'] == ['one', 'two']
+    assert [r['state'] for r in metadata['results']] == ['migrated', 'migrated']
+    configs, backups = await rows(env)
+    assert configs['foreign'] == SOURCE
+    assert len(backups) == 2
+    with pytest.raises(env.m.MigrationError, match='nothing_to_migrate'):
+        await execute_all(env)
+
+
+@pytest.mark.asyncio
+async def test_all_data_only_without_plugins_never_contacts_runtime_or_marketplace(env):
+    async with env.engine.begin() as conn:
+        await conn.execute(sa.delete(PluginSetting))
+    env.ap.runner_registry.list_runners.side_effect = AssertionError('offline must not query runtime')
+    env.ap.plugin_connector.install_plugin = AsyncMock(side_effect=AssertionError('offline must not install'))
+    _, metadata = await execute_all(env, install_plugins=False)
+    assert [r['state'] for r in metadata['results']] == ['migrated', 'migrated']
+    assert all(r['code'] == 'data_only' for r in metadata['results'])
+    configs, backups = await rows(env)
+    assert len(backups) == 2
+    assert configs['one']['ai']['runner']['id'] == RID
+    assert configs['foreign'] == SOURCE
+    env.ap.plugin_connector.install_plugin.assert_not_awaited()
+    env.ap.runner_registry.list_runners.assert_not_awaited()
+    assert env.ap.pipeline_mgr.publish_pipeline.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_all_mode_installs_missing_plugin_once_then_migrates_both(env):
+    async with env.engine.begin() as conn:
+        await conn.execute(sa.delete(PluginSetting))
+
+    async def install(source, info, task_context):
+        assert info['plugin_version'] == '1.0'
+        async with env.engine.begin() as conn:
+            await conn.execute(
+                sa.insert(PluginSetting).values(
+                    workspace_uuid=WS, plugin_author='langbot-team', plugin_name='TestAgent', enabled=True
+                )
+            )
+
+    env.ap.plugin_connector.install_plugin = AsyncMock(side_effect=install)
+    _, metadata = await execute_all(env)
+    assert [r['state'] for r in metadata['results']] == ['migrated', 'migrated']
+    env.ap.plugin_connector.install_plugin.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_all_install_failure_preserves_sources_and_never_exposes_upstream_error(env):
+    async with env.engine.begin() as conn:
+        await conn.execute(sa.delete(PluginSetting))
+    env.ap.plugin_connector.install_plugin = AsyncMock(side_effect=RuntimeError('secret-token'))
+    _, metadata = await execute_all(env)
+    assert all(r['code'] == 'plugin_install_failed' for r in metadata['results'])
+    assert 'secret-token' not in str(metadata)
+    configs, backups = await rows(env)
+    assert configs['one'] == SOURCE and not backups
+    env.ap.plugin_connector.install_plugin.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_all_installation_cannot_migrate_edits_made_while_installing(env):
+    async with env.engine.begin() as conn:
+        await conn.execute(sa.delete(PluginSetting))
+
+    async def install(*args, **kwargs):
+        async with env.engine.begin() as conn:
+            await conn.execute(
+                sa.insert(PluginSetting).values(
+                    workspace_uuid=WS, plugin_author='langbot-team', plugin_name='TestAgent', enabled=True
+                )
+            )
+            await conn.execute(sa.update(LegacyPipeline).where(LegacyPipeline.uuid == 'one').values(name='edited'))
+
+    env.ap.plugin_connector.install_plugin = AsyncMock(side_effect=install)
+    _, metadata = await execute_all(env)
+    assert metadata['results'][0]['code'] == 'preview_stale'
+    assert metadata['results'][1]['state'] == 'migrated'
+    configs, backups = await rows(env)
+    assert configs['one'] == SOURCE
+    assert len(backups) == 1
+
+
+@pytest.mark.asyncio
+async def test_all_mode_has_no_fifty_pipeline_limit(env):
+    async with env.engine.begin() as conn:
+        await conn.execute(
+            sa.insert(LegacyPipeline),
+            [
+                dict(
+                    uuid=f'extra-{i}',
+                    workspace_uuid=WS,
+                    name=f'extra-{i}',
+                    description='bulk fixture',
+                    for_version='4.10',
+                    stages=[],
+                    config=SOURCE,
+                    extensions_preferences={'enable_all_plugins': True},
+                )
+                for i in range(51)
+            ],
+        )
+    response, metadata = await execute_all(env, install_plugins=False)
+    assert len(response['pipeline_uuids']) == 53
+    assert all(r['state'] == 'migrated' for r in metadata['results'])
+
+
+@pytest.mark.asyncio
+async def test_all_mode_rejects_duplicate_tasks_and_unconfirmed_requests(env):
+    for body in [
+        {'all': True, 'confirmed': False, 'install_plugins': True},
+        {'all': True, 'confirmed': True, 'install_plugins': 'false'},
+        {'all': True, 'confirmed': True, 'install_plugins': False, 'workspace_uuid': OTHER},
+    ]:
+        with pytest.raises(env.m.MigrationError):
+            await env.svc.execute(context(), body)
+    env.svc._all_tasks.add(WS)
+    with pytest.raises(env.m.MigrationError, match='migration_running'):
+        await execute_all(env)
+    env.svc._all_tasks.clear()
