@@ -787,6 +787,17 @@ const enUS = {
     },
   },
   agents: {
+    monitoring: {
+      description:
+        'Follow each task from its triggering event through model output and tool execution.',
+      empty:
+        'No runs yet. Trigger a platform event or run a debug test to see it here.',
+      input: 'Triggering input',
+      eventData: 'Event data',
+      execution: 'Execution steps',
+      rawEvents: 'Raw run events',
+      inputUnavailable: 'Input was not recorded for this run.',
+    },
     eventProcessor: {
       configurations: 'Plugin processor configurations',
       configTab: 'Configuration',
@@ -825,6 +836,7 @@ const enUS = {
       loadMore: 'Load more',
       activation:
         'Install a plugin, create a processor configuration, then bind a bot.',
+      status_timeout: 'Timed out',
       status_pending: 'Pending',
       status_running: 'Running',
       status_completed: 'Completed',

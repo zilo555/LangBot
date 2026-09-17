@@ -636,6 +636,7 @@ class RunLedgerStore:
         strict_thread: bool = False,
         runner_id: str | None = None,
         binding_id: str | None = None,
+        agent_id: str | None = None,
     ) -> tuple[list[dict[str, typing.Any]], int | None, bool, int]:
         """Page runs by scope.
 
@@ -643,9 +644,21 @@ class RunLedgerStore:
             Tuple of (items, next_cursor, has_more, total_count).
         """
         limit = min(max(int(limit), 1), 100)
+        agent_filter = sqlalchemy.or_(
+            AgentRun.agent_id == agent_id,
+            sqlalchemy.and_(
+                AgentRun.agent_id.is_(None),
+                sqlalchemy.or_(
+                    AgentRun.binding_id.startswith(f'agent_{agent_id}_', autoescape=True),
+                    AgentRun.binding_id.startswith(f'debug:{agent_id}:', autoescape=True),
+                ),
+            ),
+        )
         async with self._session_factory() as session:
             # First get total count
             count_query = sqlalchemy.select(sqlalchemy.func.count(AgentRun.id))
+            if agent_id is not None:
+                count_query = count_query.where(agent_filter)
             if conversation_id is not None:
                 count_query = count_query.where(AgentRun.conversation_id == conversation_id)
             if statuses:
@@ -660,6 +673,8 @@ class RunLedgerStore:
 
             # Then get items
             query = sqlalchemy.select(AgentRun)
+            if agent_id is not None:
+                query = query.where(agent_filter)
             if conversation_id is not None:
                 query = query.where(AgentRun.conversation_id == conversation_id)
             if statuses:

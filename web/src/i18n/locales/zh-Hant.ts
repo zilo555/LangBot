@@ -573,6 +573,15 @@ const zhHant = {
     },
   },
   agents: {
+    monitoring: {
+      description: '查看每次任務的觸發事件、模型輸出和工具執行過程。',
+      empty: '尚無執行紀錄。觸發平台事件或執行除錯後，可在此查看。',
+      input: '觸發輸入',
+      eventData: '事件資料',
+      execution: '執行過程',
+      rawEvents: '原始執行事件',
+      inputUnavailable: '此次執行未記錄輸入內容。',
+    },
     eventProcessor: {
       configurations: '外掛處理器設定',
       configTab: '設定',
@@ -608,6 +617,7 @@ const zhHant = {
       destination: '傳送目標',
       loadMore: '載入更多',
       activation: '安裝外掛、建立處理器設定，再綁定機器人。',
+      status_timeout: '已逾時',
       status_pending: '待執行',
       status_running: '執行中',
       status_completed: '已完成',

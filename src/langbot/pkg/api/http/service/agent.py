@@ -529,16 +529,20 @@ class AgentService:
         return config, component_ref, descriptor.supported_event_patterns
 
     async def get_processor_runs(self, context, processor_id, *, before_id=None):
-        """Read only this Workspace's explicitly created processor instance."""
+        """Read only this Workspace's Agent or plugin processor runs."""
         from ....agent.runner.run_ledger_store import RunLedgerStore
 
         processor = await self.get_agent(context, processor_id)
-        if processor is None or processor.get('kind') != AGENT_KIND_EVENT_PROCESSOR:
-            raise ValueError('Event processor not found')
+        if processor is None or processor.get('kind') not in {'agent', AGENT_KIND_EVENT_PROCESSOR}:
+            raise ValueError('Processor not found')
         store = RunLedgerStore(self.ap.persistence_mgr.get_db_engine())
         items, cursor, has_more, total = await store.list_runs(
             workspace_id=require_workspace_uuid(context),
-            binding_id=f'event_processor:{processor_id}',
+            **(
+                {'binding_id': f'event_processor:{processor_id}'}
+                if processor.get('kind') == AGENT_KIND_EVENT_PROCESSOR
+                else {'agent_id': processor_id}
+            ),
             before_id=before_id,
         )
         return {'items': items, 'next_cursor': cursor, 'has_more': has_more, 'total': total}
@@ -548,14 +552,22 @@ class AgentService:
         from ....agent.runner.run_ledger_store import RunLedgerStore
 
         processor = await self.get_agent(context, processor_id)
-        if processor is None or processor.get('kind') != AGENT_KIND_EVENT_PROCESSOR:
-            raise ValueError('Event processor not found')
+        if processor is None or processor.get('kind') not in {'agent', AGENT_KIND_EVENT_PROCESSOR}:
+            raise ValueError('Processor not found')
         store = RunLedgerStore(self.ap.persistence_mgr.get_db_engine())
         run = await store.get_run(run_id)
         if (
             run is None
             or run.get('workspace_id') != require_workspace_uuid(context)
-            or run.get('binding_id') != f'event_processor:{processor_id}'
+            or not (
+                run.get('binding_id') == f'event_processor:{processor_id}'
+                if processor.get('kind') == AGENT_KIND_EVENT_PROCESSOR
+                else run.get('agent_id') == processor_id
+                or (
+                    run.get('agent_id') is None
+                    and str(run.get('binding_id', '')).startswith((f'agent_{processor_id}_', f'debug:{processor_id}:'))
+                )
+            )
         ):
             raise ValueError('Processor run not found')
         items, next_cursor, _, has_more = await store.page_run_events(

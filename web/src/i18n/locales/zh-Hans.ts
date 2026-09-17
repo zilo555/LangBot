@@ -748,6 +748,15 @@ const zhHans = {
     },
   },
   agents: {
+    monitoring: {
+      description: '查看每次任务的触发事件、模型输出和工具执行过程。',
+      empty: '暂无运行记录。触发平台事件或运行调试后，可在这里查看。',
+      input: '触发输入',
+      eventData: '事件数据',
+      execution: '执行过程',
+      rawEvents: '原始运行事件',
+      inputUnavailable: '这次运行未记录输入内容。',
+    },
     eventProcessor: {
       configurations: '插件处理器配置',
       configTab: '配置',
@@ -783,6 +792,7 @@ const zhHans = {
       destination: '投递目标',
       loadMore: '加载更多',
       activation: '安装插件，创建处理器配置，再绑定机器人。',
+      status_timeout: '已超时',
       status_pending: '待执行',
       status_running: '运行中',
       status_completed: '已完成',

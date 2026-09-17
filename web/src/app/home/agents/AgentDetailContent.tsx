@@ -27,6 +27,7 @@ import PipelineDetailContent from '@/app/home/pipelines/PipelineDetailContent';
 import PluginProcessorDetailContent from './PluginProcessorDetailContent';
 import AgentCreateContent from './components/AgentCreateContent';
 import AgentDebugPanel from './components/AgentDebugPanel';
+import AgentMonitoringTab from './components/AgentMonitoringTab';
 import AgentFormComponent, {
   AgentFormHandle,
   RunnerStatus,
@@ -281,6 +282,21 @@ export default function AgentDetailContent({
             ) : undefined
           }
           unsavedLabel={t('pipelines.unsavedChanges')}
+          monitoring={
+            currentWorkspace?.permissions.includes('resource.view')
+              ? {
+                  label: t('pipelines.monitoring.title'),
+                  workbenchLabel: t('pipelines.monitoring.workbench'),
+                  content: (
+                    <AgentMonitoringTab
+                      key={id}
+                      agentId={id}
+                      platformTools={platformTools}
+                    />
+                  ),
+                }
+              : undefined
+          }
         />
       )}
       <EntityBasicInfoDialog

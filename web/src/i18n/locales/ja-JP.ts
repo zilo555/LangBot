@@ -800,6 +800,17 @@ const jaJP = {
     },
   },
   agents: {
+    monitoring: {
+      description:
+        '各タスクのトリガーイベント、モデル出力、ツール実行を確認します。',
+      empty:
+        '実行記録はありません。プラットフォームイベントまたはデバッグテストを実行してください。',
+      input: 'トリガー入力',
+      eventData: 'イベントデータ',
+      execution: '実行過程',
+      rawEvents: '生の実行イベント',
+      inputUnavailable: 'この実行の入力は記録されていません。',
+    },
     eventProcessor: {
       configurations: 'プラグインプロセッサー設定',
       configTab: '設定',
@@ -839,6 +850,7 @@ const jaJP = {
       loadMore: 'さらに読み込む',
       activation:
         'プラグインをインストールし、プロセッサー設定を作成してボットに紐付けます。',
+      status_timeout: 'タイムアウト',
       status_pending: '待機中',
       status_running: '実行中',
       status_completed: '完了',

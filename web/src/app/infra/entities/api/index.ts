@@ -196,6 +196,13 @@ export interface RunnerDescriptor {
 
 export interface ProcessorRun {
   run_id: string;
+  binding_id?: string;
+  runner_id?: string;
+  usage?: {
+    prompt_tokens?: number | null;
+    completion_tokens?: number | null;
+    total_tokens?: number | null;
+  } | null;
   status: string;
   status_reason?: string;
   created_at: number;
@@ -204,7 +211,13 @@ export interface ProcessorRun {
   created_at_ms?: number | null;
   started_at_ms?: number | null;
   finished_at_ms?: number | null;
-  metadata: { event_type?: string; input_event?: unknown; delivery?: unknown };
+  metadata: {
+    event_type?: string;
+    source?: string;
+    input?: { text?: string; contents?: unknown[]; attachments?: unknown[] };
+    input_event?: unknown;
+    delivery?: unknown;
+  };
 }
 
 export interface ProcessorRunEvent {
@@ -215,6 +228,7 @@ export interface ProcessorRunEvent {
 
 export interface ProcessorRunPage {
   items: ProcessorRun[];
+  total?: number;
   next_cursor: number | null;
   has_more: boolean;
 }

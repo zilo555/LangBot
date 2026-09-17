@@ -611,6 +611,17 @@ const esES = {
     },
   },
   agents: {
+    monitoring: {
+      description:
+        'Consulta el evento, la salida del modelo y las herramientas de cada tarea.',
+      empty:
+        'Sin ejecuciones. Activa un evento o ejecuta una prueba de depuración.',
+      input: 'Entrada inicial',
+      eventData: 'Datos del evento',
+      execution: 'Pasos de ejecución',
+      rawEvents: 'Eventos sin procesar',
+      inputUnavailable: 'No se registró la entrada de esta ejecución.',
+    },
     eventProcessor: {
       configurations: 'Configuraciones de procesadores de plugins',
       configTab: 'Configuración',
@@ -649,6 +660,7 @@ const esES = {
       loadMore: 'Cargar más',
       activation:
         'Instala un plugin, crea una configuración de procesador y vincula un bot.',
+      status_timeout: 'Tiempo agotado',
       status_pending: 'Pendiente',
       status_running: 'En ejecución',
       status_completed: 'Completado',

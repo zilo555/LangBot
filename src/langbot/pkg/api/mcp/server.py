@@ -227,14 +227,16 @@ class LangBotMCPServer:
             return _dump(await ap.agent_service.get_agent_metadata(context))
 
         @mcp.tool(
-            description='List one Event processor instance run history; use before_id to page older runs. '
+            description='List one Agent or plugin processor run history; use before_id to page older runs. '
             'created_at_ms, started_at_ms and finished_at_ms are Host lifecycle times in epoch milliseconds.'
         )
         async def list_processor_runs(processor_uuid: str, before_id: int | None = None) -> str:
             context = _authorized(Permission.RESOURCE_VIEW)
             return _dump(await ap.agent_service.get_processor_runs(context, processor_uuid, before_id=before_id))
 
-        @mcp.tool(description='Read logs and action results for an Event processor run; page using after_sequence.')
+        @mcp.tool(
+            description='Read logs and action results for an Agent or plugin processor run; page using after_sequence.'
+        )
         async def get_processor_run_events(
             processor_uuid: str,
             run_id: str,

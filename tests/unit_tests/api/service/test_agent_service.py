@@ -905,3 +905,44 @@ async def test_processor_trace_rejects_other_workspace_or_instance(monkeypatch, 
     with pytest.raises(ValueError, match='Processor run not found'):
         await service.get_processor_run_events(WORKSPACE_UUID, 'one', 'run')
     store.page_run_events.assert_not_called()
+
+
+async def test_agent_runs_use_workspace_and_stable_agent_identity(monkeypatch):
+    service = AgentService(_make_app())
+    service.get_agent = AsyncMock(return_value={'kind': 'agent'})
+    service.ap.persistence_mgr.get_db_engine = Mock()
+    store = SimpleNamespace(list_runs=AsyncMock(return_value=([], None, False, 0)))
+    monkeypatch.setattr('langbot.pkg.agent.runner.run_ledger_store.RunLedgerStore', Mock(return_value=store))
+    assert (await service.get_processor_runs(WORKSPACE_UUID, 'one', before_id=12))['total'] == 0
+    store.list_runs.assert_awaited_once_with(workspace_id=WORKSPACE_UUID, agent_id='one', before_id=12)
+
+
+@pytest.mark.parametrize(
+    'binding,agent_id,workspace,allowed',
+    [
+        ('agent_one_plugin:a/old/default', None, WORKSPACE_UUID, True),
+        ('debug:one:plugin:a/new/default', None, WORKSPACE_UUID, True),
+        ('any-new-binding', 'one', WORKSPACE_UUID, True),
+        ('agent_two_plugin:a/old/default', None, WORKSPACE_UUID, False),
+        ('debug:two:plugin:a/new/default', None, WORKSPACE_UUID, False),
+        ('agent_one_plugin:a/old/default', 'two', WORKSPACE_UUID, False),
+        ('agent_one_plugin:a/old/default', None, 'other-workspace', False),
+        ('event_processor:one', None, WORKSPACE_UUID, False),
+    ],
+)
+async def test_agent_trace_authorizes_history_across_runner_changes(monkeypatch, binding, agent_id, workspace, allowed):
+    service = AgentService(_make_app())
+    service.get_agent = AsyncMock(return_value={'kind': 'agent'})
+    service.ap.persistence_mgr.get_db_engine = Mock()
+    store = SimpleNamespace(
+        get_run=AsyncMock(return_value={'workspace_id': workspace, 'binding_id': binding, 'agent_id': agent_id}),
+        page_run_events=AsyncMock(return_value=([], None, None, False)),
+    )
+    monkeypatch.setattr('langbot.pkg.agent.runner.run_ledger_store.RunLedgerStore', Mock(return_value=store))
+    if allowed:
+        await service.get_processor_run_events(WORKSPACE_UUID, 'one', 'run', after_sequence=100)
+        store.page_run_events.assert_awaited_once_with(run_id='run', after_sequence=100, limit=100)
+    else:
+        with pytest.raises(ValueError, match='Processor run not found'):
+            await service.get_processor_run_events(WORKSPACE_UUID, 'one', 'run')
+        store.page_run_events.assert_not_called()

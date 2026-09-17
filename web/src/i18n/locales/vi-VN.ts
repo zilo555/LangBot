@@ -601,6 +601,16 @@ const viVN = {
     },
   },
   agents: {
+    monitoring: {
+      description:
+        'Xem sự kiện kích hoạt, đầu ra mô hình và quá trình gọi công cụ của mỗi tác vụ.',
+      empty: 'Chưa có lượt chạy. Kích hoạt sự kiện hoặc chạy thử gỡ lỗi.',
+      input: 'Đầu vào kích hoạt',
+      eventData: 'Dữ liệu sự kiện',
+      execution: 'Quá trình thực thi',
+      rawEvents: 'Sự kiện gốc',
+      inputUnavailable: 'Đầu vào của lượt chạy này chưa được ghi lại.',
+    },
     eventProcessor: {
       configurations: 'Cấu hình bộ xử lý plugin',
       configTab: 'Cấu hình',
@@ -637,6 +647,7 @@ const viVN = {
       destination: 'Đích gửi',
       loadMore: 'Tải thêm',
       activation: 'Cài plugin, tạo cấu hình bộ xử lý rồi liên kết bot.',
+      status_timeout: 'Hết thời gian',
       status_pending: 'Đang chờ',
       status_running: 'Đang chạy',
       status_completed: 'Hoàn tất',
