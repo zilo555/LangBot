@@ -45,6 +45,10 @@ import {
 import { Form, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import AgentEventPatternPicker from './AgentEventPatternPicker';
 import RunnerSelect from './RunnerSelect';
+import GuidedTour, {
+  GuidedTourStep,
+} from '@/app/home/components/guided-tour/GuidedTour';
+import { areRequiredDynamicFieldsComplete } from '@/app/home/components/guided-tour/dynamic-form-progress';
 import AgentApiToolPicker from './AgentApiToolPicker';
 
 const OTHER_TOOL_SCOPES = [
@@ -70,6 +74,7 @@ interface AgentFormComponentProps {
   onRunnerStatusChange?: (status: RunnerStatus) => void;
   onSupportedEventPatternsChange?: (patterns: string[]) => void;
   onPlatformToolsChange?: (tools: AgentPlatformTool[]) => void;
+  guideEnabled?: boolean;
 }
 
 export type AgentConfigSection = 'runner' | 'events_and_tools';
@@ -124,6 +129,7 @@ function AgentFormComponent(
     onRunnerStatusChange,
     onSupportedEventPatternsChange,
     onPlatformToolsChange,
+    guideEnabled = true,
   }: AgentFormComponentProps,
   ref: ForwardedRef<AgentFormHandle>,
 ) {
@@ -469,6 +475,54 @@ function AgentFormComponent(
     t,
   ]);
 
+  const runnerGuideSteps = useMemo<GuidedTourStep[]>(() => {
+    const steps: GuidedTourStep[] = [
+      {
+        id: 'runner',
+        target: '[data-guide="runner-selector"]',
+        title: t('guidedTour.runner.select.title'),
+        description: t('guidedTour.runner.select.description'),
+        complete: Boolean(currentRunner && selectedRunnerOption),
+        requirement: t('guidedTour.runner.select.requirement'),
+        action: {
+          href: 'https://space.langbot.app/market?type=plugin&component=Runner&runner_usage=agent',
+          label: t('guidedTour.runner.select.action'),
+        },
+      },
+    ];
+
+    if (activeRunnerStage) {
+      steps.push({
+        id: 'parameters',
+        target: '[data-guide="runner-parameters"]',
+        title: t('guidedTour.runner.parameters.title'),
+        description: t('guidedTour.runner.parameters.description'),
+        complete: areRequiredDynamicFieldsComplete(
+          activeRunnerStage.config,
+          activeRunnerValues,
+        ),
+        requirement: t('guidedTour.runner.parameters.requirement'),
+      });
+    }
+
+    steps.push({
+      id: 'events',
+      target: '[data-guide="agent-sections"]',
+      title: t('guidedTour.runner.events.title'),
+      description: t('guidedTour.runner.events.description'),
+      complete: activeSection === 'events_and_tools',
+      requirement: t('guidedTour.runner.events.requirement'),
+    });
+    return steps;
+  }, [
+    activeRunnerStage,
+    activeRunnerValues,
+    activeSection,
+    currentRunner,
+    selectedRunnerOption,
+    t,
+  ]);
+
   useEffect(() => {
     onRunnerStatusChange?.(runnerStatus);
   }, [onRunnerStatusChange, runnerStatus]);
@@ -517,7 +571,10 @@ function AgentFormComponent(
         ] || {};
 
     return (
-      <Card key={stage.name}>
+      <Card
+        key={stage.name}
+        data-guide={isRunnerSelector ? 'runner-selector' : 'runner-parameters'}
+      >
         <CardHeader>
           <CardTitle>{extractI18nObject(stage.label)}</CardTitle>
           {stage.description && (
@@ -660,7 +717,10 @@ function AgentFormComponent(
           onSubmit={form.handleSubmit(handleSubmit)}
           className="mb-2 flex h-full min-h-0 min-w-0 flex-1 flex-col"
         >
-          <nav className="mb-4 shrink-0 space-y-2 border-b pb-4">
+          <nav
+            className="mb-4 shrink-0 space-y-2 border-b pb-4"
+            data-guide="agent-sections"
+          >
             <Tabs
               value={activeSection}
               onValueChange={(value) =>
@@ -806,6 +866,12 @@ function AgentFormComponent(
               )}
             </div>
           </div>
+          <GuidedTour
+            enabled={guideEnabled}
+            storageKey="langbot_runner_setup_guide_v1"
+            steps={runnerGuideSteps}
+            testId="runner-setup-guide"
+          />
         </form>
       </Form>
     </div>

@@ -163,7 +163,7 @@ export default function KBDetailContent({ id }: { id: string }) {
             {t('knowledge.createKnowledgeBase')}
           </h1>
           {canManage && (
-            <Button type="submit" form="kb-form">
+            <Button type="submit" form="kb-form" data-guide="knowledge-submit">
               {t('common.submit')}
             </Button>
           )}
@@ -176,6 +176,7 @@ export default function KBDetailContent({ id }: { id: string }) {
                 initKbId={undefined}
                 onNewKbCreated={handleNewKbCreated}
                 onKbUpdated={handleKbUpdated}
+                guideEnabled={canManage}
               />
             </fieldset>
           </div>

@@ -43,6 +43,115 @@ const zhHans = {
       },
     },
   },
+  guidedTour: {
+    label: '配置引导',
+    progress: '第 {{current}} 步，共 {{total}} 步',
+    next: '下一步',
+    finish: '完成引导',
+    bot: {
+      connection: {
+        title: '选择接入方式',
+        description:
+          '从该适配器支持的方式中选择一种，相关适配器参数会自动同步。',
+        requirement: '请选择 Webhook 或长连接后继续。',
+      },
+      basic: {
+        title: '填写机器人信息',
+        description: '使用容易识别的名称，便于之后在事件路由和日志中快速找到。',
+        requirement: '请先填写机器人名称。',
+      },
+      adapter: {
+        title: '选择平台适配器',
+        description:
+          '先选择平台，LangBot 会再判断该适配器支持 Webhook、长连接或两者都支持。',
+        requirement: '请选择一个适配器。',
+      },
+      parameters: {
+        title: '配置平台参数',
+        description:
+          '填写凭据和平台参数；需要在平台侧创建的配置可按适配器文档操作。',
+        requirement: '请填写当前可见的全部必填参数。',
+        action: '打开适配器文档',
+      },
+      routing: {
+        title: '设置事件路由',
+        description:
+          '选择各类事件交给哪个处理器；机器人创建后仍可继续添加路由。',
+      },
+      submit: {
+        title: '创建机器人',
+        description:
+          '创建后连接配置才会生效；LangBot 生成的 Webhook 地址会显示在已保存机器人的配置中。',
+      },
+    },
+    processorCreate: {
+      type: {
+        title: '选择处理器类型',
+        description:
+          '流水线按固定流程处理消息，Agent 使用模型和工具自主决策，插件处理器负责声明的平台事件。',
+      },
+      basic: {
+        title: '填写处理器信息',
+        description: '先设置容易识别的名称，创建后再配置 Runner、事件和工具。',
+        requirement: '请先填写处理器名称。',
+      },
+      submit: {
+        title: '创建并继续配置',
+        description:
+          '创建后继续完成该类型处理器所需的 Runner、参数、事件和工具设置。',
+      },
+    },
+    runner: {
+      select: {
+        title: '选择或安装 Runner',
+        description:
+          '选择已安装的 Runner，也可以直接在此选择器的市场列表中安装。',
+        requirement: '请选择一个可用的 Runner。',
+        action: '浏览 Runner 市场',
+      },
+      parameters: {
+        title: '配置 Runner 参数',
+        description:
+          '按照所选 Runner 的定义填写模型、凭据、服务地址和其他参数。',
+        requirement: '请填写当前可见的全部必填参数。',
+      },
+      events: {
+        title: '设置事件和工具',
+        description:
+          '打开“事件和工具”，选择 Agent 可接收的事件以及允许使用的平台或主机工具。',
+        requirement: '请打开“事件和工具”页签以完成引导。',
+      },
+    },
+    knowledge: {
+      basic: {
+        title: '填写知识库信息',
+        description:
+          '设置容易识别的名称和可选描述，然后选择知识的存储与检索引擎。',
+        requirement: '请先填写知识库名称。',
+      },
+      engine: {
+        title: '选择或安装知识引擎',
+        description:
+          '选择已安装的知识引擎，也可以在此选择器的市场区域直接安装。',
+        requirement: '请选择一个知识引擎。',
+        action: '浏览知识引擎市场',
+      },
+      parameters: {
+        title: '配置引擎参数',
+        description: '填写该引擎要求的存储、模型、凭据或外部服务设置。',
+        requirement: '请填写当前可见的全部必填参数。',
+      },
+      retrieval: {
+        title: '配置检索方式',
+        description: '设置引擎如何搜索内容，以及如何把相关结果返回给处理器。',
+        requirement: '请填写当前可见的全部必填检索参数。',
+      },
+      submit: {
+        title: '创建知识库',
+        description: '创建后即可添加文档，或连接所选引擎支持的外部知识源。',
+      },
+    },
+  },
   sidebar: {
     home: '首页',
     extensions: '扩展',
@@ -417,6 +526,13 @@ const zhHans = {
     botNameRequired: '机器人名称不能为空',
     botDescriptionRequired: '机器人描述不能为空',
     adapterRequired: '适配器不能为空',
+    connectionMode: '接入方式',
+    connectionModeDescription: '从当前适配器支持的接入方式中选择一种。',
+    connectionWebhook: 'Webhook',
+    connectionWebhookDescription: '平台向 LangBot 生成的地址推送事件。',
+    connectionPersistent: '长连接',
+    connectionPersistentDescription: 'LangBot 主动保持 Socket 或流式连接。',
+    noAdaptersForConnectionMode: '尚未安装支持这种接入方式的适配器。',
     defaultDescription: '一个机器人',
     getBotConfigError: '获取机器人配置失败：',
     saveSuccess: '保存成功',

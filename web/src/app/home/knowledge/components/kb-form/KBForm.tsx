@@ -37,6 +37,13 @@ import {
 } from '@/app/home/components/dynamic-form/DynamicFormItemConfig';
 import { UUID } from 'uuidjs';
 import KnowledgeEngineSelect from './KnowledgeEngineSelect';
+import GuidedTour, {
+  GuidedTourStep,
+} from '@/app/home/components/guided-tour/GuidedTour';
+import { areRequiredDynamicFieldsComplete } from '@/app/home/components/guided-tour/dynamic-form-progress';
+
+const KNOWLEDGE_ENGINE_MARKETPLACE_URL =
+  'https://space.langbot.app/market?type=plugin&component=KnowledgeEngine';
 
 const getFormSchema = (t: (key: string) => string) =>
   z.object({
@@ -79,11 +86,13 @@ export default function KBForm({
   onNewKbCreated,
   onKbUpdated,
   onDirtyChange,
+  guideEnabled = true,
 }: {
   initKbId?: string;
   onNewKbCreated: (kbId: string) => void;
   onKbUpdated: (kbId: string) => void;
   onDirtyChange?: (dirty: boolean) => void;
+  guideEnabled?: boolean;
 }) {
   const { t } = useTranslation();
   const [ragEngines, setRagEngines] = useState<KnowledgeEngine[]>([]);
@@ -328,6 +337,77 @@ export default function KBForm({
     [selectedEngine?.retrieval_schema],
   );
 
+  const guideSteps = useMemo<GuidedTourStep[]>(() => {
+    const steps: GuidedTourStep[] = [
+      {
+        id: 'basic',
+        target: '[data-guide="knowledge-basic"]',
+        title: t('guidedTour.knowledge.basic.title'),
+        description: t('guidedTour.knowledge.basic.description'),
+        complete: Boolean(watchedFormValues.name?.trim()),
+        requirement: t('guidedTour.knowledge.basic.requirement'),
+      },
+      {
+        id: 'engine',
+        target: '[data-guide="knowledge-engine"]',
+        title: t('guidedTour.knowledge.engine.title'),
+        description: t('guidedTour.knowledge.engine.description'),
+        complete: Boolean(selectedEngineId),
+        requirement: t('guidedTour.knowledge.engine.requirement'),
+        action: {
+          href: KNOWLEDGE_ENGINE_MARKETPLACE_URL,
+          label: t('guidedTour.knowledge.engine.action'),
+        },
+      },
+    ];
+
+    if (configFormItems.length > 0) {
+      steps.push({
+        id: 'engine-parameters',
+        target: '[data-guide="knowledge-engine-parameters"]',
+        title: t('guidedTour.knowledge.parameters.title'),
+        description: t('guidedTour.knowledge.parameters.description'),
+        complete: areRequiredDynamicFieldsComplete(
+          configFormItems,
+          configSettings,
+          retrievalSettings,
+        ),
+        requirement: t('guidedTour.knowledge.parameters.requirement'),
+      });
+    }
+
+    if (retrievalFormItems.length > 0) {
+      steps.push({
+        id: 'retrieval',
+        target: '[data-guide="knowledge-retrieval"]',
+        title: t('guidedTour.knowledge.retrieval.title'),
+        description: t('guidedTour.knowledge.retrieval.description'),
+        complete: areRequiredDynamicFieldsComplete(
+          retrievalFormItems,
+          retrievalSettings,
+          configSettings,
+        ),
+        requirement: t('guidedTour.knowledge.retrieval.requirement'),
+      });
+    }
+
+    steps.push({
+      id: 'submit',
+      target: '[data-guide="knowledge-submit"]',
+      title: t('guidedTour.knowledge.submit.title'),
+      description: t('guidedTour.knowledge.submit.description'),
+    });
+    return steps;
+  }, [
+    configFormItems,
+    configSettings,
+    retrievalFormItems,
+    retrievalSettings,
+    selectedEngineId,
+    t,
+    watchedFormValues.name,
+  ]);
+
   if (loadFailed)
     return (
       <EntityLoadState error onRetry={() => setLoadAttempt((n) => n + 1)} />
@@ -343,7 +423,7 @@ export default function KBForm({
       >
         {/* Basic information is entered here only during creation. */}
         {!isEditing && (
-          <Card>
+          <Card data-guide="knowledge-basic">
             <CardHeader>
               <CardTitle>{t('knowledge.basicInfo')}</CardTitle>
               <CardDescription>
@@ -406,7 +486,7 @@ export default function KBForm({
         )}
 
         {/* Knowledge engine selection and settings stay together. */}
-        <Card>
+        <Card data-guide="knowledge-engine">
           <CardHeader>
             <CardTitle>{t('knowledge.engineSettings')}</CardTitle>
             <CardDescription>
@@ -450,7 +530,10 @@ export default function KBForm({
             />
 
             {configFormItems.length > 0 && (
-              <>
+              <div
+                data-guide="knowledge-engine-parameters"
+                className="space-y-6"
+              >
                 <Separator />
                 <DynamicFormComponent
                   itemConfigList={configFormItems}
@@ -464,14 +547,14 @@ export default function KBForm({
                     (configValidateRef.current = validateFn)
                   }
                 />
-              </>
+              </div>
             )}
           </CardContent>
         </Card>
 
         {/* Retrieval Settings (dynamic form from retrieval_schema) */}
         {retrievalFormItems.length > 0 && (
-          <Card>
+          <Card data-guide="knowledge-retrieval">
             <CardHeader>
               <CardTitle>{t('knowledge.retrievalSettings')}</CardTitle>
               <CardDescription>
@@ -494,6 +577,12 @@ export default function KBForm({
           </Card>
         )}
       </form>
+      <GuidedTour
+        enabled={!isEditing && guideEnabled}
+        storageKey="langbot_knowledge_create_guide_v1"
+        steps={guideSteps}
+        testId="knowledge-create-guide"
+      />
     </Form>
   );
 }

@@ -1298,6 +1298,17 @@ export async function installLangBotApiMocks(
       if (!Object.hasOwn(storage, 'langbot_sidebar_guide_v1')) {
         localStorage.setItem('langbot_sidebar_guide_v1', 'completed');
       }
+      const contextualGuides = [
+        'langbot_bot_create_guide_v4',
+        'langbot_processor_create_guide_v1',
+        'langbot_runner_setup_guide_v1',
+        'langbot_knowledge_create_guide_v1',
+      ];
+      for (const guideKey of contextualGuides) {
+        if (!Object.hasOwn(storage, guideKey)) {
+          localStorage.setItem(guideKey, 'completed');
+        }
+      }
 
       if (authenticated) {
         localStorage.setItem('token', 'playwright-token');

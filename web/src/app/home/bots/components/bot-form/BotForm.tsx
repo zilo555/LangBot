@@ -15,14 +15,23 @@ import {
   getDefaultValues,
   parseDynamicFormItemType,
 } from '@/app/home/components/dynamic-form/DynamicFormItemConfig';
-import { IDynamicFormItemSchema } from '@/app/infra/entities/form/dynamic';
+import {
+  DynamicFormItemType,
+  IDynamicFormItemSchema,
+} from '@/app/infra/entities/form/dynamic';
 import { UUID } from 'uuidjs';
 import DynamicFormComponent from '@/app/home/components/dynamic-form/DynamicFormComponent';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { systemInfo } from '@/app/infra/http';
 import { Agent, Bot } from '@/app/infra/entities/api';
 import { getAdapterDocUrl } from '@/app/infra/entities/adapter-docs';
-import { ExternalLink, ChevronDown, ChevronRight } from 'lucide-react';
+import {
+  Cable,
+  ExternalLink,
+  ChevronDown,
+  ChevronRight,
+  Webhook,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import EventBindingsEditor from './EventBindingsEditor';
 import PluginProcessorBindings from './PluginProcessorBindings';
@@ -65,6 +74,89 @@ import {
   groupByCategory,
   getCategoryLabel,
 } from '@/app/infra/entities/adapter-categories';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import GuidedTour, {
+  GuidedTourStep,
+} from '@/app/home/components/guided-tour/GuidedTour';
+import { areRequiredDynamicFieldsComplete } from '@/app/home/components/guided-tour/dynamic-form-progress';
+
+type ConnectionMode = 'webhook' | 'persistent';
+
+function supportsConnectionMode(
+  config: IDynamicFormItemSchema[],
+  mode: ConnectionMode,
+) {
+  const webhookField = config.find(
+    (item) =>
+      item.name === 'webhook_url' ||
+      item.name === '__system.webhook_url' ||
+      item.type === DynamicFormItemType.WEBHOOK_URL,
+  );
+  if (!webhookField) return mode === 'persistent';
+  if (webhookField.show_if) return true;
+  return mode === 'webhook';
+}
+
+function getSupportedConnectionModes(config: IDynamicFormItemSchema[]) {
+  return (['webhook', 'persistent'] as const).filter((mode) =>
+    supportsConnectionMode(config, mode),
+  );
+}
+
+function conditionMatches(
+  condition: NonNullable<IDynamicFormItemSchema['show_if']>,
+  value: unknown,
+) {
+  if (condition.operator === 'eq') return value === condition.value;
+  if (condition.operator === 'neq') return value !== condition.value;
+  return Array.isArray(condition.value) && condition.value.includes(value);
+}
+
+function applyConnectionMode(
+  config: IDynamicFormItemSchema[],
+  values: Record<string, unknown>,
+  mode: ConnectionMode,
+) {
+  const webhookField = config.find(
+    (item) => item.type === DynamicFormItemType.WEBHOOK_URL,
+  );
+  const condition = webhookField?.show_if;
+  if (!condition) return values;
+
+  const controller = config.find((item) => item.name === condition.field);
+  const candidates: unknown[] = [
+    controller?.default,
+    ...(controller?.options?.map((option) => option.name) ?? []),
+    true,
+    false,
+    '',
+  ];
+  const shouldMatch = mode === 'webhook';
+  const nextValue = candidates.find(
+    (candidate) =>
+      candidate !== undefined &&
+      conditionMatches(condition, candidate) === shouldMatch,
+  );
+  if (nextValue === undefined) return values;
+  return { ...values, [condition.field]: nextValue };
+}
+
+function detectConnectionMode(
+  config: IDynamicFormItemSchema[],
+  values: Record<string, unknown>,
+): ConnectionMode {
+  const webhookField = config.find(
+    (item) => item.type === DynamicFormItemType.WEBHOOK_URL,
+  );
+  if (!webhookField) return 'persistent';
+  if (!webhookField.show_if) return 'webhook';
+  return conditionMatches(
+    webhookField.show_if,
+    values[webhookField.show_if.field],
+  )
+    ? 'webhook'
+    : 'persistent';
+}
 
 const getFormSchema = (t: (key: string) => string) =>
   z.object({
@@ -108,6 +200,7 @@ interface BotFormProps {
   onNewBotCreated: (botId: string) => void;
   onDirtyChange?: (dirty: boolean) => void;
   onAdapterLabelChange?: (label: string) => void;
+  guideEnabled?: boolean;
 }
 
 const BotForm = forwardRef<BotFormHandle, BotFormProps>(function BotForm(
@@ -117,6 +210,7 @@ const BotForm = forwardRef<BotFormHandle, BotFormProps>(function BotForm(
     onNewBotCreated,
     onDirtyChange,
     onAdapterLabelChange,
+    guideEnabled = true,
   },
   ref,
 ) {
@@ -167,8 +261,12 @@ const BotForm = forwardRef<BotFormHandle, BotFormProps>(function BotForm(
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [webhookUrl, setWebhookUrl] = useState<string>('');
   const [extraWebhookUrl, setExtraWebhookUrl] = useState<string>('');
+  const [connectionMode, setConnectionMode] = useState<ConnectionMode | null>(
+    null,
+  );
 
   // Watch adapter and adapter_config for filtering
+  const currentBotName = form.watch('name');
   const currentAdapter = form.watch('adapter');
   const adapterLabel =
     adapterNameList.find((adapter) => adapter.value === currentAdapter)
@@ -393,22 +491,142 @@ const BotForm = forwardRef<BotFormHandle, BotFormProps>(function BotForm(
 
   function handleAdapterSelect(adapterName: string) {
     if (adapterName) {
-      const dynamicFormConfigList =
-        adapterNameToDynamicConfigMap.get(adapterName);
-      if (dynamicFormConfigList) {
-        setDynamicFormConfigList(dynamicFormConfigList);
+      const adapterConfig = adapterNameToDynamicConfigMap.get(adapterName);
+      if (adapterConfig) {
+        setDynamicFormConfigList(adapterConfig);
         if (!initBotId) {
+          const defaultValues = getDefaultValues(adapterConfig);
+          const supportedModes = getSupportedConnectionModes(adapterConfig);
+          const nextMode =
+            supportedModes.length === 1 ? supportedModes[0] : null;
+          setConnectionMode(nextMode);
           form.setValue(
             'adapter_config',
-            getDefaultValues(dynamicFormConfigList),
+            nextMode
+              ? applyConnectionMode(adapterConfig, defaultValues, nextMode)
+              : defaultValues,
+          );
+        } else {
+          setConnectionMode(
+            detectConnectionMode(
+              adapterConfig,
+              form.getValues('adapter_config') || {},
+            ),
           );
         }
       }
       setShowDynamicForm(true);
     } else {
+      setConnectionMode(null);
       setShowDynamicForm(false);
     }
   }
+
+  function handleConnectionModeChange(mode: ConnectionMode) {
+    if (!currentAdapter) return;
+    const adapterConfig =
+      adapterNameToDynamicConfigMap.get(currentAdapter) ?? [];
+    if (!supportsConnectionMode(adapterConfig, mode)) return;
+    setConnectionMode(mode);
+    form.setValue(
+      'adapter_config',
+      applyConnectionMode(adapterConfig, currentAdapterConfig, mode),
+      { shouldDirty: true },
+    );
+  }
+
+  const supportedConnectionModes = useMemo(
+    () =>
+      currentAdapter
+        ? getSupportedConnectionModes(
+            adapterNameToDynamicConfigMap.get(currentAdapter) ?? [],
+          )
+        : [],
+    [adapterNameToDynamicConfigMap, currentAdapter],
+  );
+
+  const botGuideSteps = useMemo<GuidedTourStep[]>(() => {
+    const steps: GuidedTourStep[] = [
+      {
+        id: 'basic',
+        target: '[data-guide="bot-basic"]',
+        title: t('guidedTour.bot.basic.title'),
+        description: t('guidedTour.bot.basic.description'),
+        complete: Boolean(currentBotName?.trim()),
+        requirement: t('guidedTour.bot.basic.requirement'),
+      },
+      {
+        id: 'adapter',
+        target: '[data-guide="bot-adapter"]',
+        title: t('guidedTour.bot.adapter.title'),
+        description: t('guidedTour.bot.adapter.description'),
+        complete: Boolean(currentAdapter),
+        advanceOnComplete: true,
+        requirement: t('guidedTour.bot.adapter.requirement'),
+      },
+    ];
+
+    if (currentAdapter) {
+      steps.push({
+        id: 'connection',
+        target: '[data-guide="bot-connection-mode"]',
+        title: t('guidedTour.bot.connection.title'),
+        description: t('guidedTour.bot.connection.description'),
+        complete: connectionMode !== null,
+        advanceOnComplete: true,
+        requirement: t('guidedTour.bot.connection.requirement'),
+      });
+    }
+
+    if (currentAdapter && dynamicFormConfigList.length > 0) {
+      const docsUrl = getAdapterDocUrl(
+        adapterHelpLinks[currentAdapter],
+        i18n.language,
+      );
+      steps.push({
+        id: 'parameters',
+        target: '[data-guide="bot-adapter-parameters"]',
+        title: t('guidedTour.bot.parameters.title'),
+        description: t('guidedTour.bot.parameters.description'),
+        complete: areRequiredDynamicFieldsComplete(
+          dynamicFormConfigList,
+          currentAdapterConfig,
+        ),
+        requirement: t('guidedTour.bot.parameters.requirement'),
+        action: docsUrl
+          ? {
+              href: docsUrl,
+              label: t('guidedTour.bot.parameters.action'),
+            }
+          : undefined,
+      });
+    }
+
+    if (currentAdapter) {
+      steps.push({
+        id: 'routing',
+        target: '[data-guide="bot-routing"]',
+        title: t('guidedTour.bot.routing.title'),
+        description: t('guidedTour.bot.routing.description'),
+      });
+    }
+
+    steps.push({
+      id: 'submit',
+      target: '[data-guide="bot-submit"]',
+      title: t('guidedTour.bot.submit.title'),
+      description: t('guidedTour.bot.submit.description'),
+    });
+    return steps;
+  }, [
+    adapterHelpLinks,
+    connectionMode,
+    currentAdapter,
+    currentAdapterConfig,
+    currentBotName,
+    dynamicFormConfigList,
+    t,
+  ]);
 
   function onDynamicFormSubmit() {
     setIsLoading(true);
@@ -494,7 +712,7 @@ const BotForm = forwardRef<BotFormHandle, BotFormProps>(function BotForm(
           disabled={isLoading}
         >
           {!initBotId && (
-            <Card>
+            <Card data-guide="bot-basic">
               <CardHeader>
                 <CardTitle>{t('bots.basicInfo')}</CardTitle>
                 <CardDescription>
@@ -554,201 +772,268 @@ const BotForm = forwardRef<BotFormHandle, BotFormProps>(function BotForm(
                 initBotId && 'lg:min-h-0 lg:flex-1 lg:overflow-y-auto',
               )}
             >
-              <FormField
-                control={form.control}
-                name="adapter"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      {t('bots.platformAdapter')}
-                      <span className="text-destructive">*</span>
-                    </FormLabel>
-                    <FormControl>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Select
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            handleAdapterSelect(value);
-                          }}
-                          value={field.value}
-                        >
-                          <SelectTrigger className="w-full min-w-0 overflow-hidden sm:w-[240px]">
-                            {field.value ? (
-                              <div className="flex min-w-0 items-center gap-2">
-                                <img
-                                  src={httpClient.getAdapterIconURL(
-                                    field.value,
-                                  )}
-                                  alt=""
-                                  className="h-5 w-5 shrink-0 rounded"
-                                />
-                                {(() => {
-                                  const selectedAdapter = adapterNameList.find(
-                                    (a) => a.value === field.value,
-                                  );
+              <div data-guide="bot-adapter">
+                <FormField
+                  control={form.control}
+                  name="adapter"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        {t('bots.platformAdapter')}
+                        <span className="text-destructive">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Select
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              handleAdapterSelect(value);
+                            }}
+                            value={field.value}
+                          >
+                            <SelectTrigger className="w-full min-w-0 overflow-hidden sm:w-[240px]">
+                              {field.value ? (
+                                <div className="flex min-w-0 items-center gap-2">
+                                  <img
+                                    src={httpClient.getAdapterIconURL(
+                                      field.value,
+                                    )}
+                                    alt=""
+                                    className="h-5 w-5 shrink-0 rounded"
+                                  />
+                                  {(() => {
+                                    const selectedAdapter =
+                                      adapterNameList.find(
+                                        (a) => a.value === field.value,
+                                      );
 
-                                  return (
-                                    <>
-                                      <span className="min-w-0 truncate">
-                                        {selectedAdapter?.label ?? field.value}
-                                      </span>
-                                      {selectedAdapter?.legacy && (
-                                        <span className="shrink-0 rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
-                                          {t('bots.legacyAdapterBadge')}
+                                    return (
+                                      <>
+                                        <span className="min-w-0 truncate">
+                                          {selectedAdapter?.label ??
+                                            field.value}
                                         </span>
-                                      )}
-                                    </>
-                                  );
-                                })()}
-                              </div>
-                            ) : (
-                              <SelectValue
-                                placeholder={t('bots.selectAdapter')}
-                              />
-                            )}
-                          </SelectTrigger>
-                          <SelectContent>
-                            {groupedAdapters.map((group) => (
-                              <SelectGroup
-                                key={group.categoryId ?? 'uncategorized'}
-                              >
-                                {group.categoryId && (
-                                  <SelectLabel>
-                                    {getCategoryLabel(t, group.categoryId)}
-                                  </SelectLabel>
-                                )}
-                                {group.items.map((item) => (
-                                  <SelectItem
-                                    key={`${group.categoryId ?? 'uncategorized'}:${item.value}`}
-                                    value={item.value}
-                                  >
-                                    <div className="flex min-w-0 w-full items-center gap-2">
-                                      <img
-                                        src={httpClient.getAdapterIconURL(
-                                          item.value,
+                                        {selectedAdapter?.legacy && (
+                                          <span className="shrink-0 rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
+                                            {t('bots.legacyAdapterBadge')}
+                                          </span>
                                         )}
-                                        alt=""
-                                        className="h-5 w-5 shrink-0 rounded"
-                                      />
-                                      <span className="min-w-0 truncate">
-                                        {item.label}
-                                      </span>
-                                    </div>
-                                  </SelectItem>
-                                ))}
-                              </SelectGroup>
-                            ))}
-                            {legacyAdapters.length > 0 && (
-                              <>
-                                <div
-                                  role="button"
-                                  tabIndex={0}
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setShowLegacyAdapters((v) => !v);
-                                  }}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
-                                      e.preventDefault();
-                                      setShowLegacyAdapters((v) => !v);
-                                    }
-                                  }}
-                                  className="flex cursor-pointer items-center gap-1 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground border-t mt-1 pt-2"
-                                >
-                                  {showLegacyAdapters ? (
-                                    <ChevronDown className="h-3.5 w-3.5" />
-                                  ) : (
-                                    <ChevronRight className="h-3.5 w-3.5" />
-                                  )}
-                                  {t('bots.legacyAdapters')}
-                                  <span className="ml-1 rounded bg-muted px-1.5 py-0.5 text-[10px]">
-                                    {legacyAdapters.length}
-                                  </span>
+                                      </>
+                                    );
+                                  })()}
                                 </div>
-                                {showLegacyAdapters && (
-                                  <>
-                                    <p className="whitespace-pre-line px-2 pb-1 text-[11px] leading-snug text-muted-foreground">
-                                      {t('bots.legacyAdaptersHint')}
-                                    </p>
-                                    <SelectGroup>
-                                      {legacyAdapters.map((item) => (
-                                        <SelectItem
-                                          key={`legacy:${item.value}`}
-                                          value={item.value}
-                                        >
-                                          <div className="flex min-w-0 w-full items-center gap-2 opacity-70">
-                                            <img
-                                              src={httpClient.getAdapterIconURL(
-                                                item.value,
-                                              )}
-                                              alt=""
-                                              className="h-5 w-5 shrink-0 rounded grayscale"
-                                            />
-                                            <span className="min-w-0 truncate">
-                                              {item.label}
-                                            </span>
-                                            <span className="ml-auto shrink-0 rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
-                                              {t('bots.legacyAdapterBadge')}
-                                            </span>
-                                          </div>
-                                        </SelectItem>
-                                      ))}
-                                    </SelectGroup>
-                                  </>
-                                )}
-                              </>
-                            )}
-                          </SelectContent>
-                        </Select>
-                        {currentAdapter &&
-                          (() => {
-                            const docUrl = getAdapterDocUrl(
-                              adapterHelpLinks[currentAdapter],
-                              i18n.language,
-                            );
-                            return docUrl ? (
-                              <a
-                                href={docUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex shrink-0 items-center gap-1 text-xs text-primary hover:underline"
-                              >
-                                {t('bots.viewAdapterDocs')}
-                                <ExternalLink className="h-3 w-3" />
-                              </a>
-                            ) : null;
-                          })()}
-                      </div>
-                    </FormControl>
-                    {currentAdapter &&
-                      adapterDescriptionList[currentAdapter] && (
-                        <FormDescription>
-                          {adapterDescriptionList[currentAdapter]}
-                        </FormDescription>
-                      )}
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                              ) : (
+                                <SelectValue
+                                  placeholder={t('bots.selectAdapter')}
+                                />
+                              )}
+                            </SelectTrigger>
+                            <SelectContent className="z-[70]">
+                              {groupedAdapters.map((group) => (
+                                <SelectGroup
+                                  key={group.categoryId ?? 'uncategorized'}
+                                >
+                                  {group.categoryId && (
+                                    <SelectLabel>
+                                      {getCategoryLabel(t, group.categoryId)}
+                                    </SelectLabel>
+                                  )}
+                                  {group.items.map((item) => (
+                                    <SelectItem
+                                      key={`${group.categoryId ?? 'uncategorized'}:${item.value}`}
+                                      value={item.value}
+                                    >
+                                      <div className="flex min-w-0 w-full items-center gap-2">
+                                        <img
+                                          src={httpClient.getAdapterIconURL(
+                                            item.value,
+                                          )}
+                                          alt=""
+                                          className="h-5 w-5 shrink-0 rounded"
+                                        />
+                                        <span className="min-w-0 truncate">
+                                          {item.label}
+                                        </span>
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectGroup>
+                              ))}
+                              {legacyAdapters.length > 0 && (
+                                <>
+                                  <div
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setShowLegacyAdapters((v) => !v);
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        setShowLegacyAdapters((v) => !v);
+                                      }
+                                    }}
+                                    className="flex cursor-pointer items-center gap-1 px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground border-t mt-1 pt-2"
+                                  >
+                                    {showLegacyAdapters ? (
+                                      <ChevronDown className="h-3.5 w-3.5" />
+                                    ) : (
+                                      <ChevronRight className="h-3.5 w-3.5" />
+                                    )}
+                                    {t('bots.legacyAdapters')}
+                                    <span className="ml-1 rounded bg-muted px-1.5 py-0.5 text-[10px]">
+                                      {legacyAdapters.length}
+                                    </span>
+                                  </div>
+                                  {showLegacyAdapters && (
+                                    <>
+                                      <p className="whitespace-pre-line px-2 pb-1 text-[11px] leading-snug text-muted-foreground">
+                                        {t('bots.legacyAdaptersHint')}
+                                      </p>
+                                      <SelectGroup>
+                                        {legacyAdapters.map((item) => (
+                                          <SelectItem
+                                            key={`legacy:${item.value}`}
+                                            value={item.value}
+                                          >
+                                            <div className="flex min-w-0 w-full items-center gap-2 opacity-70">
+                                              <img
+                                                src={httpClient.getAdapterIconURL(
+                                                  item.value,
+                                                )}
+                                                alt=""
+                                                className="h-5 w-5 shrink-0 rounded grayscale"
+                                              />
+                                              <span className="min-w-0 truncate">
+                                                {item.label}
+                                              </span>
+                                              <span className="ml-auto shrink-0 rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-300">
+                                                {t('bots.legacyAdapterBadge')}
+                                              </span>
+                                            </div>
+                                          </SelectItem>
+                                        ))}
+                                      </SelectGroup>
+                                    </>
+                                  )}
+                                </>
+                              )}
+                            </SelectContent>
+                          </Select>
+                          {currentAdapter &&
+                            (() => {
+                              const docUrl = getAdapterDocUrl(
+                                adapterHelpLinks[currentAdapter],
+                                i18n.language,
+                              );
+                              return docUrl ? (
+                                <a
+                                  href={docUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex shrink-0 items-center gap-1 text-xs text-primary hover:underline"
+                                >
+                                  {t('bots.viewAdapterDocs')}
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                              ) : null;
+                            })()}
+                        </div>
+                      </FormControl>
+                      {currentAdapter &&
+                        adapterDescriptionList[currentAdapter] && (
+                          <FormDescription>
+                            {adapterDescriptionList[currentAdapter]}
+                          </FormDescription>
+                        )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {!initBotId && currentAdapter && (
+                <div
+                  data-guide="bot-connection-mode"
+                  className="space-y-3 rounded-md border bg-muted/20 p-4"
+                >
+                  <div>
+                    <h3 className="text-sm font-medium">
+                      {t('bots.connectionMode')}
+                    </h3>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {t('bots.connectionModeDescription')}
+                    </p>
+                  </div>
+                  <ToggleGroup
+                    type="single"
+                    value={connectionMode ?? ''}
+                    onValueChange={(value) => {
+                      if (value) {
+                        handleConnectionModeChange(value as ConnectionMode);
+                      }
+                    }}
+                    variant="outline"
+                    className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2"
+                    spacing={3}
+                  >
+                    <ToggleGroupItem
+                      value="webhook"
+                      disabled={!supportedConnectionModes.includes('webhook')}
+                      className="h-auto min-h-20 justify-start gap-3 whitespace-normal px-4 py-3 text-left data-[state=on]:border-blue-500/50 data-[state=on]:bg-blue-50 dark:data-[state=on]:bg-blue-500/10"
+                    >
+                      <Webhook className="size-5 shrink-0 text-primary" />
+                      <span>
+                        <span className="block font-medium">
+                          {t('bots.connectionWebhook')}
+                        </span>
+                        <span className="mt-1 block text-xs font-normal text-muted-foreground">
+                          {t('bots.connectionWebhookDescription')}
+                        </span>
+                      </span>
+                    </ToggleGroupItem>
+                    <ToggleGroupItem
+                      value="persistent"
+                      disabled={
+                        !supportedConnectionModes.includes('persistent')
+                      }
+                      className="h-auto min-h-20 justify-start gap-3 whitespace-normal px-4 py-3 text-left data-[state=on]:border-blue-500/50 data-[state=on]:bg-blue-50 dark:data-[state=on]:bg-blue-500/10"
+                    >
+                      <Cable className="size-5 shrink-0 text-primary" />
+                      <span>
+                        <span className="block font-medium">
+                          {t('bots.connectionPersistent')}
+                        </span>
+                        <span className="mt-1 block text-xs font-normal text-muted-foreground">
+                          {t('bots.connectionPersistentDescription')}
+                        </span>
+                      </span>
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+              )}
 
               {showDynamicForm && dynamicFormConfigList.length > 0 && (
-                <DynamicFormComponent
-                  itemConfigList={dynamicFormConfigList}
-                  initialValues={currentAdapterConfig}
-                  onSubmit={(values) => {
-                    form.setValue('adapter_config', values, {
-                      shouldDirty: !isInitializing.current,
-                    });
-                  }}
-                  systemContext={{
-                    webhook_url: webhookUrl,
-                    extra_webhook_url: extraWebhookUrl,
-                    bot_uuid: initBotId || '',
-                    adapter_config: form.getValues('adapter_config') || {},
-                    outbound_ips: systemInfo.outbound_ips,
-                  }}
-                />
+                <div data-guide="bot-adapter-parameters">
+                  <DynamicFormComponent
+                    itemConfigList={dynamicFormConfigList}
+                    initialValues={currentAdapterConfig}
+                    onSubmit={(values) => {
+                      form.setValue('adapter_config', values, {
+                        shouldDirty: !isInitializing.current,
+                      });
+                    }}
+                    systemContext={{
+                      webhook_url: webhookUrl,
+                      extra_webhook_url: extraWebhookUrl,
+                      bot_uuid: initBotId || '',
+                      adapter_config: form.getValues('adapter_config') || {},
+                      outbound_ips: systemInfo.outbound_ips,
+                    }}
+                  />
+                </div>
               )}
             </CardContent>
           </Card>
@@ -756,6 +1041,7 @@ const BotForm = forwardRef<BotFormHandle, BotFormProps>(function BotForm(
           {/* Card 3: Event Routing */}
           {currentAdapter && (
             <Card
+              data-guide="bot-routing"
               className={cn(
                 'min-w-0',
                 initBotId && 'lg:min-h-0 lg:overflow-hidden',
@@ -799,6 +1085,12 @@ const BotForm = forwardRef<BotFormHandle, BotFormProps>(function BotForm(
           )}
         </fieldset>
       </form>
+      <GuidedTour
+        enabled={!initBotId && guideEnabled}
+        storageKey="langbot_bot_create_guide_v4"
+        steps={botGuideSteps}
+        testId="bot-create-guide"
+      />
     </Form>
   );
 });

@@ -47,6 +47,119 @@ const jaJP = {
       },
     },
   },
+  guidedTour: {
+    label: 'セットアップガイド',
+    progress: '{{current}} / {{total}}',
+    next: '次へ',
+    finish: '完了',
+    bot: {
+      connection: {
+        title: '接続方式を選択',
+        description:
+          'このアダプターが対応する接続方式から選択すると、関連パラメーターが自動的に更新されます。',
+        requirement: 'Webhook または常時接続を選択してください。',
+      },
+      basic: {
+        title: 'ボット情報を入力',
+        description: 'ルーティングやログで見つけやすい名前を設定します。',
+        requirement: 'ボット名を入力してください。',
+      },
+      adapter: {
+        title: 'プラットフォームアダプターを選択',
+        description:
+          '先にプラットフォームを選択すると、Webhook、常時接続、または両方への対応状況が表示されます。',
+        requirement: 'アダプターを選択してください。',
+      },
+      parameters: {
+        title: 'プラットフォームを設定',
+        description:
+          '認証情報とプラットフォームのパラメーターを入力します。外部側の設定はドキュメントを参照してください。',
+        requirement: '表示されている必須項目をすべて入力してください。',
+        action: 'アダプターのドキュメントを開く',
+      },
+      routing: {
+        title: 'イベントルートを設定',
+        description:
+          '各イベントを処理するプロセッサーを選びます。作成後にもルートを追加できます。',
+      },
+      submit: {
+        title: 'ボットを作成',
+        description:
+          '作成すると接続設定が適用されます。Webhook URL は保存後のボット設定に表示されます。',
+      },
+    },
+    processorCreate: {
+      type: {
+        title: 'プロセッサーの種類を選択',
+        description:
+          'Pipeline は固定フロー、Agent はモデルとツールによる判断、プラグインプロセッサーは宣言済みイベントを処理します。',
+      },
+      basic: {
+        title: 'プロセッサー情報を入力',
+        description:
+          '識別しやすい名前を設定し、作成後に Runner、イベント、ツールを設定します。',
+        requirement: 'プロセッサー名を入力してください。',
+      },
+      submit: {
+        title: '作成して設定を続行',
+        description:
+          '作成後、必要な Runner、パラメーター、イベント、ツールを設定します。',
+      },
+    },
+    runner: {
+      select: {
+        title: 'Runner を選択またはインストール',
+        description:
+          'インストール済み Runner を選択するか、この選択欄のマーケット一覧から直接インストールします。',
+        requirement: '利用可能な Runner を選択してください。',
+        action: 'Runner マーケットを見る',
+      },
+      parameters: {
+        title: 'Runner のパラメーターを設定',
+        description:
+          '選択した Runner が要求するモデル、認証情報、サービス URL などを入力します。',
+        requirement: '表示されている必須項目をすべて入力してください。',
+      },
+      events: {
+        title: 'イベントとツールを設定',
+        description:
+          '「イベントとツール」を開き、Agent が受け取るイベントと使用可能なツールを選びます。',
+        requirement: '「イベントとツール」タブを開いてください。',
+      },
+    },
+    knowledge: {
+      basic: {
+        title: 'ナレッジベース情報を入力',
+        description:
+          '名前と任意の説明を設定してから、保存・検索エンジンを選択します。',
+        requirement: 'ナレッジベース名を入力してください。',
+      },
+      engine: {
+        title: 'エンジンを選択またはインストール',
+        description:
+          'インストール済みエンジンを選択するか、この選択欄のマーケットから直接インストールします。',
+        requirement: 'ナレッジエンジンを選択してください。',
+        action: 'ナレッジエンジンのマーケットを見る',
+      },
+      parameters: {
+        title: 'エンジンのパラメーターを設定',
+        description:
+          'エンジンが要求するストレージ、モデル、認証情報、外部サービス設定を入力します。',
+        requirement: '表示されている必須項目をすべて入力してください。',
+      },
+      retrieval: {
+        title: '検索方法を設定',
+        description:
+          '関連コンテンツの検索方法とプロセッサーへの返却方法を設定します。',
+        requirement: '表示されている必須検索項目を入力してください。',
+      },
+      submit: {
+        title: 'ナレッジベースを作成',
+        description:
+          '作成後、ドキュメントの追加や対応する外部ナレッジソースへの接続ができます。',
+      },
+    },
+  },
   sidebar: {
     home: 'ホーム',
     extensions: '拡張機能',
@@ -445,6 +558,17 @@ const jaJP = {
     botNameRequired: 'ボット名は必須です',
     botDescriptionRequired: 'ボットの説明は必須です',
     adapterRequired: 'アダプターは必須です',
+    connectionMode: '接続方式',
+    connectionModeDescription:
+      'このアダプターが対応する接続方式から選択します。',
+    connectionWebhook: 'Webhook',
+    connectionWebhookDescription:
+      'プラットフォームから LangBot が生成した URL へイベントを送信します。',
+    connectionPersistent: '常時接続',
+    connectionPersistentDescription:
+      'LangBot が Socket またはストリーミング接続を維持します。',
+    noAdaptersForConnectionMode:
+      'この接続方式に対応するアダプターがインストールされていません。',
     defaultDescription: 'ボット',
     getBotConfigError: 'ボット設定の取得に失敗しました：',
     saveSuccess: '保存に成功しました',

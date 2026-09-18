@@ -115,6 +115,7 @@ export default function AgentDetailContent({ id }: { id: string }) {
   if (isCreateMode) {
     return (
       <AgentCreateContent
+        guideEnabled={canManage}
         onCreated={(newAgentId) => {
           refreshPipelines();
           navigate(`/home/agents?id=${encodeURIComponent(newAgentId)}`);
@@ -248,6 +249,7 @@ export default function AgentDetailContent({ id }: { id: string }) {
                 onRunnerStatusChange={setRunnerStatus}
                 onSupportedEventPatternsChange={setSupportedEventPatterns}
                 onPlatformToolsChange={setPlatformTools}
+                guideEnabled={canManage}
               />
             </fieldset>
           }

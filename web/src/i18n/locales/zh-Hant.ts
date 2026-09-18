@@ -43,6 +43,109 @@ const zhHant = {
       },
     },
   },
+  guidedTour: {
+    label: '設定引導',
+    progress: '第 {{current}} 步，共 {{total}} 步',
+    next: '下一步',
+    finish: '完成引導',
+    bot: {
+      connection: {
+        title: '選擇接入方式',
+        description:
+          '從此適配器支援的方式中選擇一種，相關適配器參數會自動同步。',
+        requirement: '請選擇 Webhook 或長連線後繼續。',
+      },
+      basic: {
+        title: '填寫機器人資訊',
+        description: '使用容易辨識的名稱，方便之後在事件路由和日誌中找到。',
+        requirement: '請先填寫機器人名稱。',
+      },
+      adapter: {
+        title: '選擇平台適配器',
+        description:
+          '先選擇平台，LangBot 會再判斷此適配器支援 Webhook、長連線或兩者皆支援。',
+        requirement: '請選擇一個適配器。',
+      },
+      parameters: {
+        title: '設定平台參數',
+        description: '填寫憑證和平台參數；平台端的設定請依適配器文件操作。',
+        requirement: '請填寫目前可見的所有必填參數。',
+        action: '開啟適配器文件',
+      },
+      routing: {
+        title: '設定事件路由',
+        description: '選擇各類事件交給哪個處理器；建立後仍可繼續新增路由。',
+      },
+      submit: {
+        title: '建立機器人',
+        description:
+          '建立後連線設定才會生效；Webhook 位址會顯示在已儲存機器人的設定中。',
+      },
+    },
+    processorCreate: {
+      type: {
+        title: '選擇處理器類型',
+        description:
+          '流水線按固定流程處理訊息，Agent 使用模型和工具決策，外掛處理器負責宣告的平台事件。',
+      },
+      basic: {
+        title: '填寫處理器資訊',
+        description: '先設定容易辨識的名稱，建立後再設定 Runner、事件和工具。',
+        requirement: '請先填寫處理器名稱。',
+      },
+      submit: {
+        title: '建立並繼續設定',
+        description: '建立後繼續完成此處理器所需的 Runner、參數、事件和工具。',
+      },
+    },
+    runner: {
+      select: {
+        title: '選擇或安裝 Runner',
+        description:
+          '選擇已安裝的 Runner，也可以直接從選擇器中的市集清單安裝。',
+        requirement: '請選擇一個可用的 Runner。',
+        action: '瀏覽 Runner 市集',
+      },
+      parameters: {
+        title: '設定 Runner 參數',
+        description: '依所選 Runner 的定義填寫模型、憑證、服務位址和其他參數。',
+        requirement: '請填寫目前可見的所有必填參數。',
+      },
+      events: {
+        title: '設定事件和工具',
+        description:
+          '開啟「事件和工具」，選擇 Agent 可接收的事件與可使用的工具。',
+        requirement: '請開啟「事件和工具」頁籤以完成引導。',
+      },
+    },
+    knowledge: {
+      basic: {
+        title: '填寫知識庫資訊',
+        description: '設定容易辨識的名稱和選填說明，再選擇儲存與檢索引擎。',
+        requirement: '請先填寫知識庫名稱。',
+      },
+      engine: {
+        title: '選擇或安裝知識引擎',
+        description: '選擇已安裝的知識引擎，也可以從選擇器的市集區域直接安裝。',
+        requirement: '請選擇一個知識引擎。',
+        action: '瀏覽知識引擎市集',
+      },
+      parameters: {
+        title: '設定引擎參數',
+        description: '填寫此引擎要求的儲存、模型、憑證或外部服務設定。',
+        requirement: '請填寫目前可見的所有必填參數。',
+      },
+      retrieval: {
+        title: '設定檢索方式',
+        description: '設定引擎如何搜尋內容，以及如何將相關結果傳回處理器。',
+        requirement: '請填寫目前可見的所有必填檢索參數。',
+      },
+      submit: {
+        title: '建立知識庫',
+        description: '建立後即可加入文件，或連接所選引擎支援的外部知識來源。',
+      },
+    },
+  },
   sidebar: {
     home: '首頁',
     extensions: '擴展',
@@ -433,6 +536,13 @@ const zhHant = {
     botNameRequired: '機器人名稱不能為空',
     botDescriptionRequired: '機器人描述不能為空',
     adapterRequired: '適配器不能為空',
+    connectionMode: '接入方式',
+    connectionModeDescription: '從目前適配器支援的接入方式中選擇一種。',
+    connectionWebhook: 'Webhook',
+    connectionWebhookDescription: '平台向 LangBot 產生的位址推送事件。',
+    connectionPersistent: '長連線',
+    connectionPersistentDescription: 'LangBot 主動維持 Socket 或串流連線。',
+    noAdaptersForConnectionMode: '尚未安裝支援此接入方式的適配器。',
     defaultDescription: '一個機器人',
     getBotConfigError: '取得機器人設定失敗：',
     saveSuccess: '儲存成功',

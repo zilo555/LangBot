@@ -163,7 +163,7 @@ export default function BotDetailContent({ id }: { id: string }) {
         <div className="flex items-center justify-between pb-4 shrink-0">
           <h1 className="text-xl font-semibold">{t('bots.createBot')}</h1>
           {canManage && (
-            <Button type="submit" form="bot-form">
+            <Button type="submit" form="bot-form" data-guide="bot-submit">
               {t('common.submit')}
             </Button>
           )}
@@ -177,6 +177,7 @@ export default function BotDetailContent({ id }: { id: string }) {
                 initBotId={undefined}
                 onFormSubmit={handleFormSubmit}
                 onNewBotCreated={handleNewBotCreated}
+                guideEnabled={canManage}
               />
             </fieldset>
           </div>
