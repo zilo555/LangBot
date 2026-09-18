@@ -141,6 +141,8 @@ export default function WizardPage() {
   const [ownModelSelection, setOwnModelSelection] =
     useState<OwnModelSelection | null>(null);
   const [preparingDefault, setPreparingDefault] = useState(false);
+  const [defaultPreparationProgress, setDefaultPreparationProgress] =
+    useState(0);
   const [selectedAdapter, setSelectedAdapter] = useState<string | null>(null);
   const [selectedRunner, setSelectedRunner] = useState<string | null>(null);
   const [botName, setBotName] = useState('');
@@ -783,7 +785,15 @@ export default function WizardPage() {
       );
       setAdapterConfig(configToSave);
 
+      setDefaultPreparationProgress(0);
       setPreparingDefault(true);
+      const onDefaultInstallProgress = (task: AsyncTask) => {
+        const progress = asyncTaskToPluginInstallTask(task);
+        // Reserve the final 10% for registration, model setup and bot binding.
+        setDefaultPreparationProgress(
+          Math.min(90, Math.round(progress.overallProgress * 0.9)),
+        );
+      };
       const metadata = await httpClient.getGeneralPipelineMetadata();
       let configTab = metadata.configs.find((tab) => tab.name === 'ai');
       if (
@@ -792,14 +802,14 @@ export default function WizardPage() {
         const scope = 'wizard-default';
         const pending = readPendingRunnerInstall(scope);
         const installed = pending
-          ? await resumePendingRunnerInstall(scope)
+          ? await resumePendingRunnerInstall(scope, onDefaultInstallProgress)
           : await installMarketplaceRunner(
               (
                 await (
                   await getCloudServiceClient()
                 ).getPluginDetail('langbot-team', 'LocalAgent')
               ).plugin,
-              { scope },
+              { scope, onProgress: onDefaultInstallProgress },
             );
         configTab = installed?.configTab;
       }
@@ -809,6 +819,7 @@ export default function WizardPage() {
       if (!localStage)
         throw new Error(t('wizard.aiEngine.defaultRunnerUnavailable'));
       setAiConfigTab(configTab ?? null);
+      setDefaultPreparationProgress(92);
 
       if (!previewPipelineUuid) {
         const pipelineResp = await httpClient.createPipeline({
@@ -836,6 +847,7 @@ export default function WizardPage() {
         model?.primary || (await httpClient.getWizardRecommendedModel()).uuid;
       if (!modelUuid)
         throw new Error(t('wizard.aiEngine.defaultModelUnavailable'));
+      setDefaultPreparationProgress(96);
       await httpClient.updatePipeline(previewPipelineUuid, {
         config: configureLocalAgentPrimaryModel(
           {
@@ -851,7 +863,7 @@ export default function WizardPage() {
           modelUuid,
         ),
       });
-      setPreparingDefault(false);
+      setDefaultPreparationProgress(98);
 
       const botUpdate: Partial<Bot> = {
         name: botName,
@@ -875,6 +887,7 @@ export default function WizardPage() {
       }
 
       await httpClient.updateBot(createdBotUuid, botUpdate);
+      setDefaultPreparationProgress(100);
       if (previewPipelineUuid !== createdPipelineUuid) {
         setCreatedPipelineUuid(previewPipelineUuid);
       }
@@ -1158,6 +1171,7 @@ export default function WizardPage() {
             createdBotUuid={createdBotUuid}
             isSavingBot={isSavingBot}
             preparingDefault={preparingDefault}
+            defaultPreparationProgress={defaultPreparationProgress}
             botSaved={botSaved}
             pageBotPreviewRequest={pageBotPreviewRequest}
             messageReceived={messageReceived}
@@ -1516,6 +1530,7 @@ function StepBotConfig({
   createdBotUuid,
   isSavingBot,
   preparingDefault,
+  defaultPreparationProgress,
   botSaved,
   pageBotPreviewRequest,
   messageReceived,
@@ -1533,6 +1548,7 @@ function StepBotConfig({
   createdBotUuid: string | null;
   isSavingBot: boolean;
   preparingDefault: boolean;
+  defaultPreparationProgress: number;
   botSaved: boolean;
   pageBotPreviewRequest: number;
   messageReceived: boolean;
@@ -1758,16 +1774,37 @@ function StepBotConfig({
                 size="sm"
                 onClick={onSaveBot}
                 disabled={isSavingBot}
-                className="w-full sm:w-auto shrink-0"
-              >
-                {isSavingBot && (
-                  <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                className={cn(
+                  'relative w-full shrink-0 overflow-hidden sm:w-auto',
+                  preparingDefault && 'disabled:opacity-100',
                 )}
-                {preparingDefault
-                  ? t('wizard.aiEngine.preparingDefault')
-                  : botSaved
-                    ? t('wizard.botConfig.resaveBot')
-                    : t('wizard.botConfig.saveBot')}
+                aria-busy={isSavingBot}
+                aria-live="polite"
+              >
+                {preparingDefault && (
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-y-0 left-0 bg-white/20 transition-[width] duration-300 motion-reduce:transition-none"
+                    style={{ width: `${defaultPreparationProgress}%` }}
+                  />
+                )}
+                <span className="relative flex min-w-0 items-center justify-center gap-2">
+                  {isSavingBot && (
+                    <Loader2 className="size-4 shrink-0 animate-spin" />
+                  )}
+                  <span className="truncate">
+                    {preparingDefault
+                      ? t('wizard.aiEngine.preparingDefault')
+                      : botSaved
+                        ? t('wizard.botConfig.resaveBot')
+                        : t('wizard.botConfig.saveBot')}
+                  </span>
+                  {preparingDefault && (
+                    <span className="shrink-0 tabular-nums">
+                      {defaultPreparationProgress}%
+                    </span>
+                  )}
+                </span>
               </Button>
             </CardHeader>
             {adapterConfigItems.length > 0 && (

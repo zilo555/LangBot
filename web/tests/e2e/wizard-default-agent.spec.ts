@@ -16,6 +16,7 @@ for (const failsFirst of [false, true]) {
       withAdapterEvents: true,
     });
     let installed = false;
+    let completeInstall = false;
     let installCount = 0;
     let modelCount = 0;
     let messageReceived = false;
@@ -66,13 +67,20 @@ for (const failsFirst of [false, true]) {
     });
     await page.route('**/api/v1/system/tasks/*', async (route) => {
       const failed = failsFirst && installCount === 1;
-      installed = !failed;
+      installed = !failed && completeInstall;
       await route.fulfill({
         contentType: 'application/json',
         body: ok({
+          id: installCount,
+          name: 'plugin-install-marketplace',
+          label: 'LocalAgent',
           runtime: {
-            done: true,
+            done: failed || completeInstall,
             exception: failed ? 'Download failed: connection reset' : null,
+          },
+          task_context: {
+            current_action: 'Downloading package',
+            metadata: { progress_percent: 25 },
           },
         }),
       });
@@ -136,6 +144,16 @@ for (const failsFirst of [false, true]) {
       await expect(page.getByRole('button', { name: 'Next' })).toBeDisabled();
       await page.getByRole('button', { name: 'Save & Enable Bot' }).click();
     }
+    const preparing = page.getByRole('button', {
+      name: /Preparing default AI.*23%/,
+    });
+    await expect(preparing).toBeDisabled();
+    await expect(preparing.locator('span[aria-hidden="true"]')).toHaveAttribute(
+      'style',
+      'width: 23%;',
+    );
+    await expect(page.getByRole('progressbar')).toHaveCount(0);
+    completeInstall = true;
     await expect(
       page.getByRole('button', { name: 'Re-save Configuration' }),
     ).toBeVisible();
