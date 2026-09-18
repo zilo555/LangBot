@@ -16,8 +16,19 @@ async function submit(page: Page) {
 }
 
 async function selectPlaywrightAdapter(page: Page) {
-  await page.getByRole('combobox').click();
-  await page.getByRole('option', { name: 'Playwright Adapter' }).click();
+  await page
+    .getByTestId('adapter-gallery')
+    .getByRole('button', { name: /Playwright Adapter/ })
+    .click();
+}
+
+async function createPlaywrightBot(page: Page, name: string, description = '') {
+  await selectPlaywrightAdapter(page);
+  await page.locator('input[name="name"]').fill(name);
+  if (description) {
+    await page.locator('input[name="description"]').fill(description);
+  }
+  await submit(page);
 }
 
 async function confirmDelete(page: Page) {
@@ -107,12 +118,11 @@ test.describe('frontend CRUD smoke flows', () => {
     });
 
     await page.goto('/home/bots?id=new');
-    await selectPlaywrightAdapter(page);
-    await page.locator('input[name="name"]').fill('Viewer Test Bot');
-    await page
-      .locator('input[name="description"]')
-      .fill('Proves monitoring is ordinary resource visibility.');
-    await submit(page);
+    await createPlaywrightBot(
+      page,
+      'Viewer Test Bot',
+      'Proves monitoring is ordinary resource visibility.',
+    );
     await expect(page).toHaveURL(/\/home\/bots\?id=bot-1$/);
 
     await page.goto('/home/agents?id=new');
@@ -152,14 +162,22 @@ test.describe('frontend CRUD smoke flows', () => {
     await installLangBotApiMocks(page, { authenticated: true });
 
     await page.goto('/home/bots?id=new');
-    await selectPlaywrightAdapter(page);
-
-    await expect(page.locator('input[name="name"]')).toBeVisible();
-    await page.locator('input[name="name"]').fill('Support Bot');
-    await page
-      .locator('input[name="description"]')
-      .fill('Answers customer support questions.');
-    await submit(page);
+    const createRequest = page.waitForRequest(
+      (request) =>
+        request.method() === 'POST' &&
+        request.url().endsWith('/api/v1/platform/bots'),
+    );
+    await createPlaywrightBot(
+      page,
+      'Support Bot',
+      'Answers customer support questions.',
+    );
+    expect((await createRequest).postDataJSON()).toMatchObject({
+      name: 'Support Bot',
+      description: 'Answers customer support questions.',
+      adapter: 'playwright-adapter',
+      enable: false,
+    });
 
     await expect(page).toHaveURL(/\/home\/bots\?id=bot-1$/);
     await page.reload();
@@ -293,7 +311,7 @@ test.describe('frontend CRUD smoke flows', () => {
     await page
       .locator('input[name="description"]')
       .fill('Source material for support answers.');
-    await submit(page);
+    await save(page);
 
     await expect(page).toHaveURL(/\/home\/knowledge\?id=knowledge-1$/);
     await page.reload();
@@ -481,9 +499,7 @@ test.describe('bot advanced flows', () => {
       });
     });
     await page.goto('/home/bots?id=new');
-    await selectPlaywrightAdapter(page);
-    await page.locator('input[name="name"]').fill('Route Status Bot');
-    await submit(page);
+    await createPlaywrightBot(page, 'Route Status Bot');
 
     await expect(page).toHaveURL(/\/home\/bots\?id=bot-1$/);
     await expect(page.getByText('Supported events')).toBeVisible();
@@ -629,14 +645,14 @@ test.describe('bot advanced flows', () => {
     ).toBeVisible();
   });
 
-  test('toggles bot enable/disable state', async ({ page }) => {
+  test('creates a disabled bot and enables it from the detail page', async ({
+    page,
+  }) => {
     await installLangBotApiMocks(page, { authenticated: true });
 
     // Create a bot first
     await page.goto('/home/bots?id=new');
-    await selectPlaywrightAdapter(page);
-    await page.locator('input[name="name"]').fill('Toggle Test Bot');
-    await submit(page);
+    await createPlaywrightBot(page, 'Toggle Test Bot');
 
     await expect(page).toHaveURL(/\/home\/bots\?id=bot-1$/);
 
@@ -645,16 +661,16 @@ test.describe('bot advanced flows', () => {
       timeout: 5000,
     });
 
-    // Verify initial state is enabled
-    await expect(page.locator('#bot-enable-switch')).toBeChecked();
-
-    // Toggle to disabled
-    await page.locator('#bot-enable-switch').click();
+    // Draft bots remain disabled until their adapter configuration is ready.
     await expect(page.locator('#bot-enable-switch')).not.toBeChecked();
+
+    // Enable after reaching the detail page.
+    await page.locator('#bot-enable-switch').click();
+    await expect(page.locator('#bot-enable-switch')).toBeChecked();
 
     // Reload and verify state persisted
     await page.reload();
-    await expect(page.locator('#bot-enable-switch')).not.toBeChecked();
+    await expect(page.locator('#bot-enable-switch')).toBeChecked();
   });
 
   test('switches between bot detail tabs', async ({ page }) => {
@@ -662,9 +678,7 @@ test.describe('bot advanced flows', () => {
 
     // Create a bot
     await page.goto('/home/bots?id=new');
-    await selectPlaywrightAdapter(page);
-    await page.locator('input[name="name"]').fill('Tab Test Bot');
-    await submit(page);
+    await createPlaywrightBot(page, 'Tab Test Bot');
 
     // Verify we're on the Configuration tab
     await expect(
@@ -700,9 +714,7 @@ test.describe('bot advanced flows', () => {
 
     // Create a bot
     await page.goto('/home/bots?id=new');
-    await selectPlaywrightAdapter(page);
-    await page.locator('input[name="name"]').fill('Clean Form Bot');
-    await submit(page);
+    await createPlaywrightBot(page, 'Clean Form Bot');
     await expect(page).toHaveURL(/\/home\/bots\?id=bot-1$/);
 
     // Reload the persisted record so post-create initialization has completed.
@@ -727,11 +739,10 @@ test.describe('bot advanced flows', () => {
 
     await page.goto('/home/bots?id=new');
 
-    // Select adapter but leave name empty
+    // Select an adapter but leave the required name empty.
     await selectPlaywrightAdapter(page);
     await submit(page);
 
-    // Should show validation error for name (zod validation)
     await expect(page.getByText(/cannot be empty/i)).toBeVisible();
     await expect(page).toHaveURL(/\/home\/bots\?id=new$/);
   });
@@ -1325,9 +1336,7 @@ test.describe('cross-resource flows', () => {
     });
 
     await page.goto('/home/bots?id=new');
-    await selectPlaywrightAdapter(page);
-    await page.locator('input[name="name"]').fill('Routing Bot');
-    await submit(page);
+    await createPlaywrightBot(page, 'Routing Bot');
     await expect(page).toHaveURL(/\/home\/bots\?id=bot-1$/);
 
     await page.getByRole('button', { name: 'Add behavior' }).click();
@@ -1412,9 +1421,7 @@ test.describe('cross-resource flows', () => {
 
     // Create a bot
     await page.goto('/home/bots?id=new');
-    await selectPlaywrightAdapter(page);
-    await page.locator('input[name="name"]').fill('Bound Bot');
-    await submit(page);
+    await createPlaywrightBot(page, 'Bound Bot');
     await expect(page).toHaveURL(/\/home\/bots\?id=bot-1$/);
 
     // Wait for form to fully load

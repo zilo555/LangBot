@@ -431,6 +431,9 @@ export interface KnowledgeBase {
   knowledge_engine_plugin_id?: string;
   creation_settings?: Record<string, unknown>;
   retrieval_settings?: Record<string, unknown>;
+  initialized?: boolean;
+  defer_initialization?: boolean;
+  initialize_engine?: boolean;
   knowledge_engine?: KnowledgeEngineInfo;
 }
 

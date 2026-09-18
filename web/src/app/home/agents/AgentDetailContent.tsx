@@ -115,7 +115,6 @@ export default function AgentDetailContent({ id }: { id: string }) {
   if (isCreateMode) {
     return (
       <AgentCreateContent
-        guideEnabled={canManage}
         onCreated={(newAgentId) => {
           refreshPipelines();
           navigate(`/home/agents?id=${encodeURIComponent(newAgentId)}`);

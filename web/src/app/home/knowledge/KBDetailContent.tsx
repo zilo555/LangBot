@@ -164,7 +164,7 @@ export default function KBDetailContent({ id }: { id: string }) {
           </h1>
           {canManage && (
             <Button type="submit" form="kb-form" data-guide="knowledge-submit">
-              {t('common.submit')}
+              {t('common.save')}
             </Button>
           )}
         </div>
@@ -215,6 +215,7 @@ export default function KBDetailContent({ id }: { id: string }) {
               form="kb-form"
               disabled={!formDirty}
               className={activeTab !== 'metadata' ? 'invisible' : ''}
+              data-guide="knowledge-config-save"
             >
               {t('common.save')}
             </Button>
@@ -233,16 +234,18 @@ export default function KBDetailContent({ id }: { id: string }) {
               <FileText className="size-3.5" />
               {t('knowledge.metadata')}
             </TabsTrigger>
-            {hasDocumentCapability() && (
+            {kbInfo.initialized !== false && hasDocumentCapability() && (
               <TabsTrigger value="documents" className="gap-1.5">
                 <FolderOpen className="size-3.5" />
                 {t('knowledge.documents')}
               </TabsTrigger>
             )}
-            <TabsTrigger value="retrieve" className="gap-1.5">
-              <Search className="size-3.5" />
-              {t('knowledge.retrieve')}
-            </TabsTrigger>
+            {kbInfo.initialized !== false && (
+              <TabsTrigger value="retrieve" className="gap-1.5">
+                <Search className="size-3.5" />
+                {t('knowledge.retrieve')}
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Tab: Metadata */}
@@ -258,6 +261,7 @@ export default function KBDetailContent({ id }: { id: string }) {
                   onNewKbCreated={handleNewKbCreated}
                   onKbUpdated={handleKbUpdated}
                   onDirtyChange={setFormDirty}
+                  guideEnabled={canManage}
                 />
               </fieldset>
 
@@ -299,7 +303,7 @@ export default function KBDetailContent({ id }: { id: string }) {
           </TabsContent>
 
           {/* Tab: Documents */}
-          {hasDocumentCapability() && (
+          {kbInfo.initialized !== false && hasDocumentCapability() && (
             <TabsContent
               value="documents"
               className="flex-1 min-h-0 overflow-y-auto mt-4"
@@ -315,12 +319,17 @@ export default function KBDetailContent({ id }: { id: string }) {
           )}
 
           {/* Tab: Retrieve */}
-          <TabsContent
-            value="retrieve"
-            className="flex-1 min-h-0 overflow-y-auto mt-4"
-          >
-            <KBRetrieveGeneric kbId={id} retrieveFunction={retrieveFunction} />
-          </TabsContent>
+          {kbInfo.initialized !== false && (
+            <TabsContent
+              value="retrieve"
+              className="flex-1 min-h-0 overflow-y-auto mt-4"
+            >
+              <KBRetrieveGeneric
+                kbId={id}
+                retrieveFunction={retrieveFunction}
+              />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 

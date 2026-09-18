@@ -348,7 +348,7 @@ export default function RunnerSelect({
             <SelectValue placeholder={t('common.select')} />
           )}
         </SelectTrigger>
-        <SelectContent className="max-h-72 w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]">
+        <SelectContent className="z-[70] max-h-72 w-[var(--radix-select-trigger-width)] max-w-[calc(100vw-2rem)]">
           <SelectGroup>
             <SelectLabel className="px-2 py-1 text-[11px] font-medium">
               <span className="inline-flex items-center gap-1.5">

@@ -40,7 +40,6 @@ import KnowledgeEngineSelect from './KnowledgeEngineSelect';
 import GuidedTour, {
   GuidedTourStep,
 } from '@/app/home/components/guided-tour/GuidedTour';
-import { areRequiredDynamicFieldsComplete } from '@/app/home/components/guided-tour/dynamic-form-progress';
 
 const KNOWLEDGE_ENGINE_MARKETPLACE_URL =
   'https://space.langbot.app/market?type=plugin&component=KnowledgeEngine';
@@ -104,6 +103,7 @@ export default function KBForm({
     Record<string, unknown>
   >({});
   const [isEditing, setIsEditing] = useState(Boolean(initKbId));
+  const [engineInitialized, setEngineInitialized] = useState(true);
   const [loadFailed, setLoadFailed] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
@@ -220,11 +220,13 @@ export default function KBForm({
 
       setConfigSettings(kb.creation_settings || {});
       setRetrievalSettings(kb.retrieval_settings || {});
+      setEngineInitialized(kb.initialized !== false);
 
       // Capture snapshot after a tick so dynamic forms have emitted initial values
       setTimeout(() => {
         captureSnapshot();
         isInitializing.current = false;
+        onDirtyChange?.(kb.initialized === false);
       }, 500);
     } catch (err) {
       isInitializing.current = false;
@@ -269,8 +271,8 @@ export default function KBForm({
   }, []);
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    // Validate dynamic forms before submission
-    if (configValidateRef.current) {
+    // Engine parameters are configured only after the draft has been created.
+    if (initKbId && configValidateRef.current) {
       const configValid = await configValidateRef.current();
       if (!configValid) {
         toast.error(t('knowledge.engineSettingsInvalid'));
@@ -278,7 +280,7 @@ export default function KBForm({
       }
     }
 
-    if (retrievalValidateRef.current) {
+    if (initKbId && retrievalValidateRef.current) {
       const retrievalValid = await retrievalValidateRef.current();
       if (!retrievalValid) {
         toast.error(t('knowledge.retrievalSettingsInvalid'));
@@ -293,12 +295,16 @@ export default function KBForm({
       knowledge_engine_plugin_id: selectedEngineId,
       creation_settings: configSettings,
       retrieval_settings: retrievalSettings,
+      ...(initKbId
+        ? { initialize_engine: !engineInitialized }
+        : { defer_initialization: true }),
     };
 
     if (initKbId) {
       httpClient
         .updateKnowledgeBase(initKbId, kbData)
         .then((res) => {
+          setEngineInitialized(true);
           captureSnapshot();
           onDirtyChange?.(false);
           onKbUpdated(res.uuid);
@@ -340,20 +346,10 @@ export default function KBForm({
   const guideSteps = useMemo<GuidedTourStep[]>(() => {
     const steps: GuidedTourStep[] = [
       {
-        id: 'basic',
-        target: '[data-guide="knowledge-basic"]',
-        title: t('guidedTour.knowledge.basic.title'),
-        description: t('guidedTour.knowledge.basic.description'),
-        complete: Boolean(watchedFormValues.name?.trim()),
-        requirement: t('guidedTour.knowledge.basic.requirement'),
-      },
-      {
         id: 'engine',
         target: '[data-guide="knowledge-engine"]',
         title: t('guidedTour.knowledge.engine.title'),
         description: t('guidedTour.knowledge.engine.description'),
-        complete: Boolean(selectedEngineId),
-        requirement: t('guidedTour.knowledge.engine.requirement'),
         action: {
           href: KNOWLEDGE_ENGINE_MARKETPLACE_URL,
           label: t('guidedTour.knowledge.engine.action'),
@@ -367,12 +363,6 @@ export default function KBForm({
         target: '[data-guide="knowledge-engine-parameters"]',
         title: t('guidedTour.knowledge.parameters.title'),
         description: t('guidedTour.knowledge.parameters.description'),
-        complete: areRequiredDynamicFieldsComplete(
-          configFormItems,
-          configSettings,
-          retrievalSettings,
-        ),
-        requirement: t('guidedTour.knowledge.parameters.requirement'),
       });
     }
 
@@ -382,31 +372,17 @@ export default function KBForm({
         target: '[data-guide="knowledge-retrieval"]',
         title: t('guidedTour.knowledge.retrieval.title'),
         description: t('guidedTour.knowledge.retrieval.description'),
-        complete: areRequiredDynamicFieldsComplete(
-          retrievalFormItems,
-          retrievalSettings,
-          configSettings,
-        ),
-        requirement: t('guidedTour.knowledge.retrieval.requirement'),
       });
     }
 
     steps.push({
-      id: 'submit',
-      target: '[data-guide="knowledge-submit"]',
-      title: t('guidedTour.knowledge.submit.title'),
-      description: t('guidedTour.knowledge.submit.description'),
+      id: 'save',
+      target: '[data-guide="knowledge-config-save"]',
+      title: t('guidedTour.knowledge.save.title'),
+      description: t('guidedTour.knowledge.save.description'),
     });
     return steps;
-  }, [
-    configFormItems,
-    configSettings,
-    retrievalFormItems,
-    retrievalSettings,
-    selectedEngineId,
-    t,
-    watchedFormValues.name,
-  ]);
+  }, [configFormItems, retrievalFormItems, t]);
 
   if (loadFailed)
     return (
@@ -529,7 +505,7 @@ export default function KBForm({
               )}
             />
 
-            {configFormItems.length > 0 && (
+            {isEditing && configFormItems.length > 0 && (
               <div
                 data-guide="knowledge-engine-parameters"
                 className="space-y-6"
@@ -541,7 +517,7 @@ export default function KBForm({
                   onSubmit={(val) =>
                     setConfigSettings(val as Record<string, unknown>)
                   }
-                  isEditing={isEditing}
+                  isEditing={engineInitialized}
                   externalDependentValues={retrievalSettings}
                   onValidate={(validateFn) =>
                     (configValidateRef.current = validateFn)
@@ -553,7 +529,7 @@ export default function KBForm({
         </Card>
 
         {/* Retrieval Settings (dynamic form from retrieval_schema) */}
-        {retrievalFormItems.length > 0 && (
+        {isEditing && retrievalFormItems.length > 0 && (
           <Card data-guide="knowledge-retrieval">
             <CardHeader>
               <CardTitle>{t('knowledge.retrievalSettings')}</CardTitle>
@@ -578,10 +554,10 @@ export default function KBForm({
         )}
       </form>
       <GuidedTour
-        enabled={!isEditing && guideEnabled}
-        storageKey="langbot_knowledge_create_guide_v1"
+        enabled={isEditing && guideEnabled}
+        storageKey="langbot_knowledge_detail_guide_v1"
         steps={guideSteps}
-        testId="knowledge-create-guide"
+        testId="knowledge-detail-guide"
       />
     </Form>
   );

@@ -2,54 +2,111 @@ import { expect, test } from '@playwright/test';
 
 import { installLangBotApiMocks } from './fixtures/langbot-api';
 
-test('knowledge setup guide advances only after required state is complete', async ({
+const categorizedAdapters = [
+  ['popular-adapter', 'Popular Adapter', 'popular', false],
+  ['china-adapter', 'China Adapter', 'china', false],
+  ['global-adapter', 'Global Adapter', 'global', false],
+  ['protocol-adapter', 'Protocol Adapter', 'protocol', false],
+  ['legacy-adapter', 'Legacy Adapter', 'protocol', true],
+].map(([name, label, category, legacy]) => ({
+  name,
+  label: { en_US: label, zh_Hans: label },
+  description: {
+    en_US: `${label} description`,
+    zh_Hans: `${label} description`,
+  },
+  spec: { categories: [category], legacy, config: [] },
+}));
+
+test('knowledge guide starts only after creation opens the detail page', async ({
   page,
 }) => {
   await installLangBotApiMocks(page, {
     authenticated: true,
-    storage: { langbot_knowledge_create_guide_v1: 'basic' },
+    storage: { langbot_knowledge_detail_guide_v1: 'engine' },
   });
+  await page.route('**/api/v1/knowledge/engines', (route) =>
+    route.fulfill({
+      json: {
+        code: 0,
+        data: {
+          engines: [
+            {
+              plugin_id: 'builtin/minimal-knowledge',
+              name: { en_US: 'Guided Knowledge Engine' },
+              description: { en_US: 'Engine with detail-page setup.' },
+              capabilities: ['text_retrieval'],
+              creation_schema: [
+                {
+                  name: 'endpoint',
+                  label: { en_US: 'Engine endpoint' },
+                  type: 'text',
+                  required: true,
+                  default: '',
+                },
+              ],
+              retrieval_schema: [],
+            },
+          ],
+        },
+      },
+    }),
+  );
 
   await page.goto('/home/knowledge?id=new');
 
-  const guide = page.getByTestId('knowledge-create-guide');
+  await expect(page.getByTestId('knowledge-detail-guide')).toHaveCount(0);
   await expect(
-    guide.getByRole('heading', { name: 'Describe the knowledge base' }),
-  ).toBeVisible();
-  await expect(guide.getByRole('button', { name: 'Next' })).toBeDisabled();
-
+    page.locator('[data-guide="knowledge-engine-parameters"]'),
+  ).toHaveCount(0);
+  await expect(page.locator('[data-guide="knowledge-retrieval"]')).toHaveCount(
+    0,
+  );
   await page.locator('input[name="name"]').fill('Guided Knowledge');
+  await page.getByRole('button', { name: /^Save$/ }).click();
+
+  await expect(page).toHaveURL(/\/home\/knowledge\?id=knowledge-1$/);
+  const guide = page.getByTestId('knowledge-detail-guide');
+  await expect(
+    guide.getByRole('heading', { name: 'Review the knowledge engine' }),
+  ).toBeVisible();
   await expect(guide.getByRole('button', { name: 'Next' })).toBeEnabled();
   await guide.getByRole('button', { name: 'Next' }).click();
 
   await expect(
-    guide.getByRole('heading', { name: 'Choose or install an engine' }),
+    guide.getByRole('heading', { name: 'Configure engine parameters' }),
   ).toBeVisible();
-  await expect(
-    guide.getByRole('link', { name: /Marketplace/ }),
-  ).toHaveAttribute('target', '_blank');
+  await expect(guide.getByRole('button', { name: 'Next' })).toBeEnabled();
   await guide.getByRole('button', { name: 'Next' }).click();
 
   await expect(
-    guide.getByRole('heading', { name: 'Create the knowledge base' }),
+    guide.getByRole('heading', {
+      name: 'Save the knowledge base configuration',
+    }),
   ).toBeVisible();
+  await page
+    .locator('[data-guide="knowledge-engine-parameters"]')
+    .getByRole('textbox')
+    .fill('https://example.invalid');
+  await page.getByRole('button', { name: /^Save$/ }).click();
+  await expect(page.getByRole('tab', { name: 'Retrieve' })).toBeVisible();
   await guide.getByRole('button', { name: 'Finish' }).click();
   await expect(guide).toHaveCount(0);
   await expect
     .poll(() =>
       page.evaluate(() =>
-        localStorage.getItem('langbot_knowledge_create_guide_v1'),
+        localStorage.getItem('langbot_knowledge_detail_guide_v1'),
       ),
     )
     .toBe('completed');
 });
 
-test('bot setup guide chooses the adapter before its connection method', async ({
+test('bot guide starts on the detail page after adapter-only creation', async ({
   page,
 }) => {
   await installLangBotApiMocks(page, {
     authenticated: true,
-    storage: { langbot_bot_create_guide_v4: 'basic' },
+    storage: { langbot_bot_detail_guide_v1: 'connection' },
   });
   await page.route('**/api/v1/platform/adapters', (route) =>
     route.fulfill({
@@ -96,92 +153,167 @@ test('bot setup guide chooses the adapter before its connection method', async (
 
   await page.goto('/home/bots?id=new');
 
-  const guide = page.getByTestId('bot-create-guide');
-  await expect(
-    guide.getByRole('heading', { name: 'Name this bot' }),
-  ).toBeVisible();
-  await expect(guide.getByRole('button', { name: 'Next' })).toBeDisabled();
+  await expect(page.getByTestId('bot-detail-guide')).toHaveCount(0);
+  await page
+    .getByTestId('adapter-gallery')
+    .getByRole('button', { name: /Dual Mode Adapter/ })
+    .click();
+
   await page.locator('input[name="name"]').fill('Guided Bot');
-  await guide.getByRole('button', { name: 'Next' }).click();
+  await page
+    .locator('input[name="description"]')
+    .fill('Created before configuration.');
+  await page.getByRole('button', { name: /^Submit$/ }).click();
 
-  await expect(
-    guide.getByRole('heading', { name: 'Choose a platform adapter' }),
-  ).toBeVisible();
-  await page.getByRole('combobox').click();
-  await page.getByRole('option', { name: 'Dual Mode Adapter' }).click();
-
+  await expect(page).toHaveURL(/\/home\/bots\?id=bot-1$/);
+  await expect(page.getByRole('heading', { name: 'Guided Bot' })).toBeVisible();
+  const guide = page.getByTestId('bot-detail-guide');
   await expect(
     guide.getByRole('heading', { name: 'Choose a connection method' }),
   ).toBeVisible();
-  await expect(page.getByRole('radio', { name: /^Webhook/ })).not.toBeChecked();
+  await expect(
+    page.getByRole('radio', { name: /^Persistent connection/ }),
+  ).toBeChecked();
   await page.getByRole('radio', { name: /^Webhook/ }).click();
+  const adapterCard = page.locator('[data-slot="card"]').filter({
+    has: page.getByText('Adapter Configuration', { exact: true }),
+  });
+  await expect(adapterCard.getByRole('switch')).toBeChecked();
+  await guide.getByRole('button', { name: 'Next' }).click();
 
   await expect(
     guide.getByRole('heading', { name: 'Configure the platform' }),
   ).toBeVisible();
-  await expect(page.getByRole('switch')).toBeChecked();
-  await page.getByRole('radio', { name: /^Persistent connection/ }).click();
-  await expect(page.getByRole('switch')).not.toBeChecked();
-  await page.getByRole('radio', { name: /^Webhook/ }).click();
   await guide.getByRole('button', { name: 'Next' }).click();
 
   await expect(
     guide.getByRole('heading', { name: 'Route incoming events' }),
   ).toBeVisible();
   await guide.getByRole('button', { name: 'Next' }).click();
+
   await expect(
-    guide.getByRole('heading', { name: 'Create the bot' }),
+    guide.getByRole('heading', { name: 'Save the bot configuration' }),
   ).toBeVisible();
   await guide.getByRole('button', { name: 'Finish' }).click();
   await expect(guide).toHaveCount(0);
   await expect
     .poll(() =>
-      page.evaluate(() => localStorage.getItem('langbot_bot_create_guide_v4')),
+      page.evaluate(() => localStorage.getItem('langbot_bot_detail_guide_v1')),
     )
     .toBe('completed');
-  await page.waitForTimeout(500);
-  await expect(guide).toHaveCount(0);
-  await expect(page.locator('input[name="name"]')).toHaveValue('Guided Bot');
 
   await page.reload();
   await expect(guide).toHaveCount(0);
 });
 
-test('bot setup guide restores missing basic info before a saved adapter step', async ({
-  page,
-}) => {
+test('bot creation page never renders a contextual guide', async ({ page }) => {
   await page.setViewportSize({ width: 1645, height: 478 });
   await installLangBotApiMocks(page, {
     authenticated: true,
     language: 'zh-Hans',
-    storage: { langbot_bot_create_guide_v4: 'adapter' },
+    storage: { langbot_bot_detail_guide_v1: 'connection' },
   });
+  await page.route('**/api/v1/platform/adapters', (route) =>
+    route.fulfill({
+      json: {
+        code: 0,
+        data: {
+          adapters: categorizedAdapters,
+        },
+      },
+    }),
+  );
 
   await page.goto('/home/bots?id=new');
 
-  const guide = page.getByTestId('bot-create-guide');
-  await expect(guide).toHaveAttribute('data-active-step', 'basic');
-  await expect(guide).toHaveAttribute('data-step-complete', 'false');
-  await page.locator('input[name="name"]').fill('test');
-  await expect(guide).toHaveAttribute('data-step-complete', 'true');
+  await expect(page.getByTestId('bot-detail-guide')).toHaveCount(0);
+  await expect(page.locator('[data-guide="bot-adapter"]')).toBeVisible();
+  await expect(page.locator('[data-guide="bot-basic"]')).toBeVisible();
+  for (const category of ['popular', 'china', 'global', 'protocol', 'legacy']) {
+    await expect(
+      page.locator(`[data-adapter-category="${category}"]`),
+    ).toBeVisible();
+  }
+  await expect(page.getByRole('button', { name: /^提交$/ })).toHaveCount(0);
+});
 
-  const nextButton = guide.getByRole('button', { name: '下一步' });
-  await nextButton.evaluate((button) => {
-    button.replaceWith(button.cloneNode(true));
+test('bot adapter gallery keeps categories and fits desktop and mobile', async ({
+  page,
+}) => {
+  await installLangBotApiMocks(page, {
+    authenticated: true,
   });
-  const buttonBox = await nextButton.boundingBox();
-  expect(buttonBox).not.toBeNull();
-  await page.mouse.click(
-    buttonBox!.x + buttonBox!.width / 2,
-    buttonBox!.y + buttonBox!.height / 2,
+  await page.route('**/api/v1/platform/adapters', (route) =>
+    route.fulfill({
+      json: {
+        code: 0,
+        data: { adapters: categorizedAdapters },
+      },
+    }),
   );
 
-  await expect(guide).toHaveAttribute('data-active-step', 'adapter');
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/home/bots?id=new');
+
+  const gallery = page.getByTestId('adapter-gallery');
+  const basicInfo = page.locator('[data-guide="bot-basic"]');
+  await expect(gallery).toBeVisible();
+  await expect(basicInfo).toBeVisible();
+  for (const category of ['popular', 'global', 'china', 'protocol', 'legacy']) {
+    await expect(
+      gallery.locator(`[data-adapter-category="${category}"]`),
+    ).toBeVisible();
+  }
+  await expect(
+    gallery.getByRole('button', { name: /Legacy Adapter/ }),
+  ).toHaveCount(0);
+  const desktopBasicBox = await basicInfo.boundingBox();
+  const desktopGalleryBox = await gallery.boundingBox();
+  expect(desktopBasicBox).not.toBeNull();
+  expect(desktopGalleryBox).not.toBeNull();
+  expect(desktopBasicBox!.x + desktopBasicBox!.width).toBeLessThan(
+    desktopGalleryBox!.x,
+  );
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  const mobileBasicBox = await basicInfo.boundingBox();
+  const mobileGalleryBox = await gallery.boundingBox();
+  expect(mobileBasicBox).not.toBeNull();
+  expect(mobileGalleryBox).not.toBeNull();
+  expect(mobileBasicBox!.y + mobileBasicBox!.height).toBeLessThanOrEqual(
+    mobileGalleryBox!.y,
+  );
   await expect
     .poll(() =>
-      page.evaluate(() => localStorage.getItem('langbot_bot_create_guide_v4')),
+      page.evaluate(
+        () =>
+          document.documentElement.scrollWidth <=
+          document.documentElement.clientWidth,
+      ),
     )
-    .toBe('adapter');
+    .toBe(true);
+
+  await gallery.getByRole('button', { name: /Legacy adapters/ }).click();
+  await expect(
+    gallery.getByRole('button', { name: /Legacy Adapter/ }),
+  ).toBeVisible();
+  await gallery.getByRole('button', { name: /Popular Adapter/ }).click();
+
+  await expect(gallery).toBeVisible();
+  await expect(
+    gallery.getByRole('button', { name: /Popular Adapter/ }),
+  ).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: /^Submit$/ })).toBeVisible();
+  await expect(page.locator('input[name="name"]')).toBeVisible();
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          document.documentElement.scrollWidth <=
+          document.documentElement.clientWidth,
+      ),
+    )
+    .toBe(true);
 });
 
 test('runner guide covers selection, parameters, and event tools', async ({
@@ -201,6 +333,35 @@ test('runner guide covers selection, parameters, and event tools', async ({
   await expect(
     guide.getByRole('link', { name: /Runner Marketplace/ }),
   ).toHaveAttribute('target', '_blank');
+
+  await page
+    .locator('[data-guide="runner-selector"]')
+    .getByRole('combobox')
+    .click();
+  const runnerOptions = page.locator('[data-slot="select-content"]');
+  await expect(runnerOptions).toBeVisible();
+  await expect
+    .poll(() =>
+      runnerOptions.evaluate((element) =>
+        Number.parseInt(getComputedStyle(element).zIndex, 10),
+      ),
+    )
+    .toBeGreaterThan(61);
+  const runnerOptionsZIndex = await runnerOptions.evaluate((element) =>
+    Number.parseInt(getComputedStyle(element).zIndex, 10),
+  );
+  await expect
+    .poll(() =>
+      guide.evaluate((element) => {
+        const popover = element.querySelector('[role="dialog"]');
+        return popover
+          ? Number.parseInt(getComputedStyle(popover).zIndex, 10)
+          : 0;
+      }),
+    )
+    .toBeGreaterThan(runnerOptionsZIndex);
+  await page.keyboard.press('Escape');
+
   await guide.getByRole('button', { name: 'Next' }).click();
 
   await expect(
@@ -211,38 +372,48 @@ test('runner guide covers selection, parameters, and event tools', async ({
   await expect(
     guide.getByRole('heading', { name: 'Set events and tools' }),
   ).toBeVisible();
-  await expect(guide.getByRole('button', { name: 'Finish' })).toBeDisabled();
-  await page.getByRole('tab', { name: 'Events & tools' }).click();
   await expect(guide.getByRole('button', { name: 'Finish' })).toBeEnabled();
   await guide.getByRole('button', { name: 'Finish' }).click();
   await expect(guide).toHaveCount(0);
 });
 
-test('processor creation guide explains the type before required details', async ({
+test('detail guide can be skipped from the popover corner', async ({
   page,
 }) => {
   await installLangBotApiMocks(page, {
     authenticated: true,
-    storage: { langbot_processor_create_guide_v1: 'type' },
+    storage: { langbot_runner_setup_guide_v1: 'runner' },
+  });
+
+  await page.goto('/home/agents?id=agent-guide');
+
+  const guide = page.getByTestId('runner-setup-guide');
+  await expect(guide.getByRole('button', { name: 'Skip' })).toBeVisible();
+  await guide.getByRole('button', { name: 'Skip' }).click();
+  await expect(guide).toHaveCount(0);
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        localStorage.getItem('langbot_runner_setup_guide_v1'),
+      ),
+    )
+    .toBe('completed');
+
+  await page.reload();
+  await expect(guide).toHaveCount(0);
+});
+
+test('processor creation page does not render the runner detail guide', async ({
+  page,
+}) => {
+  await installLangBotApiMocks(page, {
+    authenticated: true,
+    storage: { langbot_runner_setup_guide_v1: 'runner' },
   });
 
   await page.goto('/home/agents?id=new');
 
-  const guide = page.getByTestId('processor-create-guide');
-  await expect(
-    guide.getByRole('heading', { name: 'Choose a processor type' }),
-  ).toBeVisible();
-  await guide.getByRole('button', { name: 'Next' }).click();
-
-  await expect(
-    guide.getByRole('heading', { name: 'Name the processor' }),
-  ).toBeVisible();
-  await expect(guide.getByRole('button', { name: 'Next' })).toBeDisabled();
-  await page.locator('input[name="name"]').fill('Guided Processor');
-  await expect(guide.getByRole('button', { name: 'Next' })).toBeEnabled();
-  await guide.getByRole('button', { name: 'Next' }).click();
-
-  await expect(
-    guide.getByRole('heading', { name: 'Create and continue setup' }),
-  ).toBeVisible();
+  await expect(page.getByTestId('runner-setup-guide')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^Submit$/ })).toBeVisible();
+  await expect(page.locator('input[name="name"]')).toBeVisible();
 });

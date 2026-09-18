@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Check, ChevronRight, ExternalLink, LockKeyhole } from 'lucide-react';
+import { Check, ChevronRight, ExternalLink, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 
@@ -24,9 +24,6 @@ export interface GuidedTourStep {
   target: string;
   title: string;
   description: string;
-  complete?: boolean;
-  advanceOnComplete?: boolean;
-  requirement?: string;
   action?: {
     href: string;
     label: string;
@@ -78,14 +75,9 @@ export default function GuidedTour({
     useState<PopoverPosition | null>(null);
   const popoverRef = useRef<HTMLDivElement | null>(null);
   const previousStorageKeyRef = useRef(storageKey);
-  const previousCompletionRef = useRef<{
-    stepId: string;
-    complete: boolean;
-  } | null>(null);
 
   const activeIndex = steps.findIndex((step) => step.id === activeStepId);
   const activeStep = activeIndex >= 0 ? steps[activeIndex] : undefined;
-  const isComplete = activeStep?.complete !== false;
   const isPopoverPositioned = popoverPosition !== null;
 
   useEffect(() => {
@@ -105,15 +97,7 @@ export default function GuidedTour({
     }
 
     const currentIndex = steps.findIndex((step) => step.id === activeStepId);
-    const firstIncompleteIndex = steps.findIndex(
-      (step) => step.complete === false,
-    );
-    const nextIndex =
-      currentIndex < 0
-        ? 0
-        : firstIncompleteIndex >= 0 && firstIncompleteIndex < currentIndex
-          ? firstIncompleteIndex
-          : currentIndex;
+    const nextIndex = currentIndex < 0 ? 0 : currentIndex;
 
     if (nextIndex !== currentIndex) {
       const nextStep = steps[nextIndex];
@@ -208,27 +192,33 @@ export default function GuidedTour({
     if (isPopoverPositioned) measure();
   }, [activeStep?.id, isPopoverPositioned, measure]);
 
+  const finishTour = useCallback(() => {
+    setTargetRect(null);
+    setPopoverPosition(null);
+    storeProgress(storageKey, 'completed');
+    setFinished(true);
+    setActiveStepId(null);
+  }, [storageKey]);
+
   const handleNext = useCallback(() => {
-    if (!activeStep || !isComplete) return;
+    if (!activeStep) return;
     const nextStep = steps[activeIndex + 1];
     setTargetRect(null);
     setPopoverPosition(null);
     if (!nextStep) {
-      storeProgress(storageKey, 'completed');
-      setFinished(true);
-      setActiveStepId(null);
+      finishTour();
       return;
     }
     storeProgress(storageKey, nextStep.id);
     setActiveStepId(nextStep.id);
-  }, [activeIndex, activeStep, isComplete, steps, storageKey]);
+  }, [activeIndex, activeStep, finishTour, steps, storageKey]);
 
   useEffect(() => {
     const handleNativeClick = (event: MouseEvent) => {
       const target = event.target;
       if (!(target instanceof Element)) return;
       const button = target.closest<HTMLButtonElement>(
-        '[data-guided-tour-action="next"]',
+        '[data-guided-tour-action]',
       );
       if (
         !button ||
@@ -237,33 +227,18 @@ export default function GuidedTour({
       ) {
         return;
       }
-      handleNext();
+      if (button.dataset.guidedTourAction === 'skip') {
+        finishTour();
+      } else if (button.dataset.guidedTourAction === 'next') {
+        handleNext();
+      }
     };
 
     // Translation extensions can rewrite nodes inside the popover and detach
     // React's delegated handler. Capture the command by its stable data marker.
     document.addEventListener('click', handleNativeClick, true);
     return () => document.removeEventListener('click', handleNativeClick, true);
-  }, [handleNext, testId]);
-
-  useEffect(() => {
-    if (!activeStep) return;
-    const previous = previousCompletionRef.current;
-    previousCompletionRef.current = {
-      stepId: activeStep.id,
-      complete: isComplete,
-    };
-    if (
-      !activeStep.advanceOnComplete ||
-      previous?.stepId !== activeStep.id ||
-      previous.complete ||
-      !isComplete
-    ) {
-      return;
-    }
-
-    window.setTimeout(handleNext, 0);
-  }, [activeStep, handleNext, isComplete]);
+  }, [finishTour, handleNext, testId]);
 
   if (
     !enabled ||
@@ -282,7 +257,6 @@ export default function GuidedTour({
     <div
       data-testid={testId}
       data-active-step={activeStep.id}
-      data-step-complete={String(isComplete)}
       translate="no"
       className="notranslate pointer-events-none"
     >
@@ -301,19 +275,30 @@ export default function GuidedTour({
         ref={popoverRef}
         role="dialog"
         aria-labelledby={titleId}
-        className="pointer-events-auto fixed z-[62] rounded-lg border bg-popover p-4 text-popover-foreground shadow-xl"
+        className="pointer-events-auto fixed z-[80] rounded-lg border bg-popover p-4 text-popover-foreground shadow-xl"
         style={popoverPosition}
       >
-        <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="mb-3 flex items-center gap-2">
           <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
             {t('guidedTour.label')}
           </span>
-          <span className="text-xs tabular-nums text-muted-foreground">
+          <span className="ml-auto text-xs tabular-nums text-muted-foreground">
             {t('guidedTour.progress', {
               current: activeIndex + 1,
               total: steps.length,
             })}
           </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            data-guided-tour-action="skip"
+            data-guided-tour-id={testId}
+            className="-my-2 -mr-2 h-7 gap-1 px-2 text-xs text-muted-foreground"
+          >
+            <X className="size-3.5" />
+            {t('guidedTour.skip')}
+          </Button>
         </div>
         <h2 id={titleId} className="text-base font-semibold">
           {activeStep.title}
@@ -332,18 +317,11 @@ export default function GuidedTour({
             <ExternalLink className="size-3.5" />
           </a>
         )}
-        {!isComplete && activeStep.requirement && (
-          <div className="mt-3 flex items-start gap-2 rounded-md bg-muted px-3 py-2 text-xs leading-5 text-muted-foreground">
-            <LockKeyhole className="mt-0.5 size-3.5 shrink-0" />
-            <span>{activeStep.requirement}</span>
-          </div>
-        )}
         <Button
           type="button"
           data-guided-tour-action="next"
           data-guided-tour-id={testId}
           className="mt-4 w-full"
-          disabled={!isComplete}
         >
           {isLastStep ? (
             <Check className="size-4" />

@@ -30,6 +30,7 @@ interface KnowledgeBaseMock {
   knowledge_engine_plugin_id: string;
   creation_settings: JsonRecord;
   retrieval_settings: JsonRecord;
+  initialized: boolean;
   knowledge_engine: {
     plugin_id: string;
     name: {
@@ -465,6 +466,10 @@ function makeKnowledgeBase(
     creation_settings: (data.creation_settings as JsonRecord | undefined) || {},
     retrieval_settings:
       (data.retrieval_settings as JsonRecord | undefined) || {},
+    initialized:
+      data.initialized === false || data.defer_initialization === true
+        ? false
+        : true,
     knowledge_engine: {
       plugin_id: engine.plugin_id,
       name: engine.name,
@@ -896,7 +901,18 @@ async function handleBackendApi(route: Route, state: LangBotApiMockState) {
     const baseId = decodeURIComponent(knowledgeBaseMatch[1]);
 
     if (method === 'PUT') {
-      const base = makeKnowledgeBase(state, parseJsonBody(route), baseId);
+      const current = state.knowledgeBases.find((item) => item.uuid === baseId);
+      const payload = parseJsonBody(route);
+      const base = makeKnowledgeBase(
+        state,
+        {
+          ...(current || {}),
+          ...payload,
+          initialized:
+            payload.initialize_engine === true ? true : current?.initialized,
+        },
+        baseId,
+      );
       state.knowledgeBases = [
         ...state.knowledgeBases.filter((item) => item.uuid !== baseId),
         base,
@@ -1299,10 +1315,9 @@ export async function installLangBotApiMocks(
         localStorage.setItem('langbot_sidebar_guide_v1', 'completed');
       }
       const contextualGuides = [
-        'langbot_bot_create_guide_v4',
-        'langbot_processor_create_guide_v1',
+        'langbot_bot_detail_guide_v1',
         'langbot_runner_setup_guide_v1',
-        'langbot_knowledge_create_guide_v1',
+        'langbot_knowledge_detail_guide_v1',
       ];
       for (const guideKey of contextualGuides) {
         if (!Object.hasOwn(storage, guideKey)) {

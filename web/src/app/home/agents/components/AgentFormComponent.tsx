@@ -48,7 +48,6 @@ import RunnerSelect from './RunnerSelect';
 import GuidedTour, {
   GuidedTourStep,
 } from '@/app/home/components/guided-tour/GuidedTour';
-import { areRequiredDynamicFieldsComplete } from '@/app/home/components/guided-tour/dynamic-form-progress';
 import AgentApiToolPicker from './AgentApiToolPicker';
 
 const OTHER_TOOL_SCOPES = [
@@ -482,8 +481,6 @@ function AgentFormComponent(
         target: '[data-guide="runner-selector"]',
         title: t('guidedTour.runner.select.title'),
         description: t('guidedTour.runner.select.description'),
-        complete: Boolean(currentRunner && selectedRunnerOption),
-        requirement: t('guidedTour.runner.select.requirement'),
         action: {
           href: 'https://space.langbot.app/market?type=plugin&component=Runner&runner_usage=agent',
           label: t('guidedTour.runner.select.action'),
@@ -497,11 +494,6 @@ function AgentFormComponent(
         target: '[data-guide="runner-parameters"]',
         title: t('guidedTour.runner.parameters.title'),
         description: t('guidedTour.runner.parameters.description'),
-        complete: areRequiredDynamicFieldsComplete(
-          activeRunnerStage.config,
-          activeRunnerValues,
-        ),
-        requirement: t('guidedTour.runner.parameters.requirement'),
       });
     }
 
@@ -510,18 +502,9 @@ function AgentFormComponent(
       target: '[data-guide="agent-sections"]',
       title: t('guidedTour.runner.events.title'),
       description: t('guidedTour.runner.events.description'),
-      complete: activeSection === 'events_and_tools',
-      requirement: t('guidedTour.runner.events.requirement'),
     });
     return steps;
-  }, [
-    activeRunnerStage,
-    activeRunnerValues,
-    activeSection,
-    currentRunner,
-    selectedRunnerOption,
-    t,
-  ]);
+  }, [activeRunnerStage, t]);
 
   useEffect(() => {
     onRunnerStatusChange?.(runnerStatus);

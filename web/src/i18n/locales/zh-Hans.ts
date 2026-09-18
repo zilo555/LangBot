@@ -48,6 +48,7 @@ const zhHans = {
     progress: '第 {{current}} 步，共 {{total}} 步',
     next: '下一步',
     finish: '完成引导',
+    skip: '跳过',
     bot: {
       connection: {
         title: '选择接入方式',
@@ -63,7 +64,7 @@ const zhHans = {
       adapter: {
         title: '选择平台适配器',
         description:
-          '先选择平台，LangBot 会再判断该适配器支持 Webhook、长连接或两者都支持。',
+          '选择机器人使用的平台适配器；接入方式和平台参数将在创建后配置。',
         requirement: '请选择一个适配器。',
       },
       parameters: {
@@ -75,13 +76,16 @@ const zhHans = {
       },
       routing: {
         title: '设置事件路由',
-        description:
-          '选择各类事件交给哪个处理器；机器人创建后仍可继续添加路由。',
+        description: '选择该机器人收到的各类事件交给哪个处理器。',
+      },
+      save: {
+        title: '保存机器人配置',
+        description: '确认接入参数和事件路由后保存；准备完成后即可启用机器人。',
       },
       submit: {
         title: '创建机器人',
         description:
-          '创建后连接配置才会生效；LangBot 生成的 Webhook 地址会显示在已保存机器人的配置中。',
+          '先创建未启用的机器人，再到机器人页面配置接入方式和平台参数。',
       },
     },
     processorCreate: {
@@ -130,9 +134,8 @@ const zhHans = {
         requirement: '请先填写知识库名称。',
       },
       engine: {
-        title: '选择或安装知识引擎',
-        description:
-          '选择已安装的知识引擎，也可以在此选择器的市场区域直接安装。',
+        title: '确认知识引擎',
+        description: '确认该知识库使用的引擎，并在下方配置引擎参数和检索方式。',
         requirement: '请选择一个知识引擎。',
         action: '浏览知识引擎市场',
       },
@@ -145,6 +148,10 @@ const zhHans = {
         title: '配置检索方式',
         description: '设置引擎如何搜索内容，以及如何把相关结果返回给处理器。',
         requirement: '请填写当前可见的全部必填检索参数。',
+      },
+      save: {
+        title: '保存知识库配置',
+        description: '确认引擎参数和检索设置后保存配置。',
       },
       submit: {
         title: '创建知识库',
@@ -537,7 +544,7 @@ const zhHans = {
     getBotConfigError: '获取机器人配置失败：',
     saveSuccess: '保存成功',
     saveError: '保存失败：',
-    createSuccess: '创建成功，请配置事件路由',
+    createSuccess: '创建成功，请继续配置机器人',
     createError: '创建失败：',
     deleteSuccess: '删除成功',
     deleteError: '删除失败：',

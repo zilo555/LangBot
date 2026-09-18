@@ -56,8 +56,10 @@ test('creates a configured processor, persists subscriptions separately and reus
     return route.fulfill({ json: { code: 0, data: { agents: processors } } });
   });
   await page.goto('/home/bots?id=new');
-  await page.getByRole('combobox').click();
-  await page.getByRole('option', { name: 'Playwright Adapter' }).click();
+  await page
+    .getByTestId('adapter-gallery')
+    .getByRole('button', { name: /Playwright Adapter/ })
+    .click();
   await page.locator('input[name="name"]').fill('Subscription Bot');
   await page.getByRole('button', { name: /^Submit$/ }).click();
   await expect(page).toHaveURL(/id=bot-1$/);

@@ -27,16 +27,11 @@ import {
 import { Input } from '@/components/ui/input';
 import EmojiPicker from '@/components/ui/emoji-picker';
 import ProcessorTypeDiagram from './ProcessorTypeDiagram';
-import GuidedTour, {
-  GuidedTourStep,
-} from '@/app/home/components/guided-tour/GuidedTour';
 
 export default function AgentCreateContent({
   onCreated,
-  guideEnabled = true,
 }: {
   onCreated: (agentId: string) => void;
-  guideEnabled?: boolean;
 }) {
   const { t } = useTranslation();
   const [kind, setKind] = useState<AgentKind>('agent');
@@ -114,29 +109,6 @@ export default function AgentCreateContent({
       description: t('agents.eventProcessor.description'),
     },
   ];
-  const guideSteps: GuidedTourStep[] = [
-    {
-      id: 'type',
-      target: '[data-guide="processor-type"]',
-      title: t('guidedTour.processorCreate.type.title'),
-      description: t('guidedTour.processorCreate.type.description'),
-    },
-    {
-      id: 'basic',
-      target: '[data-guide="processor-basic"]',
-      title: t('guidedTour.processorCreate.basic.title'),
-      description: t('guidedTour.processorCreate.basic.description'),
-      complete: Boolean(form.watch('name')?.trim()),
-      requirement: t('guidedTour.processorCreate.basic.requirement'),
-    },
-    {
-      id: 'submit',
-      target: '[data-guide="processor-submit"]',
-      title: t('guidedTour.processorCreate.submit.title'),
-      description: t('guidedTour.processorCreate.submit.description'),
-    },
-  ];
-
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between pb-4 shrink-0">
@@ -147,7 +119,6 @@ export default function AgentCreateContent({
           type="submit"
           form="agent-create-form"
           disabled={form.formState.isSubmitting}
-          data-guide="processor-submit"
         >
           {t('common.submit')}
         </Button>
@@ -160,7 +131,6 @@ export default function AgentCreateContent({
               <section
                 aria-labelledby="processor-kind-heading"
                 className="space-y-3"
-                data-guide="processor-type"
               >
                 <div>
                   <h2
@@ -211,7 +181,7 @@ export default function AgentCreateContent({
                 </ToggleGroup>
               </section>
 
-              <Card data-guide="processor-basic">
+              <Card>
                 <CardHeader>
                   <CardTitle>{t('agents.basicInfo')}</CardTitle>
                   <CardDescription>
@@ -287,12 +257,6 @@ export default function AgentCreateContent({
           </div>
         </div>
       </div>
-      <GuidedTour
-        enabled={guideEnabled}
-        storageKey="langbot_processor_create_guide_v1"
-        steps={guideSteps}
-        testId="processor-create-guide"
-      />
     </div>
   );
 }

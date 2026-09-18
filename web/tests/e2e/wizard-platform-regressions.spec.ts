@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, Page, test } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -78,6 +78,16 @@ function adapterWithQrLogin(
       ],
     },
   };
+}
+
+async function createDraftBot(page: Page, adapterLabel: string) {
+  await page
+    .getByTestId('adapter-gallery')
+    .getByRole('button', { name: new RegExp(adapterLabel) })
+    .click();
+  await page.locator('input[name="name"]').fill(`${adapterLabel} Bot`);
+  await page.getByRole('button', { name: /^Submit$/ }).click();
+  await expect(page).toHaveURL(/\/home\/bots\?id=bot-1$/);
 }
 
 test.describe('wizard and QR platform regressions', () => {
@@ -476,8 +486,7 @@ test.describe('wizard and QR platform regressions', () => {
       });
 
       await page.goto('/home/bots?id=new');
-      await page.getByRole('combobox').click();
-      await page.getByRole('option', { name: qrPlatform.label }).click();
+      await createDraftBot(page, qrPlatform.label);
       await page.getByRole('button', { name: /^Start$/ }).click();
 
       const qrImage = page.getByRole('img', { name: 'QR Code' });
@@ -515,8 +524,7 @@ test.describe('wizard and QR platform regressions', () => {
     });
 
     await page.goto('/home/bots?id=new');
-    await page.getByRole('combobox').click();
-    await page.getByRole('option', { name: qrPlatform.label }).click();
+    await createDraftBot(page, qrPlatform.label);
     await page.getByRole('button', { name: /^Start$/ }).click();
 
     const dialog = page.getByRole('dialog');
@@ -524,6 +532,6 @@ test.describe('wizard and QR platform regressions', () => {
     await expect(dialog.getByRole('button', { name: 'Retry' })).toBeEnabled();
     await dialog.getByRole('button', { name: 'Cancel' }).click();
     await expect(dialog).toHaveCount(0);
-    await expect(page.getByRole('button', { name: /^Submit$/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Save$/ })).toBeVisible();
   });
 });

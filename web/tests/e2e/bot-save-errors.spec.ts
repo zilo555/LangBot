@@ -22,8 +22,10 @@ for (const failure of [
   test(`bot save displays actionable ${failure.code}`, async ({ page }) => {
     await installLangBotApiMocks(page, { authenticated: true });
     await page.goto('/home/bots?id=new');
-    await page.getByRole('combobox').click();
-    await page.getByRole('option', { name: 'Playwright Adapter' }).click();
+    await page
+      .getByTestId('adapter-gallery')
+      .getByRole('button', { name: /Playwright Adapter/ })
+      .click();
     await page.locator('input[name="name"]').fill('Error Test Bot');
     await page.getByRole('button', { name: /^Submit$/ }).click();
     await expect(page).toHaveURL(/\/home\/bots\?id=bot-1$/);
@@ -36,9 +38,9 @@ for (const failure of [
       });
     });
     await page.getByRole('button', { name: 'Edit basic information' }).click();
-    const dialog = page.getByRole('dialog');
-    await dialog.getByLabel('Name', { exact: true }).fill('Edited Bot');
-    await dialog.getByRole('button', { name: /^Save$/ }).click();
+    const editDialog = page.getByRole('dialog');
+    await editDialog.getByLabel('Name', { exact: true }).fill('Edited Bot');
+    await editDialog.getByRole('button', { name: /^Save$/ }).click();
     if (failure.code === 'internal_error') {
       await expect(
         page.getByText('Error reference: bot-save-test-reference'),

@@ -162,7 +162,7 @@ export default function BotDetailContent({ id }: { id: string }) {
         {/* Header */}
         <div className="flex items-center justify-between pb-4 shrink-0">
           <h1 className="text-xl font-semibold">{t('bots.createBot')}</h1>
-          {canManage && (
+          {canManage && adapterLabel && (
             <Button type="submit" form="bot-form" data-guide="bot-submit">
               {t('common.submit')}
             </Button>
@@ -171,13 +171,14 @@ export default function BotDetailContent({ id }: { id: string }) {
 
         {/* Content */}
         <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden">
-          <div className="mx-auto w-full min-w-0 max-w-3xl pb-8">
+          <div className="mx-auto w-full min-w-0 max-w-7xl pb-8">
             <fieldset className="contents" disabled={!canManage}>
               <BotForm
                 initBotId={undefined}
                 onFormSubmit={handleFormSubmit}
                 onNewBotCreated={handleNewBotCreated}
                 guideEnabled={canManage}
+                onAdapterLabelChange={setAdapterLabel}
               />
             </fieldset>
           </div>
@@ -236,6 +237,7 @@ export default function BotDetailContent({ id }: { id: string }) {
                 form="bot-form"
                 disabled={!formDirty}
                 className={activeTab !== 'config' ? 'invisible' : ''}
+                data-guide="bot-config-save"
               >
                 {t('common.save')}
               </Button>
@@ -318,6 +320,7 @@ export default function BotDetailContent({ id }: { id: string }) {
                   onNewBotCreated={handleNewBotCreated}
                   onDirtyChange={setFormDirty}
                   onAdapterLabelChange={setAdapterLabel}
+                  guideEnabled={canManage}
                 />
               </fieldset>
             </div>
