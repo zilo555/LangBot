@@ -1966,13 +1966,16 @@ const viVN = {
         'Giám sát hoạt động Bot để xác minh kết nối nền tảng đang hoạt động.',
     },
     aiEngine: {
+      defaultModelUnavailable: 'Chưa có mô hình mặc định. Vui lòng thử lại.',
+      defaultRunnerUnavailable: 'Local Agent chưa sẵn sàng. Vui lòng thử lại.',
+      preparingDefault: 'Đang chuẩn bị AI mặc định…',
       title: 'Cấu hình công cụ AI',
       description: 'Chọn công cụ AI sẽ cung cấp trí tuệ cho Bot của bạn.',
       optionalDescription:
-        'Bước này không bắt buộc. Hãy chọn cách bạn muốn tiếp tục với Agent hiện tại.',
+        'AI mặc định đã sẵn sàng. Bạn có thể dùng ngay hoặc đổi cách kết nối.',
       externalTitle: 'Kết nối Agent từ nền tảng bên ngoài',
       externalDescription:
-        'Kết nối Dify, n8n, Coze hoặc nền tảng khác và thay thế Pipeline của Bot.',
+        'Kết nối Dify, n8n, Coze hoặc Agent bên ngoài qua plugin Runner.',
       ownModelTitle: 'Sử dụng mô hình của riêng tôi',
       ownModelDescription:
         'Thêm nhà cung cấp, sau đó quét hoặc nhập mô hình thủ công để hoàn tất thiết lập.',
@@ -1985,7 +1988,7 @@ const viVN = {
       selectModelTitle: 'Chọn mô hình',
       selectScannedModelTitle: 'Chọn mô hình',
       selectScannedModelDescription:
-        'Mô hình đã chọn sẽ là mô hình chính của Pipeline mới và Bot sẽ chuyển sang sử dụng mô hình đó.',
+        'Mô hình đã chọn sẽ thay thế mô hình chính trong pipeline của bot này.',
       scanModelMode: 'Quét mô hình',
       manualModelMode: 'Thêm thủ công',
       scanningModels: 'Đang quét các mô hình khả dụng…',
@@ -2004,11 +2007,12 @@ const viVN = {
       manualModelOptions: 'Khả năng mô hình tùy chọn',
       editProvider: 'Chỉnh sửa nhà cung cấp',
       rescanModels: 'Quét lại mô hình',
-      moreFeaturesTitle: 'Thêm khả năng cho Agent',
+      moreFeaturesTitle: 'Dùng cấu hình mặc định',
       moreFeaturesDescription:
-        'Mở bàn làm việc để thêm công cụ, cơ sở tri thức và các khả năng khác cho Agent vừa được tạo tự động.',
+        'Tiếp tục dùng Local Agent và mô hình đề xuất. Có thể thêm công cụ và cơ sở tri thức sau.',
       runnerDescription: 'Chọn Runner cho Agent bên ngoài và cấu hình kết nối.',
       backToChoices: 'Quay lại các tùy chọn',
+      backToList: 'Quay lại danh sách',
       createExternal: 'Tạo và liên kết',
       finishWithModel: 'Sử dụng mô hình đã chọn và hoàn tất',
       openWorkbench: 'Mở bàn làm việc',

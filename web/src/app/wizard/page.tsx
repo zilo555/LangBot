@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { UUID } from 'uuidjs';
 import { toast } from 'sonner';
 import {
+  Bug,
+  Blocks,
+  Cable,
+  Settings2,
   ArrowLeft,
   ArrowRight,
   AlertTriangle,
@@ -30,14 +34,10 @@ import {
   bootstrapWorkspaceSession,
   initializeSystemInfo,
   getCloudServiceClientSync,
+  getCloudServiceClient,
   userInfo,
 } from '@/app/infra/http';
-import {
-  Adapter,
-  Bot,
-  Pipeline,
-  WizardProgress,
-} from '@/app/infra/entities/api';
+import { Adapter, Bot, WizardProgress } from '@/app/infra/entities/api';
 import { IDynamicFormItemSchema } from '@/app/infra/entities/form/dynamic';
 import {
   PipelineConfigTab,
@@ -58,6 +58,7 @@ import {
 import { getAdapterDocUrl } from '@/app/infra/entities/adapter-docs';
 import i18n from 'i18next';
 import { PluginV4 } from '@/app/infra/entities/plugin';
+import type { I18nObject } from '@/app/infra/entities/common';
 import {
   RunnerMarketplaceError,
   getErrorMessage,
@@ -69,12 +70,31 @@ import {
   runnerPluginPrefix,
 } from '@/app/home/agents/runner-marketplace';
 import {
+  LOCAL_AGENT_RUNNER_ID,
+  configureLocalAgentPrimaryModel,
   ensureHttpBotSigningSecret,
   isRequiredRunnerConfigComplete,
   isWebhookModeEnabled,
 } from '@/app/wizard/utils';
 
+import OwnModelSetup, {
+  type OwnModelSelection,
+} from '@/app/wizard/components/OwnModelSetup';
+
+type RunnerInstallProgress = { stage: InstallStage; percent: number };
+
+type RunnerPluginStatus = 'installed' | 'debug';
+
+type AIChoice = 'more-features' | 'external' | 'own-model';
+
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import type { AsyncTask } from '@/app/infra/entities/api';
+import {
+  InstallStage,
+  asyncTaskToPluginInstallTask,
+} from '@/app/home/plugins/components/plugin-install-task/PluginInstallTaskContext';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Input } from '@/components/ui/input';
 import {
   Card,
@@ -117,6 +137,10 @@ export default function WizardPage() {
 
   // ---- Wizard state ----
   const [currentStep, setCurrentStep] = useState(0);
+  const [aiChoice, setAiChoice] = useState<AIChoice>('more-features');
+  const [ownModelSelection, setOwnModelSelection] =
+    useState<OwnModelSelection | null>(null);
+  const [preparingDefault, setPreparingDefault] = useState(false);
   const [selectedAdapter, setSelectedAdapter] = useState<string | null>(null);
   const [selectedRunner, setSelectedRunner] = useState<string | null>(null);
   const [botName, setBotName] = useState('');
@@ -139,11 +163,20 @@ export default function WizardPage() {
   );
   const [marketplaceRunners, setMarketplaceRunners] = useState<PluginV4[]>([]);
   const [installedPluginIds, setInstalledPluginIds] = useState<string[]>([]);
+  const [runnerPluginStatuses, setRunnerPluginStatuses] = useState<
+    Record<string, RunnerPluginStatus>
+  >({});
+  const [runnerPluginDescriptions, setRunnerPluginDescriptions] = useState<
+    Record<string, I18nObject>
+  >({});
   const [isRunnerCatalogLoading, setIsRunnerCatalogLoading] = useState(true);
   const [runnerCatalogError, setRunnerCatalogError] = useState(false);
   const [installingRunnerPluginId, setInstallingRunnerPluginId] = useState<
     string | null
   >(null);
+  const [runnerInstallProgress, setRunnerInstallProgress] = useState<
+    Record<string, RunnerInstallProgress>
+  >({});
   const [runnerInstallError, setRunnerInstallError] = useState<string | null>(
     null,
   );
@@ -171,8 +204,44 @@ export default function WizardPage() {
   }, []);
 
   useEffect(() => {
+    if (currentStep !== 2 || aiChoice !== 'external') return;
     void loadRunnerCatalog();
-  }, [loadRunnerCatalog]);
+    let cancelled = false;
+    // Local status remains available even when the marketplace cannot be reached.
+    void httpClient
+      .getPlugins()
+      .then(({ plugins }) => {
+        if (cancelled) return;
+        setRunnerPluginDescriptions(
+          Object.fromEntries(
+            plugins.flatMap((plugin) => {
+              const { author, name, description } =
+                plugin.manifest.manifest.metadata;
+              return description
+                ? [[`${author ?? ''}/${name}`, description]]
+                : [];
+            }),
+          ),
+        );
+        setRunnerPluginStatuses(
+          Object.fromEntries(
+            plugins.map((plugin) => {
+              const { author, name } = plugin.manifest.manifest.metadata;
+              return [
+                `${author ?? ''}/${name}`,
+                plugin.debug ? 'debug' : 'installed',
+              ];
+            }),
+          ),
+        );
+      })
+      .catch((error) =>
+        console.error('Failed to load local Runner status', error),
+      );
+    return () => {
+      cancelled = true;
+    };
+  }, [loadRunnerCatalog, currentStep, aiChoice]);
 
   // ---- Helper: persist wizard progress to backend (fire-and-forget) ----
   const saveProgress = useCallback(
@@ -271,17 +340,44 @@ export default function WizardPage() {
 
             setSelectedAdapter(restoredAdapter);
             setCreatedBotUuid(progress.created_bot_uuid);
-            setCreatedPipelineUuid(
+            const restoredPipelineUuid =
               progress.created_pipeline_uuid ??
-                botData.bot.event_bindings?.find(
-                  (binding) =>
-                    binding.event_pattern === 'message.received' &&
-                    binding.target_type === 'pipeline',
-                )?.target_uuid ??
-                null,
-            );
+              botData.bot.event_bindings?.find(
+                (binding) =>
+                  binding.event_pattern === 'message.received' &&
+                  binding.target_type === 'pipeline',
+              )?.target_uuid ??
+              null;
+            setCreatedPipelineUuid(restoredPipelineUuid);
+            let pipelineReady = false;
+            if (restoredPipelineUuid) {
+              const { pipeline } =
+                await httpClient.getPipeline(restoredPipelineUuid);
+              const config = pipeline.config as unknown as Record<
+                string,
+                unknown
+              >;
+              const ai = config.ai as
+                | {
+                    runner?: { id?: string };
+                    runner_config?: Record<
+                      string,
+                      { model?: { primary?: string } }
+                    >;
+                  }
+                | undefined;
+              const id = ai?.runner?.id;
+              pipelineReady =
+                !!id &&
+                !!aiTab?.stages.some((stage) => stage.name === id) &&
+                (id !== LOCAL_AGENT_RUNNER_ID ||
+                  !!ai?.runner_config?.[id]?.model?.primary);
+            }
+            if (cancelled) return;
             setBotSaved(
-              configNeedsSave ? false : (progress.bot_saved ?? false),
+              !configNeedsSave &&
+                pipelineReady &&
+                (progress.bot_saved ?? false),
             );
             setMessageReceived(progress.message_received ?? false);
             setSelectedRunner(progress.selected_runner);
@@ -300,7 +396,7 @@ export default function WizardPage() {
             );
 
             // Step 3 is resumable so a refresh cannot create a duplicate processor.
-            setCurrentStep(Math.min(progress.step, 3));
+            setCurrentStep(pipelineReady ? Math.min(progress.step, 3) : 1);
           } catch {
             // Clear stale or unsupported progress without modifying its resources.
             httpClient
@@ -405,7 +501,10 @@ export default function WizardPage() {
 
   // ---- Runner selection with progress saving ----
   const handleSelectRunner = useCallback(
-    (runner: string, configTab: PipelineConfigTab | null = aiConfigTab) => {
+    (
+      runner: string | null,
+      configTab: PipelineConfigTab | null = aiConfigTab,
+    ) => {
       setSelectedRunner(runner);
       const configStage = configTab?.stages.find((s) => s.name === runner);
       const defaults = configStage ? getDefaultValues(configStage.config) : {};
@@ -415,17 +514,55 @@ export default function WizardPage() {
     [aiConfigTab, saveProgress],
   );
 
+  const updateRunnerInstallProgress = useCallback(
+    (pluginId: string, task: AsyncTask) => {
+      const progress = asyncTaskToPluginInstallTask(task);
+      const registering = task.runtime.done && !task.runtime.exception;
+      setRunnerInstallProgress((current) => ({
+        ...current,
+        [pluginId]: {
+          stage: registering ? InstallStage.ACTIVATING : progress.stage,
+          percent: registering ? 95 : progress.overallProgress,
+        },
+      }));
+    },
+    [],
+  );
+
+  const finishRunnerProgress = useCallback(
+    (pluginId: string, failed = false) => {
+      setRunnerInstallProgress((current) => ({
+        ...current,
+        [pluginId]: {
+          stage: failed ? InstallStage.ERROR : InstallStage.DONE,
+          percent: failed ? (current[pluginId]?.percent ?? 0) : 100,
+        },
+      }));
+    },
+    [],
+  );
+
   const handleInstallRunner = useCallback(
     async (plugin: PluginV4) => {
       const pluginId = marketplacePluginId(plugin);
       setInstallingRunnerPluginId(pluginId);
       setRunnerInstallError(null);
+      setRunnerInstallProgress((current) => ({
+        ...current,
+        [pluginId]: { stage: InstallStage.CHECKING, percent: 0 },
+      }));
 
       try {
         const installed = await installMarketplaceRunner(plugin, {
           scope: WIZARD_RUNNER_INSTALL_SCOPE,
+          onProgress: (task) => updateRunnerInstallProgress(pluginId, task),
         });
+        finishRunnerProgress(pluginId);
         setAiConfigTab(installed.configTab);
+        setRunnerPluginStatuses((current) => ({
+          ...current,
+          [pluginId]: 'installed',
+        }));
         setInstalledPluginIds((current) =>
           current.includes(pluginId) ? current : [...current, pluginId],
         );
@@ -436,6 +573,7 @@ export default function WizardPage() {
           }),
         );
       } catch (error) {
+        finishRunnerProgress(pluginId, true);
         let message = getErrorMessage(error);
         if (error instanceof RunnerMarketplaceError) {
           const key =
@@ -453,7 +591,7 @@ export default function WizardPage() {
         setInstallingRunnerPluginId(null);
       }
     },
-    [handleSelectRunner, t],
+    [handleSelectRunner, updateRunnerInstallProgress, finishRunnerProgress, t],
   );
 
   useEffect(() => {
@@ -464,10 +602,17 @@ export default function WizardPage() {
     let cancelled = false;
     setInstallingRunnerPluginId(pending.pluginId);
     setRunnerInstallError(null);
-    void resumePendingRunnerInstall(WIZARD_RUNNER_INSTALL_SCOPE)
+    void resumePendingRunnerInstall(WIZARD_RUNNER_INSTALL_SCOPE, (task) => {
+      if (!cancelled) updateRunnerInstallProgress(pending.pluginId, task);
+    })
       .then((installed) => {
         if (cancelled || !installed) return;
+        finishRunnerProgress(pending.pluginId);
         setAiConfigTab(installed.configTab);
+        setRunnerPluginStatuses((current) => ({
+          ...current,
+          [pending.pluginId]: 'installed',
+        }));
         setInstalledPluginIds((current) =>
           current.includes(pending.pluginId)
             ? current
@@ -482,6 +627,7 @@ export default function WizardPage() {
       })
       .catch((error) => {
         if (cancelled) return;
+        finishRunnerProgress(pending.pluginId, true);
         const message =
           getErrorMessage(error) || t('wizard.aiEngine.installFailed');
         setRunnerInstallError(message);
@@ -494,7 +640,13 @@ export default function WizardPage() {
     return () => {
       cancelled = true;
     };
-  }, [handleSelectRunner, isLoading, t]);
+  }, [
+    handleSelectRunner,
+    isLoading,
+    updateRunnerInstallProgress,
+    finishRunnerProgress,
+    t,
+  ]);
 
   // ---- Navigation helpers ----
 
@@ -505,12 +657,18 @@ export default function WizardPage() {
       case 1:
         return createdBotUuid !== null && botSaved && messageReceived;
       case 2:
-        return selectedRunner !== null && isRunnerConfigComplete;
+        if (aiChoice === 'own-model') return ownModelSelection !== null;
+        if (aiChoice === 'external')
+          return selectedRunner !== null && isRunnerConfigComplete;
+        return createdPipelineUuid !== null;
       default:
         return false;
     }
   }, [
     currentStep,
+    aiChoice,
+    ownModelSelection,
+    createdPipelineUuid,
     selectedAdapter,
     createdBotUuid,
     botSaved,
@@ -614,6 +772,7 @@ export default function WizardPage() {
   const handleSaveBot = useCallback(async () => {
     if (!createdBotUuid || !selectedAdapter) return;
     setIsSavingBot(true);
+    setBotSaved(false);
     let previewPipelineUuid = createdPipelineUuid;
     let createdPreviewPipelineUuid: string | null = null;
 
@@ -624,6 +783,33 @@ export default function WizardPage() {
       );
       setAdapterConfig(configToSave);
 
+      setPreparingDefault(true);
+      const metadata = await httpClient.getGeneralPipelineMetadata();
+      let configTab = metadata.configs.find((tab) => tab.name === 'ai');
+      if (
+        !configTab?.stages.some((stage) => stage.name === LOCAL_AGENT_RUNNER_ID)
+      ) {
+        const scope = 'wizard-default';
+        const pending = readPendingRunnerInstall(scope);
+        const installed = pending
+          ? await resumePendingRunnerInstall(scope)
+          : await installMarketplaceRunner(
+              (
+                await (
+                  await getCloudServiceClient()
+                ).getPluginDetail('langbot-team', 'LocalAgent')
+              ).plugin,
+              { scope },
+            );
+        configTab = installed?.configTab;
+      }
+      const localStage = configTab?.stages.find(
+        (stage) => stage.name === LOCAL_AGENT_RUNNER_ID,
+      );
+      if (!localStage)
+        throw new Error(t('wizard.aiEngine.defaultRunnerUnavailable'));
+      setAiConfigTab(configTab ?? null);
+
       if (!previewPipelineUuid) {
         const pipelineResp = await httpClient.createPipeline({
           name: `${botName} Pipeline`,
@@ -633,6 +819,39 @@ export default function WizardPage() {
         previewPipelineUuid = pipelineResp.uuid;
         createdPreviewPipelineUuid = pipelineResp.uuid;
       }
+
+      const { pipeline } = await httpClient.getPipeline(previewPipelineUuid);
+      const config = pipeline.config as unknown as Record<string, unknown>;
+      const ai = (config.ai ?? {}) as Record<string, unknown>;
+      const configs = (ai.runner_config ?? {}) as Record<
+        string,
+        Record<string, unknown>
+      >;
+      const localConfig = {
+        ...getDefaultValues(localStage.config),
+        ...configs[LOCAL_AGENT_RUNNER_ID],
+      };
+      const model = localConfig.model as { primary?: string } | undefined;
+      const modelUuid =
+        model?.primary || (await httpClient.getWizardRecommendedModel()).uuid;
+      if (!modelUuid)
+        throw new Error(t('wizard.aiEngine.defaultModelUnavailable'));
+      await httpClient.updatePipeline(previewPipelineUuid, {
+        config: configureLocalAgentPrimaryModel(
+          {
+            ...config,
+            ai: {
+              ...ai,
+              runner_config: {
+                ...configs,
+                [LOCAL_AGENT_RUNNER_ID]: localConfig,
+              },
+            },
+          },
+          modelUuid,
+        ),
+      });
+      setPreparingDefault(false);
 
       const botUpdate: Partial<Bot> = {
         name: botName,
@@ -697,11 +916,9 @@ export default function WizardPage() {
           );
         }
       }
-      const apiErr = err as { msg?: string };
-      toast.error(
-        t('wizard.createError') + (apiErr?.msg ? `: ${apiErr.msg}` : ''),
-      );
+      toast.error(`${t('wizard.createError')}: ${getErrorMessage(err)}`);
     } finally {
+      setPreparingDefault(false);
       setIsSavingBot(false);
     }
   }, [
@@ -724,109 +941,75 @@ export default function WizardPage() {
   // ---- Create Pipeline & Link (Step 2 finish) ----
 
   const handleFinish = useCallback(async () => {
-    if (!selectedRunner || !isRunnerConfigComplete || !createdBotUuid) return;
+    if (!createdBotUuid || !createdPipelineUuid || !canProceed()) return;
     setIsSubmitting(true);
-    let processorUuid = '';
-    let processorCreatedThisAttempt = false;
-
+    let createdModelUuid: string | null = null;
+    let modelBound = false;
     try {
-      processorUuid = createdPipelineUuid ?? '';
-      if (!processorUuid) {
-        const pipeline: Pipeline = {
-          name: `${botName} Pipeline`,
-          description: botDescription || '',
-          config: {},
-        };
-        const pipelineResp = await httpClient.createPipeline(pipeline);
-        processorUuid = pipelineResp.uuid;
-        processorCreatedThisAttempt = true;
-      }
-      const createdPipeline = await httpClient.getPipeline(processorUuid);
-      const fullConfig = createdPipeline.pipeline.config as unknown as Record<
-        string,
-        unknown
-      >;
-      const fullAiConfig =
-        fullConfig.ai && typeof fullConfig.ai === 'object'
-          ? (fullConfig.ai as Record<string, unknown>)
-          : {};
-      const existingRunner =
-        fullAiConfig.runner && typeof fullAiConfig.runner === 'object'
-          ? (fullAiConfig.runner as Record<string, unknown>)
-          : {};
-      const existingRunnerConfigs =
-        fullAiConfig.runner_config &&
-        typeof fullAiConfig.runner_config === 'object'
-          ? (fullAiConfig.runner_config as Record<string, unknown>)
-          : {};
-
-      await httpClient.updatePipeline(processorUuid, {
-        name: `${botName} Pipeline`,
-        description: botDescription || '',
-        config: {
-          ...fullConfig,
-          ai: {
-            ...fullAiConfig,
-            runner: { ...existingRunner, id: selectedRunner },
-            runner_config: {
-              ...existingRunnerConfigs,
-              [selectedRunner]: runnerConfig,
+      // The preview pipeline is already connected. Keeping the default requires no changes.
+      if (aiChoice !== 'more-features') {
+        const { pipeline } = await httpClient.getPipeline(createdPipelineUuid);
+        const config = pipeline.config as unknown as Record<string, unknown>;
+        let updatedConfig: Record<string, unknown>;
+        if (aiChoice === 'own-model' && ownModelSelection) {
+          const model = await httpClient.createProviderLLMModel({
+            name: ownModelSelection.model.name,
+            provider_uuid: ownModelSelection.providerUuid,
+            abilities: ownModelSelection.model.abilities ?? [],
+            reasoning_config: { level: 'provider_default' },
+            context_length: ownModelSelection.model.context_length ?? null,
+            extra_args: {},
+          });
+          createdModelUuid = model.uuid;
+          updatedConfig = configureLocalAgentPrimaryModel(config, model.uuid);
+        } else if (aiChoice === 'external' && selectedRunner) {
+          const ai = (config.ai ?? {}) as Record<string, unknown>;
+          updatedConfig = {
+            ...config,
+            ai: {
+              ...ai,
+              runner: {
+                ...(ai.runner as Record<string, unknown>),
+                id: selectedRunner,
+              },
+              runner_config: {
+                ...(ai.runner_config as Record<string, unknown>),
+                [selectedRunner]: runnerConfig,
+              },
             },
-          },
-        },
-      });
-      const botData = await httpClient.getBot(createdBotUuid);
-      const existingBot = botData.bot;
-      await httpClient.updateBot(createdBotUuid, {
-        name: existingBot.name,
-        description: existingBot.description,
-        adapter: existingBot.adapter,
-        adapter_config: existingBot.adapter_config,
-        enable: existingBot.enable,
-        event_bindings: [
-          {
-            event_pattern: 'message.received',
-            target_type: 'pipeline',
-            target_uuid: processorUuid,
-            filters: [],
-            priority: 0,
-            enabled: true,
-            description: '',
-          },
-        ],
-      });
-
+          };
+        } else {
+          return;
+        }
+        await httpClient.updatePipeline(createdPipelineUuid, {
+          config: updatedConfig,
+        });
+        modelBound = true;
+      }
       setCurrentStep(3);
-      setCreatedPipelineUuid(processorUuid);
-      saveProgress({
-        step: 3,
-        created_pipeline_uuid: processorUuid,
-      });
+      saveProgress({ step: 3, created_pipeline_uuid: createdPipelineUuid });
     } catch (err) {
-      if (processorCreatedThisAttempt && processorUuid) {
+      if (createdModelUuid && !modelBound) {
         try {
-          await httpClient.deletePipeline(processorUuid);
+          await httpClient.deleteProviderLLMModel(createdModelUuid);
         } catch (rollbackError) {
-          console.warn('Failed to roll back wizard processor', rollbackError);
+          console.warn('Failed to roll back wizard model', rollbackError);
         }
       }
-      const apiErr = err as { msg?: string };
-      toast.error(
-        t('wizard.createError') + (apiErr?.msg ? `: ${apiErr.msg}` : ''),
-      );
+      toast.error(`${t('wizard.createError')}: ${getErrorMessage(err)}`);
     } finally {
       setIsSubmitting(false);
     }
   }, [
-    selectedRunner,
-    isRunnerConfigComplete,
     createdBotUuid,
     createdPipelineUuid,
-    botName,
-    botDescription,
+    canProceed,
+    aiChoice,
+    ownModelSelection,
+    selectedRunner,
     runnerConfig,
-    t,
     saveProgress,
+    t,
   ]);
 
   // ---- Skip handler ----
@@ -953,7 +1136,7 @@ export default function WizardPage() {
       <div
         className={cn(
           'flex-1 min-h-0 px-4 sm:px-6 pb-4 sm:pb-6',
-          currentStep === 2 && selectedRunner
+          currentStep === 2 && aiChoice === 'external' && selectedRunner
             ? 'lg:flex lg:flex-col lg:overflow-hidden overflow-y-auto'
             : 'overflow-y-auto',
         )}
@@ -974,6 +1157,7 @@ export default function WizardPage() {
             adapters={adapters}
             createdBotUuid={createdBotUuid}
             isSavingBot={isSavingBot}
+            preparingDefault={preparingDefault}
             botSaved={botSaved}
             pageBotPreviewRequest={pageBotPreviewRequest}
             messageReceived={messageReceived}
@@ -986,13 +1170,24 @@ export default function WizardPage() {
         )}
         {currentStep === 2 && (
           <StepAIEngine
-            runnerOptions={runnerOptions}
-            marketplaceRunners={marketplaceRunners}
+            choice={aiChoice}
+            onChoiceChange={setAiChoice}
+            onOwnModelSelectionChange={setOwnModelSelection}
+            runnerOptions={runnerOptions.filter(
+              (runner) => runner.name !== LOCAL_AGENT_RUNNER_ID,
+            )}
+            marketplaceRunners={marketplaceRunners.filter(
+              (plugin) =>
+                marketplacePluginId(plugin) !== 'langbot-team/LocalAgent',
+            )}
             installedPluginIds={installedPluginIds}
+            runnerPluginStatuses={runnerPluginStatuses}
+            runnerPluginDescriptions={runnerPluginDescriptions}
             isRunnerCatalogLoading={isRunnerCatalogLoading}
             runnerCatalogError={runnerCatalogError}
             installingRunnerPluginId={installingRunnerPluginId}
             runnerInstallError={runnerInstallError}
+            runnerInstallProgress={runnerInstallProgress}
             selected={selectedRunner}
             onSelect={handleSelectRunner}
             onInstall={handleInstallRunner}
@@ -1011,7 +1206,9 @@ export default function WizardPage() {
           <Button
             variant="outline"
             onClick={goPrev}
-            disabled={currentStep === 0}
+            disabled={
+              currentStep === 0 || isSavingBot || isSubmitting || isCreatingBot
+            }
           >
             <ArrowLeft className="w-4 h-4 mr-1.5" />
             {t('wizard.prev')}
@@ -1041,7 +1238,11 @@ export default function WizardPage() {
               {isSubmitting && (
                 <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
               )}
-              {t('wizard.finish')}
+              {aiChoice === 'more-features'
+                ? t('wizard.step.done')
+                : aiChoice === 'own-model'
+                  ? t('wizard.aiEngine.finishWithModel')
+                  : t('wizard.finish')}
             </Button>
           )}
         </div>
@@ -1314,6 +1515,7 @@ function StepBotConfig({
   adapters,
   createdBotUuid,
   isSavingBot,
+  preparingDefault,
   botSaved,
   pageBotPreviewRequest,
   messageReceived,
@@ -1330,6 +1532,7 @@ function StepBotConfig({
   adapters: Adapter[];
   createdBotUuid: string | null;
   isSavingBot: boolean;
+  preparingDefault: boolean;
   botSaved: boolean;
   pageBotPreviewRequest: number;
   messageReceived: boolean;
@@ -1560,9 +1763,11 @@ function StepBotConfig({
                 {isSavingBot && (
                   <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
                 )}
-                {botSaved
-                  ? t('wizard.botConfig.resaveBot')
-                  : t('wizard.botConfig.saveBot')}
+                {preparingDefault
+                  ? t('wizard.aiEngine.preparingDefault')
+                  : botSaved
+                    ? t('wizard.botConfig.resaveBot')
+                    : t('wizard.botConfig.saveBot')}
               </Button>
             </CardHeader>
             {adapterConfigItems.length > 0 && (
@@ -1623,14 +1828,52 @@ function StepBotConfig({
 // Step 2: Select & Configure AI Engine
 // ---------------------------------------------------------------------------
 
+const RUNNER_INSTALL_STAGE_LABELS: Record<InstallStage, string> = {
+  [InstallStage.CHECKING]: 'plugins.installProgress.checkingUpdate',
+  [InstallStage.DOWNLOADING]: 'plugins.installProgress.downloading',
+  [InstallStage.VALIDATING]: 'plugins.installProgress.validating',
+  [InstallStage.INSTALLING_DEPS]: 'plugins.installProgress.installingDeps',
+  [InstallStage.ACTIVATING]: 'plugins.installProgress.activating',
+  [InstallStage.DONE]: 'plugins.installProgress.completed',
+  [InstallStage.ERROR]: 'plugins.installProgress.failed',
+};
+
+function RunnerStatusBadge({ status }: { status?: RunnerPluginStatus }) {
+  const { t } = useTranslation();
+  if (status !== 'debug') return null;
+  return (
+    <Badge
+      variant="outline"
+      className="w-fit shrink-0 border-orange-400 text-xs font-normal text-orange-400"
+    >
+      <Bug className="size-3" />
+      {t('plugins.debugging')}
+    </Badge>
+  );
+}
+
+function runnerPluginId(runner: string) {
+  return runner
+    .replace(/^plugin:/, '')
+    .split('/')
+    .slice(0, 2)
+    .join('/');
+}
+
 function StepAIEngine({
+  choice,
+  onChoiceChange,
+  onOwnModelSelectionChange,
   runnerOptions,
   marketplaceRunners,
   installedPluginIds,
+  runnerPluginStatuses,
+  runnerPluginDescriptions,
   isRunnerCatalogLoading,
   runnerCatalogError,
   installingRunnerPluginId,
   runnerInstallError,
+  runnerInstallProgress,
   selected,
   onSelect,
   onInstall,
@@ -1639,15 +1882,21 @@ function StepAIEngine({
   runnerConfigValues,
   onRunnerConfigChange,
 }: {
+  choice: AIChoice;
+  onChoiceChange: (choice: AIChoice) => void;
+  onOwnModelSelectionChange: (selection: OwnModelSelection | null) => void;
   runnerOptions: { name: string; label: { en_US: string; zh_Hans: string } }[];
   marketplaceRunners: PluginV4[];
   installedPluginIds: string[];
+  runnerPluginStatuses: Record<string, RunnerPluginStatus>;
+  runnerPluginDescriptions: Record<string, I18nObject>;
   isRunnerCatalogLoading: boolean;
   runnerCatalogError: boolean;
   installingRunnerPluginId: string | null;
   runnerInstallError: string | null;
+  runnerInstallProgress: Record<string, RunnerInstallProgress>;
   selected: string | null;
-  onSelect: (name: string) => void;
+  onSelect: (name: string | null) => void;
   onInstall: (plugin: PluginV4) => void;
   onRetryCatalog: () => void;
   runnerConfigItems: IDynamicFormItemSchema[];
@@ -1683,61 +1932,181 @@ function StepAIEngine({
     [marketplaceRunnerIds, runnerOptions],
   );
 
-  // Before any runner is selected: centered grid layout
-  if (!selected) {
+  const orderedRunnerEntries = useMemo(() => {
+    const installedIds = new Set([
+      ...installedPluginIds,
+      ...Object.keys(runnerPluginStatuses),
+      ...runnerOptions.map((option) => runnerPluginId(option.name)),
+    ]);
+    const entries: (
+      | { kind: 'marketplace'; plugin: PluginV4; installed: boolean }
+      | {
+          kind: 'local';
+          option: (typeof runnerOptions)[number];
+          installed: boolean;
+        }
+    )[] = [
+      ...marketplaceRunners.map((plugin) => ({
+        kind: 'marketplace' as const,
+        plugin,
+        installed: installedIds.has(marketplacePluginId(plugin)),
+      })),
+      ...standaloneRunnerOptions.map((option) => ({
+        kind: 'local' as const,
+        option,
+        installed: true,
+      })),
+    ];
+    return entries.sort((a, b) => Number(b.installed) - Number(a.installed));
+  }, [
+    marketplaceRunners,
+    standaloneRunnerOptions,
+    installedPluginIds,
+    runnerPluginStatuses,
+    runnerOptions,
+  ]);
+
+  const choices = [
+    {
+      id: 'more-features' as const,
+      icon: Blocks,
+      title: t('wizard.aiEngine.moreFeaturesTitle'),
+      description: t('wizard.aiEngine.moreFeaturesDescription'),
+    },
+    {
+      id: 'external' as const,
+      icon: Cable,
+      title: t('wizard.aiEngine.externalTitle'),
+      description: t('wizard.aiEngine.externalDescription'),
+    },
+    {
+      id: 'own-model' as const,
+      icon: Settings2,
+      title: t('wizard.aiEngine.ownModelTitle'),
+      description: t('wizard.aiEngine.ownModelDescription'),
+    },
+  ];
+
+  if (choice === 'own-model') {
     return (
-      <div className="space-y-6 max-w-4xl mx-auto">
+      <div
+        key="ai-engine-own-model"
+        className="w-full animate-in fade-in-0 slide-in-from-right-4 duration-300 ease-out motion-reduce:animate-none"
+      >
+        <OwnModelSetup
+          onBack={() => onChoiceChange('more-features')}
+          onSelectionChange={onOwnModelSelectionChange}
+        />
+      </div>
+    );
+  }
+
+  if (choice !== 'external') {
+    return (
+      <div
+        key="ai-engine-choices"
+        className="mx-auto max-w-4xl space-y-6 animate-in fade-in-0 slide-in-from-left-4 duration-300 ease-out motion-reduce:animate-none"
+      >
         <div className="text-center">
           <h2 className="text-xl font-semibold">
             {t('wizard.aiEngine.title')}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            {t('wizard.aiEngine.description')}
+            {t('wizard.aiEngine.optionalDescription')}
           </p>
         </div>
-        {runnerCatalogError && (
-          <div className="rounded-md border border-destructive/40 bg-destructive/5 p-4">
-            <div className="flex items-start gap-3">
-              <CircleAlert className="mt-0.5 size-5 shrink-0 text-destructive" />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium">
-                  {t('wizard.aiEngine.catalogUnavailable')}
-                </p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {t('wizard.aiEngine.catalogUnavailableDescription')}
-                </p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="mt-3"
-                  onClick={onRetryCatalog}
-                >
-                  <RefreshCw className="size-4" />
-                  {t('common.retry')}
-                </Button>
-              </div>
+        <ToggleGroup
+          type="single"
+          value={choice}
+          onValueChange={(value) => {
+            if (value) onChoiceChange(value as AIChoice);
+          }}
+          aria-label={t('wizard.aiEngine.title')}
+          variant="outline"
+          spacing={3}
+          className="grid w-full grid-cols-1 items-stretch gap-3 md:grid-cols-3"
+        >
+          {choices.map((item) => {
+            const Icon = item.icon;
+            return (
+              <ToggleGroupItem
+                key={item.id}
+                value={item.id}
+                aria-label={item.title}
+                className="h-auto min-h-28 w-full items-start justify-start gap-3 rounded-lg border px-4 py-4 text-left whitespace-normal shadow-none hover:bg-muted/40 data-[state=on]:border-[#2288ee]/50 data-[state=on]:bg-blue-50/60 data-[state=on]:text-foreground data-[state=on]:shadow-none dark:data-[state=on]:border-blue-500/50 dark:data-[state=on]:bg-blue-500/10"
+              >
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-md border bg-background text-[#2288ee] shadow-xs">
+                  <Icon className="size-4" />
+                </span>
+                <span className="min-w-0 space-y-1.5">
+                  <span className="block text-sm font-medium text-foreground">
+                    {item.title}
+                  </span>
+                  <span className="block text-sm font-normal leading-relaxed text-muted-foreground">
+                    {item.description}
+                  </span>
+                </span>
+              </ToggleGroupItem>
+            );
+          })}
+        </ToggleGroup>
+      </div>
+    );
+  }
+
+  // The catalog is shared by the picker and the configuration sidebar.
+  const runnerCatalog = (
+    <div className="space-y-4">
+      {runnerCatalogError && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-4">
+          <div className="flex items-start gap-3">
+            <CircleAlert className="mt-0.5 size-5 shrink-0 text-destructive" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium">
+                {t('wizard.aiEngine.catalogUnavailable')}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {t('wizard.aiEngine.catalogUnavailableDescription')}
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={onRetryCatalog}
+              >
+                <RefreshCw className="size-4" />
+                {t('common.retry')}
+              </Button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {runnerInstallError && (
-          <div className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-            {runnerInstallError}
+      {runnerInstallError && (
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          {runnerInstallError}
+        </div>
+      )}
+
+      {isRunnerCatalogLoading && marketplaceRunners.length === 0 && (
+        <div className="flex min-h-32 items-center justify-center rounded-md border border-dashed">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" />
+            {t('wizard.aiEngine.loadingCatalog')}
           </div>
-        )}
+        </div>
+      )}
 
-        {isRunnerCatalogLoading && marketplaceRunners.length === 0 && (
-          <div className="flex min-h-32 items-center justify-center rounded-md border border-dashed">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" />
-              {t('wizard.aiEngine.loadingCatalog')}
-            </div>
-          </div>
+      <div
+        className={cn(
+          'grid grid-cols-1 gap-4',
+          !selected && 'sm:grid-cols-2 lg:grid-cols-3',
         )}
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {marketplaceRunners.map((plugin) => {
+      >
+        {orderedRunnerEntries.map((entry) => {
+          if (entry.kind === 'marketplace') {
+            const plugin = entry.plugin;
             const pluginId = marketplacePluginId(plugin);
             const prefix = runnerPluginPrefix(plugin);
             const registeredOptions = runnerOptions.filter((option) =>
@@ -1747,8 +2116,15 @@ function StepAIEngine({
               registeredOptions.find((option) =>
                 option.name.endsWith('/default'),
               ) ?? registeredOptions[0];
+            const isSelected = registeredOptions.some(
+              (option) => option.name === selected,
+            );
             const isInstalled = installedPluginIds.includes(pluginId);
             const isInstalling = installingRunnerPluginId === pluginId;
+            const progress = runnerInstallProgress[pluginId];
+            const progressLabel = progress
+              ? t(RUNNER_INSTALL_STAGE_LABELS[progress.stage])
+              : t('wizard.aiEngine.installing');
             const iconUrl =
               getCloudServiceClientSync().resolveMarketplaceIconURL(
                 plugin.type,
@@ -1758,23 +2134,36 @@ function StepAIEngine({
               );
 
             return (
-              <Card key={pluginId} className="flex min-h-52 flex-col">
-                <CardHeader className="flex flex-row items-start gap-3 pb-3">
+              <Card
+                key={pluginId}
+                className={cn(
+                  'flex flex-col gap-3 py-4 shadow-none',
+                  !selected && 'min-h-52',
+                  isSelected &&
+                    'border-[#2288ee]/50 bg-blue-50/60 dark:border-blue-500/50 dark:bg-blue-500/10',
+                )}
+              >
+                <CardHeader className="flex flex-row items-start gap-3 px-4">
                   <img
                     src={iconUrl}
                     alt=""
                     className="size-10 shrink-0 rounded-md border bg-muted object-cover"
                   />
                   <div className="min-w-0 flex-1">
-                    <CardTitle className="text-base">
-                      {extractI18nObject(plugin.label) || plugin.name}
-                    </CardTitle>
-                    <CardDescription className="mt-1 text-xs font-mono">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <CardTitle className="text-base">
+                        {extractI18nObject(plugin.label) || plugin.name}
+                      </CardTitle>
+                      <RunnerStatusBadge
+                        status={runnerPluginStatuses[pluginId]}
+                      />
+                    </div>
+                    <CardDescription className="mt-1 break-all text-xs">
                       {plugin.author}/{plugin.name}
                     </CardDescription>
                   </div>
                 </CardHeader>
-                <CardContent className="flex flex-1 flex-col">
+                <CardContent className="flex flex-1 flex-col px-4">
                   <p className="line-clamp-3 text-sm text-muted-foreground">
                     {extractI18nObject(plugin.description)}
                   </p>
@@ -1783,7 +2172,11 @@ function StepAIEngine({
                       <Button
                         type="button"
                         className="w-full"
-                        onClick={() => onSelect(preferredOption.name)}
+                        variant={isSelected ? 'secondary' : 'outline'}
+                        aria-pressed={isSelected}
+                        onClick={() => {
+                          if (!isSelected) onSelect(preferredOption.name);
+                        }}
                       >
                         <Check className="size-4" />
                         {t('wizard.aiEngine.useInstalled')}
@@ -1801,135 +2194,187 @@ function StepAIEngine({
                     ) : (
                       <Button
                         type="button"
-                        className="w-full"
+                        className={cn(
+                          'relative w-full overflow-hidden',
+                          isInstalling && 'disabled:opacity-100',
+                        )}
                         disabled={installingRunnerPluginId !== null}
+                        aria-busy={isInstalling}
+                        aria-live="polite"
+                        title={isInstalling ? progressLabel : undefined}
                         onClick={() => onInstall(plugin)}
                       >
-                        {isInstalling ? (
-                          <Loader2 className="size-4 animate-spin" />
-                        ) : (
-                          <Download className="size-4" />
+                        {isInstalling && (
+                          <span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute inset-y-0 left-0 bg-white/20 transition-[width] duration-300 motion-reduce:transition-none"
+                            style={{ width: `${progress?.percent ?? 0}%` }}
+                          />
                         )}
-                        {isInstalling
-                          ? t('wizard.aiEngine.installing')
-                          : t('wizard.aiEngine.installAndContinue')}
+                        <span className="relative flex min-w-0 items-center justify-center gap-2">
+                          {isInstalling ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <Download className="size-4" />
+                          )}
+                          <span className="truncate">
+                            {isInstalling
+                              ? progressLabel
+                              : progress?.stage === InstallStage.ERROR
+                                ? `${t('plugins.installProgress.failed')} · ${t('common.retry')}`
+                                : t('wizard.aiEngine.installAndContinue')}
+                          </span>
+                          {isInstalling && (
+                            <span className="shrink-0 tabular-nums">
+                              {progress?.percent ?? 0}%
+                            </span>
+                          )}
+                        </span>
                       </Button>
                     )}
                   </div>
                 </CardContent>
               </Card>
             );
-          })}
-
-          {standaloneRunnerOptions.map((opt) => (
+          }
+          const opt = entry.option;
+          const pluginId = runnerPluginId(opt.name);
+          const [author, name] = pluginId.split('/');
+          const description = runnerPluginDescriptions[pluginId];
+          const isSelected = selected === opt.name;
+          return (
             <Card
               key={opt.name}
-              className="min-h-40 cursor-pointer transition-all hover:border-primary/50 hover:shadow-md"
-              onClick={() => onSelect(opt.name)}
+              className={cn(
+                'flex flex-col gap-3 py-4 shadow-none',
+                !selected && 'min-h-52',
+                isSelected &&
+                  'border-[#2288ee]/50 bg-blue-50/60 dark:border-blue-500/50 dark:bg-blue-500/10',
+              )}
             >
-              <CardHeader className="flex flex-row items-center gap-3">
+              <CardHeader className="flex flex-row items-start gap-3 px-4">
+                {author && name ? (
+                  <img
+                    src={httpClient.getPluginIconURL(author, name)}
+                    alt=""
+                    className="size-10 shrink-0 rounded-md border bg-muted object-cover"
+                  />
+                ) : (
+                  <Blocks className="size-10 shrink-0 rounded-md border bg-muted p-2 text-muted-foreground" />
+                )}
                 <div className="min-w-0 flex-1">
-                  <CardTitle className="text-base">
-                    {extractI18nObject(opt.label)}
-                  </CardTitle>
-                  <CardDescription className="mt-1 text-xs font-mono text-muted-foreground">
-                    {opt.name}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CardTitle className="text-base">
+                      {extractI18nObject(opt.label)}
+                    </CardTitle>
+                    <RunnerStatusBadge
+                      status={runnerPluginStatuses[pluginId]}
+                    />
+                  </div>
+                  <CardDescription className="mt-1 break-all text-xs">
+                    {pluginId}
                   </CardDescription>
                 </div>
               </CardHeader>
+              <CardContent className="flex flex-1 flex-col px-4">
+                {description && (
+                  <p className="line-clamp-3 text-sm text-muted-foreground">
+                    {extractI18nObject(description)}
+                  </p>
+                )}
+                <div className="mt-auto pt-4">
+                  <Button
+                    type="button"
+                    className="w-full"
+                    variant={isSelected ? 'secondary' : 'outline'}
+                    aria-pressed={isSelected}
+                    onClick={() => {
+                      if (!isSelected) onSelect(opt.name);
+                    }}
+                  >
+                    <Check className="size-4" />
+                    {t('wizard.aiEngine.useInstalled')}
+                  </Button>
+                </div>
+              </CardContent>
             </Card>
-          ))}
-        </div>
-
-        {!isRunnerCatalogLoading &&
-          marketplaceRunners.length === 0 &&
-          standaloneRunnerOptions.length === 0 &&
-          !runnerCatalogError && (
-            <div className="rounded-md border border-dashed p-6 text-center">
-              <p className="font-medium">
-                {t('wizard.aiEngine.noMarketplaceRunners')}
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {t('wizard.aiEngine.noMarketplaceRunnersDescription')}
-              </p>
-            </div>
-          )}
-
-        <div className="flex justify-center">
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/home/extensions?type=plugin&component=Runner&runner_usage=agent">
-              {t('wizard.aiEngine.browseRunners')}
-              <ExternalLink className="size-4" />
-            </Link>
-          </Button>
-        </div>
+          );
+        })}
       </div>
-    );
-  }
 
-  // After a runner is selected: left-right split layout
-  // On mobile (< lg): single column, normal scroll from parent
-  // On desktop (>= lg): side-by-side with independent scroll per column
+      {!isRunnerCatalogLoading &&
+        marketplaceRunners.length === 0 &&
+        standaloneRunnerOptions.length === 0 &&
+        !runnerCatalogError && (
+          <div className="rounded-md border border-dashed p-6 text-center">
+            <p className="font-medium">
+              {t('wizard.aiEngine.noMarketplaceRunners')}
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {t('wizard.aiEngine.noMarketplaceRunnersDescription')}
+            </p>
+          </div>
+        )}
+
+      <div className="flex justify-center">
+        <Button variant="outline" size="sm" asChild>
+          <a
+            href="https://space.langbot.app/market?type=plugin&component=Runner"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {t('wizard.aiEngine.browseRunners')}
+            <ExternalLink className="size-4" />
+          </a>
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="flex flex-col lg:flex-1 lg:min-h-0 max-w-6xl mx-auto w-full">
-      <div className="text-center shrink-0 mb-4">
-        <h2 className="text-xl font-semibold">{t('wizard.aiEngine.title')}</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          {t('wizard.aiEngine.description')}
+    <div
+      key={selected ? 'ai-engine-external-config' : 'ai-engine-external-picker'}
+      className="mx-auto flex w-full max-w-4xl flex-col gap-6 animate-in fade-in-0 slide-in-from-right-4 duration-300 ease-out motion-reduce:animate-none lg:min-h-0 lg:flex-1"
+    >
+      <div className="shrink-0 text-center">
+        <h2 className="text-xl font-semibold">
+          {t('wizard.aiEngine.externalTitle')}
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t(
+            selected
+              ? 'wizard.aiEngine.description'
+              : 'wizard.aiEngine.runnerDescription',
+          )}
         </p>
       </div>
-
-      <div className="flex flex-col lg:flex-row lg:justify-center gap-6 lg:flex-1 lg:min-h-0 animate-in fade-in slide-in-from-bottom-2 duration-300">
-        {/* Left: runner list */}
-        <div className="w-full lg:w-[280px] shrink-0 lg:overflow-y-auto lg:pr-3">
-          {/* p-1 provides space for ring-2 (4px) to render without clipping */}
-          <div className="space-y-3 p-1">
-            {runnerOptions.map((opt) => {
-              const isSelected = selected === opt.name;
-              return (
-                <Card
-                  key={opt.name}
-                  className={cn(
-                    'cursor-pointer transition-all',
-                    isSelected
-                      ? 'ring-2 ring-primary shadow-md'
-                      : 'opacity-50 hover:opacity-80 hover:border-primary/50',
-                  )}
-                  onClick={() => onSelect(opt.name)}
-                >
-                  <CardHeader className="flex flex-row items-center gap-3 py-3 px-4">
-                    <div className="min-w-0 flex-1">
-                      <CardTitle
-                        className={cn(
-                          'text-sm',
-                          !isSelected && 'text-muted-foreground',
-                        )}
-                      >
-                        {extractI18nObject(opt.label)}
-                      </CardTitle>
-                      <CardDescription className="text-xs font-mono text-muted-foreground">
-                        {opt.name}
-                      </CardDescription>
-                    </div>
-                    {isSelected && (
-                      <div className="shrink-0">
-                        <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                          <Check className="w-3 h-3 text-primary-foreground" />
-                        </div>
-                      </div>
-                    )}
-                  </CardHeader>
-                </Card>
-              );
-            })}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="shrink-0 self-start"
+        onClick={() => {
+          if (selected) onSelect(null);
+          else onChoiceChange('more-features');
+        }}
+      >
+        <ArrowLeft className="size-4 mr-1.5" />
+        {t(
+          selected
+            ? 'wizard.aiEngine.backToList'
+            : 'wizard.aiEngine.backToChoices',
+        )}
+      </Button>
+      {selected ? (
+        <div className="flex min-h-0 flex-col gap-6 lg:flex-1 lg:flex-row">
+          <div className="w-full shrink-0 lg:w-[300px] lg:overflow-y-auto lg:pr-2">
+            {runnerCatalog}
           </div>
-        </div>
-
-        {/* Right: runner configuration — fixed width on desktop */}
-        <div className="w-full lg:w-[560px] shrink-0 lg:overflow-y-auto lg:pr-3 animate-in fade-in slide-in-from-right-2 duration-300">
-          <div className="p-1">
+          <div className="min-w-0 flex-1 lg:overflow-y-auto lg:pr-2">
             {runnerConfigItems.length > 0 && (
-              <Card>
+              <Card
+                key={selected}
+                className="animate-in fade-in-0 slide-in-from-right-2 duration-300 motion-reduce:animate-none"
+              >
                 <CardHeader>
                   <CardTitle>
                     {t('wizard.config.aiConfig', { engine: runnerLabel })}
@@ -1937,7 +2382,6 @@ function StepAIEngine({
                 </CardHeader>
                 <CardContent>
                   <DynamicFormComponent
-                    key={selected}
                     itemConfigList={runnerConfigItems}
                     initialValues={runnerConfigValues as Record<string, object>}
                     onSubmit={stableRunnerConfigCb}
@@ -1948,7 +2392,9 @@ function StepAIEngine({
             )}
           </div>
         </div>
-      </div>
+      ) : (
+        runnerCatalog
+      )}
     </div>
   );
 }

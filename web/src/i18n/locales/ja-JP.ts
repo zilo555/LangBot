@@ -2361,14 +2361,19 @@ const jaJP = {
         'ボットの活動を監視して、プラットフォーム接続が正常に動作していることを確認します。',
     },
     aiEngine: {
+      defaultModelUnavailable:
+        '既定の会話モデルがありません。再試行してください。',
+      defaultRunnerUnavailable:
+        'ローカル Agent が準備できていません。再試行してください。',
+      preparingDefault: '既定の AI を準備中…',
       title: 'AIエンジンを選択',
       description:
         'ボットのインテリジェンスを駆動するAIエンジンを選択してください。',
       optionalDescription:
-        'このステップは任意です。現在の Agent をどのように設定するか選択してください。',
+        '既定の AI は設定済みです。そのまま使うか、接続方法を変更できます。',
       externalTitle: '外部プラットフォームの Agent を接続',
       externalDescription:
-        'Dify、n8n、Coze などを接続し、ボットのパイプラインを置き換えます。',
+        'ランナープラグインで Dify、n8n、Coze などの外部 Agent に接続します。',
       ownModelTitle: '自分のモデルを使用',
       ownModelDescription:
         'プロバイダーを追加し、モデルをスキャンまたは手動入力して設定を完了します。',
@@ -2381,7 +2386,7 @@ const jaJP = {
       selectModelTitle: 'モデルを選択',
       selectScannedModelTitle: 'モデルを選択',
       selectScannedModelDescription:
-        '選択したモデルを新しいパイプラインのメインモデルに設定し、ボットをそのパイプラインへ切り替えます。',
+        '選択したモデルを現在のパイプラインのメインモデルに設定します。',
       scanModelMode: 'モデルをスキャン',
       manualModelMode: '手動で追加',
       scanningModels: '利用可能なモデルをスキャン中…',
@@ -2400,11 +2405,12 @@ const jaJP = {
       manualModelOptions: '任意のモデル機能',
       editProvider: 'プロバイダーを編集',
       rescanModels: 'モデルを再スキャン',
-      moreFeaturesTitle: 'Agent に機能を追加',
+      moreFeaturesTitle: '既定の設定を使う',
       moreFeaturesDescription:
-        'ワークベンチを開き、自動生成されたばかりの Agent にツール、ナレッジベースなどの機能を追加します。',
+        'ローカル Agent と推奨モデルを使います。ツールやナレッジベースは後から追加できます。',
       runnerDescription: '外部 Agent の Runner を選択し、接続を設定します。',
       backToChoices: '選択肢に戻る',
+      backToList: '一覧に戻る',
       createExternal: '作成して関連付ける',
       finishWithModel: '選択したモデルを使用して完了',
       openWorkbench: 'ワークベンチを開く',

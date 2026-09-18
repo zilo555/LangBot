@@ -510,6 +510,17 @@ test.describe('wizard and QR platform regressions', () => {
               label: { en_US: 'AI Feature', zh_Hans: 'AI 能力' },
               stages: [
                 {
+                  name: 'plugin:langbot-team/LocalAgent/default',
+                  config: [
+                    {
+                      name: 'model',
+                      type: 'model-fallback-selector',
+                      required: true,
+                      default: { primary: 'llm-valid', fallbacks: [] },
+                    },
+                  ],
+                },
+                {
                   name: 'runner',
                   label: { en_US: 'Runtime', zh_Hans: '运行方式' },
                   config: [
@@ -562,7 +573,15 @@ test.describe('wizard and QR platform regressions', () => {
     await expect(page.getByRole('button', { name: 'Next' })).toBeDisabled();
     messageReceived = true;
     await page.getByRole('button', { name: 'Next' }).click();
-    await page.getByText('External Runner', { exact: true }).click();
+    await expect(
+      page.getByText('Use the default setup', { exact: true }),
+    ).toBeVisible();
+    await page.getByText('Connect an External Agent', { exact: true }).click();
+    await page
+      .locator('[data-slot="card"]')
+      .filter({ has: page.getByText('External Runner', { exact: true }) })
+      .getByRole('button', { name: 'Use This Runner' })
+      .click();
 
     const deployButton = page.getByRole('button', { name: 'Create & Deploy' });
     await expect(deployButton).toBeDisabled();
@@ -571,21 +590,14 @@ test.describe('wizard and QR platform regressions', () => {
     const bindingRequest = page.waitForRequest(
       (request) =>
         request.method() === 'PUT' &&
-        new URL(request.url()).pathname === '/api/v1/platform/bots/bot-1',
+        new URL(request.url()).pathname === '/api/v1/pipelines/pipeline-1',
     );
     await deployButton.click();
     const body = (await bindingRequest).postDataJSON();
-    expect(body.event_bindings).toEqual([
-      {
-        event_pattern: 'message.received',
-        target_type: 'pipeline',
-        target_uuid: 'pipeline-1',
-        filters: [],
-        priority: 0,
-        enabled: true,
-        description: '',
-      },
-    ]);
+    expect(body.config.ai.runner.id).toBe('external-runner');
+    expect(body.config.ai.runner_config['external-runner']['api-key']).toBe(
+      'app-real-api-key',
+    );
     await expect(
       page.getByRole('button', { name: 'Back to Workbench' }),
     ).toBeVisible();

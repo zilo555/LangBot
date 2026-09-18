@@ -1875,12 +1875,16 @@ const zhHant = {
       logsDescription: '監控機器人活動，確認平台連接是否正常運作。',
     },
     aiEngine: {
+      defaultModelUnavailable: '暫無可用的預設對話模型，請重試。',
+      defaultRunnerUnavailable: '本地 Agent 尚未就緒，請重試。',
+      preparingDefault: '正在準備預設 AI…',
       title: '配置 AI 引擎',
       description: '選擇驅動機器人智慧的 AI 引擎。',
-      optionalDescription: '這一步可選。選擇接下來要如何完善目前的 Agent。',
+      optionalDescription:
+        '預設 AI 已設定好，你可以直接使用，也可以選擇其他接入方式。',
       externalTitle: '接入外部平台 Agent',
       externalDescription:
-        '接入 Dify、n8n、Coze 等平台，並替換目前機器人的流水線。',
+        '透過執行器外掛接入 Dify、n8n、Coze 等外部 Agent 平台。',
       ownModelTitle: '改成使用自己的模型',
       ownModelDescription:
         '新增模型供應商，自動掃描或手動填寫模型以快速完成引導。',
@@ -1892,7 +1896,7 @@ const zhHant = {
       selectModelTitle: '選擇模型',
       selectScannedModelTitle: '選擇模型',
       selectScannedModelDescription:
-        '所選模型將成為新流水線的主要模型，機器人也會切換到該流水線。',
+        '選取的模型將取代目前機器人流水線的主模型。',
       scanModelMode: '自動掃描',
       manualModelMode: '手動新增',
       scanningModels: '正在掃描可用模型…',
@@ -1906,11 +1910,12 @@ const zhHant = {
       manualModelOptions: '模型能力（可選）',
       editProvider: '編輯供應商',
       rescanModels: '重新掃描模型',
-      moreFeaturesTitle: '給目前的 Agent 配置更多功能',
+      moreFeaturesTitle: '使用預設設定',
       moreFeaturesDescription:
-        '進入工作台，為剛剛自動產生的 Agent 新增工具、知識庫等能力',
+        '繼續使用本地 Agent 和推薦模型，之後可在流水線中新增工具、知識庫等功能。',
       runnerDescription: '選擇外部 Agent 的運行器並完成連接配置。',
       backToChoices: '返回選項',
+      backToList: '返回列表',
       createExternal: '建立並關聯',
       finishWithModel: '使用所選模型並完成',
       openWorkbench: '進入工作台',

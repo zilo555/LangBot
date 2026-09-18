@@ -89,13 +89,10 @@ test('requires the selected Runner mandatory configuration before finishing', ()
     wizardSource,
     /isRequiredRunnerConfigComplete\(selectedRunnerConfigItems, runnerConfig\)/,
   );
+  assert.match(wizardSource, /aiChoice === 'external'/);
   assert.match(
     wizardSource,
-    /return selectedRunner !== null && isRunnerConfigComplete/,
-  );
-  assert.match(
-    wizardSource,
-    /!selectedRunner \|\|[\s\S]*?!isRunnerConfigComplete \|\|[\s\S]*?!createdBotUuid/,
+    /!createdBotUuid \|\| !createdPipelineUuid \|\| !canProceed\(\)/,
   );
 });
 

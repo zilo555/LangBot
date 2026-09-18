@@ -2012,14 +2012,19 @@ const esES = {
         'Monitorea la actividad del Bot para verificar que la conexión con la plataforma funcione.',
     },
     aiEngine: {
+      defaultModelUnavailable:
+        'No hay un modelo predeterminado disponible. Inténtalo de nuevo.',
+      defaultRunnerUnavailable:
+        'Local Agent aún no está listo. Inténtalo de nuevo.',
+      preparingDefault: 'Preparando la IA predeterminada…',
       title: 'Configura el motor de IA',
       description:
         'Elige el motor de IA que impulsará la inteligencia de tu Bot.',
       optionalDescription:
-        'Este paso es opcional. Elige cómo quieres continuar con el Agent actual.',
+        'La IA ya está configurada. Puedes usarla o cambiar la conexión.',
       externalTitle: 'Conectar un Agent de una plataforma externa',
       externalDescription:
-        'Conecta Dify, n8n, Coze u otra plataforma y sustituye el Pipeline del Bot.',
+        'Conecta Dify, n8n, Coze u otro Agent externo mediante un plugin Runner.',
       ownModelTitle: 'Usar mi propio modelo',
       ownModelDescription:
         'Añade un proveedor y luego escanea o introduce manualmente un modelo para completar la configuración.',
@@ -2032,7 +2037,7 @@ const esES = {
       selectModelTitle: 'Elige un modelo',
       selectScannedModelTitle: 'Elige un modelo',
       selectScannedModelDescription:
-        'El modelo seleccionado será el modelo principal de un nuevo Pipeline y el Bot cambiará a él.',
+        'El modelo seleccionado sustituirá al modelo principal del pipeline de este bot.',
       scanModelMode: 'Detectar modelos',
       manualModelMode: 'Añadir manualmente',
       scanningModels: 'Detectando modelos disponibles…',
@@ -2051,12 +2056,13 @@ const esES = {
       manualModelOptions: 'Capacidades opcionales del modelo',
       editProvider: 'Editar proveedor',
       rescanModels: 'Volver a detectar modelos',
-      moreFeaturesTitle: 'Añadir más funciones al Agent',
+      moreFeaturesTitle: 'Usar la configuración predeterminada',
       moreFeaturesDescription:
-        'Abre el área de trabajo para añadir herramientas, bases de conocimiento y otras capacidades al Agent que se acaba de generar automáticamente.',
+        'Usa Local Agent y el modelo recomendado. Podrás añadir herramientas y bases de conocimiento después.',
       runnerDescription:
         'Selecciona un Runner para el Agent externo y configura su conexión.',
       backToChoices: 'Volver a las opciones',
+      backToList: 'Volver a la lista',
       createExternal: 'Crear y vincular',
       finishWithModel: 'Usar el modelo seleccionado y finalizar',
       openWorkbench: 'Abrir área de trabajo',

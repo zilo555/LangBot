@@ -1938,13 +1938,17 @@ const thTH = {
         'ตรวจสอบกิจกรรม Bot เพื่อยืนยันว่าการเชื่อมต่อแพลตฟอร์มทำงานอยู่',
     },
     aiEngine: {
+      defaultModelUnavailable:
+        'ไม่มีโมเดลเริ่มต้นที่พร้อมใช้งาน โปรดลองอีกครั้ง',
+      defaultRunnerUnavailable: 'Local Agent ยังไม่พร้อม โปรดลองอีกครั้ง',
+      preparingDefault: 'กำลังเตรียม AI เริ่มต้น…',
       title: 'กำหนดค่าเครื่องมือ AI',
       description: 'เลือกเครื่องมือ AI ที่จะขับเคลื่อนความฉลาดของ Bot',
       optionalDescription:
-        'ขั้นตอนนี้ไม่บังคับ เลือกวิธีที่คุณต้องการดำเนินการต่อกับ Agent ปัจจุบัน',
+        'AI เริ่มต้นพร้อมแล้ว ใช้งานได้ทันทีหรือเลือกวิธีเชื่อมต่ออื่น',
       externalTitle: 'เชื่อมต่อ Agent จากแพลตฟอร์มภายนอก',
       externalDescription:
-        'เชื่อมต่อ Dify, n8n, Coze หรือแพลตฟอร์มอื่น และแทนที่ Pipeline ของ Bot',
+        'เชื่อมต่อ Dify, n8n, Coze หรือ Agent ภายนอกผ่านปลั๊กอิน Runner',
       ownModelTitle: 'ใช้โมเดลของฉันเอง',
       ownModelDescription:
         'เพิ่มผู้ให้บริการ แล้วสแกนหรือกรอกโมเดลด้วยตนเองเพื่อเสร็จสิ้นการตั้งค่า',
@@ -1957,7 +1961,7 @@ const thTH = {
       selectModelTitle: 'เลือกโมเดล',
       selectScannedModelTitle: 'เลือกโมเดล',
       selectScannedModelDescription:
-        'โมเดลที่เลือกจะเป็นโมเดลหลักของ Pipeline ใหม่ และ Bot จะเปลี่ยนไปใช้โมเดลนี้',
+        'โมเดลที่เลือกจะแทนที่โมเดลหลักในไปป์ไลน์ของบอทนี้',
       scanModelMode: 'สแกนโมเดล',
       manualModelMode: 'เพิ่มด้วยตนเอง',
       scanningModels: 'กำลังสแกนโมเดลที่พร้อมใช้งาน…',
@@ -1974,12 +1978,13 @@ const thTH = {
       manualModelOptions: 'ความสามารถเพิ่มเติมของโมเดล',
       editProvider: 'แก้ไขผู้ให้บริการ',
       rescanModels: 'สแกนโมเดลอีกครั้ง',
-      moreFeaturesTitle: 'เพิ่มความสามารถให้ Agent',
+      moreFeaturesTitle: 'ใช้การตั้งค่าเริ่มต้น',
       moreFeaturesDescription:
-        'เปิดหน้าทำงานเพื่อเพิ่มเครื่องมือ ฐานความรู้ และความสามารถอื่น ๆ ให้ Agent ที่เพิ่งสร้างขึ้นโดยอัตโนมัติ',
+        'ใช้ Local Agent และโมเดลที่แนะนำต่อไป เพิ่มเครื่องมือและฐานความรู้ได้ภายหลัง',
       runnerDescription:
         'เลือก Runner สำหรับ Agent ภายนอกและกำหนดค่าการเชื่อมต่อ',
       backToChoices: 'กลับไปยังตัวเลือก',
+      backToList: 'กลับไปยังรายการ',
       createExternal: 'สร้างและผูก',
       finishWithModel: 'ใช้โมเดลที่เลือกและเสร็จสิ้น',
       openWorkbench: 'เปิดหน้าทำงาน',

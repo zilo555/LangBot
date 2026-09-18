@@ -185,7 +185,9 @@ function isPluginInstallTask(name: string): boolean {
 /**
  * Convert a backend AsyncTask to our PluginInstallTask.
  */
-function asyncTaskToPluginInstallTask(task: AsyncTask): PluginInstallTask {
+export function asyncTaskToPluginInstallTask(
+  task: AsyncTask,
+): PluginInstallTask {
   const source = extractSourceFromName(task.name);
   const md = (task.task_context?.metadata ?? {}) as Record<string, unknown>;
   const action = task.task_context?.current_action || '';

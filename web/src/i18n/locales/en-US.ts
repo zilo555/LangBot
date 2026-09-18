@@ -2580,14 +2580,18 @@ const enUS = {
         'Monitor bot activity to verify the platform connection is working.',
     },
     aiEngine: {
+      defaultModelUnavailable:
+        'No default chat model is available. Please retry.',
+      defaultRunnerUnavailable: 'Local Agent is not ready. Please retry.',
+      preparingDefault: 'Preparing default AI…',
       title: 'Select an AI Engine',
       description:
         "Choose the AI engine that will power your bot's intelligence.",
       optionalDescription:
-        'This step is optional. Choose how you want to continue with the current agent.',
+        'The default AI is ready. Keep it or choose another way to connect.',
       externalTitle: 'Connect an External Agent',
       externalDescription:
-        'Connect Dify, n8n, Coze, or another platform and replace the bot pipeline.',
+        'Connect Dify, n8n, Coze, or another external Agent through a Runner plugin.',
       ownModelTitle: 'Use My Own Model',
       ownModelDescription:
         'Add a provider, then scan or manually enter a model to finish setup.',
@@ -2600,7 +2604,7 @@ const enUS = {
       selectModelTitle: 'Choose a Model',
       selectScannedModelTitle: 'Choose a Model',
       selectScannedModelDescription:
-        'The selected model will be the primary model of a new pipeline, and the bot will switch to it.',
+        'The selected model will replace the primary model in this bot’s pipeline.',
       scanModelMode: 'Scan Models',
       manualModelMode: 'Add Manually',
       scanningModels: 'Scanning available models…',
@@ -2619,12 +2623,13 @@ const enUS = {
       manualModelOptions: 'Optional Model Capabilities',
       editProvider: 'Edit provider',
       rescanModels: 'Scan models again',
-      moreFeaturesTitle: 'Add More Agent Features',
+      moreFeaturesTitle: 'Use the default setup',
       moreFeaturesDescription:
-        'Open the workbench to add tools, knowledge bases, and other capabilities to the Agent that was just generated automatically.',
+        'Keep Local Agent and the recommended model. You can add tools and knowledge bases later.',
       runnerDescription:
         'Select a runner for the external agent and configure its connection.',
       backToChoices: 'Back to options',
+      backToList: 'Back to list',
       createExternal: 'Create and Bind',
       finishWithModel: 'Use Selected Model & Finish',
       openWorkbench: 'Open Workbench',
