@@ -1,5 +1,5 @@
 <p align="center">
-<a href="https://langbot.app">
+<a href="https://langbot.rcpd.cc">
 <img width="130" src="res/logo-blue.png" alt="LangBot"/>
 </a>
 
@@ -18,7 +18,7 @@ English / [简体中文](README_CN.md) / [繁體中文](README_TW.md) / [日本�
 <img src="https://img.shields.io/badge/python-3.10 ~ 3.13 -blue.svg" alt="python">
 [![GitHub stars](https://img.shields.io/github/stars/langbot-app/LangBot?style=social)](https://github.com/langbot-app/LangBot/stargazers)
 
-<a href="https://langbot.app">Website</a> ｜
+<a href="https://langbot.rcpd.cc">Website</a> ｜
 <a href="https://langbot.app/docs/en/insight/features">Features</a> ｜
 <a href="https://langbot.app/docs/en/insight/guide">Docs</a> ｜
 <a href="https://langbot.app/docs/en/tags/readme">API</a> ｜
