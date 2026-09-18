@@ -864,3 +864,90 @@ async def test_all_mode_rejects_duplicate_tasks_and_unconfirmed_requests(env):
     with pytest.raises(env.m.MigrationError, match='migration_running'):
         await execute_all(env)
     env.svc._all_tasks.clear()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('stage', ['discovery', 'install', 'validation'])
+async def test_disconnected_runtime_has_specific_error_without_modifying_sources(env, stage):
+    from langbot.pkg.plugin.connector import PluginRuntimeNotConnectedError
+
+    error = PluginRuntimeNotConnectedError('private connection diagnostics')
+    if stage == 'discovery':
+        env.ap.runner_registry.list_runners.side_effect = error
+    elif stage == 'install':
+        async with env.engine.begin() as conn:
+            await conn.execute(sa.delete(PluginSetting))
+        env.ap.plugin_connector.install_plugin = AsyncMock(side_effect=error)
+    else:
+        env.svc._verify_runtime = AsyncMock(side_effect=error)
+    _, metadata = await execute_all(env)
+    assert all(r['code'] == 'plugin_runtime_unavailable' for r in metadata['results'])
+    assert 'private connection diagnostics' not in str(metadata)
+    configs, backups = await rows(env)
+    assert configs['one'] == SOURCE and configs['two'] == SOURCE
+    assert not backups
+
+
+def test_install_progress_records_stages_without_exposing_diagnostics():
+    from langbot.pkg.api.http.service.pipeline_migration import MigrationInstallContext
+
+    ctx = MigrationInstallContext({'author': 'team', 'name': 'Runner', 'version': '1.0'})
+    ctx.trace('private-token', action='downloading plugin package')
+    ctx.metadata.update(download_current=120, download_total=240, progress_percent=15, url='private-token')
+    ctx.set_current_action('validating plugin package')
+    ctx.metadata['progress_percent'] = float('nan')
+    ctx.finish('plugin_install_failed')
+    assert ctx.progress['download_current'] == 120
+    assert ctx.progress['progress_percent'] == 15
+    assert [step['stage'] for step in ctx.progress['steps']] == ['checking', 'downloading', 'validating']
+    assert all(step['finished_at'] is not None for step in ctx.progress['steps'])
+    assert ctx.progress['status'] == 'failed'
+    assert 'private-token' not in str(ctx.progress)
+
+
+@pytest.mark.asyncio
+async def test_install_progress_visible_while_download_is_running(env):
+    import asyncio
+
+    async with env.engine.begin() as conn:
+        await conn.execute(sa.delete(PluginSetting))
+    started, release = asyncio.Event(), asyncio.Event()
+
+    async def install(source, info, task_context):
+        task_context.set_current_action('downloading plugin package')
+        task_context.metadata.update(download_current=123, download_total=456)
+        started.set()
+        await release.wait()
+        raise RuntimeError('private-token')
+
+    env.ap.plugin_connector.install_plugin = AsyncMock(side_effect=install)
+    response = await env.svc.execute(context(), {'confirmed': True, 'all': True, 'install_plugins': True})
+    task = env.ap.task_mgr.get_task_by_id(response['task_id'])
+    try:
+        await asyncio.wait_for(started.wait(), 3)
+        await asyncio.sleep(0.25)
+        progress = task.task_context.metadata['installations'][0]
+        assert progress['status'] == 'installing'
+        assert progress['download_current'] == 123
+        assert progress['stage'] == 'downloading'
+    finally:
+        release.set()
+        await task.task
+    assert len(task.task_context.metadata['installations']) == 1
+    assert progress['status'] == 'failed'
+    assert 'private-token' not in str(task.task_context.to_dict())
+
+
+@pytest.mark.asyncio
+async def test_missing_marketplace_release_has_specific_migration_result(env):
+    from langbot.pkg.plugin.connector import MarketplacePluginVersionNotFoundError
+
+    async with env.engine.begin() as conn:
+        await conn.execute(sa.delete(PluginSetting))
+    env.ap.plugin_connector.install_plugin = AsyncMock(
+        side_effect=MarketplacePluginVersionNotFoundError('private-token')
+    )
+    _, metadata = await execute_all(env)
+    assert all(r['code'] == 'plugin_version_unavailable' for r in metadata['results'])
+    assert metadata['installations'][0]['code'] == 'plugin_version_unavailable'
+    assert 'private-token' not in str(metadata)

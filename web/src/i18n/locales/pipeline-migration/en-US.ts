@@ -1,4 +1,25 @@
 export default {
+  complete: 'Done',
+  checkingPlugin: 'Check plugin',
+  preparingPlugin: 'Prepare installation',
+  installDetails: 'Installation details',
+  stageProgress: 'Stage progress',
+  downloaded: 'Downloaded {{size}}',
+  processed: 'Processed {{completed}} / {{total}} pipelines',
+  installErrors: {
+    plugin_version_unavailable:
+      'The required plugin version is not available in the marketplace. Retry after it is published, or migrate data only.',
+    plugin_download_timeout:
+      'Plugin download timed out. Check the network and retry.',
+    plugin_marketplace_unavailable:
+      'The marketplace could not serve the plugin package. Retry later.',
+    plugin_download_failed:
+      'Could not download the plugin. Check the network and retry.',
+    dependency_prepare_failed:
+      'Plugin dependencies could not be installed. Check the runtime environment and retry.',
+    plugin_launch_failed:
+      'The plugin could not start. Check the runtime environment and retry.',
+  },
   autoDescription:
     'Legacy runners are now plugins. Migrate all pipelines while keeping your settings. Original configurations are backed up; conversations start fresh.',
   viewPipelines: 'View pipelines',
@@ -10,12 +31,15 @@ export default {
   migrating: 'Migrating pipelines…',
   summary: '{{migrated}} migrated; {{remaining}} need attention.',
   installFailed:
-    'Plugin installation failed. Check your network and extension quota, then retry, or migrate data only.',
+    'Plugin installation failed. Expand the details to see the failed stage, then retry or migrate data only.',
 
   activationRetryHint:
     'After checking the runtime, refresh, select this pipeline and confirm to retry activation only. Its saved configuration will not be migrated again.',
   details: 'Migration details',
   notices: {
+    runtimeUnavailable:
+      'The plugin runtime is disconnected. Restore the connection and retry, or migrate data only.',
+    executionFailed: 'Migration failed. Check the server logs and retry.',
     pluginRequired:
       'Install or enable the runner plugin shown above, then refresh the preview.',
     legacyArchive:
@@ -28,7 +52,7 @@ export default {
     retrievalDefaults:
       'Retrieval uses the new top-k and result limits. Review them after migration.',
     boxReset:
-      'Existing Box session state is not transferred; a new isolated session will be created.',
+      'Sandbox reuse settings are preserved. Existing container state is not migrated; new sandboxes follow the same reuse rules.',
     persistentHistory:
       'New conversations use persistent, isolated history. Existing remote history is not imported.',
     tweaksDefault: 'Langflow tweaks default to an empty object.',
@@ -53,8 +77,8 @@ export default {
       'The installed runner configuration does not match the migration target. Check the plugin version and refresh.',
     runnerExcluded:
       'This pipeline excludes the required runner plugin. Update its extension settings first.',
-    boxScope:
-      'A custom Box session template cannot be migrated safely. Remove it or review the isolation requirements first.',
+    boxTemplateInvalid:
+      'Invalid sandbox reuse template. Use {variable_name}; positional fields, format conversions and attribute access are not supported.',
     pendingInteraction:
       'A conversation is waiting for input. Complete or cancel it before migration.',
   },

@@ -46,9 +46,9 @@
 
 ### LocalAgent（28 项）
 
-- **`ai.local-agent.box-session-id-template`** → `Host execution_context.build_host_box_scope + Box service`。
-  - 缺失、空值或原生默认 {launcher_type}_{launcher_id} 不写入新 Runner；用户确认明确的 Box 状态重置警告后创建新隔离会话。任何其他自定义共享模板仍阻断，不自动复制文件或跨作用域授权。
-  - 所有权：`host_tenancy_and_existing_file_state`；原生依据：`src/langbot/pkg/box/service.py:641`。
+- **`ai.local-agent.box-session-id-template`** → `R.box-session-id-template`。
+  - 全局、每会话、每用户、每对话上下文、每消息及有效自定义模板均原样保留；缺失时沿用插件默认 `{launcher_type}_{launcher_id}`。插件清单的 `allow_custom: true` 允许非预制值。空值、错误括号、位置参数、格式转换和属性访问会提示修正；公开请求变量保留，但运行时必须有值。复用范围保留不等于迁移旧容器及文件，新运行器按同样规则申请新的沙箱。
+  - 所有权：Runner 管理复用策略、申请、绑定及附件传输；Host 管理连接、工作区隔离和配额。沙箱开关沿用 LocalAgent 插件默认 `true`，仅在有沙箱工具授权且平台支持时使用。
 - **`ai.local-agent.enable-all-tools`** → `R.enable-all-tools`。
   - 原样复制有效授权；mcp 字段缺失时取 extensions_preferences 对应值；显式 null/错误类型不回退扩大权限。
   - 所有权：`host_policy_in_pipeline_runner_config`；原生依据：`src/langbot/pkg/pipeline/preproc/preproc.py:34`。

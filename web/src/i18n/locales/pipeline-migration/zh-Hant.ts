@@ -1,4 +1,21 @@
 export default {
+  complete: '完成',
+  checkingPlugin: '檢查外掛',
+  preparingPlugin: '準備安裝',
+  installDetails: '安裝詳情',
+  stageProgress: '階段進度',
+  downloaded: '已下載 {{size}}',
+  processed: '已處理 {{completed}} / {{total}} 條流水線',
+  installErrors: {
+    plugin_version_unavailable:
+      '擴充市集尚未提供所需外掛版本，請等待上架後重試，或選擇僅遷移資料。',
+    plugin_download_timeout: '下載外掛逾時，請檢查網路後重試。',
+    plugin_marketplace_unavailable:
+      '擴充市集暫時無法提供外掛套件，請稍後重試。',
+    plugin_download_failed: '外掛下載失敗，請檢查網路後重試。',
+    dependency_prepare_failed: '外掛相依套件安裝失敗，請檢查執行環境後重試。',
+    plugin_launch_failed: '外掛啟動失敗，請檢查執行環境後重試。',
+  },
   autoDescription:
     '舊版執行方式已改為外掛。遷移全部流水線並保留現有設定，原設定會自動備份；遷移後開始新對話。',
   viewPipelines: '查看流水線',
@@ -8,12 +25,16 @@ export default {
   installing: '正在安裝所需外掛…',
   migrating: '正在遷移流水線…',
   summary: '已遷移 {{migrated}} 條，{{remaining}} 條需要處理。',
-  installFailed: '外掛安裝失敗，請檢查網路和擴充配額後重試，或選擇僅遷移資料。',
+  installFailed:
+    '外掛安裝失敗。展開詳情查看失敗階段，處理後重試，或選擇僅遷移資料。',
 
   activationRetryHint:
     '檢查執行環境後重新整理，選取此流水線並確認，即可只重試啟用，不會再次遷移已儲存的設定。',
   details: '遷移詳情',
   notices: {
+    runtimeUnavailable:
+      '外掛執行環境未連線，請恢復連線後重試，或選擇僅遷移資料。',
+    executionFailed: '遷移執行失敗，請查看服務日誌後重試。',
     pluginRequired: '請先安裝或啟用上方所示的執行器外掛，再重新整理預覽。',
     legacyArchive:
       '作用中的設定僅保留所選 Runner；全部舊 Runner 設定（包括未啟用的設定）保存在遷移備份中。',
@@ -22,7 +43,8 @@ export default {
     modelReasoning: '各模型的推理設定會保留，並由主程式套用。',
     serialTools: '遷移後工具呼叫仍依序執行。',
     retrievalDefaults: '檢索採用新的 top-k 與結果長度預設值，請在遷移後檢查。',
-    boxReset: '現有 Box 工作階段狀態不遷移，後續將建立新的隔離工作階段。',
+    boxReset:
+      '沙箱複用範圍會保留；舊容器狀態不遷移，後續按原複用規則建立沙箱。',
     persistentHistory:
       '新對話採用持久化、相互隔離的歷史記錄，不匯入原有遠端歷史。',
     tweaksDefault: 'Langflow tweaks 預設為空物件。',
@@ -40,7 +62,8 @@ export default {
     schemaChanged:
       '已安裝 Runner 的設定格式與遷移目標不一致，請檢查外掛版本後重新整理。',
     runnerExcluded: '此流水線排除了所需 Runner 外掛，請先調整擴充設定。',
-    boxScope: '自訂 Box 工作階段範本無法安全遷移，請先移除或檢查隔離要求。',
+    boxTemplateInvalid:
+      '沙箱複用範本格式有誤，請使用 {變數名}；不支援位置參數、格式轉換或屬性存取。',
     pendingInteraction: '有對話正在等待輸入，請完成或取消後再遷移。',
   },
   title: '流水線遷移',

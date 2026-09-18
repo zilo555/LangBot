@@ -1,4 +1,25 @@
 export default {
+  complete: '完了',
+  checkingPlugin: 'プラグインを確認',
+  preparingPlugin: 'インストールを準備',
+  installDetails: 'インストール詳細',
+  stageProgress: '段階の進捗',
+  downloaded: 'ダウンロード済み {{size}}',
+  processed: '{{completed}} / {{total}} 件のパイプラインを処理済み',
+  installErrors: {
+    plugin_version_unavailable:
+      '必要なバージョンはまだマーケットにありません。公開後に再試行するかデータのみ移行してください。',
+    plugin_download_timeout:
+      'ダウンロードがタイムアウトしました。ネットワークを確認して再試行してください。',
+    plugin_marketplace_unavailable:
+      'マーケットからプラグインを取得できません。後で再試行してください。',
+    plugin_download_failed:
+      'ダウンロードに失敗しました。ネットワークを確認してください。',
+    dependency_prepare_failed:
+      '依存関係のインストールに失敗しました。実行環境を確認してください。',
+    plugin_launch_failed:
+      'プラグインを起動できません。実行環境を確認してください。',
+  },
   autoDescription:
     '従来の実行方式はプラグインになりました。設定を保持して全パイプラインを移行します。元の設定はバックアップされ、会話は新しく始まります。',
   viewPipelines: 'パイプラインを表示',
@@ -10,12 +31,16 @@ export default {
   migrating: 'パイプラインを移行中…',
   summary: '{{migrated}} 件移行済み、{{remaining}} 件の確認が必要です。',
   installFailed:
-    'プラグインのインストールに失敗しました。ネットワークと拡張機能の上限を確認して再試行するか、データのみ移行してください。',
+    'インストールに失敗しました。詳細で失敗した段階を確認し、再試行するかデータのみ移行してください。',
 
   activationRetryHint:
     '実行環境を確認して再読み込みし、このパイプラインを選択して確定すると、有効化のみを再試行します。保存済み設定は再移行しません。',
   details: '移行の詳細',
   notices: {
+    runtimeUnavailable:
+      'プラグインランタイムが未接続です。接続を復旧して再試行するか、データのみ移行してください。',
+    executionFailed:
+      '移行に失敗しました。サーバーログを確認して再試行してください。',
     pluginRequired:
       '上記のランナープラグインをインストールまたは有効化し、プレビューを更新してください。',
     legacyArchive:
@@ -27,7 +52,7 @@ export default {
     retrievalDefaults:
       '検索には新しい top-k と結果長の既定値を適用します。移行後に確認してください。',
     boxReset:
-      '既存の Box セッション状態は引き継がず、新しい分離セッションを作成します。',
+      'サンドボックスの再利用設定は保持されます。既存コンテナの状態は移行せず、同じ再利用ルールで新しく作成されます。',
     persistentHistory:
       '新しい会話の履歴は分離して永続化します。既存のリモート履歴は取り込みません。',
     tweaksDefault: 'Langflow tweaks の既定値は空のオブジェクトです。',
@@ -53,8 +78,8 @@ export default {
       'インストール済み Runner の設定形式が移行先と一致しません。プラグインのバージョンを確認してください。',
     runnerExcluded:
       'このパイプラインでは必要な Runner プラグインが除外されています。拡張機能の設定を変更してください。',
-    boxScope:
-      '独自の Box セッションテンプレートは安全に移行できません。削除するか、分離要件を確認してください。',
+    boxTemplateInvalid:
+      '再利用テンプレートが無効です。{変数名} を使用してください。位置引数、書式変換、属性アクセスは使用できません。',
     pendingInteraction:
       '入力待ちの会話があります。完了またはキャンセルしてから移行してください。',
   },

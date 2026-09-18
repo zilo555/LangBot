@@ -55,4 +55,23 @@ export interface PipelineMigrationTaskMetadata {
   kind: 'pipeline_migration';
   phase?: 'installing' | 'migrating' | 'finished';
   results: PipelineMigrationResult[];
+  installations?: MigrationInstallation[];
+}
+
+export interface MigrationInstallation {
+  author: string;
+  name: string;
+  version: string;
+  status: 'installing' | 'completed' | 'failed';
+  stage: string;
+  code: string | null;
+  progress_percent?: number;
+  download_current?: number;
+  download_total?: number;
+  download_speed?: number;
+  deps_total?: number;
+  started_at: number;
+  updated_at: number;
+  finished_at: number | null;
+  steps: { stage: string; started_at: number; finished_at: number | null }[];
 }

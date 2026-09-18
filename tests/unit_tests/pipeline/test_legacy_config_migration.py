@@ -992,3 +992,13 @@ def test_local_box_reuse_templates_are_preserved_for_plugin(template):
     result = plan(source)
     assert result['state'] != 'blocked', result
     assert result['config']['ai']['runner_config'][result['target_runner_id']]['box-session-id-template'] == template
+
+
+@pytest.mark.parametrize(
+    'template', ['', ' ', '{}', '{0}', '{sender_id', '{sender_id!r}', '{query_id:04}', '{actor.id}', '{actor[id]}']
+)
+def test_invalid_box_templates_are_reported_before_migration(template):
+    source = source_for('local-agent')
+    source['ai']['local-agent']['box-session-id-template'] = template
+    result = plan(source)
+    assert_block(result, 'local.box_template_invalid', 'ai.local-agent.box-session-id-template')

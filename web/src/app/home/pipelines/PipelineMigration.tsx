@@ -3,9 +3,11 @@ import { useTranslation } from 'react-i18next';
 import { AlertTriangle, ChevronDown, Loader2 } from 'lucide-react';
 import { httpClient } from '@/app/infra/http/HttpClient';
 import { getCurrentWorkspaceSnapshot } from '@/app/infra/http/currentWorkspaceStore';
+import MigrationInstallProgress from './MigrationInstallProgress';
 import { migrationIssueKey } from './pipeline-migration-issues';
 import type { CurrentWorkspace } from '@/app/infra/entities/workspace';
 import type {
+  MigrationInstallation,
   PipelineMigrationIssue,
   PipelineMigrationPreview,
   PipelineMigrationResult,
@@ -70,6 +72,9 @@ export default function PipelineMigration({
   const [phase, setPhase] = useState('migrating');
   const [dataOnly, setDataOnly] = useState(false);
   const [status, setStatus] = useState<Status>('idle');
+  const [installations, setInstallations] = useState<MigrationInstallation[]>(
+    [],
+  );
   const [results, setResults] = useState<PipelineMigrationResult[]>([]);
   const active = useRef(false);
   const submitting = useRef(false);
@@ -135,6 +140,12 @@ export default function PipelineMigration({
   }, [refresh]);
 
   const busy = status === 'submitting' || status === 'running';
+  const completed =
+    status === 'finished' &&
+    results.length > 0 &&
+    results.every((item) =>
+      ['migrated', 'already_current'].includes(item.state),
+    );
   const rows = preview?.items ?? [];
   const count = rows.filter(
     (item) => !['already_current', 'not_legacy'].includes(item.state),
@@ -142,6 +153,17 @@ export default function PipelineMigration({
 
   function renderIssue(issue: PipelineMigrationIssue, warning = false) {
     // Unknown server codes use localized fallbacks, never raw upstream messages.
+    if (
+      [
+        'plugin_version_unavailable',
+        'plugin_download_timeout',
+        'plugin_marketplace_unavailable',
+        'plugin_download_failed',
+        'dependency_prepare_failed',
+        'plugin_launch_failed',
+      ].includes(issue.code)
+    )
+      return <span>{t(`pipelineMigration.installErrors.${issue.code}`)}</span>;
     if (issue.code === 'plugin_install_failed')
       return <span>{t('pipelineMigration.installFailed')}</span>;
     const key = migrationIssueKey(issue.code);
@@ -169,6 +191,7 @@ export default function PipelineMigration({
     let items = rows.filter(
       (item) => !['already_current', 'not_legacy'].includes(item.state),
     );
+    setInstallations([]);
     setDataOnly(!installPlugins);
     setPhase(installPlugins ? 'installing' : 'migrating');
     submitting.current = true;
@@ -267,6 +290,8 @@ export default function PipelineMigration({
               },
           );
           setResults(scopedResults);
+          if (Array.isArray(metadata.installations))
+            setInstallations(metadata.installations as MigrationInstallation[]);
           if (metadata.phase === 'installing' || metadata.phase === 'migrating')
             setPhase(metadata.phase);
           if (task.runtime.done) {
@@ -309,7 +334,7 @@ export default function PipelineMigration({
   function changeOpen(next: boolean) {
     setOpen(next);
     if (!submitting.current) {
-      if (next) void refresh(status === 'idle');
+      if (next) void refresh();
     }
   }
 
@@ -386,7 +411,17 @@ export default function PipelineMigration({
                 {t('pipelineMigration.detected', { count })}
               </p>
             )}
-            {!busy && (count > 0 || results.length > 0) && (
+            <MigrationInstallProgress installations={installations} />
+            {busy && results.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {t('pipelineMigration.processed', {
+                  completed: results.filter((r) => r.state !== 'pending')
+                    .length,
+                  total: results.length,
+                })}
+              </p>
+            )}
+            {(count > 0 || results.length > 0) && (
               <Collapsible>
                 <CollapsibleTrigger asChild>
                   <Button
@@ -439,6 +474,14 @@ export default function PipelineMigration({
                                   {item.target_plugin.name}
                                 </p>
                               )}
+                              {item.warnings.some(
+                                (issue) =>
+                                  issue.code === 'local.box_state_reset',
+                              ) && (
+                                <p className="text-xs text-muted-foreground">
+                                  {t('pipelineMigration.notices.boxReset')}
+                                </p>
+                              )}
                               {result?.code && result.code !== 'data_only' ? (
                                 <p className="text-xs text-destructive">
                                   {renderIssue({ code: result.code })}
@@ -472,39 +515,36 @@ export default function PipelineMigration({
             )}
           </div>
           <DialogFooter className="shrink-0 flex-col gap-2 sm:flex-col">
-            {!busy && (
-              <>
-                <Button
-                  disabled={!canManage || loading || !valid || !count}
-                  className="w-full"
-                  onClick={() => void execute(true)}
-                >
-                  {t('pipelineMigration.autoInstall')}
-                </Button>
-                <Button
-                  variant="outline"
-                  disabled={!canManage || loading || !valid || !count}
-                  className="w-full"
-                  onClick={() => void execute(false)}
-                >
-                  {t('pipelineMigration.dataOnly')}
-                </Button>
-                <p className="text-center text-xs text-muted-foreground">
-                  {t('pipelineMigration.dataOnlyHint')}
-                </p>
-                {(status !== 'idle' || previewError) && (
+            {completed ? (
+              <Button
+                className="w-full"
+                onClick={() => window.location.reload()}
+              >
+                {t('pipelineMigration.complete')}
+              </Button>
+            ) : (
+              !busy && (
+                <>
+                  <Button
+                    disabled={!canManage || loading || !valid || !count}
+                    className="w-full"
+                    onClick={() => void execute(true)}
+                  >
+                    {t('pipelineMigration.autoInstall')}
+                  </Button>
                   <Button
                     variant="outline"
-                    disabled={loading}
-                    onClick={() => {
-                      setStatus('idle');
-                      void refresh();
-                    }}
+                    disabled={!canManage || loading || !valid || !count}
+                    className="w-full"
+                    onClick={() => void execute(false)}
                   >
-                    {t('pipelineMigration.refresh')}
+                    {t('pipelineMigration.dataOnly')}
                   </Button>
-                )}
-              </>
+                  <p className="text-center text-xs text-muted-foreground">
+                    {t('pipelineMigration.dataOnlyHint')}
+                  </p>
+                </>
+              )
             )}
             <Button variant="ghost" onClick={() => changeOpen(false)}>
               {t('common.close')}

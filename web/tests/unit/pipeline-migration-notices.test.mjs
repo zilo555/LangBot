@@ -47,6 +47,12 @@ test('every converter warning has a specific explanation in all eight locales', 
     }
     assert.ok(catalog.notices.pluginVersion);
     assert.ok(catalog.notices.pendingInteraction);
+    for (const code of ['plugin_runtime_unavailable', 'migration_failed']) {
+      const key = migrationIssueKey(code);
+      assert.ok(key);
+      assert.equal(typeof catalog.notices[key], 'string');
+      assert.notEqual(catalog.notices[key], catalog.blockerFallback);
+    }
   }
 });
 

@@ -1,4 +1,24 @@
 export default {
+  complete: 'Finalizar',
+  checkingPlugin: 'Comprobar plugin',
+  preparingPlugin: 'Preparar instalación',
+  installDetails: 'Detalles de instalación',
+  stageProgress: 'Progreso por etapas',
+  downloaded: 'Descargado {{size}}',
+  processed: 'Procesados {{completed}} / {{total}} pipelines',
+  installErrors: {
+    plugin_version_unavailable:
+      'La versión requerida aún no está disponible en el mercado. Reintenta tras su publicación o migra solo los datos.',
+    plugin_download_timeout:
+      'La descarga agotó el tiempo de espera. Revisa la red y reintenta.',
+    plugin_marketplace_unavailable:
+      'El mercado no puede servir el paquete. Reintenta más tarde.',
+    plugin_download_failed: 'No se pudo descargar el plugin. Revisa la red.',
+    dependency_prepare_failed:
+      'No se pudieron instalar las dependencias. Revisa el entorno de ejecución.',
+    plugin_launch_failed:
+      'El plugin no pudo iniciarse. Revisa el entorno de ejecución.',
+  },
   autoDescription:
     'Los ejecutores antiguos ahora son plugins. Migra todos los pipelines conservando sus ajustes. Se guardará una copia de la configuración y las conversaciones empezarán de nuevo.',
   viewPipelines: 'Ver pipelines',
@@ -10,12 +30,16 @@ export default {
   migrating: 'Migrando pipelines…',
   summary: '{{migrated}} migrados; {{remaining}} requieren atención.',
   installFailed:
-    'No se pudieron instalar los plugins. Comprueba la red y la cuota de extensiones y reintenta, o migra solo los datos.',
+    'La instalación falló. Consulta la etapa fallida en los detalles y reintenta, o migra solo los datos.',
 
   activationRetryHint:
     'Tras comprobar el entorno, actualiza, selecciona esta canalización y confirma para reintentar solo la activación. No se volverá a migrar la configuración guardada.',
   details: 'Detalles de migración',
   notices: {
+    runtimeUnavailable:
+      'El entorno de plugins está desconectado. Restablece la conexión y reintenta, o migra solo los datos.',
+    executionFailed:
+      'La migración falló. Revisa los registros del servidor y reintenta.',
     pluginRequired:
       'Instala o activa el plugin de ejecución indicado arriba y actualiza la vista previa.',
     legacyArchive:
@@ -28,7 +52,7 @@ export default {
     retrievalDefaults:
       'La recuperación usará los nuevos límites de top-k y longitud. Revísalos después de migrar.',
     boxReset:
-      'No se transfiere el estado de Box; se creará una nueva sesión aislada.',
+      'Se conserva la configuración de reutilización del sandbox. El estado del contenedor no se migra; los nuevos sandboxes siguen las mismas reglas.',
     persistentHistory:
       'Las nuevas conversaciones tendrán un historial persistente y aislado. No se importa el historial remoto anterior.',
     tweaksDefault:
@@ -59,8 +83,8 @@ export default {
       'La configuración del Runner instalado no coincide con el destino. Revisa la versión del plugin y actualiza.',
     runnerExcluded:
       'Esta canalización excluye el plugin Runner necesario. Ajusta primero la configuración de extensiones.',
-    boxScope:
-      'La plantilla personalizada de sesión de Box no se puede migrar de forma segura. Elimínala o revisa los requisitos de aislamiento.',
+    boxTemplateInvalid:
+      'Plantilla de reutilización inválida. Use {nombre_variable}; no se admiten campos posicionales, conversiones de formato ni acceso a atributos.',
     pendingInteraction:
       'Hay una conversación esperando una respuesta. Complétala o cancélala antes de migrar.',
   },

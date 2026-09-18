@@ -5,6 +5,7 @@ const canonicalConfig = JSON.parse(
   readFileSync('../src/langbot/templates/default-pipeline-config.json', 'utf8'),
 );
 import type {
+  MigrationInstallation,
   PipelineMigrationItem,
   PipelineMigrationResult,
   PipelineMigrationState,
@@ -71,6 +72,7 @@ async function setup(
     writes: [] as unknown[],
     previews: 0,
     polls: 0,
+    installations: [] as MigrationInstallation[],
     metadataReads: 0,
     pipelineReads: 0,
     executeStatus: 200,
@@ -151,7 +153,11 @@ async function setup(
         exception: state.taskException ? 'unsafe-upstream-secret' : null,
       },
       task_context: {
-        metadata: { kind: 'pipeline_migration', results: state.results },
+        metadata: {
+          kind: 'pipeline_migration',
+          results: state.results,
+          installations: state.installations,
+        },
       },
     });
   });
@@ -254,6 +260,14 @@ for (const install of [true, false]) {
       await expect(dialog).toContainText(
         'Install the corresponding runner plugins yourself',
       );
+    await expect(installButton(page)).toHaveCount(0);
+    await expect(dataButton(page)).toHaveCount(0);
+    await Promise.all([
+      page.waitForEvent('load'),
+      dialog.getByRole('button', { name: 'Done', exact: true }).click(),
+    ]);
+    await expect(dialog).toHaveCount(0);
+    expect(state.posts).toHaveLength(1);
   });
 }
 
@@ -291,7 +305,7 @@ test('double clicks do not submit duplicate tasks; close does not cancel running
   await expect(dialog).toContainText('2 migrated; 0 need attention.');
 });
 
-test('partial failures are reported without exposing upstream errors, and refresh allows retry', async ({
+test('partial failures are reported without exposing upstream errors, and reopening allows retry', async ({
   page,
 }) => {
   const state = await setup(page);
@@ -308,7 +322,16 @@ test('partial failures are reported without exposing upstream errors, and refres
   );
   await expect(dialog).not.toContainText('unsafe-upstream-secret');
   await expect(installButton(page)).toBeEnabled();
-  await dialog.getByRole('button', { name: 'Refresh preview' }).click();
+  await expect(
+    dialog.getByRole('button', { name: 'Refresh preview' }),
+  ).toHaveCount(0);
+  await dialog
+    .getByRole('button', { name: 'Close', exact: true })
+    .first()
+    .click();
+  await page
+    .getByRole('button', { name: 'Review migration', exact: true })
+    .click();
   await expect(installButton(page)).toBeEnabled();
   expect(state.posts).toHaveLength(1);
 });
@@ -551,4 +574,125 @@ test('SPEC actual legacy on second read remains guarded on the sidebar route', a
     page.getByRole('button', { name: 'Save', exact: true }),
   ).toHaveCount(0);
   expect(state.writes).toEqual([]);
+});
+
+test('Box reuse notice stays concise and template validation has an actionable message', async ({
+  page,
+}) => {
+  const state = await setup(page);
+  state.items[0].legacy_runner = 'local-agent';
+  state.items[0].warnings = [
+    {
+      code: 'local.box_state_reset',
+      field: 'ai.local-agent.box-session-id-template',
+    },
+  ];
+  state.items[1].state = 'blocked';
+  state.items[1].blockers = [
+    {
+      code: 'local.box_template_invalid',
+      field: 'ai.local-agent.box-session-id-template',
+    },
+  ];
+  const dialog = await open(page);
+  await expect(
+    dialog.getByText('Sandbox reuse settings are preserved.', { exact: false }),
+  ).not.toBeVisible();
+  await dialog.getByRole('button', { name: 'View pipelines' }).click();
+  await expect(
+    dialog.getByText('Sandbox reuse settings are preserved.', { exact: false }),
+  ).toBeVisible();
+  await expect(
+    dialog.getByText('Invalid sandbox reuse template.', { exact: false }),
+  ).toBeVisible();
+  await expect(dialog).not.toContainText('ai.local-agent');
+  await expect(dialog.getByRole('checkbox')).toHaveCount(0);
+});
+
+test('installation progress remains inspectable during work and after a missing release failure', async ({
+  page,
+}) => {
+  const state = await setup(page);
+  await page.route(
+    '**/api/v1/marketplace/plugins/langbot-team/DifyAgent',
+    (route) =>
+      reply(route, {
+        plugin: {
+          author: 'langbot-team',
+          name: 'DifyAgent',
+          label: { en_US: 'Dify Agent' },
+          description: { en_US: 'Connect your Dify workflows.' },
+          icon: 'https://market.test/dify.svg',
+        },
+      }),
+  );
+  await page.route('https://market.test/dify.svg', (route) =>
+    route.fulfill({
+      contentType: 'image/svg+xml',
+      body: '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><rect width="32" height="32"/></svg>',
+    }),
+  );
+  state.done = false;
+  state.results = state.items.map((item) => ({
+    pipeline_uuid: item.pipeline_uuid,
+    state: 'pending',
+    code: null,
+  }));
+  state.installations = [
+    {
+      author: 'langbot-team',
+      name: 'DifyAgent',
+      version: '1.0.0',
+      status: 'installing',
+      stage: 'downloading',
+      code: null,
+      progress_percent: 15,
+      download_current: 1024,
+      download_total: 2048,
+      started_at: 100,
+      updated_at: 103,
+      finished_at: null,
+      steps: [
+        { stage: 'checking', started_at: 100, finished_at: 101 },
+        { stage: 'downloading', started_at: 101, finished_at: null },
+      ],
+    },
+  ];
+  const dialog = await open(page);
+  await installButton(page).click();
+  await expect(dialog.getByRole('progressbar')).toHaveAttribute(
+    'aria-valuenow',
+    '15',
+  );
+  await expect(dialog.getByText('Dify Agent', { exact: true })).toBeVisible();
+  await expect(
+    dialog.getByText('Connect your Dify workflows.', { exact: true }),
+  ).toBeVisible();
+  await expect(dialog.getByRole('img', { name: 'Dify Agent' })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Installation details' }).click();
+  await expect(dialog.getByText('Downloaded 1.0 KB / 2.0 KB')).toBeVisible();
+  await dialog.getByRole('button', { name: 'View pipelines' }).click();
+  await expect(dialog.getByText('Legacy one', { exact: true })).toBeVisible();
+  state.installations[0] = {
+    ...state.installations[0],
+    status: 'failed',
+    code: 'plugin_version_unavailable',
+    finished_at: 104,
+    updated_at: 104,
+  };
+  state.results = state.items.map((item) => ({
+    pipeline_uuid: item.pipeline_uuid,
+    state: 'blocked',
+    code: 'plugin_version_unavailable',
+  }));
+  state.done = true;
+  await expect(
+    dialog
+      .getByTestId('migration-installations')
+      .getByText(
+        'The required plugin version is not available in the marketplace. Retry after it is published, or migrate data only.',
+      ),
+  ).toBeVisible();
+  await expect(dialog.getByRole('progressbar')).toHaveCount(0);
+  await expect(dialog.getByText('Downloaded 1.0 KB / 2.0 KB')).toBeVisible();
 });

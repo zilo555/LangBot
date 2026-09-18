@@ -7,11 +7,11 @@
       "name": "model",
       "description": {
         "en_US": "Primary/fallback model UUIDs and per-model reasoning levels. Host validates and applies reasoning for every request; this is per-pipeline configuration.",
-        "zh_Hans": "\u4e3b\u6a21\u578b/\u5907\u7528\u6a21\u578b UUID \u4e0e\u5404\u6a21\u578b\u63a8\u7406\u7b49\u7ea7\u3002\u7531 Host \u5bf9\u6bcf\u6b21\u8bf7\u6c42\u6821\u9a8c\u5e76\u5e94\u7528\uff0c\u5c5e\u4e8e\u6d41\u6c34\u7ebf\u72ec\u7acb\u914d\u7f6e\u3002"
+        "zh_Hans": "主模型/备用模型 UUID 与各模型推理等级。由 Host 对每次请求校验并应用，属于流水线独立配置。"
       },
       "label": {
         "en_US": "Model",
-        "zh_Hans": "\u6a21\u578b"
+        "zh_Hans": "模型"
       },
       "type": "model-fallback-selector",
       "required": true,
@@ -25,7 +25,7 @@
       "name": "prompt",
       "label": {
         "en_US": "Prompt",
-        "zh_Hans": "\u63d0\u793a\u8bcd"
+        "zh_Hans": "提示词"
       },
       "type": "prompt-editor",
       "required": true,
@@ -40,21 +40,122 @@
       "name": "knowledge-bases",
       "label": {
         "en_US": "Knowledge Bases",
-        "zh_Hans": "\u77e5\u8bc6\u5e93"
+        "zh_Hans": "知识库"
       },
       "type": "knowledge-base-multi-selector",
       "required": false,
       "default": []
     },
     {
+      "name": "box-enabled",
+      "label": {
+        "en_US": "Sandbox",
+        "zh_Hans": "沙箱"
+      },
+      "description": {
+        "en_US": "Use Box for code execution and file processing.",
+        "zh_Hans": "使用 Box 执行代码和处理文件。"
+      },
+      "type": "boolean",
+      "required": false,
+      "default": true
+    },
+    {
+      "name": "box-session-id-template",
+      "label": {
+        "en_US": "Sandbox reuse",
+        "zh_Hans": "沙箱复用范围"
+      },
+      "description": {
+        "en_US": "Choose how sandbox files and environments are shared. Custom templates substitute {variable_name}, for example {launcher_type}_{launcher_id}_{sender_id}. Equal results reuse the same sandbox; {global} shares one sandbox throughout the workspace. Available variables: {launcher_type}, {launcher_id}, {sender_id}, {conversation_id}, {bot_id}, {query_id}, {run_id}, {event_id}, {event_type}, and public request variables. Only named variables are supported, not expressions or attribute access; unavailable variables cause an error.",
+        "zh_Hans": "选择沙箱文件和环境的共享方式。自定义模板使用 {变量名} 插值，如 {launcher_type}_{launcher_id}_{sender_id}；插值结果相同就复用同一个沙箱，{global} 表示在工作区内全局共享。可用变量：{launcher_type}（会话类型）、{launcher_id}（会话 ID）、{sender_id}（用户 ID）、{conversation_id}（对话上下文 ID）、{bot_id}（机器人 ID）、{query_id}（请求 ID）、{run_id}（运行 ID）、{event_id}（事件 ID）、{event_type}（事件类型），也可引用公开请求变量。仅支持变量名，不支持运算或属性访问；变量不可用时会报错。"
+      },
+      "type": "select",
+      "allow_custom": true,
+      "required": true,
+      "default": "{launcher_type}_{launcher_id}",
+      "options": [
+        {
+          "name": "{global}",
+          "label": {
+            "en_US": "Global (shared by all)",
+            "zh_Hans": "全局（所有人共享）",
+            "zh_Hant": "全域（所有人共用）",
+            "ja_JP": "グローバル（全員共有）",
+            "vi_VN": "Toàn cục (chia sẻ cho tất cả)",
+            "th_TH": "ทั่วไป (แชร์ทั้งหมด)",
+            "es_ES": "Global (compartido por todos)",
+            "ru_RU": "Глобальный (общий для всех)"
+          }
+        },
+        {
+          "name": "{launcher_type}_{launcher_id}",
+          "label": {
+            "en_US": "Per chat (Recommended)",
+            "zh_Hans": "每个会话（推荐）",
+            "zh_Hant": "每個會話（推薦）",
+            "ja_JP": "チャットごと（推奨）",
+            "vi_VN": "Mỗi cuộc trò chuyện (Khuyến nghị)",
+            "th_TH": "ต่อแชท (แนะนำ)",
+            "es_ES": "Por chat (Recomendado)",
+            "ru_RU": "По чату (Рекомендуется)"
+          }
+        },
+        {
+          "name": "{launcher_type}_{launcher_id}_{sender_id}",
+          "label": {
+            "en_US": "Per user in chat",
+            "zh_Hans": "会话中每个用户",
+            "zh_Hant": "會話中每個用戶",
+            "ja_JP": "チャット内のユーザーごと",
+            "vi_VN": "Mỗi người dùng trong cuộc trò chuyện",
+            "th_TH": "ต่อผู้ใช้ในแชท",
+            "es_ES": "Por usuario en chat",
+            "ru_RU": "По пользователю в чате"
+          }
+        },
+        {
+          "name": "{launcher_type}_{launcher_id}_{conversation_id}",
+          "label": {
+            "en_US": "Per conversation context",
+            "zh_Hans": "每个对话上下文",
+            "zh_Hant": "每個對話上下文",
+            "ja_JP": "会話コンテキストごと",
+            "vi_VN": "Mỗi ngữ cảnh hội thoại",
+            "th_TH": "ต่อบริบทการสนทนา",
+            "es_ES": "Por contexto de conversación",
+            "ru_RU": "По контексту разговора"
+          }
+        },
+        {
+          "name": "{query_id}",
+          "label": {
+            "en_US": "Per message (isolated)",
+            "zh_Hans": "每条消息（完全隔离）",
+            "zh_Hant": "每條訊息（完全隔離）",
+            "ja_JP": "メッセージごと（隔離）",
+            "vi_VN": "Mỗi tin nhắn (cách ly)",
+            "th_TH": "ต่อข้อความ (แยกส่วน)",
+            "es_ES": "Por mensaje (aislado)",
+            "ru_RU": "По сообщению (изолированно)"
+          }
+        }
+      ],
+      "show_if": {
+        "field": "box-enabled",
+        "operator": "eq",
+        "value": true
+      }
+    },
+    {
       "name": "advanced-settings",
       "label": {
         "en_US": "Advanced Settings",
-        "zh_Hans": "\u9ad8\u7ea7\u8bbe\u7f6e"
+        "zh_Hans": "高级设置"
       },
       "description": {
         "en_US": "Show tuning controls for retrieval, tools, timeouts, and context management.",
-        "zh_Hans": "\u663e\u793a\u68c0\u7d22\u3001\u5de5\u5177\u3001\u8d85\u65f6\u548c\u4e0a\u4e0b\u6587\u7ba1\u7406\u7684\u8c03\u4f18\u9009\u9879\u3002"
+        "zh_Hans": "显示检索、工具、超时和上下文管理的调优选项。"
       },
       "type": "boolean",
       "required": false,
@@ -64,11 +165,11 @@
       "name": "date-grounding",
       "label": {
         "en_US": "Current Date Grounding",
-        "zh_Hans": "\u5f53\u524d\u65e5\u671f\u951a\u5b9a"
+        "zh_Hans": "当前日期锚定"
       },
       "description": {
         "en_US": "Add the current UTC date and a reminder to verify time-sensitive facts with available search tools.",
-        "zh_Hans": "\u6ce8\u5165\u5f53\u524d UTC \u65e5\u671f\uff0c\u5e76\u63d0\u9192\u4f7f\u7528\u53ef\u7528\u641c\u7d22\u5de5\u5177\u6838\u5b9e\u6709\u65f6\u6548\u6027\u7684\u4fe1\u606f\u3002"
+        "zh_Hans": "注入当前 UTC 日期，并提醒使用可用搜索工具核实有时效性的信息。"
       },
       "type": "boolean",
       "required": false,
@@ -83,7 +184,7 @@
       "name": "timeout",
       "label": {
         "en_US": "Timeout",
-        "zh_Hans": "\u6267\u884c\u8d85\u65f6"
+        "zh_Hans": "执行超时"
       },
       "type": "integer",
       "required": false,
@@ -98,7 +199,7 @@
       "name": "remove-think",
       "label": {
         "en_US": "Remove Thinking Output",
-        "zh_Hans": "\u79fb\u9664\u601d\u8003\u5185\u5bb9"
+        "zh_Hans": "移除思考内容"
       },
       "type": "boolean",
       "required": false,
@@ -113,7 +214,7 @@
       "name": "retrieval-top-k",
       "label": {
         "en_US": "Retrieval Top K",
-        "zh_Hans": "\u77e5\u8bc6\u5e93\u68c0\u7d22\u6570\u91cf"
+        "zh_Hans": "知识库检索数量"
       },
       "type": "integer",
       "required": false,
@@ -128,7 +229,7 @@
       "name": "rerank-model",
       "label": {
         "en_US": "Rerank Model",
-        "zh_Hans": "\u91cd\u6392\u5e8f\u6a21\u578b"
+        "zh_Hans": "重排序模型"
       },
       "type": "rerank-model-selector",
       "required": false,
@@ -143,7 +244,7 @@
       "name": "rerank-top-k",
       "label": {
         "en_US": "Rerank Top K",
-        "zh_Hans": "\u91cd\u6392\u5e8f\u4fdd\u7559\u6570\u91cf"
+        "zh_Hans": "重排序保留数量"
       },
       "type": "integer",
       "required": false,
@@ -158,7 +259,7 @@
       "name": "max-tool-iterations",
       "label": {
         "en_US": "Max Tool Iterations",
-        "zh_Hans": "\u6700\u5927\u5de5\u5177\u8c03\u7528\u8f6e\u6570"
+        "zh_Hans": "最大工具调用轮数"
       },
       "type": "integer",
       "required": false,
@@ -173,11 +274,11 @@
       "name": "tool-execution-mode",
       "description": {
         "en_US": "Parallel is faster for independent tools. Use serial for dependent or side-effecting actions; result order does not guarantee execution order.",
-        "zh_Hans": "\u5e76\u884c\u9002\u5408\u72ec\u7acb\u5de5\u5177\uff1b\u6709\u4f9d\u8d56\u6216\u526f\u4f5c\u7528\u7684\u64cd\u4f5c\u8bf7\u9009\u62e9\u4e32\u884c\u3002\u7ed3\u679c\u6392\u5217\u4e0d\u4fdd\u8bc1\u6267\u884c\u987a\u5e8f\u3002"
+        "zh_Hans": "并行适合独立工具；有依赖或副作用的操作请选择串行。结果排列不保证执行顺序。"
       },
       "label": {
         "en_US": "Tool Execution Mode",
-        "zh_Hans": "\u5de5\u5177\u6267\u884c\u6a21\u5f0f"
+        "zh_Hans": "工具执行模式"
       },
       "type": "select",
       "required": false,
@@ -187,14 +288,14 @@
           "name": "parallel",
           "label": {
             "en_US": "Parallel",
-            "zh_Hans": "\u5e76\u884c"
+            "zh_Hans": "并行"
           }
         },
         {
           "name": "serial",
           "label": {
             "en_US": "Serial",
-            "zh_Hans": "\u4e32\u884c"
+            "zh_Hans": "串行"
           }
         }
       ],
@@ -208,7 +309,7 @@
       "name": "max-tool-result-chars",
       "label": {
         "en_US": "Max Tool Result Characters",
-        "zh_Hans": "\u6700\u5927\u5de5\u5177\u7ed3\u679c\u5b57\u7b26\u6570"
+        "zh_Hans": "最大工具结果字符数"
       },
       "type": "integer",
       "required": false,
@@ -223,7 +324,7 @@
       "name": "context-history-fetch-limit",
       "label": {
         "en_US": "History Fetch Limit",
-        "zh_Hans": "\u5386\u53f2\u6d88\u606f\u62c9\u53d6\u6570\u91cf"
+        "zh_Hans": "历史消息拉取数量"
       },
       "type": "integer",
       "required": false,
@@ -238,7 +339,7 @@
       "name": "context-window-tokens",
       "label": {
         "en_US": "Context Window Tokens",
-        "zh_Hans": "\u4e0a\u4e0b\u6587\u7a97\u53e3 Token \u6570"
+        "zh_Hans": "上下文窗口 Token 数"
       },
       "type": "integer",
       "required": false,
@@ -253,7 +354,7 @@
       "name": "context-reserve-tokens",
       "label": {
         "en_US": "Reserved Output Tokens",
-        "zh_Hans": "\u8f93\u51fa\u4fdd\u7559 Token \u6570"
+        "zh_Hans": "输出保留 Token 数"
       },
       "type": "integer",
       "required": false,
@@ -268,7 +369,7 @@
       "name": "context-keep-recent-tokens",
       "label": {
         "en_US": "Recent Context Tokens",
-        "zh_Hans": "\u6700\u8fd1\u4e0a\u4e0b\u6587 Token \u6570"
+        "zh_Hans": "最近上下文 Token 数"
       },
       "type": "integer",
       "required": false,
@@ -283,7 +384,7 @@
       "name": "context-summary-tokens",
       "label": {
         "en_US": "Summary Tokens",
-        "zh_Hans": "\u6458\u8981 Token \u6570"
+        "zh_Hans": "摘要 Token 数"
       },
       "type": "integer",
       "required": false,

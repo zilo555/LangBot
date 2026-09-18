@@ -11,12 +11,15 @@ import copy
 import hashlib
 import hmac
 import json
+import math
+import time
 import secrets
 import sys
 import uuid
 
 from langbot_plugin.runtime.plugin.mgr import PluginInstallSource
 
+import httpx
 import sqlalchemy as sa
 
 from ..authz import Permission, permissions_for_role, require_permission
@@ -37,7 +40,76 @@ from ....entity.persistence.pipeline_migration import PipelineMigrationSnapshot
 from ....entity.persistence.plugin import PluginSetting
 from ....entity.persistence.user import User
 from ....entity.persistence.workspace import Workspace, WorkspaceMembership, WorkspaceExecutionState
+from ....plugin.errors import (
+    PluginRuntimeNotConnectedError,
+    MarketplacePluginVersionNotFoundError,
+    PluginInstallationFailedError,
+)
 from ....pipeline.legacy_config_migration import PLANNER_VERSION, plan_legacy_pipeline
+
+
+class MigrationInstallContext(TaskContext):
+    """Publish only structured installer progress, never upstream logs or URLs."""
+
+    ACTIONS = {
+        'downloading plugin package': 'downloading',
+        'validating plugin package': 'validating',
+        'preparing plugin installation': 'preparing',
+        'installing plugin dependencies': 'installing_deps',
+        'waiting for plugin initialization': 'activating',
+        'refreshing plugin components': 'refreshing',
+        'plugin installed': 'done',
+    }
+    METRICS = ('progress_percent', 'download_current', 'download_total', 'download_speed', 'deps_total')
+
+    def __init__(self, target):
+        super().__init__()
+        self.progress = {
+            **target,
+            'status': 'installing',
+            'stage': 'checking',
+            'code': None,
+            'started_at': time.time(),
+            'finished_at': None,
+            'steps': [],
+        }
+        self._step('checking')
+
+    def _step(self, stage):
+        steps = self.progress['steps']
+        if steps and steps[-1]['stage'] == stage:
+            return
+        now = time.time()
+        if steps:
+            steps[-1]['finished_at'] = now
+        steps.append({'stage': stage, 'started_at': now, 'finished_at': None})
+        self.progress['stage'] = stage
+
+    def set_current_action(self, action):
+        super().set_current_action(action)
+        stage = self.ACTIONS.get(action)
+        if stage:
+            self._step(stage)
+        self.publish()
+
+    def publish(self):
+        for key in self.METRICS:
+            value = self.metadata.get(key)
+            if type(value) in (int, float) and math.isfinite(value) and value >= 0:
+                self.progress[key] = min(value, 100) if key == 'progress_percent' else value
+        self.progress['updated_at'] = time.time()
+
+    def finish(self, code=None):
+        self.publish()
+        self.progress.update(status='failed' if code else 'completed', code=code, finished_at=time.time())
+        self.progress['steps'][-1]['finished_at'] = self.progress['finished_at']
+        if not code:
+            self.progress['progress_percent'] = 100
+
+    async def observe(self):
+        while True:
+            self.publish()
+            await asyncio.sleep(0.2)
 
 
 class MigrationError(ValueError):
@@ -47,6 +119,14 @@ class MigrationError(ValueError):
         super().__init__(code)
         self.code = code
         self.status_code = status_code
+
+
+def _failure_code(exc: Exception) -> str:
+    if isinstance(exc, MigrationError):
+        return exc.code
+    if isinstance(exc, PluginRuntimeNotConnectedError):
+        return 'plugin_runtime_unavailable'
+    return 'migration_failed'
 
 
 def validate_execute_request(body) -> list[dict]:
@@ -368,6 +448,7 @@ class PipelineMigrationService:
             task_context.metadata = {
                 'kind': 'pipeline_migration',
                 'phase': 'installing' if install_plugins else 'migrating',
+                'installations': [],
                 'results': [{'pipeline_uuid': row['uuid'], 'state': 'pending', 'code': None} for row in sources],
             }
             task = self.ap.task_mgr.create_user_task(
@@ -429,12 +510,13 @@ class PipelineMigrationService:
                             )
                             if not ready:
                                 task_context.metadata['phase'] = 'installing'
+                                install_context = MigrationInstallContext(target)
+                                task_context.metadata['installations'].append(install_context.progress)
+                                observer = asyncio.create_task(install_context.observe())
+                                install_code = 'operation_cancelled'
                                 try:
                                     await self._authorize(ctx)
                                     await self.ap.plugin_connector.require_workspace_context(execution)
-                                    # Keep installer diagnostics out of the user task: upstream
-                                    # errors may contain credentials. Reuse normal quota and
-                                    # runtime-readiness checks in the connector.
                                     await self.ap.plugin_connector.install_plugin(
                                         PluginInstallSource.MARKETPLACE,
                                         {
@@ -442,11 +524,38 @@ class PipelineMigrationService:
                                             'plugin_name': target['name'],
                                             'plugin_version': target['version'],
                                         },
-                                        task_context=TaskContext.new(),
+                                        task_context=install_context,
                                     )
-                                    installed[key] = None
+                                    install_code = None
+                                except PluginRuntimeNotConnectedError:
+                                    install_code = 'plugin_runtime_unavailable'
+                                except MarketplacePluginVersionNotFoundError:
+                                    install_code = 'plugin_version_unavailable'
+                                except httpx.TimeoutException:
+                                    install_code = 'plugin_download_timeout'
+                                except httpx.HTTPStatusError as exc:
+                                    install_code = (
+                                        'plugin_version_unavailable'
+                                        if exc.response.status_code == 404
+                                        else 'plugin_marketplace_unavailable'
+                                    )
+                                except httpx.RequestError:
+                                    install_code = 'plugin_download_failed'
+                                except PluginInstallationFailedError as exc:
+                                    install_code = {
+                                        'dependency_prepare_failed': 'dependency_prepare_failed',
+                                        'worker_launch_failed': 'plugin_launch_failed',
+                                    }.get(exc.error_code, 'plugin_install_failed')
                                 except Exception:
-                                    installed[key] = 'plugin_install_failed'
+                                    install_code = 'plugin_install_failed'
+                                finally:
+                                    observer.cancel()
+                                    try:
+                                        await observer
+                                    except asyncio.CancelledError:
+                                        pass
+                                    install_context.finish(install_code)
+                                installed[key] = install_code
                             else:
                                 installed[key] = None
                         if installed[key]:
@@ -467,7 +576,7 @@ class PipelineMigrationService:
                     except Exception as exc:
                         result.update(
                             state='blocked' if isinstance(exc, MigrationError) else 'failed',
-                            code=exc.code if isinstance(exc, MigrationError) else 'migration_failed',
+                            code=_failure_code(exc),
                         )
                     if any(
                         r['code'] in ('operation_cancelled', 'commit_outcome_unknown')
@@ -557,7 +666,7 @@ class PipelineMigrationService:
             )
             if not valid:
                 raise MigrationError('runner_schema_incompatible')
-            if kind == 'select' and field.get('options'):
+            if kind == 'select' and field.get('options') and field.get('allow_custom') is not True:
                 if value not in [o.get('value', o.get('name')) for o in field['options']]:
                     raise MigrationError('runner_schema_incompatible')
         if any(
@@ -771,13 +880,7 @@ class PipelineMigrationService:
                 except (Exception, asyncio.CancelledError) as exc:
                     cancelled = isinstance(exc, asyncio.CancelledError)
                     reconciliation_cancel = None
-                    code = (
-                        'operation_cancelled'
-                        if cancelled
-                        else exc.code
-                        if isinstance(exc, MigrationError)
-                        else 'migration_failed'
-                    )
+                    code = 'operation_cancelled' if cancelled else _failure_code(exc)
                     if commit_attempted and not committed and not isinstance(exc, MigrationError):
                         # A commit can succeed while acknowledgement/connection
                         # cleanup fails, including cancellation. Make one read

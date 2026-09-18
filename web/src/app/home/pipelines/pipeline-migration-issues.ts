@@ -1,4 +1,6 @@
 const issueKeys: Record<string, string> = {
+  plugin_runtime_unavailable: 'runtimeUnavailable',
+  migration_failed: 'executionFailed',
   plugin_missing: 'pluginRequired',
   plugin_disabled: 'pluginRequired',
   'local.context_defaults': 'contextDefaults',
@@ -25,7 +27,9 @@ const issueKeys: Record<string, string> = {
   'runtime.schema_invalid': 'schemaChanged',
   'runtime.schema_missing': 'schemaChanged',
   'extensions.runner_excluded': 'runnerExcluded',
-  'local.box_scope': 'boxScope',
+  'local.box_template_invalid': 'boxTemplateInvalid',
+  runner_schema_incompatible: 'schemaChanged',
+  plugin_version_incompatible: 'pluginVersion',
   'runtime.pending_interaction': 'pendingInteraction',
 };
 

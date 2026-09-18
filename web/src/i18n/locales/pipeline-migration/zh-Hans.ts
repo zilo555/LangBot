@@ -1,4 +1,20 @@
 export default {
+  complete: '完成',
+  checkingPlugin: '检查插件',
+  preparingPlugin: '准备安装',
+  installDetails: '安装详情',
+  stageProgress: '阶段进度',
+  downloaded: '已下载 {{size}}',
+  processed: '已处理 {{completed}} / {{total}} 条流水线',
+  installErrors: {
+    plugin_version_unavailable:
+      '扩展市场尚未提供所需插件版本，请等待上架后重试，或选择仅迁移数据。',
+    plugin_download_timeout: '下载插件超时，请检查网络后重试。',
+    plugin_marketplace_unavailable: '扩展市场暂时无法提供插件包，请稍后重试。',
+    plugin_download_failed: '插件下载失败，请检查网络后重试。',
+    dependency_prepare_failed: '插件依赖安装失败，请检查运行时环境后重试。',
+    plugin_launch_failed: '插件启动失败，请检查运行时环境后重试。',
+  },
   autoDescription:
     '旧版运行方式已改为插件。迁移全部流水线并保留现有设置，原配置会自动备份；迁移后开始新会话。',
   viewPipelines: '查看流水线',
@@ -8,12 +24,16 @@ export default {
   installing: '正在安装所需插件…',
   migrating: '正在迁移流水线…',
   summary: '已迁移 {{migrated}} 条，{{remaining}} 条需要处理。',
-  installFailed: '插件安装失败，请检查网络和扩展配额后重试，或选择仅迁移数据。',
+  installFailed:
+    '插件安装失败。展开详情查看失败阶段，处理后重试，或选择仅迁移数据。',
 
   activationRetryHint:
     '检查运行环境后刷新，选中此流水线并确认，即可仅重试激活，不会再次迁移已保存的配置。',
   details: '迁移详情',
   notices: {
+    runtimeUnavailable:
+      '插件运行时未连接，请恢复连接后重试，或选择仅迁移数据。',
+    executionFailed: '迁移执行失败，请查看服务日志后重试。',
     pluginRequired: '请先安装或启用上方所示的运行器插件，再刷新预览。',
     legacyArchive:
       '活动配置仅保留所选 Runner；全部旧 Runner 配置（包括未启用的配置）保存在迁移备份中。',
@@ -22,7 +42,8 @@ export default {
     modelReasoning: '各模型的推理设置会保留，并由主程序应用。',
     serialTools: '迁移后工具调用仍按顺序执行。',
     retrievalDefaults: '检索采用新的 top-k 与结果长度默认值，请在迁移后检查。',
-    boxReset: '现有 Box 会话状态不迁移，后续将创建新的隔离会话。',
+    boxReset:
+      '沙箱复用范围会保留；旧容器状态不迁移，后续按原复用规则创建沙箱。',
     persistentHistory:
       '新会话采用持久化、相互隔离的历史记录，不导入原有远端历史。',
     tweaksDefault: 'Langflow tweaks 默认设为空对象。',
@@ -40,7 +61,8 @@ export default {
     schemaChanged:
       '已安装 Runner 的配置格式与迁移目标不一致，请检查插件版本后刷新。',
     runnerExcluded: '此流水线排除了所需 Runner 插件，请先调整扩展设置。',
-    boxScope: '自定义 Box 会话模板无法安全迁移，请先移除或检查隔离要求。',
+    boxTemplateInvalid:
+      '沙箱复用模板格式有误，请使用 {变量名}；不支持位置参数、格式转换或属性访问。',
     pendingInteraction: '有会话正在等待输入，请完成或取消后再迁移。',
   },
   title: '流水线迁移',

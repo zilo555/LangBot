@@ -62,4 +62,6 @@ def test_empty_box_template_requires_correction():
     source['ai']['local-agent']['box-session-id-template'] = ''
     result = plan_legacy_pipeline(source)
     assert result['state'] == 'blocked'
-    assert {'code': 'invalid_type', 'field': 'ai.local-agent.box-session-id-template'} in result['blockers']
+    assert {'code': 'local.box_template_invalid', 'field': 'ai.local-agent.box-session-id-template'} in result[
+        'blockers'
+    ]

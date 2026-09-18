@@ -1,4 +1,24 @@
 export default {
+  complete: 'Hoàn tất',
+  checkingPlugin: 'Kiểm tra plugin',
+  preparingPlugin: 'Chuẩn bị cài đặt',
+  installDetails: 'Chi tiết cài đặt',
+  stageProgress: 'Tiến độ từng giai đoạn',
+  downloaded: 'Đã tải {{size}}',
+  processed: 'Đã xử lý {{completed}} / {{total}} pipeline',
+  installErrors: {
+    plugin_version_unavailable:
+      'Phiên bản cần thiết chưa có trên chợ. Thử lại sau khi phát hành hoặc chỉ chuyển dữ liệu.',
+    plugin_download_timeout:
+      'Tải plugin quá thời gian chờ. Kiểm tra mạng rồi thử lại.',
+    plugin_marketplace_unavailable:
+      'Chợ chưa thể cung cấp gói plugin. Vui lòng thử lại sau.',
+    plugin_download_failed: 'Không thể tải plugin. Vui lòng kiểm tra mạng.',
+    dependency_prepare_failed:
+      'Không thể cài các thư viện phụ thuộc. Kiểm tra môi trường chạy.',
+    plugin_launch_failed:
+      'Không thể khởi động plugin. Kiểm tra môi trường chạy.',
+  },
   autoDescription:
     'Các runner cũ đã chuyển thành plugin. Chuyển đổi tất cả pipeline và giữ lại thiết lập. Cấu hình cũ sẽ được sao lưu; hội thoại sẽ bắt đầu lại.',
   viewPipelines: 'Xem pipeline',
@@ -10,12 +30,16 @@ export default {
   migrating: 'Đang chuyển đổi pipeline…',
   summary: 'Đã chuyển {{migrated}}; {{remaining}} cần xử lý.',
   installFailed:
-    'Cài plugin thất bại. Kiểm tra mạng và hạn mức tiện ích rồi thử lại, hoặc chỉ chuyển đổi dữ liệu.',
+    'Cài đặt thất bại. Mở chi tiết để xem giai đoạn lỗi rồi thử lại, hoặc chỉ chuyển dữ liệu.',
 
   activationRetryHint:
     'Sau khi kiểm tra môi trường chạy, làm mới, chọn pipeline này và xác nhận để chỉ thử kích hoạt lại. Cấu hình đã lưu sẽ không được di chuyển lần nữa.',
   details: 'Chi tiết chuyển đổi',
   notices: {
+    runtimeUnavailable:
+      'Môi trường chạy plugin bị ngắt kết nối. Khôi phục kết nối rồi thử lại, hoặc chỉ di chuyển dữ liệu.',
+    executionFailed:
+      'Di chuyển thất bại. Kiểm tra nhật ký máy chủ rồi thử lại.',
     pluginRequired:
       'Cài đặt hoặc bật plugin runner ở trên, rồi làm mới bản xem trước.',
     legacyArchive:
@@ -28,7 +52,7 @@ export default {
     retrievalDefaults:
       'Truy xuất dùng giới hạn top-k và độ dài kết quả mới. Hãy kiểm tra sau khi di chuyển.',
     boxReset:
-      'Trạng thái phiên Box hiện tại không được chuyển; một phiên cách ly mới sẽ được tạo.',
+      'Giữ nguyên cấu hình tái sử dụng sandbox. Không chuyển trạng thái container cũ; sandbox mới dùng cùng quy tắc tái sử dụng.',
     persistentHistory:
       'Hội thoại mới dùng lịch sử bền vững và riêng biệt. Lịch sử từ xa cũ không được nhập.',
     tweaksDefault: 'Langflow tweaks mặc định là một đối tượng rỗng.',
@@ -53,8 +77,8 @@ export default {
       'Cấu hình Runner đã cài không khớp với đích di chuyển. Kiểm tra phiên bản plugin rồi làm mới.',
     runnerExcluded:
       'Pipeline này loại trừ plugin Runner cần thiết. Hãy chỉnh thiết lập tiện ích trước.',
-    boxScope:
-      'Mẫu phiên Box tùy chỉnh không thể di chuyển an toàn. Hãy xóa mẫu hoặc kiểm tra yêu cầu cách ly.',
+    boxTemplateInvalid:
+      'Mẫu tái sử dụng không hợp lệ. Dùng {tên_biến}; không hỗ trợ trường vị trí, chuyển đổi định dạng hoặc truy cập thuộc tính.',
     pendingInteraction:
       'Có hội thoại đang chờ nhập liệu. Hãy hoàn tất hoặc hủy trước khi di chuyển.',
   },

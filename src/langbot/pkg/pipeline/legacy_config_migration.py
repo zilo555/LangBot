@@ -17,6 +17,7 @@ import json
 import math
 import re
 from urllib.parse import urlsplit
+from string import Formatter
 
 PLANNER_VERSION = '3'
 
@@ -344,7 +345,18 @@ def _validate_local(result, section):
     _warn(result, 'local.retrieval_defaults', f'{prefix}.knowledge-bases')
     template = section.get('box-session-id-template', '{launcher_type}_{launcher_id}')
     if type(template) is not str or not template.strip():
-        _block(result, 'invalid_type', f'{prefix}.box-session-id-template')
+        _block(result, 'local.box_template_invalid', f'{prefix}.box-session-id-template')
+    else:
+        try:
+            fields = list(Formatter().parse(template))
+            if any(
+                name is not None
+                and (not name or name.isdecimal() or re.search(r'[.\[\]{}]', name) or spec or conversion)
+                for _, name, spec, conversion in fields
+            ):
+                raise ValueError('Only named interpolation variables are supported')
+        except ValueError:
+            _block(result, 'local.box_template_invalid', f'{prefix}.box-session-id-template')
     _warn(result, 'local.box_state_reset', f'{prefix}.box-session-id-template')
 
 
