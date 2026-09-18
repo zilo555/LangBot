@@ -1,5 +1,5 @@
 <p align="center">
-<a href="https://langbot.rcpd.cc">
+<a href="https://langbot.app">
 <img width="130" src="res/logo-blue.png" alt="LangBot"/>
 </a>
 
@@ -20,7 +20,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/langbot-app/LangBot?style=social)](https://github.com/langbot-app/LangBot/stargazers)
 [![star](https://gitcode.com/RockChinQ/LangBot/star/badge.svg)](https://gitcode.com/RockChinQ/LangBot)
 
-<a href="https://langbot.rcpd.cc">官网</a> ｜
+<a href="https://langbot.app">官网</a> ｜
 <a href="https://langbot.app/docs/zh/insight/features">特性</a> ｜
 <a href="https://langbot.app/docs/zh/insight/guide">文档</a> ｜
 <a href="https://langbot.app/docs/zh/tags/readme">API</a> ｜
