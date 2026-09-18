@@ -1858,6 +1858,7 @@ const zhHant = {
       messageReceived: '機器人已成功收到 IM 訊息，可以進入下一步。',
       messageReceivedLocalAccountWarning:
         '機器人側已配置正常並成功收到 IM 訊息。目前未透過 LangBot Account 登入，模型呼叫可能報錯；可以進入下一步新增自己的模型。',
+      pageBotPreviewFailed: '測試聊天載入失敗，請重新儲存設定後重試。',
       pageBotTestPrompt:
         '頁面機器人已啟用。點擊右下角聊天氣泡並傳送一則訊息，驗證完整對話流程。',
       pageBotTestNotice: '僅供測試使用，請將程式碼嵌入真實的外部網頁。',

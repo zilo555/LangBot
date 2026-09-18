@@ -11,12 +11,9 @@ import {
   ChevronDown,
   ChevronRight,
   Sparkles,
+  MessageSquare,
   PartyPopper,
   Loader2,
-  MessageSquare,
-  ShieldCheck,
-  UserMinus,
-  UserPlus,
   X,
   ExternalLink,
   Download,
@@ -41,10 +38,7 @@ import {
   Pipeline,
   WizardProgress,
 } from '@/app/infra/entities/api';
-import {
-  DynamicFormItemType,
-  IDynamicFormItemSchema,
-} from '@/app/infra/entities/form/dynamic';
+import { IDynamicFormItemSchema } from '@/app/infra/entities/form/dynamic';
 import {
   PipelineConfigTab,
   PipelineConfigStage,
@@ -108,67 +102,9 @@ import {
 const TOTAL_STEPS = 4;
 const WIZARD_RUNNER_INSTALL_SCOPE = 'wizard';
 
-type WizardScenarioId =
-  | 'message_reply'
-  | 'welcome_members'
-  | 'handle_departures'
-  | 'handle_moderation';
-
-const WIZARD_SCENARIO_PROMPT_KEYS: Partial<Record<WizardScenarioId, string>> = {
-  welcome_members: 'wizard.scenario.welcomeMembersPrompt',
-  handle_departures: 'wizard.scenario.handleDeparturesPrompt',
-  handle_moderation: 'wizard.scenario.handleModerationPrompt',
-};
-
-const WIZARD_SCENARIOS = [
-  {
-    id: 'message_reply' as const,
-    eventType: 'message.received',
-    processorKind: 'pipeline' as const,
-    labelKey: 'wizard.scenario.messageReply',
-    descriptionKey: 'wizard.scenario.messageReplyDescription',
-    icon: MessageSquare,
-    emoji: '💬',
-  },
-  {
-    id: 'welcome_members' as const,
-    eventType: 'group.member_joined',
-    processorKind: 'agent' as const,
-    labelKey: 'wizard.scenario.welcomeMembers',
-    descriptionKey: 'wizard.scenario.welcomeMembersDescription',
-    icon: UserPlus,
-    emoji: '👋',
-  },
-  {
-    id: 'handle_departures' as const,
-    eventType: 'group.member_left',
-    processorKind: 'agent' as const,
-    labelKey: 'wizard.scenario.handleDepartures',
-    descriptionKey: 'wizard.scenario.handleDeparturesDescription',
-    icon: UserMinus,
-    emoji: '👤',
-  },
-  {
-    id: 'handle_moderation' as const,
-    eventType: 'group.member_banned',
-    processorKind: 'agent' as const,
-    labelKey: 'wizard.scenario.handleModeration',
-    descriptionKey: 'wizard.scenario.handleModerationDescription',
-    icon: ShieldCheck,
-    emoji: '🛡️',
-  },
-];
-
-function adapterSupportsScenario(
-  adapter: Adapter,
-  scenarioId: WizardScenarioId,
-) {
-  const scenario = WIZARD_SCENARIOS.find((item) => item.id === scenarioId);
-  if (!scenario) return false;
-  const supportedEvents = adapter.spec.supported_events?.length
-    ? adapter.spec.supported_events
-    : ['message.received'];
-  return supportedEvents.includes(scenario.eventType);
+function adapterSupportsMessages(adapter: Adapter) {
+  const events = adapter.spec.supported_events;
+  return !events?.length || events.includes('message.received');
 }
 
 // ---------------------------------------------------------------------------
@@ -181,8 +117,6 @@ export default function WizardPage() {
 
   // ---- Wizard state ----
   const [currentStep, setCurrentStep] = useState(0);
-  const [selectedScenario, setSelectedScenario] =
-    useState<WizardScenarioId | null>(null);
   const [selectedAdapter, setSelectedAdapter] = useState<string | null>(null);
   const [selectedRunner, setSelectedRunner] = useState<string | null>(null);
   const [botName, setBotName] = useState('');
@@ -245,10 +179,7 @@ export default function WizardPage() {
     (overrides: Partial<WizardProgress> = {}) => {
       const progress: WizardProgress = {
         step: overrides.step ?? currentStep,
-        selected_scenario:
-          overrides.selected_scenario !== undefined
-            ? overrides.selected_scenario
-            : selectedScenario,
+        selected_scenario: null,
         selected_adapter:
           overrides.selected_adapter !== undefined
             ? overrides.selected_adapter
@@ -274,7 +205,6 @@ export default function WizardPage() {
     },
     [
       currentStep,
-      selectedScenario,
       selectedAdapter,
       createdBotUuid,
       createdPipelineUuid,
@@ -314,6 +244,16 @@ export default function WizardPage() {
         if (progress && progress.created_bot_uuid) {
           // Verify the bot still exists before restoring
           try {
+            // Scenario-based drafts may point at Agents. Leave those resources
+            // untouched and start a new message-only setup instead.
+            if (
+              progress.selected_scenario &&
+              progress.selected_scenario !== 'message_reply'
+            ) {
+              throw new Error(
+                'Scenario-based wizard draft is no longer supported',
+              );
+            }
             const botData = await httpClient.getBot(progress.created_bot_uuid);
             if (cancelled) return;
 
@@ -330,10 +270,6 @@ export default function WizardPage() {
             const configNeedsSave = configToRestore !== restoredConfig;
 
             setSelectedAdapter(restoredAdapter);
-            setSelectedScenario(
-              (progress.selected_scenario as WizardScenarioId | null) ??
-                'message_reply',
-            );
             setCreatedBotUuid(progress.created_bot_uuid);
             setCreatedPipelineUuid(
               progress.created_pipeline_uuid ??
@@ -366,7 +302,7 @@ export default function WizardPage() {
             // Step 3 is resumable so a refresh cannot create a duplicate processor.
             setCurrentStep(Math.min(progress.step, 3));
           } catch {
-            // Bot no longer exists — clear stale progress and start fresh
+            // Clear stale or unsupported progress without modifying its resources.
             httpClient
               .saveWizardProgress({
                 step: 0,
@@ -411,11 +347,6 @@ export default function WizardPage() {
       if (!selectedRunner || !aiConfigTab) return undefined;
       return aiConfigTab.stages.find((s) => s.name === selectedRunner);
     }, [selectedRunner, aiConfigTab]);
-
-  const selectedScenarioDefinition = useMemo(
-    () => WIZARD_SCENARIOS.find((item) => item.id === selectedScenario),
-    [selectedScenario],
-  );
 
   // Adapter spec config for the selected adapter
   const selectedAdapterConfig: IDynamicFormItemSchema[] = useMemo(() => {
@@ -478,19 +409,10 @@ export default function WizardPage() {
       setSelectedRunner(runner);
       const configStage = configTab?.stages.find((s) => s.name === runner);
       const defaults = configStage ? getDefaultValues(configStage.config) : {};
-      const promptKey = selectedScenario
-        ? WIZARD_SCENARIO_PROMPT_KEYS[selectedScenario]
-        : undefined;
-      const supportsPromptEditor = configStage?.config.some(
-        (item) => item.type === DynamicFormItemType.PROMPT_EDITOR,
-      );
-      if (promptKey && supportsPromptEditor) {
-        defaults.prompt = [{ role: 'system', content: t(promptKey) }];
-      }
       setRunnerConfig(defaults);
       saveProgress({ step: 2, selected_runner: runner });
     },
-    [aiConfigTab, saveProgress, selectedScenario, t],
+    [aiConfigTab, saveProgress],
   );
 
   const handleInstallRunner = useCallback(
@@ -579,13 +501,9 @@ export default function WizardPage() {
   const canProceed = useCallback((): boolean => {
     switch (currentStep) {
       case 0:
-        return selectedScenario !== null && selectedAdapter !== null;
+        return selectedAdapter !== null;
       case 1:
-        return (
-          createdBotUuid !== null &&
-          botSaved &&
-          (selectedScenario !== 'message_reply' || messageReceived)
-        );
+        return createdBotUuid !== null && botSaved && messageReceived;
       case 2:
         return selectedRunner !== null && isRunnerConfigComplete;
       default:
@@ -593,7 +511,6 @@ export default function WizardPage() {
     }
   }, [
     currentStep,
-    selectedScenario,
     selectedAdapter,
     createdBotUuid,
     botSaved,
@@ -601,24 +518,6 @@ export default function WizardPage() {
     selectedRunner,
     isRunnerConfigComplete,
   ]);
-
-  const handleSelectScenario = useCallback(
-    (scenarioId: WizardScenarioId) => {
-      const adapter = adapters.find((item) => item.name === selectedAdapter);
-      const nextAdapter =
-        adapter && adapterSupportsScenario(adapter, scenarioId)
-          ? selectedAdapter
-          : null;
-      setSelectedScenario(scenarioId);
-      setSelectedAdapter(nextAdapter);
-      saveProgress({
-        step: 0,
-        selected_scenario: scenarioId,
-        selected_adapter: nextAdapter,
-      });
-    },
-    [adapters, selectedAdapter, saveProgress],
-  );
 
   const goNext = useCallback(() => {
     if (currentStep < TOTAL_STEPS - 1 && canProceed()) {
@@ -691,7 +590,7 @@ export default function WizardPage() {
       // Persist progress
       saveProgress({
         step: 1,
-        selected_scenario: selectedScenario,
+        selected_scenario: null,
         selected_adapter: selectedAdapter,
         created_bot_uuid: resp.uuid,
         created_pipeline_uuid: null,
@@ -707,7 +606,7 @@ export default function WizardPage() {
     } finally {
       setIsCreatingBot(false);
     }
-  }, [selectedScenario, selectedAdapter, adapters, t, saveProgress]);
+  }, [selectedAdapter, adapters, t, saveProgress]);
 
   // ---- Save Bot Config & Enable (Step 1) ----
   // Updates the bot's adapter config and enables it.
@@ -725,10 +624,7 @@ export default function WizardPage() {
       );
       setAdapterConfig(configToSave);
 
-      if (
-        selectedScenarioDefinition?.processorKind === 'pipeline' &&
-        !previewPipelineUuid
-      ) {
+      if (!previewPipelineUuid) {
         const pipelineResp = await httpClient.createPipeline({
           name: `${botName} Pipeline`,
           description: botDescription || '',
@@ -745,13 +641,10 @@ export default function WizardPage() {
         adapter_config: configToSave,
         enable: true,
       };
-      if (
-        selectedScenarioDefinition?.processorKind === 'pipeline' &&
-        previewPipelineUuid
-      ) {
+      if (previewPipelineUuid) {
         botUpdate.event_bindings = [
           {
-            event_pattern: selectedScenarioDefinition.eventType,
+            event_pattern: 'message.received',
             target_type: 'pipeline',
             target_uuid: previewPipelineUuid,
             filters: [],
@@ -818,7 +711,6 @@ export default function WizardPage() {
     botDescription,
     adapterConfig,
     createdPipelineUuid,
-    selectedScenarioDefinition,
     t,
     saveProgress,
   ]);
@@ -832,84 +724,57 @@ export default function WizardPage() {
   // ---- Create Pipeline & Link (Step 2 finish) ----
 
   const handleFinish = useCallback(async () => {
-    if (
-      !selectedRunner ||
-      !isRunnerConfigComplete ||
-      !createdBotUuid ||
-      !selectedScenarioDefinition
-    )
-      return;
+    if (!selectedRunner || !isRunnerConfigComplete || !createdBotUuid) return;
     setIsSubmitting(true);
     let processorUuid = '';
     let processorCreatedThisAttempt = false;
-    let targetType: 'agent' | 'pipeline' | null = null;
 
     try {
-      if (selectedScenarioDefinition.processorKind === 'pipeline') {
-        targetType = 'pipeline';
-        processorUuid = createdPipelineUuid ?? '';
-        if (!processorUuid) {
-          const pipeline: Pipeline = {
-            name: `${botName} Pipeline`,
-            description: botDescription || '',
-            config: {},
-          };
-          const pipelineResp = await httpClient.createPipeline(pipeline);
-          processorUuid = pipelineResp.uuid;
-          processorCreatedThisAttempt = true;
-        }
-        const createdPipeline = await httpClient.getPipeline(processorUuid);
-        const fullConfig = createdPipeline.pipeline.config as unknown as Record<
-          string,
-          unknown
-        >;
-        const fullAiConfig =
-          fullConfig.ai && typeof fullConfig.ai === 'object'
-            ? (fullConfig.ai as Record<string, unknown>)
-            : {};
-        const existingRunner =
-          fullAiConfig.runner && typeof fullAiConfig.runner === 'object'
-            ? (fullAiConfig.runner as Record<string, unknown>)
-            : {};
-        const existingRunnerConfigs =
-          fullAiConfig.runner_config &&
-          typeof fullAiConfig.runner_config === 'object'
-            ? (fullAiConfig.runner_config as Record<string, unknown>)
-            : {};
-
-        await httpClient.updatePipeline(processorUuid, {
+      processorUuid = createdPipelineUuid ?? '';
+      if (!processorUuid) {
+        const pipeline: Pipeline = {
           name: `${botName} Pipeline`,
           description: botDescription || '',
-          config: {
-            ...fullConfig,
-            ai: {
-              ...fullAiConfig,
-              runner: { ...existingRunner, id: selectedRunner },
-              runner_config: {
-                ...existingRunnerConfigs,
-                [selectedRunner]: runnerConfig,
-              },
-            },
-          },
-        });
-      } else {
-        targetType = 'agent';
-        const agentResp = await httpClient.createAgent({
-          kind: 'agent',
-          name: `${botName} - ${t(selectedScenarioDefinition.labelKey)}`,
-          description: botDescription || '',
-          emoji: selectedScenarioDefinition.emoji,
-          component_ref: selectedRunner,
-          config: {
-            runner: { id: selectedRunner, 'expire-time': 0 },
-            runner_config: { [selectedRunner]: runnerConfig },
-          },
-          supported_event_patterns: [selectedScenarioDefinition.eventType],
-        });
-        processorUuid = agentResp.uuid;
+          config: {},
+        };
+        const pipelineResp = await httpClient.createPipeline(pipeline);
+        processorUuid = pipelineResp.uuid;
         processorCreatedThisAttempt = true;
       }
+      const createdPipeline = await httpClient.getPipeline(processorUuid);
+      const fullConfig = createdPipeline.pipeline.config as unknown as Record<
+        string,
+        unknown
+      >;
+      const fullAiConfig =
+        fullConfig.ai && typeof fullConfig.ai === 'object'
+          ? (fullConfig.ai as Record<string, unknown>)
+          : {};
+      const existingRunner =
+        fullAiConfig.runner && typeof fullAiConfig.runner === 'object'
+          ? (fullAiConfig.runner as Record<string, unknown>)
+          : {};
+      const existingRunnerConfigs =
+        fullAiConfig.runner_config &&
+        typeof fullAiConfig.runner_config === 'object'
+          ? (fullAiConfig.runner_config as Record<string, unknown>)
+          : {};
 
+      await httpClient.updatePipeline(processorUuid, {
+        name: `${botName} Pipeline`,
+        description: botDescription || '',
+        config: {
+          ...fullConfig,
+          ai: {
+            ...fullAiConfig,
+            runner: { ...existingRunner, id: selectedRunner },
+            runner_config: {
+              ...existingRunnerConfigs,
+              [selectedRunner]: runnerConfig,
+            },
+          },
+        },
+      });
       const botData = await httpClient.getBot(createdBotUuid);
       const existingBot = botData.bot;
       await httpClient.updateBot(createdBotUuid, {
@@ -920,8 +785,8 @@ export default function WizardPage() {
         enable: existingBot.enable,
         event_bindings: [
           {
-            event_pattern: selectedScenarioDefinition.eventType,
-            target_type: targetType,
+            event_pattern: 'message.received',
+            target_type: 'pipeline',
             target_uuid: processorUuid,
             filters: [],
             priority: 0,
@@ -932,21 +797,15 @@ export default function WizardPage() {
       });
 
       setCurrentStep(3);
-      if (targetType === 'pipeline') {
-        setCreatedPipelineUuid(processorUuid);
-      }
+      setCreatedPipelineUuid(processorUuid);
       saveProgress({
         step: 3,
-        created_pipeline_uuid: targetType === 'pipeline' ? processorUuid : null,
+        created_pipeline_uuid: processorUuid,
       });
     } catch (err) {
       if (processorCreatedThisAttempt && processorUuid) {
         try {
-          if (targetType === 'pipeline') {
-            await httpClient.deletePipeline(processorUuid);
-          } else {
-            await httpClient.deleteAgent(processorUuid);
-          }
+          await httpClient.deletePipeline(processorUuid);
         } catch (rollbackError) {
           console.warn('Failed to roll back wizard processor', rollbackError);
         }
@@ -963,7 +822,6 @@ export default function WizardPage() {
     isRunnerConfigComplete,
     createdBotUuid,
     createdPipelineUuid,
-    selectedScenarioDefinition,
     botName,
     botDescription,
     runnerConfig,
@@ -1014,7 +872,7 @@ export default function WizardPage() {
   }
 
   const stepLabels = [
-    t('wizard.step.scenarioChannel'),
+    t('wizard.step.platform'),
     t('wizard.step.botConfig'),
     t('wizard.step.aiEngine'),
     t('wizard.step.done'),
@@ -1103,8 +961,6 @@ export default function WizardPage() {
         {currentStep === 0 && (
           <StepPlatform
             adapters={adapters}
-            selectedScenario={selectedScenario}
-            onSelectScenario={handleSelectScenario}
             selected={selectedAdapter}
             onSelect={setSelectedAdapter}
           />
@@ -1121,7 +977,7 @@ export default function WizardPage() {
             botSaved={botSaved}
             pageBotPreviewRequest={pageBotPreviewRequest}
             messageReceived={messageReceived}
-            requiresMessageVerification={selectedScenario === 'message_reply'}
+            requiresMessageVerification
             onMessageReceived={handleMessageReceived}
             onSaveBot={handleSaveBot}
             webhookUrl={webhookUrl}
@@ -1227,41 +1083,28 @@ export default function WizardPage() {
 
 function StepPlatform({
   adapters,
-  selectedScenario,
-  onSelectScenario,
   selected,
   onSelect,
 }: {
   adapters: Adapter[];
-  selectedScenario: WizardScenarioId | null;
-  onSelectScenario: (scenarioId: WizardScenarioId) => void;
   selected: string | null;
   onSelect: (name: string) => void;
 }) {
   const { t } = useTranslation();
   const [showLegacy, setShowLegacy] = useState(false);
 
-  const activeAdapters = useMemo(
+  const messageAdapters = useMemo(
     () =>
-      selectedScenario
-        ? adapters.filter(
-            (adapter) =>
-              !adapter.spec.legacy &&
-              adapterSupportsScenario(adapter, selectedScenario),
-          )
-        : [],
-    [adapters, selectedScenario],
+      Array.from(
+        new Map(adapters.map((adapter) => [adapter.name, adapter])).values(),
+      ).filter(adapterSupportsMessages),
+    [adapters],
   );
-  const legacyAdapters = useMemo(
-    () =>
-      selectedScenario
-        ? adapters.filter(
-            (adapter) =>
-              adapter.spec.legacy &&
-              adapterSupportsScenario(adapter, selectedScenario),
-          )
-        : [],
-    [adapters, selectedScenario],
+  const activeAdapters = messageAdapters.filter(
+    (adapter) => !adapter.spec.legacy,
+  );
+  const legacyAdapters = messageAdapters.filter(
+    (adapter) => adapter.spec.legacy,
   );
 
   const groupedAdapters = useMemo(() => {
@@ -1273,68 +1116,8 @@ function StepPlatform({
   }, [activeAdapters]);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
-      <section className="space-y-3">
-        <div>
-          <h2 className="text-xl font-semibold">
-            {t('wizard.scenario.title')}
-          </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t('wizard.scenario.description')}
-          </p>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {WIZARD_SCENARIOS.map((scenario) => {
-            const Icon = scenario.icon;
-            const isSelected = selectedScenario === scenario.id;
-            return (
-              <button
-                key={scenario.id}
-                type="button"
-                onClick={() => onSelectScenario(scenario.id)}
-                className={cn(
-                  'rounded-md border bg-card p-3 text-left transition-colors',
-                  isSelected
-                    ? 'border-primary ring-2 ring-primary/20'
-                    : 'hover:border-primary/60',
-                )}
-              >
-                <div className="flex items-start gap-3">
-                  <span
-                    className={cn(
-                      'flex h-8 w-8 shrink-0 items-center justify-center rounded-md',
-                      isSelected
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground',
-                    )}
-                  >
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-center justify-between gap-2">
-                      <span className="font-medium">
-                        {t(scenario.labelKey)}
-                      </span>
-                      <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
-                        {t(
-                          scenario.processorKind === 'pipeline'
-                            ? 'wizard.scenario.pipelineBadge'
-                            : 'wizard.scenario.agentBadge',
-                        )}
-                      </span>
-                    </span>
-                    <span className="mt-1 block text-sm leading-snug text-muted-foreground">
-                      {t(scenario.descriptionKey)}
-                    </span>
-                  </span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="space-y-5 border-t pt-6">
+    <div className="mx-auto max-w-4xl space-y-6">
+      <section className="space-y-5">
         <div className="text-center">
           <h2 className="text-xl font-semibold">
             {t('wizard.platform.title')}
@@ -1343,18 +1126,6 @@ function StepPlatform({
             {t('wizard.platform.description')}
           </p>
         </div>
-        {!selectedScenario && (
-          <div className="rounded-md border border-dashed p-5 text-center text-sm text-muted-foreground">
-            {t('wizard.platform.chooseScenarioFirst')}
-          </div>
-        )}
-        {selectedScenario &&
-          activeAdapters.length === 0 &&
-          legacyAdapters.length === 0 && (
-            <div className="rounded-md border border-dashed p-5 text-center text-sm text-muted-foreground">
-              {t('wizard.platform.noCompatiblePlatforms')}
-            </div>
-          )}
         {groupedAdapters.map((group) => (
           <div key={group.categoryId ?? 'uncategorized'} className="space-y-3">
             {group.categoryId && (
@@ -1501,15 +1272,22 @@ function PageBotFloatingWidget({
   testNotice: string;
   openRequest: number;
 }) {
+  const { t } = useTranslation();
   useEffect(() => {
     const script = document.createElement('script');
-    script.src = `${window.location.origin}/api/v1/embed/${botUuid}/widget.js?preview=wizard&v=${Date.now()}`;
+    const backendUrl = httpClient.getBaseUrl().replace(/\/$/, '');
+    script.src = `${backendUrl}/api/v1/embed/${botUuid}/widget.js?preview=wizard&v=${Date.now()}`;
     script.dataset.title = title || 'LangBot';
     script.dataset.testNotice = testNotice;
     script.dataset.autoOpen = 'true';
+    script.onerror = () =>
+      toast.error(t('wizard.botConfig.pageBotPreviewFailed'), {
+        id: `wizard-page-bot-${botUuid}`,
+      });
     document.body.appendChild(script);
 
     return () => {
+      script.onerror = null;
       script.remove();
       const root = document.getElementById('langbot-widget-root') as
         | (HTMLElement & {
@@ -1523,15 +1301,7 @@ function PageBotFloatingWidget({
         root?.remove();
       }
     };
-  }, [botUuid, testNotice, title]);
-
-  useEffect(() => {
-    if (openRequest <= 0) return;
-    const root = document.getElementById('langbot-widget-root') as
-      | (HTMLElement & { langbotOpen?: () => void })
-      | null;
-    root?.langbotOpen?.();
-  }, [openRequest]);
+  }, [botUuid, testNotice, title, openRequest, t]);
 
   return null;
 }

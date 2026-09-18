@@ -148,6 +148,21 @@ class TestEmbedWidgetEndpoint:
         assert 'javascript' in response.content_type
         fake_embed_app.platform_mgr.resolve_public_bot.assert_any_await('a1b2c3d4-5678-90ab-cdef-123456789abc')
 
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ('query', 'expected_base'),
+        [('', 'https://public.example/bot'), ('?preview=wizard', 'http://localhost')],
+    )
+    async def test_widget_preview_uses_current_backend(
+        self, quart_test_client, fake_embed_app, monkeypatch, query, expected_base
+    ):
+        monkeypatch.setitem(fake_embed_app.instance_config.data['api'], 'webhook_prefix', 'https://public.example/bot')
+        response = await quart_test_client.get('/api/v1/embed/a1b2c3d4-5678-90ab-cdef-123456789abc/widget.js' + query)
+        assert response.status_code == 200
+        body = await response.get_data(as_text=True)
+        assert f'baseUrl: "{expected_base}"' in body
+        assert f'logoUrl: "{expected_base}"' in body
+
     def test_widget_template_cache_reloads_after_file_change(self, monkeypatch, tmp_path):
         """Development edits to widget.js take effect without restarting the backend."""
         import langbot.pkg.api.http.controller.groups.pipelines.embed as embed

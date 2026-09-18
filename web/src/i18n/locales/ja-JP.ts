@@ -2308,7 +2308,7 @@ const jaJP = {
     next: '次へ',
     finish: '作成＆デプロイ',
     confirmCreateBot: '確定、ボットを作成',
-    createSuccess: 'プロセッサーが作成され、ボットにリンクされました！',
+    createSuccess: 'パイプラインが作成され、ボットにリンクされました！',
     botCreateSuccess: 'ボットが正常に作成されました！',
     botSaveSuccess: 'ボット設定が保存され、有効になりました！',
     createError: 'リソースの作成に失敗しました',
@@ -2316,43 +2316,14 @@ const jaJP = {
     completeSaveError: '完了状態の保存に失敗しました。もう一度お試しください。',
     step: {
       platform: 'プラットフォーム',
-      scenarioChannel: 'シナリオとチャンネル',
       botConfig: 'ボット設定',
       aiEngine: 'AIエンジン',
       done: '完了',
     },
-    scenario: {
-      title: 'このボットで何を実現しますか？',
-      description:
-        'まず主要な動作を1つ選びます。作成後に他の動作も追加できます。',
-      messageReply: '受信メッセージに返信',
-      messageReplyDescription:
-        'AI Pipeline でプライベートまたはグループメッセージに返信します。',
-      welcomeMembers: '新しいメンバーを歓迎',
-      welcomeMembersDescription:
-        'メンバーがグループに参加したときに Agent を実行します。',
-      welcomeMembersPrompt:
-        '新しいグループメンバーを短く親しみやすいメッセージで歓迎してください。利用可能なメンバーとグループの情報を活用し、内部イベント名やシステムの詳細には言及しないでください。',
-      handleDepartures: 'メンバーの退出を処理',
-      handleDeparturesDescription:
-        'メンバーが退出または削除されたときに Agent を実行します。',
-      handleDeparturesPrompt:
-        '公開の応答が適切な場合に、メンバーの退出へ短く敬意のあるメッセージで対応してください。退出理由を推測したり、内部イベント名に言及したりしないでください。',
-      handleModeration: 'モデレーションイベントを処理',
-      handleModerationDescription:
-        'グループメンバーが制限されたときに Agent を実行します。',
-      handleModerationPrompt:
-        '利用可能な情報だけを使い、メンバーへの制限について簡潔で中立的なグループ通知を書いてください。詳細を作り上げたり、内部イベント名に言及したりしないでください。',
-      pipelineBadge: 'Pipeline',
-      agentBadge: 'Agent',
-    },
     platform: {
-      title: 'チャンネルを選択',
-      description: '選択したシナリオに対応するチャンネルのみ表示されます。',
-      chooseScenarioFirst:
-        'シナリオを選択すると、対応するチャンネルが表示されます。',
-      noCompatiblePlatforms:
-        '現在インストールされているチャンネルはこのシナリオに対応していません。',
+      title: 'プラットフォームを選択',
+      description:
+        'ボットが接続するメッセージングプラットフォームを選択してください。',
     },
     botConfig: {
       title: 'ボットを設定',
@@ -2368,6 +2339,8 @@ const jaJP = {
         'ボットが IM メッセージを受信しました。次のステップに進めます。',
       messageReceivedLocalAccountWarning:
         'ボット側の接続設定は正常で、IM メッセージを受信できています。LangBot Account でログインしていないためモデル呼び出しが失敗する場合がありますが、次のステップで独自のモデルを追加できます。',
+      pageBotPreviewFailed:
+        'テストチャットを読み込めませんでした。設定を再保存してお試しください。',
       pageBotTestPrompt:
         'ページボットが有効になりました。右下のチャットバブルをクリックしてメッセージを送信し、会話フロー全体を確認してください。',
       pageBotTestNotice:
@@ -2466,7 +2439,7 @@ const jaJP = {
     done: {
       title: '完了しました！',
       description:
-        'ボットが作成され、プロセッサーに接続されました。ワークベンチから管理できます。',
+        'ボットが作成され、パイプラインに接続されました。ワークベンチから管理できます。',
       backToWorkbench: 'ワークベンチに戻る',
     },
   },

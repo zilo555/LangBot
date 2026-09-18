@@ -1944,6 +1944,8 @@ const viVN = {
         'Bot đã nhận được tin nhắn. Bạn có thể tiếp tục sang bước tiếp theo.',
       messageReceivedLocalAccountWarning:
         'Kết nối phía Bot đã được cấu hình đúng và đã nhận được tin nhắn. Vì bạn không đăng nhập bằng tài khoản LangBot, lệnh gọi mô hình có thể thất bại; hãy tiếp tục sang bước tiếp theo để thêm mô hình của riêng bạn.',
+      pageBotPreviewFailed:
+        'Không thể tải cuộc trò chuyện thử nghiệm. Hãy lưu lại cấu hình để thử lại.',
       pageBotTestPrompt:
         'Page Bot đã được bật. Nhấp vào bong bóng trò chuyện ở góc dưới bên phải và gửi tin nhắn để xác minh toàn bộ luồng hội thoại.',
       pageBotTestNotice:

@@ -1990,6 +1990,8 @@ const esES = {
         'El Bot recibió un mensaje. Puedes continuar al siguiente paso.',
       messageReceivedLocalAccountWarning:
         'La conexión del Bot está configurada correctamente y recibió un mensaje. Como no has iniciado sesión con una cuenta de LangBot, las llamadas al modelo pueden fallar; continúa al siguiente paso para añadir tu propio modelo.',
+      pageBotPreviewFailed:
+        'No se pudo cargar el chat de prueba. Guarda la configuración de nuevo para reintentar.',
       pageBotTestPrompt:
         'El Bot de página está activado. Haz clic en la burbuja de chat de la esquina inferior derecha y envía un mensaje para verificar el flujo completo de la conversación.',
       pageBotTestNotice:

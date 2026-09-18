@@ -2404,7 +2404,7 @@ const zhHans = {
     next: '下一步',
     finish: '创建并部署',
     confirmCreateBot: '确定，创建机器人',
-    createSuccess: '处理器已创建并关联到机器人！',
+    createSuccess: '流水线已创建并关联到机器人！',
     botCreateSuccess: '机器人创建成功！',
     botSaveSuccess: '机器人配置已保存并启用！',
     createError: '创建资源失败',
@@ -2412,36 +2412,13 @@ const zhHans = {
     completeSaveError: '保存完成状态失败，请重试。',
     step: {
       platform: '平台接入',
-      scenarioChannel: '场景与频道',
       botConfig: '机器人配置',
       aiEngine: 'AI 引擎',
       done: '完成',
     },
-    scenario: {
-      title: '这个机器人要完成什么？',
-      description: '先选择一个主要结果，机器人创建后还可以继续添加其他行为。',
-      messageReply: '回复收到的消息',
-      messageReplyDescription: '使用 AI Pipeline 回复私聊或群聊消息。',
-      welcomeMembers: '欢迎新成员',
-      welcomeMembersDescription: '有人加入群组时运行 Agent。',
-      welcomeMembersPrompt:
-        '用简短、友好的消息欢迎新群成员。有成员和群组上下文时请合理使用，不要提及内部事件名称或系统细节。',
-      handleDepartures: '处理成员离群',
-      handleDeparturesDescription: '有人离开或被移出群组时运行 Agent。',
-      handleDeparturesPrompt:
-        '当适合公开回应时，用简短、尊重的消息处理群成员离开。不要猜测成员离开的原因，也不要提及内部事件名称。',
-      handleModeration: '处理群管理事件',
-      handleModerationDescription: '群成员受到限制时运行 Agent。',
-      handleModerationPrompt:
-        '仅根据现有上下文，写一条简洁、中立的群管理通知，说明成员受到的限制。不要编造细节或提及内部事件名称。',
-      pipelineBadge: 'Pipeline',
-      agentBadge: 'Agent',
-    },
     platform: {
-      title: '选择频道',
-      description: '这里只显示支持所选场景的频道。',
-      chooseScenarioFirst: '请先选择场景，再查看可用频道。',
-      noCompatiblePlatforms: '当前安装的频道都不支持这个场景。',
+      title: '选择平台',
+      description: '选择机器人要接入的消息平台。',
     },
     botConfig: {
       title: '配置机器人',
@@ -2453,6 +2430,7 @@ const zhHans = {
       messageReceived: '机器人已成功收到 IM 消息，可以进入下一步。',
       messageReceivedLocalAccountWarning:
         '机器人侧已配置正常并成功收到 IM 消息。当前未通过 LangBot Account 登录，模型调用可能报错；可以进入下一步添加自己的模型。',
+      pageBotPreviewFailed: '测试聊天加载失败，请重新保存配置后重试。',
       pageBotTestPrompt:
         '页面机器人已启用。点击右下角聊天气泡并发送一条消息，验证完整对话链路。',
       pageBotTestNotice: '仅供测试使用，请嵌入代码到真实外部网页。',
@@ -2535,7 +2513,7 @@ const zhHans = {
     },
     done: {
       title: '一切就绪！',
-      description: '机器人已创建并连接到处理器。你现在可以在工作台中管理它。',
+      description: '机器人已创建并连接到流水线。你现在可以在工作台中管理它。',
       backToWorkbench: '返回工作台',
     },
   },

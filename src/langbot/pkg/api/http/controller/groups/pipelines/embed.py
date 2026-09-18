@@ -199,7 +199,9 @@ class EmbedRouterGroup(group.RouterGroup):
 
             base_url = quart.request.host_url.rstrip('/')
             webhook_prefix = self.ap.instance_config.data.get('api', {}).get('webhook_prefix', '')
-            if webhook_prefix:
+            # The wizard previews the currently connected backend, which can
+            # differ from the public address used by external website embeds.
+            if webhook_prefix and quart.request.args.get('preview') != 'wizard':
                 base_url = webhook_prefix.rstrip('/')
 
             if not re.match(r'^https?://[a-zA-Z0-9._:/-]+$', base_url):
