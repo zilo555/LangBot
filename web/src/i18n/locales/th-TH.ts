@@ -256,8 +256,7 @@ const thTH = {
     reasoningAbility: 'ความสามารถในการให้เหตุผล',
     reasoningLevel: 'ระดับการให้เหตุผล',
     reasoningLevels: {
-      useModelSetting: 'ใช้การตั้งค่าโมเดล',
-      providerDefault: 'ค่าเริ่มต้นของผู้ให้บริการ',
+      providerDefault: 'ใช้ค่าเริ่มต้นของผู้ให้บริการ',
       disabled: 'ปิด',
       enabled: 'เปิด',
       minimal: 'ต่ำสุด',

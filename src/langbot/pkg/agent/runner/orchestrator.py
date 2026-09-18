@@ -28,7 +28,6 @@ from .execution_context import (
 )
 from .host_models import AgentBinding, AgentEventEnvelope
 from .invoker import RunnerInvoker
-from .model_reasoning import extract_model_reasoning_overrides
 from .interaction_manager import InteractionManager
 from .query_bridge import QueryRunBridge
 from .registry import RunnerRegistry
@@ -143,7 +142,6 @@ class AgentRunOrchestrator:
             binding=binding,
             descriptor=descriptor,
         )
-        model_reasoning_overrides = extract_model_reasoning_overrides(descriptor, binding.runner_config, resources)
 
         context = await self.context_builder.build_context_from_event(
             event=execution_event,
@@ -209,7 +207,6 @@ class AgentRunOrchestrator:
                 'state_scopes': list(binding.state_policy.state_scopes),
             },
             'state_context': state_context,
-            'model_reasoning_overrides': model_reasoning_overrides,
         }
 
         seen_sequences: set[int] = set()
@@ -246,7 +243,6 @@ class AgentRunOrchestrator:
                 execution_query=execution_query,
                 platform_context=freeze_platform_context(event),
                 reply_streams=reply_streams,
-                model_reasoning_overrides=model_reasoning_overrides,
             )
 
             event_log_id = await self.journal.write_event_log(

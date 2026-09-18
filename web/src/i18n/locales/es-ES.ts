@@ -265,8 +265,7 @@ const esES = {
     reasoningAbility: 'Razonamiento',
     reasoningLevel: 'Nivel de razonamiento',
     reasoningLevels: {
-      useModelSetting: 'Usar ajuste del modelo',
-      providerDefault: 'Predeterminado del proveedor',
+      providerDefault: 'Usar valor predeterminado del proveedor',
       disabled: 'Desactivado',
       enabled: 'Activado',
       minimal: 'Mínimo',

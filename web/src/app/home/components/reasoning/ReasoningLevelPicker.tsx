@@ -37,8 +37,6 @@ interface ReasoningLevelPickerProps {
   value: ReasoningLevel;
   levels: ReasoningLevel[];
   disabled?: boolean;
-  inherited?: boolean;
-  onInherit?: () => void;
   onChange: (value: ReasoningLevel) => void;
 }
 
@@ -46,8 +44,6 @@ export default function ReasoningLevelPicker({
   value,
   levels,
   disabled = false,
-  inherited = false,
-  onInherit,
   onChange,
 }: ReasoningLevelPickerProps) {
   const { t } = useTranslation();
@@ -56,14 +52,8 @@ export default function ReasoningLevelPicker({
   const safeValue: ReasoningLevel = safeLevels.includes(value)
     ? value
     : safeLevels[0];
-  const isInherited = Boolean(onInherit && inherited);
-  const currentLabel = t(
-    isInherited
-      ? 'models.reasoningLevels.useModelSetting'
-      : REASONING_LEVEL_LABEL_KEYS[safeValue],
-  );
-  const isExplicit =
-    !isInherited && (Boolean(onInherit) || safeValue !== 'provider_default');
+  const currentLabel = t(REASONING_LEVEL_LABEL_KEYS[safeValue]);
+  const isExplicit = safeValue !== 'provider_default';
   const currentIndex = Math.max(0, safeLevels.indexOf(safeValue));
 
   return (
@@ -73,9 +63,9 @@ export default function ReasoningLevelPicker({
           type="button"
           variant="outline"
           size="sm"
-          disabled={disabled || (safeLevels.length <= 1 && !onInherit)}
+          disabled={disabled || safeLevels.length <= 1}
           aria-label={`${t('models.reasoningLevel')}: ${currentLabel}`}
-          className="h-9 w-9 shrink-0 gap-1.5 px-2.5 text-xs font-normal sm:w-auto sm:max-w-36"
+          className="h-9 w-9 shrink-0 gap-1.5 px-2.5 text-xs font-normal sm:w-auto sm:max-w-52"
         >
           <BrainCircuit
             className={`size-4 shrink-0 ${isExplicit ? 'text-primary' : 'text-muted-foreground'}`}
@@ -87,29 +77,17 @@ export default function ReasoningLevelPicker({
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[272px] p-4">
-        {onInherit && (
-          <div className="mb-3 flex flex-col gap-1">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              aria-pressed={isInherited}
-              onClick={onInherit}
-            >
-              {t('models.reasoningLevels.useModelSetting')}
-            </Button>
-            {safeLevels.includes('provider_default') && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                aria-pressed={!isInherited && safeValue === 'provider_default'}
-                onClick={() => onChange('provider_default')}
-              >
-                {t(REASONING_LEVEL_LABEL_KEYS.provider_default)}
-              </Button>
-            )}
-          </div>
+        {safeLevels.includes('provider_default') && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mb-3 w-full"
+            aria-pressed={safeValue === 'provider_default'}
+            onClick={() => onChange('provider_default')}
+          >
+            {t(REASONING_LEVEL_LABEL_KEYS.provider_default)}
+          </Button>
         )}
         <div className="flex h-5 items-center gap-0.5 text-sm text-muted-foreground">
           <span>{currentLabel}</span>

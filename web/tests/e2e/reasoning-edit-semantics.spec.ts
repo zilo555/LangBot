@@ -14,6 +14,7 @@ async function setup(
   name = 'WeKnoraAgent',
   agentId: null | 'absent' = null,
   converted?: typeof canonical,
+  reasoningEnabled = true,
 ) {
   const schema = contract.plugins[plugin].component;
   const id = `plugin:langbot-team/${name}/default`;
@@ -127,8 +128,10 @@ async function setup(
             name: uuid,
             provider_uuid: 'provider-valid',
             provider: { uuid: 'provider-valid', name: 'Mock Provider' },
+            abilities: reasoningEnabled ? ['reasoning'] : [],
             reasoning: { level: 'high' },
             reasoning_capabilities: {
+              supported: true,
               levels: ['provider_default', 'low', 'high'],
             },
           })),
@@ -141,14 +144,19 @@ async function setup(
   return { writes, raw, id };
 }
 
-test('reasoning edit distinguishes provider default from model inheritance and preserves fallbacks', async ({
+test('explicit reasoning choices persist independently for primary and fallback models', async ({
   page,
 }) => {
   const { writes, raw, id } = await setup(page, 'LocalAgent', 'LocalAgent');
   await page
     .getByRole('button', { name: 'Reasoning level: High', exact: true })
     .click();
-  await page.getByRole('slider').press('Home');
+  await expect(
+    page.getByRole('button', { name: 'Use model setting', exact: true }),
+  ).toHaveCount(0);
+  await page
+    .getByRole('button', { name: 'Use provider default', exact: true })
+    .click();
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect.poll(() => writes.length).toBe(1);
@@ -161,67 +169,37 @@ test('reasoning edit distinguishes provider default from model inheritance and p
   });
   await page.reload();
   await page.getByRole('tab', { name: 'AI', exact: true }).click();
-  await page
-    .getByRole('button', {
-      name: 'Reasoning level: Provider default',
-      exact: true,
-    })
-    .click();
-  await page
-    .getByRole('button', { name: 'Use model setting', exact: true })
-    .click();
-  await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
-  await expect.poll(() => writes.length).toBe(2);
-  expect(writes[1].config.ai.runner_config[id]).toEqual({
-    ...raw,
-    model: { ...(raw.model as object), reasoning: { 'llm-fallback': 'low' } },
-  });
-  expect(writes[1].config.output).toEqual(writes[0].config.output);
-  await page.reload();
-  await page.getByRole('tab', { name: 'AI', exact: true }).click();
   await expect(
     page.getByRole('button', {
-      name: 'Reasoning level: Use model setting',
+      name: 'Reasoning level: Use provider default',
       exact: true,
     }),
   ).toBeVisible();
   await expect(
     page.getByRole('button', { name: 'Save', exact: true }),
   ).toBeDisabled();
-  // The reverse transition must not require moving through another level.
-  await page
-    .getByRole('button', {
-      name: 'Reasoning level: Use model setting',
-      exact: true,
-    })
-    .click();
-  await page
-    .getByRole('button', { name: 'Provider default', exact: true })
-    .click();
-  await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
-  await expect.poll(() => writes.length).toBe(3);
-  expect(writes[2].config.ai.runner_config[id]).toEqual(
-    writes[0].config.ai.runner_config[id],
-  );
-  // Clearing a fallback override must not clear the primary override.
   await page
     .getByRole('button', { name: 'Reasoning level: Low', exact: true })
     .click();
-  await page
-    .getByRole('button', { name: 'Use model setting', exact: true })
-    .click();
+  await page.getByRole('slider').press('End');
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
-  await expect.poll(() => writes.length).toBe(4);
-  expect(writes[3].config.ai.runner_config[id]).toEqual({
-    ...raw,
-    model: {
-      ...(raw.model as object),
-      reasoning: { 'llm-valid': 'provider_default' },
-    },
+  await expect.poll(() => writes.length).toBe(2);
+  expect(writes[1].config.ai.runner_config[id].model.reasoning).toEqual({
+    'llm-valid': 'provider_default',
+    'llm-fallback': 'high',
   });
+  expect(writes[1].config.output).toEqual(writes[0].config.output);
+});
+
+test('custom models without reasoning enabled hide budget controls despite inferred support', async ({
+  page,
+}) => {
+  await setup(page, 'LocalAgent', 'LocalAgent', null, undefined, false);
+  await expect(page.getByRole('combobox').first()).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: /^Reasoning level:/ }),
+  ).toHaveCount(0);
 });
 
 test('standalone picker keeps its original levels and provider default API', async ({
@@ -267,7 +245,7 @@ test('standalone picker keeps its original levels and provider default API', asy
   });
   await page
     .getByRole('button', {
-      name: 'Reasoning level: Provider default',
+      name: 'Reasoning level: Use provider default',
       exact: true,
     })
     .click();
@@ -284,4 +262,71 @@ test('standalone picker keeps its original levels and provider default API', asy
     'data-value',
     'provider_default',
   );
+});
+
+test('LangBot Models reasoning checkbox matches the capability icon', async ({
+  page,
+}) => {
+  await installLangBotApiMocks(page, { authenticated: true });
+  await page.route('**/api/v1/user/info', (route) =>
+    route.fulfill({
+      json: {
+        code: 0,
+        data: {
+          account_uuid: 'account-playwright',
+          user: 'admin@example.com',
+          account_type: 'space',
+          has_password: true,
+        },
+      },
+    }),
+  );
+  const provider = {
+    uuid: 'space-provider',
+    name: 'LangBot Models',
+    requester: 'space-chat-completions',
+    base_url: '',
+    api_keys: [],
+    llm_count: 1,
+    embedding_count: 0,
+    rerank_count: 0,
+  };
+  await page.route('**/api/v1/provider/**', (route) => {
+    const path = new URL(route.request().url()).pathname;
+    const ok = (data: unknown) => route.fulfill({ json: { code: 0, data } });
+    if (path.endsWith('/providers')) return ok({ providers: [provider] });
+    if (path.endsWith('/requesters')) return ok({ requesters: [] });
+    if (path.includes('/models/'))
+      return ok({
+        models: path.endsWith('/llm')
+          ? [
+              {
+                uuid: 'space-reasoning',
+                name: 'Space reasoning model',
+                provider_uuid: provider.uuid,
+                provider,
+                abilities: ['vision', 'func_call'],
+                extra_args: {},
+                reasoning_capabilities: {
+                  supported: true,
+                  levels: ['provider_default', 'low', 'high'],
+                },
+              },
+            ]
+          : [],
+      });
+    return ok({ provider });
+  });
+  await page.goto('/home/bots');
+  await page.getByRole('button', { name: 'Models', exact: true }).click();
+  const card = page
+    .locator('[data-slot="card"]')
+    .filter({ hasText: 'LangBot Models' });
+  await card.getByText('Space reasoning model', { exact: true }).click();
+  const checkbox = page.getByRole('checkbox', {
+    name: 'Reasoning',
+    exact: true,
+  });
+  await expect(checkbox).toBeChecked();
+  await expect(checkbox).toBeDisabled();
 });

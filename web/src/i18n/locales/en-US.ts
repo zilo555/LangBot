@@ -264,8 +264,7 @@ const enUS = {
     reasoningAbility: 'Reasoning',
     reasoningLevel: 'Reasoning level',
     reasoningLevels: {
-      useModelSetting: 'Use model setting',
-      providerDefault: 'Provider default',
+      providerDefault: 'Use provider default',
       disabled: 'Off',
       enabled: 'On',
       minimal: 'Minimal',

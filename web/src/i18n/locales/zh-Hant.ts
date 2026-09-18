@@ -248,8 +248,7 @@ const zhHant = {
     reasoningAbility: '思考能力',
     reasoningLevel: '思考等級',
     reasoningLevels: {
-      useModelSetting: '使用模型設定',
-      providerDefault: '供應商預設',
+      providerDefault: '使用供應商預設值',
       disabled: '關閉',
       enabled: '開啟',
       minimal: '最低',

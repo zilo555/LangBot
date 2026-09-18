@@ -1,4 +1,4 @@
-"""Actual secured Host actions consume frozen policy, not plugin payload hints."""
+"""Secured Host actions accept explicit per-call options after authorization."""
 
 from __future__ import annotations
 
@@ -29,6 +29,7 @@ class RecordingProvider:
 
     def __init__(self, request):
         self.requester = request
+        self.provider_entity = SimpleNamespace(requester='openai')
         self.calls = []
 
     async def record(self, kwargs):
@@ -74,9 +75,7 @@ async def host(monkeypatch):
     )
     runtime = make_handler(ap)
 
-    async def register(
-        run_id='run', overrides=None, workspace='workspace-a', plugin='test-author/test-plugin', operations=None
-    ):
+    async def register(run_id='run', workspace='workspace-a', plugin='test-author/test-plugin', operations=None):
         await registry.register(
             run_id=run_id,
             runner_id='plugin:test-author/test-plugin/arbitrary',
@@ -89,7 +88,6 @@ async def host(monkeypatch):
                     for model_id in (PRIMARY, FALLBACK)
                 ]
             },
-            model_reasoning_overrides=overrides,
         )
         return await registry.get(run_id)
 
@@ -114,10 +112,10 @@ async def call(host, action, model_id=PRIMARY, run_id='run', **extra):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize('action', ACTIONS)
-async def test_primary_fallback_and_repeated_tool_round_use_frozen_per_model_policy(host, action):
-    await host.register(overrides={PRIMARY: {'level': 'high'}, FALLBACK: {'level': 'low'}})
+async def test_primary_fallback_and_repeated_tool_round_use_explicit_options(host, action):
+    await host.register()
     for model_id, level in [(PRIMARY, 'high'), (FALLBACK, 'low'), (FALLBACK, 'low')]:
-        responses = await call(host, action, model_id)
+        responses = await call(host, action, model_id, reasoning_level=level)
         assert all(response.code == 0 for response in responses)
         kwargs, built = host.provider.calls[-1]
         assert built == {'reasoning_effort': level}
@@ -132,8 +130,8 @@ async def test_primary_fallback_and_repeated_tool_round_use_frozen_per_model_pol
 @pytest.mark.parametrize('action', ACTIONS)
 @pytest.mark.parametrize('level', [None, 'provider_default'])
 async def test_absent_and_explicit_provider_default_are_distinct(host, action, level):
-    await host.register(overrides={PRIMARY: {'level': level}} if level else None)
-    assert all(response.code == 0 for response in await call(host, action))
+    await host.register()
+    assert all(response.code == 0 for response in await call(host, action, reasoning_level=level))
     kwargs, built = host.provider.calls[-1]
     assert built == ({} if level else {'reasoning_effort': 'medium'})
     assert (kwargs['model'] is host.models[PRIMARY]) is (level is None)
@@ -158,8 +156,8 @@ async def test_regular_plugin_without_run_keeps_model_defaults_and_ignores_forge
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize('action', ACTIONS)
-async def test_plugin_cannot_replace_host_map(host, action):
-    await host.register(overrides={PRIMARY: {'level': 'high'}})
+async def test_obsolete_hidden_policy_fields_do_not_override_explicit_api(host, action):
+    await host.register()
     responses = await call(
         host,
         action,
@@ -167,7 +165,7 @@ async def test_plugin_cannot_replace_host_map(host, action):
         reasoning_config_override={'level': 'disabled'},
     )
     assert all(response.code == 0 for response in responses)
-    assert host.provider.calls[-1][1] == {'reasoning_effort': 'high'}
+    assert host.provider.calls[-1][1] == {'reasoning_effort': 'medium'}
 
 
 @pytest.mark.asyncio
@@ -175,7 +173,6 @@ async def test_plugin_cannot_replace_host_map(host, action):
 @pytest.mark.parametrize('denial', ['workspace', 'plugin', 'unselected', 'operation', 'expired'])
 async def test_authorization_denial_happens_before_model_access(host, action, denial):
     await host.register(
-        overrides={PRIMARY: {'level': 'high'}, OTHER: {'level': 'max'}},
         workspace='workspace-b' if denial == 'workspace' else 'workspace-a',
         plugin='other/plugin' if denial == 'plugin' else 'test-author/test-plugin',
         operations=['rerank'] if denial == 'operation' else None,
@@ -191,9 +188,14 @@ async def test_authorization_denial_happens_before_model_access(host, action, de
 @pytest.mark.asyncio
 @pytest.mark.parametrize('action', ACTIONS)
 async def test_concurrent_runs_share_model_without_cross_run_or_round_leakage(host, action):
-    await host.register('high-run', {PRIMARY: {'level': 'high'}})
-    await host.register('low-run', {PRIMARY: {'level': 'low'}})
-    results = await asyncio.gather(*(call(host, action, run_id=run_id) for run_id in ['high-run', 'low-run'] * 3))
+    await host.register('high-run')
+    await host.register('low-run')
+    results = await asyncio.gather(
+        *(
+            call(host, action, run_id=run_id, reasoning_level=run_id.split('-')[0])
+            for run_id in ['high-run', 'low-run'] * 3
+        )
+    )
     assert all(response.code == 0 for result in results for response in result)
     assert sorted(built['reasoning_effort'] for _, built in host.provider.calls) == ['high'] * 3 + ['low'] * 3
     assert len({id(kwargs['model']) for kwargs, _ in host.provider.calls}) == 6
@@ -203,7 +205,7 @@ async def test_concurrent_runs_share_model_without_cross_run_or_round_leakage(ho
 @pytest.mark.asyncio
 @pytest.mark.parametrize('action', ACTIONS)
 async def test_model_runtime_workspace_mismatch_denies(host, action):
-    await host.register(overrides={PRIMARY: {'level': 'high'}})
+    await host.register()
     host.models[PRIMARY].model_entity.workspace_uuid = 'workspace-b'
     responses = await call(host, action)
     assert all(response.code != 0 for response in responses)
@@ -213,33 +215,16 @@ async def test_model_runtime_workspace_mismatch_denies(host, action):
 @pytest.mark.asyncio
 @pytest.mark.parametrize('action', ACTIONS)
 async def test_host_reuses_core_ability_validation_before_provider_call(host, action):
-    await host.register(overrides={PRIMARY: {'level': 'high'}})
+    await host.register()
     host.models[PRIMARY].model_entity.abilities = []
     with pytest.raises(ValueError, match='reasoning ability'):
-        await call(host, action)
+        await call(host, action, reasoning_level='high')
     assert not host.provider.calls
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize('action', ACTIONS)
-async def test_snapshot_survives_configuration_edits_and_tool_followup(host, action):
-    config = {PRIMARY: {'level': 'high'}, FALLBACK: {'level': 'low'}}
-    await host.register(overrides=config)
-    config[PRIMARY]['level'] = 'disabled'
-    config[FALLBACK]['level'] = 'max'
-    responses = await call(
-        host,
-        action,
-        FALLBACK,
-        messages=[
-            {'role': 'user', 'content': 'search'},
-            {
-                'role': 'assistant',
-                'content': '',
-                'tool_calls': [{'id': 'call-1', 'type': 'function', 'function': {'name': 'search', 'arguments': '{}'}}],
-            },
-            {'role': 'tool', 'content': 'search result', 'tool_call_id': 'call-1'},
-        ],
-    )
+async def test_regular_plugins_can_explicitly_set_level_without_runner_session(host, action):
+    responses = await call(host, action, run_id=None, reasoning_level='low')
     assert all(response.code == 0 for response in responses)
     assert host.provider.calls[-1][1] == {'reasoning_effort': 'low'}

@@ -33,10 +33,9 @@ test('provider default is an explicit override, not inheritance', () => {
     b: 'low',
   });
 });
-test('inherit deletes only the selected override without mutating input', () => {
+test('changing one model preserves other overrides without mutating input', () => {
   const input = Object.freeze({ a: 'provider_default', b: 'high' });
-  const output = edit(input, 'a', undefined);
-  assert.equal(Object.hasOwn(output, 'a'), false);
-  assert.deepEqual(output, { b: 'high' });
+  const output = edit(input, 'a', 'low');
+  assert.deepEqual(output, { a: 'low', b: 'high' });
   assert.deepEqual(input, { a: 'provider_default', b: 'high' });
 });

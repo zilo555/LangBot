@@ -52,7 +52,7 @@ from ..entity.persistence import model as persistence_model
 from ..core import app
 from ..utils import constants
 from ..agent.runner.session_registry import get_session_registry
-from ..agent.runner.model_reasoning import model_with_reasoning_override
+from ..provider.modelmgr.reasoning import model_with_reasoning_level
 from ..agent.runner.config_resolver import RunnerConfigResolver
 from ..agent.runner import config_schema
 from ..agent.runner.platform_tools import execute_platform_tool, get_platform_tool_detail, resolve_platform_api_call
@@ -1129,6 +1129,7 @@ class RuntimeConnectionHandler(handler.Handler):
             return handler.ActionResponse.success(
                 data={
                     'version': constants.semantic_version,
+                    'api_features': ['llm.reasoning_level'],
                 },
             )
 
@@ -1362,7 +1363,7 @@ class RuntimeConnectionHandler(handler.Handler):
             caller_plugin_identity = data.get('caller_plugin_identity')
 
             if run_id:
-                session, error = await _validate_run_authorization(
+                _, error = await _validate_run_authorization(
                     run_id,
                     'model',
                     llm_model_uuid,
@@ -1373,8 +1374,6 @@ class RuntimeConnectionHandler(handler.Handler):
                 )
                 if error:
                     return error
-            else:
-                session = None
 
             if not await self._resource_exists(
                 persistence_model.LLMModel,
@@ -1397,7 +1396,7 @@ class RuntimeConnectionHandler(handler.Handler):
 
             if getattr(llm_model.model_entity, 'workspace_uuid', None) not in (None, action_context.workspace_uuid):
                 return handler.ActionResponse.error(message='LLM model belongs to another Workspace')
-            llm_model = model_with_reasoning_override(llm_model, llm_model_uuid, session)
+            llm_model = model_with_reasoning_level(llm_model, data.get('reasoning_level'))
             messages_obj = [provider_message.Message.model_validate(message) for message in messages]
 
             async def _placeholder_func(**kwargs):
@@ -1479,7 +1478,7 @@ class RuntimeConnectionHandler(handler.Handler):
                     message=f'LLM model with llm_model_uuid {llm_model_uuid} not found',
                 )
 
-            llm_model = model_with_reasoning_override(llm_model, llm_model_uuid, session)
+            llm_model = model_with_reasoning_level(llm_model, data.get('reasoning_level'))
             messages_obj = [provider_message.Message.model_validate(message) for message in messages]
 
             # The func field is excluded during model_dump() in plugin side (marked as exclude=True),
@@ -1576,7 +1575,7 @@ class RuntimeConnectionHandler(handler.Handler):
             if getattr(llm_model.model_entity, 'workspace_uuid', None) not in (None, action_context.workspace_uuid):
                 yield handler.ActionResponse.error(message='LLM model belongs to another Workspace')
                 return
-            llm_model = model_with_reasoning_override(llm_model, llm_model_uuid, session)
+            llm_model = model_with_reasoning_level(llm_model, data.get('reasoning_level'))
             messages_obj = [provider_message.Message.model_validate(message) for message in messages]
 
             # The func field is excluded during model_dump() in plugin side

@@ -260,8 +260,7 @@ const viVN = {
     reasoningAbility: 'Khả năng suy luận',
     reasoningLevel: 'Mức độ suy luận',
     reasoningLevels: {
-      useModelSetting: 'Dùng cài đặt mô hình',
-      providerDefault: 'Mặc định của nhà cung cấp',
+      providerDefault: 'Dùng giá trị mặc định của nhà cung cấp',
       disabled: 'Tắt',
       enabled: 'Bật',
       minimal: 'Tối thiểu',

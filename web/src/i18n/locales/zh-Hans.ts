@@ -254,8 +254,7 @@ const zhHans = {
     reasoningAbility: '思考能力',
     reasoningLevel: '思考档位',
     reasoningLevels: {
-      useModelSetting: '使用模型设置',
-      providerDefault: 'Provider 默认',
+      providerDefault: '使用供应商默认值',
       disabled: '关闭',
       enabled: '开启',
       minimal: '最低',

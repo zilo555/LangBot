@@ -28,7 +28,6 @@ from ....agent.runner.config_resolver import RunnerConfigResolver
 from ....agent.runner import config_schema
 from ....agent.runner.resource_builder import AgentResourceBuilder
 from ....agent.runner.resource_policy import ResourcePolicyProjector
-from ....agent.runner.model_reasoning import extract_model_reasoning_overrides
 from ....entity.persistence.model import LLMModel, RerankModel, EmbeddingModel
 from ....entity.persistence.rag import KnowledgeBase
 from ....entity.persistence.mcp import MCPServer
@@ -706,18 +705,15 @@ class PipelineMigrationService:
                 raise MigrationError('runner_resource_unavailable')
 
         permissions = getattr(descriptor, 'permissions', None)
-        model_resources = []
         for model_type, model_uuid in config_schema.iter_config_model_refs(descriptor, runner_config):
             allowed = set(getattr(permissions, 'models', []))
             if not (allowed & ({'rerank'} if model_type == 'rerank' else {'invoke', 'stream'})):
                 raise MigrationError('runner_resource_unavailable')
             await require_row(RerankModel if model_type == 'rerank' else LLMModel, model_uuid)
-            model_resources.append({'model_id': model_uuid})
         for field in config_schema.iter_schema_items(descriptor, {'embedding-model-selector'}):
             value = runner_config.get(field['name'])
             if value and value not in config_schema.NONE_SENTINELS:
                 await require_row(EmbeddingModel, value)
-        extract_model_reasoning_overrides(descriptor, runner_config, {'models': model_resources})
 
         kb_ids = runner_config.get('knowledge-bases', [])
         if not isinstance(kb_ids, list) or any(not isinstance(v, str) or not v for v in kb_ids):

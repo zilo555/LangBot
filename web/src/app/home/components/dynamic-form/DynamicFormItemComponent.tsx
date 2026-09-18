@@ -1,3 +1,4 @@
+import { hasModelReasoningAbility } from '@/app/home/components/reasoning/model-reasoning';
 import {
   DynamicFormItemType,
   IDynamicFormItemSchema,
@@ -193,8 +194,7 @@ export default function DynamicFormItemComponent({
         {model.abilities?.includes('func_call') && (
           <Wrench className="h-3 w-3 text-muted-foreground" />
         )}
-        {(model.reasoning_capabilities?.supported === true ||
-          model.abilities?.includes('reasoning')) && (
+        {hasModelReasoningAbility(model) && (
           <BrainCircuit
             className="h-3 w-3 shrink-0 text-muted-foreground"
             aria-label={t('models.reasoningAbility')}
@@ -1260,15 +1260,11 @@ export default function DynamicFormItemComponent({
 
       const updateModelReasoning = (
         modelUuid: string,
-        level: ReasoningLevel | undefined,
+        level: ReasoningLevel,
       ) => {
         if (!modelUuid) return;
         const updated = { ...modelValue.reasoning };
-        if (level === undefined) {
-          delete updated[modelUuid];
-        } else {
-          updated[modelUuid] = level;
-        }
+        updated[modelUuid] = level;
         updateValue({ reasoning: updated });
       };
 
@@ -1297,6 +1293,7 @@ export default function DynamicFormItemComponent({
         const model = llmModels.find(
           (candidate) => candidate.uuid === modelUuid,
         );
+        if (!hasModelReasoningAbility(model)) return null;
         const currentLevel =
           modelValue.reasoning[modelUuid] || 'provider_default';
         const availableLevels = model?.reasoning_capabilities?.levels || [
@@ -1310,8 +1307,6 @@ export default function DynamicFormItemComponent({
           <ReasoningLevelPicker
             value={currentLevel}
             levels={levels}
-            inherited={!Object.hasOwn(modelValue.reasoning, modelUuid)}
-            onInherit={() => updateModelReasoning(modelUuid, undefined)}
             onChange={(level) => updateModelReasoning(modelUuid, level)}
           />
         );

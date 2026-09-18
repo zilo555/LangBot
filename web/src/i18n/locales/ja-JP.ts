@@ -269,8 +269,7 @@ const jaJP = {
     reasoningAbility: '推論',
     reasoningLevel: '推論レベル',
     reasoningLevels: {
-      useModelSetting: 'モデル設定を使用',
-      providerDefault: 'Provider デフォルト',
+      providerDefault: 'プロバイダーの既定値を使用',
       disabled: 'オフ',
       enabled: 'オン',
       minimal: '最小',

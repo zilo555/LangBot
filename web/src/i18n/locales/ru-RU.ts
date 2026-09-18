@@ -261,8 +261,7 @@ const ruRU = {
     reasoningAbility: 'Рассуждение',
     reasoningLevel: 'Уровень рассуждений',
     reasoningLevels: {
-      useModelSetting: 'Настройка модели',
-      providerDefault: 'По умолчанию провайдера',
+      providerDefault: 'Использовать настройки поставщика',
       disabled: 'Выключено',
       enabled: 'Включено',
       minimal: 'Минимальный',

@@ -1,3 +1,4 @@
+import { hasModelReasoningAbility } from '../../reasoning/model-reasoning';
 import { useState, useEffect } from 'react';
 import { Trash2, Eye, Wrench, Check, BrainCircuit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -175,8 +176,7 @@ export default function ModelItem({
 
   const supportsReasoning =
     modelType === 'llm' &&
-    ((model as LLMModel).reasoning_capabilities?.supported === true ||
-      (model as LLMModel).abilities?.includes('reasoning'));
+    hasModelReasoningAbility(model as LLMModel, isLangBotModels);
   const canSaveModel = !isLangBotModels;
 
   // Check if popover should be disabled (space models when not logged in)
@@ -353,7 +353,11 @@ export default function ModelItem({
                 <div className="flex items-center gap-2">
                   <Checkbox
                     id={`edit-reasoning-${model.uuid}`}
-                    checked={editAbilities.includes('reasoning')}
+                    checked={
+                      isLangBotModels
+                        ? supportsReasoning
+                        : editAbilities.includes('reasoning')
+                    }
                     disabled={isLangBotModels}
                     onCheckedChange={(checked) =>
                       toggleAbility('reasoning', checked as boolean)
