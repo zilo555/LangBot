@@ -8,6 +8,20 @@ APP_DIR="${TRIM_APPDEST}/langbot"
 DATA_DIR="${TRIM_DATA_SHARE_PATHS%%:*}"
 [ -z "${DATA_DIR}" ] && DATA_DIR="${TRIM_PKGVAR}/data"
 
+# Writable HOME / caches / venv on the data share (must match
+# cmd/install_callback — venv is relocated under DATA_DIR).
+VENV_DIR="${DATA_DIR}/.venv"
+export HOME="${DATA_DIR}/.home"
+export UV_CACHE_DIR="${DATA_DIR}/.cache/uv"
+# Never download a managed CPython — distro Python only (see install_callback)
+export UV_PYTHON_DOWNLOADS=never
+export UV_PROJECT_ENVIRONMENT="${VENV_DIR}"
+mkdir -p "${HOME}" "${UV_CACHE_DIR}" "${DATA_DIR}/logs" || {
+    echo "Data share not writable: ${DATA_DIR}" > "${TRIM_TEMP_LOGFILE}"
+    exit 1
+}
+DEBUG_LOG="${DATA_DIR}/logs/upgrade-debug.log"
+
 # Apply port from upgrade wizard (config persists across upgrades; this
 # only rewrites it when the user changed the value in the upgrade wizard)
 CONFIG_FILE="${DATA_DIR}/config.yaml"
@@ -26,52 +40,56 @@ cd "${APP_DIR}" || {
     exit 1
 }
 
-# Find uv (bundled first, then PATH / ~/.local/bin / ~/.cargo/bin)
-UV_BIN="${TRIM_PKGVAR}/bin/uv"
-if [ ! -x "${UV_BIN}" ]; then
-    UV_BIN="uv"
-fi
-if ! command -v "${UV_BIN}" >/dev/null 2>&1; then
-    UV_BIN="${HOME}/.local/bin/uv"
-fi
-if ! command -v "${UV_BIN}" >/dev/null 2>&1 && [ ! -x "${UV_BIN}" ]; then
-    UV_BIN="${HOME}/.cargo/bin/uv"
-fi
+# --- CPU architecture (must be resolved before locating bundled binaries) ---
+ARCH=$(uname -m)
+case "${ARCH}" in
+    x86_64|aarch64) ;;
+    *)
+        echo "Unsupported CPU architecture: ${ARCH}" > "${TRIM_TEMP_LOGFILE}"
+        exit 1
+        ;;
+esac
 
-PYTHON_BIN="python3"
-! command -v "${PYTHON_BIN}" >/dev/null 2>&1 && PYTHON_BIN="python"
+# uv: bundled binary at its single canonical path in the app dir
+UV_BIN="${TRIM_APPDEST}/bin/uv-${ARCH}"
+[ -x "${UV_BIN}" ] || {
+    echo "Bundled uv binary missing or not executable: ${UV_BIN}" > "${TRIM_TEMP_LOGFILE}"
+    exit 1
+}
 
-# Re-sync deps
-if [ -d ".venv" ]; then
-    "${UV_BIN}" sync --extra seekdb 2>/dev/null || {
-        echo "Dependency sync failed after upgrade" > "${TRIM_TEMP_LOGFILE}"
+# Python: official python312 App Store app (same borrow pattern as Node.js)
+PYTHON_BIN="/var/apps/python312/target/bin/python3"
+[ -x "${PYTHON_BIN}" ] || {
+    echo "Python interpreter missing or not executable: ${PYTHON_BIN} (install the python312 app)" > "${TRIM_TEMP_LOGFILE}"
+    exit 1
+}
+
+# Re-sync deps (venv lives at ${DATA_DIR}/.venv, see install_callback)
+if [ -d "${VENV_DIR}" ]; then
+    UV_PROJECT_ENVIRONMENT="${VENV_DIR}" "${UV_BIN}" sync --extra seekdb >> "${DEBUG_LOG}" 2>&1 || {
+        echo "Dependency sync failed after upgrade. See ${DEBUG_LOG}" > "${TRIM_TEMP_LOGFILE}"
         exit 1
     }
 else
-    # Venv was lost, recreate via uv
-    if ! command -v "${UV_BIN}" >/dev/null 2>&1 && [ ! -x "${UV_BIN}" ]; then
-        "${PYTHON_BIN}" -m pip install --user --no-cache-dir uv 2>/dev/null || \
-        "${PYTHON_BIN}" -m pip install --no-cache-dir uv 2>/dev/null || {
-            echo "Failed to install uv" > "${TRIM_TEMP_LOGFILE}"
-            exit 1
-        }
-        export PATH="${HOME}/.local/bin:${PATH}"
-        UV_BIN="uv"
-    fi
-    "${UV_BIN}" venv .venv --python "${PYTHON_BIN}" || {
-        echo "Failed to recreate virtual environment" > "${TRIM_TEMP_LOGFILE}"
+    # Venv was lost, recreate it with the bundled uv on the data share
+    "${UV_BIN}" venv "${VENV_DIR}" --python "${PYTHON_BIN}" >> "${DEBUG_LOG}" 2>&1 || {
+        echo "Failed to recreate virtual environment. See ${DEBUG_LOG}" > "${TRIM_TEMP_LOGFILE}"
         exit 1
     }
-    "${UV_BIN}" sync --extra seekdb || {
-        echo "Dependency sync failed" > "${TRIM_TEMP_LOGFILE}"
+    UV_PROJECT_ENVIRONMENT="${VENV_DIR}" "${UV_BIN}" sync --extra seekdb >> "${DEBUG_LOG}" 2>&1 || {
+        echo "Dependency sync failed. See ${DEBUG_LOG}" > "${TRIM_TEMP_LOGFILE}"
         exit 1
     }
 fi
 
 # Verify frontend dist still present
 if [ ! -d "web/dist" ] || [ -z "$(ls -A web/dist 2>/dev/null)" ]; then
-    echo "Frontend dist missing after upgrade! Web UI will not be available." > "${TRIM_TEMP_LOGFILE}"
+    echo "Frontend dist missing! Web UI will not be available." > "${TRIM_TEMP_LOGFILE}"
     exit 1
 fi
+
+# Everything runs as the package user (run-as: package); the venv recreated
+# above and the config rewritten via sed already belong to it. Cache HOME is
+# prepared at the top of this script (see cmd/install_callback).
 
 exit 0
