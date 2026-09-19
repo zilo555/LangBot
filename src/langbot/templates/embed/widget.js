@@ -645,9 +645,10 @@
               .replace(/\s+/g, " ")
               .trim();
             if (
-              prevContent === content ||
-              prevContent.indexOf(content) >= 0 ||
-              content.indexOf(prevContent) >= 0
+              prevContent &&
+              (prevContent === content ||
+                prevContent.indexOf(content) >= 0 ||
+                content.indexOf(prevContent) >= 0)
             )
               return;
           }
@@ -1265,6 +1266,11 @@
     // Styles
     var style = document.createElement("style");
     style.textContent = STYLES;
+    // Keep the wizard navigation accessible while the chat preview is open.
+    if (scriptTestNotice) {
+      style.textContent +=
+        ".lb-bubble { bottom: 84px; } .lb-panel { bottom: 152px; max-height: calc(100vh - 172px); } @media (max-width: 480px) { .lb-panel { bottom: 64px; height: calc(100vh - 64px); max-height: calc(100vh - 64px); } }";
+    }
     shadow.appendChild(style);
 
     // Chat bubble button

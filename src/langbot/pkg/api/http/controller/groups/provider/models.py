@@ -4,6 +4,7 @@ from langbot.pkg.provider.modelmgr import errors as provider_errors
 from ....authz import Permission, has_permission
 from ....context import RequestContext
 from ... import group
+from .query import resolve_include_secret
 
 
 MODEL_TEST_ERROR_CODE = 'model_test_failed'
@@ -20,7 +21,12 @@ class LLMModelsRouterGroup(group.RouterGroup):
         )
         async def _(request_context: RequestContext) -> str:
             provider_uuid = quart.request.args.get('provider_uuid')
-            include_secret = has_permission(request_context, Permission.PROVIDER_SECRET_MANAGE)
+            include_secret, error = resolve_include_secret(
+                quart.request.args.get('include_secret'),
+                permitted=has_permission(request_context, Permission.PROVIDER_SECRET_MANAGE),
+            )
+            if error:
+                return self.http_status(400, -1, error)
             if provider_uuid:
                 models = await self.ap.llm_model_service.get_llm_models_by_provider(
                     request_context,
@@ -57,10 +63,16 @@ class LLMModelsRouterGroup(group.RouterGroup):
             permission=Permission.RESOURCE_VIEW,
         )
         async def _(model_uuid: str, request_context: RequestContext) -> str:
+            include_secret, error = resolve_include_secret(
+                quart.request.args.get('include_secret'),
+                permitted=has_permission(request_context, Permission.PROVIDER_SECRET_MANAGE),
+            )
+            if error:
+                return self.http_status(400, -1, error)
             model = await self.ap.llm_model_service.get_llm_model(
                 request_context,
                 model_uuid,
-                include_secret=has_permission(request_context, Permission.PROVIDER_SECRET_MANAGE),
+                include_secret=include_secret,
             )
             if model is None:
                 return self.http_status(404, -1, 'model not found')
@@ -106,7 +118,7 @@ class LLMModelsRouterGroup(group.RouterGroup):
                     model_uuid,
                     await quart.request.json,
                 )
-            except (provider_errors.RequesterError, ValueError) as exc:
+            except provider_errors.RequesterError as exc:
                 return self.http_status(400, MODEL_TEST_ERROR_CODE, str(exc))
             return self.success()
 
@@ -122,7 +134,12 @@ class EmbeddingModelsRouterGroup(group.RouterGroup):
         )
         async def _(request_context: RequestContext) -> str:
             provider_uuid = quart.request.args.get('provider_uuid')
-            include_secret = has_permission(request_context, Permission.PROVIDER_SECRET_MANAGE)
+            include_secret, error = resolve_include_secret(
+                quart.request.args.get('include_secret'),
+                permitted=has_permission(request_context, Permission.PROVIDER_SECRET_MANAGE),
+            )
+            if error:
+                return self.http_status(400, -1, error)
             if provider_uuid:
                 models = await self.ap.embedding_models_service.get_embedding_models_by_provider(
                     request_context,
@@ -159,10 +176,16 @@ class EmbeddingModelsRouterGroup(group.RouterGroup):
             permission=Permission.RESOURCE_VIEW,
         )
         async def _(model_uuid: str, request_context: RequestContext) -> str:
+            include_secret, error = resolve_include_secret(
+                quart.request.args.get('include_secret'),
+                permitted=has_permission(request_context, Permission.PROVIDER_SECRET_MANAGE),
+            )
+            if error:
+                return self.http_status(400, -1, error)
             model = await self.ap.embedding_models_service.get_embedding_model(
                 request_context,
                 model_uuid,
-                include_secret=has_permission(request_context, Permission.PROVIDER_SECRET_MANAGE),
+                include_secret=include_secret,
             )
             if model is None:
                 return self.http_status(404, -1, 'model not found')
@@ -208,7 +231,7 @@ class EmbeddingModelsRouterGroup(group.RouterGroup):
                     model_uuid,
                     await quart.request.json,
                 )
-            except (provider_errors.RequesterError, ValueError) as exc:
+            except provider_errors.RequesterError as exc:
                 return self.http_status(400, MODEL_TEST_ERROR_CODE, str(exc))
             return self.success()
 
@@ -224,7 +247,12 @@ class RerankModelsRouterGroup(group.RouterGroup):
         )
         async def _(request_context: RequestContext) -> str:
             provider_uuid = quart.request.args.get('provider_uuid')
-            include_secret = has_permission(request_context, Permission.PROVIDER_SECRET_MANAGE)
+            include_secret, error = resolve_include_secret(
+                quart.request.args.get('include_secret'),
+                permitted=has_permission(request_context, Permission.PROVIDER_SECRET_MANAGE),
+            )
+            if error:
+                return self.http_status(400, -1, error)
             if provider_uuid:
                 models = await self.ap.rerank_models_service.get_rerank_models_by_provider(
                     request_context,
@@ -261,10 +289,16 @@ class RerankModelsRouterGroup(group.RouterGroup):
             permission=Permission.RESOURCE_VIEW,
         )
         async def _(model_uuid: str, request_context: RequestContext) -> str:
+            include_secret, error = resolve_include_secret(
+                quart.request.args.get('include_secret'),
+                permitted=has_permission(request_context, Permission.PROVIDER_SECRET_MANAGE),
+            )
+            if error:
+                return self.http_status(400, -1, error)
             model = await self.ap.rerank_models_service.get_rerank_model(
                 request_context,
                 model_uuid,
-                include_secret=has_permission(request_context, Permission.PROVIDER_SECRET_MANAGE),
+                include_secret=include_secret,
             )
             if model is None:
                 return self.http_status(404, -1, 'model not found')
@@ -310,6 +344,6 @@ class RerankModelsRouterGroup(group.RouterGroup):
                     model_uuid,
                     await quart.request.json,
                 )
-            except (provider_errors.RequesterError, ValueError) as exc:
+            except provider_errors.RequesterError as exc:
                 return self.http_status(400, MODEL_TEST_ERROR_CODE, str(exc))
             return self.success()

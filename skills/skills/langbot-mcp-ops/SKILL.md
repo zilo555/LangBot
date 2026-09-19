@@ -43,6 +43,8 @@ Two kinds of key are accepted:
 Invalid, revoked, or expired keys get `401 Unauthorized`. A valid key whose
 scopes do not authorize a tool gets `403 Forbidden`.
 
+To inspect key identity and permissions, call `GET /api/v1/system/context` with the API key.
+
 ## Client configuration
 
 ```json
@@ -67,7 +69,7 @@ The tools wrap the LangBot service layer. Current tools (v1):
 | `list_bot_event_route_statuses` | Inspect bot event-route runtime status |
 | `list_processors` / `get_processor` / `create_processor` / `update_processor` / `delete_processor` | Manage the peer Agent, Pipeline and Event processor types |
 | `get_processor_metadata` | Discover installed event-capable Runner components, schemas and supported event patterns. |
-| `list_processor_runs` / `get_processor_run_events` | Read one Event processor instance run history and logs; paginate with `before_id` / `after_sequence`. |
+| `list_processor_runs` / `get_processor_run_events` | Read one Agent or plugin processor run history and logs; paginate with `before_id` / `after_sequence`. |
 | `debug_agent` | Execute a synthetic Agent event (`processor_uuid`, `payload`); requires `runtime.operate`. Returns final text and up to 1000 execution events (thinking, text, tool arguments/results). Platform tools use Mock; other configured tools execute normally. Optional `payload.mock`: `errors`/`results` keyed by platform tool name, `unsupported_apis` lists unavailable platform APIs. |
 | `list_pipelines` / `get_pipeline` / `create_pipeline` / `update_pipeline` / `delete_pipeline` | Manage pipelines |
 | `list_llm_models` / `get_llm_model` / `list_embedding_models` / `list_model_providers` | Inspect models & providers |
@@ -90,6 +92,38 @@ already have a default pipeline.
 3. Call `get_system_info` to confirm connectivity.
 4. Use `list_*` tools to discover, then `get_*` / `create_*` / `update_*` /
    `delete_*` as needed.
+
+## ChatGPT / Codex subscription providers
+
+`list_model_providers` can return the `openai-codex` requester. Its OAuth
+credentials are server-only and are not provider API keys. Never ask a user
+to paste ChatGPT access tokens, refresh tokens, or a Codex auth cache into an
+MCP tool or model configuration.
+
+A human connects or disconnects the subscription through **Models → provider
+settings** in the LangBot web UI. The provider-scoped `/codex/*` authentication
+routes deliberately require a browser-user session and are not exposed as MCP
+tools or authorized by a LangBot API key. Once connected, models are managed
+and selected through the normal provider/model workflow. A disconnected
+provider must be reauthorized; do not silently replace it with API-key billing.
+
+See [ChatGPT / Codex subscription](../../../docs/CODEX_SUBSCRIPTION.md) for setup,
+usage limits, and the personal-account versus shared-service boundary.
+
+## Provider deletion
+
+The curated MCP surface currently lists providers but has no provider-deletion
+tool. In the web UI, **Edit Provider → Delete** asks for confirmation before
+removing that provider and all its LLM, embedding, and rerank models. This is
+irreversible; never interpret a request to edit a provider as authorization to
+delete it.
+
+The equivalent HTTP operation is
+`DELETE /api/v1/provider/providers/{uuid}?cascade=true`, requiring
+`resource.manage` in the authenticated Workspace. Omitting `cascade` preserves
+the existing refusal to delete providers that still have models. Cloud-managed
+providers remain protected. Cascade deletion removes stored Codex authorization
+state as well; it is not the same operation as disconnecting an account.
 
 ## Implementation & maintenance (for LangBot developers)
 

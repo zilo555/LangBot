@@ -1,7 +1,12 @@
+from __future__ import annotations
+
 import quart
 import argon2
 import asyncio
 import datetime
+import hmac
+import time
+import typing
 import uuid
 from urllib.parse import parse_qs, urlsplit
 
@@ -10,6 +15,33 @@ from .....entity.errors import account as account_errors
 from ...context import RequestContext
 from .....cloud.launch import SpaceLaunchError
 from ...service.user import ControlPlaneDirectoryRequiredError, PublicRegistrationClosedError
+
+# Fixed-window admission quota for the unauthenticated reset-password endpoint (#2392).
+# The admission check and slot bump share ONE synchronous critical section with no await
+# points, so concurrent bursts within a single event loop cannot slip past accounting.
+# Every admitted attempt consumes quota (regardless of success), which throttles both the
+# legacy 24-bit keyspace exhaustion and brute-force on modern high-entropy keys.
+# NOTE: this state is process-local; multi-worker deployments need a shared limiter upstream.
+_MAX_RESET_ATTEMPTS_PER_WINDOW = 5
+_RESET_WINDOW_SECONDS = 15 * 60
+
+_reset_password_state: dict = {'window_started_at': 0.0, 'attempts': 0}
+
+
+def _admit_reset_attempt(now: float) -> bool:
+    """Atomically reserve one reset-password admission slot.
+
+    Must stay await-free: running to completion without suspension makes the
+    check-and-increment atomic under the single-threaded event loop.
+    """
+    st = _reset_password_state
+    if now - st['window_started_at'] >= _RESET_WINDOW_SECONDS:
+        st['window_started_at'] = now
+        st['attempts'] = 0
+    if st['attempts'] >= _MAX_RESET_ATTEMPTS_PER_WINDOW:
+        return False
+    st['attempts'] += 1
+    return True
 
 
 @group.group_class('user', '/api/v1/user')
@@ -34,6 +66,22 @@ class UserRouterGroup(group.RouterGroup):
             raise ValueError('Invalid LangBot Account login redirect_uri')
 
         return redirect_uri
+
+    def _extract_origin_and_rp_id(self, json_data: dict[str, typing.Any] | None = None) -> tuple[str, str]:
+        origin = ''
+        if json_data and isinstance(json_data, dict):
+            origin = json_data.get('origin', '')
+        if not origin:
+            origin = quart.request.headers.get('Origin', '')
+        if not origin:
+            origin = quart.request.headers.get('Referer', '')
+        if not origin:
+            origin = quart.request.url_root.rstrip('/')
+
+        parsed = urlsplit(origin)
+        rp_id = parsed.hostname or 'localhost'
+        clean_origin = f'{parsed.scheme}://{parsed.netloc}' if parsed.scheme and parsed.netloc else origin.rstrip('/')
+        return clean_origin, rp_id
 
     async def initialize(self) -> None:
         @self.route('/init', methods=['GET', 'POST'], auth_type=group.AuthType.NONE)
@@ -81,6 +129,12 @@ class UserRouterGroup(group.RouterGroup):
 
         @self.route('/reset-password', methods=['POST'], auth_type=group.AuthType.NONE)
         async def _() -> str:
+            # Admit (or reject) BEFORE touching the body or any service call (#2392):
+            # rejecting requests never reach the slow path, and quota accounting happens
+            # synchronously at entry, closing the post-await race of burst requests.
+            if not _admit_reset_attempt(time.monotonic()):
+                return self.http_status(429, -1, 'Too many attempts, try again later')
+
             json_data = await quart.request.json
 
             user_email = json_data['user']
@@ -98,7 +152,18 @@ class UserRouterGroup(group.RouterGroup):
             if user_obj is None:
                 return self.http_status(400, -1, 'User not found')
 
-            if recovery_key != self.ap.instance_config.data['system']['recovery_key']:
+            stored_key = self.ap.instance_config.data['system']['recovery_key']
+            try:
+                key_matches = (
+                    isinstance(recovery_key, str)
+                    and isinstance(stored_key, str)
+                    and hmac.compare_digest(recovery_key.encode(), stored_key.encode())
+                )
+            except UnicodeEncodeError:
+                # JSON can contain lone surrogates, which are not valid UTF-8.
+                key_matches = False
+
+            if not key_matches:
                 return self.http_status(403, -1, 'Invalid recovery key')
 
             await self.ap.user_service.reset_password(user_email, new_password)
@@ -186,6 +251,9 @@ class UserRouterGroup(group.RouterGroup):
             json_data = await quart.request.json
             code = json_data.get('code')
             state = json_data.get('state')
+            redirect_uri = json_data.get('redirect_uri') or (
+                quart.request.url_root.rstrip('/') + '/auth/space/callback'
+            )
             launch_assertion = json_data.get('launch_assertion')
             workspace_uuid = json_data.get('workspace_uuid')
 
@@ -199,8 +267,11 @@ class UserRouterGroup(group.RouterGroup):
                 return self.fail(1, 'Missing authorization code')
             if not state:
                 return self.fail(1, 'Missing state parameter')
+            if not str(code).startswith('v4_'):
+                return self.fail(1, 'Unsupported Space OAuth code contract')
 
             try:
+                redirect_uri = self._validate_space_redirect_uri(str(redirect_uri), bind=False)
                 consumed_state = await self.ap.user_service.consume_space_oauth_state_details(state, 'login')
                 # Exchange code for tokens
                 launch_workspace_uuid = consumed_state.launch_workspace_uuid
@@ -218,24 +289,36 @@ class UserRouterGroup(group.RouterGroup):
                     code,
                     workspace_uuids,
                     workspace_created_ats,
+                    redirect_uri=redirect_uri,
                 )
                 access_token = token_data.get('access_token')
                 refresh_token = token_data.get('refresh_token')
                 expires_in = token_data.get('expires_in', 0)
+                cloud_workspace_uuid = token_data.get('cloud_workspace_uuid')
 
                 if not access_token:
                     return self.fail(1, 'Failed to get access token from Space')
 
-                # Authenticate and create/update local user
+                cloud_mode = getattr(getattr(self.ap, 'deployment', None), 'mode', 'oss') == 'cloud'
+                if cloud_mode and launch_workspace_uuid and launch_workspace_uuid != cloud_workspace_uuid:
+                    return self.fail(1, 'Space OAuth Workspace binding mismatch')
+                target_workspace_uuid = launch_workspace_uuid or cloud_workspace_uuid
+                if cloud_mode:
+                    if not target_workspace_uuid:
+                        return self.fail(1, 'Space OAuth response is missing the Cloud Workspace binding')
+                    await self.ap.directory_projection_service.reconcile_workspaces((target_workspace_uuid,))
+
+                # Authenticate only after the signed, exact Workspace delta has
+                # established the Account and membership runtime shadow rows.
                 jwt_token, user_obj = await self.ap.user_service.authenticate_space_user(
                     access_token, refresh_token, expires_in
                 )
 
-                if launch_workspace_uuid:
+                if target_workspace_uuid:
                     try:
                         access = await self.ap.workspace_collaboration_service.resolve_account_workspace(
                             user_obj.uuid,
-                            launch_workspace_uuid,
+                            target_workspace_uuid,
                         )
                     except Exception:
                         self.ap.logger.warning('Rejected Space OAuth launch for unauthorized Workspace')
@@ -323,6 +406,8 @@ class UserRouterGroup(group.RouterGroup):
                 capabilities['password_login_enabled'] = False
             capabilities['authenticated_invitation_acceptance_enabled'] = cloud_mode
             capabilities['invitation_registration_enabled'] = not cloud_mode
+            capabilities['passkey_login_enabled'] = True
+            capabilities['passkey_supported'] = True
             return self.success(data={'initialized': True, **capabilities})
 
         @self.route('/set-password', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
@@ -367,12 +452,17 @@ class UserRouterGroup(group.RouterGroup):
             json_data = await quart.request.json
             code = json_data.get('code')
             state = json_data.get('state')
+            redirect_uri = json_data.get('redirect_uri') or (
+                quart.request.url_root.rstrip('/') + '/auth/space/callback?mode=bind'
+            )
 
             if not code:
                 return self.http_status(400, -1, 'Missing authorization code')
 
             if not state:
                 return self.http_status(400, -1, 'Missing state parameter')
+            if not str(code).startswith('v4_'):
+                return self.http_status(400, -1, 'Unsupported Space OAuth code contract')
 
             try:
                 user_obj = await self.ap.user_service.consume_space_oauth_state(state, 'bind')
@@ -385,7 +475,10 @@ class UserRouterGroup(group.RouterGroup):
                 return self.http_status(400, -1, 'Only local accounts can bind to Space')
 
             try:
-                updated_user = await self.ap.user_service.bind_space_account(user_obj.user, code)
+                redirect_uri = self._validate_space_redirect_uri(str(redirect_uri), bind=True)
+                updated_user = await self.ap.user_service.bind_space_account(
+                    user_obj.user, code, redirect_uri=redirect_uri
+                )
                 jwt_token = await self.ap.user_service.generate_jwt_token(updated_user)
                 return self.success(
                     data={
@@ -404,6 +497,182 @@ class UserRouterGroup(group.RouterGroup):
                 return self.http_status(400, -1, 'LangBot Account binding failed')
             except Exception:
                 raise
+
+        @self.route('/passkey/register/options', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
+        async def _(user_email: str) -> str:
+            """Generate WebAuthn registration options for current account."""
+            allow_modify_login_info = self.ap.instance_config.data.get('system', {}).get(
+                'allow_modify_login_info', True
+            )
+            if not allow_modify_login_info:
+                return self.http_status(403, -1, 'Modifying login info is disabled')
+
+            user_obj = await self.ap.user_service.get_user_by_email(user_email)
+            if user_obj is None:
+                return self.http_status(404, -1, 'User not found')
+
+            json_data = (await quart.request.json) or {}
+            origin, rp_id = self._extract_origin_and_rp_id(json_data)
+
+            try:
+                options, challenge_token = await self.ap.user_service.generate_passkey_registration_options(
+                    account_uuid=user_obj.uuid,
+                    rp_id=rp_id,
+                    origin=origin,
+                    rp_name='LangBot',
+                )
+                return self.success(data={'options': options, 'challenge_token': challenge_token})
+            except Exception as e:
+                return self.fail(1, str(e))
+
+        @self.route('/passkey/register/verify', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
+        async def _(user_email: str) -> str:
+            """Verify WebAuthn registration response and save credential."""
+            allow_modify_login_info = self.ap.instance_config.data.get('system', {}).get(
+                'allow_modify_login_info', True
+            )
+            if not allow_modify_login_info:
+                return self.http_status(403, -1, 'Modifying login info is disabled')
+
+            user_obj = await self.ap.user_service.get_user_by_email(user_email)
+            if user_obj is None:
+                return self.http_status(404, -1, 'User not found')
+
+            json_data = await quart.request.json
+            challenge_token = json_data.get('challenge_token')
+            credential = json_data.get('credential') or json_data.get('response')
+            name = json_data.get('name')
+
+            if not challenge_token or not credential:
+                return self.fail(1, 'Missing challenge_token or credential')
+
+            try:
+                cred = await self.ap.user_service.verify_and_save_passkey_registration(
+                    challenge_token=challenge_token,
+                    credential_data=credential,
+                    name=name,
+                )
+                return self.success(
+                    data={
+                        'uuid': cred.uuid,
+                        'name': cred.name,
+                        'created_at': cred.created_at.isoformat() if cred.created_at else None,
+                    }
+                )
+            except Exception as e:
+                return self.fail(1, str(e))
+
+        @self.route('/passkey/auth/options', methods=['POST'], auth_type=group.AuthType.NONE)
+        async def _() -> str:
+            """Generate WebAuthn authentication options for passkey login."""
+            json_data = (await quart.request.json) or {}
+            email = json_data.get('email')
+            origin, rp_id = self._extract_origin_and_rp_id(json_data)
+
+            try:
+                options, challenge_token = await self.ap.user_service.generate_passkey_authentication_options(
+                    rp_id=rp_id,
+                    origin=origin,
+                    email=email,
+                )
+                return self.success(data={'options': options, 'challenge_token': challenge_token})
+            except Exception as e:
+                return self.fail(1, str(e))
+
+        @self.route('/passkey/auth/verify', methods=['POST'], auth_type=group.AuthType.NONE)
+        async def _() -> str:
+            """Verify WebAuthn authentication response and log in."""
+            json_data = await quart.request.json
+            challenge_token = json_data.get('challenge_token')
+            credential = json_data.get('credential') or json_data.get('response')
+
+            if not challenge_token or not credential:
+                return self.fail(1, 'Missing challenge_token or credential')
+
+            try:
+                token, user_obj = await self.ap.user_service.verify_passkey_authentication(
+                    challenge_token=challenge_token,
+                    credential_data=credential,
+                )
+                return self.success(
+                    data={
+                        'token': token,
+                        'user': user_obj.user,
+                    }
+                )
+            except Exception as e:
+                return self.fail(1, str(e))
+
+        @self.route('/passkeys', methods=['GET'], auth_type=group.AuthType.USER_TOKEN)
+        async def _(user_email: str) -> str:
+            """List registered passkeys for the current user."""
+            user_obj = await self.ap.user_service.get_user_by_email(user_email)
+            if user_obj is None:
+                return self.http_status(404, -1, 'User not found')
+
+            passkeys = await self.ap.user_service.get_user_passkeys(user_obj.uuid)
+            return self.success(
+                data=[
+                    {
+                        'uuid': pk.uuid,
+                        'name': pk.name,
+                        'aaguid': pk.aaguid,
+                        'transports': pk.transports,
+                        'backed_up': pk.backed_up,
+                        'created_at': pk.created_at.isoformat() if pk.created_at else None,
+                        'last_used_at': pk.last_used_at.isoformat() if pk.last_used_at else None,
+                    }
+                    for pk in passkeys
+                ]
+            )
+
+        @self.route('/passkey/<passkey_uuid>', methods=['PATCH'], auth_type=group.AuthType.USER_TOKEN)
+        async def _(user_email: str, passkey_uuid: str) -> str:
+            """Rename a registered passkey."""
+            allow_modify_login_info = self.ap.instance_config.data.get('system', {}).get(
+                'allow_modify_login_info', True
+            )
+            if not allow_modify_login_info:
+                return self.http_status(403, -1, 'Modifying login info is disabled')
+
+            user_obj = await self.ap.user_service.get_user_by_email(user_email)
+            if user_obj is None:
+                return self.http_status(404, -1, 'User not found')
+
+            json_data = await quart.request.json
+            name = (json_data.get('name') or '').strip()
+            if not name:
+                return self.fail(1, 'Passkey name cannot be empty')
+
+            updated = await self.ap.user_service.rename_user_passkey(
+                account_uuid=user_obj.uuid,
+                passkey_uuid=passkey_uuid,
+                new_name=name,
+            )
+            if not updated:
+                return self.http_status(404, -1, 'Passkey not found')
+            return self.success(data={'uuid': updated.uuid, 'name': updated.name})
+
+        @self.route('/passkey/<passkey_uuid>', methods=['DELETE'], auth_type=group.AuthType.USER_TOKEN)
+        async def _(user_email: str, passkey_uuid: str) -> str:
+            """Delete/revoke a registered passkey."""
+            allow_modify_login_info = self.ap.instance_config.data.get('system', {}).get(
+                'allow_modify_login_info', True
+            )
+            if not allow_modify_login_info:
+                return self.http_status(403, -1, 'Modifying login info is disabled')
+
+            user_obj = await self.ap.user_service.get_user_by_email(user_email)
+            if user_obj is None:
+                return self.http_status(404, -1, 'User not found')
+
+            deleted = await self.ap.user_service.delete_user_passkey(
+                account_uuid=user_obj.uuid,
+                passkey_uuid=passkey_uuid,
+            )
+            if not deleted:
+                return self.http_status(404, -1, 'Passkey not found')
+            return self.success()
 
     async def _handle_space_direct_launch(
         self,
@@ -428,6 +697,10 @@ class UserRouterGroup(group.RouterGroup):
                     }
                 )
 
+            projection_service = self.ap.directory_projection_service
+            if projection_service is None:
+                raise SpaceLaunchError('Cloud directory projection is unavailable')
+            await projection_service.reconcile_workspaces((launch['workspace_uuid'],))
             account = await self.ap.user_service.get_user_by_uuid(launch['account_uuid'])
             if account is None:
                 raise SpaceLaunchError('Launch Account is not projected into Core')

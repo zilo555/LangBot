@@ -25,6 +25,7 @@ from langbot_plugin.api.entities.builtin.runner.delivery import DeliveryContext
 from .host_models import (
     AgentConfig,
     AgentEventEnvelope,
+    LegacyRunnerIdentity,
     StatePolicy,
     DeliveryPolicy,
 )
@@ -100,6 +101,24 @@ class QueryEntryAdapter:
             delivery=delivery,
             raw_ref=raw_ref,
             data=event.data,
+            legacy_identity=cls._build_legacy_identity(query, execution_context.workspace_uuid),
+        )
+
+    @staticmethod
+    def _build_legacy_identity(query, workspace_id: str) -> LegacyRunnerIdentity:
+        def exact(value):
+            value = getattr(value, 'value', value)
+            return value if isinstance(value, str) and value else None
+
+        session = getattr(query, 'session', None)
+        return LegacyRunnerIdentity(
+            workspace_id=workspace_id,
+            bot_id=exact(getattr(query, 'bot_uuid', None)),
+            pipeline_id=exact(getattr(query, 'pipeline_uuid', None)),
+            query_launcher_type=exact(getattr(query, 'launcher_type', None)),
+            query_launcher_id=exact(getattr(query, 'launcher_id', None)),
+            session_launcher_type=exact(getattr(session, 'launcher_type', None)),
+            session_launcher_id=exact(getattr(session, 'launcher_id', None)),
         )
 
     @classmethod

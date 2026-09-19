@@ -1,3 +1,5 @@
+import pipelineMigration from './pipeline-migration/ja-JP';
+
 const jaJP = {
   sidebarGuide: {
     label: 'ワークスペースツアー',
@@ -160,6 +162,7 @@ const jaJP = {
       },
     },
   },
+  pipelineMigration,
   sidebar: {
     home: 'ホーム',
     extensions: '拡張機能',
@@ -175,6 +178,7 @@ const jaJP = {
     editionCloud: 'Cloud',
   },
   common: {
+    customValue: 'カスタム',
     loadFailed: '読み込みに失敗しました。再試行してください。',
     login: 'ログイン',
     logout: 'ログアウト',
@@ -245,7 +249,8 @@ const jaJP = {
     privacyPolicy: 'プライバシーポリシー',
     and: 'および',
     dataCollectionPolicy: 'データ収集ポリシー',
-    dataCollectionPolicyUrl: 'https://link.langbot.app/ja/docs/data-policy',
+    dataCollectionPolicyUrl:
+      'https://langbot.app/docs/ja/insight/data-collection-policy',
     loading: '読み込み中...',
     fieldRequired: 'この項目は必須です',
     or: 'または',
@@ -254,6 +259,11 @@ const jaJP = {
       'おすすめ：公式の安定したモデル API とクラウドサービスを利用',
     loginLocal: 'ローカルアカウントでログイン',
     loginWithPassword: 'パスワードでログイン',
+    loginWithPasskey: 'パスキーでログイン',
+    passkeyLoginSuccess: 'パスキーの認証に成功しました。ログイン中...',
+    passkeyLoginFailed: 'パスキーでのログインに失敗しました',
+    passkeyNotSupported:
+      'お使いのブラウザまたはデバイスはパスキーをサポートしていません',
     spaceLoginTitle: 'LangBot アカウントでログイン',
     spaceLoginDescription:
       'QRコードをスキャンするか、下のリンクにアクセスして認証してください',
@@ -352,6 +362,38 @@ const jaJP = {
     help: 'ヘルプドキュメントを見る',
   },
   models: {
+    codex: {
+      account: 'ChatGPT サブスクリプション',
+      description:
+        'ChatGPT アカウントでログインします。サブスクリプションと OpenAI API の課金は別です。利用可能なモデルと使用制限はプランによって異なります。',
+      disconnected: '未接続',
+      loading: '接続を確認中…',
+      starting: 'ログインを開始中…',
+      pending: '認証を待機中',
+      connected: '接続済み',
+      expired:
+        'ログインの有効期限が切れました。新しいコードを取得してください。',
+      error: 'ログインできません。接続を確認して再試行してください。',
+      canceling: 'ログインをキャンセル中…',
+      saveAndSignIn: '保存してログイン',
+      done: '完了',
+      instructions:
+        'OpenAI のページでこのコードを入力してください。ログインが完了するまでこの画面を開いたままにしてください。',
+      copyCode: 'コードをコピー',
+      copied: 'コピー済み',
+      copyManually: 'コードを選択して手動でコピーしてください。',
+      continueAtOpenAI: 'OpenAI で続行',
+      expiresAt: 'コードの有効期限: {{time}}',
+      retrying: '接続が切れました。自動的に再試行しています…',
+      cancelSignIn: 'ログインをキャンセル',
+      tryAgain: '再試行',
+      signIn: 'ログイン',
+      reconnect: '再接続',
+      disconnect: '切断',
+      disconnectConfirm:
+        'このプロバイダーを切断しますか？再ログインするまでモデルは使用できません。ChatGPT のサブスクリプションは解約されません。',
+      confirmDisconnect: '切断を確認',
+    },
     title: 'モデル設定',
     description: 'パイプラインで使用できるモデルを設定・管理',
     createModel: 'モデルを作成',
@@ -388,7 +430,7 @@ const jaJP = {
     reasoningAbility: '推論',
     reasoningLevel: '推論レベル',
     reasoningLevels: {
-      providerDefault: 'Provider デフォルト',
+      providerDefault: 'プロバイダーの既定値を使用',
       disabled: 'オフ',
       enabled: 'オン',
       minimal: '最小',
@@ -503,6 +545,8 @@ const jaJP = {
     providerSaveError: 'プロバイダーの保存に失敗しました：',
     providerDeleted: 'プロバイダーを削除しました',
     providerDeleteError: 'プロバイダーの削除に失敗しました：',
+    deleteProviderCascadeConfirmation:
+      'このプロバイダーと、その中のすべてのモデルを削除しますか？この操作は取り消せず、元に戻せません。',
     deleteProviderConfirmation: 'このプロバイダーを削除してもよろしいですか？',
     loadError: 'データの読み込みに失敗しました',
     chat: 'チャット',
@@ -927,6 +971,17 @@ const jaJP = {
     },
   },
   agents: {
+    monitoring: {
+      description:
+        '各タスクのトリガーイベント、モデル出力、ツール実行を確認します。',
+      empty:
+        '実行記録はありません。プラットフォームイベントまたはデバッグテストを実行してください。',
+      input: 'トリガー入力',
+      eventData: 'イベントデータ',
+      execution: '実行過程',
+      rawEvents: '生の実行イベント',
+      inputUnavailable: 'この実行の入力は記録されていません。',
+    },
     eventProcessor: {
       configurations: 'プラグインプロセッサー設定',
       configTab: '設定',
@@ -966,6 +1021,7 @@ const jaJP = {
       loadMore: 'さらに読み込む',
       activation:
         'プラグインをインストールし、プロセッサー設定を作成してボットに紐付けます。',
+      status_timeout: 'タイムアウト',
       status_pending: '待機中',
       status_running: '実行中',
       status_completed: '完了',
@@ -1493,6 +1549,15 @@ const jaJP = {
     connectionSuccess: '接続に成功しました',
     connectionFailed: '接続に失敗しました，URLを確認してください',
     connectionFailedStatus: '接続失敗',
+    connectionUnreachable:
+      'MCP サーバーに接続できません。起動状態とネットワークを確認してください。',
+    connectionTimeout:
+      'MCP サーバーの応答がタイムアウトしました。サービスを確認するか、待機時間を延長してください。',
+    connectionHttpError:
+      'MCP サーバーが HTTP {{status}} を返しました。アクセス要件とサーバーログを確認してください。',
+    oauthAuthorizationRequired: 'OAuth 認可が必要です',
+    oauthAuthorizationRequiredSuggestion:
+      'この MCP サーバーには OAuth ログインが必要です。現在は OAuth ログインに対応していません。サーバーが許可している場合は、Authorization ヘッダーを手動で追加してください。',
     boxDisabledStdioRefused:
       'Stdio モードの MCP サーバーは Box サンドボックスを必要としますが、設定で無効化されています（box.enabled = false）。',
     boxUnavailableStdioRefused:
@@ -1972,6 +2037,20 @@ const jaJP = {
     bindSpaceWarning:
       '連携後、ログインメールアドレスは {{localEmail}} から LangBot アカウントのメールアドレスに変更されます。',
     bindSpaceSuccess: 'LangBot アカウントの連携に成功しました',
+    passkeySectionTitle: 'パスキー (Passkey)',
+    passkeySectionDesc:
+      '生体認証やセキュリティキーを使って、パスワード不要で安全にログインします',
+    addPasskey: 'パスキーを追加',
+    passkeyName: 'キー名',
+    passkeyNamePlaceholder: '例: MacBook Touch ID、YubiKey',
+    passkeyCreated: '作成日: {{date}}',
+    passkeyLastUsed: '最終使用: {{date}}',
+    noPasskeys: '登録されているパスキーはありません',
+    deletePasskeyConfirm:
+      'このパスキーを削除してもよろしいですか？削除後はこのキーでのログインができなくなります。',
+    passkeyAddedSuccess: 'パスキーが正常に追加されました',
+    passkeyDeleteSuccess: 'パスキーを削除しました',
+    passkeyRenameSuccess: 'パスキー名を変更しました',
     bindSpaceFailed: 'LangBot アカウントの連携に失敗しました',
     bindSpaceInvalidState:
       '無効な連携リクエストです。アカウント設定から再度お試しください。',
@@ -2280,7 +2359,17 @@ const jaJP = {
     queryVariables: {
       title: 'クエリ変数',
     },
+    loadError: 'モニタリングデータを読み込めませんでした',
+    partialMessages:
+      '全 {{total}} 件中 {{shown}} 件のメッセージを表示。会話トレースは不完全な場合があります。',
+    partialModelCalls: '全 {{total}} 件中 {{shown}} 件のモデル呼び出しを表示。',
+    partialToolCalls:
+      '全 {{total}} 件中 {{shown}} 件のツール呼び出しを表示。会話トレースは不完全な場合があります。',
+    partialErrors: '全 {{total}} 件中 {{shown}} 件のエラーを表示。',
     trafficChart: {
+      unavailable: 'トラフィック集計を利用できません',
+      truncated:
+        'トラフィック範囲が切り詰められています。短い期間を選択してください。',
       title: 'トラフィック概要',
       messages: 'メッセージ',
       llmCalls: 'LLM呼び出し',
@@ -2390,7 +2479,7 @@ const jaJP = {
     next: '次へ',
     finish: '作成＆デプロイ',
     confirmCreateBot: '確定、ボットを作成',
-    createSuccess: 'プロセッサーが作成され、ボットにリンクされました！',
+    createSuccess: 'パイプラインが作成され、ボットにリンクされました！',
     botCreateSuccess: 'ボットが正常に作成されました！',
     botSaveSuccess: 'ボット設定が保存され、有効になりました！',
     createError: 'リソースの作成に失敗しました',
@@ -2398,43 +2487,14 @@ const jaJP = {
     completeSaveError: '完了状態の保存に失敗しました。もう一度お試しください。',
     step: {
       platform: 'プラットフォーム',
-      scenarioChannel: 'シナリオとチャンネル',
       botConfig: 'ボット設定',
       aiEngine: 'AIエンジン',
       done: '完了',
     },
-    scenario: {
-      title: 'このボットで何を実現しますか？',
-      description:
-        'まず主要な動作を1つ選びます。作成後に他の動作も追加できます。',
-      messageReply: '受信メッセージに返信',
-      messageReplyDescription:
-        'AI Pipeline でプライベートまたはグループメッセージに返信します。',
-      welcomeMembers: '新しいメンバーを歓迎',
-      welcomeMembersDescription:
-        'メンバーがグループに参加したときに Agent を実行します。',
-      welcomeMembersPrompt:
-        '新しいグループメンバーを短く親しみやすいメッセージで歓迎してください。利用可能なメンバーとグループの情報を活用し、内部イベント名やシステムの詳細には言及しないでください。',
-      handleDepartures: 'メンバーの退出を処理',
-      handleDeparturesDescription:
-        'メンバーが退出または削除されたときに Agent を実行します。',
-      handleDeparturesPrompt:
-        '公開の応答が適切な場合に、メンバーの退出へ短く敬意のあるメッセージで対応してください。退出理由を推測したり、内部イベント名に言及したりしないでください。',
-      handleModeration: 'モデレーションイベントを処理',
-      handleModerationDescription:
-        'グループメンバーが制限されたときに Agent を実行します。',
-      handleModerationPrompt:
-        '利用可能な情報だけを使い、メンバーへの制限について簡潔で中立的なグループ通知を書いてください。詳細を作り上げたり、内部イベント名に言及したりしないでください。',
-      pipelineBadge: 'Pipeline',
-      agentBadge: 'Agent',
-    },
     platform: {
-      title: 'チャンネルを選択',
-      description: '選択したシナリオに対応するチャンネルのみ表示されます。',
-      chooseScenarioFirst:
-        'シナリオを選択すると、対応するチャンネルが表示されます。',
-      noCompatiblePlatforms:
-        '現在インストールされているチャンネルはこのシナリオに対応していません。',
+      title: 'プラットフォームを選択',
+      description:
+        'ボットが接続するメッセージングプラットフォームを選択してください。',
     },
     botConfig: {
       title: 'ボットを設定',
@@ -2450,6 +2510,8 @@ const jaJP = {
         'ボットが IM メッセージを受信しました。次のステップに進めます。',
       messageReceivedLocalAccountWarning:
         'ボット側の接続設定は正常で、IM メッセージを受信できています。LangBot Account でログインしていないためモデル呼び出しが失敗する場合がありますが、次のステップで独自のモデルを追加できます。',
+      pageBotPreviewFailed:
+        'テストチャットを読み込めませんでした。設定を再保存してお試しください。',
       pageBotTestPrompt:
         'ページボットが有効になりました。右下のチャットバブルをクリックしてメッセージを送信し、会話フロー全体を確認してください。',
       pageBotTestNotice:
@@ -2470,14 +2532,19 @@ const jaJP = {
         'ボットの活動を監視して、プラットフォーム接続が正常に動作していることを確認します。',
     },
     aiEngine: {
+      defaultModelUnavailable:
+        '既定の会話モデルがありません。再試行してください。',
+      defaultRunnerUnavailable:
+        'ローカル Agent が準備できていません。再試行してください。',
+      preparingDefault: '既定の AI を準備中…',
       title: 'AIエンジンを選択',
       description:
         'ボットのインテリジェンスを駆動するAIエンジンを選択してください。',
       optionalDescription:
-        'このステップは任意です。現在の Agent をどのように設定するか選択してください。',
+        '既定の AI は設定済みです。そのまま使うか、接続方法を変更できます。',
       externalTitle: '外部プラットフォームの Agent を接続',
       externalDescription:
-        'Dify、n8n、Coze などを接続し、ボットのパイプラインを置き換えます。',
+        'ランナープラグインで Dify、n8n、Coze などの外部 Agent に接続します。',
       ownModelTitle: '自分のモデルを使用',
       ownModelDescription:
         'プロバイダーを追加し、モデルをスキャンまたは手動入力して設定を完了します。',
@@ -2490,7 +2557,7 @@ const jaJP = {
       selectModelTitle: 'モデルを選択',
       selectScannedModelTitle: 'モデルを選択',
       selectScannedModelDescription:
-        '選択したモデルを新しいパイプラインのメインモデルに設定し、ボットをそのパイプラインへ切り替えます。',
+        '選択したモデルを現在のパイプラインのメインモデルに設定します。',
       scanModelMode: 'モデルをスキャン',
       manualModelMode: '手動で追加',
       scanningModels: '利用可能なモデルをスキャン中…',
@@ -2509,11 +2576,12 @@ const jaJP = {
       manualModelOptions: '任意のモデル機能',
       editProvider: 'プロバイダーを編集',
       rescanModels: 'モデルを再スキャン',
-      moreFeaturesTitle: 'Agent に機能を追加',
+      moreFeaturesTitle: '既定の設定を使う',
       moreFeaturesDescription:
-        'ワークベンチを開き、自動生成されたばかりの Agent にツール、ナレッジベースなどの機能を追加します。',
+        'ローカル Agent と推奨モデルを使います。ツールやナレッジベースは後から追加できます。',
       runnerDescription: '外部 Agent の Runner を選択し、接続を設定します。',
       backToChoices: '選択肢に戻る',
+      backToList: '一覧に戻る',
       createExternal: '作成して関連付ける',
       finishWithModel: '選択したモデルを使用して完了',
       openWorkbench: 'ワークベンチを開く',
@@ -2548,7 +2616,7 @@ const jaJP = {
     done: {
       title: '完了しました！',
       description:
-        'ボットが作成され、プロセッサーに接続されました。ワークベンチから管理できます。',
+        'ボットが作成され、パイプラインに接続されました。ワークベンチから管理できます。',
       backToWorkbench: 'ワークベンチに戻る',
     },
   },

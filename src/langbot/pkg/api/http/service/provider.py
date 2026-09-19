@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import uuid
 import traceback
 
@@ -7,8 +8,10 @@ import sqlalchemy
 
 from ....cloud.model_catalog import LANGBOT_MODELS_PROVIDER_REQUESTER
 from ....core import app
+from ....core.task_boundary import create_detached_task
 from ....entity.persistence import model as persistence_model
 from ....workspace.errors import WorkspaceNotFoundError
+from ....provider.modelmgr.codex_auth import CodexAuth, REQUESTER as CODEX_REQUESTER, validate_config
 from .secrets import contains_secret_placeholder, redact_secrets, restore_secret_placeholders
 from .tenant import TenantContext, require_workspace_uuid, scope_statement
 
@@ -20,6 +23,8 @@ class ModelProviderService:
 
     def __init__(self, ap: app.Application) -> None:
         self.ap = ap
+        self.codex_auth = CodexAuth(ap)
+        self._deletion_tasks: set[asyncio.Task[None]] = set()
 
     def _is_cloud_runtime(self) -> bool:
         mode = getattr(self.ap.persistence_mgr, 'mode', None)
@@ -116,14 +121,30 @@ class ModelProviderService:
         provider_data = provider_data.copy()
         if self._system_requester_is_reserved(provider_data.get('requester')):
             raise ValueError('space-chat-completions is reserved for the Cloud-managed LangBot Models provider')
+        validate_config(provider_data)
         provider_data['uuid'] = str(uuid.uuid4())
         provider_data['workspace_uuid'] = require_workspace_uuid(context)
         provider_data['api_keys'] = self._normalize_api_keys(
             restore_secret_placeholders(provider_data.get('api_keys'), sensitive=True)
         )
-        await self.ap.persistence_mgr.execute_async(
-            sqlalchemy.insert(persistence_model.ModelProvider).values(**provider_data)
-        )
+        if provider_data.get('requester') == CODEX_REQUESTER:
+            async with self.ap.persistence_mgr.tenant_uow(provider_data['workspace_uuid']):
+                await self.ap.persistence_mgr.execute_async(
+                    sqlalchemy.insert(persistence_model.ModelProvider).values(**provider_data)
+                )
+                await self.ap.persistence_mgr.execute_async(
+                    sqlalchemy.insert(persistence_model.CodexCredential).values(
+                        workspace_uuid=provider_data['workspace_uuid'],
+                        provider_uuid=provider_data['uuid'],
+                        payload={},
+                        version=0,
+                        lease_until=0,
+                    )
+                )
+        else:
+            await self.ap.persistence_mgr.execute_async(
+                sqlalchemy.insert(persistence_model.ModelProvider).values(**provider_data)
+            )
 
         # load to runtime
         runtime_provider = await self.ap.model_mgr.load_provider(context, provider_data)
@@ -138,6 +159,17 @@ class ModelProviderService:
             raise ValueError('space-chat-completions is reserved for the Cloud-managed LangBot Models provider')
         provider_data.pop('uuid', None)
         provider_data.pop('workspace_uuid', None)
+        if {'requester', 'base_url', 'api_keys'} & provider_data.keys():
+            current = await self.get_provider(context, provider_uuid, include_secret=True)
+            if current is None:
+                raise WorkspaceNotFoundError('Provider not found')
+            if CODEX_REQUESTER in (current.get('requester'), provider_data.get('requester')):
+                if provider_data.get('requester', current.get('requester')) != current.get('requester'):
+                    raise ValueError('Create a separate provider to change the ChatGPT authentication type')
+                merged = {**current, **provider_data}
+                validate_config(merged)
+                provider_data['base_url'] = merged['base_url']
+                provider_data['api_keys'] = []
         if 'api_keys' in provider_data:
             submitted_keys = provider_data.get('api_keys')
             if contains_secret_placeholder(submitted_keys, sensitive=True):
@@ -163,60 +195,107 @@ class ModelProviderService:
             raise WorkspaceNotFoundError('Provider not found')
         await self.ap.model_mgr.reload_provider(context, provider_uuid)
 
-    async def delete_provider(self, context: TenantContext, provider_uuid: str) -> None:
-        """Delete a provider (only if no models reference it)"""
-        await self._assert_provider_mutable(context, provider_uuid)
+    async def delete_provider(self, context: TenantContext, provider_uuid: str, cascade: bool = False) -> None:
+        """Delete a provider, optionally deleting all its Workspace-scoped models."""
         workspace_uuid = require_workspace_uuid(context)
-        # Check if any models use this provider
-        llm_result = await self.ap.persistence_mgr.execute_async(
-            scope_statement(
-                sqlalchemy.select(persistence_model.LLMModel).where(
-                    persistence_model.LLMModel.provider_uuid == provider_uuid
-                ),
-                persistence_model.LLMModel,
-                workspace_uuid,
-            )
+        persistence = self.ap.persistence_mgr
+        model_types = (
+            (persistence_model.LLMModel, 'LLM', 'remove_llm_model'),
+            (persistence_model.EmbeddingModel, 'Embedding', 'remove_embedding_model'),
+            (persistence_model.RerankModel, 'Rerank', 'remove_rerank_model'),
         )
-        if llm_result.first() is not None:
-            raise ValueError('Cannot delete provider: LLM models still reference it')
-
-        embedding_result = await self.ap.persistence_mgr.execute_async(
-            scope_statement(
-                sqlalchemy.select(persistence_model.EmbeddingModel).where(
-                    persistence_model.EmbeddingModel.provider_uuid == provider_uuid
-                ),
-                persistence_model.EmbeddingModel,
-                workspace_uuid,
+        deleted_models: list[tuple[str, list[str]]] = []
+        async with persistence.tenant_uow(workspace_uuid):
+            # Check ownership before touching children. Lock the provider on PostgreSQL
+            # so concurrent model inserts cannot race the reference check/deletion.
+            provider_result = await persistence.execute_async(
+                scope_statement(
+                    sqlalchemy.select(persistence_model.ModelProvider.requester)
+                    .where(persistence_model.ModelProvider.uuid == provider_uuid)
+                    .with_for_update(),
+                    persistence_model.ModelProvider,
+                    workspace_uuid,
+                )
             )
-        )
-        if embedding_result.first() is not None:
-            raise ValueError('Cannot delete provider: Embedding models still reference it')
+            provider = provider_result.first()
+            if provider is None:
+                raise WorkspaceNotFoundError('Provider not found')
+            if self._system_requester_is_reserved(provider.requester):
+                raise ValueError('LangBot Models is managed by Cloud and cannot be modified')
 
-        rerank_result = await self.ap.persistence_mgr.execute_async(
-            scope_statement(
-                sqlalchemy.select(persistence_model.RerankModel).where(
-                    persistence_model.RerankModel.provider_uuid == provider_uuid
-                ),
-                persistence_model.RerankModel,
-                workspace_uuid,
+            for model_type, label, remover in model_types:
+                result = await persistence.execute_async(
+                    scope_statement(
+                        sqlalchemy.select(model_type.uuid).where(model_type.provider_uuid == provider_uuid),
+                        model_type,
+                        workspace_uuid,
+                    )
+                )
+                model_uuids = list(result.scalars())
+                if model_uuids and not cascade:
+                    raise ValueError(f'Cannot delete provider: {label} models still reference it')
+                if model_uuids:
+                    # Model services have no pipeline/KB deletion side effects: they
+                    # delete the scoped row and evict its runtime cache. Defer eviction
+                    # here rather than calling those services before our commit.
+                    await persistence.execute_async(
+                        scope_statement(
+                            sqlalchemy.delete(model_type).where(model_type.provider_uuid == provider_uuid),
+                            model_type,
+                            workspace_uuid,
+                        )
+                    )
+                    deleted_models.append((remover, model_uuids))
+
+            # Explicit cleanup also works on legacy SQLite connections without FK
+            # enforcement; never load or serialize the private credential payload.
+            await persistence.execute_async(
+                scope_statement(
+                    sqlalchemy.delete(persistence_model.CodexCredential).where(
+                        persistence_model.CodexCredential.provider_uuid == provider_uuid
+                    ),
+                    persistence_model.CodexCredential,
+                    workspace_uuid,
+                )
             )
-        )
-        if rerank_result.first() is not None:
-            raise ValueError('Cannot delete provider: Rerank models still reference it')
-
-        result = await self.ap.persistence_mgr.execute_async(
-            scope_statement(
-                sqlalchemy.delete(persistence_model.ModelProvider).where(
-                    persistence_model.ModelProvider.uuid == provider_uuid
-                ),
-                persistence_model.ModelProvider,
-                workspace_uuid,
+            result = await persistence.execute_async(
+                scope_statement(
+                    sqlalchemy.delete(persistence_model.ModelProvider).where(
+                        persistence_model.ModelProvider.uuid == provider_uuid
+                    ),
+                    persistence_model.ModelProvider,
+                    workspace_uuid,
+                )
             )
-        )
-        if getattr(result, 'rowcount', None) == 0:
-            raise WorkspaceNotFoundError('Provider not found')
+            if result.rowcount == 0:
+                raise WorkspaceNotFoundError('Provider not found')
 
-        await self.ap.model_mgr.remove_provider(context, provider_uuid)
+        async def remove_runtime() -> None:
+            async with persistence.tenant_scope(workspace_uuid):
+                for remover, model_uuids in deleted_models:
+                    for model_uuid in model_uuids:
+                        await getattr(self.ap.model_mgr, remover)(context, model_uuid)
+                # This also closes the requester's HTTP client; models go first.
+                await self.ap.model_mgr.remove_provider(context, provider_uuid)
+
+        if persistence.current_session() is None:
+            await remove_runtime()
+        else:
+            # A nested UoW has not committed yet. Reuse the rollback-cancelled gate
+            # and detached context boundary instead of evicting uncommitted data.
+            task = create_detached_task(
+                remove_runtime(),
+                after_commit_manager=persistence,
+                workspace_uuid=workspace_uuid,
+            )
+            self._deletion_tasks.add(task)
+
+            def completed(task: asyncio.Task[None]) -> None:
+                self._deletion_tasks.discard(task)
+                if not task.cancelled() and task.exception() is not None:
+                    self.ap.logger.error('Failed to remove deleted provider runtime', exc_info=task.exception())
+
+            task.add_done_callback(completed)
 
     async def get_provider_model_counts(self, context: TenantContext, provider_uuid: str) -> dict:
         """Get count of models using this provider"""

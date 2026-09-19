@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 import enum
 import json
 import math
@@ -208,6 +209,13 @@ class MCPSessionStatus(enum.Enum):
     ERROR = 'error'
 
 
+@dataclasses.dataclass(frozen=True)
+class MCPOAuthChallenge:
+    """Bearer challenge metadata returned by an OAuth-protected MCP server."""
+
+    resource_metadata_url: str | None
+
+
 class _TransportReconnect(Exception):
     """Internal signal: the Box stdio WS transport dropped but the managed
     process is still alive. Triggers a lightweight transport reconnect that
@@ -267,6 +275,7 @@ class RuntimeMCPSession:
     _ready_event: asyncio.Event
 
     error_message: str | None = None
+    _public_error_code: str = 'runtime_error'
 
     error_phase: MCPSessionErrorPhase | None = None
 
@@ -513,6 +522,13 @@ class RuntimeMCPSession:
             await self._init_streamable_http_server()
             return
         except Exception as e:
+            if self._extract_oauth_challenge(e) is not None:
+                self.error_phase = MCPSessionErrorPhase.OAUTH_REQUIRED
+                self.ap.logger.info(
+                    f'MCP server {self.server_name}: remote server requires OAuth authorization; '
+                    'not falling back to SSE'
+                )
+                raise
             if not self._should_fallback_to_sse(e):
                 self.ap.logger.info(
                     f'MCP server {self.server_name}: Streamable HTTP transport failed '
@@ -636,6 +652,7 @@ class RuntimeMCPSession:
         except Exception as e:
             self.status = MCPSessionStatus.ERROR
             self.error_message = str(e)
+            self._public_error_code = self._classify_public_error(e)
             self.ap.logger.error(f'Error in MCP session lifecycle {self.server_name}: {e}\n{traceback.format_exc()}')
             # Do NOT set _ready_event here — let _lifecycle_loop_with_retry
             # handle retries first. It will set the event when all retries
@@ -759,6 +776,11 @@ class RuntimeMCPSession:
                 self.retry_count += 1
                 if self._shutdown_event.is_set():
                     return  # Shutdown requested, don't retry
+                if self.error_phase == MCPSessionErrorPhase.OAUTH_REQUIRED:
+                    self.retry_count = attempt + 1
+                    self.status = MCPSessionStatus.ERROR
+                    self._ready_event.set()
+                    return
                 # A lifecycle that reached CONNECTED proved its preceding
                 # startup attempt was healthy. Give a later runtime failure a
                 # fresh consecutive-startup retry budget instead of exhausting
@@ -896,6 +918,39 @@ class RuntimeMCPSession:
                 yield from RuntimeMCPSession._iter_exception_leaves(child)
         else:
             yield exc
+
+    @staticmethod
+    def _classify_public_error(exc: BaseException) -> str:
+        """Expose a safe category without transport URLs, headers, or arguments."""
+        for leaf in RuntimeMCPSession._iter_exception_leaves(exc):
+            if isinstance(leaf, httpx.HTTPStatusError):
+                return f'http_{leaf.response.status_code}'
+            if isinstance(leaf, (httpx.TimeoutException, TimeoutError)):
+                return 'connection_timeout'
+            if isinstance(leaf, httpx.ConnectError):
+                return 'connection_unreachable'
+        return 'runtime_error'
+
+    @staticmethod
+    def _extract_oauth_challenge(exc: BaseException) -> MCPOAuthChallenge | None:
+        """Extract an OAuth Bearer challenge from a remote MCP connection failure."""
+        for leaf in RuntimeMCPSession._iter_exception_leaves(exc):
+            if not isinstance(leaf, httpx.HTTPStatusError) or leaf.response.status_code != 401:
+                continue
+            for header in leaf.response.headers.get_list('www-authenticate'):
+                bearer_match = re.search(r'(?:^|,)\s*Bearer(?:\s|,|$)', header, flags=re.IGNORECASE)
+                if bearer_match is None:
+                    continue
+                metadata_match = re.search(
+                    r'(?:^|,)\s*resource_metadata\s*=\s*(?:"([^"]+)"|([^,\s]+))',
+                    header[bearer_match.end() :],
+                    flags=re.IGNORECASE,
+                )
+                if metadata_match is None:
+                    continue
+                resource_metadata_url = metadata_match.group(1) or metadata_match.group(2)
+                return MCPOAuthChallenge(resource_metadata_url=resource_metadata_url)
+        return None
 
     @staticmethod
     def _should_fallback_to_sse(exc: BaseException) -> bool:
@@ -1439,7 +1494,7 @@ class RuntimeMCPSession:
             # environment values. Detailed diagnostics belong in AUDIT_VIEW
             # logs; resource-list responses expose only a stable status.
             'error_message': 'MCP runtime failed' if self.error_message else None,
-            'error_code': 'runtime_error' if self.error_message else None,
+            'error_code': self._public_error_code if self.error_message else None,
             'error_phase': self.error_phase.value if self.error_phase else None,
             'retry_count': self.retry_count,
             'tool_count': len(self.get_tools()),

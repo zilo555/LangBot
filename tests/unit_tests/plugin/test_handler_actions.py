@@ -1597,6 +1597,9 @@ class TestAgentRunProxyActions:
         app.tool_mgr = tool_mgr
 
         run_id = 'run_pure_event_native_exec'
+        from langbot.pkg.box.runner import RunBoxBinding
+
+        object.__setattr__(query, '_box_binding', RunBoxBinding(run_id, 'box', {}, run_id))
         registry = get_session_registry()
         await registry.unregister(run_id)
         await registry.register(

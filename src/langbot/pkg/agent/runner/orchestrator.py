@@ -23,7 +23,6 @@ from .execution_context import (
     append_mcp_resource_context_to_event,
     build_mcp_resource_context_addition,
     build_execution_query,
-    prepare_box_scope,
     prepare_execution_query,
     project_mcp_resource_config,
 )
@@ -121,6 +120,16 @@ class AgentRunOrchestrator:
             project_mcp_resource_config(execution_query, binding.runner_config)
         object.__setattr__(execution_query, '_execution_context', execution_context)
 
+        if event.event_type == 'interaction.submitted' and binding.runner_config.get('user-id-source') in (
+            'legacy-session',
+            'legacy-bot',
+        ):
+            await self.interaction_manager.restore_legacy_identity(event, binding)
+
+        from ...box.runner import prepare_input_files
+
+        event = event.model_copy(deep=True)
+        prepare_input_files(execution_query, event.input)
         execution_event = event
         resource_addition = await build_mcp_resource_context_addition(self.ap, execution_query)
         if resource_addition:
@@ -159,6 +168,12 @@ class AgentRunOrchestrator:
             str(skill['skill_name']) for skill in resources.get('skills', []) if skill.get('skill_name')
         ]
         prepare_execution_query(execution_query, event, authorized_skill_names)
+        context['variables'] = {
+            key: value
+            for key, value in (execution_query.variables or {}).items()
+            if isinstance(key, str) and not key.startswith('_') and isinstance(value, (str, int, float, bool))
+        }
+        context['variables']['query_id'] = execution_query.query_id
 
         state_context = build_state_context(event, binding, descriptor)
         run_id = context['run_id']
@@ -356,6 +371,17 @@ class AgentRunOrchestrator:
                         assistant_transcript_written = True
 
                     result = await self.result_normalizer.normalize(result_dict, descriptor)
+                    file_ids = result_dict.get('data', {}).get('file_ids', [])
+                    if file_ids:
+                        if result_type != 'message.completed' or result is None:
+                            raise ValueError('Files must be attached to a completed message')
+                        if binding.processor_type != 'pipeline':
+                            raise ValueError('Agent files must be sent explicitly through the reply API')
+                        from ...box.runner import exported_message, binding_for
+
+                        async with binding_for(execution_query).lock:
+                            result.attachments = exported_message(execution_query, file_ids, consume=True)
+
                     if result is not None:
                         yield result
 
@@ -387,6 +413,9 @@ class AgentRunOrchestrator:
             )
             raise
         finally:
+            binding_box = getattr(execution_query, '_box_binding', None)
+            if binding_box is not None and binding_box.run_id == run_id:
+                object.__delattr__(execution_query, '_box_binding')
             session = await self._session_registry.unregister(run_id)
             await reply_streams.close()
             pending_steering = session.get('steering_queue', []) if session else []
@@ -412,13 +441,11 @@ class AgentRunOrchestrator:
         plan = self.query_bridge.build_plan(query)
         adapter_context = dict(plan.adapter_context)
         adapter_context['_query'] = query
+        import copy
+
+        adapter_context['_pipeline_expected_config'] = copy.deepcopy(query.pipeline_config)
+        adapter_context['_pipeline_conversation'] = getattr(getattr(query, 'session', None), 'using_conversation', None)
         adapter_context['_execution_context'] = get_query_execution_context(query)
-
-        # Inbound files and subsequent runner tools must share one Host scope.
-        prepare_box_scope(query, plan.event)
-
-        # Materialize inbound attachments into sandbox before running
-        await self._materialize_inbound_attachments(query, plan.event)
 
         async with contextlib.aclosing(
             self.run(
@@ -430,48 +457,6 @@ class AgentRunOrchestrator:
         ) as results:
             async for result in results:
                 yield result
-
-    async def _materialize_inbound_attachments(
-        self,
-        query: pipeline_query.Query,
-        event: AgentEventEnvelope,
-    ) -> None:
-        """Persist inbound attachments into the sandbox and update event.input.attachments.
-
-        No-op when the box service is unavailable or there are no attachments.
-        On success, updates each attachment in event.input.attachments with the
-        sandbox path so runners can tell the model where to find the files.
-        """
-        box_service = getattr(self.ap, 'box_service', None)
-        if box_service is None or not getattr(box_service, 'available', False):
-            return
-
-        try:
-            materialized = await box_service.materialize_inbound_attachments(query)
-        except Exception as e:
-            # Never break the chat turn over attachment IO
-            self.ap.logger.warning(f'Inbound attachment materialization failed: {e}')
-            return
-
-        if not materialized:
-            return
-
-        # Build a lookup by name for matching
-        materialized_by_name = {att.get('name'): att for att in materialized if att.get('name')}
-
-        # Update event.input.attachments with sandbox paths
-        if event.input and event.input.attachments:
-            for attachment in event.input.attachments:
-                name = attachment.name
-                if name and name in materialized_by_name:
-                    mat = materialized_by_name[name]
-                    # Update the attachment with sandbox path
-                    attachment.path = mat.get('path')
-                    attachment.size = mat.get('size') or attachment.size
-                    attachment.mime_type = attachment.mime_type or mat.get('mime_type')
-
-        # Store materialized descriptors in query variables for downstream use
-        query.variables['_sandbox_inbound_attachments'] = materialized
 
     def resolve_runner_id_for_telemetry(self, query: pipeline_query.Query) -> str | None:
         """Resolve runner ID for telemetry/logging without full execution."""

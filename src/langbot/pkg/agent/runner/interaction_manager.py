@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from langbot.pkg.telemetry import diagnostics
 
+import copy
 import json
 import time
 import typing
@@ -14,7 +15,7 @@ from langbot_plugin.api.entities.builtin.platform import message as platform_mes
 
 from .descriptor import RunnerDescriptor
 from .errors import RunnerProtocolError
-from .host_models import AgentBinding, AgentEventEnvelope
+from .host_models import AgentBinding, AgentEventEnvelope, LegacyRunnerIdentity
 from .interaction_store import InteractionStore
 
 
@@ -152,7 +153,12 @@ class InteractionManager:
             runner_id=descriptor.id,
             processor_type=binding.processor_type,
             processor_id=processor_id,
-            request=request_data,
+            request={
+                **request_data,
+                '_host_legacy_identity': event.legacy_identity.model_dump(mode='json')
+                if event.legacy_identity is not None
+                else None,
+            },
             delivery_target=reply_target,
             replaces_interaction_id=(update_target or {}).get('interaction_id'),
             bot_id=event.bot_id,
@@ -161,6 +167,7 @@ class InteractionManager:
             thread_id=event.thread_id,
             actor_id=event.actor.actor_id if event.actor else None,
             expires_at=expires_at,
+            **self._pipeline_admission(binding, descriptor, adapter_context),
         )
 
         try:
@@ -203,6 +210,50 @@ class InteractionManager:
             raise
         diagnostics.set_outcome('waiting', reason_code='waiting')
         return True
+
+    @staticmethod
+    def _pipeline_admission(binding, descriptor, adapter_context):
+        if binding.processor_type != 'pipeline':
+            return {}
+        query = (adapter_context or {}).get('_query')
+        expected = copy.deepcopy((adapter_context or {}).get('_pipeline_expected_config'))
+        session = getattr(query, 'session', None)
+        conversation = (adapter_context or {}).get('_pipeline_conversation')
+
+        def authority():
+            from .config_resolver import RunnerConfigResolver
+
+            return (
+                query is not None
+                and session is not None
+                and conversation is not None
+                and isinstance(expected, dict)
+                and session.using_conversation is conversation
+                and getattr(query, 'pipeline_uuid', None) == binding.processor_id
+                and RunnerConfigResolver.resolve_runner_id(expected) == descriptor.id == binding.runner_id
+                and RunnerConfigResolver.resolve_runner_config(expected, descriptor.id) == binding.runner_config
+            )
+
+        return {'expected_config': expected, 'authority_check': authority}
+
+    async def restore_legacy_identity(self, event: AgentEventEnvelope, binding: AgentBinding) -> None:
+        """Resume only from the scoped, consumed Host record, never callback fields."""
+        event.legacy_identity = None
+        submission = getattr(event.input, 'interaction', None)
+        if submission is None:
+            return
+        if hasattr(submission, 'model_dump'):
+            submission = submission.model_dump(mode='json')
+        record = await self.store.find_resume_request(event=event, binding=binding, submission=submission)
+        if record is None:
+            return
+        identity = record['request'].get('_host_legacy_identity')
+        if not isinstance(identity, dict):
+            return
+        try:
+            event.legacy_identity = LegacyRunnerIdentity.model_validate(identity)
+        except pydantic.ValidationError:
+            return
 
     @diagnostics.observe('interaction', 'interaction.acknowledge', source='platform', stage='ack')
     async def acknowledge_submission(self, record: dict[str, typing.Any], adapter: typing.Any) -> None:

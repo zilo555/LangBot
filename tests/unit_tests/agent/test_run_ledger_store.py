@@ -472,3 +472,30 @@ async def test_run_lifecycle_retains_milliseconds(store, monkeypatch):
     await store.finalize_run(run_id='run-ms', status='completed')
     saved = await store.get_run('run-ms')
     assert saved['finished_at_ms'] - saved['started_at_ms'] == 275
+
+
+@pytest.mark.asyncio
+async def test_agent_run_pages_include_old_bindings_without_leaking_other_agents(store):
+    for run_id, agent_id, binding, workspace in [
+        ('old', None, 'agent_one_plugin:a/old/default', 'w'),
+        ('debug', None, 'debug:one:plugin:a/new/default', 'w'),
+        ('new', 'one', 'new-binding', 'w'),
+        ('other', 'two', 'agent_two_plugin:a/old/default', 'w'),
+        ('conflicting-id', 'two', 'agent_one_plugin:a/old/default', 'w'),
+        ('other-workspace', 'one', 'agent_one_plugin:a/old/default', 'other'),
+        ('plugin-processor', None, 'event_processor:one', 'w'),
+    ]:
+        await store.create_run(
+            run_id=run_id,
+            event_id=None,
+            agent_id=agent_id,
+            binding_id=binding,
+            workspace_id=workspace,
+            runner_id='runner',
+        )
+    page, cursor, more, total = await store.list_runs(agent_id='one', workspace_id='w', limit=2)
+    assert [run['run_id'] for run in page] == ['new', 'debug']
+    assert more and total == 3
+    page, cursor, more, total = await store.list_runs(agent_id='one', workspace_id='w', before_id=cursor, limit=2)
+    assert [run['run_id'] for run in page] == ['old']
+    assert not more and total == 3

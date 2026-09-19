@@ -8,6 +8,7 @@ import {
   type PluginV4,
   type RunnerUsage,
 } from '@/app/infra/entities/plugin';
+import type { AsyncTask } from '@/app/infra/entities/api';
 import type { I18nObject } from '@/app/infra/entities/common';
 
 export const RUNNER_COMPONENT_FILTER = 'Runner';
@@ -54,6 +55,7 @@ export interface PendingRunnerInstall {
 interface InstallRunnerOptions {
   scope: string;
   onTaskCreated?: (taskId: number) => void;
+  onProgress?: (task: AsyncTask) => void;
 }
 
 function wait(ms: number) {
@@ -250,7 +252,7 @@ export async function installMarketplaceRunner(
   };
   writePendingRunnerInstall(pending);
   options.onTaskCreated?.(taskId);
-  return finishRunnerInstall(pending);
+  return finishRunnerInstall(pending, options.onProgress);
 }
 
 function extractPluginLabel(plugin: PluginV4) {
@@ -267,6 +269,7 @@ function extractPluginLabel(plugin: PluginV4) {
 
 async function finishRunnerInstall(
   pending: PendingRunnerInstall,
+  onProgress?: (task: AsyncTask) => void,
 ): Promise<InstalledRunner> {
   // A refreshed page receives a fresh observation window. The backend task is
   // authoritative; `startedAt` is display metadata, not a reason to abandon a
@@ -275,6 +278,7 @@ async function finishRunnerInstall(
   let installCompleted = false;
   while (true) {
     const task = await httpClient.getAsyncTask(pending.taskId);
+    onProgress?.(task);
     if (task.runtime.done) {
       if (task.runtime.exception) {
         clearPendingRunnerInstall(pending.scope, pending.taskId);
@@ -323,8 +327,9 @@ async function finishRunnerInstall(
 
 export async function resumePendingRunnerInstall(
   scope: string,
+  onProgress?: (task: AsyncTask) => void,
 ): Promise<InstalledRunner | null> {
   const pending = readPendingRunnerInstall(scope);
   if (!pending) return null;
-  return finishRunnerInstall(pending);
+  return finishRunnerInstall(pending, onProgress);
 }

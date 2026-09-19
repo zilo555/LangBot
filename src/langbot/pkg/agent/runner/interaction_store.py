@@ -14,6 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
 from ...entity.persistence.agent_interaction import AgentInteraction
+from ...persistence.tenant_uow import TenantUnitOfWork
+from ...persistence.pipeline_admission import lock_pipeline_admission
 
 
 UTC = datetime.timezone.utc
@@ -47,6 +49,12 @@ class DuplicateInteractionError(InteractionStoreError):
 
 def _utc_now() -> datetime.datetime:
     return datetime.datetime.now(UTC)
+
+
+def _db_datetime(value):
+    # Existing schema is TIMESTAMP WITHOUT TIME ZONE; persist UTC naive on
+    # both backends and normalize to aware UTC only for application comparisons.
+    return _as_utc(value).replace(tzinfo=None) if value is not None else None
 
 
 def _as_utc(value: datetime.datetime | None) -> datetime.datetime | None:
@@ -113,6 +121,8 @@ class InteractionStore:
         thread_id: str | None = None,
         actor_id: str | None = None,
         expires_at: int | float | None = None,
+        expected_config: dict | None = None,
+        authority_check: typing.Callable[[], bool] | None = None,
     ) -> tuple[dict[str, typing.Any], str]:
         """Persist a request and return its record plus one-time callback token."""
         if not interaction_id or not run_id or not binding_id or not runner_id or not processor_id:
@@ -145,10 +155,31 @@ class InteractionStore:
             delivery_target_json=delivery_target_json,
             replaces_interaction_id=replaces_interaction_id,
             callback_token_hash=_token_hash(callback_token),
-            expires_at=expires_at_dt,
-            created_at=now,
-            updated_at=now,
+            expires_at=_db_datetime(expires_at_dt),
+            created_at=_db_datetime(now),
+            updated_at=_db_datetime(now),
         )
+
+        if processor_type == 'pipeline':
+            # Require Host-captured configuration and live conversation authority;
+            # runner output must never supply either of these admission inputs.
+            if not workspace_id or not isinstance(expected_config, dict) or authority_check is None:
+                raise InteractionScopeError('Pipeline interaction authority unavailable')
+            try:
+                async with TenantUnitOfWork(self.engine, workspace_id) as uow:
+                    current = await lock_pipeline_admission(uow.session, workspace_id, processor_id)
+                    if current != expected_config or authority_check() is not True:
+                        raise InteractionScopeError('Pipeline interaction authority changed')
+                    existing = await self._get_by_run_interaction(uow.session, run_id, interaction_id)
+                    if existing is not None:
+                        raise DuplicateInteractionError('Interaction already exists')
+                    uow.session.add(row)
+                    await uow.session.flush()
+                return self._to_dict(row), callback_token
+            except ValueError as exc:
+                raise InteractionScopeError('Pipeline interaction authority unavailable') from exc
+            except IntegrityError as exc:
+                raise DuplicateInteractionError('Interaction already exists') from exc
 
         async with self._session_factory() as session:
             existing = await self._get_by_run_interaction(session, run_id, interaction_id)
@@ -182,7 +213,7 @@ class InteractionStore:
                     AgentInteraction.interaction_id == interaction_id,
                     AgentInteraction.status.in_(['pending', 'submitted']),
                 )
-                .values(delivery_result_json=payload, updated_at=_utc_now())
+                .values(delivery_result_json=payload, updated_at=_db_datetime(_utc_now()))
             )
             await session.commit()
             return result.rowcount == 1
@@ -227,6 +258,38 @@ class InteractionStore:
             )
             row = result.scalar_one_or_none()
             return self._to_dict(row) if row is not None else None
+
+    async def find_resume_request(self, *, event, binding, submission) -> dict[str, typing.Any] | None:
+        """Resolve persisted provenance with exact tenant/processor/callback scope.
+
+        Ambiguous identities fail closed instead of picking the newest run.
+        """
+        if not isinstance(submission, dict) or not submission.get('interaction_id'):
+            return None
+        target = event.delivery.reply_target or {}
+        target_type, target_id = target.get('target_type'), target.get('target_id')
+        conversation_id = f'{target_type}_{target_id}' if target_type and target_id else event.conversation_id
+        conditions = [
+            AgentInteraction.interaction_id == submission['interaction_id'],
+            AgentInteraction.status == 'submitted',
+            AgentInteraction.binding_id == binding.binding_id,
+            AgentInteraction.runner_id == binding.runner_id,
+            AgentInteraction.processor_type == binding.processor_type,
+            AgentInteraction.processor_id == (binding.processor_id or binding.agent_id),
+        ]
+        for column, value in (
+            (AgentInteraction.workspace_id, event.workspace_id),
+            (AgentInteraction.bot_id, event.bot_id),
+            (AgentInteraction.conversation_id, conversation_id),
+            (AgentInteraction.thread_id, event.thread_id),
+            (AgentInteraction.actor_id, event.actor.actor_id if event.actor else None),
+        ):
+            conditions.append(column.is_(None) if value is None else column == value)
+        async with self._session_factory() as session:
+            result = await session.execute(sqlalchemy.select(AgentInteraction).where(*conditions))
+            records = [self._to_dict(row) for row in result.scalars()]
+        matches = [record for record in records if record['submission'] == submission]
+        return matches[0] if len(matches) == 1 else None
 
     async def get_request(self, run_id: str, interaction_id: str) -> dict[str, typing.Any] | None:
         """Return a request by the runner-visible identity."""
@@ -283,7 +346,7 @@ class InteractionStore:
             if expires_at is not None and expires_at <= now:
                 row.status = 'expired'
                 row.status_reason = 'interaction expired before submission'
-                row.updated_at = now
+                row.updated_at = _db_datetime(now)
                 await session.commit()
                 raise InteractionExpiredError('Interaction has expired')
 
@@ -297,9 +360,9 @@ class InteractionStore:
                 )
                 .values(
                     status='submitted',
-                    submitted_at=submission_time,
+                    submitted_at=_db_datetime(submission_time),
                     submission_json=_json_dumps(submission),
-                    updated_at=now,
+                    updated_at=_db_datetime(now),
                 )
             )
             if update_result.rowcount != 1:
@@ -323,7 +386,7 @@ class InteractionStore:
                     AgentInteraction.interaction_id == interaction_id,
                     AgentInteraction.status == 'pending',
                 )
-                .values(status='delivery_failed', status_reason=reason, updated_at=now)
+                .values(status='delivery_failed', status_reason=reason, updated_at=_db_datetime(now))
             )
             await session.commit()
             return result.rowcount == 1
@@ -337,12 +400,12 @@ class InteractionStore:
                 .where(
                     AgentInteraction.status == 'pending',
                     AgentInteraction.expires_at.is_not(None),
-                    AgentInteraction.expires_at <= cutoff,
+                    AgentInteraction.expires_at <= _db_datetime(cutoff),
                 )
                 .values(
                     status='expired',
                     status_reason='interaction expired',
-                    updated_at=cutoff,
+                    updated_at=_db_datetime(cutoff),
                 )
             )
             await session.commit()

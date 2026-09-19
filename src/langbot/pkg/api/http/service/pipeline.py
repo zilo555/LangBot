@@ -13,7 +13,7 @@ from ....pipeline.extension_preferences import (
     validate_extension_preferences,
 )
 from ....workspace.errors import WorkspaceNotFoundError
-from .secrets import contains_secret_placeholder, redact_secrets, restore_secret_placeholders
+from .secrets import redact_secrets, restore_secret_placeholders
 from .tenant import TenantContext, require_workspace_uuid, scope_statement
 
 
@@ -213,12 +213,24 @@ class PipelineService:
             pipeline_data.pop(protected_field, None)
 
         if 'config' in pipeline_data:
-            current_config = None
-            if contains_secret_placeholder(pipeline_data['config']):
-                current_pipeline = await self.get_pipeline(context, pipeline_uuid, include_secret=True)
-                if current_pipeline is None:
-                    raise WorkspaceNotFoundError('Pipeline not found')
-                current_config = current_pipeline.get('config', {})
+            current_pipeline = await self.get_pipeline(context, pipeline_uuid, include_secret=True)
+            if current_pipeline is None:
+                raise WorkspaceNotFoundError('Pipeline not found')
+            current_config = current_pipeline.get('config', {})
+            old_ai = current_config.get('ai', {}) if isinstance(current_config, dict) else {}
+            old_runner = old_ai.get('runner') if isinstance(old_ai, dict) else None
+            legacy_binding = (
+                isinstance(old_runner, str)
+                and bool(old_runner)
+                or isinstance(old_runner, dict)
+                and bool(old_runner.get('runner'))
+                and not old_runner.get('id')
+            )
+            new_config = pipeline_data['config']
+            new_ai = new_config.get('ai', {}) if isinstance(new_config, dict) else {}
+            new_runner = new_ai.get('runner') if isinstance(new_ai, dict) else None
+            if legacy_binding and isinstance(new_runner, dict) and new_runner.get('id'):
+                raise ValueError('manual_migration_required')
             pipeline_data['config'] = restore_secret_placeholders(
                 pipeline_data['config'],
                 current_config if current_config is not None else {},

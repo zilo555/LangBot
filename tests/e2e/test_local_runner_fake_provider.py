@@ -1,7 +1,7 @@
 """E2E coverage for the official Local Agent runner with fake Host resources.
 
 These tests start the real LangBot application and the real SDK Plugin Runtime,
-load the sibling ``langbot-local-agent`` plugin, and verify Local Agent paths
+load the consolidated ``langbot-plugin-demo/Runner/LocalAgent`` plugin, and verify Local Agent paths
 that must cross Host run-scoped APIs without calling any external provider.
 """
 
@@ -45,7 +45,7 @@ def _free_port() -> int:
 def _local_agent_repo() -> Path:
     """Return the sibling local-agent repository used by this workspace E2E."""
     project_root = find_project_root()
-    return project_root.parent / 'langbot-local-agent'
+    return project_root.parent / 'langbot-plugin-demo' / 'Runner' / 'LocalAgent'
 
 
 def _package_local_agent_plugin(tmpdir: Path) -> Path:
@@ -1010,3 +1010,125 @@ def test_local_runner_combines_rag_compaction_and_multi_turn_tool_loop(
         assert 'SUMMARY_COMBO compacted older history' in checkpoint['summary']
     finally:
         conn.close()
+
+
+def test_local_runner_owns_box_reuse_and_explicit_files(
+    local_agent_e2e_tmpdir,
+    local_agent_e2e_config_path,
+    local_agent_runtime_process,
+):
+    """Real plugin RPC and Docker sandbox, with only the model scripted."""
+    del local_agent_e2e_config_path, local_agent_runtime_process
+    import base64
+    from langbot_plugin.box.backend import DockerBackend
+    from langbot_plugin.box.runtime import BoxRuntime
+    from langbot_plugin.api.entities.builtin.runner.input import InputAttachment
+    from langbot.pkg.box.service import BoxService
+    from langbot.pkg.box.runner import RunnerBoxService, binding_for
+    from tests.unit_tests.box.test_box_service import _InProcessBoxRuntimeClient
+
+    class TestDockerBackend(DockerBackend):
+        async def cleanup_orphaned_containers(self, current_instance_id=''):
+            # This test must never clean up a developer's unrelated containers.
+            pass
+
+    class Client(_InProcessBoxRuntimeClient):
+        async def get_status(self, *, action_context=None):
+            return {**await self._runtime.get_status(), 'capacity': await self._runtime.get_capacity(action_context)}
+
+        async def create_session(self, spec, *, action_context=None):
+            return await self._runtime.create_session(spec, action_context=action_context)
+
+        async def execute(self, spec, *, action_context=None):
+            return await self._runtime.execute(spec, action_context=action_context)
+
+        async def get_sessions(self, *, action_context=None):
+            return self._runtime.get_sessions_for_workspace(action_context)
+
+    class ToolManager(_FakeToolManager):
+        def __init__(self, box):
+            super().__init__()
+            self.box = box
+            self.bindings = []
+
+        async def get_resolved_tool_catalog(self, *args, **kwargs):
+            return [{'name': 'exec', 'source': 'native', 'source_id': None}]
+
+        async def get_tool_schema(self, context, tool_name, source_ref=None):
+            return 'Copy the input into the output directory.', {
+                'type': 'object',
+                'properties': {'query': {'type': 'string'}},
+                'required': ['query'],
+            }
+
+        async def execute_func_call(self, name, parameters, query=None, source_ref=None):
+            binding = binding_for(query)
+            self.bindings.append((binding.session_id, binding.run_id))
+            source = next(iter(binding.imported.values()))['path']
+            outbox = f'/workspace/outbox/{binding.io_scope}'
+            # Shell arguments are Host-issued paths, never model input.
+            import shlex
+
+            result = await self.box.execute_tool(
+                {
+                    'command': f'mkdir -p {shlex.quote(outbox)} && cp {shlex.quote(source)} {shlex.quote(outbox + "/answer.txt")}'
+                },
+                query,
+            )
+            assert result['ok'], result
+            return result
+
+    async def probe(ap):
+        backend = TestDockerBackend(ap.logger)
+        if not await backend.is_available():
+            pytest.skip('Docker is required for the real Box probe')
+        runtime = BoxRuntime(logger=ap.logger, backends=[backend], max_sessions=1)
+        ap.instance_config.data['box'].update(
+            {
+                'enabled': True,
+                'backend': 'docker',
+                'local': {'host_root': str(local_agent_e2e_tmpdir / 'box-files'), 'image': 'python:3.12-alpine'},
+            }
+        )
+        box = BoxService(ap, client=Client(ap.logger, runtime))
+        ap.box_service = box
+        await box.initialize()
+        manager = ToolManager(box)
+        ap.tool_mgr = manager
+        fake = await _inject_fake_llm_model(ap)
+        context = await ap.plugin_connector._current_execution_context()
+        try:
+            for index in range(2):
+                fake.queue_llm_responses(_scripted_tool_call('exec'), 'File is ready.')
+                event = _event(
+                    event_id=f'box-event-{index}',
+                    conversation_id=f'box-conversation-{index}',
+                    text='Copy this attachment into the outbox.',
+                )
+                event.input.attachments = [
+                    InputAttachment(
+                        type='file', name='input.txt', content=base64.b64encode(f'run-{index}'.encode()).decode()
+                    )
+                ]
+                binding = _binding(
+                    binding_id=f'box-binding-{index}',
+                    allowed_tool_names=['exec'],
+                    runner_config={'box-enabled': True, 'box-session-id-template': '{global}'},
+                )
+                binding.processor_type = 'pipeline'
+                messages = await _run_runner(ap, event, binding)
+                output = [component for message in messages for component in (message.attachments or [])]
+                assert len(output) == 1, messages
+                assert base64.b64decode(output[0].base64) == f'run-{index}'.encode()
+                status = await RunnerBoxService(box).status(context)
+                assert status['used'] == 1 and status['remaining'] == 0, status
+            assert manager.bindings[0][0] == manager.bindings[1][0]
+            assert manager.bindings[0][1] != manager.bindings[1][1]
+            from langbot_plugin.box.errors import BoxCapacityExceededError
+
+            with pytest.raises(BoxCapacityExceededError):
+                await RunnerBoxService(box).acquire(context, {'reuse_key': 'different'})
+        finally:
+            await box.shutdown()
+
+    _run_local_agent_probe(local_agent_e2e_tmpdir, probe)

@@ -23,6 +23,11 @@ from langbot_plugin.api.entities.builtin.pipeline.query import provider_session
 
 from ..core import app
 from . import handler
+from .errors import (
+    PluginRuntimeNotConnectedError,
+    PluginInstallationFailedError,
+    MarketplacePluginVersionNotFoundError,
+)
 from .archive import inspect_plugin_archive_metadata
 from .github import (
     validate_github_plugin_install_info,
@@ -89,8 +94,10 @@ async def _read_httpx_response_limited(
     response: httpx.Response,
     *,
     max_bytes: int,
+    task_context: taskmgr.TaskContext | None = None,
 ) -> bytes:
     content_length = response.headers.get('content-length')
+    declared_size = None
     if content_length is not None:
         try:
             declared_size = int(content_length)
@@ -99,9 +106,16 @@ async def _read_httpx_response_limited(
         if declared_size is not None and declared_size > max_bytes:
             raise ValueError(f'Remote response exceeds the {max_bytes}-byte limit')
 
+    started = time.monotonic()
+    if task_context is not None:
+        task_context.metadata.update(download_current=0, download_total=max(declared_size or 0, 0))
     body = bytearray()
     async for chunk in response.aiter_bytes(chunk_size=64 * 1024):
         body.extend(chunk)
+        if task_context is not None:
+            task_context.metadata.update(
+                download_current=len(body), download_speed=len(body) / max(time.monotonic() - started, 0.001)
+            )
         if len(body) > max_bytes:
             raise ValueError(f'Remote response exceeds the {max_bytes}-byte limit')
     return bytes(body)
@@ -113,14 +127,25 @@ async def _marketplace_get(
     *,
     max_bytes: int,
     allow_not_found: bool = False,
+    task_context: taskmgr.TaskContext | None = None,
 ) -> tuple[int, bytes]:
     async with client.stream('GET', url) as response:
         if allow_not_found and response.status_code == 404:
             return response.status_code, b''
+        if response.is_error:
+            body = await _read_httpx_response_limited(response, max_bytes=min(max_bytes, 64 * 1024))
+            try:
+                payload = json.loads(body)
+            except (ValueError, UnicodeDecodeError):
+                payload = {}
+            # Space currently returns HTTP 500 for a missing plugin release.
+            if isinstance(payload, dict) and str(payload.get('msg', '')).startswith('plugin version not found:'):
+                raise MarketplacePluginVersionNotFoundError('The requested plugin version is not available')
         response.raise_for_status()
         return response.status_code, await _read_httpx_response_limited(
             response,
             max_bytes=max_bytes,
+            task_context=task_context,
         )
 
 
@@ -132,25 +157,6 @@ def _decode_json_object(body: bytes, *, subject: str) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise ValueError(f'{subject} returned a non-object response')
     return payload
-
-
-class PluginRuntimeNotConnectedError(RuntimeError):
-    """Raised when plugin runtime operations are requested before connection."""
-
-
-class PluginInstallationFailedError(RuntimeError):
-    """Stable Runtime desired-state failure for one plugin installation."""
-
-    def __init__(
-        self,
-        installation_uuid: str,
-        error_code: str,
-        message: str,
-    ) -> None:
-        self.installation_uuid = installation_uuid
-        self.error_code = error_code
-        self.runtime_message = message
-        super().__init__(f'Plugin installation {installation_uuid} failed [{error_code}]: {message}')
 
 
 class PluginRuntimeConnector(ManagedRuntimeConnector):
@@ -1631,6 +1637,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
         plugin_author: str,
         plugin_name: str,
         task_context: taskmgr.TaskContext | None,
+        version: str | None = None,
     ) -> tuple[bytes | None, str | None]:
         """Return a plugin package, or install an MCP/skill and return none."""
 
@@ -1640,6 +1647,23 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
             timeout=15,
             event_hooks=httpclient.httpx_response_limit_hooks(_MARKETPLACE_PLUGIN_DOWNLOAD_MAX_BYTES),
         ) as client:
+            if version is not None:
+                if (
+                    not isinstance(version, str)
+                    or not version
+                    or any(
+                        c not in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._+-' for c in version
+                    )
+                ):
+                    raise ValueError('Invalid plugin version')
+                _status, package = await _marketplace_get(
+                    client,
+                    f'{space_url}/api/v1/marketplace/plugins/download/{plugin_author}/{plugin_name}/{version}',
+                    max_bytes=_MARKETPLACE_PLUGIN_DOWNLOAD_MAX_BYTES,
+                    task_context=task_context,
+                )
+                return package, version
+
             mcp_status, mcp_body = await _marketplace_get(
                 client,
                 f'{space_url}/api/v1/marketplace/mcps/{plugin_author}/{plugin_name}',
@@ -1726,11 +1750,13 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
             if task_context is not None:
                 task_context.set_current_action('downloading plugin package')
                 task_context.metadata['progress_percent'] = 15
+            version_options = {'version': install_info['plugin_version']} if install_info.get('plugin_version') else {}
             file_bytes, version = await self._download_marketplace_package(
                 execution_context,
                 plugin_author,
                 plugin_name,
                 task_context,
+                **version_options,
             )
             if file_bytes is None:
                 return

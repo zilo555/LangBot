@@ -491,6 +491,7 @@ export default function ModelsPanel({
       // Get the provider info
       const provider = providers.find((p) => p.uuid === providerUuid);
       const providerData = {
+        uuid: providerUuid,
         requester: provider?.requester || '',
         base_url: provider?.base_url || '',
         api_keys: provider?.api_keys || [],
@@ -500,7 +501,7 @@ export default function ModelsPanel({
         await httpClient.testLLMModel('_', {
           uuid: '',
           name,
-          provider_uuid: '',
+          provider_uuid: providerUuid,
           provider: providerData,
           abilities,
           reasoning_config: reasoningConfig,
@@ -510,7 +511,7 @@ export default function ModelsPanel({
         await httpClient.testEmbeddingModel('_', {
           uuid: '',
           name,
-          provider_uuid: '',
+          provider_uuid: providerUuid,
           provider: providerData,
           extra_args: extraArgsObj,
         } as never);
@@ -518,7 +519,7 @@ export default function ModelsPanel({
         await httpClient.testRerankModel('_', {
           uuid: '',
           name,
-          provider_uuid: '',
+          provider_uuid: providerUuid,
           provider: providerData,
           extra_args: extraArgsObj,
         } as never);
@@ -540,6 +541,29 @@ export default function ModelsPanel({
     loadProviders();
     // Refresh expanded providers
     expandedProviders.forEach((uuid) => loadProviderModels(uuid));
+  }
+
+  async function handleProviderDeleted(providerUuid: string) {
+    setProviders((prev) =>
+      prev.filter((provider) => provider.uuid !== providerUuid),
+    );
+    setProviderModels((prev) => {
+      const next = { ...prev };
+      delete next[providerUuid];
+      return next;
+    });
+    setExpandedProviders((prev) => {
+      const next = new Set(prev);
+      next.delete(providerUuid);
+      return next;
+    });
+    await Promise.all([
+      loadProviders(),
+      ...Array.from(expandedProviders)
+        .filter((uuid) => uuid !== providerUuid)
+        .map((uuid) => loadProviderModels(uuid)),
+    ]);
+    setProviderFormOpen(false);
   }
 
   function renderProviderCard(
@@ -674,8 +698,14 @@ export default function ModelsPanel({
         )}
       </PanelBody>
 
-      <Dialog open={providerFormOpen} onOpenChange={setProviderFormOpen}>
-        <DialogContent className="w-full max-w-[calc(100%-2rem)] p-4 sm:max-w-[600px] sm:p-6">
+      <Dialog
+        open={providerFormOpen}
+        onOpenChange={(open) => {
+          if (!open) handleFormClose();
+          else setProviderFormOpen(true);
+        }}
+      >
+        <DialogContent className="w-full max-w-[calc(100%-2rem)] max-h-[calc(100dvh-2rem)] overflow-y-auto p-4 sm:max-w-[600px] sm:p-6">
           <DialogHeader>
             <DialogTitle>
               {editingProviderId
@@ -683,11 +713,15 @@ export default function ModelsPanel({
                 : t('models.addProvider')}
             </DialogTitle>
           </DialogHeader>
-          <ProviderForm
-            providerId={editingProviderId || undefined}
-            onFormSubmit={handleFormClose}
-            onFormCancel={() => setProviderFormOpen(false)}
-          />
+          {providerFormOpen && (
+            <ProviderForm
+              key={editingProviderId || 'new'}
+              providerId={editingProviderId || undefined}
+              onFormSubmit={handleFormClose}
+              onFormCancel={handleFormClose}
+              onProviderDeleted={canManage ? handleProviderDeleted : undefined}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </>

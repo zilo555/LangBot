@@ -91,15 +91,123 @@ async function createDraftBot(page: Page, adapterLabel: string) {
 }
 
 test.describe('wizard and QR platform regressions', () => {
-  test('opens the Page Bot test panel after the first and every later save', async ({
+  test('starts with message platforms directly and keeps legacy adapters available', async ({
+    page,
+  }) => {
+    await installLangBotApiMocks(page, { authenticated: true });
+    const adapter = adapterWithQrLogin(
+      'message-adapter',
+      'Message Adapter',
+      'feishu',
+    );
+    await page.route('**/api/v1/platform/adapters', async (route) => {
+      await route.fulfill({
+        contentType: 'application/json',
+        body: ok({
+          adapters: [
+            adapter,
+            adapter,
+            {
+              ...adapter,
+              name: 'events-only',
+              label: { en_US: 'Events Only' },
+              spec: {
+                ...adapter.spec,
+                supported_events: ['group.member_joined'],
+              },
+            },
+            {
+              ...adapter,
+              name: 'legacy',
+              label: { en_US: 'Legacy Message Adapter' },
+              spec: {
+                ...adapter.spec,
+                legacy: true,
+                supported_events: undefined,
+              },
+            },
+          ],
+        }),
+      });
+    });
+    await page.goto('/wizard');
+    await expect(
+      page.getByRole('heading', { name: 'Select a Platform' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', {
+        name: /Reply to messages|Welcome new members/,
+      }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByText('Message Adapter', { exact: true }),
+    ).toHaveCount(1);
+    await expect(page.getByText('Events Only', { exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: /Legacy Adapters/i }).click();
+    await expect(
+      page.getByText('Legacy Message Adapter', { exact: true }),
+    ).toBeVisible();
+    await page.getByText('Message Adapter', { exact: true }).click();
+    await expect(
+      page.getByRole('button', { name: 'Confirm, Create Bot' }),
+    ).toBeEnabled();
+  });
+
+  test('old non-message drafts start fresh without modifying their Agent or bot', async ({
+    page,
+  }) => {
+    await installLangBotApiMocks(page, { authenticated: true });
+    await page.route('**/api/v1/system/info', async (route) => {
+      await route.fulfill({
+        contentType: 'application/json',
+        body: ok({
+          version: 'frontend-smoke',
+          edition: 'community',
+          wizard_status: 'none',
+          cloud_service_url: 'https://space.langbot.app',
+          enable_marketplace: true,
+          wizard_progress: {
+            step: 2,
+            selected_scenario: 'welcome_members',
+            created_bot_uuid: 'old-bot',
+            selected_adapter: 'test',
+          },
+        }),
+      });
+    });
+    const resourceRequests: string[] = [];
+    page.on('request', (request) => {
+      if (
+        /\/api\/v1\/(agents|pipelines|platform\/bots)(\/[^_]|$)/.test(
+          new URL(request.url()).pathname,
+        ) &&
+        request.method() !== 'GET'
+      ) {
+        resourceRequests.push(request.url());
+      }
+    });
+    await page.goto('/wizard');
+    await expect(
+      page.getByRole('heading', { name: 'Select a Platform' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Confirm, Create Bot' }),
+    ).toBeDisabled();
+    expect(resourceRequests).toEqual([]);
+  });
+
+  test('loads the Page Bot from the API origin, retries failures, and reopens after every save', async ({
     page,
   }) => {
     await installLangBotApiMocks(page, { authenticated: true });
 
     let pipelineCreateCount = 0;
     let boundPipelineUuid: string | null = null;
+    let backendOrigin = '';
     page.on('request', (request) => {
       const url = new URL(request.url());
+      if (url.pathname === '/api/v1/platform/adapters')
+        backendOrigin = url.origin;
       if (request.method() === 'POST' && url.pathname === '/api/v1/pipelines') {
         pipelineCreateCount += 1;
       }
@@ -160,8 +268,10 @@ test.describe('wizard and QR platform regressions', () => {
       path.resolve(process.cwd(), '../src/langbot/templates/embed/widget.js'),
       'utf8',
     );
+    let widgetAvailable = false;
     await page.route('**/api/v1/embed/*/widget.js?*', async (route) => {
-      if (!boundPipelineUuid || pipelineCreateCount === 0) {
+      expect(new URL(route.request().url()).origin).toBe(backendOrigin);
+      if (!widgetAvailable || !boundPipelineUuid || pipelineCreateCount === 0) {
         await route.fulfill({
           status: 404,
           contentType: 'application/javascript',
@@ -184,7 +294,6 @@ test.describe('wizard and QR platform regressions', () => {
     });
 
     await page.goto('/wizard');
-    await page.getByRole('button', { name: /Reply to messages/ }).click();
     await page.getByText('Page Bot', { exact: true }).click();
     await page.getByRole('button', { name: 'Confirm, Create Bot' }).click();
 
@@ -195,6 +304,15 @@ test.describe('wizard and QR platform regressions', () => {
 
     await expect.poll(() => pipelineCreateCount).toBe(1);
     await expect.poll(() => boundPipelineUuid).toBe('pipeline-1');
+
+    await expect(
+      page.getByText(
+        'Failed to load the test chat. Please save the configuration again to retry.',
+        { exact: true },
+      ),
+    ).toBeVisible();
+    widgetAvailable = true;
+    await saveButton.click();
 
     const widgetRoot = page.locator('#langbot-widget-root');
     await expect(widgetRoot).toBeAttached();
@@ -337,7 +455,6 @@ test.describe('wizard and QR platform regressions', () => {
     );
 
     await page.goto('/wizard');
-    await page.getByRole('button', { name: /Reply to messages/ }).click();
     await page.getByText('HTTP Bot', { exact: true }).click();
     await page.getByRole('button', { name: 'Confirm, Create Bot' }).click();
     await page
@@ -354,12 +471,43 @@ test.describe('wizard and QR platform regressions', () => {
     await expect.poll(() => inboundTestCount).toBe(1);
   });
 
-  test('blocks deployment until required Runner configuration is real', async ({
+  test('creates only a message pipeline after message verification and valid Runner configuration', async ({
     page,
   }) => {
     await installLangBotApiMocks(page, {
       authenticated: true,
       withAdapterEvents: true,
+    });
+    const processorRequests: string[] = [];
+    page.on('request', (request) => {
+      const path = new URL(request.url()).pathname;
+      if (
+        request.method() === 'POST' &&
+        ['/api/v1/pipelines', '/api/v1/agents'].includes(path)
+      ) {
+        processorRequests.push(path);
+      }
+    });
+    let messageReceived = false;
+    await page.route('**/api/v1/platform/bots/*/logs', async (route) => {
+      await route.fulfill({
+        contentType: 'application/json',
+        body: ok({
+          logs: messageReceived
+            ? [
+                {
+                  seq_id: 1,
+                  timestamp: Date.now() / 1000,
+                  level: 'info',
+                  text: 'Received message',
+                  images: [],
+                  message_session_id: 'person_123',
+                },
+              ]
+            : [],
+          total_count: messageReceived ? 1 : 0,
+        }),
+      });
     });
     await page.route('**/api/v1/pipelines/_/metadata', async (route) => {
       await route.fulfill({
@@ -371,6 +519,17 @@ test.describe('wizard and QR platform regressions', () => {
               name: 'ai',
               label: { en_US: 'AI Feature', zh_Hans: 'AI 能力' },
               stages: [
+                {
+                  name: 'plugin:langbot-team/LocalAgent/default',
+                  config: [
+                    {
+                      name: 'model',
+                      type: 'model-fallback-selector',
+                      required: true,
+                      default: { primary: 'llm-valid', fallbacks: [] },
+                    },
+                  ],
+                },
                 {
                   name: 'runner',
                   label: { en_US: 'Runtime', zh_Hans: '运行方式' },
@@ -418,17 +577,41 @@ test.describe('wizard and QR platform regressions', () => {
     });
 
     await page.goto('/wizard');
-    await page.getByRole('button', { name: /Welcome new members/ }).click();
     await page.getByText('Playwright Adapter', { exact: true }).click();
     await page.getByRole('button', { name: 'Confirm, Create Bot' }).click();
     await page.getByRole('button', { name: 'Save & Enable Bot' }).click();
+    await expect(page.getByRole('button', { name: 'Next' })).toBeDisabled();
+    messageReceived = true;
     await page.getByRole('button', { name: 'Next' }).click();
-    await page.getByText('External Runner', { exact: true }).click();
+    await expect(
+      page.getByText('Use the default setup', { exact: true }),
+    ).toBeVisible();
+    await page.getByText('Connect an External Agent', { exact: true }).click();
+    await page
+      .locator('[data-slot="card"]')
+      .filter({ has: page.getByText('External Runner', { exact: true }) })
+      .getByRole('button', { name: 'Use This Runner' })
+      .click();
 
     const deployButton = page.getByRole('button', { name: 'Create & Deploy' });
     await expect(deployButton).toBeDisabled();
     await page.getByRole('textbox').fill('app-real-api-key');
     await expect(deployButton).toBeEnabled();
+    const bindingRequest = page.waitForRequest(
+      (request) =>
+        request.method() === 'PUT' &&
+        new URL(request.url()).pathname === '/api/v1/pipelines/pipeline-1',
+    );
+    await deployButton.click();
+    const body = (await bindingRequest).postDataJSON();
+    expect(body.config.ai.runner.id).toBe('external-runner');
+    expect(body.config.ai.runner_config['external-runner']['api-key']).toBe(
+      'app-real-api-key',
+    );
+    await expect(
+      page.getByRole('button', { name: 'Back to Workbench' }),
+    ).toBeVisible();
+    expect(processorRequests).toEqual(['/api/v1/pipelines']);
   });
 
   for (const qrPlatform of qrPlatforms) {

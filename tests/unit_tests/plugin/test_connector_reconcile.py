@@ -740,3 +740,25 @@ async def test_missing_artifact_repair_adds_dependency_failure_and_continues():
     ]
     assert setting_a.installation_uuid in connector._installation_failures
     assert setting_b.installation_uuid not in connector._installation_failures
+
+
+@pytest.mark.asyncio
+async def test_marketplace_download_honors_migration_version_without_latest_lookup(monkeypatch):
+    import langbot.pkg.plugin.connector as connector_module
+
+    connector = connection_result_connector(AsyncMock())
+    download = AsyncMock(return_value=(200, b'pinned-plugin-package'))
+    monkeypatch.setattr(connector_module, '_marketplace_get', download)
+    package, version = await connector._download_marketplace_package(
+        SimpleNamespace(), 'langbot-team', 'LocalAgent', None, version='0.1.6'
+    )
+    assert package == b'pinned-plugin-package'
+    assert version == '0.1.6'
+    download.assert_awaited_once()
+    assert download.call_args.args[1].endswith('/plugins/download/langbot-team/LocalAgent/0.1.6')
+    for version in ('../latest', '1.0?token=x', '1.0/other'):
+        with pytest.raises(ValueError, match='Invalid plugin version'):
+            await connector._download_marketplace_package(
+                SimpleNamespace(), 'langbot-team', 'LocalAgent', None, version=version
+            )
+    assert download.await_count == 1

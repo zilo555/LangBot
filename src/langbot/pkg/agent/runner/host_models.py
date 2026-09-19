@@ -17,6 +17,18 @@ from langbot_plugin.api.entities.builtin.runner.input import AgentInput
 from langbot_plugin.api.entities.builtin.runner.delivery import DeliveryContext
 
 
+class LegacyRunnerIdentity(pydantic.BaseModel):
+    """Host-captured native Query identity; never populated from event data/params."""
+
+    workspace_id: str | None = None
+    bot_id: str | None = None
+    pipeline_id: str | None = None
+    query_launcher_type: str | None = None
+    query_launcher_id: str | None = None
+    session_launcher_type: str | None = None
+    session_launcher_id: str | None = None
+
+
 class AgentEventEnvelope(pydantic.BaseModel):
     """Event envelope for LangBot Host event gateway.
 
@@ -68,6 +80,9 @@ class AgentEventEnvelope(pydantic.BaseModel):
 
     data: dict[str, typing.Any] = pydantic.Field(default_factory=dict)
     """Small structured event payload. Large payloads should be referenced via raw_ref."""
+
+    legacy_identity: LegacyRunnerIdentity | None = None
+    """Host-only provenance, separate from untrusted event payload and adapter params."""
 
 
 # Binding scope types

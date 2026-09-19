@@ -1,5 +1,14 @@
 import { BaseHttpClient, type RequestConfig } from './BaseHttpClient';
+import type {
+  PipelineMigrationPreview,
+  PipelineMigrationRequest,
+} from '@/app/infra/entities/api/pipeline-migration';
 import type { DebugExecutionEvent } from '@/app/infra/entities/api/agent-debug';
+import type {
+  CodexAuthStatus,
+  CodexDeviceAuthorization,
+  CodexDevicePoll,
+} from '@/app/infra/entities/codex';
 import {
   ApiRespProviderRequesters,
   ApiRespProviderRequester,
@@ -135,8 +144,52 @@ export class BackendClient extends BaseHttpClient {
     return this.put(`/api/v1/provider/providers/${uuid}`, provider);
   }
 
-  public deleteModelProvider(uuid: string): Promise<object> {
-    return this.delete(`/api/v1/provider/providers/${uuid}`);
+  public deleteModelProvider(uuid: string, cascade = false): Promise<object> {
+    return this.delete(
+      `/api/v1/provider/providers/${uuid}${cascade ? '?cascade=true' : ''}`,
+    );
+  }
+
+  public getCodexAuthStatus(
+    uuid: string,
+    signal?: AbortSignal,
+  ): Promise<CodexAuthStatus> {
+    return this.get(
+      `/api/v1/provider/providers/${uuid}/codex/status`,
+      undefined,
+      { signal },
+    );
+  }
+
+  public startCodexDeviceLogin(
+    uuid: string,
+  ): Promise<CodexDeviceAuthorization> {
+    return this.post(`/api/v1/provider/providers/${uuid}/codex/device`, {});
+  }
+
+  public pollCodexDeviceLogin(
+    uuid: string,
+    authorizationId: string,
+    signal?: AbortSignal,
+  ): Promise<CodexDevicePoll> {
+    return this.post(
+      `/api/v1/provider/providers/${uuid}/codex/device/poll`,
+      { authorization_id: authorizationId },
+      { signal },
+    );
+  }
+
+  public cancelCodexDeviceLogin(
+    uuid: string,
+    authorizationId: string,
+  ): Promise<object> {
+    return this.delete(
+      `/api/v1/provider/providers/${uuid}/codex/device/${encodeURIComponent(authorizationId)}`,
+    );
+  }
+
+  public disconnectCodex(uuid: string): Promise<object> {
+    return this.delete(`/api/v1/provider/providers/${uuid}/codex/auth`);
   }
 
   public scanProviderModels(
@@ -392,6 +445,19 @@ export class BackendClient extends BaseHttpClient {
     return this.get(`/api/v1/pipelines/${uuid}`);
   }
 
+  public getPipelineMigrationPreview(
+    config?: RequestConfig,
+  ): Promise<PipelineMigrationPreview> {
+    return this.get('/api/v1/pipelines/_/migration/preview', undefined, config);
+  }
+
+  public executePipelineMigration(
+    body: PipelineMigrationRequest,
+    config?: RequestConfig,
+  ): Promise<AsyncTaskCreatedResp & { pipeline_uuids?: string[] }> {
+    return this.post('/api/v1/pipelines/_/migration/execute', body, config);
+  }
+
   public createPipeline(pipeline: Pipeline): Promise<{
     uuid: string;
   }> {
@@ -624,8 +690,13 @@ export class BackendClient extends BaseHttpClient {
 
   public getBotSessions(
     botId: string,
-    limit: number = 100,
-    offset: number = 0,
+    options: {
+      limit: number;
+      offset: number;
+      startTime?: string;
+      endTime?: string;
+      userQuery?: string;
+    },
   ): Promise<{
     sessions: Array<{
       session_id: string;
@@ -645,15 +716,38 @@ export class BackendClient extends BaseHttpClient {
   }> {
     const queryParams = new URLSearchParams();
     queryParams.append('botId', botId);
-    queryParams.append('limit', limit.toString());
-    queryParams.append('offset', offset.toString());
+    queryParams.append('limit', options.limit.toString());
+    queryParams.append('offset', options.offset.toString());
+    if (options.startTime) {
+      queryParams.append('startTime', options.startTime);
+    }
+    if (options.endTime) {
+      queryParams.append('endTime', options.endTime);
+    }
+    if (options.userQuery) {
+      queryParams.append('userQuery', options.userQuery);
+    }
     return this.get(`/api/v1/monitoring/sessions?${queryParams.toString()}`);
+  }
+
+  public getSessionAnalysis<T>(
+    sessionId: string,
+    botId: string,
+    options: { startTime?: string; endTime?: string } = {},
+  ): Promise<T> {
+    const queryParams = new URLSearchParams({ botId });
+    if (options.startTime) queryParams.set('startTime', options.startTime);
+    if (options.endTime) queryParams.set('endTime', options.endTime);
+    return this.get(
+      `/api/v1/monitoring/sessions/${encodeURIComponent(sessionId)}/analysis?${queryParams.toString()}`,
+    );
   }
 
   public getSessionMessages(
     sessionId: string,
     limit: number = 200,
     offset: number = 0,
+    botId?: string,
   ): Promise<{
     messages: Array<{
       id: string;
@@ -677,6 +771,7 @@ export class BackendClient extends BaseHttpClient {
   }> {
     const queryParams = new URLSearchParams();
     queryParams.append('sessionId', sessionId);
+    if (botId) queryParams.append('botId', botId);
     queryParams.append('limit', limit.toString());
     queryParams.append('offset', offset.toString());
     return this.get(`/api/v1/monitoring/messages?${queryParams.toString()}`);
@@ -1266,8 +1361,8 @@ export class BackendClient extends BaseHttpClient {
     return this.get(`/api/v1/system/tasks${qs ? `?${qs}` : ''}`);
   }
 
-  public getAsyncTask(id: number): Promise<AsyncTask> {
-    return this.get(`/api/v1/system/tasks/${id}`);
+  public getAsyncTask(id: number, config?: RequestConfig): Promise<AsyncTask> {
+    return this.get(`/api/v1/system/tasks/${id}`, undefined, config);
   }
 
   public getPluginSystemStatus(): Promise<ApiRespPluginSystemStatus> {
@@ -1387,8 +1482,88 @@ export class BackendClient extends BaseHttpClient {
     invitation_registration_enabled?: boolean;
     password_login_enabled?: boolean;
     space_login_enabled?: boolean;
+    passkey_login_enabled?: boolean;
+    passkey_supported?: boolean;
   }> {
     return this.get('/api/v1/user/account-info', undefined, {
+      skipWorkspace: true,
+    });
+  }
+
+  // ============ Passkey (WebAuthn) API ============
+  public getPasskeyAuthOptions(
+    email?: string,
+    origin?: string,
+  ): Promise<{ options: any; challenge_token: string }> {
+    return this.post(
+      '/api/v1/user/passkey/auth/options',
+      { email, origin },
+      { skipWorkspace: true },
+    );
+  }
+
+  public verifyPasskeyAuth(
+    challenge_token: string,
+    credential: any,
+  ): Promise<{ token: string; user: string }> {
+    return this.post(
+      '/api/v1/user/passkey/auth/verify',
+      { challenge_token, credential },
+      { skipWorkspace: true },
+    );
+  }
+
+  public getPasskeyRegisterOptions(
+    origin?: string,
+  ): Promise<{ options: any; challenge_token: string }> {
+    return this.post(
+      '/api/v1/user/passkey/register/options',
+      { origin },
+      { skipWorkspace: true },
+    );
+  }
+
+  public verifyPasskeyRegister(
+    challenge_token: string,
+    credential: any,
+    name?: string,
+  ): Promise<{ uuid: string; name: string; created_at?: string }> {
+    return this.post(
+      '/api/v1/user/passkey/register/verify',
+      { challenge_token, credential, name },
+      { skipWorkspace: true },
+    );
+  }
+
+  public getPasskeys(): Promise<
+    Array<{
+      uuid: string;
+      name: string;
+      aaguid?: string;
+      transports?: string;
+      backed_up?: boolean;
+      created_at?: string;
+      last_used_at?: string;
+    }>
+  > {
+    return this.get('/api/v1/user/passkeys', undefined, {
+      skipWorkspace: true,
+    });
+  }
+
+  public renamePasskey(
+    uuid: string,
+    name: string,
+  ): Promise<{ uuid: string; name: string }> {
+    return this.patch(
+      `/api/v1/user/passkey/${encodeURIComponent(uuid)}`,
+      { name },
+      { skipWorkspace: true },
+    );
+  }
+
+  public deletePasskey(uuid: string): Promise<void> {
+    return this.delete(`/api/v1/user/passkey/${encodeURIComponent(uuid)}`, {
       skipWorkspace: true,
     });
   }
@@ -1512,6 +1687,7 @@ export class BackendClient extends BaseHttpClient {
   public async bindSpaceAccount(
     code: string,
     state: string,
+    redirectUri: string,
   ): Promise<{
     token: string;
     user: string;
@@ -1519,7 +1695,7 @@ export class BackendClient extends BaseHttpClient {
   }> {
     const response = await this.instance.post(
       '/api/v1/user/bind-space',
-      { code, state },
+      { code, state, redirect_uri: redirectUri },
       { skipWorkspace: true } as RequestConfig,
     );
     if (response.data.code !== 0) {
@@ -1555,6 +1731,7 @@ export class BackendClient extends BaseHttpClient {
   public async exchangeSpaceOAuthCode(
     code: string,
     state: string,
+    redirectUri: string,
     workspaceUuid?: string,
     launchAssertion?: string,
   ): Promise<{
@@ -1569,6 +1746,7 @@ export class BackendClient extends BaseHttpClient {
       {
         code,
         state,
+        redirect_uri: redirectUri,
         workspace_uuid: workspaceUuid,
         launch_assertion: launchAssertion,
       },
@@ -1591,6 +1769,11 @@ export class BackendClient extends BaseHttpClient {
     endTime?: string;
     limit?: number;
   }): Promise<{
+    traffic?: {
+      bucket: 'hour' | 'day';
+      points: Array<{ timestamp: string; messages: number; llm_calls: number }>;
+      truncated: boolean;
+    };
     overview: {
       total_messages: number;
       llm_calls: number;

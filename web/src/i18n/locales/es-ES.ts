@@ -1,4 +1,7 @@
+import pipelineMigration from './pipeline-migration/es-ES';
+
 const esES = {
+  pipelineMigration,
   sidebar: {
     home: 'Inicio',
     extensions: 'Extensiones',
@@ -15,6 +18,7 @@ const esES = {
     editionCloud: 'Cloud',
   },
   common: {
+    customValue: 'Personalizado',
     login: 'Iniciar sesión',
     logout: 'Cerrar sesión',
     accountOptions: 'Configuración',
@@ -79,7 +83,8 @@ const esES = {
     privacyPolicy: 'Política de privacidad',
     and: 'y',
     dataCollectionPolicy: 'Política de recopilación de datos',
-    dataCollectionPolicyUrl: 'https://link.langbot.app/en/docs/data-policy',
+    dataCollectionPolicyUrl:
+      'https://langbot.app/docs/en/insight/data-collection-policy',
     loading: 'Cargando...',
     fieldRequired: 'Este campo es obligatorio',
     or: 'o',
@@ -88,6 +93,11 @@ const esES = {
       'Recomendado: Usa API de modelos oficiales estables y servicios en la nube',
     loginLocal: 'Iniciar sesión con cuenta local',
     loginWithPassword: 'Iniciar sesión con contraseña',
+    loginWithPasskey: 'Iniciar sesión con Passkey',
+    passkeyLoginSuccess: 'Passkey verificada con éxito, iniciando sesión...',
+    passkeyLoginFailed: 'Error al iniciar sesión con Passkey',
+    passkeyNotSupported:
+      'Passkey no es compatible en este navegador o dispositivo',
     spaceLoginTitle: 'Iniciar sesión con una cuenta de LangBot',
     spaceLoginDescription:
       'Escanea el código QR o visita el enlace para autorizar',
@@ -186,6 +196,38 @@ const esES = {
     help: 'Obtener ayuda',
   },
   models: {
+    codex: {
+      account: 'Suscripción de ChatGPT',
+      description:
+        'Inicia sesión con tu cuenta de ChatGPT. La suscripción es independiente de la facturación de la API de OpenAI; los modelos y límites dependen de tu plan.',
+      disconnected: 'Sin conexión',
+      loading: 'Comprobando conexión…',
+      starting: 'Iniciando sesión…',
+      pending: 'Esperando autorización',
+      connected: 'Conectado',
+      expired: 'El inicio de sesión ha caducado. Solicita un nuevo código.',
+      error:
+        'No se pudo iniciar sesión. Comprueba la conexión e inténtalo de nuevo.',
+      canceling: 'Cancelando inicio de sesión…',
+      saveAndSignIn: 'Guardar e iniciar sesión',
+      done: 'Listo',
+      instructions:
+        'Introduce este código en la página de OpenAI. Mantén este diálogo abierto hasta completar el inicio de sesión.',
+      copyCode: 'Copiar código',
+      copied: 'Copiado',
+      copyManually: 'Selecciona y copia el código manualmente.',
+      continueAtOpenAI: 'Continuar en OpenAI',
+      expiresAt: 'El código caduca a las {{time}}.',
+      retrying: 'Conexión interrumpida. Reintentando automáticamente…',
+      cancelSignIn: 'Cancelar inicio de sesión',
+      tryAgain: 'Reintentar',
+      signIn: 'Iniciar sesión',
+      reconnect: 'Reconectar',
+      disconnect: 'Desconectar',
+      disconnectConfirm:
+        '¿Desconectar este proveedor? Sus modelos dejarán de funcionar hasta que vuelvas a iniciar sesión. Esto no cancela tu suscripción de ChatGPT.',
+      confirmDisconnect: 'Confirmar desconexión',
+    },
     title: 'Modelos',
     description:
       'Configura y gestiona los modelos que se pueden usar en los Pipelines',
@@ -223,7 +265,7 @@ const esES = {
     reasoningAbility: 'Razonamiento',
     reasoningLevel: 'Nivel de razonamiento',
     reasoningLevels: {
-      providerDefault: 'Predeterminado del proveedor',
+      providerDefault: 'Usar valor predeterminado del proveedor',
       disabled: 'Desactivado',
       enabled: 'Activado',
       minimal: 'Mínimo',
@@ -338,6 +380,8 @@ const esES = {
     providerSaveError: 'Error al guardar el proveedor: ',
     providerDeleted: 'Proveedor eliminado',
     providerDeleteError: 'Error al eliminar el proveedor: ',
+    deleteProviderCascadeConfirmation:
+      '¿Eliminar este proveedor y TODOS los modelos que contiene? Esta acción es irreversible y no se puede deshacer.',
     deleteProviderConfirmation:
       '¿Estás seguro de que deseas eliminar este proveedor?',
     loadError: 'Error al cargar datos',
@@ -566,6 +610,17 @@ const esES = {
     },
   },
   agents: {
+    monitoring: {
+      description:
+        'Consulta el evento, la salida del modelo y las herramientas de cada tarea.',
+      empty:
+        'Sin ejecuciones. Activa un evento o ejecuta una prueba de depuración.',
+      input: 'Entrada inicial',
+      eventData: 'Datos del evento',
+      execution: 'Pasos de ejecución',
+      rawEvents: 'Eventos sin procesar',
+      inputUnavailable: 'No se registró la entrada de esta ejecución.',
+    },
     eventProcessor: {
       configurations: 'Configuraciones de procesadores de plugins',
       configTab: 'Configuración',
@@ -604,6 +659,7 @@ const esES = {
       loadMore: 'Cargar más',
       activation:
         'Instala un plugin, crea una configuración de procesador y vincula un bot.',
+      status_timeout: 'Tiempo agotado',
       status_pending: 'Pendiente',
       status_running: 'En ejecución',
       status_completed: 'Completado',
@@ -1053,6 +1109,15 @@ const esES = {
     connectionSuccess: 'Conexión exitosa',
     connectionFailed: 'Error de conexión, por favor verifica la URL',
     connectionFailedStatus: 'Conexión fallida',
+    connectionUnreachable:
+      'No se puede acceder al servidor MCP. Compruebe que esté iniciado y accesible.',
+    connectionTimeout:
+      'El servidor MCP no respondió a tiempo. Compruebe el servicio o aumente el tiempo de espera.',
+    connectionHttpError:
+      'El servidor MCP devolvió HTTP {{status}}. Compruebe los requisitos de acceso y los registros del servidor.',
+    oauthAuthorizationRequired: 'Se requiere autorización OAuth',
+    oauthAuthorizationRequiredSuggestion:
+      'Este servidor MCP requiere inicio de sesión con OAuth. Aún no está disponible; agregue manualmente un encabezado Authorization si el servidor lo permite.',
     boxDisabledStdioRefused:
       'Los servidores MCP en modo stdio requieren el sandbox de Box, desactivado en la configuración (box.enabled = false).',
     boxUnavailableStdioRefused:
@@ -1529,6 +1594,20 @@ const esES = {
     bindSpaceWarning:
       'Después de vincular, tu correo de inicio de sesión se cambiará de {{localEmail}} al correo de la cuenta de LangBot.',
     bindSpaceSuccess: 'Cuenta de LangBot vinculada correctamente',
+    passkeySectionTitle: 'Llaves de acceso (Passkeys)',
+    passkeySectionDesc:
+      'Inicia sesión de forma segura sin contraseñas usando biometría o llaves de seguridad',
+    addPasskey: 'Añadir llave de acceso',
+    passkeyName: 'Nombre de la llave',
+    passkeyNamePlaceholder: 'p. ej., MacBook Touch ID, YubiKey',
+    passkeyCreated: 'Creada el {{date}}',
+    passkeyLastUsed: 'Último uso: {{date}}',
+    noPasskeys: 'No hay llaves de acceso registradas',
+    deletePasskeyConfirm:
+      '¿Seguro que deseas eliminar esta llave de acceso? Ya no podrás usarla para iniciar sesión.',
+    passkeyAddedSuccess: 'Llave de acceso añadida con éxito',
+    passkeyDeleteSuccess: 'Llave de acceso eliminada',
+    passkeyRenameSuccess: 'Nombre de llave de acceso modificado con éxito',
     bindSpaceFailed: 'Error al vincular la cuenta de LangBot',
     bindSpaceInvalidState:
       'Solicitud de vinculación no válida. Por favor, inténtalo de nuevo desde la configuración de la cuenta.',
@@ -1755,7 +1834,17 @@ const esES = {
     queryVariables: {
       title: 'Variables de consulta',
     },
+    loadError: 'No se pudieron cargar los datos de monitoreo',
+    partialMessages:
+      'Se muestran {{shown}} de {{total}} mensajes. Las trazas de conversación pueden estar incompletas.',
+    partialModelCalls: 'Se muestran {{shown}} de {{total}} llamadas al modelo.',
+    partialToolCalls:
+      'Se muestran {{shown}} de {{total}} llamadas a herramientas. Las trazas de conversación pueden estar incompletas.',
+    partialErrors: 'Se muestran {{shown}} de {{total}} errores.',
     trafficChart: {
+      unavailable: 'Agregación de tráfico no disponible',
+      truncated:
+        'Rango de tráfico truncado. Selecciona un intervalo más corto.',
       title: 'Resumen de tráfico',
       messages: 'Mensajes',
       llmCalls: 'Llamadas LLM',
@@ -1900,6 +1989,8 @@ const esES = {
         'El Bot recibió un mensaje. Puedes continuar al siguiente paso.',
       messageReceivedLocalAccountWarning:
         'La conexión del Bot está configurada correctamente y recibió un mensaje. Como no has iniciado sesión con una cuenta de LangBot, las llamadas al modelo pueden fallar; continúa al siguiente paso para añadir tu propio modelo.',
+      pageBotPreviewFailed:
+        'No se pudo cargar el chat de prueba. Guarda la configuración de nuevo para reintentar.',
       pageBotTestPrompt:
         'El Bot de página está activado. Haz clic en la burbuja de chat de la esquina inferior derecha y envía un mensaje para verificar el flujo completo de la conversación.',
       pageBotTestNotice:
@@ -1920,14 +2011,19 @@ const esES = {
         'Monitorea la actividad del Bot para verificar que la conexión con la plataforma funcione.',
     },
     aiEngine: {
+      defaultModelUnavailable:
+        'No hay un modelo predeterminado disponible. Inténtalo de nuevo.',
+      defaultRunnerUnavailable:
+        'Local Agent aún no está listo. Inténtalo de nuevo.',
+      preparingDefault: 'Preparando la IA predeterminada…',
       title: 'Configura el motor de IA',
       description:
         'Elige el motor de IA que impulsará la inteligencia de tu Bot.',
       optionalDescription:
-        'Este paso es opcional. Elige cómo quieres continuar con el Agent actual.',
+        'La IA ya está configurada. Puedes usarla o cambiar la conexión.',
       externalTitle: 'Conectar un Agent de una plataforma externa',
       externalDescription:
-        'Conecta Dify, n8n, Coze u otra plataforma y sustituye el Pipeline del Bot.',
+        'Conecta Dify, n8n, Coze u otro Agent externo mediante un plugin Runner.',
       ownModelTitle: 'Usar mi propio modelo',
       ownModelDescription:
         'Añade un proveedor y luego escanea o introduce manualmente un modelo para completar la configuración.',
@@ -1940,7 +2036,7 @@ const esES = {
       selectModelTitle: 'Elige un modelo',
       selectScannedModelTitle: 'Elige un modelo',
       selectScannedModelDescription:
-        'El modelo seleccionado será el modelo principal de un nuevo Pipeline y el Bot cambiará a él.',
+        'El modelo seleccionado sustituirá al modelo principal del pipeline de este bot.',
       scanModelMode: 'Detectar modelos',
       manualModelMode: 'Añadir manualmente',
       scanningModels: 'Detectando modelos disponibles…',
@@ -1959,12 +2055,13 @@ const esES = {
       manualModelOptions: 'Capacidades opcionales del modelo',
       editProvider: 'Editar proveedor',
       rescanModels: 'Volver a detectar modelos',
-      moreFeaturesTitle: 'Añadir más funciones al Agent',
+      moreFeaturesTitle: 'Usar la configuración predeterminada',
       moreFeaturesDescription:
-        'Abre el área de trabajo para añadir herramientas, bases de conocimiento y otras capacidades al Agent que se acaba de generar automáticamente.',
+        'Usa Local Agent y el modelo recomendado. Podrás añadir herramientas y bases de conocimiento después.',
       runnerDescription:
         'Selecciona un Runner para el Agent externo y configura su conexión.',
       backToChoices: 'Volver a las opciones',
+      backToList: 'Volver a la lista',
       createExternal: 'Crear y vincular',
       finishWithModel: 'Usar el modelo seleccionado y finalizar',
       openWorkbench: 'Abrir área de trabajo',

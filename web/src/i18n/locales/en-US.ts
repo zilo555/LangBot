@@ -1,3 +1,5 @@
+import pipelineMigration from './pipeline-migration/en-US';
+
 const enUS = {
   sidebarGuide: {
     label: 'Workspace tour',
@@ -172,6 +174,7 @@ const enUS = {
       },
     },
   },
+  pipelineMigration,
   sidebar: {
     home: 'Home',
     extensions: 'Extensions',
@@ -187,6 +190,7 @@ const enUS = {
     editionCloud: 'Cloud',
   },
   common: {
+    customValue: 'Custom',
     loadFailed: 'Failed to load. Please try again.',
     login: 'Login',
     logout: 'Logout',
@@ -256,7 +260,8 @@ const enUS = {
     privacyPolicy: 'Privacy Policy',
     and: 'and',
     dataCollectionPolicy: 'Data Collection Policy',
-    dataCollectionPolicyUrl: 'https://link.langbot.app/en/docs/data-policy',
+    dataCollectionPolicyUrl:
+      'https://langbot.app/docs/en/insight/data-collection-policy',
     loading: 'Loading...',
     fieldRequired: 'This field is required',
     or: 'or',
@@ -265,6 +270,10 @@ const enUS = {
       'Recommended: Use official stable model APIs and cloud services',
     loginLocal: 'Login with local account',
     loginWithPassword: 'Login with password',
+    loginWithPasskey: 'Sign in with Passkey',
+    passkeyLoginSuccess: 'Passkey verified successfully, signing in...',
+    passkeyLoginFailed: 'Failed to sign in with Passkey',
+    passkeyNotSupported: 'Passkey is not supported on this browser or device',
     spaceLoginTitle: 'Login with LangBot Account',
     spaceLoginDescription:
       'Scan the QR code or visit the link below to authorize',
@@ -361,6 +370,37 @@ const enUS = {
     help: 'Get Help',
   },
   models: {
+    codex: {
+      account: 'ChatGPT subscription',
+      description:
+        'Sign in with your ChatGPT account. Subscription access is separate from OpenAI API billing; model availability and usage limits depend on your plan.',
+      disconnected: 'Not connected',
+      loading: 'Checking connection…',
+      starting: 'Starting sign-in…',
+      pending: 'Waiting for authorization',
+      connected: 'Connected',
+      expired: 'Sign-in expired. Start again to get a new code.',
+      error: 'Unable to sign in. Check your connection and try again.',
+      canceling: 'Canceling sign-in…',
+      saveAndSignIn: 'Save and sign in',
+      done: 'Done',
+      instructions:
+        'Enter this code on the OpenAI page. Keep this dialog open until sign-in completes.',
+      copyCode: 'Copy code',
+      copied: 'Copied',
+      copyManually: 'Select and copy the code manually.',
+      continueAtOpenAI: 'Continue at OpenAI',
+      expiresAt: 'Code expires at {{time}}.',
+      retrying: 'Connection interrupted. Retrying automatically…',
+      cancelSignIn: 'Cancel sign-in',
+      tryAgain: 'Try again',
+      signIn: 'Sign in',
+      reconnect: 'Reconnect',
+      disconnect: 'Disconnect',
+      disconnectConfirm:
+        'Disconnect this provider? Its models will stop working until you sign in again. This does not cancel your ChatGPT subscription.',
+      confirmDisconnect: 'Confirm disconnect',
+    },
     title: 'Models',
     description: 'Configure and manage models that can be used in pipelines',
     createModel: 'Create Model',
@@ -397,7 +437,7 @@ const enUS = {
     reasoningAbility: 'Reasoning',
     reasoningLevel: 'Reasoning level',
     reasoningLevels: {
-      providerDefault: 'Provider default',
+      providerDefault: 'Use provider default',
       disabled: 'Off',
       enabled: 'On',
       minimal: 'Minimal',
@@ -509,6 +549,8 @@ const enUS = {
     providerSaveError: 'Failed to save provider: ',
     providerDeleted: 'Provider deleted',
     providerDeleteError: 'Failed to delete provider: ',
+    deleteProviderCascadeConfirmation:
+      'Delete this provider and ALL models it contains? This action is irreversible and cannot be undone.',
     deleteProviderConfirmation:
       'Are you sure you want to delete this provider?',
     loadError: 'Failed to load data',
@@ -928,6 +970,17 @@ const enUS = {
     },
   },
   agents: {
+    monitoring: {
+      description:
+        'Follow each task from its triggering event through model output and tool execution.',
+      empty:
+        'No runs yet. Trigger a platform event or run a debug test to see it here.',
+      input: 'Triggering input',
+      eventData: 'Event data',
+      execution: 'Execution steps',
+      rawEvents: 'Raw run events',
+      inputUnavailable: 'Input was not recorded for this run.',
+    },
     eventProcessor: {
       configurations: 'Plugin processor configurations',
       configTab: 'Configuration',
@@ -966,6 +1019,7 @@ const enUS = {
       loadMore: 'Load more',
       activation:
         'Install a plugin, create a processor configuration, then bind a bot.',
+      status_timeout: 'Timed out',
       status_pending: 'Pending',
       status_running: 'Running',
       status_completed: 'Completed',
@@ -1588,6 +1642,15 @@ const enUS = {
     connectionSuccess: 'Connection successful',
     connectionFailed: 'Connection failed, please check URL',
     connectionFailedStatus: 'Connection Failed',
+    connectionUnreachable:
+      'Cannot reach the MCP server. Check that it is running and accessible.',
+    connectionTimeout:
+      'The MCP server did not respond in time. Check the service or increase the timeout.',
+    connectionHttpError:
+      'The MCP server returned HTTP {{status}}. Check its access requirements and server logs.',
+    oauthAuthorizationRequired: 'OAuth authorization required',
+    oauthAuthorizationRequiredSuggestion:
+      'This MCP server requires OAuth sign-in. OAuth sign-in is not available yet; add an Authorization header manually if the server supports it.',
     boxDisabledStdioRefused:
       'Stdio MCP servers require the Box sandbox, which is disabled in config (box.enabled = false).',
     boxUnavailableStdioRefused:
@@ -2066,6 +2129,20 @@ const enUS = {
     bindSpaceWarning:
       'After binding, your login email will be changed from {{localEmail}} to the LangBot Account email.',
     bindSpaceSuccess: 'LangBot Account bound successfully',
+    passkeySectionTitle: 'Passkeys',
+    passkeySectionDesc:
+      'Sign in securely without passwords using biometrics or security keys',
+    addPasskey: 'Add Passkey',
+    passkeyName: 'Key Name',
+    passkeyNamePlaceholder: 'e.g., MacBook Touch ID, YubiKey',
+    passkeyCreated: 'Created on {{date}}',
+    passkeyLastUsed: 'Last used: {{date}}',
+    noPasskeys: 'No passkeys registered yet',
+    deletePasskeyConfirm:
+      'Are you sure you want to delete this passkey? You will no longer be able to use it to sign in.',
+    passkeyAddedSuccess: 'Passkey added successfully',
+    passkeyDeleteSuccess: 'Passkey deleted',
+    passkeyRenameSuccess: 'Passkey renamed successfully',
     bindSpaceFailed: 'Failed to bind LangBot Account',
     bindSpaceInvalidState:
       'Invalid bind request. Please try again from account settings.',
@@ -2371,7 +2448,16 @@ const enUS = {
     queryVariables: {
       title: 'Query Variables',
     },
+    loadError: 'Failed to load monitoring data',
+    partialMessages:
+      'Showing {{shown}} of {{total}} messages. Conversation traces may be incomplete.',
+    partialModelCalls: 'Showing {{shown}} of {{total}} model calls.',
+    partialToolCalls:
+      'Showing {{shown}} of {{total}} tool calls. Conversation traces may be incomplete.',
+    partialErrors: 'Showing {{shown}} of {{total}} errors.',
     trafficChart: {
+      unavailable: 'Traffic aggregation unavailable',
+      truncated: 'Traffic range truncated. Choose a shorter time range.',
       title: 'Traffic Overview',
       messages: 'Messages',
       llmCalls: 'LLM Calls',
@@ -2626,7 +2712,7 @@ const enUS = {
     next: 'Next',
     finish: 'Create & Deploy',
     confirmCreateBot: 'Confirm, Create Bot',
-    createSuccess: 'Processor created and linked to the bot successfully!',
+    createSuccess: 'Pipeline created and linked to bot successfully!',
     botCreateSuccess: 'Bot created successfully!',
     botSaveSuccess: 'Bot configuration saved and enabled!',
     createError: 'Failed to create resources',
@@ -2634,42 +2720,13 @@ const enUS = {
     completeSaveError: 'Failed to save completion status. Please try again.',
     step: {
       platform: 'Platform',
-      scenarioChannel: 'Scenario & Channel',
       botConfig: 'Bot Setup',
       aiEngine: 'AI Engine',
       done: 'Done',
     },
-    scenario: {
-      title: 'What should this bot do?',
-      description:
-        'Start with one outcome. You can add more behaviors after the bot is created.',
-      messageReply: 'Reply to messages',
-      messageReplyDescription:
-        'Answer incoming private or group messages with an AI Pipeline.',
-      welcomeMembers: 'Welcome new members',
-      welcomeMembersDescription: 'Run an Agent when someone joins a group.',
-      welcomeMembersPrompt:
-        'Welcome new group members with a short, friendly message. Use the available member and group context when present. Do not mention internal event names or system details.',
-      handleDepartures: 'Handle member departures',
-      handleDeparturesDescription:
-        'Run an Agent when someone leaves or is removed.',
-      handleDeparturesPrompt:
-        'Respond to group member departures with a brief, respectful message when a public response is appropriate. Do not speculate about why the member left or mention internal event names.',
-      handleModeration: 'Handle moderation events',
-      handleModerationDescription:
-        'Run an Agent when a group member is restricted.',
-      handleModerationPrompt:
-        'Write a concise, neutral group notice about the member restriction using only the available context. Do not invent details or mention internal event names.',
-      pipelineBadge: 'Pipeline',
-      agentBadge: 'Agent',
-    },
     platform: {
-      title: 'Select a Channel',
-      description:
-        'Only channels that support the selected scenario are shown.',
-      chooseScenarioFirst: 'Choose a scenario to see compatible channels.',
-      noCompatiblePlatforms:
-        'No installed channel currently supports this scenario.',
+      title: 'Select a Platform',
+      description: 'Choose the messaging platform your bot will connect to.',
     },
     botConfig: {
       title: 'Configure Your Bot',
@@ -2684,6 +2741,8 @@ const enUS = {
         'The bot received an IM message. You can continue to the next step.',
       messageReceivedLocalAccountWarning:
         'The bot-side connection is configured correctly and received an IM message. Because you are not signed in with a LangBot Account, model calls may fail; continue to the next step to add your own model.',
+      pageBotPreviewFailed:
+        'Failed to load the test chat. Please save the configuration again to retry.',
       pageBotTestPrompt:
         'Page Bot is enabled. Click the chat bubble in the lower-right corner and send a message to verify the full conversation flow.',
       pageBotTestNotice:
@@ -2704,14 +2763,18 @@ const enUS = {
         'Monitor bot activity to verify the platform connection is working.',
     },
     aiEngine: {
+      defaultModelUnavailable:
+        'No default chat model is available. Please retry.',
+      defaultRunnerUnavailable: 'Local Agent is not ready. Please retry.',
+      preparingDefault: 'Preparing default AI…',
       title: 'Select an AI Engine',
       description:
         "Choose the AI engine that will power your bot's intelligence.",
       optionalDescription:
-        'This step is optional. Choose how you want to continue with the current agent.',
+        'The default AI is ready. Keep it or choose another way to connect.',
       externalTitle: 'Connect an External Agent',
       externalDescription:
-        'Connect Dify, n8n, Coze, or another platform and replace the bot pipeline.',
+        'Connect Dify, n8n, Coze, or another external Agent through a Runner plugin.',
       ownModelTitle: 'Use My Own Model',
       ownModelDescription:
         'Add a provider, then scan or manually enter a model to finish setup.',
@@ -2724,7 +2787,7 @@ const enUS = {
       selectModelTitle: 'Choose a Model',
       selectScannedModelTitle: 'Choose a Model',
       selectScannedModelDescription:
-        'The selected model will be the primary model of a new pipeline, and the bot will switch to it.',
+        'The selected model will replace the primary model in this bot’s pipeline.',
       scanModelMode: 'Scan Models',
       manualModelMode: 'Add Manually',
       scanningModels: 'Scanning available models…',
@@ -2743,12 +2806,13 @@ const enUS = {
       manualModelOptions: 'Optional Model Capabilities',
       editProvider: 'Edit provider',
       rescanModels: 'Scan models again',
-      moreFeaturesTitle: 'Add More Agent Features',
+      moreFeaturesTitle: 'Use the default setup',
       moreFeaturesDescription:
-        'Open the workbench to add tools, knowledge bases, and other capabilities to the Agent that was just generated automatically.',
+        'Keep Local Agent and the recommended model. You can add tools and knowledge bases later.',
       runnerDescription:
         'Select a runner for the external agent and configure its connection.',
       backToChoices: 'Back to options',
+      backToList: 'Back to list',
       createExternal: 'Create and Bind',
       finishWithModel: 'Use Selected Model & Finish',
       openWorkbench: 'Open Workbench',
@@ -2783,7 +2847,7 @@ const enUS = {
     done: {
       title: 'All Set!',
       description:
-        'Your bot has been created and connected to its processor. You can now manage it from the workbench.',
+        'Your bot has been created and connected to its pipeline. You can now manage it from the workbench.',
       backToWorkbench: 'Back to Workbench',
     },
   },

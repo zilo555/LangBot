@@ -302,7 +302,7 @@ function makePipeline(
   };
 }
 
-function pipelineMetadata(withRunnerToolSelector = false) {
+export function pipelineMetadata(withRunnerToolSelector = false) {
   const runnerId = 'plugin:langbot-team/LocalAgent/default';
   return {
     configs: [

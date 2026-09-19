@@ -1,4 +1,7 @@
+import pipelineMigration from './pipeline-migration/vi-VN';
+
 const viVN = {
+  pipelineMigration,
   sidebar: {
     home: 'Trang chủ',
     extensions: 'Tiện ích mở rộng',
@@ -15,6 +18,7 @@ const viVN = {
     editionCloud: 'Cloud',
   },
   common: {
+    customValue: 'Tùy chỉnh',
     login: 'Đăng nhập',
     logout: 'Đăng xuất',
     accountOptions: 'Cài đặt',
@@ -77,7 +81,8 @@ const viVN = {
     privacyPolicy: 'Chính sách bảo mật',
     and: 'và',
     dataCollectionPolicy: 'Chính sách thu thập dữ liệu',
-    dataCollectionPolicyUrl: 'https://link.langbot.app/en/docs/data-policy',
+    dataCollectionPolicyUrl:
+      'https://langbot.app/docs/en/insight/data-collection-policy',
     loading: 'Đang tải...',
     fieldRequired: 'Trường này là bắt buộc',
     or: 'hoặc',
@@ -86,6 +91,10 @@ const viVN = {
       'Khuyến nghị: Sử dụng API mô hình ổn định chính thức và dịch vụ đám mây',
     loginLocal: 'Đăng nhập với tài khoản cục bộ',
     loginWithPassword: 'Đăng nhập bằng mật khẩu',
+    loginWithPasskey: 'Đăng nhập bằng Passkey',
+    passkeyLoginSuccess: 'Xác thực Passkey thành công, đang đăng nhập...',
+    passkeyLoginFailed: 'Đăng nhập bằng Passkey thất bại',
+    passkeyNotSupported: 'Trình duyệt hoặc thiết bị này không hỗ trợ Passkey',
     spaceLoginTitle: 'Đăng nhập bằng tài khoản LangBot',
     spaceLoginDescription:
       'Quét mã QR hoặc truy cập liên kết bên dưới để ủy quyền',
@@ -183,6 +192,37 @@ const viVN = {
     help: 'Trợ giúp',
   },
   models: {
+    codex: {
+      account: 'Gói đăng ký ChatGPT',
+      description:
+        'Đăng nhập bằng tài khoản ChatGPT. Gói đăng ký độc lập với thanh toán API OpenAI; mô hình và giới hạn sử dụng tùy thuộc vào gói của bạn.',
+      disconnected: 'Chưa kết nối',
+      loading: 'Đang kiểm tra kết nối…',
+      starting: 'Đang bắt đầu đăng nhập…',
+      pending: 'Đang chờ cấp quyền',
+      connected: 'Đã kết nối',
+      expired: 'Phiên đăng nhập đã hết hạn. Hãy lấy mã mới.',
+      error: 'Không thể đăng nhập. Kiểm tra kết nối và thử lại.',
+      canceling: 'Đang hủy đăng nhập…',
+      saveAndSignIn: 'Lưu và đăng nhập',
+      done: 'Xong',
+      instructions:
+        'Nhập mã này trên trang OpenAI. Giữ hộp thoại này mở cho đến khi đăng nhập hoàn tất.',
+      copyCode: 'Sao chép mã',
+      copied: 'Đã sao chép',
+      copyManually: 'Chọn và sao chép mã thủ công.',
+      continueAtOpenAI: 'Tiếp tục tại OpenAI',
+      expiresAt: 'Mã hết hạn lúc {{time}}.',
+      retrying: 'Kết nối bị gián đoạn. Đang tự động thử lại…',
+      cancelSignIn: 'Hủy đăng nhập',
+      tryAgain: 'Thử lại',
+      signIn: 'Đăng nhập',
+      reconnect: 'Kết nối lại',
+      disconnect: 'Ngắt kết nối',
+      disconnectConfirm:
+        'Ngắt kết nối nhà cung cấp này? Các mô hình sẽ ngừng hoạt động cho đến khi bạn đăng nhập lại. Thao tác này không hủy gói ChatGPT của bạn.',
+      confirmDisconnect: 'Xác nhận ngắt kết nối',
+    },
     title: 'Mô hình',
     description:
       'Cấu hình và quản lý các mô hình có thể sử dụng trong Pipeline',
@@ -220,7 +260,7 @@ const viVN = {
     reasoningAbility: 'Khả năng suy luận',
     reasoningLevel: 'Mức độ suy luận',
     reasoningLevels: {
-      providerDefault: 'Mặc định của nhà cung cấp',
+      providerDefault: 'Dùng giá trị mặc định của nhà cung cấp',
       disabled: 'Tắt',
       enabled: 'Bật',
       minimal: 'Tối thiểu',
@@ -331,6 +371,8 @@ const viVN = {
     providerSaveError: 'Lưu nhà cung cấp thất bại: ',
     providerDeleted: 'Đã xóa nhà cung cấp',
     providerDeleteError: 'Xóa nhà cung cấp thất bại: ',
+    deleteProviderCascadeConfirmation:
+      'Xóa nhà cung cấp này và TẤT CẢ mô hình bên trong? Hành động này không thể đảo ngược hoặc hoàn tác.',
     deleteProviderConfirmation:
       'Bạn có chắc chắn muốn xóa nhà cung cấp này không?',
     loadError: 'Tải dữ liệu thất bại',
@@ -558,6 +600,16 @@ const viVN = {
     },
   },
   agents: {
+    monitoring: {
+      description:
+        'Xem sự kiện kích hoạt, đầu ra mô hình và quá trình gọi công cụ của mỗi tác vụ.',
+      empty: 'Chưa có lượt chạy. Kích hoạt sự kiện hoặc chạy thử gỡ lỗi.',
+      input: 'Đầu vào kích hoạt',
+      eventData: 'Dữ liệu sự kiện',
+      execution: 'Quá trình thực thi',
+      rawEvents: 'Sự kiện gốc',
+      inputUnavailable: 'Đầu vào của lượt chạy này chưa được ghi lại.',
+    },
     eventProcessor: {
       configurations: 'Cấu hình bộ xử lý plugin',
       configTab: 'Cấu hình',
@@ -594,6 +646,7 @@ const viVN = {
       destination: 'Đích gửi',
       loadMore: 'Tải thêm',
       activation: 'Cài plugin, tạo cấu hình bộ xử lý rồi liên kết bot.',
+      status_timeout: 'Hết thời gian',
       status_pending: 'Đang chờ',
       status_running: 'Đang chạy',
       status_completed: 'Hoàn tất',
@@ -1036,6 +1089,15 @@ const viVN = {
     connectionSuccess: 'Kết nối thành công',
     connectionFailed: 'Kết nối thất bại, vui lòng kiểm tra URL',
     connectionFailedStatus: 'Kết nối thất bại',
+    connectionUnreachable:
+      'Không thể kết nối tới máy chủ MCP. Hãy kiểm tra dịch vụ và kết nối mạng.',
+    connectionTimeout:
+      'Máy chủ MCP không phản hồi kịp thời. Hãy kiểm tra dịch vụ hoặc tăng thời gian chờ.',
+    connectionHttpError:
+      'Máy chủ MCP trả về HTTP {{status}}. Hãy kiểm tra yêu cầu truy cập và nhật ký máy chủ.',
+    oauthAuthorizationRequired: 'Yêu cầu ủy quyền OAuth',
+    oauthAuthorizationRequiredSuggestion:
+      'MCP server này yêu cầu đăng nhập OAuth. Hiện chưa hỗ trợ đăng nhập OAuth; hãy thêm thủ công tiêu đề Authorization nếu server cho phép.',
     boxDisabledStdioRefused:
       'MCP server ở chế độ stdio cần Sandbox Box, hiện đã bị tắt trong cấu hình (box.enabled = false).',
     boxUnavailableStdioRefused:
@@ -1494,6 +1556,20 @@ const viVN = {
     bindSpaceWarning:
       'Sau khi liên kết, email đăng nhập của bạn sẽ được đổi từ {{localEmail}} sang email tài khoản LangBot.',
     bindSpaceSuccess: 'Liên kết tài khoản LangBot thành công',
+    passkeySectionTitle: 'Mã khóa truy cập (Passkey)',
+    passkeySectionDesc:
+      'Đăng nhập an toàn không cần mật khẩu bằng sinh trắc học hoặc khóa bảo mật',
+    addPasskey: 'Thêm mã khóa truy cập',
+    passkeyName: 'Tên khóa',
+    passkeyNamePlaceholder: 'ví dụ: MacBook Touch ID, YubiKey',
+    passkeyCreated: 'Được tạo vào {{date}}',
+    passkeyLastUsed: 'Sử dụng lần cuối: {{date}}',
+    noPasskeys: 'Chưa có mã khóa truy cập nào được đăng ký',
+    deletePasskeyConfirm:
+      'Bạn có chắc chắn muốn xóa mã khóa truy cập này? Bạn sẽ không thể sử dụng nó để đăng nhập nữa.',
+    passkeyAddedSuccess: 'Đã thêm mã khóa truy cập thành công',
+    passkeyDeleteSuccess: 'Đã xóa mã khóa truy cập',
+    passkeyRenameSuccess: 'Đã đổi tên mã khóa truy cập thành công',
     bindSpaceFailed: 'Liên kết tài khoản LangBot thất bại',
     bindSpaceInvalidState:
       'Yêu cầu liên kết không hợp lệ. Vui lòng thử lại từ cài đặt tài khoản.',
@@ -1717,7 +1793,17 @@ const viVN = {
     queryVariables: {
       title: 'Biến truy vấn',
     },
+    loadError: 'Không thể tải dữ liệu giám sát',
+    partialMessages:
+      'Hiển thị {{shown}} trên {{total}} tin nhắn. Dấu vết hội thoại có thể không đầy đủ.',
+    partialModelCalls: 'Hiển thị {{shown}} trên {{total}} lượt gọi mô hình.',
+    partialToolCalls:
+      'Hiển thị {{shown}} trên {{total}} lượt gọi công cụ. Dấu vết hội thoại có thể không đầy đủ.',
+    partialErrors: 'Hiển thị {{shown}} trên {{total}} lỗi.',
     trafficChart: {
+      unavailable: 'Không có dữ liệu tổng hợp lưu lượng',
+      truncated:
+        'Phạm vi lưu lượng bị cắt ngắn. Hãy chọn khoảng thời gian ngắn hơn.',
       title: 'Tổng quan lưu lượng',
       messages: 'Tin nhắn',
       llmCalls: 'Cuộc gọi LLM',
@@ -1857,6 +1943,8 @@ const viVN = {
         'Bot đã nhận được tin nhắn. Bạn có thể tiếp tục sang bước tiếp theo.',
       messageReceivedLocalAccountWarning:
         'Kết nối phía Bot đã được cấu hình đúng và đã nhận được tin nhắn. Vì bạn không đăng nhập bằng tài khoản LangBot, lệnh gọi mô hình có thể thất bại; hãy tiếp tục sang bước tiếp theo để thêm mô hình của riêng bạn.',
+      pageBotPreviewFailed:
+        'Không thể tải cuộc trò chuyện thử nghiệm. Hãy lưu lại cấu hình để thử lại.',
       pageBotTestPrompt:
         'Page Bot đã được bật. Nhấp vào bong bóng trò chuyện ở góc dưới bên phải và gửi tin nhắn để xác minh toàn bộ luồng hội thoại.',
       pageBotTestNotice:
@@ -1877,13 +1965,16 @@ const viVN = {
         'Giám sát hoạt động Bot để xác minh kết nối nền tảng đang hoạt động.',
     },
     aiEngine: {
+      defaultModelUnavailable: 'Chưa có mô hình mặc định. Vui lòng thử lại.',
+      defaultRunnerUnavailable: 'Local Agent chưa sẵn sàng. Vui lòng thử lại.',
+      preparingDefault: 'Đang chuẩn bị AI mặc định…',
       title: 'Cấu hình công cụ AI',
       description: 'Chọn công cụ AI sẽ cung cấp trí tuệ cho Bot của bạn.',
       optionalDescription:
-        'Bước này không bắt buộc. Hãy chọn cách bạn muốn tiếp tục với Agent hiện tại.',
+        'AI mặc định đã sẵn sàng. Bạn có thể dùng ngay hoặc đổi cách kết nối.',
       externalTitle: 'Kết nối Agent từ nền tảng bên ngoài',
       externalDescription:
-        'Kết nối Dify, n8n, Coze hoặc nền tảng khác và thay thế Pipeline của Bot.',
+        'Kết nối Dify, n8n, Coze hoặc Agent bên ngoài qua plugin Runner.',
       ownModelTitle: 'Sử dụng mô hình của riêng tôi',
       ownModelDescription:
         'Thêm nhà cung cấp, sau đó quét hoặc nhập mô hình thủ công để hoàn tất thiết lập.',
@@ -1896,7 +1987,7 @@ const viVN = {
       selectModelTitle: 'Chọn mô hình',
       selectScannedModelTitle: 'Chọn mô hình',
       selectScannedModelDescription:
-        'Mô hình đã chọn sẽ là mô hình chính của Pipeline mới và Bot sẽ chuyển sang sử dụng mô hình đó.',
+        'Mô hình đã chọn sẽ thay thế mô hình chính trong pipeline của bot này.',
       scanModelMode: 'Quét mô hình',
       manualModelMode: 'Thêm thủ công',
       scanningModels: 'Đang quét các mô hình khả dụng…',
@@ -1915,11 +2006,12 @@ const viVN = {
       manualModelOptions: 'Khả năng mô hình tùy chọn',
       editProvider: 'Chỉnh sửa nhà cung cấp',
       rescanModels: 'Quét lại mô hình',
-      moreFeaturesTitle: 'Thêm khả năng cho Agent',
+      moreFeaturesTitle: 'Dùng cấu hình mặc định',
       moreFeaturesDescription:
-        'Mở bàn làm việc để thêm công cụ, cơ sở tri thức và các khả năng khác cho Agent vừa được tạo tự động.',
+        'Tiếp tục dùng Local Agent và mô hình đề xuất. Có thể thêm công cụ và cơ sở tri thức sau.',
       runnerDescription: 'Chọn Runner cho Agent bên ngoài và cấu hình kết nối.',
       backToChoices: 'Quay lại các tùy chọn',
+      backToList: 'Quay lại danh sách',
       createExternal: 'Tạo và liên kết',
       finishWithModel: 'Sử dụng mô hình đã chọn và hoàn tất',
       openWorkbench: 'Mở bàn làm việc',

@@ -18,6 +18,7 @@ from langbot.pkg.agent.runner.interaction_store import (
 )
 from langbot.pkg.entity.persistence.agent_interaction import AgentInteraction
 from langbot.pkg.entity.persistence.base import Base
+from langbot.pkg.entity.persistence.pipeline import LegacyPipeline
 
 
 UTC = datetime.timezone.utc
@@ -28,6 +29,18 @@ async def db_engine(tmp_path):
     engine = create_async_engine(f'sqlite+aiosqlite:///{tmp_path / "interactions.db"}', echo=False)
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.execute(
+            sqlalchemy.insert(LegacyPipeline).values(
+                uuid='pipeline-1',
+                workspace_uuid='workspace-1',
+                name='test',
+                description='',
+                for_version='4.11',
+                stages=[],
+                config={},
+                extensions_preferences={},
+            )
+        )
     yield engine
     await engine.dispose()
 
@@ -45,6 +58,9 @@ async def _create(store: InteractionStore, **overrides):
         'runner_id': 'plugin:test/ApprovalRunner/default',
         'processor_type': 'pipeline',
         'processor_id': 'pipeline-1',
+        'workspace_id': 'workspace-1',
+        'expected_config': {},
+        'authority_check': lambda: True,
         'request': {'interaction_id': 'form-1', 'title': 'Approve?', 'fallback_text': 'Reply yes or no.'},
         'delivery_target': {'chat_id': 'chat-1'},
         'bot_id': 'bot-1',

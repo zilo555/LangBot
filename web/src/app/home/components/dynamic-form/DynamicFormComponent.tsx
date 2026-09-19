@@ -6,6 +6,7 @@ import {
 import { useForm } from 'react-hook-form';
 import type { ControllerRenderProps } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { isJsonValue, isPromptValue } from './StructuredFieldValue';
 import { z } from 'zod';
 import {
   Form,
@@ -49,30 +50,10 @@ import {
 import { systemInfo } from '@/app/infra/http';
 import { getAdapterDocUrl } from '@/app/infra/entities/adapter-docs';
 import { parseDynamicFormItemType } from './DynamicFormItemConfig';
-
-/**
- * Resolve the value referenced by a `show_if.field` string.
- *
- * Fields prefixed with `__system.` are looked up in the caller-supplied
- * `systemContext` dictionary (e.g. `__system.is_wizard` → `systemContext.is_wizard`).
- * All other field names are resolved from the live form values first, then
- * fall back to `externalDependentValues`.
- */
-function resolveShowIfValue(
-  field: string,
-  watchedValues: Record<string, unknown>,
-  externalDependentValues?: Record<string, unknown>,
-  systemContext?: Record<string, unknown>,
-): unknown {
-  if (field.startsWith(SYSTEM_FIELD_PREFIX)) {
-    const key = field.slice(SYSTEM_FIELD_PREFIX.length);
-    return systemContext?.[key];
-  }
-  if (watchedValues[field] !== undefined) {
-    return watchedValues[field];
-  }
-  return externalDependentValues?.[field];
-}
+import {
+  resolveDisabledState,
+  resolveShowIfValue,
+} from './DynamicFormConditions';
 
 type DynamicFormValueSpec = Pick<
   IDynamicFormItemSchema,
@@ -153,13 +134,10 @@ function getValueSchema(spec: DynamicFormValueSpec) {
         fallbacks: z.array(z.string()),
         reasoning: z.record(z.string()),
       });
+    case DynamicFormItemType.JSON:
+      return z.custom(isJsonValue);
     case DynamicFormItemType.PROMPT_EDITOR:
-      return z.array(
-        z.object({
-          content: z.string(),
-          role: z.string(),
-        }),
-      );
+      return z.custom(isPromptValue);
     default:
       return z.string();
   }
@@ -676,6 +654,7 @@ export default function DynamicFormComponent({
           };
           const fieldKey = config.id || config.name || `field-${index}`;
 
+          let isHiddenByCondition = false;
           if (config.show_if) {
             const dependValue = resolveShowIfValue(
               config.show_if.field,
@@ -688,57 +667,45 @@ export default function DynamicFormComponent({
               config.show_if.operator === 'eq' &&
               dependValue !== config.show_if.value
             ) {
-              return null;
+              isHiddenByCondition = true;
             }
             if (
               config.show_if.operator === 'neq' &&
               dependValue === config.show_if.value
             ) {
-              return null;
+              isHiddenByCondition = true;
             }
             if (
               config.show_if.operator === 'in' &&
               Array.isArray(config.show_if.value) &&
               !config.show_if.value.includes(dependValue)
             ) {
-              return null;
+              isHiddenByCondition = true;
             }
           }
 
-          // ``disable_if`` mirrors ``show_if``'s evaluator but instead of
-          // hiding the field, leaves it visible and inert. Use it when the
-          // operator needs to see that the field exists yet cannot edit it
-          // under the current runtime state (e.g. sandbox-bound fields when
-          // Box is disabled).
-          let isDisabledByCondition = false;
-          if (config.disable_if) {
-            const dependValue = resolveShowIfValue(
-              config.disable_if.field,
+          // Keep structured drafts mounted across conditional hiding so invalid
+          // JSON cannot disappear from validation when Advanced Settings closes.
+          if (
+            isHiddenByCondition &&
+            normalizedConfig.type !== DynamicFormItemType.JSON &&
+            normalizedConfig.type !== DynamicFormItemType.PROMPT_EDITOR
+          )
+            return null;
+
+          // Keep locked fields visible and resolve only the applicable reason.
+          const { isDisabledByCondition, disabledTooltip: tooltip } =
+            resolveDisabledState(
+              config,
               watchedValues as Record<string, unknown>,
               externalDependentValues,
               systemContext,
             );
-            const cond = config.disable_if;
-            if (cond.operator === 'eq' && dependValue === cond.value) {
-              isDisabledByCondition = true;
-            } else if (cond.operator === 'neq' && dependValue !== cond.value) {
-              isDisabledByCondition = true;
-            } else if (
-              cond.operator === 'in' &&
-              Array.isArray(cond.value) &&
-              cond.value.includes(dependValue)
-            ) {
-              isDisabledByCondition = true;
-            }
-          }
 
           // All fields are disabled when editing (creation_settings are
           // immutable) or when ``disable_if`` matches.
           const isFieldDisabled = !!isEditing || isDisabledByCondition;
-          const disabledTooltip =
-            isDisabledByCondition && config.disabled_tooltip
-              ? extractI18nObject(config.disabled_tooltip)
-              : '';
+          const disabledTooltip = tooltip ? extractI18nObject(tooltip) : '';
           const renderDisabledTooltipIcon = () =>
             disabledTooltip ? (
               <DisabledTooltipIcon text={disabledTooltip} />
@@ -998,7 +965,10 @@ export default function DynamicFormComponent({
                   setFormValue,
                 });
                 return (
-                  <FormItem className="min-w-0">
+                  <FormItem
+                    className={cn('min-w-0', isHiddenByCondition && 'hidden')}
+                    hidden={isHiddenByCondition}
+                  >
                     <FormLabel className="flex min-w-0 items-center gap-1.5">
                       <span className="min-w-0 break-words">
                         {extractI18nObject(config.label)}{' '}

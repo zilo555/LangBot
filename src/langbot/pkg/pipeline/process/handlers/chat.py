@@ -147,12 +147,14 @@ class ChatMessageHandler(handler.MessageHandler):
                         if result.all_content is not None:
                             result = result.model_copy(update={'content': result.all_content})
                     elif is_stream and isinstance(result, provider_message.Message):
+                        attachments = result.attachments
                         result = provider_message.MessageChunk.model_validate(
                             {
                                 **result.model_dump(),
                                 'is_final': True,
                             }
                         )
+                        result.attachments = attachments
 
                     result.resp_message_id = str(resp_message_id)
 

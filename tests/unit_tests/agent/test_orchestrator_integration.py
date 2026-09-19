@@ -469,6 +469,23 @@ async def test_orchestrator_consumes_interaction_request_before_message_output(c
         call_platform_api=AsyncMock(return_value={'ok': True}),
     )
 
+    import sqlalchemy as sa
+    from langbot.pkg.entity.persistence.pipeline import LegacyPipeline
+
+    async with db_engine.begin() as conn:
+        await conn.execute(
+            sa.insert(LegacyPipeline).values(
+                uuid=query.pipeline_uuid,
+                workspace_uuid=TEST_CONTEXT.workspace_uuid,
+                name='test',
+                description='',
+                for_version='4.11',
+                stages=[],
+                config=query.pipeline_config,
+                extensions_preferences={},
+            )
+        )
+
     messages = [message async for message in orchestrator.run_from_query(query)]
 
     assert [message.content for message in messages] == ['Waiting for approval']
@@ -910,7 +927,7 @@ class TestQueryEntrySessionQueryId:
     """Tests for internal query_id entering session registry."""
 
     @pytest.mark.asyncio
-    async def test_query_box_scope_exists_before_attachment_materialization(self, clean_agent_state):
+    async def test_query_entry_does_not_select_box_or_materialize_attachments(self, clean_agent_state):
         """Inbound staging and later runner tools resolve to the same Box session."""
         from langbot.pkg.box.service import BoxService
 
@@ -948,9 +965,9 @@ class TestQueryEntrySessionQueryId:
         session = plugin_connector.sessions_during_run[0]
         assert session is not None
         assert session['execution_query'] is query
-        runner_session_id = box_service.resolver.resolve_box_session_id(session['execution_query'])
-        assert box_service.materialize_session_id == runner_session_id
-        assert query.variables['_host_box_scope']
+        assert box_service.materialize_session_id is None
+        assert '_host_box_scope' not in query.variables
+        assert getattr(query, '_box_binding', None) is None
 
     @pytest.mark.asyncio
     async def test_query_id_registered_in_session_for_query_entry_flow(self, clean_agent_state):
@@ -1095,7 +1112,7 @@ class TestQueryEntrySessionQueryId:
         assert execution_query.sender_id == event.conversation_id
         assert execution_query.session.launcher_id == event.conversation_id
         assert execution_query.message_event.type == event.event_type
-        assert execution_query.variables['_host_box_scope']
+        assert '_host_box_scope' not in execution_query.variables
         assert execution_query.variables['_pipeline_bound_skills'] == ['demo', 'hidden']
         assert execution_query.variables['_pipeline_mcp_resource_attachments'][0]['server_uuid'] == 'srv-1'
         assert execution_query.variables['_pipeline_mcp_resource_agent_read_enabled'] is True
@@ -1526,3 +1543,28 @@ async def test_beta_diagnostics_real_runner_terminal(clean_agent_state, terminal
     import json
 
     assert 'CANARY' not in json.dumps(ap.diagnostics.pending)
+
+
+@pytest.mark.asyncio
+async def test_agent_cannot_deliver_exported_files_without_reply_api(clean_agent_state):
+    """Returning file handles must not bypass the Agent's reply authorization."""
+    connector = FakePluginConnector(
+        results=[
+            {
+                'type': 'message.completed',
+                'data': {'message': {'role': 'assistant', 'content': 'file'}, 'file_ids': ['exported-file']},
+            }
+        ]
+    )
+    orchestrator = AgentRunOrchestrator(FakeApplication(connector, clean_agent_state), FakeRegistry(make_descriptor()))
+    query = make_query()
+    plan = orchestrator.query_bridge.build_plan(query)
+    plan.binding.processor_type = 'agent'
+    with pytest.raises(ValueError, match='sent explicitly'):
+        [
+            m
+            async for m in orchestrator.run(
+                plan.event, plan.binding, adapter_context={'_execution_context': TEST_CONTEXT, '_query': query}
+            )
+        ]
+    assert await get_session_registry().list_active_runs() == []

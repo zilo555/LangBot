@@ -27,12 +27,19 @@ import PipelineDetailContent from '@/app/home/pipelines/PipelineDetailContent';
 import PluginProcessorDetailContent from './PluginProcessorDetailContent';
 import AgentCreateContent from './components/AgentCreateContent';
 import AgentDebugPanel from './components/AgentDebugPanel';
+import AgentMonitoringTab from './components/AgentMonitoringTab';
 import AgentFormComponent, {
   AgentFormHandle,
   RunnerStatus,
 } from './components/AgentFormComponent';
 
-export default function AgentDetailContent({ id }: { id: string }) {
+export default function AgentDetailContent({
+  id,
+  pipelineRevision,
+}: {
+  id: string;
+  pipelineRevision?: string;
+}) {
   const isCreateMode = id === 'new';
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -130,7 +137,13 @@ export default function AgentDetailContent({ id }: { id: string }) {
   if (loading || !agent) return <EntityLoadState />;
 
   if (agent.kind === 'pipeline') {
-    return <PipelineDetailContent id={id} routeBase="/home/agents" />;
+    return (
+      <PipelineDetailContent
+        key={pipelineRevision}
+        id={id}
+        routeBase="/home/agents"
+      />
+    );
   }
 
   async function saveBasicInfo(values: EntityBasicInfoValues) {
@@ -270,6 +283,21 @@ export default function AgentDetailContent({ id }: { id: string }) {
             ) : undefined
           }
           unsavedLabel={t('pipelines.unsavedChanges')}
+          monitoring={
+            currentWorkspace?.permissions.includes('resource.view')
+              ? {
+                  label: t('pipelines.monitoring.title'),
+                  workbenchLabel: t('pipelines.monitoring.workbench'),
+                  content: (
+                    <AgentMonitoringTab
+                      key={id}
+                      agentId={id}
+                      platformTools={platformTools}
+                    />
+                  ),
+                }
+              : undefined
+          }
         />
       )}
       <EntityBasicInfoDialog

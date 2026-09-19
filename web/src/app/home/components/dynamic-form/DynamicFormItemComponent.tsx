@@ -1,8 +1,12 @@
+import { hasModelReasoningAbility } from '@/app/home/components/reasoning/model-reasoning';
 import {
   DynamicFormItemType,
   IDynamicFormItemSchema,
   IFileConfig,
 } from '@/app/infra/entities/form/dynamic';
+import StructuredFieldEditor from './StructuredFieldEditor';
+import PresetSelect from './PresetSelect';
+import { isSimplePrompt } from './StructuredFieldValue';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -190,8 +194,7 @@ export default function DynamicFormItemComponent({
         {model.abilities?.includes('func_call') && (
           <Wrench className="h-3 w-3 text-muted-foreground" />
         )}
-        {(model.reasoning_capabilities?.supported === true ||
-          model.abilities?.includes('reasoning')) && (
+        {hasModelReasoningAbility(model) && (
           <BrainCircuit
             className="h-3 w-3 shrink-0 text-muted-foreground"
             aria-label={t('models.reasoningAbility')}
@@ -490,14 +493,7 @@ export default function DynamicFormItemComponent({
       );
 
     case DynamicFormItemType.JSON:
-      return (
-        <Textarea
-          {...field}
-          value={field.value ?? ''}
-          className="min-h-[200px] font-mono text-sm"
-          placeholder='{"key": "value"}'
-        />
-      );
+      return <StructuredFieldEditor field={field} />;
 
     case DynamicFormItemType.BOOLEAN:
       return (
@@ -549,6 +545,9 @@ export default function DynamicFormItemComponent({
       );
 
     case DynamicFormItemType.SELECT:
+      if (config.allow_custom) {
+        return <PresetSelect config={config} field={field} />;
+      }
       const selectedOption = config.options?.find(
         (option) => option.name === field.value,
       );
@@ -1265,11 +1264,7 @@ export default function DynamicFormItemComponent({
       ) => {
         if (!modelUuid) return;
         const updated = { ...modelValue.reasoning };
-        if (level === 'provider_default') {
-          delete updated[modelUuid];
-        } else {
-          updated[modelUuid] = level;
-        }
+        updated[modelUuid] = level;
         updateValue({ reasoning: updated });
       };
 
@@ -1298,6 +1293,7 @@ export default function DynamicFormItemComponent({
         const model = llmModels.find(
           (candidate) => candidate.uuid === modelUuid,
         );
+        if (!hasModelReasoningAbility(model)) return null;
         const currentLevel =
           modelValue.reasoning[modelUuid] || 'provider_default';
         const availableLevels = model?.reasoning_capabilities?.levels || [
@@ -1872,6 +1868,9 @@ export default function DynamicFormItemComponent({
       );
 
     case DynamicFormItemType.PROMPT_EDITOR: {
+      if (!isSimplePrompt(field.value)) {
+        return <StructuredFieldEditor field={field} prompt />;
+      }
       // Guard: field.value may be undefined when the form resets or
       // initialValues haven't propagated yet. Fall back to a default
       // single system-prompt entry to prevent the .map() crash.

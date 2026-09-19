@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import copy
 import hashlib
-import json
 import typing
 
 from langbot_plugin.api.entities.builtin.pipeline import query as pipeline_query
@@ -13,11 +12,9 @@ from langbot_plugin.api.entities.builtin.platform import message as platform_mes
 from langbot_plugin.api.entities.builtin.provider import message as provider_message
 from langbot_plugin.api.entities.builtin.provider import session as provider_session
 
-from ...utils import constants
 from .host_models import AgentEventEnvelope
 
 
-HOST_BOX_SCOPE_VARIABLE = '_host_box_scope'
 AUTHORIZED_SKILLS_VARIABLE = '_pipeline_bound_skills'
 MCP_RESOURCE_ATTACHMENTS_VARIABLE = '_pipeline_mcp_resource_attachments'
 MCP_RESOURCE_AGENT_READ_ENABLED_VARIABLE = '_pipeline_mcp_resource_agent_read_enabled'
@@ -102,29 +99,12 @@ def prepare_execution_query(
     authorized_skill_names: list[str],
 ) -> pipeline_query.Query:
     """Attach Host-owned execution metadata without changing Query identity."""
-    variables = prepare_box_scope(query, event, preserve_existing=True)
-    variables[AUTHORIZED_SKILLS_VARIABLE] = list(dict.fromkeys(authorized_skill_names))
-    return query
-
-
-def prepare_box_scope(
-    query: pipeline_query.Query,
-    event: AgentEventEnvelope,
-    *,
-    preserve_existing: bool = False,
-) -> dict[str, typing.Any]:
-    """Attach the Host Box scope before any Query-side file staging."""
-    variables = getattr(query, 'variables', None)
+    variables = query.variables
     if not isinstance(variables, dict):
         variables = {}
         query.variables = variables
-
-    existing_scope = variables.get(HOST_BOX_SCOPE_VARIABLE)
-    if preserve_existing and isinstance(existing_scope, str) and existing_scope.strip():
-        return variables
-
-    variables[HOST_BOX_SCOPE_VARIABLE] = build_host_box_scope(event, query=query)
-    return variables
+    variables[AUTHORIZED_SKILLS_VARIABLE] = list(dict.fromkeys(authorized_skill_names))
+    return query
 
 
 def build_execution_query(
@@ -168,48 +148,8 @@ def build_execution_query(
         variables={},
         resp_messages=[],
     )
-    query.variables[HOST_BOX_SCOPE_VARIABLE] = build_host_box_scope(event)
     query.variables[AUTHORIZED_SKILLS_VARIABLE] = list(dict.fromkeys(authorized_skill_names))
     return query
-
-
-def build_host_box_scope(
-    event: AgentEventEnvelope,
-    *,
-    query: pipeline_query.Query | None = None,
-) -> str | None:
-    """Return a stable Host scope for a Query session or event."""
-    target_type, target_id = _resolve_box_target(event, query)
-    if target_type is None or target_id is None:
-        return None
-
-    capabilities = event.delivery.platform_capabilities or {}
-    adapter_identity = None
-    if query is not None:
-        adapter = getattr(query, 'adapter', None)
-        if adapter is not None:
-            adapter_identity = adapter.__class__.__name__
-    adapter_identity = _first_present(
-        adapter_identity,
-        capabilities.get('adapter'),
-        capabilities.get('source'),
-        event.source if query is None else None,
-    )
-
-    return json.dumps(
-        {
-            'instance_id': _nonempty(constants.instance_id),
-            'workspace_id': _nonempty(event.workspace_id),
-            'bot_id': _nonempty(event.bot_id),
-            'platform_adapter': adapter_identity,
-            'target_type': target_type,
-            'target_id': target_id,
-            'thread_id': _nonempty(event.thread_id),
-        },
-        ensure_ascii=False,
-        sort_keys=True,
-        separators=(',', ':'),
-    )
 
 
 def _resolve_session_identity(
@@ -247,42 +187,6 @@ def _resolve_session_identity(
     )
 
     return provider_session.LauncherTypes(launcher_type_value), launcher_id, sender_id
-
-
-def _resolve_box_target(
-    event: AgentEventEnvelope,
-    query: pipeline_query.Query | None,
-) -> tuple[str | None, str | None]:
-    if query is not None:
-        launcher_type = getattr(query, 'launcher_type', None)
-        if hasattr(launcher_type, 'value'):
-            launcher_type = launcher_type.value
-        launcher_id = getattr(query, 'launcher_id', None)
-        normalized_type = _nonempty(launcher_type)
-        normalized_id = _nonempty(launcher_id)
-        if normalized_type is not None and normalized_id is not None:
-            return normalized_type, normalized_id
-
-    reply_target = event.delivery.reply_target or {}
-    target_type = _first_present(
-        reply_target.get('target_type'),
-        reply_target.get('launcher_type'),
-    )
-    target_id = _first_present(
-        reply_target.get('target_id'),
-        reply_target.get('launcher_id'),
-    )
-    if target_type is not None and target_id is not None:
-        return target_type, target_id
-
-    conversation_id = _nonempty(event.conversation_id)
-    if conversation_id is not None:
-        return 'conversation', conversation_id
-
-    event_id = _nonempty(event.event_id)
-    if event_id is not None:
-        return 'event', event_id
-    return None, None
 
 
 def _build_message_chain(event: AgentEventEnvelope) -> platform_message.MessageChain:

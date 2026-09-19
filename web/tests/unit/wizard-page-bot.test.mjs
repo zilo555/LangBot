@@ -45,20 +45,20 @@ test('opens the Page Bot preview after every successful wizard save', () => {
     wizardSource,
     /setPageBotPreviewRequest\(\(request\) => request \+ 1\)/,
   );
-  assert.match(wizardSource, /root\?\.langbotOpen\?\.\(\)/);
+
   assert.match(widgetSource, /getAttribute\("data-auto-open"\) === "true"/);
   assert.match(widgetSource, /root\.langbotOpen = function \(\)/);
   assert.match(widgetSource, /if \(scriptAutoOpen\) root\.langbotOpen\(\)/);
 });
 
-test('binds every message-reply bot to its provisional pipeline before verification', () => {
+test('binds every wizard bot to its provisional pipeline before verification', () => {
   assert.match(
     wizardSource,
-    /selectedScenarioDefinition\?\.processorKind === 'pipeline'[\s\S]*?httpClient\.createPipeline\(/,
+    /if \(!previewPipelineUuid\) \{[\s\S]*?httpClient\.createPipeline\(/,
   );
   assert.match(
     wizardSource,
-    /event_pattern: selectedScenarioDefinition\.eventType,[\s\S]*?target_type: 'pipeline',[\s\S]*?target_uuid: previewPipelineUuid/,
+    /event_pattern: 'message\.received',[\s\S]*?target_type: 'pipeline',[\s\S]*?target_uuid: previewPipelineUuid/,
   );
   assert.doesNotMatch(
     wizardSource,
@@ -89,25 +89,19 @@ test('requires the selected Runner mandatory configuration before finishing', ()
     wizardSource,
     /isRequiredRunnerConfigComplete\(selectedRunnerConfigItems, runnerConfig\)/,
   );
+  assert.match(wizardSource, /aiChoice === 'external'/);
   assert.match(
     wizardSource,
-    /return selectedRunner !== null && isRunnerConfigComplete/,
-  );
-  assert.match(
-    wizardSource,
-    /!selectedRunner \|\|[\s\S]*?!isRunnerConfigComplete \|\|[\s\S]*?!createdBotUuid/,
+    /!createdBotUuid \|\| !createdPipelineUuid \|\| !canProceed\(\)/,
   );
 });
 
-test('requires an observed message only for the message-reply scenario', () => {
+test('requires an observed message before configuring the runner', () => {
   assert.match(
     wizardSource,
-    /selectedScenario !== 'message_reply' \|\| messageReceived/,
+    /createdBotUuid !== null && botSaved && messageReceived/,
   );
-  assert.match(
-    wizardSource,
-    /requiresMessageVerification=\{selectedScenario === 'message_reply'\}/,
-  );
+  assert.match(wizardSource, /requiresMessageVerification/);
   assert.match(wizardSource, /onMessageReceived=\{handleMessageReceived\}/);
 });
 

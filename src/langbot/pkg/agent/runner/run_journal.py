@@ -83,6 +83,7 @@ class AgentRunJournal:
             run_id=context['run_id'],
             event_id=event.event_id,
             binding_id=binding.binding_id,
+            agent_id=binding.agent_id,
             runner_id=descriptor.id,
             conversation_id=event.conversation_id,
             thread_id=event.thread_id,
@@ -98,6 +99,19 @@ class AgentRunJournal:
                 **(
                     {'input_event': event.data, 'delivery': event.delivery.model_dump(mode='json')}
                     if binding.processor_type == 'event_processor'
+                    else {}
+                ),
+                **(
+                    {
+                        **({'input_event': event.data} if event.event_type != 'message.received' else {}),
+                        'input': {
+                            'text': context.get('input', {}).get('text', ''),
+                            'contents': self._sanitize_contents(context.get('input', {}).get('contents', [])),
+                            'attachments': self._sanitize_attachments(context.get('input', {}).get('attachments', [])),
+                        },
+                        'delivery': event.delivery.model_dump(mode='json'),
+                    }
+                    if binding.processor_type == 'agent'
                     else {}
                 ),
             },

@@ -1,3 +1,5 @@
+import pipelineMigration from './pipeline-migration/zh-Hant';
+
 const zhHant = {
   sidebarGuide: {
     label: '工作台導覽',
@@ -146,6 +148,7 @@ const zhHant = {
       },
     },
   },
+  pipelineMigration,
   sidebar: {
     home: '首頁',
     extensions: '擴展',
@@ -161,6 +164,7 @@ const zhHant = {
     editionCloud: 'Cloud',
   },
   common: {
+    customValue: '自訂',
     login: '登入',
     logout: '登出',
     accountOptions: '系統設定',
@@ -222,7 +226,8 @@ const zhHant = {
     privacyPolicy: '隱私政策',
     and: '和',
     dataCollectionPolicy: '數據收集政策',
-    dataCollectionPolicyUrl: 'https://link.langbot.app/zh/docs/data-policy',
+    dataCollectionPolicyUrl:
+      'https://langbot.app/docs/zh/insight/data-collection-policy',
     loading: '載入中...',
     fieldRequired: '此欄位為必填',
     or: '或',
@@ -230,6 +235,10 @@ const zhHant = {
     spaceLoginRecommended: '推薦：使用官方提供的穩定模型 API 和雲服務',
     loginLocal: '使用本地帳號登入',
     loginWithPassword: '透過密碼登入',
+    loginWithPasskey: '使用 Passkey 登入',
+    passkeyLoginSuccess: 'Passkey 驗證成功，正在登入...',
+    passkeyLoginFailed: 'Passkey 登入失敗',
+    passkeyNotSupported: '目前瀏覽器或裝置不支援 Passkey',
     spaceLoginTitle: '透過 LangBot 帳號登入',
     spaceLoginDescription: '掃描二維碼或訪問下方連結進行授權',
     spaceLoginUserCode: '您的驗證碼',
@@ -319,6 +328,37 @@ const zhHant = {
     help: '查看說明文件',
   },
   models: {
+    codex: {
+      account: 'ChatGPT 訂閱',
+      description:
+        '使用 ChatGPT 帳號登入。訂閱權限與 OpenAI API 計費相互獨立，可用模型和使用額度取決於你的訂閱方案。',
+      disconnected: '未連線',
+      loading: '正在檢查連線…',
+      starting: '正在開始登入…',
+      pending: '等待授權',
+      connected: '已連線',
+      expired: '登入已過期，請重試以取得新驗證碼。',
+      error: '無法登入，請檢查網路連線後重試。',
+      canceling: '正在取消登入…',
+      saveAndSignIn: '儲存並登入',
+      done: '完成',
+      instructions:
+        '在 OpenAI 頁面輸入此驗證碼，登入完成前請保持此對話框開啟。',
+      copyCode: '複製驗證碼',
+      copied: '已複製',
+      copyManually: '請選取並手動複製驗證碼。',
+      continueAtOpenAI: '前往 OpenAI 繼續',
+      expiresAt: '驗證碼將於 {{time}} 過期。',
+      retrying: '連線中斷，正在自動重試…',
+      cancelSignIn: '取消登入',
+      tryAgain: '重試',
+      signIn: '登入',
+      reconnect: '重新連線',
+      disconnect: '中斷連線',
+      disconnectConfirm:
+        '中斷此供應商的連線？重新登入前，其模型將無法使用。此操作不會取消你的 ChatGPT 訂閱。',
+      confirmDisconnect: '確認中斷',
+    },
     title: '模型設定',
     description: '設定和管理可在流程線中使用的模型',
     createModel: '建立模型',
@@ -355,7 +395,7 @@ const zhHant = {
     reasoningAbility: '思考能力',
     reasoningLevel: '思考等級',
     reasoningLevels: {
-      providerDefault: '供應商預設',
+      providerDefault: '使用供應商預設值',
       disabled: '關閉',
       enabled: '開啟',
       minimal: '最低',
@@ -459,6 +499,8 @@ const zhHant = {
     providerSaveError: '儲存供應商失敗：',
     providerDeleted: '供應商已刪除',
     providerDeleteError: '刪除供應商失敗：',
+    deleteProviderCascadeConfirmation:
+      '確定刪除此供應商及其包含的所有模型嗎？此操作不可逆，無法復原。',
     deleteProviderConfirmation: '您確定要刪除這個供應商嗎？',
     loadError: '載入資料失敗',
     chat: '對話',
@@ -684,6 +726,15 @@ const zhHant = {
     },
   },
   agents: {
+    monitoring: {
+      description: '查看每次任務的觸發事件、模型輸出和工具執行過程。',
+      empty: '尚無執行紀錄。觸發平台事件或執行除錯後，可在此查看。',
+      input: '觸發輸入',
+      eventData: '事件資料',
+      execution: '執行過程',
+      rawEvents: '原始執行事件',
+      inputUnavailable: '此次執行未記錄輸入內容。',
+    },
     eventProcessor: {
       configurations: '外掛處理器設定',
       configTab: '設定',
@@ -719,6 +770,7 @@ const zhHant = {
       destination: '傳送目標',
       loadMore: '載入更多',
       activation: '安裝外掛、建立處理器設定，再綁定機器人。',
+      status_timeout: '已逾時',
       status_pending: '待執行',
       status_running: '執行中',
       status_completed: '已完成',
@@ -1145,6 +1197,14 @@ const zhHant = {
     connectionSuccess: '連接成功',
     connectionFailed: '連接失敗，請檢查URL',
     connectionFailedStatus: '連接失敗',
+    connectionUnreachable:
+      '無法連接到 MCP 伺服器，請確認服務已啟動且網路可達。',
+    connectionTimeout: 'MCP 伺服器回應逾時，請檢查服務狀態或增加逾時時間。',
+    connectionHttpError:
+      'MCP 伺服器回傳 HTTP {{status}}，請檢查存取要求和伺服器日誌。',
+    oauthAuthorizationRequired: '需要 OAuth 授權',
+    oauthAuthorizationRequiredSuggestion:
+      '此 MCP 伺服器需要 OAuth 登入。目前尚不支援 OAuth 登入；如果伺服器允許，可以手動新增 Authorization 請求標頭。',
     boxDisabledStdioRefused:
       'Stdio 模式的 MCP 伺服器依賴 Box 沙箱，目前已在設定中停用（box.enabled = false）。',
     boxUnavailableStdioRefused:
@@ -1574,6 +1634,19 @@ const zhHant = {
     bindSpaceWarning:
       '綁定後，您的登入電子郵件將從 {{localEmail}} 更改為 LangBot 帳號的電子郵件。',
     bindSpaceSuccess: 'LangBot 帳號綁定成功',
+    passkeySectionTitle: '通行密鑰 (Passkey)',
+    passkeySectionDesc: '使用指紋、面容或硬體安全金鑰免密安全登入',
+    addPasskey: '新增通行密鑰',
+    passkeyName: '金鑰名稱',
+    passkeyNamePlaceholder: '例如：MacBook Touch ID、YubiKey',
+    passkeyCreated: '建立於 {{date}}',
+    passkeyLastUsed: '上次使用: {{date}}',
+    noPasskeys: '尚未綁定任何通行密鑰',
+    deletePasskeyConfirm:
+      '確定要刪除此通行密鑰嗎？刪除後將無法使用該金鑰登入。',
+    passkeyAddedSuccess: '通行密鑰新增成功',
+    passkeyDeleteSuccess: '通行密鑰已刪除',
+    passkeyRenameSuccess: '通行密鑰重新命名成功',
     bindSpaceFailed: '綁定 LangBot 帳號失敗',
     bindSpaceInvalidState: '無效的綁定請求，請從帳戶設定重新發起',
     setPasswordHint: '設定密碼後可使用電子郵件密碼登入',
@@ -1794,7 +1867,16 @@ const zhHant = {
     queryVariables: {
       title: '查詢變數',
     },
+    loadError: '監控資料載入失敗',
+    partialMessages:
+      '顯示 {{total}} 則訊息中的 {{shown}} 則，對話軌跡可能不完整。',
+    partialModelCalls: '顯示 {{total}} 次模型呼叫中的 {{shown}} 次。',
+    partialToolCalls:
+      '顯示 {{total}} 次工具呼叫中的 {{shown}} 次，對話軌跡可能不完整。',
+    partialErrors: '顯示 {{total}} 筆錯誤中的 {{shown}} 筆。',
     trafficChart: {
+      unavailable: '流量彙總資料無法使用',
+      truncated: '流量時間範圍已截斷，請選擇較短的時間範圍。',
       title: '流量概覽',
       messages: '訊息',
       llmCalls: 'LLM呼叫',
@@ -1929,6 +2011,7 @@ const zhHant = {
       messageReceived: '機器人已成功收到 IM 訊息，可以進入下一步。',
       messageReceivedLocalAccountWarning:
         '機器人側已配置正常並成功收到 IM 訊息。目前未透過 LangBot Account 登入，模型呼叫可能報錯；可以進入下一步新增自己的模型。',
+      pageBotPreviewFailed: '測試聊天載入失敗，請重新儲存設定後重試。',
       pageBotTestPrompt:
         '頁面機器人已啟用。點擊右下角聊天氣泡並傳送一則訊息，驗證完整對話流程。',
       pageBotTestNotice: '僅供測試使用，請將程式碼嵌入真實的外部網頁。',
@@ -1945,12 +2028,16 @@ const zhHant = {
       logsDescription: '監控機器人活動，確認平台連接是否正常運作。',
     },
     aiEngine: {
+      defaultModelUnavailable: '暫無可用的預設對話模型，請重試。',
+      defaultRunnerUnavailable: '本地 Agent 尚未就緒，請重試。',
+      preparingDefault: '正在準備預設 AI…',
       title: '配置 AI 引擎',
       description: '選擇驅動機器人智慧的 AI 引擎。',
-      optionalDescription: '這一步可選。選擇接下來要如何完善目前的 Agent。',
+      optionalDescription:
+        '預設 AI 已設定好，你可以直接使用，也可以選擇其他接入方式。',
       externalTitle: '接入外部平台 Agent',
       externalDescription:
-        '接入 Dify、n8n、Coze 等平台，並替換目前機器人的流水線。',
+        '透過執行器外掛接入 Dify、n8n、Coze 等外部 Agent 平台。',
       ownModelTitle: '改成使用自己的模型',
       ownModelDescription:
         '新增模型供應商，自動掃描或手動填寫模型以快速完成引導。',
@@ -1962,7 +2049,7 @@ const zhHant = {
       selectModelTitle: '選擇模型',
       selectScannedModelTitle: '選擇模型',
       selectScannedModelDescription:
-        '所選模型將成為新流水線的主要模型，機器人也會切換到該流水線。',
+        '選取的模型將取代目前機器人流水線的主模型。',
       scanModelMode: '自動掃描',
       manualModelMode: '手動新增',
       scanningModels: '正在掃描可用模型…',
@@ -1976,11 +2063,12 @@ const zhHant = {
       manualModelOptions: '模型能力（可選）',
       editProvider: '編輯供應商',
       rescanModels: '重新掃描模型',
-      moreFeaturesTitle: '給目前的 Agent 配置更多功能',
+      moreFeaturesTitle: '使用預設設定',
       moreFeaturesDescription:
-        '進入工作台，為剛剛自動產生的 Agent 新增工具、知識庫等能力',
+        '繼續使用本地 Agent 和推薦模型，之後可在流水線中新增工具、知識庫等功能。',
       runnerDescription: '選擇外部 Agent 的運行器並完成連接配置。',
       backToChoices: '返回選項',
+      backToList: '返回列表',
       createExternal: '建立並關聯',
       finishWithModel: '使用所選模型並完成',
       openWorkbench: '進入工作台',
