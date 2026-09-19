@@ -1,3 +1,6 @@
+import GuidedTour, {
+  type GuidedTourStep,
+} from '@/app/home/components/guided-tour/GuidedTour';
 import EntityLoadState from '@/components/EntityLoadState';
 import { preserveRunnerConfig } from './RunnerConfigPreservation';
 import type { ComponentProps } from 'react';
@@ -112,6 +115,9 @@ interface PipelineFormComponentProps {
   onDirtyChange?: (dirty: boolean) => void;
   onSavingChange?: (saving: boolean) => void;
   onLegacyPipeline?: (pipeline: Pipeline) => void;
+  guideEnabled?: boolean;
+  debugGuideEnabled?: boolean;
+  monitoringGuideEnabled?: boolean;
 }
 
 export interface PipelineFormHandle {
@@ -133,6 +139,9 @@ const PipelineFormComponent = forwardRef<
     isEditMode,
     pipelineId,
     showButtons = true,
+    guideEnabled = false,
+    debugGuideEnabled = false,
+    monitoringGuideEnabled = false,
     onDeletePipeline,
     onCancel,
     onDirtyChange,
@@ -230,6 +239,52 @@ const PipelineFormComponent = forwardRef<
   const [activeSection, setActiveSection] = useState(
     isEditMode ? 'trigger' : 'basic',
   );
+  const guideSteps = useMemo<GuidedTourStep[]>(() => {
+    const sections = [
+      'trigger',
+      'ai',
+      'output',
+      'safety',
+      'extensions',
+      'basic',
+    ];
+    return [
+      ...sections.map((section) => ({
+        id: section,
+        target: `[data-guide="pipeline-section-${section}"]`,
+        title: t(`guidedTour.pipeline.${section}.title`),
+        description: t(`guidedTour.pipeline.${section}.description`),
+        onEnter: () => setActiveSection(section),
+      })),
+      ...(debugGuideEnabled
+        ? [
+            {
+              id: 'debug',
+              target: '[data-guide="pipeline-form-debug"]',
+              title: t('guidedTour.pipeline.debug.title'),
+              description: t('guidedTour.pipeline.debug.description'),
+            },
+          ]
+        : []),
+      ...(monitoringGuideEnabled
+        ? [
+            {
+              id: 'monitoring',
+              target: '[data-guide="pipeline-form-monitoring"]',
+              title: t('guidedTour.pipeline.monitoring.title'),
+              description: t('guidedTour.pipeline.monitoring.description'),
+            },
+          ]
+        : []),
+      {
+        id: 'save',
+        target: '[data-guide="pipeline-form-save"]',
+        title: t('guidedTour.pipeline.save.title'),
+        description: t('guidedTour.pipeline.save.description'),
+        onEnter: () => setActiveSection('trigger'),
+      },
+    ];
+  }, [t, debugGuideEnabled, monitoringGuideEnabled]);
   const primarySectionNames = ['trigger', 'ai', 'output'];
   const primarySections = primarySectionNames
     .map((name) => formLabelList.find((section) => section.name === name))
@@ -808,6 +863,12 @@ const PipelineFormComponent = forwardRef<
 
   return (
     <>
+      <GuidedTour
+        enabled={guideEnabled && isEditMode}
+        storageKey="langbot_pipeline_setup_guide_v1"
+        steps={guideSteps}
+        testId="pipeline-setup-guide"
+      />
       <div className="h-full p-0 flex flex-col">
         <Form {...form}>
           <form
@@ -828,6 +889,7 @@ const PipelineFormComponent = forwardRef<
                           return (
                             <TabsTrigger
                               key={section.name}
+                              data-guide={`pipeline-section-${section.name}`}
                               value={section.name}
                             >
                               <Icon />
@@ -843,6 +905,7 @@ const PipelineFormComponent = forwardRef<
                         return (
                           <Button
                             key={section.name}
+                            data-guide={`pipeline-section-${section.name}`}
                             type="button"
                             variant={
                               activeSection === section.name

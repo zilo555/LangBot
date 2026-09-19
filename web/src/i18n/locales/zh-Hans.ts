@@ -2,31 +2,27 @@ import pipelineMigration from './pipeline-migration/zh-Hans';
 
 const zhHans = {
   sidebarGuide: {
-    label: '工作台导览',
-    progress: '第 {{current}} 项，共 {{total}} 项',
-    confirm: '我知道了',
-    finish: '完成引导',
     steps: {
       monitoring: {
-        title: '仪表盘',
+        title: '查看运行概况',
         description: '集中查看机器人活动、模型调用、消息量和系统运行情况。',
       },
       bots: {
-        title: '机器人',
+        title: '连接聊天平台',
         description: '连接聊天平台，并在这里创建和管理每一个机器人。',
       },
       pipelines: {
-        title: '处理器',
+        title: '配置处理器',
         description:
-          '创建可复用的 AI 流水线、智能体和事件处理器，为机器人提供能力。',
+          '创建可复用的流水线、Agent 和插件处理器配置，再将它们接入机器人。',
       },
       knowledge: {
-        title: '知识库',
+        title: '管理知识库',
         description:
           '管理文档和外部知识源，帮助模型生成更准确、更贴合业务的回复。',
       },
       plugins: {
-        title: '已安装扩展',
+        title: '管理已安装扩展',
         description: '管理已安装的插件、MCP 服务和技能，并查看它们的运行状态。',
       },
       'add-extension': {
@@ -34,47 +30,116 @@ const zhHans = {
         description: '从扩展市场、GitHub 或本地安装包为 LangBot 添加新能力。',
       },
       models: {
-        title: '模型配置',
+        title: '配置模型',
         description:
           '配置模型供应商，以及 LangBot 使用的语言模型、嵌入模型等。',
       },
       'api-integration': {
-        title: 'API 集成',
+        title: '配置 API 访问',
         description:
           '创建 API 密钥，并配置外部系统访问 LangBot 服务和 MCP 的方式。',
       },
     },
   },
   guidedTour: {
-    label: '配置引导',
+    eventDebugDescription:
+      '选择支持的事件并填写测试数据，运行后查看输出和工具调用结果。平台操作仅模拟执行，模型和其他工具按实际配置执行。',
+
+    pipeline: {
+      trigger: {
+        title: '选择要回复的消息',
+        description:
+          '流水线只处理消息事件，并由 AI 自动回复。在这里设置群聊触发方式、私聊规则和消息过滤条件。',
+      },
+      ai: {
+        title: '配置 AI 能力',
+        description:
+          '选择本地运行器或外部平台运行器，再按所选运行器配置模型、提示词、知识库等参数。',
+      },
+      output: {
+        title: '调整回复方式',
+        description:
+          '设置长文本处理等输出规则，决定 AI 生成的内容如何发给用户。',
+      },
+      safety: {
+        title: '设置安全控制',
+        description: '按需启用内容过滤和速率限制，控制消息内容与处理频率。',
+      },
+      extensions: {
+        title: '选择可用扩展',
+        description:
+          '选择这条流水线可使用的插件、MCP 服务和技能，扩展消息处理与工具能力。',
+      },
+      basic: {
+        title: '管理流水线',
+        description: '复制当前流水线以创建其他配置，或删除不再需要的流水线。',
+      },
+      debug: {
+        title: '测试对话效果',
+        description:
+          '发送测试消息，检查触发规则、AI 回复和输出处理是否符合预期；修改配置后，测试前会先保存。',
+      },
+      monitoring: {
+        title: '查看运行日志',
+        description:
+          '打开标题旁的“运行日志”，查看历史对话、处理过程和错误，排查回复异常。',
+      },
+      save: {
+        title: '保存并接入机器人',
+        description:
+          '保存配置后，在机器人的事件路由中，将“收到消息”交给这条流水线处理。',
+      },
+    },
+    pluginProcessor: {
+      select: {
+        title: '选择插件运行器',
+        description:
+          '选择支持事件处理的运行器。可处理的事件和处理逻辑由插件作者预先声明。',
+      },
+      parameters: {
+        title: '配置插件参数',
+        description:
+          '按照插件提供的配置项填写业务参数。同一插件可以保存多份配置，用于不同机器人或场景。',
+      },
+      debug: {
+        title: '测试插件处理逻辑',
+      },
+      logs: {
+        title: '查看处理结果',
+        description:
+          '查看每次运行的状态、输入事件、插件日志和调用结果，排查失败原因。',
+      },
+      save: {
+        title: '保存并绑定机器人',
+        description:
+          '保存后，到机器人页面的“插件处理器”板块添加这份配置。它会自动接收插件声明的事件，无需逐条配置事件路由。',
+      },
+    },
+    previous: '上一步',
+    label: '使用指引',
     progress: '第 {{current}} 步，共 {{total}} 步',
     next: '下一步',
-    finish: '完成引导',
+    finish: '完成指引',
     skip: '跳过',
     bot: {
       connection: {
         title: '选择接入方式',
-        description:
-          '从该适配器支持的方式中选择一种，相关适配器参数会自动同步。',
-        requirement: '请选择 Webhook 或长连接后继续。',
+        description: '选择适配器支持的接入方式，下方会显示对应的平台参数。',
       },
       basic: {
         title: '填写机器人信息',
         description: '使用容易识别的名称，便于之后在事件路由和日志中快速找到。',
-        requirement: '请先填写机器人名称。',
       },
       adapter: {
         title: '选择平台适配器',
         description:
           '选择机器人使用的平台适配器；接入方式和平台参数将在创建后配置。',
-        requirement: '请选择一个适配器。',
       },
       parameters: {
         title: '配置平台参数',
         description:
-          '填写凭据和平台参数；需要在平台侧创建的配置可按适配器文档操作。',
-        requirement: '请填写当前可见的全部必填参数。',
-        action: '打开适配器文档',
+          '填写平台凭据和连接参数。平台侧的配置步骤可查看适配器文档。',
+        action: '查看适配器文档',
       },
       routing: {
         title: '设置事件路由',
@@ -98,34 +163,32 @@ const zhHans = {
       },
       basic: {
         title: '填写处理器信息',
-        description: '先设置容易识别的名称，创建后再配置 Runner、事件和工具。',
-        requirement: '请先填写处理器名称。',
+        description: '先设置容易识别的名称，创建后再配置运行器、事件和工具。',
       },
       submit: {
         title: '创建并继续配置',
         description:
-          '创建后继续完成该类型处理器所需的 Runner、参数、事件和工具设置。',
+          '创建后继续完成该类型处理器所需的运行器、参数、事件和工具设置。',
       },
     },
     runner: {
+      debug: {
+        title: '测试事件处理',
+      },
       select: {
-        title: '选择或安装 Runner',
+        title: '选择或安装运行器',
         description:
-          '选择已安装的 Runner，也可以直接在此选择器的市场列表中安装。',
-        requirement: '请选择一个可用的 Runner。',
-        action: '浏览 Runner 市场',
+          '选择已安装的运行器，或在下拉列表中安装市场里的运行器插件。',
+        action: '浏览运行器市场',
       },
       parameters: {
-        title: '配置 Runner 参数',
-        description:
-          '按照所选 Runner 的定义填写模型、凭据、服务地址和其他参数。',
-        requirement: '请填写当前可见的全部必填参数。',
+        title: '配置运行器参数',
+        description: '填写所选运行器需要的模型、凭据、服务地址等参数。',
       },
       events: {
         title: '设置事件和工具',
         description:
-          '打开“事件和工具”，选择 Agent 可接收的事件以及允许使用的平台或主机工具。',
-        requirement: '请打开“事件和工具”页签以完成引导。',
+          '打开“事件和工具”，选择 Agent 可接收的事件，以及允许调用的工具。',
       },
     },
     knowledge: {
@@ -133,23 +196,20 @@ const zhHans = {
         title: '填写知识库信息',
         description:
           '设置容易识别的名称和可选描述，然后选择知识的存储与检索引擎。',
-        requirement: '请先填写知识库名称。',
       },
       engine: {
         title: '确认知识引擎',
-        description: '确认该知识库使用的引擎，并在下方配置引擎参数和检索方式。',
-        requirement: '请选择一个知识引擎。',
+        description:
+          '查看当前知识库使用的引擎。下方可继续配置引擎参数和检索方式。',
         action: '浏览知识引擎市场',
       },
       parameters: {
         title: '配置引擎参数',
         description: '填写该引擎要求的存储、模型、凭据或外部服务设置。',
-        requirement: '请填写当前可见的全部必填参数。',
       },
       retrieval: {
         title: '配置检索方式',
         description: '设置引擎如何搜索内容，以及如何把相关结果返回给处理器。',
-        requirement: '请填写当前可见的全部必填检索参数。',
       },
       save: {
         title: '保存知识库配置',

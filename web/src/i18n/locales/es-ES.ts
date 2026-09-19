@@ -1,6 +1,243 @@
 import pipelineMigration from './pipeline-migration/es-ES';
 
 const esES = {
+  sidebarGuide: {
+    steps: {
+      monitoring: {
+        title: 'Revisar la actividad',
+        description:
+          'Consulta la actividad de los bots, el uso de modelos, los mensajes y el rendimiento del sistema.',
+      },
+      bots: {
+        title: 'Conectar plataformas de chat',
+        description:
+          'Conecta LangBot a plataformas de chat y administra las conexiones de tus bots.',
+      },
+      pipelines: {
+        title: 'Configurar procesadores',
+        description:
+          'Crea flujos, Agents y configuraciones de procesadores de plugins reutilizables y conéctalos a tus bots.',
+      },
+      knowledge: {
+        title: 'Gestionar bases de conocimiento',
+        description:
+          'Organiza documentos y fuentes externas de conocimiento para mejorar las respuestas.',
+      },
+      plugins: {
+        title: 'Gestionar extensiones instaladas',
+        description:
+          'Administra plugins, servidores MCP y habilidades instalados y consulta su estado.',
+      },
+      'add-extension': {
+        title: 'Añadir extensiones',
+        description:
+          'Instala funciones desde el mercado, GitHub o un paquete local.',
+      },
+      models: {
+        title: 'Configurar modelos',
+        description:
+          'Configura proveedores y elige los modelos de lenguaje, embeddings y otros modelos que usa LangBot.',
+      },
+      'api-integration': {
+        title: 'Configurar acceso API',
+        description:
+          'Crea claves API y configura el acceso externo a los servicios de LangBot y MCP.',
+      },
+    },
+  },
+
+  guidedTour: {
+    eventDebugDescription:
+      'Elige un evento compatible, introduce datos de prueba y revisa la salida y los resultados de las herramientas. Las acciones de plataforma se simulan; los modelos y las demás herramientas se ejecutan según su configuración.',
+
+    bot: {
+      connection: {
+        title: 'Elegir un método de conexión',
+        description:
+          'Elige un método compatible con este adaptador. Sus parámetros se actualizarán automáticamente.',
+      },
+      basic: {
+        title: 'Asignar un nombre al bot',
+        description:
+          'Usa un nombre reconocible para encontrar esta conexión en las rutas y los registros.',
+      },
+      adapter: {
+        title: 'Elegir un adaptador de plataforma',
+        description:
+          'Elige el adaptador de este bot. Configurarás la conexión y los parámetros de la plataforma después de crearlo.',
+      },
+      parameters: {
+        title: 'Configurar la plataforma',
+        description:
+          'Introduce las credenciales y los parámetros. Consulta la documentación del adaptador para los ajustes del lado de la plataforma.',
+        action: 'Abrir documentación del adaptador',
+      },
+      routing: {
+        title: 'Dirigir los eventos entrantes',
+        description: 'Elige qué procesador recibe cada evento de este bot.',
+      },
+      save: {
+        title: 'Guardar la configuración del bot',
+        description:
+          'Comprueba la conexión y las rutas de eventos, y guarda los cambios. Después puedes activar el bot.',
+      },
+      submit: {
+        title: 'Crear el bot',
+        description:
+          'Crea el bot desactivado y continúa configurando la conexión y los parámetros en su página.',
+      },
+    },
+    knowledge: {
+      basic: {
+        title: 'Describir la base de conocimiento',
+        description:
+          'Asigna un nombre y, si lo deseas, una descripción antes de elegir el motor de almacenamiento y búsqueda.',
+      },
+      engine: {
+        title: 'Revisar el motor de conocimiento',
+        description:
+          'Confirma el motor de esta base de conocimiento. Sus parámetros y opciones de búsqueda se configuran debajo.',
+        action: 'Explorar motores de conocimiento',
+      },
+      parameters: {
+        title: 'Configurar parámetros del motor',
+        description:
+          'Completa los ajustes de almacenamiento, modelo, credenciales o servicio externo que solicita el motor.',
+      },
+      retrieval: {
+        title: 'Configurar la búsqueda',
+        description:
+          'Define cómo busca el motor y devuelve contenido relevante a los procesadores.',
+      },
+      save: {
+        title: 'Guardar la base de conocimiento',
+        description:
+          'Comprueba los parámetros del motor y la búsqueda, y guarda la configuración.',
+      },
+      submit: {
+        title: 'Crear la base de conocimiento',
+        description:
+          'Crea la base de conocimiento y añade documentos o conecta fuentes compatibles con el motor elegido.',
+      },
+    },
+
+    pipeline: {
+      trigger: {
+        title: 'Elegir qué mensajes responder',
+        description:
+          'Los flujos procesan eventos de mensajes y responden automáticamente con IA. Configura los activadores de grupo, las reglas de chat privado y los filtros.',
+      },
+      ai: {
+        title: 'Configurar las funciones de IA',
+        description:
+          'Elige un ejecutor local o de una plataforma externa y configura su modelo, instrucciones, bases de conocimiento y otros parámetros.',
+      },
+      output: {
+        title: 'Ajustar las respuestas',
+        description:
+          'Configura reglas de salida, como el tratamiento de textos largos, para decidir cómo se entregan las respuestas.',
+      },
+      safety: {
+        title: 'Configurar controles de seguridad',
+        description:
+          'Activa filtros de contenido y límites de frecuencia según sea necesario.',
+      },
+      extensions: {
+        title: 'Elegir extensiones disponibles',
+        description:
+          'Selecciona los plugins, servidores MCP y habilidades que puede usar este flujo para ampliar el procesamiento y las herramientas.',
+      },
+      basic: {
+        title: 'Administrar el flujo',
+        description:
+          'Copia este flujo para crear otra configuración o elimina un flujo que ya no necesites.',
+      },
+      debug: {
+        title: 'Probar una conversación',
+        description:
+          'Envía mensajes de prueba para comprobar los activadores, las respuestas de IA y el procesamiento de salida. Los cambios se guardan antes de la prueba.',
+      },
+      monitoring: {
+        title: 'Revisar el historial',
+        description:
+          'Usa la pestaña junto al título para revisar conversaciones, pasos de procesamiento y errores cuando falten respuestas o sean inesperadas.',
+      },
+      save: {
+        title: 'Guardar y conectar un bot',
+        description:
+          'Guarda la configuración y asigna los eventos de mensaje recibido a este flujo en la página del bot.',
+      },
+    },
+    pluginProcessor: {
+      select: {
+        title: 'Elegir un ejecutor de plugin',
+        description:
+          'Elige un ejecutor compatible con el procesamiento de eventos. El autor del plugin declara los eventos admitidos y su lógica.',
+      },
+      parameters: {
+        title: 'Configurar parámetros del plugin',
+        description:
+          'Completa los ajustes del plugin. Puedes guardar varias configuraciones del mismo plugin para distintos bots o usos.',
+      },
+      debug: {
+        title: 'Probar el procesamiento de eventos',
+      },
+      logs: {
+        title: 'Revisar resultados',
+        description:
+          'Consulta el estado, el evento de entrada, los registros y los resultados de cada ejecución para investigar fallos.',
+      },
+      save: {
+        title: 'Guardar y vincular a un bot',
+        description:
+          'Tras guardar, añade esta configuración en la sección de procesadores de plugins del bot. Recibirá automáticamente los eventos declarados, sin rutas individuales.',
+      },
+    },
+    label: 'Guía de uso',
+    progress: 'Paso {{current}} de {{total}}',
+    previous: 'Anterior',
+    next: 'Siguiente',
+    finish: 'Finalizar guía',
+    skip: 'Omitir',
+    processorCreate: {
+      type: {
+        title: 'Elegir un tipo de procesador',
+        description:
+          'Los pipelines siguen un flujo de mensajes definido; los agentes deciden con modelos y herramientas, y los procesadores de plugins gestionan los eventos declarados.',
+      },
+      basic: {
+        title: 'Nombrar el procesador',
+        description:
+          'Asigna un nombre reconocible. El ejecutor y los eventos se configuran después de crear el procesador.',
+      },
+      submit: {
+        title: 'Crear y continuar la configuración',
+        description:
+          'Después de crear el procesador, configura el ejecutor, sus parámetros, los eventos y las herramientas que necesite.',
+      },
+    },
+    runner: {
+      debug: {
+        title: 'Probar el procesamiento de eventos',
+      },
+      select: {
+        title: 'Elegir o instalar un ejecutor',
+        description:
+          'Selecciona un ejecutor instalado o instala uno directamente desde la lista del mercado en este selector.',
+        action: 'Explorar ejecutores en el mercado',
+      },
+      parameters: {
+        title: 'Configurar los parámetros del ejecutor',
+        description:
+          'Introduce el modelo, las credenciales, la URL del servicio y los demás ajustes definidos por el ejecutor seleccionado.',
+      },
+      events: {
+        title: 'Configurar eventos y herramientas',
+        description:
+          'Abre Eventos y herramientas para elegir qué eventos recibe este agente y qué herramientas de plataforma o de LangBot puede usar.',
+      },
+    },
+  },
   pipelineMigration,
   sidebar: {
     home: 'Inicio',
@@ -18,6 +255,14 @@ const esES = {
     editionCloud: 'Cloud',
   },
   common: {
+    loadFailed: 'No se pudo cargar. Inténtalo de nuevo.',
+    showSecret: 'Mostrar secreto',
+    hideSecret: 'Ocultar secreto',
+    editBasicInfo: 'Editar información básica',
+    editBasicInfoDescription: 'Cambia el nombre, la descripción y el icono.',
+    editBasicInfoDescriptionNoIcon: 'Cambia el nombre y la descripción.',
+    management: 'Administración',
+
     customValue: 'Personalizado',
     login: 'Iniciar sesión',
     logout: 'Cerrar sesión',
@@ -407,6 +652,209 @@ const esES = {
       "Uses the Workspace owner's LangBot Account billing and credits.",
   },
   bots: {
+    connectionMode: 'Método de conexión',
+    connectionModeDescription:
+      'Elige un método de conexión compatible con este adaptador.',
+    connectionWebhook: 'Webhook',
+    connectionWebhookDescription:
+      'La plataforma envía eventos a una URL generada por LangBot.',
+    connectionPersistent: 'Conexión persistente',
+    connectionPersistentDescription:
+      'LangBot mantiene abierta una conexión saliente de socket o streaming.',
+    noAdaptersForConnectionMode:
+      'Ningún adaptador instalado admite este método de conexión.',
+    eventBindings: 'Rutas de eventos',
+    addEventBinding: 'Añadir ruta',
+    addBehavior: 'Añadir comportamiento',
+    commonScenarios: 'Escenarios habituales',
+    dragEventRoute: 'Arrastrar ruta {{index}}',
+    behaviorReplyMessages: 'Responder a mensajes',
+    behaviorReplyMessagesDescription:
+      'Envía los mensajes entrantes a un procesador.',
+    behaviorWelcomeMembers: 'Dar la bienvenida a nuevos miembros',
+    behaviorWelcomeMembersDescription:
+      'Ejecuta un procesador cuando alguien se une a un grupo.',
+    behaviorHandleDepartures: 'Gestionar salidas de miembros',
+    behaviorHandleDeparturesDescription:
+      'Ejecuta un procesador cuando alguien sale o es expulsado.',
+    behaviorReviewFriendRequests: 'Revisar solicitudes de amistad',
+    behaviorReviewFriendRequestsDescription:
+      'Envía las nuevas solicitudes de amistad a un procesador.',
+    behaviorHandleModeration: 'Gestionar eventos de moderación',
+    behaviorHandleModerationDescription:
+      'Ejecuta un procesador cuando se restringe a un miembro del grupo.',
+    behaviorCustom: 'Configurar otro evento',
+    behaviorCustomDescription:
+      'Añade una ruta y elige entre los eventos admitidos por este adaptador.',
+    eventPattern: 'Evento',
+    eventPatternPlaceholder: 'Seleccionar evento',
+    targetType: 'Tipo de destino',
+    target: 'Procesador',
+    targetAgent: 'Agent',
+    targetPipeline: 'Flujo',
+    targetDiscard: 'Descartar',
+    selectTarget: 'Seleccionar procesador',
+    searchTarget: 'Buscar procesadores…',
+    noTargetFound: 'No se encontraron procesadores compatibles',
+    priority: 'Prioridad',
+    enabled: 'Activado',
+    eventBindingDescriptionPlaceholder: 'Descripción de la regla',
+    noEventBindings: 'No hay rutas de eventos',
+    unsupportedPipelineEvent: 'Los flujos solo admiten eventos message.*',
+    disable: 'Desactivar',
+    enable: 'Activar',
+    disabledBindings: 'Desactivado',
+    adapterEventsTitle: 'Eventos admitidos',
+    adapterEventsDescription: '{{count}} tipos de evento',
+    adapterEventsMore: '{{count}} más',
+    advancedEventValues: 'Ver todos',
+    eventGroup: 'Grupo',
+    eventGroupNames: {
+      bot: 'Estado del bot',
+      feedback: 'Comentarios',
+      friend: 'Amigos',
+      group: 'Grupos',
+      message: 'Mensajes',
+      platform: 'Plataforma',
+    },
+    routeConflictTitle: 'Algunas rutas se superponen',
+    routeConflictShadowed:
+      '{{shadowed}} podría no ejecutarse porque {{winner}} procesa primero los mismos eventos.',
+    routeConflictMore: 'Hay {{count}} conflictos de rutas adicionales.',
+    routeFallbackCatchAll: '{{route}} es la ruta general.',
+    routeFallbackIgnored:
+      'Se ignoran los eventos sin ruta coincidente. Añade una ruta general solo si todos los eventos necesitan un resultado explícito.',
+    testRoute: 'Comprobar ruta',
+    adapterEventDebugTitle: 'Depuración de eventos de plataforma',
+    adapterEventDebugDescription:
+      'Genera un evento en {{platform}}. Aparecerá aquí cuando lo reciba el adaptador.',
+    adapterEventObserveOnly:
+      'Esta ventana solo observa eventos. Los eventos entrantes siguen las rutas actuales.',
+    adapterEventPreparing: 'Preparando',
+    adapterEventListening: 'Escuchando',
+    adapterEventListenerUnavailable: 'Escucha interrumpida',
+    adapterEventLoadFailed:
+      'No se pudieron leer los eventos. Comprueba que el bot está en ejecución y vuelve a intentarlo.',
+    adapterEventReceivedCount: '{{count}} eventos recibidos',
+    adapterEventClear: 'Limpiar',
+    adapterEventEmptyTitle: 'Esperando un evento de plataforma',
+    adapterEventEmptyDescription:
+      'Envía un mensaje o genera un evento en {{platform}}.',
+    adapterEventData: 'Ver datos del evento',
+    adapterEventNeedsSavedBot: 'Guarda el bot antes de escuchar eventos.',
+    adapterEventCurrentPlatform: 'la plataforma actual',
+    adapterConfigurationTest: 'Probar la configuración del adaptador',
+    adapterConfigurationTestDescription:
+      'Guarda y activa el bot; después genera un evento para comprobar la configuración.',
+    refreshRouteStatus: 'Actualizar estado',
+    routeStatusIdle: 'Aún sin ejecuciones',
+    routeStatusRefreshFailed: 'No se pudo actualizar el estado de la ruta.',
+    routeStatus: {
+      matched: 'Coincide',
+      delivered: 'Entregado',
+      discarded: 'Descartado',
+      failed: 'Fallido',
+      not_matched: 'Sin coincidencia',
+    },
+    routeStatusDetail: {
+      matched: 'Esta ruta coincide con el evento.',
+      delivered: 'El procesador recibió el evento.',
+      discarded: 'El evento se descartó intencionadamente.',
+      failed: 'La ruta no pudo completarse.',
+      not_matched: 'Ninguna ruta configurada coincide con el evento.',
+    },
+    routeFailure: {
+      binding_disabled: 'Esta ruta está desactivada.',
+      event_pattern_mismatch: 'El evento no coincide con esta ruta.',
+      filters_mismatch:
+        'Los datos de prueba no cumplen las condiciones de la ruta.',
+      lower_priority: 'Otra ruta coincidente tiene mayor prioridad.',
+      route_not_found: 'Ninguna ruta coincide con este evento.',
+      processor_incompatible:
+        'El procesador seleccionado no admite este evento.',
+      processor_not_found: 'El procesador seleccionado no está disponible.',
+      runner_failed: 'El ejecutor del Agent falló al procesar el evento.',
+      delivery_failed: 'El procesador terminó, pero la entrega falló.',
+    },
+    dryRunTitle: 'Comprobar ruta de eventos',
+    dryRunDescription:
+      'Elige un evento para ver con qué ruta y procesador coincide.',
+    dryRunEventType: 'Tipo de evento',
+    dryRunSampleReady: 'Evento de ejemplo listo',
+    dryRunSampleDescription:
+      'LangBot ha preparado datos de ejemplo para {{event}}. Normalmente puedes usarlos sin cambios.',
+    dryRunEditPayload: 'Datos de prueba',
+    dryRunHidePayload: 'Ocultar datos',
+    dryRunPayload: 'Datos de prueba (JSON)',
+    dryRunPayloadHint:
+      'Úsalos para probar condiciones de mensajes y conversaciones.',
+    dryRunPayloadJsonError: 'Introduce un JSON válido.',
+    dryRunPayloadObjectError: 'Los datos deben ser un objeto JSON.',
+    dryRunNeedsSavedBot: 'Guarda el bot antes de comprobar las rutas.',
+    dryRunFailed: 'No se pudo comprobar la ruta. Inténtalo más tarde.',
+    dryRunAction: 'Ver coincidencia',
+    dryRunRunning: 'Comprobando…',
+    dryRunMatched: 'Ruta coincidente',
+    dryRunNotMatched: 'Ninguna ruta coincide',
+    dryRunTarget: 'Procesador de destino',
+    dryRunNoTarget: 'Sin destino',
+    dryRunMatchedRule: 'Regla coincidente',
+    dryRunRuleIndex: 'Ruta {{index}}',
+    dryRunNoRule: 'Ninguna regla coincide',
+    dryRunDiagnostics: 'Pasos de diagnóstico',
+    dryRunDiagnosticSelected: 'Se seleccionó {{route}}.',
+    dryRunDiagnosticMatched: '{{route}} coincide. {{reason}}',
+    dryRunDiagnosticSkipped: 'Se omitió {{route}}. {{reason}}',
+    eventCustom: 'Evento personalizado',
+    eventDescriptions: {
+      all: 'Coincide con todos los eventos recibidos por este adaptador.',
+      namespace: 'Coincide con todos los eventos de {{group}}.',
+      namespace_bot:
+        'Coincide con invitaciones, expulsiones, silencios y otros cambios de estado del bot.',
+      namespace_feedback:
+        'Coincide con comentarios recibidos de la plataforma o de usuarios.',
+      namespace_friend: 'Coincide con solicitudes y cambios de amistad.',
+      namespace_group:
+        'Coincide con entradas, salidas, expulsiones y otros eventos de grupo.',
+      namespace_message:
+        'Coincide con mensajes recibidos, editados, eliminados y reacciones.',
+      namespace_platform:
+        'Coincide con eventos específicos de plataforma proporcionados por un adaptador.',
+      custom: 'Evento personalizado o aún sin descripción.',
+      message_received: 'Un usuario o grupo envía un nuevo mensaje al bot.',
+      message_edited:
+        'La plataforma informa de un cambio en un mensaje existente.',
+      message_deleted: 'La plataforma informa de la eliminación de un mensaje.',
+      message_reaction: 'Un usuario añade o elimina una reacción a un mensaje.',
+      feedback_received:
+        'Se reciben comentarios de la plataforma o de un usuario.',
+      friend_request_received: 'Alguien solicita añadir al bot como amigo.',
+      friend_added: 'Se ha creado una relación de amistad.',
+      group_member_joined: 'Un miembro se une a un grupo donde está el bot.',
+      group_member_left: 'Un miembro abandona un grupo donde está el bot.',
+      group_member_banned: 'Un miembro del grupo es bloqueado o expulsado.',
+      bot_invited_to_group: 'El bot es invitado a un grupo.',
+      bot_removed_from_group: 'El bot es expulsado de un grupo.',
+      bot_muted: 'El bot es silenciado en un grupo.',
+      bot_unmuted: 'Se retira el silencio del bot en un grupo.',
+      platform_specific: 'Evento de plataforma específico del adaptador.',
+    },
+    conditions: 'Condiciones',
+    conditionsDescription:
+      'Deben cumplirse todas las condiciones. Déjalo vacío para activar siempre.',
+    conditionsEmpty: 'Sin condiciones: siempre se activa.',
+    addFilter: 'Añadir condición',
+    filterChatType: 'Tipo de sesión',
+    filterChatId: 'ID de sesión',
+    filterMessageText: 'Texto del mensaje',
+    filterMessageElement: 'Elemento del mensaje',
+    operator_eq: 'es igual a',
+    operator_neq: 'no es igual a',
+    operator_contains: 'contiene',
+    operator_not_contains: 'no contiene',
+    operator_starts_with: 'empieza por',
+    operator_regex: 'expresión regular',
+
     eventWildcard: 'Todos los eventos',
     eventNamespaceWildcard: '{{namespace}}.*',
     eventNames: {
@@ -610,6 +1058,180 @@ const esES = {
     },
   },
   agents: {
+    chooseType: 'Elegir cómo funciona',
+    chooseTypeDescription:
+      'Elige primero el tipo de procesador. Podrás configurarlo después de crearlo.',
+    diagramHint: 'Cómo funciona',
+    agentDiagramTitle: 'Agent: decidir y actuar',
+    agentDiagramDescription:
+      'Un Agent recibe diversos eventos, usa modelos y herramientas para comprender la situación y decide qué hacer.',
+    pipelineDiagramTitle: 'Flujo: seguir pasos definidos',
+    pipelineDiagramDescription:
+      'Un flujo solo procesa eventos de mensajes y ejecuta los pasos en el orden configurado.',
+    pipelineDiagramFlow: 'Los mensajes siguen una secuencia fija',
+    diagramEvents: 'Eventos de plataforma',
+    diagramAgentCanUse: 'Disponible para el Agent',
+    diagramMessages: 'Mensajes',
+    diagramMembers: 'Miembros',
+    diagramFeedback: 'Comentarios',
+    diagramDecide: 'Comprender y decidir',
+    diagramModel: 'Usar modelo',
+    diagramTools: 'Usar herramientas',
+    diagramActions: 'Actuar',
+    diagramMessage: 'Mensaje',
+    diagramPreprocess: 'Preparar',
+    diagramAI: 'IA',
+    diagramPostprocess: 'Refinar',
+    diagramOutput: 'Salida',
+    eventsAndTools: 'Eventos y herramientas',
+    eventsAndToolsDescription:
+      'Define los eventos de activación y las herramientas disponibles.',
+    configuredEvents: 'Eventos añadidos',
+    configuredEventsCount: '{{count}} en total',
+    addEvent: 'Añadir evento',
+    removeEvent: 'Eliminar evento',
+    eventActions: 'Herramientas activadas automáticamente',
+    eventToolEnabled: 'Activado',
+    eventToolsEnabledCount: '{{count}} herramientas activadas',
+    noEventActions: 'No hay acciones disponibles para este evento.',
+    noEventsConfigured: 'No hay eventos añadidos',
+    noEventsConfiguredDescription: 'Ningún evento puede activar este Agent.',
+    noEventsConfiguredBadge: 'Sin eventos',
+    apiTools: 'Acceso a herramientas',
+    apiToolsDescription: 'Elige qué herramientas puede llamar este Agent.',
+    otherTools: 'Otras herramientas',
+    otherToolsDescription:
+      'Elige herramientas de plataforma, sandbox, MCP, plugins y habilidades.',
+    apiToolsSelected: '{{count}} seleccionadas',
+    apiToolsSecurityHint:
+      'Activa solo las herramientas que necesita este Agent.',
+    apiToolsSearch: 'Buscar herramientas…',
+    eventApiTools: 'Herramientas de eventos',
+    eventToolUnavailable: 'No disponible',
+    eventApiToolsDescription:
+      'Los destinos se fijan a partir del evento actual. El Agent solo proporciona los parámetros de acción.',
+    platformApiTools: 'Herramientas de plataforma',
+    platformApiToolsDescription:
+      'El Agent puede elegir los ID de usuario, grupo o mensaje. Concede solo lo necesario.',
+    apiToolEvents: 'Eventos',
+    apiToolParameters: 'Parámetros del Agent',
+    apiToolSource: 'Origen',
+    apiToolNoParameters: 'ninguno',
+    sandboxTools: 'Sandbox',
+    mcpTools: 'MCP',
+    pluginTools: 'Plugins',
+    skillTools: 'Habilidades',
+    langbotBuiltIn: 'LangBot',
+    apiToolDetails: 'Detalles',
+    apiToolHideDetails: 'Ocultar',
+    apiToolsNoResults: 'Ninguna API o herramienta coincide',
+    apiToolsCatalogUnavailable:
+      'El backend de LangBot no devolvió el catálogo de herramientas API. Comprueba que esté actualizado y reiniciado; esto no significa que la plataforma no tenga herramientas.',
+    hostToolsCatalogUnavailable:
+      'El catálogo de herramientas no está disponible temporalmente.',
+    apiToolRisk: {
+      read: 'Solo lectura',
+      write: 'Acción',
+      dangerous: 'Sensible',
+    },
+    runnerStatusLoading: 'Comprobando estado del ejecutor',
+    runnerStatusCheckFailed: 'No se pudo comprobar el estado del ejecutor',
+    runnerStatusCheckFailedDescription:
+      'Vuelve a comprobarlo. Si sigue fallando, revisa el backend y el entorno de ejecución de plugins.',
+    noRunnersAvailable: 'No hay ejecutores disponibles',
+    noRunnersAvailableDescription:
+      'Instala y activa una extensión de ejecutor antes de configurar este Agent.',
+    installedRunners: 'Ejecutores instalados',
+    marketplaceRunners: 'Plugins de ejecutores en el mercado',
+    viewMarketplace: 'Ver mercado',
+    restoringRunnerInstall:
+      'Restaurando la instalación del plugin y esperando al ejecutor…',
+    noInstalledRunners: 'Aún no hay extensiones de ejecutor instaladas.',
+    installingRunner: 'Instalando {{runner}}...',
+    runnerInstallSuccess:
+      '{{runner}} está instalado y listo para seleccionarse',
+    selectedRunnerUnavailable: 'El ejecutor seleccionado no está disponible',
+    selectedRunnerUnavailableDescription:
+      '{{runner}} no está registrado actualmente. Elige otro ejecutor o restaura su extensión.',
+    noRunnerSelected: 'Ningún ejecutor seleccionado',
+    runnerConfigIncomplete: 'Configuración del ejecutor incompleta',
+    runnerConfigIncompleteDescription:
+      'Completa los campos obligatorios: {{fields}}',
+    runnerReady: 'Ejecutor listo',
+    runnerReadyDescription:
+      '{{runner}} está registrado y el entorno de ejecución de plugins está conectado.',
+    debugTab: 'Depuración de eventos',
+    debugTitle: 'Depuración de eventos del Agent',
+    debugDescription:
+      'Ejecuta el Agent actual con un mensaje o evento de plataforma y revisa el resultado real.',
+    debugResetSession: 'Restablecer sesión',
+    debugEventType: 'Tipo de evento',
+    debugNoEventsTitle: 'No hay eventos para depurar',
+    debugNoEventsDescription:
+      'Añade primero un evento en Eventos y herramientas.',
+    debugMessageReceived: 'Mensaje recibido',
+    debugGroupMemberJoined: 'Miembro añadido al grupo',
+    debugGroupMemberLeft: 'Miembro salió del grupo',
+    debugFriendRequested: 'Solicitud de amistad recibida',
+    debugFeedbackReceived: 'Comentarios recibidos',
+    debugCustomEvent: 'Evento personalizado',
+    debugCustomEventType: 'Nombre del evento personalizado',
+    debugMessageInput: 'Entrada de conversación',
+    debugEventSummary: 'Resumen del evento',
+    debugInputPlaceholder: 'Introduce lo que debe procesar el Agent',
+    debugEventPayload: 'Datos del evento (JSON)',
+    debugSupportedEvents: 'El Agent admite',
+    debugRun: 'Ejecutar prueba',
+    debugSaveAndRun: 'Guardar y ejecutar',
+    debugRunning: 'En ejecución',
+    debugTranscript: 'Registro de depuración',
+    debugTranscriptDescription:
+      'Entradas y respuestas del Agent de esta sesión de depuración.',
+    debugEmptyTitle: 'Comprobar el comportamiento del Agent',
+    debugEmptyTranscript:
+      'Elige un evento, introduce datos de prueba y pulsa «Ejecutar prueba». Los resultados permanecen en esta página.',
+    debugAgentOutput: 'Salida del Agent',
+    debugReasoning: 'Pensando',
+    debugTextOutput: 'Salida de texto',
+    debugPlatformNotice:
+      'Las herramientas de plataforma usan Mock: el Agent realiza llamadas reales, pero las acciones se simulan sin enviar mensajes reales. Las demás herramientas se ejecutan según su configuración.',
+    debugToolSimulated: 'Simulación correcta · Mock',
+    debugStop: 'Detener depuración',
+    debugMockOptions: 'Escenario Mock (JSON)',
+    debugInvalidMock: 'El escenario Mock debe ser un objeto JSON válido.',
+    debugToolMockFailed: 'Fallo simulado · Mock',
+    debugMockOptionsHelp:
+      'De forma predeterminada, las llamadas tienen éxito. Asigna errores por nombre de herramienta en errors, datos de consulta en results y API no admitidas en unsupported_apis. Ejemplo: {"errors":{"event_reply":"Fallo de envío simulado"}}',
+    debugCancelled:
+      'Depuración detenida. Se conservan los registros anteriores.',
+    debugNoToolCalls:
+      'No se registraron llamadas a herramientas. Generar texto no implica haber enviado un mensaje.',
+    debugToolCount:
+      '{{count}} llamadas a herramientas registradas. Consulta su estado y resultados debajo.',
+    debugToolRunning: 'En ejecución',
+    debugToolCompleted: 'Completado',
+    debugToolFailed: 'Fallido',
+    debugToolInterrupted: 'Sin resultado devuelto',
+    debugToolArguments: 'Argumentos',
+    debugToolResult: 'Resultado',
+    debugTestInput: 'Entrada de prueba',
+    debugNoTextOutput: 'La ejecución terminó sin salida de texto.',
+    debugEventTypeRequired: 'Introduce un tipo de evento',
+    debugInputRequired: 'Introduce una entrada de conversación',
+    debugInvalidPayload: 'Los datos del evento deben ser un objeto JSON válido',
+    debugUnsupportedEvent: 'Este evento no está entre los que admite el Agent',
+    debugRunnerConfigInvalidDescription:
+      'La configuración del ejecutor está incompleta: {{message}}',
+    debugRunnerExecutionFailedDescription:
+      'La ejecución falló. Revisa el modelo y la configuración del ejecutor e inténtalo de nuevo.',
+    debugRunnerTimeoutDescription:
+      'Se agotó el tiempo de ejecución. Inténtalo más tarde o ajusta el tiempo límite del ejecutor.',
+    debugApiKeyRequired: 'Falta la clave API',
+    debugOpenRunnerConfig: 'Abrir configuración del ejecutor',
+    debugReviewRunnerConfig: 'Revisar configuración del ejecutor',
+    debugErrorDetails: 'Ver detalles del error',
+    debugRunFailed: 'Falló la depuración del Agent',
+
     monitoring: {
       description:
         'Consulta el evento, la salida del modelo y las herramientas de cada tarea.',
@@ -933,6 +1555,13 @@ const esES = {
     installFromGithubDesc: 'Instalar plugin desde GitHub Release',
     goToMarketplace: 'Ir a la tienda',
     installProgress: {
+      updateTitle: 'Actualizando {{name}}',
+      checkingUpdate: 'Buscando actualizaciones',
+      validating: 'Validando paquete',
+      applyingUpdate: 'Aplicando actualización',
+      activating: 'Iniciando y actualizando componentes',
+      updateComplete: 'Plugin actualizado correctamente',
+
       title: 'Instalando {{name}}',
       titleGeneric: 'Instalación de Plugin',
       overallProgress: 'Progreso general',
@@ -962,6 +1591,11 @@ const esES = {
     uploadPluginOnly: 'Solo se admiten paquetes de plugin .lbpkg',
   },
   market: {
+    runnerUsage: 'Uso del ejecutor',
+    runnerUsageAll: 'Todos',
+    runnerUsageAgent: 'Agent / Flujo',
+    runnerUsageEvent: 'Procesador de plugin',
+
     searchPlaceholder: 'Buscar plugins...',
     searchPlaceholderCount:
       'Buscar {{count}} extensiones, capacidades o casos de uso...',
@@ -1197,6 +1831,8 @@ const esES = {
       'Una vez eliminada, la configuración de este servidor MCP no se podrá recuperar.',
   },
   pipelines: {
+    managementDescription: 'Copia o elimina este flujo.',
+
     title: 'Flujos',
     description:
       'Los Pipelines definen el flujo de procesamiento de eventos de mensajes, se usan para vincular a los Bots',
@@ -1320,6 +1956,8 @@ const esES = {
       selectKnowledgeBases: 'Seleccionar bases de conocimiento',
     },
     debugDialog: {
+      saveAndSend: 'Guardar y enviar',
+
       title: 'Chat del Pipeline',
       selectPipeline: 'Seleccionar Pipeline',
       sessionType: 'Tipo de sesión',
@@ -1364,6 +2002,26 @@ const esES = {
     },
   },
   knowledge: {
+    installedEngines: 'Motores de conocimiento instalados',
+    noInstalledEngines:
+      'Aún no hay plugins de motores de conocimiento instalados.',
+    marketplaceEngines: 'Plugins de motores de conocimiento en el mercado',
+    noMarketplaceEngines:
+      'No hay plugins de motores de conocimiento disponibles.',
+    loadingEngineCatalog: 'Cargando plugins del mercado…',
+    engineCatalogUnavailable:
+      'El mercado no está disponible temporalmente. Vuelve a abrir el selector para reintentar.',
+    viewMarketplace: 'Ver mercado',
+    installingEngine: 'Instalando {{engine}}…',
+    engineInstallSuccess:
+      '{{engine}} está instalado y listo para seleccionarse',
+    engineInstallFailed: 'Falló la instalación del motor. Inténtalo de nuevo.',
+    engineVersionUnavailable: 'Este plugin no tiene una versión instalable.',
+    engineInstallTimeout:
+      'La instalación continúa. Actualiza la página para comprobar el estado.',
+    engineRegistrationTimeout:
+      'El plugin está instalado, pero su motor aún no está listo.',
+
     title: 'Conocimiento',
     createKnowledgeBase: 'Crear base de conocimiento',
     selectFromSidebar:
@@ -1895,6 +2553,47 @@ const esES = {
     },
   },
   storageAnalysis: {
+    notCreated: 'Aún no creado',
+    processStorage: 'Almacenamiento por proceso',
+    processStorageDescription:
+      'Cada entorno de ejecución mide sus propios directorios. Los detalles ya se incluyen en el total del directorio principal.',
+    directory: 'Directorio',
+    size: 'Tamaño',
+    files: 'Archivos',
+    runtimeUnavailable:
+      'Las estadísticas de almacenamiento del entorno de ejecución no están disponibles.',
+    noManagedDirectories: 'No se informaron directorios administrados.',
+    scanWarnings: '{{count}} entradas ilegibles',
+    boxActivity: '{{sessions}} sesiones · {{processes}} procesos administrados',
+    statusLabels: {
+      available: 'Disponible',
+      unavailable: 'No disponible',
+      disabled: 'Desactivado',
+      not_applicable: 'No aplicable',
+    },
+    sourceLabels: {
+      local_process: 'Medido por el proceso LangBot',
+      runtime_rpc:
+        'Medido por el entorno de ejecución mediante RPC autenticado',
+    },
+    scopeLabels: {
+      runtime_host: 'Host del entorno de ejecución',
+      sandbox_sessions: 'Sesiones de sandbox',
+    },
+    processNames: {
+      langbot: 'Proceso principal de LangBot',
+      plugin_runtime: 'Entorno de ejecución de plugins',
+      box_runtime: 'Entorno de ejecución de Box',
+    },
+    processDescriptions: {
+      langbot:
+        'Base de datos, registros, archivos subidos, datos vectoriales y archivos temporales.',
+      plugin_runtime:
+        'Paquetes de plugins, artefactos verificados, entornos de dependencias y datos privados de instalación.',
+      box_runtime:
+        'Espacios de trabajo de sandbox, procesos MCP, directorios de intercambio de adjuntos y habilidades.',
+    },
+
     title: 'Análisis de almacenamiento',
     description:
       'Inspecciona el uso de almacenamiento y los candidatos de limpieza',
@@ -1921,6 +2620,22 @@ const esES = {
     noExpiredUploads: 'No hay archivos subidos caducados',
     noExpiredLogs: 'No hay registros caducados',
     sectionNames: {
+      legacy_plugins: 'Paquetes de plugins antiguos',
+      artifacts: 'Artefactos de plugins verificados',
+      dependency_environments: 'Entornos de dependencias',
+      installations: 'Datos de instalación de plugins',
+      staging: 'Archivos provisionales de plugins',
+      rpc_transfer: 'Archivos de transferencia RPC',
+      workspace: 'Espacio de trabajo de sandbox',
+      inbox: 'Adjuntos entrantes',
+      outbox: 'Adjuntos salientes',
+      skills: 'Habilidades',
+      session_workspaces: 'Espacios de trabajo de sesiones sandbox',
+      session_caches: 'Cachés del entorno de sandbox',
+      session_temp: 'Archivos temporales de sandbox',
+      managed_process_workspaces:
+        'Espacios de procesos administrados (incluido MCP)',
+
       database: 'Base de datos',
       logs: 'Registros',
       storage: 'Archivos subidos',
@@ -2011,6 +2726,26 @@ const esES = {
         'Monitorea la actividad del Bot para verificar que la conexión con la plataforma funcione.',
     },
     aiEngine: {
+      loadingCatalog: 'Cargando extensiones de ejecutores...',
+      catalogUnavailable: 'El catálogo de ejecutores no está disponible',
+      catalogUnavailableDescription:
+        'Los ejecutores instalados siguen disponibles. Reintenta cargar el catálogo o explora las extensiones.',
+      noMarketplaceRunners: 'Ningún plugin de ejecutor coincide con este uso',
+      noMarketplaceRunnersDescription:
+        'Usa un ejecutor instalado o inténtalo más tarde.',
+      browseRunners: 'Explorar extensiones de ejecutores',
+      installAndContinue: 'Instalar y continuar',
+      installing: 'Instalando...',
+      useInstalled: 'Usar este ejecutor',
+      installedUnavailable: 'Instalado, ejecutor no disponible',
+      installSuccess: '{{runner}} instalado y seleccionado',
+      installFailed: 'No se pudo instalar la extensión de ejecutor',
+      versionUnavailable: 'El mercado no devolvió ninguna versión instalable.',
+      installTimeout:
+        'La instalación del ejecutor agotó el tiempo de espera. Revisa la tarea en Extensiones.',
+      registrationTimeout:
+        'La extensión se instaló, pero el ejecutor no se registró. Revisa el entorno de ejecución de plugins y reinténtalo.',
+
       defaultModelUnavailable:
         'No hay un modelo predeterminado disponible. Inténtalo de nuevo.',
       defaultRunnerUnavailable:

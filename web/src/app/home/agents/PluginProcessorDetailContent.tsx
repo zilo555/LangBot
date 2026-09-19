@@ -1,5 +1,8 @@
+import GuidedTour, {
+  type GuidedTourStep,
+} from '@/app/home/components/guided-tour/GuidedTour';
 import EntityLoadState from '@/components/EntityLoadState';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import { eventPatternLabel } from '@/app/home/components/event-patterns/event-pattern-groups';
@@ -89,6 +92,65 @@ export default function PluginProcessorDetailContent({
   const requestVersion = useRef(0);
   const component = components.find((item) => item.id === componentRef);
   const available = Boolean(component);
+  const hasParameters = Boolean(component?.config_schema.length);
+  const guideSteps = useMemo<GuidedTourStep[]>(
+    () => [
+      {
+        id: 'select',
+        target: '#event-processor-component',
+        title: t('guidedTour.pluginProcessor.select.title'),
+        description: t('guidedTour.pluginProcessor.select.description'),
+        onEnter: () => setActiveTab('config'),
+        action: {
+          href: 'https://space.langbot.app/market?type=plugin&component=Runner&runner_usage=event',
+          label: t('guidedTour.runner.select.action'),
+        },
+      },
+      ...(hasParameters
+        ? [
+            {
+              id: 'parameters',
+              target: '[data-guide="event-processor-form-config"]',
+              title: t('guidedTour.pluginProcessor.parameters.title'),
+              description: t(
+                'guidedTour.pluginProcessor.parameters.description',
+              ),
+              onEnter: () => setActiveTab('config'),
+            },
+          ]
+        : []),
+      ...(canOperate && available
+        ? [
+            {
+              id: 'debug',
+              target: '[data-guide="event-processor-form-debug"]',
+              title: t('guidedTour.pluginProcessor.debug.title'),
+              description: t('guidedTour.eventDebugDescription'),
+              onEnter: () => setActiveTab('config'),
+            },
+          ]
+        : []),
+      {
+        id: 'logs',
+        target: '[data-guide="event-processor-form-tab-logs"]',
+        title: t('guidedTour.pluginProcessor.logs.title'),
+        description: t('guidedTour.pluginProcessor.logs.description'),
+        onEnter: () => setActiveTab('logs'),
+      },
+      ...(available
+        ? [
+            {
+              id: 'save',
+              target: '[data-guide="event-processor-form-save"]',
+              title: t('guidedTour.pluginProcessor.save.title'),
+              description: t('guidedTour.pluginProcessor.save.description'),
+              onEnter: () => setActiveTab('config'),
+            },
+          ]
+        : []),
+    ],
+    [t, available, hasParameters, canOperate],
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -393,122 +455,130 @@ export default function PluginProcessorDetailContent({
     return <EntityLoadState error={failed} onRetry={() => void load()} />;
 
   return (
-    <ProcessorDetailWorkbench
-      title={`${agent.emoji || '🧩'} ${agent.name}`}
-      titleAction={
-        canManage ? <EntityTitleEditButton onClick={onEdit} /> : undefined
-      }
-      titleControls={
-        <PluginProcessorSettings
-          components={components}
-          value={componentRef}
-          disabled={!canManage || saving || loading}
-          onChange={(value) => {
-            setComponentRef(value);
-            setActiveTab('config');
-            const descriptor = components.find((item) => item.id === value);
-            setParameters(
-              Object.fromEntries(
-                (descriptor?.config_schema ?? [])
-                  .filter((field) => field.default !== undefined)
-                  .map((field) => [field.name, field.default]),
+    <>
+      <GuidedTour
+        enabled={canManage}
+        storageKey="langbot_plugin_processor_setup_guide_v1"
+        steps={guideSteps}
+        testId="plugin-processor-setup-guide"
+      />
+      <ProcessorDetailWorkbench
+        title={`${agent.emoji || '🧩'} ${agent.name}`}
+        titleAction={
+          canManage ? <EntityTitleEditButton onClick={onEdit} /> : undefined
+        }
+        titleControls={
+          <PluginProcessorSettings
+            components={components}
+            value={componentRef}
+            disabled={!canManage || saving || loading}
+            onChange={(value) => {
+              setComponentRef(value);
+              setActiveTab('config');
+              const descriptor = components.find((item) => item.id === value);
+              setParameters(
+                Object.fromEntries(
+                  (descriptor?.config_schema ?? [])
+                    .filter((field) => field.default !== undefined)
+                    .map((field) => [field.name, field.default]),
+                ),
+              );
+              validate.current = null;
+            }}
+          />
+        }
+        status={
+          !loading && componentRef && !available
+            ? { label: t('agents.eventProcessor.unavailable'), tone: 'error' }
+            : undefined
+        }
+        saveLabel={t('common.save')}
+        saveFormId="event-processor-form"
+        canSave={canManage && available}
+        isDirty={dirty}
+        isSaving={saving}
+        headerActions={
+          canManage ? (
+            <Button variant="destructive" disabled={saving} onClick={onDelete}>
+              <Trash2 className="size-4" />
+              {t('common.delete')}
+            </Button>
+          ) : undefined
+        }
+        configTitle={t('agents.eventProcessor.type')}
+        configTabs={{
+          value: activeTab,
+          onValueChange: setActiveTab,
+          items: [
+            {
+              value: 'config',
+              label: t('agents.eventProcessor.configTab'),
+              icon: <Settings2 className="size-4" />,
+              content: (
+                <div className="h-full overflow-y-auto">
+                  {!component ? (
+                    <p className="text-sm text-muted-foreground">
+                      {t('agents.eventProcessor.selectComponent')}
+                    </p>
+                  ) : component.config_schema.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      {t('agents.eventProcessor.noSettings')}
+                    </p>
+                  ) : (
+                    <fieldset disabled={!canManage || saving}>
+                      <DynamicFormComponent
+                        key={componentRef}
+                        itemConfigList={component.config_schema}
+                        initialValues={parameters}
+                        onSubmit={(values) =>
+                          setParameters(values as Record<string, unknown>)
+                        }
+                        onValidate={(fn) => {
+                          validate.current = fn;
+                        }}
+                      />
+                    </fieldset>
+                  )}
+                </div>
               ),
-            );
-            validate.current = null;
-          }}
-        />
-      }
-      status={
-        !loading && componentRef && !available
-          ? { label: t('agents.eventProcessor.unavailable'), tone: 'error' }
-          : undefined
-      }
-      saveLabel={t('common.save')}
-      saveFormId="event-processor-form"
-      canSave={canManage && available}
-      isDirty={dirty}
-      isSaving={saving}
-      headerActions={
-        canManage ? (
-          <Button variant="destructive" disabled={saving} onClick={onDelete}>
-            <Trash2 className="size-4" />
-            {t('common.delete')}
-          </Button>
-        ) : undefined
-      }
-      configTitle={t('agents.eventProcessor.type')}
-      configTabs={{
-        value: activeTab,
-        onValueChange: setActiveTab,
-        items: [
-          {
-            value: 'config',
-            label: t('agents.eventProcessor.configTab'),
-            icon: <Settings2 className="size-4" />,
-            content: (
-              <div className="h-full overflow-y-auto">
-                {!component ? (
-                  <p className="text-sm text-muted-foreground">
-                    {t('agents.eventProcessor.selectComponent')}
-                  </p>
-                ) : component.config_schema.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    {t('agents.eventProcessor.noSettings')}
-                  </p>
-                ) : (
-                  <fieldset disabled={!canManage || saving}>
-                    <DynamicFormComponent
-                      key={componentRef}
-                      itemConfigList={component.config_schema}
-                      initialValues={parameters}
-                      onSubmit={(values) =>
-                        setParameters(values as Record<string, unknown>)
-                      }
-                      onValidate={(fn) => {
-                        validate.current = fn;
-                      }}
-                    />
-                  </fieldset>
-                )}
-              </div>
-            ),
-          },
-          {
-            value: 'logs',
-            label: t('agents.eventProcessor.logsTab'),
-            icon: <ScrollText className="size-4" />,
-            content: logsContent,
-          },
-        ],
-      }}
-      debugTitle={canOperate ? t('agents.debugTab') : undefined}
-      debugDescription={t('agents.eventProcessor.debugNotice')}
-      debugContent={
-        canOperate ? (
-          !component ? (
-            <Alert className="m-3 w-auto">
-              <AlertDescription>
-                {t('agents.eventProcessor.selectToDebug')}
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <AgentDebugPanel
-              agentId={id}
-              processor
-              platformTools={platformTools}
-              hasUnsavedChanges={dirty}
-              beforeRun={save}
-              onRunFinished={() => {
-                setActiveTab('logs');
-                void refreshLatestRun();
-              }}
-              supportedEventPatterns={component.supported_event_patterns}
-              availableEventTypes={availableEventTypes}
-            />
-          )
-        ) : undefined
-      }
-      unsavedLabel={t('pipelines.unsavedChanges')}
-    />
+            },
+            {
+              value: 'logs',
+              label: t('agents.eventProcessor.logsTab'),
+              icon: <ScrollText className="size-4" />,
+              content: logsContent,
+            },
+          ],
+        }}
+        debugTitle={canOperate ? t('agents.debugTab') : undefined}
+        debugDescription={t('agents.eventProcessor.debugNotice')}
+        debugContent={
+          canOperate ? (
+            !component ? (
+              <Alert className="m-3 w-auto">
+                <AlertDescription>
+                  {t('agents.eventProcessor.selectToDebug')}
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <AgentDebugPanel
+                agentId={id}
+                processor
+                platformTools={platformTools}
+                hasUnsavedChanges={dirty}
+                beforeRun={save}
+                onRunFinished={() => {
+                  setActiveTab('logs');
+                  void refreshLatestRun();
+                }}
+                supportedEventPatterns={component.supported_event_patterns}
+                availableEventTypes={availableEventTypes}
+              />
+            )
+          ) : undefined
+        }
+        unsavedLabel={t('pipelines.unsavedChanges')}
+      />
+    </>
   );
 }

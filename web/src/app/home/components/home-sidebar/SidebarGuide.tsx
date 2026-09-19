@@ -1,14 +1,13 @@
-import { createPortal } from 'react-dom';
+import TourOverlay, {
+  getTourPosition,
+  type TargetRect,
+  type PopoverPosition,
+} from '../guided-tour/TourOverlay';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Check, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { Button } from '@/components/ui/button';
 import { useSidebar } from '@/components/ui/sidebar';
 
 const SIDEBAR_GUIDE_STORAGE_KEY = 'langbot_sidebar_guide_v1';
-const MIN_POPOVER_WIDTH = 196;
-const MAX_POPOVER_WIDTH = 320;
-const VIEWPORT_GAP = 12;
 
 const GUIDE_STEP_IDS = [
   'monitoring',
@@ -22,21 +21,6 @@ const GUIDE_STEP_IDS = [
 ] as const;
 
 type GuideStepId = (typeof GUIDE_STEP_IDS)[number];
-
-type TargetRect = {
-  top: number;
-  right: number;
-  bottom: number;
-  left: number;
-  width: number;
-  height: number;
-};
-
-type PopoverPosition = {
-  left: number;
-  top: number;
-  width: number;
-};
 
 function loadStoredStep(): number | null {
   if (typeof window === 'undefined') return null;
@@ -68,16 +52,16 @@ function getTarget(stepId: GuideStepId): HTMLElement | null {
   );
 }
 
-function findAvailableStep(startIndex: number): number | null {
-  for (let index = startIndex; index < GUIDE_STEP_IDS.length; index += 1) {
+function findAvailableStep(startIndex: number, direction = 1): number | null {
+  for (
+    let index = startIndex;
+    index >= 0 && index < GUIDE_STEP_IDS.length;
+    index += direction
+  ) {
     const target = getTarget(GUIDE_STEP_IDS[index]);
     if (target) return index;
   }
   return null;
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), Math.max(min, max));
 }
 
 export function SidebarGuide() {
@@ -88,7 +72,6 @@ export function SidebarGuide() {
   const [popoverPosition, setPopoverPosition] =
     useState<PopoverPosition | null>(null);
   const popoverRef = useRef<HTMLDivElement | null>(null);
-  const confirmButtonRef = useRef<HTMLButtonElement | null>(null);
   const originalSidebarStateRef = useRef<{
     open: boolean;
     openMobile: boolean;
@@ -144,45 +127,9 @@ export function SidebarGuide() {
     };
     setTargetRect(nextRect);
 
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const popoverHeight = popoverRef.current?.offsetHeight ?? 210;
-    const rightSpace = viewportWidth - nextRect.right - VIEWPORT_GAP * 2;
-    const leftSpace = nextRect.left - VIEWPORT_GAP * 2;
-
-    let width = Math.min(MAX_POPOVER_WIDTH, viewportWidth - VIEWPORT_GAP * 2);
-    let left = VIEWPORT_GAP;
-    let top = nextRect.bottom + VIEWPORT_GAP;
-
-    if (rightSpace >= MIN_POPOVER_WIDTH) {
-      width = Math.min(MAX_POPOVER_WIDTH, rightSpace);
-      left = nextRect.right + VIEWPORT_GAP;
-      top = clamp(
-        nextRect.top,
-        VIEWPORT_GAP,
-        viewportHeight - popoverHeight - VIEWPORT_GAP,
-      );
-    } else if (leftSpace >= MIN_POPOVER_WIDTH) {
-      width = Math.min(MAX_POPOVER_WIDTH, leftSpace);
-      left = nextRect.left - VIEWPORT_GAP - width;
-      top = clamp(
-        nextRect.top,
-        VIEWPORT_GAP,
-        viewportHeight - popoverHeight - VIEWPORT_GAP,
-      );
-    } else {
-      top =
-        nextRect.bottom + VIEWPORT_GAP + popoverHeight <= viewportHeight
-          ? nextRect.bottom + VIEWPORT_GAP
-          : nextRect.top - popoverHeight - VIEWPORT_GAP;
-      top = clamp(
-        top,
-        VIEWPORT_GAP,
-        viewportHeight - popoverHeight - VIEWPORT_GAP,
-      );
-    }
-
-    setPopoverPosition({ left, top, width });
+    setPopoverPosition(
+      getTourPosition(nextRect, popoverRef.current?.offsetHeight),
+    );
   }, [activeStepId]);
 
   useEffect(() => {
@@ -224,6 +171,7 @@ export function SidebarGuide() {
 
     target.scrollIntoView({ block: 'nearest' });
 
+    const frame = window.requestAnimationFrame(measure);
     const delayedMeasure = window.setTimeout(measure, 260);
     const resizeObserver = new ResizeObserver(measure);
     resizeObserver.observe(target);
@@ -231,6 +179,7 @@ export function SidebarGuide() {
     window.addEventListener('scroll', measure, true);
 
     return () => {
+      window.cancelAnimationFrame(frame);
       window.clearTimeout(delayedMeasure);
       resizeObserver.disconnect();
       window.removeEventListener('resize', measure);
@@ -241,7 +190,6 @@ export function SidebarGuide() {
   useEffect(() => {
     if (!isPopoverReady) return;
     measure();
-    confirmButtonRef.current?.focus();
   }, [activeStepId, isPopoverReady, measure]);
 
   useEffect(() => {
@@ -249,23 +197,18 @@ export function SidebarGuide() {
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    const blockKeyboardNavigation = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-      if (event.key === 'Tab') {
-        event.preventDefault();
-        confirmButtonRef.current?.focus();
-      }
-    };
-    window.addEventListener('keydown', blockKeyboardNavigation, true);
-
     return () => {
       document.body.style.overflow = previousOverflow;
-      window.removeEventListener('keydown', blockKeyboardNavigation, true);
     };
   }, [stepIndex]);
+
+  function handlePrevious() {
+    if (stepIndex === null) return;
+    const previousIndex = findAvailableStep(stepIndex - 1, -1);
+    if (previousIndex === null) return;
+    storeGuideProgress(String(previousIndex));
+    setStepIndex(previousIndex);
+  }
 
   function handleConfirm() {
     if (stepIndex === null) return;
@@ -276,8 +219,6 @@ export function SidebarGuide() {
     }
 
     storeGuideProgress(String(nextIndex));
-    setTargetRect(null);
-    setPopoverPosition(null);
     setStepIndex(nextIndex);
   }
 
@@ -290,70 +231,25 @@ export function SidebarGuide() {
     return null;
   }
 
-  const isLastVisibleStep =
-    findAvailableStep((stepIndex ?? GUIDE_STEP_IDS.length - 1) + 1) === null;
-  const titleId = `sidebar-guide-${activeStepId}-title`;
-
-  return createPortal(
-    <div data-testid="sidebar-guide">
-      <div
-        className="fixed inset-0 z-[90] cursor-default"
-        aria-hidden="true"
-        onClick={(event) => event.preventDefault()}
-      />
-      <div
-        className="pointer-events-none fixed z-[91] rounded-md ring-2 ring-blue-500 ring-offset-2 ring-offset-background transition-[top,left,width,height] duration-200"
-        aria-hidden="true"
-        style={{
-          top: targetRect.top,
-          left: targetRect.left,
-          width: targetRect.width,
-          height: targetRect.height,
-          boxShadow: '0 0 0 9999px rgb(15 23 42 / 0.56)',
-        }}
-      />
-      <div
-        ref={popoverRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        className="fixed z-[92] rounded-lg border bg-popover p-4 text-popover-foreground shadow-xl"
-        style={popoverPosition}
-      >
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
-            {t('sidebarGuide.label')}
-          </span>
-          <span className="text-xs tabular-nums text-muted-foreground">
-            {t('sidebarGuide.progress', {
-              current: visibleStepNumber,
-              total: visibleStepCount,
-            })}
-          </span>
-        </div>
-        <h2 id={titleId} className="text-base font-semibold">
-          {t(`sidebarGuide.steps.${activeStepId}.title`)}
-        </h2>
-        <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
-          {t(`sidebarGuide.steps.${activeStepId}.description`)}
-        </p>
-        <Button
-          ref={confirmButtonRef}
-          type="button"
-          className="mt-4 w-full"
-          onClick={handleConfirm}
-        >
-          {isLastVisibleStep ? (
-            <Check className="size-4" />
-          ) : (
-            <ChevronRight className="size-4" />
-          )}
-          {isLastVisibleStep
-            ? t('sidebarGuide.finish')
-            : t('sidebarGuide.confirm')}
-        </Button>
-      </div>
-    </div>,
-    document.body,
+  return (
+    <TourOverlay
+      testId="sidebar-guide"
+      stepId={activeStepId}
+      current={visibleStepNumber}
+      total={visibleStepCount}
+      title={t(`sidebarGuide.steps.${activeStepId}.title`)}
+      description={t(`sidebarGuide.steps.${activeStepId}.description`)}
+      targetRect={targetRect}
+      position={popoverPosition}
+      popoverRef={popoverRef}
+      modal
+      onPrevious={
+        findAvailableStep((stepIndex ?? 0) - 1, -1) !== null
+          ? handlePrevious
+          : undefined
+      }
+      onNext={handleConfirm}
+      onSkip={completeGuide}
+    />
   );
 }

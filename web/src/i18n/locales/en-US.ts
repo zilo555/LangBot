@@ -2,33 +2,29 @@ import pipelineMigration from './pipeline-migration/en-US';
 
 const enUS = {
   sidebarGuide: {
-    label: 'Workspace tour',
-    progress: '{{current}} of {{total}}',
-    confirm: 'Got it',
-    finish: 'Finish tour',
     steps: {
       monitoring: {
-        title: 'Dashboard',
+        title: 'Review activity',
         description:
           'Review bot activity, model usage, message volume, and system performance at a glance.',
       },
       bots: {
-        title: 'Bots',
+        title: 'Connect chat platforms',
         description:
           'Connect LangBot to chat platforms and manage each bot connection from here.',
       },
       pipelines: {
-        title: 'Processors',
+        title: 'Configure processors',
         description:
-          'Build reusable AI pipelines, agents, and event processors that power your bots.',
+          'Create reusable pipelines, Agents, and plugin processor configurations, then connect them to bots.',
       },
       knowledge: {
-        title: 'Knowledge bases',
+        title: 'Manage knowledge bases',
         description:
           'Organize documents and external knowledge sources used to improve model responses.',
       },
       plugins: {
-        title: 'Installed extensions',
+        title: 'Manage installed extensions',
         description:
           'Manage installed plugins, MCP servers, and skills, including their runtime status.',
       },
@@ -38,20 +34,96 @@ const enUS = {
           'Install capabilities from the marketplace, GitHub, or a local extension package.',
       },
       models: {
-        title: 'Model configuration',
+        title: 'Configure models',
         description:
           'Configure model providers and choose the language, embedding, and other models LangBot uses.',
       },
       'api-integration': {
-        title: 'API integration',
+        title: 'Configure API access',
         description:
           'Create API keys and configure external access to LangBot services and MCP.',
       },
     },
   },
   guidedTour: {
-    label: 'Setup guide',
-    progress: '{{current}} of {{total}}',
+    eventDebugDescription:
+      'Choose a supported event, enter test data, and review the output and tool results. Platform actions are simulated; models and other tools run as configured.',
+
+    pipeline: {
+      trigger: {
+        title: 'Choose which messages to answer',
+        description:
+          'Pipelines handle message events and reply automatically with AI. Configure group triggers, private chat rules, and message filters here.',
+      },
+      ai: {
+        title: 'Configure AI capabilities',
+        description:
+          'Choose a local or external platform Runner, then configure its model, prompts, knowledge bases, and other parameters.',
+      },
+      output: {
+        title: 'Adjust replies',
+        description:
+          'Set output rules such as long-text handling to control how AI responses are delivered to users.',
+      },
+      safety: {
+        title: 'Set safety controls',
+        description:
+          'Enable content filtering and rate limits as needed to control message content and processing frequency.',
+      },
+      extensions: {
+        title: 'Choose available extensions',
+        description:
+          'Choose the plugins, MCP servers, and skills this pipeline can use to extend message handling and tools.',
+      },
+      basic: {
+        title: 'Manage the pipeline',
+        description:
+          'Copy this pipeline to create another configuration, or delete a pipeline you no longer need.',
+      },
+      debug: {
+        title: 'Test a conversation',
+        description:
+          'Send test messages to check triggers, AI replies, and output processing. Any configuration changes are saved before testing.',
+      },
+      monitoring: {
+        title: 'Review run history',
+        description:
+          'Use the tab beside the title to review past conversations, processing steps, and errors when replies are missing or unexpected.',
+      },
+      save: {
+        title: 'Save and connect a bot',
+        description:
+          'Save your configuration, then route Message received events to this pipeline on the bot page.',
+      },
+    },
+    pluginProcessor: {
+      select: {
+        title: 'Choose a plugin Runner',
+        description:
+          'Choose a Runner that supports event processing. The plugin author declares which events it handles and implements the processing logic.',
+      },
+      parameters: {
+        title: 'Configure plugin parameters',
+        description:
+          'Fill in the settings provided by the plugin. Save multiple configurations of the same plugin for different bots or use cases.',
+      },
+      debug: {
+        title: 'Test plugin event handling',
+      },
+      logs: {
+        title: 'Review execution results',
+        description:
+          'Review each run’s status, input event, plugin logs, and call results to investigate failures.',
+      },
+      save: {
+        title: 'Save and bind to a bot',
+        description:
+          'After saving, add this configuration in the bot’s Plugin processors section. It automatically receives the plugin’s declared events, with no per-event routing needed.',
+      },
+    },
+    previous: 'Previous',
+    label: 'User guide',
+    progress: 'Step {{current}} of {{total}}',
     next: 'Next',
     finish: 'Finish',
     skip: 'Skip',
@@ -60,25 +132,21 @@ const enUS = {
         title: 'Choose a connection method',
         description:
           'Choose one of the connection methods supported by this adapter. The corresponding adapter parameters update automatically.',
-        requirement: 'Select Webhook or persistent connection to continue.',
       },
       basic: {
         title: 'Name this bot',
         description:
           'Use a recognizable name so this connection is easy to find in routing and logs.',
-        requirement: 'Enter a bot name to continue.',
       },
       adapter: {
         title: 'Choose a platform adapter',
         description:
           'Choose the platform adapter for this bot. Connection methods and platform parameters are configured after creation.',
-        requirement: 'Select an adapter to continue.',
       },
       parameters: {
         title: 'Configure the platform',
         description:
           'Fill in the credentials and platform parameters. Use the adapter documentation for settings created on the platform side.',
-        requirement: 'Complete every visible required parameter to continue.',
         action: 'Open adapter documentation',
       },
       routing: {
@@ -107,7 +175,6 @@ const enUS = {
         title: 'Name the processor',
         description:
           'Give the processor a recognizable name. Runner and event settings are configured after creation.',
-        requirement: 'Enter a processor name to continue.',
       },
       submit: {
         title: 'Create and continue setup',
@@ -116,24 +183,24 @@ const enUS = {
       },
     },
     runner: {
+      debug: {
+        title: 'Test event handling',
+      },
       select: {
         title: 'Choose or install a Runner',
         description:
           'Select an installed Runner, or install one directly from the Marketplace list in this selector.',
-        requirement: 'Select an available Runner to continue.',
         action: 'Browse Runner Marketplace',
       },
       parameters: {
         title: 'Configure Runner parameters',
         description:
           'Provide the model, credentials, service URL, and other settings declared by the selected Runner.',
-        requirement: 'Complete every visible required parameter to continue.',
       },
       events: {
         title: 'Set events and tools',
         description:
           'Open Events & tools to choose what this Agent can receive and which platform or host tools it may use.',
-        requirement: 'Open the Events & tools tab to finish the guide.',
       },
     },
     knowledge: {
@@ -141,26 +208,22 @@ const enUS = {
         title: 'Describe the knowledge base',
         description:
           'Set a recognizable name and optional description before choosing its storage and retrieval engine.',
-        requirement: 'Enter a knowledge base name to continue.',
       },
       engine: {
         title: 'Review the knowledge engine',
         description:
           'Confirm the engine used by this knowledge base. Its parameters and retrieval settings are configured below.',
-        requirement: 'Select a knowledge engine to continue.',
         action: 'Browse Knowledge Engine Marketplace',
       },
       parameters: {
         title: 'Configure engine parameters',
         description:
           'Fill in the storage, model, credentials, or external-service settings requested by this engine.',
-        requirement: 'Complete every visible required parameter to continue.',
       },
       retrieval: {
         title: 'Configure retrieval',
         description:
           'Set how this engine searches and returns relevant content to processors.',
-        requirement: 'Complete every visible required retrieval parameter.',
       },
       save: {
         title: 'Save the knowledge base configuration',

@@ -1,6 +1,240 @@
 import pipelineMigration from './pipeline-migration/th-TH';
 
 const thTH = {
+  sidebarGuide: {
+    steps: {
+      monitoring: {
+        title: 'ดูภาพรวมการทำงาน',
+        description:
+          'ดูการทำงานของบอท การใช้โมเดล ปริมาณข้อความ และประสิทธิภาพระบบ',
+      },
+      bots: {
+        title: 'เชื่อมต่อแพลตฟอร์มแชท',
+        description:
+          'เชื่อมต่อ LangBot กับแพลตฟอร์มแชทและจัดการการเชื่อมต่อบอท',
+      },
+      pipelines: {
+        title: 'ตั้งค่าตัวประมวลผล',
+        description:
+          'สร้างไปป์ไลน์ Agent และการตั้งค่าตัวประมวลผลปลั๊กอินที่ใช้ซ้ำได้ แล้วเชื่อมต่อกับบอท',
+      },
+      knowledge: {
+        title: 'จัดการฐานความรู้',
+        description:
+          'จัดการเอกสารและแหล่งความรู้ภายนอกเพื่อปรับปรุงคำตอบของโมเดล',
+      },
+      plugins: {
+        title: 'จัดการส่วนขยายที่ติดตั้ง',
+        description:
+          'จัดการปลั๊กอิน เซิร์ฟเวอร์ MCP และทักษะที่ติดตั้ง พร้อมดูสถานะการทำงาน',
+      },
+      'add-extension': {
+        title: 'เพิ่มส่วนขยาย',
+        description:
+          'ติดตั้งความสามารถจากตลาด GitHub หรือแพ็กเกจส่วนขยายในเครื่อง',
+      },
+      models: {
+        title: 'ตั้งค่าโมเดล',
+        description:
+          'ตั้งค่าผู้ให้บริการและเลือกโมเดลภาษา เอ็มเบดดิง และโมเดลอื่นที่ LangBot ใช้',
+      },
+      'api-integration': {
+        title: 'ตั้งค่าการเข้าถึง API',
+        description:
+          'สร้างคีย์ API และตั้งค่าการเข้าถึงบริการ LangBot และ MCP จากภายนอก',
+      },
+    },
+  },
+
+  guidedTour: {
+    eventDebugDescription:
+      'เลือกเหตุการณ์ที่รองรับ ใส่ข้อมูลทดสอบ แล้วดูผลลัพธ์และการเรียกเครื่องมือ การกระทำบนแพลตฟอร์มจะถูกจำลอง ส่วนโมเดลและเครื่องมืออื่นทำงานตามการตั้งค่าจริง',
+
+    bot: {
+      connection: {
+        title: 'เลือกวิธีเชื่อมต่อ',
+        description:
+          'เลือกวิธีเชื่อมต่อที่อะแดปเตอร์รองรับ พารามิเตอร์จะปรับโดยอัตโนมัติ',
+      },
+      basic: {
+        title: 'ตั้งชื่อบอท',
+        description:
+          'ใช้ชื่อที่จดจำง่ายเพื่อค้นหาการเชื่อมต่อนี้ในเส้นทางและบันทึก',
+      },
+      adapter: {
+        title: 'เลือกอะแดปเตอร์แพลตฟอร์ม',
+        description:
+          'เลือกอะแดปเตอร์สำหรับบอท แล้วตั้งค่าวิธีเชื่อมต่อและพารามิเตอร์แพลตฟอร์มหลังสร้าง',
+      },
+      parameters: {
+        title: 'ตั้งค่าแพลตฟอร์ม',
+        description:
+          'กรอกข้อมูลรับรองและพารามิเตอร์ ดูเอกสารอะแดปเตอร์สำหรับการตั้งค่าฝั่งแพลตฟอร์ม',
+        action: 'เปิดเอกสารอะแดปเตอร์',
+      },
+      routing: {
+        title: 'กำหนดเส้นทางเหตุการณ์ขาเข้า',
+        description: 'เลือกตัวประมวลผลสำหรับแต่ละเหตุการณ์ที่บอทได้รับ',
+      },
+      save: {
+        title: 'บันทึกการตั้งค่าบอท',
+        description:
+          'ตรวจพารามิเตอร์การเชื่อมต่อและเส้นทางเหตุการณ์แล้วบันทึก จากนั้นเปิดใช้งานบอทเมื่อพร้อม',
+      },
+      submit: {
+        title: 'สร้างบอท',
+        description:
+          'สร้างบอทที่ยังไม่เปิดใช้งาน แล้วตั้งค่าการเชื่อมต่อและพารามิเตอร์ในหน้าบอท',
+      },
+    },
+    knowledge: {
+      basic: {
+        title: 'อธิบายฐานความรู้',
+        description:
+          'ตั้งชื่อที่จดจำง่ายและคำอธิบายเพิ่มเติมก่อนเลือกเอนจินจัดเก็บและค้นคืน',
+      },
+      engine: {
+        title: 'ตรวจสอบเอนจินความรู้',
+        description:
+          'ยืนยันเอนจินของฐานความรู้นี้ ตั้งค่าพารามิเตอร์และการค้นคืนด้านล่าง',
+        action: 'เรียกดูตลาดเอนจินความรู้',
+      },
+      parameters: {
+        title: 'ตั้งค่าพารามิเตอร์เอนจิน',
+        description:
+          'กรอกค่าการจัดเก็บ โมเดล ข้อมูลรับรอง หรือบริการภายนอกที่เอนจินต้องการ',
+      },
+      retrieval: {
+        title: 'ตั้งค่าการค้นคืน',
+        description: 'ตั้งค่าวิธีค้นหาและส่งเนื้อหาที่เกี่ยวข้องให้ตัวประมวลผล',
+      },
+      save: {
+        title: 'บันทึกการตั้งค่าฐานความรู้',
+        description: 'ตรวจพารามิเตอร์เอนจินและการค้นคืนแล้วบันทึก',
+      },
+      submit: {
+        title: 'สร้างฐานความรู้',
+        description:
+          'สร้างฐานความรู้ แล้วเพิ่มเอกสารหรือเชื่อมต่อแหล่งข้อมูลที่เอนจินรองรับ',
+      },
+    },
+
+    pipeline: {
+      trigger: {
+        title: 'เลือกข้อความที่จะตอบ',
+        description:
+          'ไปป์ไลน์ประมวลผลเหตุการณ์ข้อความและตอบด้วย AI อัตโนมัติ ตั้งเงื่อนไขในกลุ่ม กฎแชทส่วนตัว และตัวกรองข้อความได้ที่นี่',
+      },
+      ai: {
+        title: 'ตั้งค่าความสามารถ AI',
+        description:
+          'เลือกรันเนอร์ภายในหรือแพลตฟอร์มภายนอก แล้วตั้งค่าโมเดล พรอมต์ ฐานความรู้ และพารามิเตอร์อื่น',
+      },
+      output: {
+        title: 'ปรับรูปแบบคำตอบ',
+        description:
+          'ตั้งกฎผลลัพธ์ เช่น การจัดการข้อความยาว เพื่อกำหนดวิธีส่งคำตอบให้ผู้ใช้',
+      },
+      safety: {
+        title: 'ตั้งค่าความปลอดภัย',
+        description: 'เปิดตัวกรองเนื้อหาและจำกัดอัตราการประมวลผลตามต้องการ',
+      },
+      extensions: {
+        title: 'เลือกส่วนขยาย',
+        description:
+          'เลือกปลั๊กอิน เซิร์ฟเวอร์ MCP และทักษะที่ไปป์ไลน์นี้ใช้ได้ เพื่อเพิ่มความสามารถในการประมวลผลและเครื่องมือ',
+      },
+      basic: {
+        title: 'จัดการไปป์ไลน์',
+        description:
+          'คัดลอกไปป์ไลน์เพื่อสร้างการตั้งค่าอื่น หรือลบไปป์ไลน์ที่ไม่ต้องการแล้ว',
+      },
+      debug: {
+        title: 'ทดสอบการสนทนา',
+        description:
+          'ส่งข้อความทดสอบเพื่อตรวจเงื่อนไข คำตอบ AI และการประมวลผลผลลัพธ์ การเปลี่ยนแปลงจะถูกบันทึกก่อนทดสอบ',
+      },
+      monitoring: {
+        title: 'ดูประวัติการทำงาน',
+        description:
+          'ใช้แท็บข้างชื่อเพื่อดูบทสนทนา ขั้นตอนการประมวลผล และข้อผิดพลาด เมื่อไม่มีคำตอบหรือได้คำตอบที่ไม่คาดคิด',
+      },
+      save: {
+        title: 'บันทึกและเชื่อมต่อบอท',
+        description:
+          'บันทึกการตั้งค่า แล้วกำหนดเส้นทางเหตุการณ์รับข้อความให้ไปป์ไลน์นี้ในหน้าบอท',
+      },
+    },
+    pluginProcessor: {
+      select: {
+        title: 'เลือกรันเนอร์ปลั๊กอิน',
+        description:
+          'เลือกรันเนอร์ที่รองรับการประมวลผลเหตุการณ์ ผู้สร้างปลั๊กอินเป็นผู้กำหนดเหตุการณ์ที่รองรับและวิธีประมวลผล',
+      },
+      parameters: {
+        title: 'ตั้งค่าพารามิเตอร์ปลั๊กอิน',
+        description:
+          'กรอกค่าตามที่ปลั๊กอินกำหนด สามารถบันทึกหลายการตั้งค่าของปลั๊กอินเดียวกันสำหรับบอทหรือการใช้งานต่างกัน',
+      },
+      debug: {
+        title: 'ทดสอบการประมวลผลเหตุการณ์',
+      },
+      logs: {
+        title: 'ดูผลการประมวลผล',
+        description:
+          'ตรวจสถานะ เหตุการณ์ขาเข้า บันทึกปลั๊กอิน และผลการเรียกใช้แต่ละครั้งเพื่อหาสาเหตุข้อผิดพลาด',
+      },
+      save: {
+        title: 'บันทึกและผูกกับบอท',
+        description:
+          'หลังบันทึก เพิ่มการตั้งค่านี้ในส่วนตัวประมวลผลปลั๊กอินของหน้าบอท ระบบจะรับเหตุการณ์ที่ปลั๊กอินประกาศโดยอัตโนมัติ ไม่ต้องตั้งเส้นทางแยกแต่ละเหตุการณ์',
+      },
+    },
+    label: 'คำแนะนำการใช้งาน',
+    progress: 'ขั้นตอน {{current}} จาก {{total}}',
+    previous: 'ขั้นตอนก่อนหน้า',
+    next: 'ถัดไป',
+    finish: 'จบคำแนะนำ',
+    skip: 'ข้าม',
+    processorCreate: {
+      type: {
+        title: 'เลือกประเภทตัวประมวลผล',
+        description:
+          'ไปป์ไลน์ประมวลผลข้อความตามลำดับที่กำหนด Agent ตัดสินใจด้วยโมเดลและเครื่องมือ ส่วนตัวประมวลผลปลั๊กอินจัดการเหตุการณ์แพลตฟอร์มที่ประกาศไว้',
+      },
+      basic: {
+        title: 'ตั้งชื่อตัวประมวลผล',
+        description:
+          'ตั้งชื่อที่จดจำได้ง่าย แล้วตั้งค่ารันเนอร์และเหตุการณ์หลังจากสร้าง',
+      },
+      submit: {
+        title: 'สร้างและตั้งค่าต่อ',
+        description:
+          'หลังจากสร้าง ให้ตั้งค่ารันเนอร์ พารามิเตอร์ เหตุการณ์ และเครื่องมือที่ตัวประมวลผลประเภทนี้ต้องใช้',
+      },
+    },
+    runner: {
+      debug: {
+        title: 'ทดสอบการจัดการเหตุการณ์',
+      },
+      select: {
+        title: 'เลือกหรือติดตั้งรันเนอร์',
+        description:
+          'เลือกรันเนอร์ที่ติดตั้งแล้ว หรือติดตั้งโดยตรงจากรายการตลาดในตัวเลือกนี้',
+        action: 'เรียกดูตลาดรันเนอร์',
+      },
+      parameters: {
+        title: 'ตั้งค่าพารามิเตอร์รันเนอร์',
+        description:
+          'กรอกโมเดล ข้อมูลรับรอง URL บริการ และค่าอื่น ๆ ตามที่รันเนอร์ที่เลือกกำหนด',
+      },
+      events: {
+        title: 'ตั้งค่าเหตุการณ์และเครื่องมือ',
+        description:
+          'เปิดแท็บเหตุการณ์และเครื่องมือเพื่อเลือกเหตุการณ์ที่ Agent รับได้ และเครื่องมือของแพลตฟอร์มหรือ LangBot ที่อนุญาตให้ใช้',
+      },
+    },
+  },
   pipelineMigration,
   sidebar: {
     home: 'หน้าแรก',
@@ -17,6 +251,14 @@ const thTH = {
     editionCloud: 'Cloud',
   },
   common: {
+    loadFailed: 'โหลดไม่สำเร็จ โปรดลองอีกครั้ง',
+    showSecret: 'แสดงข้อมูลลับ',
+    hideSecret: 'ซ่อนข้อมูลลับ',
+    editBasicInfo: 'แก้ไขข้อมูลพื้นฐาน',
+    editBasicInfoDescription: 'เปลี่ยนชื่อ คำอธิบาย และไอคอน',
+    editBasicInfoDescriptionNoIcon: 'เปลี่ยนชื่อและคำอธิบาย',
+    management: 'การจัดการ',
+
     customValue: 'กำหนดเอง',
     login: 'เข้าสู่ระบบ',
     logout: 'ออกจากระบบ',
@@ -389,6 +631,196 @@ const thTH = {
       "Uses the Workspace owner's LangBot Account billing and credits.",
   },
   bots: {
+    connectionMode: 'วิธีเชื่อมต่อ',
+    connectionModeDescription: 'เลือกวิธีเชื่อมต่อที่อะแดปเตอร์รองรับ',
+    connectionWebhook: 'Webhook',
+    connectionWebhookDescription:
+      'แพลตฟอร์มส่งเหตุการณ์ไปยัง URL ที่ LangBot สร้าง',
+    connectionPersistent: 'การเชื่อมต่อถาวร',
+    connectionPersistentDescription:
+      'LangBot เปิดการเชื่อมต่อซ็อกเก็ตหรือสตรีมขาออกค้างไว้',
+    noAdaptersForConnectionMode:
+      'ไม่มีอะแดปเตอร์ที่ติดตั้งรองรับวิธีเชื่อมต่อนี้',
+    eventBindings: 'เส้นทางเหตุการณ์',
+    addEventBinding: 'เพิ่มเส้นทาง',
+    addBehavior: 'เพิ่มพฤติกรรม',
+    commonScenarios: 'สถานการณ์ทั่วไป',
+    dragEventRoute: 'ลากเส้นทาง {{index}}',
+    behaviorReplyMessages: 'ตอบข้อความ',
+    behaviorReplyMessagesDescription: 'ส่งข้อความขาเข้าไปยังตัวประมวลผล',
+    behaviorWelcomeMembers: 'ต้อนรับสมาชิกใหม่',
+    behaviorWelcomeMembersDescription: 'เรียกตัวประมวลผลเมื่อมีคนเข้ากลุ่ม',
+    behaviorHandleDepartures: 'จัดการสมาชิกออกจากกลุ่ม',
+    behaviorHandleDeparturesDescription:
+      'เรียกตัวประมวลผลเมื่อมีคนออกหรือถูกนำออกจากกลุ่ม',
+    behaviorReviewFriendRequests: 'ตรวจคำขอเป็นเพื่อน',
+    behaviorReviewFriendRequestsDescription:
+      'ส่งคำขอเป็นเพื่อนใหม่ไปยังตัวประมวลผล',
+    behaviorHandleModeration: 'จัดการเหตุการณ์ควบคุมกลุ่ม',
+    behaviorHandleModerationDescription:
+      'เรียกตัวประมวลผลเมื่อสมาชิกกลุ่มถูกจำกัดสิทธิ์',
+    behaviorCustom: 'ตั้งค่าเหตุการณ์อื่น',
+    behaviorCustomDescription:
+      'เพิ่มเส้นทางและเลือกจากเหตุการณ์ที่อะแดปเตอร์รองรับ',
+    eventPattern: 'เหตุการณ์',
+    eventPatternPlaceholder: 'เลือกเหตุการณ์',
+    targetType: 'ประเภทปลายทาง',
+    target: 'ตัวประมวลผล',
+    targetAgent: 'Agent',
+    targetPipeline: 'ไปป์ไลน์',
+    targetDiscard: 'ละทิ้ง',
+    selectTarget: 'เลือกตัวประมวลผล',
+    searchTarget: 'ค้นหาตัวประมวลผล…',
+    noTargetFound: 'ไม่พบตัวประมวลผลที่รองรับ',
+    priority: 'ลำดับความสำคัญ',
+    enabled: 'เปิดใช้งาน',
+    eventBindingDescriptionPlaceholder: 'คำอธิบายกฎ',
+    noEventBindings: 'ไม่มีเส้นทางเหตุการณ์',
+    unsupportedPipelineEvent: 'ไปป์ไลน์ใช้ได้กับเหตุการณ์ message.* เท่านั้น',
+    disable: 'ปิดใช้งาน',
+    enable: 'เปิดใช้งาน',
+    disabledBindings: 'ปิดใช้งาน',
+    adapterEventsTitle: 'เหตุการณ์ที่รองรับ',
+    adapterEventsDescription: 'เหตุการณ์ {{count}} ประเภท',
+    adapterEventsMore: 'อีก {{count}} รายการ',
+    advancedEventValues: 'ดูทั้งหมด',
+    eventGroup: 'กลุ่ม',
+    eventGroupNames: {
+      bot: 'สถานะบอท',
+      feedback: 'ข้อเสนอแนะ',
+      friend: 'เพื่อน',
+      group: 'กลุ่ม',
+      message: 'ข้อความ',
+      platform: 'แพลตฟอร์ม',
+    },
+    routeConflictTitle: 'บางเส้นทางซ้อนทับกัน',
+    routeConflictShadowed:
+      '{{shadowed}} อาจไม่ทำงาน เพราะ {{winner}} จัดการเหตุการณ์เดียวกันก่อน',
+    routeConflictMore: 'มีข้อขัดแย้งเส้นทางอีก {{count}} รายการ',
+    routeFallbackCatchAll: '{{route}} เป็นเส้นทางรับทุกเหตุการณ์',
+    routeFallbackIgnored:
+      'เหตุการณ์ที่ไม่ตรงกับเส้นทางจะถูกละเว้น เพิ่มเส้นทางรับทั้งหมดเฉพาะเมื่อต้องกำหนดผลลัพธ์ให้ทุกเหตุการณ์',
+    testRoute: 'ตรวจเส้นทาง',
+    adapterEventDebugTitle: 'ดีบักเหตุการณ์แพลตฟอร์ม',
+    adapterEventDebugDescription:
+      'สร้างเหตุการณ์ใน {{platform}} จะแสดงที่นี่เมื่ออะแดปเตอร์ได้รับ',
+    adapterEventObserveOnly:
+      'หน้าต่างนี้ใช้สังเกตเหตุการณ์เท่านั้น เหตุการณ์ขาเข้ายังคงใช้เส้นทางปัจจุบัน',
+    adapterEventPreparing: 'กำลังเตรียม',
+    adapterEventListening: 'กำลังรับฟัง',
+    adapterEventListenerUnavailable: 'การรับฟังถูกขัดจังหวะ',
+    adapterEventLoadFailed:
+      'อ่านเหตุการณ์ไม่ได้ ตรวจว่าบอททำงานอยู่แล้วลองอีกครั้ง',
+    adapterEventReceivedCount: 'ได้รับ {{count}} เหตุการณ์',
+    adapterEventClear: 'ล้าง',
+    adapterEventEmptyTitle: 'กำลังรอเหตุการณ์จากแพลตฟอร์ม',
+    adapterEventEmptyDescription: 'ส่งข้อความหรือสร้างเหตุการณ์ใน {{platform}}',
+    adapterEventData: 'ดูข้อมูลเหตุการณ์',
+    adapterEventNeedsSavedBot: 'บันทึกบอทก่อนรับฟังเหตุการณ์แพลตฟอร์ม',
+    adapterEventCurrentPlatform: 'แพลตฟอร์มปัจจุบัน',
+    adapterConfigurationTest: 'ทดสอบการตั้งค่าอะแดปเตอร์',
+    adapterConfigurationTestDescription:
+      'บันทึกและเปิดบอทก่อน แล้วสร้างเหตุการณ์แพลตฟอร์มเพื่อตรวจการตั้งค่า',
+    refreshRouteStatus: 'รีเฟรชสถานะ',
+    routeStatusIdle: 'ยังไม่เคยทำงาน',
+    routeStatusRefreshFailed: 'รีเฟรชสถานะเส้นทางไม่สำเร็จ',
+    routeStatus: {
+      matched: 'ตรงกัน',
+      delivered: 'ส่งถึงแล้ว',
+      discarded: 'ละทิ้งแล้ว',
+      failed: 'ล้มเหลว',
+      not_matched: 'ไม่ตรงกัน',
+    },
+    routeStatusDetail: {
+      matched: 'เส้นทางนี้ตรงกับเหตุการณ์',
+      delivered: 'ตัวประมวลผลได้รับเหตุการณ์แล้ว',
+      discarded: 'เหตุการณ์ถูกละทิ้งตามที่กำหนด',
+      failed: 'เส้นทางทำงานไม่สำเร็จ',
+      not_matched: 'ไม่มีเส้นทางที่ตั้งค่าไว้ตรงกับเหตุการณ์',
+    },
+    routeFailure: {
+      binding_disabled: 'เส้นทางนี้ปิดใช้งานอยู่',
+      event_pattern_mismatch: 'เหตุการณ์ไม่ตรงกับเส้นทางนี้',
+      filters_mismatch: 'ข้อมูลทดสอบไม่ตรงตามเงื่อนไขเส้นทาง',
+      lower_priority: 'เส้นทางอื่นที่ตรงกันมีลำดับความสำคัญสูงกว่า',
+      route_not_found: 'ไม่มีเส้นทางตรงกับเหตุการณ์นี้',
+      processor_incompatible: 'ตัวประมวลผลที่เลือกไม่รองรับเหตุการณ์นี้',
+      processor_not_found: 'ตัวประมวลผลที่เลือกไม่พร้อมใช้งาน',
+      runner_failed: 'รันเนอร์ของ Agent ประมวลผลเหตุการณ์ไม่สำเร็จ',
+      delivery_failed: 'ตัวประมวลผลทำงานเสร็จ แต่ส่งผลลัพธ์ไม่สำเร็จ',
+    },
+    dryRunTitle: 'ตรวจเส้นทางเหตุการณ์',
+    dryRunDescription: 'เลือกเหตุการณ์เพื่อดูว่าตรงกับเส้นทางและตัวประมวลผลใด',
+    dryRunEventType: 'ประเภทเหตุการณ์',
+    dryRunSampleReady: 'เหตุการณ์ตัวอย่างพร้อมแล้ว',
+    dryRunSampleDescription:
+      'LangBot เตรียมข้อมูลตัวอย่างสำหรับ {{event}} แล้ว โดยทั่วไปใช้ทดสอบได้ทันที',
+    dryRunEditPayload: 'ข้อมูลทดสอบ',
+    dryRunHidePayload: 'ซ่อนข้อมูล',
+    dryRunPayload: 'ข้อมูลทดสอบ (JSON)',
+    dryRunPayloadHint: 'ใช้ทดสอบเงื่อนไขข้อความและการสนทนา',
+    dryRunPayloadJsonError: 'กรอก JSON ที่ถูกต้อง',
+    dryRunPayloadObjectError: 'ข้อมูลต้องเป็นออบเจ็กต์ JSON',
+    dryRunNeedsSavedBot: 'บันทึกบอทก่อนตรวจเส้นทาง',
+    dryRunFailed: 'ตรวจเส้นทางไม่สำเร็จ โปรดลองภายหลัง',
+    dryRunAction: 'ดูผลการจับคู่',
+    dryRunRunning: 'กำลังตรวจสอบ…',
+    dryRunMatched: 'พบเส้นทางที่ตรงกัน',
+    dryRunNotMatched: 'ไม่พบเส้นทางที่ตรงกัน',
+    dryRunTarget: 'ตัวประมวลผลปลายทาง',
+    dryRunNoTarget: 'ไม่มีปลายทาง',
+    dryRunMatchedRule: 'กฎที่ตรงกัน',
+    dryRunRuleIndex: 'เส้นทาง {{index}}',
+    dryRunNoRule: 'ไม่มีกฎที่ตรงกัน',
+    dryRunDiagnostics: 'ขั้นตอนวินิจฉัย',
+    dryRunDiagnosticSelected: 'เลือก {{route}} แล้ว',
+    dryRunDiagnosticMatched: '{{route}} ตรงกัน {{reason}}',
+    dryRunDiagnosticSkipped: 'ข้าม {{route}} แล้ว {{reason}}',
+    eventCustom: 'เหตุการณ์กำหนดเอง',
+    eventDescriptions: {
+      all: 'ตรงกับทุกเหตุการณ์ที่อะแดปเตอร์นี้ได้รับ',
+      namespace: 'ตรงกับทุกเหตุการณ์ของ {{group}}',
+      namespace_bot:
+        'ตรงกับการเชิญ การนำบอทออก การปิดเสียง และเหตุการณ์สถานะอื่น',
+      namespace_feedback: 'ตรงกับเหตุการณ์ข้อเสนอแนะจากแพลตฟอร์มหรือผู้ใช้',
+      namespace_friend: 'ตรงกับคำขอเป็นเพื่อนและการเปลี่ยนแปลงความสัมพันธ์',
+      namespace_group:
+        'ตรงกับการเข้ากลุ่ม ออกจากกลุ่ม ถูกนำออก และเหตุการณ์กลุ่มอื่น',
+      namespace_message: 'ตรงกับการรับ แก้ไข ลบข้อความ และแสดงปฏิกิริยา',
+      namespace_platform: 'ตรงกับเหตุการณ์เฉพาะแพลตฟอร์มที่อะแดปเตอร์ให้มา',
+      custom: 'เหตุการณ์กำหนดเองหรือยังไม่มีคำอธิบาย',
+      message_received: 'ผู้ใช้หรือกลุ่มส่งข้อความใหม่ให้บอท',
+      message_edited: 'แพลตฟอร์มแจ้งว่าข้อความเดิมถูกแก้ไข',
+      message_deleted: 'แพลตฟอร์มแจ้งว่าข้อความถูกลบ',
+      message_reaction: 'ผู้ใช้เพิ่มหรือลบปฏิกิริยาต่อข้อความ',
+      feedback_received: 'ได้รับข้อเสนอแนะจากแพลตฟอร์มหรือผู้ใช้',
+      friend_request_received: 'มีคนขอเพิ่มบอทเป็นเพื่อน',
+      friend_added: 'สร้างความสัมพันธ์เพื่อนแล้ว',
+      group_member_joined: 'สมาชิกเข้าร่วมกลุ่มที่มีบอท',
+      group_member_left: 'สมาชิกออกจากกลุ่มที่มีบอท',
+      group_member_banned: 'สมาชิกกลุ่มถูกแบนหรือนำออก',
+      bot_invited_to_group: 'บอทได้รับเชิญเข้ากลุ่ม',
+      bot_removed_from_group: 'บอทถูกนำออกจากกลุ่ม',
+      bot_muted: 'บอทถูกปิดเสียงในกลุ่ม',
+      bot_unmuted: 'บอทถูกยกเลิกการปิดเสียงในกลุ่ม',
+      platform_specific: 'เหตุการณ์แพลตฟอร์มเฉพาะอะแดปเตอร์',
+    },
+    conditions: 'เงื่อนไข',
+    conditionsDescription:
+      'ต้องตรงทุกเงื่อนไขจึงจะทำงาน เว้นว่างเพื่อให้ทำงานเสมอ',
+    conditionsEmpty: 'ไม่มีเงื่อนไข — ทำงานเสมอ',
+    addFilter: 'เพิ่มเงื่อนไข',
+    filterChatType: 'ประเภทเซสชัน',
+    filterChatId: 'ID เซสชัน',
+    filterMessageText: 'ข้อความ',
+    filterMessageElement: 'องค์ประกอบข้อความ',
+    operator_eq: 'เท่ากับ',
+    operator_neq: 'ไม่เท่ากับ',
+    operator_contains: 'มี',
+    operator_not_contains: 'ไม่มี',
+    operator_starts_with: 'ขึ้นต้นด้วย',
+    operator_regex: 'นิพจน์ทั่วไป',
+
     eventWildcard: 'ทุกเหตุการณ์',
     eventNamespaceWildcard: '{{namespace}}.*',
     eventNames: {
@@ -590,6 +1022,171 @@ const thTH = {
     },
   },
   agents: {
+    chooseType: 'เลือกวิธีทำงาน',
+    chooseTypeDescription:
+      'เลือกประเภทตัวประมวลผลก่อน แล้วตั้งค่าเพิ่มเติมหลังสร้าง',
+    diagramHint: 'วิธีทำงาน',
+    agentDiagramTitle: 'Agent: ตัดสินใจและลงมือ',
+    agentDiagramDescription:
+      'Agent รับเหตุการณ์หลายประเภท ใช้โมเดลและเครื่องมือทำความเข้าใจ แล้วตัดสินใจทำงานต่อ',
+    pipelineDiagramTitle: 'ไปป์ไลน์: ทำตามขั้นตอนที่กำหนด',
+    pipelineDiagramDescription:
+      'ไปป์ไลน์ประมวลผลเฉพาะเหตุการณ์ข้อความและทำตามลำดับที่ตั้งไว้',
+    pipelineDiagramFlow: 'ข้อความผ่านขั้นตอนตามลำดับคงที่',
+    diagramEvents: 'เหตุการณ์แพลตฟอร์ม',
+    diagramAgentCanUse: 'สิ่งที่ Agent ใช้ได้',
+    diagramMessages: 'ข้อความ',
+    diagramMembers: 'สมาชิก',
+    diagramFeedback: 'ข้อเสนอแนะ',
+    diagramDecide: 'ทำความเข้าใจและตัดสินใจ',
+    diagramModel: 'ใช้โมเดล',
+    diagramTools: 'ใช้เครื่องมือ',
+    diagramActions: 'ลงมือทำ',
+    diagramMessage: 'ข้อความ',
+    diagramPreprocess: 'เตรียม',
+    diagramAI: 'AI',
+    diagramPostprocess: 'ปรับแต่ง',
+    diagramOutput: 'ผลลัพธ์',
+    eventsAndTools: 'เหตุการณ์และเครื่องมือ',
+    eventsAndToolsDescription: 'ตั้งเหตุการณ์กระตุ้นและเครื่องมือที่ใช้ได้',
+    configuredEvents: 'เหตุการณ์ที่เพิ่มแล้ว',
+    configuredEventsCount: 'ทั้งหมด {{count}} รายการ',
+    addEvent: 'เพิ่มเหตุการณ์',
+    removeEvent: 'ลบเหตุการณ์',
+    eventActions: 'เครื่องมือที่เปิดอัตโนมัติ',
+    eventToolEnabled: 'เปิดใช้งาน',
+    eventToolsEnabledCount: 'เปิดใช้ {{count}} เครื่องมือ',
+    noEventActions: 'ไม่มีการกระทำสำหรับเหตุการณ์นี้',
+    noEventsConfigured: 'ยังไม่ได้เพิ่มเหตุการณ์',
+    noEventsConfiguredDescription: 'ไม่มีเหตุการณ์ใดกระตุ้น Agent นี้ได้',
+    noEventsConfiguredBadge: 'ไม่มีเหตุการณ์',
+    apiTools: 'สิทธิ์ใช้เครื่องมือ',
+    apiToolsDescription: 'เลือกเครื่องมือที่ Agent นี้เรียกใช้ได้',
+    otherTools: 'เครื่องมืออื่น',
+    otherToolsDescription:
+      'เลือกเครื่องมือแพลตฟอร์ม แซนด์บ็อกซ์ MCP ปลั๊กอิน และทักษะ',
+    apiToolsSelected: 'เลือกแล้ว {{count}} รายการ',
+    apiToolsSecurityHint: 'เปิดเฉพาะเครื่องมือที่ Agent นี้จำเป็นต้องใช้',
+    apiToolsSearch: 'ค้นหาเครื่องมือ…',
+    eventApiTools: 'เครื่องมือเหตุการณ์',
+    eventToolUnavailable: 'ไม่พร้อมใช้งาน',
+    eventApiToolsDescription:
+      'ปลายทางกำหนดจากเหตุการณ์ปัจจุบัน Agent ส่งเฉพาะพารามิเตอร์การกระทำ',
+    platformApiTools: 'เครื่องมือแพลตฟอร์ม',
+    platformApiToolsDescription:
+      'Agent เลือก ID ผู้ใช้ กลุ่ม หรือข้อความได้ ให้สิทธิ์เท่าที่จำเป็น',
+    apiToolEvents: 'เหตุการณ์',
+    apiToolParameters: 'พารามิเตอร์ Agent',
+    apiToolSource: 'แหล่งที่มา',
+    apiToolNoParameters: 'ไม่มี',
+    sandboxTools: 'แซนด์บ็อกซ์',
+    mcpTools: 'MCP',
+    pluginTools: 'ปลั๊กอิน',
+    skillTools: 'ทักษะ',
+    langbotBuiltIn: 'LangBot',
+    apiToolDetails: 'รายละเอียด',
+    apiToolHideDetails: 'ซ่อน',
+    apiToolsNoResults: 'ไม่พบ API หรือเครื่องมือที่ตรงกัน',
+    apiToolsCatalogUnavailable:
+      'เซิร์ฟเวอร์ LangBot ไม่ส่งรายการเครื่องมือ API กลับมา ตรวจว่าอัปเดตและเริ่มใหม่แล้ว ไม่ได้หมายความว่าแพลตฟอร์มไม่มีเครื่องมือ',
+    hostToolsCatalogUnavailable: 'รายการเครื่องมือไม่พร้อมใช้งานชั่วคราว',
+    apiToolRisk: {
+      read: 'อ่านอย่างเดียว',
+      write: 'การกระทำ',
+      dangerous: 'มีความอ่อนไหว',
+    },
+    runnerStatusLoading: 'กำลังตรวจสถานะรันเนอร์',
+    runnerStatusCheckFailed: 'ตรวจสถานะรันเนอร์ไม่สำเร็จ',
+    runnerStatusCheckFailedDescription:
+      'ลองตรวจอีกครั้ง หากยังไม่ได้ ให้ตรวจเซิร์ฟเวอร์และรันไทม์ปลั๊กอิน',
+    noRunnersAvailable: 'ไม่มีรันเนอร์พร้อมใช้งาน',
+    noRunnersAvailableDescription:
+      'ติดตั้งและเปิดส่วนขยายรันเนอร์ก่อนตั้งค่า Agent นี้',
+    installedRunners: 'รันเนอร์ที่ติดตั้ง',
+    marketplaceRunners: 'ปลั๊กอินรันเนอร์ในตลาด',
+    viewMarketplace: 'ดูตลาด',
+    restoringRunnerInstall: 'กำลังกู้คืนการติดตั้งปลั๊กอินและรอรันเนอร์…',
+    noInstalledRunners: 'ยังไม่ได้ติดตั้งส่วนขยายรันเนอร์',
+    installingRunner: 'กำลังติดตั้ง {{runner}}...',
+    runnerInstallSuccess: 'ติดตั้ง {{runner}} แล้ว พร้อมให้เลือก',
+    selectedRunnerUnavailable: 'รันเนอร์ที่เลือกไม่พร้อมใช้งาน',
+    selectedRunnerUnavailableDescription:
+      '{{runner}} ยังไม่ได้ลงทะเบียน เลือกรันเนอร์อื่นหรือคืนค่าส่วนขยาย',
+    noRunnerSelected: 'ยังไม่ได้เลือกรันเนอร์',
+    runnerConfigIncomplete: 'การตั้งค่ารันเนอร์ไม่ครบ',
+    runnerConfigIncompleteDescription: 'กรอกช่องที่จำเป็น: {{fields}}',
+    runnerReady: 'รันเนอร์พร้อมแล้ว',
+    runnerReadyDescription:
+      '{{runner}} ลงทะเบียนแล้ว และรันไทม์ปลั๊กอินเชื่อมต่ออยู่',
+    debugTab: 'ดีบักเหตุการณ์',
+    debugTitle: 'ดีบักเหตุการณ์ Agent',
+    debugDescription:
+      'เรียก Agent ปัจจุบันด้วยข้อความหรือเหตุการณ์แพลตฟอร์ม แล้วดูผลลัพธ์จริง',
+    debugResetSession: 'รีเซ็ตเซสชัน',
+    debugEventType: 'ประเภทเหตุการณ์',
+    debugNoEventsTitle: 'ไม่มีเหตุการณ์ให้ดีบัก',
+    debugNoEventsDescription: 'เพิ่มเหตุการณ์ในส่วนเหตุการณ์และเครื่องมือก่อน',
+    debugMessageReceived: 'ได้รับข้อความ',
+    debugGroupMemberJoined: 'สมาชิกเข้ากลุ่ม',
+    debugGroupMemberLeft: 'สมาชิกออกจากกลุ่ม',
+    debugFriendRequested: 'ได้รับคำขอเป็นเพื่อน',
+    debugFeedbackReceived: 'ได้รับข้อเสนอแนะ',
+    debugCustomEvent: 'เหตุการณ์กำหนดเอง',
+    debugCustomEventType: 'ชื่อเหตุการณ์กำหนดเอง',
+    debugMessageInput: 'ข้อความสนทนา',
+    debugEventSummary: 'สรุปเหตุการณ์',
+    debugInputPlaceholder: 'ใส่สิ่งที่ต้องการให้ Agent จัดการ',
+    debugEventPayload: 'ข้อมูลเหตุการณ์ (JSON)',
+    debugSupportedEvents: 'Agent รองรับ',
+    debugRun: 'เรียกใช้การทดสอบ',
+    debugSaveAndRun: 'บันทึกและเรียกใช้',
+    debugRunning: 'กำลังทำงาน',
+    debugTranscript: 'บันทึกการดีบัก',
+    debugTranscriptDescription: 'ข้อมูลเข้าและผลลัพธ์ Agent ของเซสชันดีบักนี้',
+    debugEmptyTitle: 'ตรวจการทำงานของ Agent นี้',
+    debugEmptyTranscript:
+      'เลือกเหตุการณ์ ใส่ข้อมูลทดสอบ แล้วเลือก “เรียกใช้การทดสอบ” ผลลัพธ์จะแสดงในหน้านี้',
+    debugAgentOutput: 'ผลลัพธ์ Agent',
+    debugReasoning: 'กำลังคิด',
+    debugTextOutput: 'ผลลัพธ์ข้อความ',
+    debugPlatformNotice:
+      'เครื่องมือแพลตฟอร์มใช้ Mock: Agent เรียกเครื่องมือจริง แต่จำลองการกระทำโดยไม่ส่งข้อความจริง เครื่องมืออื่นทำงานตามที่ตั้งค่า',
+    debugToolSimulated: 'จำลองสำเร็จ · Mock',
+    debugStop: 'หยุดดีบัก',
+    debugMockOptions: 'สถานการณ์ Mock (JSON)',
+    debugInvalidMock: 'สถานการณ์ Mock ต้องเป็นออบเจ็กต์ JSON ที่ถูกต้อง',
+    debugToolMockFailed: 'จำลองความล้มเหลว · Mock',
+    debugMockOptionsHelp:
+      'ค่าเริ่มต้นคือสำเร็จ ระบุข้อผิดพลาดตามชื่อเครื่องมือใน errors ข้อมูลตอบกลับใน results และ API ที่ไม่รองรับใน unsupported_apis ตัวอย่าง: {"errors":{"event_reply":"จำลองการส่งล้มเหลว"}}',
+    debugCancelled: 'หยุดดีบักแล้ว บันทึกก่อนหน้ายังคงอยู่',
+    debugNoToolCalls:
+      'ไม่มีบันทึกการเรียกเครื่องมือ การสร้างข้อความไม่ได้หมายความว่าส่งข้อความแล้ว',
+    debugToolCount:
+      'บันทึกการเรียกเครื่องมือ {{count}} ครั้ง ดูสถานะและผลลัพธ์ด้านล่าง',
+    debugToolRunning: 'กำลังทำงาน',
+    debugToolCompleted: 'เสร็จสิ้น',
+    debugToolFailed: 'ล้มเหลว',
+    debugToolInterrupted: 'ไม่มีผลลัพธ์ตอบกลับ',
+    debugToolArguments: 'อาร์กิวเมนต์',
+    debugToolResult: 'ผลลัพธ์',
+    debugTestInput: 'ข้อมูลทดสอบ',
+    debugNoTextOutput: 'ทำงานเสร็จโดยไม่มีผลลัพธ์ข้อความ',
+    debugEventTypeRequired: 'ใส่ประเภทเหตุการณ์',
+    debugInputRequired: 'ใส่ข้อความสนทนา',
+    debugInvalidPayload: 'ข้อมูลเหตุการณ์ต้องเป็นออบเจ็กต์ JSON ที่ถูกต้อง',
+    debugUnsupportedEvent: 'เหตุการณ์นี้อยู่นอกขอบเขตที่ Agent รองรับ',
+    debugRunnerConfigInvalidDescription:
+      'การตั้งค่ารันเนอร์ไม่ครบ: {{message}}',
+    debugRunnerExecutionFailedDescription:
+      'การทำงานล้มเหลว ตรวจโมเดลและการตั้งค่ารันเนอร์แล้วลองใหม่',
+    debugRunnerTimeoutDescription:
+      'หมดเวลาทำงาน ลองภายหลังหรือปรับเวลาสูงสุดของรันเนอร์',
+    debugApiKeyRequired: 'ไม่มีคีย์ API',
+    debugOpenRunnerConfig: 'เปิดการตั้งค่ารันเนอร์',
+    debugReviewRunnerConfig: 'ตรวจการตั้งค่ารันเนอร์',
+    debugErrorDetails: 'ดูรายละเอียดข้อผิดพลาด',
+    debugRunFailed: 'ดีบัก Agent ไม่สำเร็จ',
+
     monitoring: {
       description:
         'ดูเหตุการณ์เริ่มต้น ผลลัพธ์โมเดล และการเรียกเครื่องมือของแต่ละงาน',
@@ -901,6 +1498,13 @@ const thTH = {
     installFromGithubDesc: 'ติดตั้งปลั๊กอินจาก GitHub Release',
     goToMarketplace: 'ไปที่ตลาดปลั๊กอิน',
     installProgress: {
+      updateTitle: 'กำลังอัปเดต {{name}}',
+      checkingUpdate: 'กำลังตรวจการอัปเดต',
+      validating: 'กำลังตรวจสอบแพ็กเกจ',
+      applyingUpdate: 'กำลังใช้การอัปเดต',
+      activating: 'กำลังเริ่มและรีเฟรชคอมโพเนนต์',
+      updateComplete: 'อัปเดตปลั๊กอินสำเร็จ',
+
       title: 'กำลังติดตั้ง {{name}}',
       titleGeneric: 'การติดตั้งปลั๊กอิน',
       overallProgress: 'ความคืบหน้าโดยรวม',
@@ -929,6 +1533,11 @@ const thTH = {
     uploadPluginOnly: 'รองรับเฉพาะแพ็กเกจปลั๊กอิน .lbpkg',
   },
   market: {
+    runnerUsage: 'การใช้งานรันเนอร์',
+    runnerUsageAll: 'ทั้งหมด',
+    runnerUsageAgent: 'Agent / ไปป์ไลน์',
+    runnerUsageEvent: 'ตัวประมวลผลปลั๊กอิน',
+
     searchPlaceholder: 'ค้นหาปลั๊กอิน...',
     searchPlaceholderCount:
       'ค้นหา {{count}} ส่วนขยาย ความสามารถ หรือกรณีใช้งาน...',
@@ -1159,6 +1768,8 @@ const thTH = {
       'เมื่อลบแล้ว การกำหนดค่าเซิร์ฟเวอร์ MCP นี้จะไม่สามารถกู้คืนได้',
   },
   pipelines: {
+    managementDescription: 'คัดลอกหรือลบไปป์ไลน์นี้',
+
     title: 'ไปป์ไลน์',
     description:
       'Pipeline กำหนดกระบวนการประมวลผลเหตุการณ์ข้อความ ใช้เพื่อผูกกับ Bot',
@@ -1276,6 +1887,8 @@ const thTH = {
       selectKnowledgeBases: 'เลือกคลังความรู้',
     },
     debugDialog: {
+      saveAndSend: 'บันทึกและส่ง',
+
       title: 'แชท Pipeline',
       selectPipeline: 'เลือก Pipeline',
       sessionType: 'ประเภทเซสชัน',
@@ -1320,6 +1933,22 @@ const thTH = {
     },
   },
   knowledge: {
+    installedEngines: 'เอนจินความรู้ที่ติดตั้ง',
+    noInstalledEngines: 'ยังไม่ได้ติดตั้งปลั๊กอินเอนจินความรู้',
+    marketplaceEngines: 'ปลั๊กอินเอนจินความรู้ในตลาด',
+    noMarketplaceEngines: 'ไม่มีปลั๊กอินเอนจินความรู้พร้อมใช้งาน',
+    loadingEngineCatalog: 'กำลังโหลดปลั๊กอินจากตลาด…',
+    engineCatalogUnavailable:
+      'ตลาดไม่พร้อมใช้งานชั่วคราว เปิดตัวเลือกอีกครั้งเพื่อลองใหม่',
+    viewMarketplace: 'ดูตลาด',
+    installingEngine: 'กำลังติดตั้ง {{engine}}…',
+    engineInstallSuccess: 'ติดตั้ง {{engine}} แล้ว พร้อมให้เลือก',
+    engineInstallFailed: 'ติดตั้งเอนจินความรู้ไม่สำเร็จ โปรดลองอีกครั้ง',
+    engineVersionUnavailable: 'ปลั๊กอินนี้ไม่มีเวอร์ชันที่ติดตั้งได้',
+    engineInstallTimeout: 'ยังติดตั้งอยู่ รีเฟรชหน้าเพื่อตรวจอีกครั้ง',
+    engineRegistrationTimeout:
+      'ติดตั้งปลั๊กอินแล้ว แต่เอนจินความรู้ยังไม่พร้อม',
+
     title: 'ฐานความรู้',
     createKnowledgeBase: 'สร้างฐานความรู้',
     selectFromSidebar: 'เลือกฐานความรู้จากแถบด้านข้าง',
@@ -1828,6 +2457,44 @@ const thTH = {
     },
   },
   storageAnalysis: {
+    notCreated: 'ยังไม่ได้สร้าง',
+    processStorage: 'พื้นที่จัดเก็บตามโพรเซส',
+    processStorageDescription:
+      'แต่ละรันไทม์วัดไดเรกทอรีของตน รายการย่อยรวมอยู่ในยอดของไดเรกทอรีแม่แล้ว',
+    directory: 'ไดเรกทอรี',
+    size: 'ขนาด',
+    files: 'ไฟล์',
+    runtimeUnavailable: 'สถิติพื้นที่จัดเก็บรันไทม์ไม่พร้อมใช้งาน',
+    noManagedDirectories: 'ไม่มีรายงานไดเรกทอรีที่จัดการ',
+    scanWarnings: 'อ่านไม่ได้ {{count}} รายการ',
+    boxActivity: '{{sessions}} เซสชัน · {{processes}} โพรเซสที่จัดการ',
+    statusLabels: {
+      available: 'พร้อมใช้งาน',
+      unavailable: 'ไม่พร้อมใช้งาน',
+      disabled: 'ปิดใช้งาน',
+      not_applicable: 'ไม่เกี่ยวข้อง',
+    },
+    sourceLabels: {
+      local_process: 'วัดโดยโพรเซส LangBot',
+      runtime_rpc: 'วัดโดยโพรเซสรันไทม์ผ่าน RPC ที่ยืนยันตัวตนแล้ว',
+    },
+    scopeLabels: {
+      runtime_host: 'โฮสต์รันไทม์',
+      sandbox_sessions: 'เซสชันแซนด์บ็อกซ์',
+    },
+    processNames: {
+      langbot: 'โพรเซสหลัก LangBot',
+      plugin_runtime: 'รันไทม์ปลั๊กอิน',
+      box_runtime: 'รันไทม์ Box',
+    },
+    processDescriptions: {
+      langbot: 'ฐานข้อมูลแอป บันทึก ไฟล์อัปโหลด ข้อมูลเวกเตอร์ และไฟล์ชั่วคราว',
+      plugin_runtime:
+        'แพ็กเกจปลั๊กอิน อาร์ติแฟกต์ที่ตรวจสอบแล้ว สภาพแวดล้อมการพึ่งพา และข้อมูลติดตั้งส่วนตัว',
+      box_runtime:
+        'พื้นที่ทำงานแซนด์บ็อกซ์และโพรเซส MCP ไดเรกทอรีแลกเปลี่ยนไฟล์แนบ และทักษะ',
+    },
+
     title: 'วิเคราะห์พื้นที่จัดเก็บ',
     description: 'ตรวจสอบการใช้พื้นที่จัดเก็บและรายการที่สามารถล้างได้',
     openDialog: 'ดูการวิเคราะห์',
@@ -1853,6 +2520,21 @@ const thTH = {
     noExpiredUploads: 'ไม่มีไฟล์อัปโหลดที่หมดอายุ',
     noExpiredLogs: 'ไม่มีบันทึกที่หมดอายุ',
     sectionNames: {
+      legacy_plugins: 'แพ็กเกจปลั๊กอินรุ่นเก่า',
+      artifacts: 'อาร์ติแฟกต์ปลั๊กอินที่ตรวจสอบแล้ว',
+      dependency_environments: 'สภาพแวดล้อมการพึ่งพา',
+      installations: 'ข้อมูลติดตั้งปลั๊กอิน',
+      staging: 'ไฟล์พักการติดตั้งปลั๊กอิน',
+      rpc_transfer: 'ไฟล์ถ่ายโอน RPC รันไทม์',
+      workspace: 'พื้นที่ทำงานแซนด์บ็อกซ์',
+      inbox: 'ไฟล์แนบขาเข้า',
+      outbox: 'ไฟล์แนบขาออก',
+      skills: 'ทักษะ',
+      session_workspaces: 'พื้นที่ทำงานเซสชันแซนด์บ็อกซ์',
+      session_caches: 'แคชรันไทม์แซนด์บ็อกซ์',
+      session_temp: 'ไฟล์ชั่วคราวแซนด์บ็อกซ์',
+      managed_process_workspaces: 'พื้นที่ทำงานโพรเซสที่จัดการ (รวม MCP)',
+
       database: 'ฐานข้อมูล',
       logs: 'บันทึก',
       storage: 'ไฟล์อัปโหลด',
@@ -1937,6 +2619,25 @@ const thTH = {
         'ตรวจสอบกิจกรรม Bot เพื่อยืนยันว่าการเชื่อมต่อแพลตฟอร์มทำงานอยู่',
     },
     aiEngine: {
+      loadingCatalog: 'กำลังโหลดส่วนขยายรันเนอร์...',
+      catalogUnavailable: 'รายการรันเนอร์ไม่พร้อมใช้งาน',
+      catalogUnavailableDescription:
+        'รันเนอร์ที่ติดตั้งยังใช้ได้ ลองโหลดรายการใหม่หรือเรียกดูส่วนขยาย',
+      noMarketplaceRunners: 'ไม่มีปลั๊กอินรันเนอร์ตรงกับการใช้งานนี้',
+      noMarketplaceRunnersDescription:
+        'ใช้รันเนอร์ที่ติดตั้งแล้วหรือลองภายหลัง',
+      browseRunners: 'เรียกดูส่วนขยายรันเนอร์',
+      installAndContinue: 'ติดตั้งและดำเนินการต่อ',
+      installing: 'กำลังติดตั้ง...',
+      useInstalled: 'ใช้รันเนอร์นี้',
+      installedUnavailable: 'ติดตั้งแล้ว แต่รันเนอร์ไม่พร้อมใช้',
+      installSuccess: 'ติดตั้งและเลือก {{runner}} แล้ว',
+      installFailed: 'ติดตั้งส่วนขยายรันเนอร์ไม่สำเร็จ',
+      versionUnavailable: 'ตลาดไม่ส่งเวอร์ชันที่ติดตั้งได้กลับมา',
+      installTimeout: 'หมดเวลาติดตั้งรันเนอร์ ตรวจงานในส่วนขยาย',
+      registrationTimeout:
+        'ติดตั้งส่วนขยายแล้ว แต่รันเนอร์ไม่ได้ลงทะเบียน ตรวจรันไทม์ปลั๊กอินแล้วลองใหม่',
+
       defaultModelUnavailable:
         'ไม่มีโมเดลเริ่มต้นที่พร้อมใช้งาน โปรดลองอีกครั้ง',
       defaultRunnerUnavailable: 'Local Agent ยังไม่พร้อม โปรดลองอีกครั้ง',

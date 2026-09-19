@@ -51,6 +51,10 @@ export default function PipelineDetailContent({
     return () => setDetailEntityName(null);
   }, [id, isCreateMode, pipelines, setDetailEntityName, t]);
 
+  const [activeView, setActiveView] = useState<'workbench' | 'monitoring'>(
+    'workbench',
+  );
+  useEffect(() => setActiveView('workbench'), [id]);
   const [isWebSocketConnected, setIsWebSocketConnected] = useState(false);
   const [formDirty, setFormDirty] = useState(false);
   const [formSaving, setFormSaving] = useState(false);
@@ -183,6 +187,7 @@ export default function PipelineDetailContent({
     <>
       <ProcessorDetailWorkbench
         key={id}
+        onViewChange={setActiveView}
         title={`${pipelineEmoji} ${pipelineName}`}
         titleAction={
           canManage ? (
@@ -199,6 +204,9 @@ export default function PipelineDetailContent({
           <fieldset className="contents" disabled={!canManage}>
             <PipelineFormComponent
               ref={pipelineFormRef}
+              guideEnabled={canManage && activeView === 'workbench'}
+              debugGuideEnabled={canOperate}
+              monitoringGuideEnabled={canViewMonitoring}
               onLegacyPipeline={setPipelineDetails}
               pipelineId={id}
               isEditMode={true}

@@ -1318,6 +1318,8 @@ export async function installLangBotApiMocks(
         'langbot_bot_detail_guide_v1',
         'langbot_runner_setup_guide_v1',
         'langbot_knowledge_detail_guide_v1',
+        'langbot_pipeline_setup_guide_v1',
+        'langbot_plugin_processor_setup_guide_v1',
       ];
       for (const guideKey of contextualGuides) {
         if (!Object.hasOwn(storage, guideKey)) {

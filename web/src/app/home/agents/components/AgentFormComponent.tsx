@@ -74,6 +74,7 @@ interface AgentFormComponentProps {
   onSupportedEventPatternsChange?: (patterns: string[]) => void;
   onPlatformToolsChange?: (tools: AgentPlatformTool[]) => void;
   guideEnabled?: boolean;
+  debugGuideEnabled?: boolean;
 }
 
 export type AgentConfigSection = 'runner' | 'events_and_tools';
@@ -129,6 +130,7 @@ function AgentFormComponent(
     onSupportedEventPatternsChange,
     onPlatformToolsChange,
     guideEnabled = true,
+    debugGuideEnabled = false,
   }: AgentFormComponentProps,
   ref: ForwardedRef<AgentFormHandle>,
 ) {
@@ -503,8 +505,16 @@ function AgentFormComponent(
       title: t('guidedTour.runner.events.title'),
       description: t('guidedTour.runner.events.description'),
     });
+    if (debugGuideEnabled) {
+      steps.push({
+        id: 'debug',
+        target: '[data-guide="agent-event-debug"]',
+        title: t('guidedTour.runner.debug.title'),
+        description: t('guidedTour.eventDebugDescription'),
+      });
+    }
     return steps;
-  }, [activeRunnerStage, t]);
+  }, [activeRunnerStage, debugGuideEnabled, t]);
 
   useEffect(() => {
     onRunnerStatusChange?.(runnerStatus);

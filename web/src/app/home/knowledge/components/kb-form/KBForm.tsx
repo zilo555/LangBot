@@ -347,7 +347,7 @@ export default function KBForm({
     const steps: GuidedTourStep[] = [
       {
         id: 'engine',
-        target: '[data-guide="knowledge-engine"]',
+        target: '[data-guide="knowledge-engine"] [role="combobox"]',
         title: t('guidedTour.knowledge.engine.title'),
         description: t('guidedTour.knowledge.engine.description'),
         action: {

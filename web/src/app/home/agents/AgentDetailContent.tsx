@@ -262,6 +262,7 @@ export default function AgentDetailContent({
                 onSupportedEventPatternsChange={setSupportedEventPatterns}
                 onPlatformToolsChange={setPlatformTools}
                 guideEnabled={canManage}
+                debugGuideEnabled={canOperate}
               />
             </fieldset>
           }

@@ -2,81 +2,157 @@ import pipelineMigration from './pipeline-migration/ja-JP';
 
 const jaJP = {
   sidebarGuide: {
-    label: 'ワークスペースツアー',
-    progress: '{{current}} / {{total}}',
-    confirm: '確認しました',
-    finish: 'ツアーを完了',
     steps: {
       monitoring: {
-        title: 'ダッシュボード',
+        title: '稼働状況を確認する',
         description:
           'ボットの稼働状況、モデルの使用量、メッセージ数、システムの状態をまとめて確認できます。',
       },
       bots: {
-        title: 'ボット',
+        title: 'チャットに接続する',
         description:
           'チャットプラットフォームに接続し、各ボットを作成・管理します。',
       },
       pipelines: {
-        title: 'プロセッサー',
+        title: '処理を設定する',
         description:
-          'ボットを動かす AI パイプライン、エージェント、イベントプロセッサーを作成します。',
+          '再利用できるパイプライン、Agent、プラグイン処理の設定を作成し、ボットに接続します。',
       },
       knowledge: {
-        title: 'ナレッジベース',
+        title: 'ナレッジベースを管理する',
         description:
           'ドキュメントや外部ナレッジを管理し、モデルの回答精度を高めます。',
       },
       plugins: {
-        title: 'インストール済み拡張機能',
+        title: 'インストール済み拡張機能を管理する',
         description:
           'プラグイン、MCP サーバー、スキルと、それぞれの実行状態を管理します。',
       },
       'add-extension': {
-        title: '拡張機能を追加',
+        title: '拡張機能を追加する',
         description:
           'マーケット、GitHub、ローカルパッケージから新しい機能を追加します。',
       },
       models: {
-        title: 'モデル設定',
+        title: 'モデルを設定する',
         description:
           'モデルプロバイダーと、LangBot が使用する言語・埋め込みモデルなどを設定します。',
       },
       'api-integration': {
-        title: 'API 連携',
+        title: 'API アクセスを設定する',
         description:
           'API キーを作成し、LangBot サービスや MCP への外部アクセスを設定します。',
       },
     },
   },
   guidedTour: {
-    label: 'セットアップガイド',
-    progress: '{{current}} / {{total}}',
+    eventDebugDescription:
+      '対応するイベントを選び、テストデータを入力して出力とツールの結果を確認します。プラットフォーム操作は模擬実行され、モデルや他のツールは設定に従って実行されます。',
+
+    skip: 'スキップ',
+
+    pipeline: {
+      trigger: {
+        title: '返信するメッセージを選ぶ',
+        description:
+          'パイプラインはメッセージイベントを処理し、AI が自動返信します。グループでの起動条件、個別チャットのルール、メッセージフィルターを設定します。',
+      },
+      ai: {
+        title: 'AI 機能を設定する',
+        description:
+          'ローカルまたは外部プラットフォームのランナーを選び、モデル、プロンプト、ナレッジベースなどを設定します。',
+      },
+      output: {
+        title: '返信方法を調整する',
+        description:
+          '長文の処理などの出力ルールを設定し、AI の回答をどのように届けるかを決めます。',
+      },
+      safety: {
+        title: '安全対策を設定する',
+        description:
+          '必要に応じてコンテンツフィルターやレート制限を有効にし、内容と処理頻度を制御します。',
+      },
+      extensions: {
+        title: '利用する拡張機能を選ぶ',
+        description:
+          'このパイプラインで利用するプラグイン、MCP サーバー、スキルを選び、メッセージ処理やツールを拡張します。',
+      },
+      basic: {
+        title: 'パイプラインを管理する',
+        description:
+          '現在のパイプラインを複製して別の設定を作成したり、不要なパイプラインを削除したりできます。',
+      },
+      debug: {
+        title: '会話をテストする',
+        description:
+          'テストメッセージで起動条件、AI の返信、出力処理を確認します。設定の変更はテスト前に保存されます。',
+      },
+      monitoring: {
+        title: '実行履歴を確認する',
+        description:
+          'タイトル横のタブで過去の会話、処理過程、エラーを確認し、返信がない場合や想定外の回答を調べます。',
+      },
+      save: {
+        title: '保存してボットに接続する',
+        description:
+          '設定を保存し、ボットページのイベントルーティングでメッセージ受信イベントをこのパイプラインに割り当てます。',
+      },
+    },
+    pluginProcessor: {
+      select: {
+        title: 'プラグインのランナーを選ぶ',
+        description:
+          'イベント処理に対応するランナーを選びます。対応するイベントと処理ロジックはプラグイン作者が定義します。',
+      },
+      parameters: {
+        title: 'プラグインのパラメーターを設定する',
+        description:
+          'プラグインの設定項目を入力します。同じプラグインでも、ボットや用途ごとに複数の設定を保存できます。',
+      },
+      debug: {
+        title: 'イベント処理をテストする',
+      },
+      logs: {
+        title: '処理結果を確認する',
+        description:
+          '各実行の状態、入力イベント、プラグインログ、呼び出し結果から失敗の原因を調べます。',
+      },
+      save: {
+        title: '保存してボットに紐付ける',
+        description:
+          '保存後、ボットページのプラグイン処理セクションにこの設定を追加します。宣言されたイベントを自動受信するため、イベントごとのルーティングは不要です。',
+      },
+    },
+    previous: '前へ',
+    label: '使い方ガイド',
+    progress: 'ステップ {{current}} / {{total}}',
     next: '次へ',
-    finish: '完了',
+    finish: 'ガイドを完了',
     bot: {
+      save: {
+        title: 'ボット設定を保存する',
+        description:
+          '接続パラメーターとイベントルーティングを確認して保存します。準備ができたらボットを有効にできます。',
+      },
+
       connection: {
         title: '接続方式を選択',
         description:
           'このアダプターが対応する接続方式から選択すると、関連パラメーターが自動的に更新されます。',
-        requirement: 'Webhook または常時接続を選択してください。',
       },
       basic: {
         title: 'ボット情報を入力',
         description: 'ルーティングやログで見つけやすい名前を設定します。',
-        requirement: 'ボット名を入力してください。',
       },
       adapter: {
         title: 'プラットフォームアダプターを選択',
         description:
           '先にプラットフォームを選択すると、Webhook、常時接続、または両方への対応状況が表示されます。',
-        requirement: 'アダプターを選択してください。',
       },
       parameters: {
         title: 'プラットフォームを設定',
         description:
           '認証情報とプラットフォームのパラメーターを入力します。外部側の設定はドキュメントを参照してください。',
-        requirement: '表示されている必須項目をすべて入力してください。',
         action: 'アダプターのドキュメントを開く',
       },
       routing: {
@@ -99,61 +175,61 @@ const jaJP = {
       basic: {
         title: 'プロセッサー情報を入力',
         description:
-          '識別しやすい名前を設定し、作成後に Runner、イベント、ツールを設定します。',
-        requirement: 'プロセッサー名を入力してください。',
+          '識別しやすい名前を設定し、作成後にランナー、イベント、ツールを設定します。',
       },
       submit: {
         title: '作成して設定を続行',
         description:
-          '作成後、必要な Runner、パラメーター、イベント、ツールを設定します。',
+          '作成後、必要なランナー、パラメーター、イベント、ツールを設定します。',
       },
     },
     runner: {
+      debug: {
+        title: 'イベント処理をテスト',
+      },
       select: {
-        title: 'Runner を選択またはインストール',
+        title: 'ランナーを選択またはインストール',
         description:
-          'インストール済み Runner を選択するか、この選択欄のマーケット一覧から直接インストールします。',
-        requirement: '利用可能な Runner を選択してください。',
-        action: 'Runner マーケットを見る',
+          'インストール済みランナーを選択するか、この選択欄のマーケット一覧から直接インストールします。',
+        action: 'ランナーマーケットを見る',
       },
       parameters: {
-        title: 'Runner のパラメーターを設定',
+        title: 'ランナーのパラメーターを設定',
         description:
-          '選択した Runner が要求するモデル、認証情報、サービス URL などを入力します。',
-        requirement: '表示されている必須項目をすべて入力してください。',
+          '選択したランナーが要求するモデル、認証情報、サービス URL などを入力します。',
       },
       events: {
         title: 'イベントとツールを設定',
         description:
           '「イベントとツール」を開き、Agent が受け取るイベントと使用可能なツールを選びます。',
-        requirement: '「イベントとツール」タブを開いてください。',
       },
     },
     knowledge: {
+      save: {
+        title: 'ナレッジベースの設定を保存する',
+        description: 'エンジンのパラメーターと検索設定を確認して保存します。',
+      },
+
       basic: {
         title: 'ナレッジベース情報を入力',
         description:
           '名前と任意の説明を設定してから、保存・検索エンジンを選択します。',
-        requirement: 'ナレッジベース名を入力してください。',
       },
       engine: {
         title: 'エンジンを選択またはインストール',
         description:
           'インストール済みエンジンを選択するか、この選択欄のマーケットから直接インストールします。',
-        requirement: 'ナレッジエンジンを選択してください。',
         action: 'ナレッジエンジンのマーケットを見る',
       },
       parameters: {
         title: 'エンジンのパラメーターを設定',
         description:
           'エンジンが要求するストレージ、モデル、認証情報、外部サービス設定を入力します。',
-        requirement: '表示されている必須項目をすべて入力してください。',
       },
       retrieval: {
         title: '検索方法を設定',
         description:
           '関連コンテンツの検索方法とプロセッサーへの返却方法を設定します。',
-        requirement: '表示されている必須検索項目を入力してください。',
       },
       submit: {
         title: 'ナレッジベースを作成',
@@ -971,6 +1047,107 @@ const jaJP = {
     },
   },
   agents: {
+    eventsAndTools: 'イベントとツール',
+    eventsAndToolsDescription: '起動イベントと利用できるツールを設定します。',
+    configuredEvents: '追加済みのイベント',
+    configuredEventsCount: '合計 {{count}} 件',
+    addEvent: 'イベントを追加',
+    removeEvent: 'イベントを削除',
+    eventActions: '自動で有効になるツール',
+    eventToolEnabled: '有効',
+    eventToolsEnabledCount: '{{count}} 個のツールが有効',
+    noEventActions: 'このイベントで利用できるアクションはありません。',
+    noEventsConfigured: 'イベントが未追加です',
+    noEventsConfiguredDescription:
+      'この Agent を起動できるイベントがありません。',
+    noEventsConfiguredBadge: 'イベントなし',
+    apiTools: 'ツールへのアクセス',
+    apiToolsDescription: 'この Agent が呼び出せるツールを選びます。',
+    otherTools: 'その他のツール',
+    otherToolsDescription:
+      'プラットフォーム、サンドボックス、MCP、プラグイン、スキルのツールを選びます。',
+    apiToolsSelected: '{{count}} 個を選択中',
+    apiToolsSecurityHint: 'この Agent に必要なツールだけを有効にしてください。',
+    apiToolsSearch: 'ツールを検索…',
+    eventApiTools: 'イベントツール',
+    eventToolUnavailable: '利用不可',
+    eventApiToolsDescription:
+      '操作対象は現在のイベントから決まります。Agent はアクションのパラメーターのみを指定します。',
+    platformApiTools: 'プラットフォームツール',
+    platformApiToolsDescription:
+      'Agent はユーザー、グループ、メッセージの ID を選べます。必要な権限だけを付与してください。',
+    apiToolEvents: 'イベント',
+    apiToolParameters: 'Agent のパラメーター',
+    apiToolSource: '提供元',
+    apiToolNoParameters: 'なし',
+    sandboxTools: 'サンドボックス',
+    mcpTools: 'MCP',
+    pluginTools: 'プラグイン',
+    skillTools: 'スキル',
+    langbotBuiltIn: 'LangBot',
+    apiToolDetails: '詳細',
+    apiToolHideDetails: '非表示',
+    apiToolsNoResults: '一致する API やツールはありません',
+    apiToolsCatalogUnavailable:
+      'LangBot サーバーが API ツール一覧を返しませんでした。サーバーを更新して再起動したか確認してください。プラットフォームにツールがないという意味ではありません。',
+    hostToolsCatalogUnavailable: 'ツール一覧は一時的に利用できません。',
+    apiToolRisk: {
+      read: '読み取り専用',
+      write: 'アクション',
+      dangerous: '機密性の高い操作',
+    },
+    runnerConfigIncomplete: 'ランナー設定が未完了です',
+    runnerConfigIncompleteDescription: '必須項目を入力してください：{{fields}}',
+    debugTab: 'イベントデバッグ',
+    debugTitle: 'Agent のイベントデバッグ',
+    debugDescription:
+      '現在の Agent にメッセージやプラットフォームイベントを渡して実行し、実際の出力を確認します。',
+    debugResetSession: 'セッションをリセット',
+    debugEventType: 'イベントの種類',
+    debugNoEventsTitle: 'デバッグできるイベントがありません',
+    debugNoEventsDescription:
+      'まず「イベントとツール」でイベントを追加してください。',
+    debugMessageReceived: 'メッセージ受信',
+    debugGroupMemberJoined: 'メンバーのグループ参加',
+    debugGroupMemberLeft: 'メンバーのグループ退出',
+    debugFriendRequested: '友達申請の受信',
+    debugFeedbackReceived: 'フィードバック受信',
+    debugCustomEvent: 'カスタムイベント',
+    debugCustomEventType: 'カスタムイベント名',
+    debugMessageInput: '会話の入力',
+    debugEventSummary: 'イベントの概要',
+    debugInputPlaceholder: 'Agent に処理させる内容を入力',
+    debugEventPayload: 'イベントデータ（JSON）',
+    debugSupportedEvents: 'Agent が対応するイベント',
+    debugRun: 'テストを実行',
+    debugSaveAndRun: '保存して実行',
+    debugRunning: '実行中',
+    debugTranscript: 'デバッグ記録',
+    debugTranscriptDescription:
+      '現在のデバッグセッションの入力と Agent の出力です。',
+    debugEmptyTitle: 'この Agent の動作を確認する',
+    debugEmptyTranscript:
+      'イベントを選び、テスト内容を入力して「テストを実行」を押します。結果はこのページに表示されます。',
+    debugAgentOutput: 'Agent の出力',
+    debugTestInput: 'テスト入力',
+    debugNoTextOutput: 'テキスト出力なしで実行が完了しました。',
+    debugEventTypeRequired: 'イベントの種類を入力してください',
+    debugInputRequired: '会話の入力を記入してください',
+    debugInvalidPayload:
+      'イベントデータは有効な JSON オブジェクトである必要があります',
+    debugUnsupportedEvent: 'このイベントは Agent に紐付けできる範囲外です',
+    debugRunnerConfigInvalidDescription:
+      'ランナー設定が未完了です：{{message}}',
+    debugRunnerExecutionFailedDescription:
+      '実行に失敗しました。選択したモデルとランナー設定を確認し、再試行してください。',
+    debugRunnerTimeoutDescription:
+      '実行がタイムアウトしました。後で再試行するか、ランナーのタイムアウト設定を変更してください。',
+    debugApiKeyRequired: 'API キーがありません',
+    debugOpenRunnerConfig: 'ランナー設定を開く',
+    debugReviewRunnerConfig: 'ランナー設定を確認',
+    debugErrorDetails: 'エラーの詳細を表示',
+    debugRunFailed: 'Agent のデバッグ実行に失敗しました',
+
     monitoring: {
       description:
         '各タスクのトリガーイベント、モデル出力、ツール実行を確認します。',
@@ -1755,6 +1932,8 @@ const jaJP = {
       selectKnowledgeBases: 'ナレッジベースを選択',
     },
     debugDialog: {
+      saveAndSend: '保存して送信',
+
       title: 'パイプラインのチャット',
       selectPipeline: 'パイプラインを選択',
       sessionType: 'セッションタイプ',
@@ -2419,6 +2598,45 @@ const jaJP = {
     },
   },
   storageAnalysis: {
+    notCreated: '未作成',
+    processStorage: 'プロセス別ストレージ',
+    processStorageDescription:
+      '各ランタイムが管理するディレクトリを計測します。内訳は親ディレクトリの合計に含まれます。',
+    directory: 'ディレクトリ',
+    size: 'サイズ',
+    files: 'ファイル',
+    runtimeUnavailable: 'ランタイムのストレージ統計を取得できません。',
+    noManagedDirectories: '管理対象ディレクトリの報告はありません。',
+    scanWarnings: '読み取り不可：{{count}} 件',
+    boxActivity: '{{sessions}} セッション · {{processes}} 管理プロセス',
+    statusLabels: {
+      available: '利用可能',
+      unavailable: '利用不可',
+      disabled: '無効',
+      not_applicable: '該当なし',
+    },
+    sourceLabels: {
+      local_process: 'LangBot プロセスが計測',
+      runtime_rpc: 'ランタイムプロセスが認証済み RPC 経由で計測',
+    },
+    scopeLabels: {
+      runtime_host: 'ランタイムホスト',
+      sandbox_sessions: 'サンドボックスセッション',
+    },
+    processNames: {
+      langbot: 'LangBot メインプロセス',
+      plugin_runtime: 'プラグインランタイム',
+      box_runtime: 'Box ランタイム',
+    },
+    processDescriptions: {
+      langbot:
+        'アプリケーションのデータベース、ログ、アップロードファイル、ベクトルデータ、一時ファイル。',
+      plugin_runtime:
+        'プラグインパッケージ、検証済み成果物、依存関係の環境、非公開のインストールデータ。',
+      box_runtime:
+        'サンドボックスと MCP プロセスのワークスペース、添付ファイル交換ディレクトリ、スキル。',
+    },
+
     title: 'ストレージ分析',
     description: 'ストレージ使用量とクリーンアップ候補を確認します',
     openDialog: '分析を表示',
@@ -2444,6 +2662,21 @@ const jaJP = {
     noExpiredUploads: '期限切れのアップロードファイルはありません',
     noExpiredLogs: '期限切れのログファイルはありません',
     sectionNames: {
+      legacy_plugins: '旧プラグインパッケージ',
+      artifacts: '検証済みプラグイン成果物',
+      dependency_environments: '依存関係の環境',
+      installations: 'プラグインのインストールデータ',
+      staging: 'プラグインのステージングファイル',
+      rpc_transfer: 'ランタイム RPC 転送ファイル',
+      workspace: 'サンドボックスワークスペース',
+      inbox: '受信添付ファイル',
+      outbox: '送信添付ファイル',
+      skills: 'スキル',
+      session_workspaces: 'サンドボックスセッションのワークスペース',
+      session_caches: 'サンドボックスランタイムのキャッシュ',
+      session_temp: 'サンドボックスの一時ファイル',
+      managed_process_workspaces: '管理プロセスのワークスペース（MCP を含む）',
+
       database: 'データベース',
       logs: 'ログ',
       storage: 'アップロードファイル',

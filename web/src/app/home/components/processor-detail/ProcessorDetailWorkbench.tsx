@@ -56,6 +56,7 @@ interface ProcessorDetailWorkbenchProps {
   debugDisconnectedLabel?: string;
   unsavedLabel?: string;
   monitoring?: ProcessorMonitoringView;
+  onViewChange?: (view: 'workbench' | 'monitoring') => void;
 }
 
 export default function ProcessorDetailWorkbench({
@@ -82,6 +83,7 @@ export default function ProcessorDetailWorkbench({
   debugDisconnectedLabel,
   unsavedLabel,
   monitoring,
+  onViewChange,
 }: ProcessorDetailWorkbenchProps) {
   const [activeView, setActiveView] = useState<'workbench' | 'monitoring'>(
     'workbench',
@@ -92,13 +94,18 @@ export default function ProcessorDetailWorkbench({
     <Card
       role="region"
       aria-label={configTitle}
+      data-guide={`${saveFormId}-config`}
       className="h-full min-h-[36rem] min-w-0 gap-0 overflow-hidden py-0 lg:min-h-0"
     >
       <CardHeader className="flex h-12 shrink-0 flex-row items-center gap-2 border-b px-4 font-medium [.border-b]:pb-0">
         {configTabs ? (
           <TabsList aria-label={configTitle}>
             {configTabs.items.map((tab) => (
-              <TabsTrigger key={tab.value} value={tab.value}>
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                data-guide={`${saveFormId}-tab-${tab.value}`}
+              >
                 {tab.icon}
                 {tab.label}
               </TabsTrigger>
@@ -137,9 +144,11 @@ export default function ProcessorDetailWorkbench({
   return (
     <Tabs
       value={activeView}
-      onValueChange={(value) =>
-        setActiveView(value as 'workbench' | 'monitoring')
-      }
+      onValueChange={(value) => {
+        const view = value as 'workbench' | 'monitoring';
+        setActiveView(view);
+        onViewChange?.(view);
+      }}
       className="flex h-full min-h-0 min-w-0 flex-col gap-0"
     >
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 pb-4">
@@ -162,7 +171,11 @@ export default function ProcessorDetailWorkbench({
                   </span>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="monitoring" className="gap-1.5 px-3">
+              <TabsTrigger
+                value="monitoring"
+                className="gap-1.5 px-3"
+                data-guide={`${saveFormId}-monitoring`}
+              >
                 <BarChart3 className="size-4" />
                 {monitoring.label}
               </TabsTrigger>
@@ -217,6 +230,7 @@ export default function ProcessorDetailWorkbench({
             <Button
               type="submit"
               form={saveFormId}
+              data-guide={`${saveFormId}-save`}
               disabled={!isDirty || isSaving}
             >
               {saveLabel}
@@ -258,6 +272,7 @@ export default function ProcessorDetailWorkbench({
             <Card
               role="region"
               aria-label={debugTitle}
+              data-guide={`${saveFormId}-debug`}
               className="min-h-[32rem] min-w-0 gap-0 overflow-hidden py-0 lg:min-h-0"
             >
               <CardHeader className="flex h-12 shrink-0 items-center justify-between gap-3 border-b px-4 [.border-b]:pb-0">

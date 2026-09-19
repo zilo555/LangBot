@@ -383,7 +383,10 @@ export default function AgentDebugPanel({
   }
 
   return (
-    <div className="flex h-full min-h-0 min-w-0 flex-col">
+    <div
+      data-guide={processor ? undefined : 'agent-event-debug'}
+      className="flex h-full min-h-0 min-w-0 flex-col"
+    >
       <div ref={transcriptRef} className="min-h-0 flex-1 overflow-y-auto p-3">
         <div className="mb-3">
           <p className="text-sm font-medium">{t('agents.debugTranscript')}</p>
