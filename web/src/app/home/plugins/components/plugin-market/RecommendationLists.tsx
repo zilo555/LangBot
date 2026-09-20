@@ -9,8 +9,8 @@ import { extractI18nObject } from '@/i18n/I18nProvider';
 import { getCloudServiceClientSync } from '@/app/infra/http';
 import { useTranslation } from 'react-i18next';
 import {
-  InstalledExtensionEntry,
   resolveInstalledState,
+  type InstalledExtensionEntry,
 } from './marketplace-installed';
 
 export interface RecommendationList {

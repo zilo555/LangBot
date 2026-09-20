@@ -21,8 +21,7 @@ import { extractI18nObject } from '@/i18n/I18nProvider';
 import { toast } from 'sonner';
 import { useAsyncTask, AsyncTaskStatus } from '@/hooks/useAsyncTask';
 import { useSidebarData } from '@/app/home/components/home-sidebar/SidebarDataContext';
-import { Input } from '@/components/ui/input';
-import { Loader2, Puzzle, Search, Server, Sparkles, X } from 'lucide-react';
+import { Loader2, Puzzle, Search, Server, Sparkles } from 'lucide-react';
 
 export interface PluginInstalledComponentRef {
   refreshPluginList: () => void;

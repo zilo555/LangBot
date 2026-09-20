@@ -1770,7 +1770,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
         artifact_digest = hashlib.sha256(file_bytes).hexdigest()
         await self._store_artifact_package(execution_context, artifact_digest, file_bytes)
         if task_context is not None:
-            task_context.set_current_action('installing plugin dependencies')
+            task_context.set_current_action('persisting the installation')
         try:
             binding, previous_digest, previous_was_durable = await self._persist_installation_package(
                 execution_context,
@@ -1789,7 +1789,12 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
             plugin_name=plugin_name,
         )
         if task_context is not None:
-            task_context.set_current_action('launching plugin')
+            # The runtime installs the plugin's dependencies and starts it
+            # inside apply_plugin_installation. It does not stream
+            # per-dependency progress back to this task context, so this stage
+            # deliberately stays coarse instead of claiming a separate,
+            # unobservable "installing dependencies" step.
+            task_context.set_current_action('installing or starting plugin')
         await self._apply_desired_state(
             PluginInstallationDesiredState(binding=binding, enabled=True),
             artifact_package=file_bytes,

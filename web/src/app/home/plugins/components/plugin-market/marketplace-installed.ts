@@ -1,16 +1,25 @@
-import { useMemo } from 'react';
-import { useSidebarData } from '@/app/home/components/home-sidebar/SidebarDataContext';
-
 /**
- * Marketplace extensions are addressed as `author/name`, while installed
- * extensions in the sidebar use slightly different identities per kind:
+ * Marketplace extensions are addressed as `author/name`. Installed extensions
+ * only carry a publisher-scoped identity for plugins and MCP servers:
  * - plugins: `author/name`
  * - MCP servers: `author__name` (double underscore)
- * - skills: the bare skill name
+ * - skills: the bare skill name, with no publisher recorded
  *
- * The index below normalises all of them to a single `type:author/name` shape
- * so a marketplace card can be matched with one lookup.
+ * The index below normalises those to a single `type:author/name` shape so a
+ * marketplace card can be matched with one lookup.
+ *
+ * Skills are deliberately *not* indexable: the backend derives a skill's name
+ * from the `name` field in its own SKILL.md (falling back to the package
+ * directory name), so a skill published by `alice/review` and one published by
+ * `bob/review` both install as the plain name `review`. Matching on that bare
+ * name would mark every publisher's `review` as installed once any single one
+ * of them is. Until the installed skill carries its publisher, a skill card
+ * cannot be resolved authoritatively, and so is reported as not installed.
+ *
+ * This module is intentionally free of React imports so it can be unit tested
+ * directly; the reactive hook lives in `useMarketplaceInstalledIndex.ts`.
  */
+
 export interface InstalledExtensionEntry {
   /** An installed extension of the same identity has a newer remote version. */
   hasUpdate: boolean;
@@ -30,11 +39,18 @@ export function installedExtensionKey(
   return `${type || 'plugin'}:${author}/${name}`;
 }
 
+/** Split an `author/name` identity, tolerating a missing author. */
+function splitIdentity(identity: string): [string, string] {
+  const slash = identity.indexOf('/');
+  if (slash < 0) return ['', identity];
+  return [identity.slice(0, slash), identity.slice(slash + 1)];
+}
+
 /**
  * Build the installed-extension lookup from the sidebar entity lists.
  *
- * Skills are indexed under both the bare name and the `author/name` form so a
- * marketplace skill card resolves regardless of how it was published.
+ * Skills are intentionally omitted — see the module header for why a bare
+ * skill name cannot be attributed to a publisher.
  */
 export function buildInstalledIndex(
   plugins: { id: string; hasUpdate?: boolean }[],
@@ -60,28 +76,18 @@ export function buildInstalledIndex(
     );
   }
 
-  for (const skill of skills) {
-    const entry: InstalledExtensionEntry = { hasUpdate: false };
-    const identity = splitIdentity(skill.id);
-    index.set(installedExtensionKey('skill', ...identity), entry);
-    // Skills are stored under their bare name but marketplace cards always
-    // carry `author/name`, so also index the name-only form.
-    index.set(`skill:${skill.id}`, entry);
-  }
+  // `skills` is accepted for call-site symmetry (and so the surrounding
+  // useMemo still re-runs when the list changes) but contributes nothing.
+  void skills;
 
   return index;
-}
-
-/** Split an `author/name` identity, tolerating a missing author. */
-function splitIdentity(identity: string): [string, string] {
-  const slash = identity.indexOf('/');
-  if (slash < 0) return ['', identity];
-  return [identity.slice(0, slash), identity.slice(slash + 1)];
 }
 
 /**
  * Resolve whether a marketplace extension is already installed.
  *
+ * Matching requires the full `type:author/name` identity, so a card is only
+ * marked installed when the installed extension carries the same publisher.
  * Unknown types fall back to `plugin`, matching the marketplace defaults.
  */
 export function resolveInstalledState(
@@ -89,36 +95,13 @@ export function resolveInstalledState(
   extension: { type?: string; author: string; pluginName: string },
 ): MarketplaceInstalledState {
   const type = extension.type || 'plugin';
-  const candidates = [
+  const entry = index.get(
     `${type}:${extension.author}/${extension.pluginName}`,
-    // Skills may be indexed under their bare name.
-    `${type}:${extension.pluginName}`,
-  ];
+  );
 
-  for (const key of candidates) {
-    const entry = index.get(key);
-    if (entry) {
-      return { installed: true, hasUpdate: entry.hasUpdate };
-    }
+  if (entry) {
+    return { installed: true, hasUpdate: entry.hasUpdate };
   }
 
   return { installed: false, hasUpdate: false };
-}
-
-/**
- * Reactive installed-extension index derived from the sidebar data context.
- *
- * Because the index is memoised on the sidebar lists, a finished install (which
- * triggers a sidebar refresh) automatically re-evaluates the marketplace cards.
- */
-export function useMarketplaceInstalledIndex(): Map<
-  string,
-  InstalledExtensionEntry
-> {
-  const { plugins, mcpServers, skills } = useSidebarData();
-
-  return useMemo(
-    () => buildInstalledIndex(plugins, mcpServers, skills),
-    [plugins, mcpServers, skills],
-  );
 }

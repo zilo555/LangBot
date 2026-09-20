@@ -44,10 +44,8 @@ import {
 } from '@/components/ui/tooltip';
 import PluginMarketCardComponent from './plugin-market-card/PluginMarketCardComponent';
 import { PluginMarketCardVO } from './plugin-market-card/PluginMarketCardVO';
-import {
-  resolveInstalledState,
-  useMarketplaceInstalledIndex,
-} from './marketplace-installed';
+import { resolveInstalledState } from './marketplace-installed';
+import { useMarketplaceInstalledIndex } from './useMarketplaceInstalledIndex';
 import { RecommendationLists } from './RecommendationLists';
 import type { RecommendationList } from './RecommendationLists';
 import {
