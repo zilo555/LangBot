@@ -1,7 +1,7 @@
 {
     "title": "LangBot",
     "icon": "images/icon-256.png",
-    "type": "url",
+    "type": "iframe",
     "protocol": "http",
     "port": "${wizard_port}",
     "url": "/",
