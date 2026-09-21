@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 from langbot.pkg.api.http.context import ExecutionContext
 from langbot.pkg.entity.persistence.base import Base
+from langbot.pkg.entity.persistence.pipeline import LegacyPipeline
 from langbot.pkg.entity.persistence.rag import File, KnowledgeBase
 from langbot.pkg.entity.persistence.user import User
 from langbot.pkg.entity.persistence.workspace import Workspace
@@ -74,10 +75,12 @@ async def database(request, tmp_path):
 
 async def create_schema(engine, *, legacy=False):
     # Only the fixture-owned dependency closure; never all imported application tables.
+    # Full-head upgrades also create the manual migration journal, whose scoped
+    # foreign key requires the historical legacy_pipelines table.
     async with engine.begin() as conn:
         await conn.run_sync(
             lambda sync: Base.metadata.create_all(
-                sync, tables=[User.__table__, Workspace.__table__, KnowledgeBase.__table__]
+                sync, tables=[User.__table__, Workspace.__table__, LegacyPipeline.__table__, KnowledgeBase.__table__]
             )
         )
         if legacy:
