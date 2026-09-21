@@ -13,6 +13,7 @@ import sqlalchemy
 from ....core import app
 from ....entity.persistence import bstorage as persistence_bstorage
 from ....entity.persistence import monitoring as persistence_monitoring
+from ....entity.persistence import rag as persistence_rag
 from ..authz import WorkspaceRequiredError
 from ..context import ExecutionContext
 from .tenant import TenantContext, require_workspace_uuid
@@ -223,6 +224,7 @@ class MaintenanceService:
                 retention_days,
                 True,
             )
+            candidates = await self._exclude_ingestion_uploads(context, candidates)
             return await asyncio.to_thread(
                 self._delete_local_candidates,
                 candidates,
@@ -232,6 +234,22 @@ class MaintenanceService:
             return await self._cleanup_expired_s3_uploaded_files(context, retention_days)
 
         return 0
+
+    async def _exclude_ingestion_uploads(
+        self, context: TenantContext, candidates: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """Keep source material for active or unacknowledged remote ingestion."""
+        protected = set()
+        for offset in range(0, len(candidates), 500):
+            keys = [item['key'] for item in candidates[offset : offset + 500]]
+            result = await self.ap.persistence_mgr.execute_async(
+                sqlalchemy.select(persistence_rag.File.file_name)
+                .where(persistence_rag.File.workspace_uuid == require_workspace_uuid(context))
+                .where(persistence_rag.File.status.in_(['pending', 'processing', 'interrupted']))
+                .where(persistence_rag.File.file_name.in_(keys))
+            )
+            protected.update(result.scalars().all())
+        return [item for item in candidates if item['key'] not in protected]
 
     async def _expired_uploaded_candidates(
         self,
@@ -256,6 +274,7 @@ class MaintenanceService:
     ) -> int:
         provider = self.ap.storage_mgr.storage_provider
         candidates = await self._expired_s3_upload_candidates(context, retention_days)
+        candidates = await self._exclude_ingestion_uploads(context, candidates)
         deleted = 0
         for item in candidates:
             await provider.delete(item['key'])

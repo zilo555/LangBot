@@ -80,7 +80,11 @@ class File(Base):
     file_name = sqlalchemy.Column(sqlalchemy.String)
     extension = sqlalchemy.Column(sqlalchemy.String)
     created_at = sqlalchemy.Column(sqlalchemy.DateTime, default=sqlalchemy.func.now())
-    status = sqlalchemy.Column(sqlalchemy.String, default='pending')  # pending, processing, completed, failed
+    status = sqlalchemy.Column(
+        sqlalchemy.String, default='pending'
+    )  # pending, processing, completed, failed, interrupted
+    # Server-owned engine identity; the public Host file UUID never changes.
+    engine_document_id = sqlalchemy.Column(sqlalchemy.Text, nullable=True)
 
     __table_args__ = (
         sqlalchemy.UniqueConstraint('workspace_uuid', 'uuid', name='uq_knowledge_base_files_workspace_uuid'),
