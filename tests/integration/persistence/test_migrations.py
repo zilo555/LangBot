@@ -71,7 +71,13 @@ def test_migration_graph_has_one_head_containing_both_released_branches():
     heads = scripts.get_heads()
     assert len(heads) == 1, f'Release migrations must converge, found {heads}'
     ancestors = {revision.revision for revision in scripts.walk_revisions()}
-    assert {'0024_passkey_credentials', '0025_bot_plugin_processors'} <= ancestors
+    assert {
+        '0024_passkey_credentials',
+        '0025_bot_plugin_processors',
+        '0025_rag_document_identity',
+        '0027_pipeline_migration',
+        '0028_merge_knowledge_drafts',
+    } <= ancestors
     assert all(len(revision) <= 32 for revision in ancestors)
 
 

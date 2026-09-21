@@ -339,6 +339,11 @@ class KnowledgeService:
         workspace_uuid = require_workspace_uuid(context)
         if await self.get_knowledge_base(context, kb_uuid) is None:
             raise WorkspaceNotFoundError('Knowledge base not found')
+        if isinstance(context, (RequestContext, ExecutionContext)):
+            execution_context = self._execution_context(context)
+            runtime_kb = await self.ap.rag_mgr.get_knowledge_base_by_uuid(execution_context, kb_uuid)
+            if runtime_kb is not None:
+                await runtime_kb.reconcile_interrupted_ingestions(execution_context)
         result = await self.ap.persistence_mgr.execute_async(
             sqlalchemy.select(persistence_rag.File)
             .where(persistence_rag.File.workspace_uuid == workspace_uuid)
@@ -377,11 +382,20 @@ class KnowledgeService:
         kb_uuid: str,
     ) -> None:
         """删除知识库"""
-        workspace_uuid = require_workspace_uuid(context)
+        require_workspace_uuid(context)
         if await self.get_knowledge_base(context, kb_uuid) is None:
             raise WorkspaceNotFoundError('Knowledge base not found')
 
-        # delete files
+        execution_context = self._execution_context(context)
+        runtime_kb = await self.ap.rag_mgr.get_knowledge_base_by_uuid(execution_context, kb_uuid)
+        if runtime_kb is not None:
+            async with runtime_kb.ingestion_admission_lock:
+                await self._delete_knowledge_base_records(context, kb_uuid)
+        else:
+            await self._delete_knowledge_base_records(context, kb_uuid)
+
+    async def _delete_knowledge_base_records(self, context: RequestContext | ExecutionContext, kb_uuid: str) -> None:
+        workspace_uuid = require_workspace_uuid(context)
         # NOTE: Chunk cleanup is for legacy (pre-plugin) KBs that stored chunks locally.
         # For plugin-based Knowledge Engines, the Chunk table is not populated, so this is a no-op.
         files = await self.ap.persistence_mgr.execute_async(
@@ -389,6 +403,12 @@ class KnowledgeService:
             .where(persistence_rag.File.workspace_uuid == workspace_uuid)
             .where(persistence_rag.File.kb_id == kb_uuid)
         )
+        files = files.all()
+        if any(file.status in {'pending', 'processing', 'interrupted'} for file in files):
+            raise RuntimeError(
+                'Knowledge base has active or interrupted ingestion; retain its files and reconcile '
+                'plugin/upstream state before deleting the knowledge base.'
+            )
         for file in files:
             # delete chunks
             await self.ap.persistence_mgr.execute_async(

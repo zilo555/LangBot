@@ -40,6 +40,17 @@ def execution_binding(workspace_uuid: str, generation: int = 1) -> SimpleNamespa
     )
 
 
+def mock_archive_admission(connector: PluginRuntimeConnector, digest: str) -> None:
+    # These lifecycle tests use opaque package bytes. Real certificate admission
+    # is exercised by integration/plugin/test_certified_plugin_admission.py.
+    connector._admit_plugin_archive = Mock(
+        side_effect=lambda _package, info: (
+            {**info, '_certification': {'normalized_digest': digest}},
+            SimpleNamespace(for_installation=lambda _uuid: SimpleNamespace(artifact_digest=digest)),
+        )
+    )
+
+
 def plugin_setting(
     workspace_suffix: str,
     artifact_digest: str,
@@ -275,6 +286,12 @@ async def test_local_install_persists_verified_package_before_runtime_apply():
     connector._inspect_plugin_package = Mock(return_value=('author', 'plugin'))
     connector._store_artifact_package = AsyncMock()
     connector._persist_installation_package = AsyncMock(return_value=(binding, None, False))
+    connector._admit_plugin_archive = Mock(
+        return_value=(
+            {'_certification': {'normalized_digest': digest}},
+            SimpleNamespace(for_installation=lambda _installation_uuid: SimpleNamespace(artifact_digest=digest)),
+        )
+    )
     connector._wait_for_installed_plugin_ready = AsyncMock()
 
     await connector.install_plugin(
@@ -351,6 +368,7 @@ async def test_marketplace_upgrade_reports_multistep_progress():
         observed_actions.append(task_context.current_action)
 
     connector._download_marketplace_package = AsyncMock(side_effect=download)
+    mock_archive_admission(connector, digest)
     connector._inspect_plugin_package = Mock(side_effect=inspect)
     connector._store_artifact_package = AsyncMock(side_effect=store)
     connector._persist_installation_package = AsyncMock(side_effect=persist)
@@ -403,6 +421,7 @@ async def test_workspace_reads_do_not_wait_for_an_installation_apply():
     connector.handler = runtime_handler()
     connector._current_execution_context = AsyncMock(return_value=execution_context)
     connector._validate_execution_context = AsyncMock(return_value=execution_context)
+    mock_archive_admission(connector, digest)
     connector._inspect_plugin_package = Mock(return_value=('author', 'plugin'))
     connector._store_artifact_package = AsyncMock()
     connector._persist_installation_package = AsyncMock(return_value=(binding, None, False))
@@ -471,6 +490,7 @@ async def test_local_install_cleans_untracked_legacy_plugin_before_runtime_apply
     connector._persist_installation_package = AsyncMock(return_value=(binding, None, False))
     connector._wait_for_installed_plugin_ready = AsyncMock()
     events: list[str] = []
+    mock_archive_admission(connector, digest)
 
     async def delete_legacy_plugin(plugin_author: str, plugin_name: str):
         assert (plugin_author, plugin_name) == ('author', 'plugin')
