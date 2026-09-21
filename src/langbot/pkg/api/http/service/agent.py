@@ -16,9 +16,13 @@ from langbot_plugin.api.entities.builtin.runner.event import (
     SubjectContext,
 )
 from langbot_plugin.api.entities.builtin.runner.input import AgentInput
+from langbot_plugin.api.entities.builtin.provider import message as provider_message
+from langbot_plugin.api.entities.builtin.provider import prompt as provider_prompt
 
 from ....core import app
 from ....agent.runner.config_resolver import RunnerConfigResolver
+from ....agent.runner.config_schema import extract_prompt_config
+from ....agent.runner.execution_context import build_execution_query, project_mcp_resource_config
 from ....agent.runner.host_models import (
     AgentBinding,
     AgentEventEnvelope,
@@ -307,6 +311,18 @@ class AgentService:
             context,
             query_uuid=event_id,
         )
+        # Debug bypasses pipeline preprocessing, so supply the selected Runner's
+        # prompt before advertising the Host prompt API. Keep explicit [] intact.
+        descriptor = await self.ap.runner_registry.get(execution_context, runner_id)
+        prompt_config = extract_prompt_config(descriptor, runner_config, [])
+        execution_query = build_execution_query(event, [])
+        execution_query.prompt = provider_prompt.Prompt(
+            name='default',
+            messages=[provider_message.Message(**message) for message in copy.deepcopy(prompt_config)],
+        )
+        for field_name in ('instance_uuid', 'workspace_uuid', 'placement_generation', 'query_uuid'):
+            object.__setattr__(execution_query, field_name, getattr(execution_context, field_name))
+        project_mcp_resource_config(execution_query, runner_config)
 
         output_items: list[dict[str, typing.Any]] = []
         execution_events: list[dict[str, typing.Any]] = []
@@ -338,7 +354,11 @@ class AgentService:
         async for output in self.ap.agent_run_orchestrator.run(
             event,
             binding,
-            adapter_context={'_execution_context': execution_context, '_result_observer': observe_result},
+            adapter_context={
+                '_query': execution_query,
+                '_execution_context': execution_context,
+                '_result_observer': observe_result,
+            },
         ):
             output_text = self._provider_output_to_text(output)
             if output_text:
