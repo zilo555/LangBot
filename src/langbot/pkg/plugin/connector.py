@@ -104,7 +104,7 @@ async def _read_httpx_response_limited(
     task_context: taskmgr.TaskContext | None = None,
 ) -> bytes:
     content_length = response.headers.get('content-length')
-    declared_size = None
+    declared_size: int | None = None
     if content_length is not None:
         try:
             declared_size = int(content_length)
@@ -1759,6 +1759,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
                 client,
                 f'{space_url}/api/v1/marketplace/plugins/download/{plugin_author}/{plugin_name}/{version}',
                 max_bytes=_MARKETPLACE_PLUGIN_DOWNLOAD_MAX_BYTES,
+                task_context=task_context,
             )
             return plugin_package, version
 
@@ -1814,6 +1815,18 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
         plugin_name = str(install_info.get('plugin_name') or '')
         file_bytes: bytes | None
 
+        if task_context is not None:
+            # Reset the per-install counters so re-installing the same plugin
+            # cannot inherit stale progress metadata from a previous task.
+            task_context.set_current_action('preparing plugin install')
+            task_context.metadata.update(
+                {
+                    'download_total': 0,
+                    'download_current': 0,
+                    'download_speed': 0,
+                }
+            )
+
         if install_source == PluginInstallSource.MARKETPLACE:
             if task_context is not None:
                 task_context.set_current_action('downloading plugin package')
@@ -1860,8 +1873,12 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
             task_context.set_current_action('preparing plugin installation')
             task_context.metadata['progress_percent'] = 45
 
+        if task_context is not None:
+            task_context.set_current_action('storing plugin package')
         artifact_digest = hashlib.sha256(file_bytes).hexdigest()
         await self._store_artifact_package(execution_context, artifact_digest, file_bytes)
+        if task_context is not None:
+            task_context.set_current_action('persisting the installation')
         try:
             # Persist and publish the new desired generation under the same
             # gate used by request-time reconciliation. This closes the small
@@ -1901,7 +1918,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
         if task_context is not None:
             operation = task_context.metadata.get('operation')
             task_context.set_current_action(
-                'applying plugin update' if operation == 'upgrade' else 'installing plugin dependencies'
+                'applying plugin update' if operation == 'upgrade' else 'installing or starting plugin'
             )
             task_context.metadata['progress_percent'] = 62
         await self._apply_desired_state(

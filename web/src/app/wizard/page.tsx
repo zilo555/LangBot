@@ -523,7 +523,7 @@ export default function WizardPage() {
       setRunnerInstallProgress((current) => ({
         ...current,
         [pluginId]: {
-          stage: registering ? InstallStage.ACTIVATING : progress.stage,
+          stage: registering ? InstallStage.LAUNCHING : progress.stage,
           percent: registering ? 95 : progress.overallProgress,
         },
       }));
@@ -1870,7 +1870,8 @@ const RUNNER_INSTALL_STAGE_LABELS: Record<InstallStage, string> = {
   [InstallStage.DOWNLOADING]: 'plugins.installProgress.downloading',
   [InstallStage.VALIDATING]: 'plugins.installProgress.validating',
   [InstallStage.INSTALLING_DEPS]: 'plugins.installProgress.installingDeps',
-  [InstallStage.ACTIVATING]: 'plugins.installProgress.activating',
+  [InstallStage.INITIALIZING]: 'plugins.installProgress.activating',
+  [InstallStage.LAUNCHING]: 'plugins.installProgress.activating',
   [InstallStage.DONE]: 'plugins.installProgress.completed',
   [InstallStage.ERROR]: 'plugins.installProgress.failed',
 };

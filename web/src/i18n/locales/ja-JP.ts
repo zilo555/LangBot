@@ -292,6 +292,7 @@ const jaJP = {
     delete: '削除',
     add: '追加',
     select: '選択してください',
+    clear: 'クリア',
     skill: 'スキル',
     cancel: 'キャンセル',
     submit: '送信',
@@ -1384,6 +1385,8 @@ const jaJP = {
     getPluginListError: 'プラグインリストの取得に失敗しました：',
     noPluginInstalled: 'プラグインがインストールされていません',
     noExtensionInstalled: '拡張機能がインストールされていません',
+    searchInstalled: 'インストール済み拡張機能を検索',
+    noMatchingExtensions: '「{{query}}」に一致する拡張機能はありません',
     loadingExtensions: '拡張機能を読み込み中...',
     groupByType: '形式でグループ化',
     groupByTypeShort: 'グループ',
@@ -1672,6 +1675,9 @@ const jaJP = {
     deprecatedTooltip:
       '対応する「ナレッジエンジン」プラグインをインストールしてください。',
     installCard: '{{name}} をインストール',
+    installedCard: '{{name}} はインストール済み',
+    installed: 'インストール済み',
+    updateAvailable: '更新があります',
   },
   mcp: {
     title: 'MCP',
