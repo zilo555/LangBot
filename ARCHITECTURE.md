@@ -232,6 +232,7 @@ Persistence is centered on `pkg/persistence/mgr.py`.
 
 - SQLite is the default database; PostgreSQL is supported.
 - Models live under `pkg/entity/persistence/`.
+- Timezone-less SQL `DateTime` columns store UTC-naive values on both backends. Normalize aware values with `pkg/persistence/datetime_utils.py::as_naive_utc` at the bind boundary, including deadlines, leases, event times, and query/retention cutoffs; do not merely strip an offset. Existing naive rows represent UTC. Restore UTC awareness for application comparisons and epoch serialization. Runner ledger/event/transcript stores follow this existing schema contract without a data migration or changes to journal/tenant authorization.
 - Fresh schemas are created from current metadata, then Alembic migrations run to head. LangBot 4.x does not upgrade 3.x databases.
 - New schema changes use Alembic under `pkg/persistence/alembic/versions/`; there is no legacy migration chain in 4.x.
 

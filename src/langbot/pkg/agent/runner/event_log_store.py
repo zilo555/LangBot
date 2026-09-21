@@ -11,6 +11,8 @@ import sqlalchemy
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
+from ...persistence.datetime_utils import as_naive_utc
+
 from ...entity.persistence.event_log import EventLog
 
 
@@ -106,7 +108,7 @@ class EventLogStore:
             event = EventLog(
                 event_id=event_id,
                 event_type=event_type,
-                event_time=event_time,
+                event_time=as_naive_utc(event_time),
                 source=source,
                 bot_id=bot_id,
                 workspace_id=workspace_id,
@@ -123,7 +125,7 @@ class EventLogStore:
                 run_id=run_id,
                 runner_id=runner_id,
                 metadata_json=json.dumps(metadata) if metadata else None,
-                created_at=_utc_now(),
+                created_at=as_naive_utc(_utc_now()),
             )
             session.add(event)
             await session.commit()
@@ -279,7 +281,9 @@ class EventLogStore:
     ) -> int:
         """Delete EventLog rows created before the supplied timestamp."""
         async with self._session_factory() as session:
-            result = await session.execute(sqlalchemy.delete(EventLog).where(EventLog.created_at < before))
+            result = await session.execute(
+                sqlalchemy.delete(EventLog).where(EventLog.created_at < as_naive_utc(before))
+            )
             await session.commit()
             return result.rowcount or 0
 

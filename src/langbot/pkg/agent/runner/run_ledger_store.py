@@ -11,6 +11,8 @@ import sqlalchemy
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
+from ...persistence.datetime_utils import as_naive_utc
+
 from ...entity.persistence.agent_run import AgentRun, AgentRunEvent, AgentRuntime
 
 
@@ -45,7 +47,7 @@ def _epoch_to_datetime(value: typing.Any) -> datetime.datetime | None:
     if value is None:
         return None
     try:
-        return datetime.datetime.fromtimestamp(float(value), UTC)
+        return as_naive_utc(datetime.datetime.fromtimestamp(float(value), UTC))
     except (TypeError, ValueError, OSError):
         return None
 
@@ -138,9 +140,9 @@ class RunLedgerStore:
                 queue_name=queue_name,
                 priority=priority,
                 requested_runtime_id=requested_runtime_id,
-                created_at=now,
-                started_at=now if status == 'running' else None,
-                updated_at=now,
+                created_at=as_naive_utc(now),
+                started_at=as_naive_utc(now) if status == 'running' else None,
+                updated_at=as_naive_utc(now),
                 deadline_at=_epoch_to_datetime(deadline_at),
                 authorization_json=_json_dumps(authorization),
                 metadata_json=_json_dumps(metadata),
@@ -172,7 +174,7 @@ class RunLedgerStore:
                     sqlalchemy.and_(
                         AgentRun.status == 'claimed',
                         AgentRun.claim_lease_expires_at.is_not(None),
-                        AgentRun.claim_lease_expires_at <= now,
+                        AgentRun.claim_lease_expires_at <= as_naive_utc(now),
                     ),
                 ),
                 sqlalchemy.or_(
@@ -199,10 +201,10 @@ class RunLedgerStore:
             run.status = 'claimed'
             run.claimed_by_runtime_id = runtime_id
             run.claim_token = uuid.uuid4().hex
-            run.claim_lease_expires_at = lease_expires_at
+            run.claim_lease_expires_at = as_naive_utc(lease_expires_at)
             run.dispatch_attempts = (run.dispatch_attempts or 0) + 1
-            run.last_claimed_at = now
-            run.updated_at = now
+            run.last_claimed_at = as_naive_utc(now)
+            run.updated_at = as_naive_utc(now)
             await session.commit()
             return self._run_to_dict(run, include_claim_token=True)
 
@@ -221,8 +223,8 @@ class RunLedgerStore:
             if run is None or not _claim_is_active(run, runtime_id=runtime_id, claim_token=claim_token, now=now):
                 return None
 
-            run.claim_lease_expires_at = now + datetime.timedelta(seconds=max(int(lease_seconds), 1))
-            run.updated_at = now
+            run.claim_lease_expires_at = as_naive_utc(now + datetime.timedelta(seconds=max(int(lease_seconds), 1)))
+            run.updated_at = as_naive_utc(now)
             await session.commit()
             return self._run_to_dict(run)
 
@@ -248,9 +250,9 @@ class RunLedgerStore:
             run.claimed_by_runtime_id = None
             run.claim_token = None
             run.claim_lease_expires_at = None
-            run.updated_at = now
+            run.updated_at = as_naive_utc(now)
             if status in TERMINAL_STATUSES:
-                run.finished_at = run.finished_at or now
+                run.finished_at = run.finished_at or as_naive_utc(now)
             await session.commit()
             return self._run_to_dict(run)
 
@@ -264,9 +266,7 @@ class RunLedgerStore:
     ) -> list[dict[str, typing.Any]]:
         """Release claimed runs whose claim lease has expired."""
         status = _validate_run_status(status)
-        current_time = now or _utc_now()
-        if current_time.tzinfo is None:
-            current_time = current_time.replace(tzinfo=UTC)
+        current_time = as_naive_utc(now or _utc_now())
         limit = min(max(int(limit), 1), 500)
 
         async with self._session_factory() as session:
@@ -326,7 +326,7 @@ class RunLedgerStore:
                 type=event_type,
                 data_json=_json_dumps(data or {}),
                 usage_json=_json_dumps(usage),
-                created_at=_utc_now(),
+                created_at=as_naive_utc(_utc_now()),
                 source=source,
                 metadata_json=_json_dumps(metadata),
             )
@@ -360,7 +360,7 @@ class RunLedgerStore:
                 type=event_type,
                 data_json=_json_dumps(data or {}),
                 usage_json=None,
-                created_at=_utc_now(),
+                created_at=as_naive_utc(_utc_now()),
                 source='host',
                 metadata_json=_json_dumps(metadata or {}),
             )
@@ -392,9 +392,9 @@ class RunLedgerStore:
             run.status = status
             if status_reason is not None:
                 run.status_reason = status_reason
-            run.updated_at = now
+            run.updated_at = as_naive_utc(now)
             if status in TERMINAL_STATUSES:
-                run.finished_at = run.finished_at or now
+                run.finished_at = run.finished_at or as_naive_utc(now)
                 run.claimed_by_runtime_id = None
                 run.claim_token = None
                 run.claim_lease_expires_at = None
@@ -439,8 +439,8 @@ class RunLedgerStore:
             run = await self._get_run_row(session, run_id)
             if run is None:
                 return None
-            run.cancel_requested_at = now
-            run.updated_at = now
+            run.cancel_requested_at = as_naive_utc(now)
+            run.updated_at = as_naive_utc(now)
             run.status_reason = status_reason or run.status_reason
             await session.commit()
             return self._run_to_dict(run)
@@ -469,7 +469,7 @@ class RunLedgerStore:
         async with self._session_factory() as session:
             runtime = await self._get_runtime_row(session, runtime_id)
             if runtime is None:
-                runtime = AgentRuntime(runtime_id=runtime_id, created_at=now)
+                runtime = AgentRuntime(runtime_id=runtime_id, created_at=as_naive_utc(now))
                 session.add(runtime)
 
             runtime.status = status
@@ -479,9 +479,11 @@ class RunLedgerStore:
             runtime.capabilities_json = _json_dumps(capabilities or {})
             runtime.labels_json = _json_dumps(labels or {})
             runtime.metadata_json = _json_dumps(metadata or {})
-            runtime.last_heartbeat_at = now
-            runtime.heartbeat_deadline_at = now + datetime.timedelta(seconds=max(int(heartbeat_deadline_seconds), 1))
-            runtime.updated_at = now
+            runtime.last_heartbeat_at = as_naive_utc(now)
+            runtime.heartbeat_deadline_at = as_naive_utc(
+                now + datetime.timedelta(seconds=max(int(heartbeat_deadline_seconds), 1))
+            )
+            runtime.updated_at = as_naive_utc(now)
             await session.commit()
             return self._runtime_to_dict(runtime)
 
@@ -503,9 +505,11 @@ class RunLedgerStore:
                 return None
 
             runtime.status = status
-            runtime.last_heartbeat_at = now
-            runtime.heartbeat_deadline_at = now + datetime.timedelta(seconds=max(int(heartbeat_deadline_seconds), 1))
-            runtime.updated_at = now
+            runtime.last_heartbeat_at = as_naive_utc(now)
+            runtime.heartbeat_deadline_at = as_naive_utc(
+                now + datetime.timedelta(seconds=max(int(heartbeat_deadline_seconds), 1))
+            )
+            runtime.updated_at = as_naive_utc(now)
             if capabilities is not None:
                 runtime.capabilities_json = _json_dumps(capabilities)
             if labels is not None:
@@ -588,9 +592,7 @@ class RunLedgerStore:
         stale_after_seconds: int | float | None = None,
     ) -> list[dict[str, typing.Any]]:
         """Mark runtimes stale when their heartbeat deadline has passed."""
-        current_time = now or _utc_now()
-        if current_time.tzinfo is None:
-            current_time = current_time.replace(tzinfo=UTC)
+        current_time = as_naive_utc(now or _utc_now())
         stale_conditions: list[typing.Any] = [
             sqlalchemy.and_(
                 AgentRuntime.heartbeat_deadline_at.is_not(None),

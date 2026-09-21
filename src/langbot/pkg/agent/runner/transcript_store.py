@@ -11,6 +11,8 @@ import sqlalchemy
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
+from ...persistence.datetime_utils import as_naive_utc
+
 from ...entity.persistence.transcript import Transcript
 from langbot_plugin.api.entities.builtin.provider import message as provider_message
 
@@ -110,7 +112,7 @@ class TranscriptStore:
                 seq=0,
                 run_id=run_id,
                 runner_id=runner_id,
-                created_at=_utc_now(),
+                created_at=as_naive_utc(_utc_now()),
                 metadata_json=json.dumps(metadata) if metadata else None,
             )
             session.add(item)
@@ -350,7 +352,9 @@ class TranscriptStore:
     ) -> int:
         """Delete Transcript rows created before the supplied timestamp."""
         async with self._session_factory() as session:
-            result = await session.execute(sqlalchemy.delete(Transcript).where(Transcript.created_at < before))
+            result = await session.execute(
+                sqlalchemy.delete(Transcript).where(Transcript.created_at < as_naive_utc(before))
+            )
             await session.commit()
             return result.rowcount or 0
 
