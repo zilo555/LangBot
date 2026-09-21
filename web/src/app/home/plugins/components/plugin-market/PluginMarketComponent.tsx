@@ -1,4 +1,11 @@
-import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+  Suspense,
+} from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import {
@@ -37,6 +44,8 @@ import {
 } from '@/components/ui/tooltip';
 import PluginMarketCardComponent from './plugin-market-card/PluginMarketCardComponent';
 import { PluginMarketCardVO } from './plugin-market-card/PluginMarketCardVO';
+import { resolveInstalledState } from './marketplace-installed';
+import { useMarketplaceInstalledIndex } from './useMarketplaceInstalledIndex';
 import { RecommendationLists } from './RecommendationLists';
 import type { RecommendationList } from './RecommendationLists';
 import {
@@ -122,6 +131,8 @@ function MarketPageContent({
   const [recommendationLists, setRecommendationLists] = useState<
     RecommendationList[]
   >([]);
+  // Installed extensions from the sidebar; used to mark market cards.
+  const installedIndex = useMarketplaceInstalledIndex();
   const [plugins, setPlugins] = useState<PluginMarketCardVO[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -571,7 +582,27 @@ function MarketPageContent({
     };
   }, []);
 
-  const visiblePlugins = plugins;
+  // Annotate cards with installed state derived from the sidebar index. This is
+  // computed (rather than baked into `plugins`) so a finished install updates
+  // the badges as soon as the sidebar refreshes.
+  const visiblePlugins = useMemo(
+    () =>
+      plugins.map((plugin) => {
+        const state = resolveInstalledState(installedIndex, plugin);
+        if (
+          state.installed === plugin.installed &&
+          state.hasUpdate === plugin.hasUpdate
+        ) {
+          return plugin;
+        }
+        return new PluginMarketCardVO({
+          ...plugin,
+          installed: state.installed,
+          hasUpdate: state.hasUpdate,
+        });
+      }),
+    [plugins, installedIndex],
+  );
 
   // 加载更多
   const loadMore = useCallback(() => {
@@ -853,6 +884,7 @@ function MarketPageContent({
               onInstall={handleInstallPlugin}
               installDisabled={installDisabled}
               installDisabledTooltip={installDisabledTooltip}
+              installedIndex={installedIndex}
             />
           )}
 
