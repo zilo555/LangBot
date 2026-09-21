@@ -116,6 +116,63 @@ test('fallback drift never spills into the next stage range', () => {
   }
 });
 
+test('preserves Host stage progress when byte counts are unavailable', () => {
+  assert.equal(
+    computeStageProgress({
+      stage: InstallStage.DOWNLOADING,
+      reportedProgress: 23,
+      stageElapsedSeconds: 0,
+    }),
+    23,
+  );
+  assert.equal(
+    computeStageProgress({
+      stage: InstallStage.INSTALLING_DEPS,
+      reportedProgress: 64,
+      stageElapsedSeconds: 0,
+    }),
+    64,
+  );
+  assert.equal(
+    mapActionToStage('checking plugin update'),
+    InstallStage.CHECKING,
+  );
+  assert.equal(
+    mapActionToStage('validating plugin package'),
+    InstallStage.VALIDATING,
+  );
+  assert.equal(
+    mapActionToStage('applying plugin update'),
+    InstallStage.INSTALLING_DEPS,
+  );
+  assert.equal(
+    mapActionToStage('refreshing plugin components'),
+    InstallStage.LAUNCHING,
+  );
+  assert.equal(mapActionToStage('plugin updated'), InstallStage.DONE);
+});
+
+test('measured bytes override Host coarse progress and fallback stays bounded', () => {
+  assert.equal(
+    computeStageProgress({
+      stage: InstallStage.DOWNLOADING,
+      downloadCurrent: 90,
+      downloadTotal: 100,
+      reportedProgress: 15,
+      stageElapsedSeconds: 40,
+    }),
+    41,
+  );
+  for (const reportedProgress of [-5, 100]) {
+    const progress = computeStageProgress({
+      stage: InstallStage.DOWNLOADING,
+      reportedProgress,
+      stageElapsedSeconds: 0,
+    });
+    assert.ok(progress >= 5 && progress <= 45);
+  }
+});
+
 test('a missing or zero download total falls back to bounded drift', () => {
   const [start, end] = STAGE_PROGRESS_RANGE[InstallStage.DOWNLOADING];
 

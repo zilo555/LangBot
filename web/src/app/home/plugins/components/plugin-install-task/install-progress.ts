@@ -106,6 +106,8 @@ export interface StageProgressInput {
   stage: InstallStage;
   downloadCurrent?: number;
   downloadTotal?: number;
+  /** Host coarse stage progress, used only when measured bytes are absent. */
+  reportedProgress?: number;
   /** Seconds spent in the current stage, used to bound fallback drift. */
   stageElapsedSeconds: number;
 }
@@ -134,6 +136,13 @@ export function computeStageProgress(input: StageProgressInput): number {
       (input.downloadCurrent as number) / (input.downloadTotal as number),
     );
     return clampToRange(Math.round(start + (end - start) * ratio), start, end);
+  }
+
+  if (
+    input.reportedProgress != null &&
+    Number.isFinite(input.reportedProgress)
+  ) {
+    return clampToRange(input.reportedProgress, start, end);
   }
 
   // Nothing measurable to show yet: drift slowly, but never past this stage's

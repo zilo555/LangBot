@@ -159,6 +159,7 @@ export function asyncTaskToPluginInstallTask(
         stage,
         downloadCurrent: num(md.download_current),
         downloadTotal: num(md.download_total),
+        reportedProgress: num(md.progress_percent),
         stageElapsedSeconds: 0,
       }),
     );
@@ -326,6 +327,7 @@ export function PluginInstallTaskProvider({
                   stage,
                   downloadCurrent,
                   downloadTotal,
+                  reportedProgress: num(md.progress_percent),
                   stageElapsedSeconds: (Date.now() - stageStartedAt) / 1000,
                 });
                 const progress = Math.min(
