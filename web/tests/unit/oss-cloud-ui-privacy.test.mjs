@@ -71,6 +71,13 @@ test('does not expose storage analysis in Cloud settings or via a deep link', ()
   );
 });
 
+test('renders storage analysis with the storage icon in the user menu', () => {
+  assert.match(
+    homeSidebarSource,
+    /canViewStorageAnalysis\s*&&\s*\(\s*<DropdownMenuItem[\s\S]*?<HardDrive\s*\/>[\s\S]*?\{t\('storageAnalysis\.title'\)\}/,
+  );
+});
+
 test('loads plugin pages through the authenticated Workspace-scoped asset route', () => {
   assert.match(pluginPageSource, /useAuthenticatedPluginAsset/);
   assert.match(
