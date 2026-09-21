@@ -29,6 +29,13 @@ from .errors import (
     MarketplacePluginVersionNotFoundError,
 )
 from .archive import inspect_plugin_archive_metadata
+from .certification import (
+    AdmissionDisposition,
+    PluginCertificationFacts,
+    VerifiedArchiveCertificate,
+    decide_plugin_admission,
+    verify_plugin_archive_certificate,
+)
 from .github import (
     validate_github_plugin_install_info,
     validate_github_release_asset_url,
@@ -157,6 +164,30 @@ def _decode_json_object(body: bytes, *, subject: str) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise ValueError(f'{subject} returned a non-object response')
     return payload
+
+
+def _select_marketplace_plugin_version(
+    versions: Any,
+    *,
+    requested_version: str | None,
+    plugin_author: str,
+    plugin_name: str,
+) -> str:
+    if not isinstance(versions, list) or not versions:
+        raise ValueError(f'Plugin {plugin_author}/{plugin_name} has no versions')
+
+    if requested_version is None:
+        candidate = versions[0]
+        if not isinstance(candidate, dict) or not candidate.get('version'):
+            raise ValueError(f'Plugin {plugin_author}/{plugin_name} has no versions')
+        return str(candidate['version'])
+
+    for candidate in versions:
+        if isinstance(candidate, dict) and str(candidate.get('version') or '') == requested_version:
+            return requested_version
+    raise ValueError(
+        f'Plugin {plugin_author}/{plugin_name} version {requested_version} is not available in marketplace'
+    )
 
 
 class PluginRuntimeConnector(ManagedRuntimeConnector):
@@ -1718,20 +1749,57 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
                 subject='Marketplace plugin versions',
             )
             versions = versions_payload.get('data', {}).get('versions', [])
-            if (
-                not isinstance(versions, list)
-                or not versions
-                or not isinstance(versions[0], dict)
-                or not versions[0].get('version')
-            ):
-                raise ValueError(f'Plugin {plugin_author}/{plugin_name} has no versions')
-            latest_version = str(versions[0]['version'])
+            version = _select_marketplace_plugin_version(
+                versions,
+                requested_version=None,
+                plugin_author=plugin_author,
+                plugin_name=plugin_name,
+            )
             _download_status, plugin_package = await _marketplace_get(
                 client,
-                f'{space_url}/api/v1/marketplace/plugins/download/{plugin_author}/{plugin_name}/{latest_version}',
+                f'{space_url}/api/v1/marketplace/plugins/download/{plugin_author}/{plugin_name}/{version}',
                 max_bytes=_MARKETPLACE_PLUGIN_DOWNLOAD_MAX_BYTES,
             )
-            return plugin_package, latest_version
+            return plugin_package, version
+
+    def _admit_plugin_archive(
+        self,
+        file_bytes: bytes,
+        install_info: dict[str, Any],
+    ) -> tuple[dict[str, Any], VerifiedArchiveCertificate]:
+        """Verify and admit one archive before it can reach durable storage or Runtime."""
+
+        certification_config = self.ap.instance_config.data.get('plugin', {}).get('certification', {})
+        if not isinstance(certification_config, dict):
+            raise ValueError('plugin.certification must be a mapping')
+        verified = verify_plugin_archive_certificate(
+            file_bytes,
+            trusted_public_keys=certification_config.get('trusted_public_keys', {}),
+        )
+        facts = PluginCertificationFacts(
+            installation_uuid='pending-installation',
+            artifact_digest=verified.normalized_digest,
+            certificate=verified.certificate,
+        )
+        decision = decide_plugin_admission(
+            deployment=getattr(getattr(self.ap, 'deployment', None), 'mode', 'oss'),
+            facts=facts,
+            administrator_force=install_info.get('administrator_force') is True,
+        )
+        if decision.disposition not in {
+            AdmissionDisposition.DEDICATED_ALLOWED,
+            AdmissionDisposition.SHARED_ELIGIBLE,
+        }:
+            raise ValueError(decision.code.value)
+        certification_info = {
+            'normalized_digest': facts.artifact_digest,
+            'verification': facts.certificate.verification.value,
+            'certificate_runtime_profile': facts.certificate.runtime_profile,
+            'certificate_id': facts.certificate.certificate_id,
+            'runtime_profile': decision.runtime_profile,
+            'admission_code': decision.code.value,
+        }
+        return {**install_info, '_certification': certification_info}, verified
 
     @diagnostics.observe('lifecycle', 'runtime.install_plugin', source='runtime', stage='execute')
     async def install_plugin(
@@ -1778,6 +1846,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
         if task_context is not None:
             task_context.set_current_action('validating plugin package')
             task_context.metadata['progress_percent'] = 32
+        install_info, verified_certificate = self._admit_plugin_archive(file_bytes, install_info)
         manifest_author, manifest_name = self._inspect_plugin_package(file_bytes, task_context)
         if not manifest_author or not manifest_name:
             raise ValueError('Plugin package manifest identity is missing')
@@ -1818,6 +1887,9 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
         except Exception:
             await self._delete_artifact_if_unreferenced(execution_context, artifact_digest)
             raise
+        certification_facts = verified_certificate.for_installation(binding.installation_uuid)
+        if certification_facts.artifact_digest != install_info['_certification']['normalized_digest']:
+            raise RuntimeError('Plugin certification digest changed before Runtime apply')
         if not previous_was_durable and self.runtime_profile == 'oss_dev':
             bridge = self._legacy_oss_bridge_binding(execution_context)
             try:
