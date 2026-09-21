@@ -4,6 +4,7 @@ import { Progress } from '@/components/ui/progress';
 import {
   Download,
   Package,
+  Rocket,
   CheckCircle2,
   XCircle,
   Loader2,
@@ -14,7 +15,6 @@ import {
   Sparkles,
   RefreshCcw,
   ShieldCheck,
-  Rocket,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,7 +35,8 @@ const STAGE_ICONS: Record<string, React.ElementType> = {
   [InstallStage.DOWNLOADING]: Download,
   [InstallStage.VALIDATING]: ShieldCheck,
   [InstallStage.INSTALLING_DEPS]: Package,
-  [InstallStage.ACTIVATING]: Rocket,
+  [InstallStage.INITIALIZING]: Rocket,
+  [InstallStage.LAUNCHING]: Rocket,
   [InstallStage.DONE]: CheckCircle2,
   [InstallStage.ERROR]: XCircle,
 };
@@ -110,7 +111,8 @@ function TaskQueueItem({
         return task.operation === 'upgrade'
           ? t('plugins.installProgress.applyingUpdate')
           : t('plugins.installProgress.installingDeps');
-      case InstallStage.ACTIVATING:
+      case InstallStage.INITIALIZING:
+      case InstallStage.LAUNCHING:
         return t('plugins.installProgress.activating');
       case InstallStage.DONE:
         return isDone

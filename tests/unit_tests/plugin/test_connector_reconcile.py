@@ -381,7 +381,7 @@ async def test_marketplace_upgrade_reports_multistep_progress():
     assert observed_actions == [
         'downloading plugin package',
         'validating plugin package',
-        'preparing plugin installation',
+        'storing plugin package',
         'applying plugin update',
         'waiting for plugin initialization',
         'refreshing plugin components',
@@ -392,6 +392,9 @@ async def test_marketplace_upgrade_reports_multistep_progress():
         'install_source': 'marketplace',
         'operation': 'upgrade',
         'progress_percent': 100,
+        'download_total': 0,
+        'download_current': 0,
+        'download_speed': 0,
     }
 
 

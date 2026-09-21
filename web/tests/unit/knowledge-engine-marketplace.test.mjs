@@ -71,10 +71,11 @@ test('offers KnowledgeEngine marketplace plugins inside the selector', () => {
 test('tracks plugin upgrades as recoverable multistep async tasks', () => {
   assert.match(taskContextSource, /name\.startsWith\('plugin-upgrade-'\)/);
   assert.match(taskContextSource, /operation: PluginTaskOperation/);
-  assert.match(taskContextSource, /progress_percent/);
+  assert.match(taskContextSource, /computeStageProgress/);
+  assert.match(taskContextSource, /INSTALL_PROGRESS_CAP/);
   assert.match(progressDialogSource, /InstallStage\.CHECKING/);
   assert.match(progressDialogSource, /InstallStage\.VALIDATING/);
-  assert.match(progressDialogSource, /InstallStage\.ACTIVATING/);
+  assert.match(progressDialogSource, /InstallStage\.LAUNCHING/);
   assert.match(progressDialogSource, /plugins\.installProgress\.updateTitle/);
   for (const source of [installedPluginsSource, homeSidebarSource]) {
     assert.match(

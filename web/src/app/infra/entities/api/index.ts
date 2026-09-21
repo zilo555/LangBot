@@ -649,11 +649,12 @@ export interface AsyncTaskTaskContext {
 
 export interface AsyncTask {
   id: number;
-  created_at?: number;
   kind: string;
   name: string;
   label: string;
   task_type: string; // system or user
+  /** Unix epoch seconds (float) when the task was created. */
+  created_at?: number;
   runtime: AsyncTaskRuntimeInfo;
   task_context: AsyncTaskTaskContext;
 }
