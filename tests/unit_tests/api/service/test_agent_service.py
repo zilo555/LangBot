@@ -96,7 +96,7 @@ def _make_app():
         _get_default_values_from_schema=Mock(return_value={}),
     )
     app.runner_registry = SimpleNamespace(
-        get=AsyncMock(return_value=SimpleNamespace(usages=['agent'])),
+        get=AsyncMock(return_value=SimpleNamespace(usages=['agent'], config_schema=[])),
         list_runners=AsyncMock(return_value=[]),
     )
     app.tool_mgr = None
