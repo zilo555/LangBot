@@ -26,6 +26,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from ....entity.persistence import user
 from ....entity.persistence import passkey
+from . import totp as totp_service_module
 from ....entity.persistence.workspace import MembershipRole, MembershipStatus, WorkspaceMembership
 from ....utils import constants
 from ....entity.errors import account as account_errors
@@ -413,7 +414,13 @@ class UserService:
             f'space:{space_account_uuid}',
         )
 
-    async def authenticate(self, user_email: str, password: str) -> str | None:
+    async def authenticate(self, user_email: str, password: str, totp_code: str | None = None) -> str | None:
+        """Verify primary credentials, then any enrolled second factor.
+
+        When TOTP is enrolled but no code was supplied, ``TotpRequiredError`` is
+        raised so the caller can issue a challenge instead of a session token.
+        """
+
         user_obj = await self.get_user_by_email(user_email)
         if user_obj is None:
             raise ValueError('用户不存在')
@@ -424,6 +431,14 @@ class UserService:
             raise ValueError('请使用 LangBot 账号登录')
 
         await self._verify_password(user_obj.password, password)
+
+        totp_service = getattr(self.ap, 'totp_service', None)
+        if totp_service is not None and await totp_service.is_enrolled(user_obj.uuid):
+            if not totp_code:
+                raise totp_service_module.TotpRequiredError('A second factor is required')
+            # Recovery codes are accepted here as well, so a lost authenticator
+            # does not lock an Account out of its own instance.
+            await totp_service.verify_code(user_obj.uuid, totp_code, allow_recovery=True)
 
         return await self.generate_jwt_token(user_obj)
 
@@ -533,6 +548,103 @@ class UserService:
         status = getattr(account, 'status', user.AccountStatus.ACTIVE.value)
         if isinstance(status, str) and status != user.AccountStatus.ACTIVE.value:
             raise AccountDisabledError('Account is disabled')
+
+    async def issue_totp_login_challenge(self, user_email: str) -> str | None:
+        """Issue a login second-factor challenge for a TOTP-enrolled Account.
+
+        Returns ``None`` when the Account has no active second factor, so the
+        caller can proceed with the primary factors alone.
+        """
+
+        totp_service = getattr(self.ap, 'totp_service', None)
+        if totp_service is None:
+            return None
+        user_obj = await self.get_user_by_email(user_email)
+        if user_obj is None:
+            return None
+        if not await totp_service.is_enrolled(user_obj.uuid):
+            return None
+        return await totp_service.issue_login_challenge(user_obj.uuid, user_obj.user)
+
+    async def issue_uniform_totp_login_challenge(self, user_email: str) -> str:
+        """Issue a challenge token even when the Account has no second factor.
+
+        The login endpoints are unauthenticated. Returning a distinguishable
+        error for "no second factor enrolled" would turn them into an Account
+        enumeration oracle, so the caller always receives a token. Supplying a
+        code for a non-enrolled or unknown Account simply fails verification.
+        """
+
+        totp_service = getattr(self.ap, 'totp_service', None)
+        if totp_service is None:
+            raise ValueError('TOTP service is unavailable')
+        user_obj = await self.get_user_by_email(user_email)
+        if user_obj is None or not await totp_service.is_enrolled(user_obj.uuid):
+            return await totp_service.issue_login_challenge('', '')
+        return await totp_service.issue_login_challenge(user_obj.uuid, user_obj.user)
+
+    async def has_totp_enrolled(self, user_email: str) -> bool:
+        """Whether the Account behind this email has an active second factor."""
+
+        totp_service = getattr(self.ap, 'totp_service', None)
+        if totp_service is None:
+            return False
+        user_obj = await self.get_user_by_email(user_email)
+        if user_obj is None:
+            return False
+        return await totp_service.is_enrolled(user_obj.uuid)
+
+    async def verify_totp_second_factor(
+        self,
+        user_email: str,
+        code: str,
+        *,
+        allow_recovery: bool = True,
+        challenge_token: str | None = None,
+    ) -> bool:
+        """Verify a TOTP or recovery code for the Account behind this email.
+
+        When ``challenge_token`` is supplied it must be the token issued for a
+        successful primary-factor check on this exact Account. This stops the
+        code-only path from minting a session without ever proving the password,
+        and it applies the per-challenge attempt cap.
+        """
+
+        totp_service = getattr(self.ap, 'totp_service', None)
+        if totp_service is None:
+            return False
+        user_obj = await self.get_user_by_email(user_email)
+        if user_obj is None:
+            return False
+
+        challenge = None
+        if challenge_token:
+            try:
+                challenge = totp_service.consume_login_challenge(challenge_token)
+            except totp_service_module.TotpChallengeError:
+                return False
+            # A challenge is bound to one Account: it cannot be redeemed for
+            # another, nor for an Account that never had a second factor.
+            if challenge.account_uuid != user_obj.uuid:
+                totp_service.record_failed_attempt(challenge_token)
+                return False
+
+        try:
+            verified = await totp_service.verify_code(
+                user_obj.uuid, code, allow_recovery=allow_recovery
+            )
+        except totp_service_module.TotpError:
+            # Covers "not enrolled" and "invalid code" alike. Both are simply a
+            # failed verification for this caller; neither should surface as a
+            # server error or disclose whether the Account has a second factor.
+            verified = False
+
+        if not verified and challenge_token:
+            totp_service.record_failed_attempt(challenge_token)
+            return False
+        if verified and challenge_token:
+            totp_service.complete_login_challenge(challenge_token)
+        return verified
 
     async def reset_password(self, user_email: str, new_password: str) -> None:
         hashed_password = await self._hash_password(new_password)

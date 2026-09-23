@@ -117,12 +117,20 @@ export abstract class BaseHttpClient {
           switch (status) {
             case 401:
               if (typeof window !== 'undefined') {
+                // Only an existing authenticated session should be torn down and
+                // redirected. A 401 from a sign-in attempt (bad credentials or a
+                // pending second factor) must not reload the page, otherwise the
+                // TOTP challenge step would be lost.
+                const hadSession = Boolean(localStorage.getItem('token'));
                 localStorage.removeItem('token');
                 localStorage.removeItem('userEmail');
                 clearActiveWorkspaceUuid();
                 setCurrentWorkspaceSnapshot(null);
                 clearWorkspaceBootstrapSnapshot();
-                if (!error.request.responseURL.includes('/check-token')) {
+                if (
+                  hadSession &&
+                  !error.request.responseURL.includes('/check-token')
+                ) {
                   window.location.href = '/login';
                 }
               }

@@ -1241,11 +1241,143 @@ export class BackendClient extends BaseHttpClient {
     );
   }
 
-  public authUser(user: string, password: string): Promise<ApiRespUserToken> {
+  public authUser(
+    user: string,
+    password: string,
+    totpCode?: string,
+  ): Promise<ApiRespUserToken> {
     return this.post(
       '/api/v1/user/auth',
-      { user, password },
+      { user, password, totp_code: totpCode },
       { skipWorkspace: true },
+    );
+  }
+
+  // ============ TOTP second factor (login) ============
+  public requestTotpChallenge(
+    user: string,
+  ): Promise<{ challenge_token: string }> {
+    return this.post(
+      '/api/v1/user/totp/challenge',
+      { user },
+      { skipWorkspace: true },
+    );
+  }
+
+  public verifyTotpLogin(
+    user: string,
+    code: string,
+    challengeToken: string,
+  ): Promise<{ token: string; user: string }> {
+    // The challenge token proves the password step already ran for this
+    // Account; without it the backend refuses to mint a session.
+    return this.post(
+      '/api/v1/user/totp/verify',
+      { user, code, challenge_token: challengeToken },
+      { skipWorkspace: true },
+    );
+  }
+
+  // ============ TOTP second factor (account settings) ============
+  public getTotpStatus(): Promise<{
+    enabled: boolean;
+    pending: boolean;
+    confirmed_at?: string | null;
+    last_used_at?: string | null;
+    recovery_codes_remaining: number;
+  }> {
+    return this.get('/api/v1/user/totp/status', undefined, {
+      skipWorkspace: true,
+    });
+  }
+
+  public beginTotpEnroll(rotate = false): Promise<{
+    uuid: string;
+    // A server-rendered PNG data URL. The shared secret is never returned so it
+    // cannot be read out of the browser.
+    qr_code_data_url: string;
+    algorithm: string;
+    digits: number;
+    period: number;
+  }> {
+    // rotate=true is the explicit "refresh" action; the default reuses any
+    // pending enrolment so duplicate calls cannot invalidate the shown QR.
+    return this.post(
+      '/api/v1/user/totp/enroll',
+      { rotate },
+      { skipWorkspace: true },
+    );
+  }
+
+  public confirmTotpEnroll(code: string): Promise<{ recovery_codes: string[] }> {
+    return this.post(
+      '/api/v1/user/totp/enroll/confirm',
+      { code },
+      { skipWorkspace: true },
+    );
+  }
+
+  public regenerateTotpRecoveryCodes(
+    code: string,
+  ): Promise<{ recovery_codes: string[] }> {
+    return this.post(
+      '/api/v1/user/totp/recovery-codes',
+      { code },
+      { skipWorkspace: true },
+    );
+  }
+
+  public disableTotp(code: string): Promise<void> {
+    return this.post('/api/v1/user/totp/disable', { code }, {
+      skipWorkspace: true,
+    });
+  }
+
+  // ============ TOTP oversight (Workspace owner/admin only) ============
+  public getTotpAccounts(): Promise<{
+    accounts: Array<{
+      account_uuid: string;
+      user: string;
+      status?: string;
+      enabled: boolean;
+      last_used_at?: string | null;
+      recovery_codes_remaining: number;
+    }>;
+  }> {
+    return this.get('/api/v1/user/totp/accounts');
+  }
+
+  public revokeTotpForAccount(accountUuid: string): Promise<void> {
+    return this.delete(
+      `/api/v1/user/totp/accounts/${encodeURIComponent(accountUuid)}`,
+    );
+  }
+
+  /**
+   * Force a re-binding of another Account's second factor (owner/admin only).
+   * Returns a server-rendered QR code; the shared secret is never returned.
+   */
+  public adminBeginTotpEnroll(accountUuid: string): Promise<{
+    uuid: string;
+    qr_code_data_url: string;
+    algorithm: string;
+    digits: number;
+    period: number;
+  }> {
+    return this.post(
+      `/api/v1/user/totp/accounts/${encodeURIComponent(accountUuid)}/enroll`,
+      {},
+    );
+  }
+
+  /** Activate a forced re-binding; recovery codes are returned exactly once. */
+  public adminConfirmTotpEnroll(
+    accountUuid: string,
+    code: string,
+  ): Promise<{ recovery_codes: string[] }> {
+    return this.post(
+      `/api/v1/user/totp/accounts/${encodeURIComponent(accountUuid)}/enroll/confirm`,
+      { code },
     );
   }
 
@@ -1257,15 +1389,23 @@ export class BackendClient extends BaseHttpClient {
 
   public resetPassword(
     user: string,
-    recoveryKey: string,
     newPassword: string,
+    options: {
+      // 'recovery_key' is the instance-wide key; 'totp' and 'recovery_code'
+      // consume an Account-scoped second factor instead.
+      method?: 'recovery_key' | 'totp' | 'recovery_code';
+      recoveryKey?: string;
+      totpCode?: string;
+    } = {},
   ): Promise<{ user: string }> {
     return this.post(
       '/api/v1/user/reset-password',
       {
         user,
-        recovery_key: recoveryKey,
         new_password: newPassword,
+        method: options.method ?? 'recovery_key',
+        recovery_key: options.recoveryKey,
+        totp_code: options.totpCode,
       },
       { skipWorkspace: true },
     );

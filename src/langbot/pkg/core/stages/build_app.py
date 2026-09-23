@@ -18,6 +18,7 @@ from ...persistence import mgr as persistencemgr
 from ...api.http.controller import main as http_controller
 from ...api.http.service import user as user_service
 from ...api.http.service import space as space_service
+from ...api.http.service import totp as totp_service
 from ...api.http.service import model as model_service
 from ...api.http.service import provider as provider_service
 from ...api.http.service import pipeline as pipeline_service
@@ -197,6 +198,8 @@ class BuildAppStage(stage.BootingStage):
 
         user_service_inst = user_service.UserService(ap)
         ap.user_service = user_service_inst
+
+        ap.totp_service = totp_service.TotpService(ap)
 
         async def resolve_singleton_execution_context() -> ExecutionContext:
             if workspace_policy.multi_workspace_enabled:

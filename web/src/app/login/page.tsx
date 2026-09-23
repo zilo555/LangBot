@@ -36,6 +36,9 @@ import {
   RefreshCw,
   Layers,
   Fingerprint,
+  ShieldCheck,
+  KeyRound,
+  ArrowLeft,
 } from 'lucide-react';
 import { startAuthentication } from '@simplewebauthn/browser';
 import langbotIcon from '@/app/assets/langbot-logo.webp';
@@ -67,6 +70,14 @@ export default function Login() {
   const [showSpaceLogin, setShowSpaceLogin] = useState(false);
   const [showPasskeyLogin, setShowPasskeyLogin] = useState(false);
   const [passkeyLoading, setPasskeyLoading] = useState(false);
+  // Second-factor step: primary credentials passed, awaiting a TOTP or recovery code.
+  const [totpStep, setTotpStep] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState('');
+  // Issued alongside `totp_required`; required to complete the second factor.
+  const [totpChallengeToken, setTotpChallengeToken] = useState('');
+  const [totpCode, setTotpCode] = useState('');
+  const [totpLoading, setTotpLoading] = useState(false);
+  const [useRecoveryCode, setUseRecoveryCode] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [retrying, setRetrying] = useState(false);
@@ -223,9 +234,64 @@ export default function Login() {
           toast.success(t('common.loginSuccess'));
         }
       })
-      .catch(() => {
+      .catch((error: { code?: string; msg?: string; data?: { challenge_token?: string } }) => {
+        // The backend answers `totp_required` when the password was correct but
+        // a second factor is still outstanding. It also hands back the
+        // challenge token that must accompany the code.
+        if (error?.code === 'totp_required') {
+          setPendingEmail(username);
+          setTotpChallengeToken(error?.data?.challenge_token || '');
+          setTotpStep(true);
+          setUseRecoveryCode(false);
+          setTotpCode('');
+          return;
+        }
+        if (error?.code === 'totp_invalid_code') {
+          toast.error(t('common.totpInvalidCode'));
+          return;
+        }
         toast.error(t('common.loginFailed'));
       });
+  }
+
+  async function handleTotpSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    const code = totpCode.trim();
+    if (!code) {
+      return;
+    }
+    if (!totpChallengeToken) {
+      toast.error(t('common.totpVerifyFailed'));
+      return;
+    }
+    setTotpLoading(true);
+    try {
+      // The same endpoint accepts both authenticator codes and recovery codes.
+      const res = await httpClient.verifyTotpLogin(
+        pendingEmail,
+        code,
+        totpChallengeToken,
+      );
+      if (await finishLogin(res.token, res.user || pendingEmail)) {
+        toast.success(t('common.loginSuccess'));
+      }
+    } catch (error) {
+      const apiError = error as { code?: string };
+      toast.error(
+        apiError?.code === 'totp_invalid_code'
+          ? t('common.totpInvalidCode')
+          : t('common.totpVerifyFailed'),
+      );
+    } finally {
+      setTotpLoading(false);
+    }
+  }
+
+  function handleBackToPassword() {
+    setTotpStep(false);
+    setTotpChallengeToken('');
+    setTotpCode('');
+    setUseRecoveryCode(false);
   }
 
   const handleSpaceLoginClick = useCallback(async () => {
@@ -336,6 +402,81 @@ export default function Login() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Second-factor challenge: shown once the password has been accepted. */}
+          {totpStep ? (
+            <form onSubmit={handleTotpSubmit} className="space-y-4">
+              <div className="flex items-start gap-2">
+                <ShieldCheck className="h-5 w-5 mt-0.5 text-primary" />
+                <div>
+                  <p className="text-sm font-medium">
+                    {t('common.totpChallengeTitle')}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {useRecoveryCode
+                      ? t('common.totpUseRecoveryCode')
+                      : t('common.totpChallengeDesc')}
+                  </p>
+                </div>
+              </div>
+
+              <div className="relative">
+                {useRecoveryCode ? (
+                  <KeyRound className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                ) : (
+                  <ShieldCheck className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                )}
+                <Input
+                  autoFocus
+                  inputMode={useRecoveryCode ? 'text' : 'numeric'}
+                  autoComplete="one-time-code"
+                  spellCheck={false}
+                  placeholder={
+                    useRecoveryCode
+                      ? t('common.enterRecoveryCode')
+                      : t('common.enterTotpCode')
+                  }
+                  className={`pl-10 ${useRecoveryCode ? 'font-mono' : 'tracking-widest'}`}
+                  value={totpCode}
+                  onChange={(e) => setTotpCode(e.target.value)}
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full cursor-pointer"
+                disabled={totpLoading || !totpCode.trim()}
+              >
+                {totpLoading && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                {t('common.verify')}
+              </Button>
+
+              <div className="flex items-center justify-between text-xs">
+                <button
+                  type="button"
+                  className="text-blue-500 cursor-pointer"
+                  onClick={() => {
+                    setUseRecoveryCode((prev) => !prev);
+                    setTotpCode('');
+                  }}
+                >
+                  {useRecoveryCode
+                    ? t('common.useTotpCode')
+                    : t('common.useRecoveryCode')}
+                </button>
+                <button
+                  type="button"
+                  className="flex items-center text-muted-foreground cursor-pointer"
+                  onClick={handleBackToPassword}
+                >
+                  <ArrowLeft className="mr-1 h-3 w-3" />
+                  {t('common.back')}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <>
           {/* Space and password login are per-account capabilities. */}
           {showSpaceLogin && (
             <div className="space-y-3">
@@ -487,6 +628,8 @@ export default function Login() {
               {t('common.dataCollectionPolicy')}
             </a>
           </p>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>
