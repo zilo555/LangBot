@@ -9,6 +9,8 @@
  * Installation stages mapped from backend current_action strings.
  */
 export enum InstallStage {
+  CHECKING = 'checking',
+  VALIDATING = 'validating',
   DOWNLOADING = 'downloading',
   INSTALLING_DEPS = 'installing_deps',
   INITIALIZING = 'initializing',
@@ -29,7 +31,11 @@ export function mapActionToStage(action: string): InstallStage {
 
   // Terminal wording first: "installed" would otherwise also match the
   // in-progress "installing" branch below.
-  if (lower.includes('installed') || lower.includes('complete')) {
+  if (
+    lower.includes('installed') ||
+    lower.includes('updated') ||
+    lower.includes('complete')
+  ) {
     return InstallStage.DONE;
   }
   // "waiting for plugin to become ready" is the post-install readiness wait,
@@ -37,6 +43,11 @@ export function mapActionToStage(action: string): InstallStage {
   if (lower.includes('waiting') || lower.includes('ready')) {
     return InstallStage.LAUNCHING;
   }
+  if (lower.includes('checking')) return InstallStage.CHECKING;
+  if (lower.includes('validat')) return InstallStage.VALIDATING;
+  if (lower.includes('refresh')) return InstallStage.LAUNCHING;
+  if (lower.includes('applying')) return InstallStage.INSTALLING_DEPS;
+
   // Pre-download wording, checked before the "install" branches because
   // "preparing plugin install" also contains "install".
   if (lower.includes('prepar') || lower.includes('checking')) {
@@ -74,6 +85,8 @@ export function mapActionToStage(action: string): InstallStage {
  * advances.
  */
 export const STAGE_PROGRESS_RANGE: Record<InstallStage, [number, number]> = {
+  [InstallStage.CHECKING]: [3, 5],
+  [InstallStage.VALIDATING]: [45, 45],
   [InstallStage.DOWNLOADING]: [5, 45],
   [InstallStage.INSTALLING_DEPS]: [45, 85],
   [InstallStage.INITIALIZING]: [85, 88],
@@ -93,6 +106,8 @@ export interface StageProgressInput {
   stage: InstallStage;
   downloadCurrent?: number;
   downloadTotal?: number;
+  /** Host coarse stage progress, used only when measured bytes are absent. */
+  reportedProgress?: number;
   /** Seconds spent in the current stage, used to bound fallback drift. */
   stageElapsedSeconds: number;
 }
@@ -121,6 +136,13 @@ export function computeStageProgress(input: StageProgressInput): number {
       (input.downloadCurrent as number) / (input.downloadTotal as number),
     );
     return clampToRange(Math.round(start + (end - start) * ratio), start, end);
+  }
+
+  if (
+    input.reportedProgress != null &&
+    Number.isFinite(input.reportedProgress)
+  ) {
+    return clampToRange(input.reportedProgress, start, end);
   }
 
   // Nothing measurable to show yet: drift slowly, but never past this stage's
