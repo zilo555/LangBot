@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 from langbot.pkg.api.http.context import ExecutionContext
 from langbot.pkg.entity.persistence.base import Base
+from langbot.pkg.entity.persistence.pipeline import LegacyPipeline
 from langbot.pkg.entity.persistence.rag import File, KnowledgeBase
 from langbot.pkg.entity.persistence.user import User
 from langbot.pkg.entity.persistence.workspace import Workspace
@@ -27,7 +28,19 @@ from langbot.pkg.rag.knowledge.kbmgr import RuntimeKnowledgeBase
 from langbot.pkg.workspace.errors import WorkspaceNotFoundError
 
 OLD_HEAD = '0024_passkey_credentials'
-NEW_HEAD = '0025_rag_document_identity'
+
+
+def current_head():
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+    from langbot.pkg.persistence.alembic_runner import _ALEMBIC_DIR
+
+    config = Config()
+    config.set_main_option('script_location', _ALEMBIC_DIR)
+    return ScriptDirectory.from_config(config).get_current_head()
+
+
+DOCUMENT_IDENTITY_REVISION = '0025_rag_document_identity'
 CONTEXT = ExecutionContext(instance_uuid='instance-a', workspace_uuid='workspace-a', placement_generation=5)
 
 
@@ -62,10 +75,12 @@ async def database(request, tmp_path):
 
 async def create_schema(engine, *, legacy=False):
     # Only the fixture-owned dependency closure; never all imported application tables.
+    # Full-head upgrades also create the manual migration journal, whose scoped
+    # foreign key requires the historical legacy_pipelines table.
     async with engine.begin() as conn:
         await conn.run_sync(
             lambda sync: Base.metadata.create_all(
-                sync, tables=[User.__table__, Workspace.__table__, KnowledgeBase.__table__]
+                sync, tables=[User.__table__, Workspace.__table__, LegacyPipeline.__table__, KnowledgeBase.__table__]
             )
         )
         if legacy:
@@ -353,7 +368,7 @@ async def test_populated_legacy_migration_roundtrip(database):
             lambda sync: {col['name'] for col in sa.inspect(sync).get_columns('knowledge_base_files')}
         )
     await run_alembic_stamp(database, OLD_HEAD)
-    await run_alembic_upgrade(database)
+    await run_alembic_upgrade(database, DOCUMENT_IDENTITY_REVISION)
     async with database.connect() as conn:
         columns = await conn.run_sync(lambda sync: sa.inspect(sync).get_columns('knowledge_base_files'))
         assert 'engine_document_id' in {col['name'] for col in columns}
@@ -361,10 +376,10 @@ async def test_populated_legacy_migration_roundtrip(database):
         row = (await conn.execute(sa.text('SELECT * FROM knowledge_base_files'))).mappings().one()
         assert row['uuid'] == 'legacy' and row['status'] == 'completed'
         assert row['engine_document_id'] is None
-    assert await get_alembic_current(database) == NEW_HEAD
-    await run_alembic_upgrade(database)
+    assert await get_alembic_current(database) == DOCUMENT_IDENTITY_REVISION
+    await run_alembic_upgrade(database, DOCUMENT_IDENTITY_REVISION)
     await run_alembic_stamp(database, OLD_HEAD)
-    await run_alembic_upgrade(database)
+    await run_alembic_upgrade(database, DOCUMENT_IDENTITY_REVISION)
     await run_alembic_downgrade(database, OLD_HEAD)
     async with database.connect() as conn:
         assert 'engine_document_id' not in await conn.run_sync(
@@ -375,11 +390,34 @@ async def test_populated_legacy_migration_roundtrip(database):
 
 
 @pytest.mark.asyncio
+async def test_published_document_identity_branch_converges_to_release_head(database):
+    await create_schema(database, legacy=True)
+    await run_alembic_stamp(database, OLD_HEAD)
+    await run_alembic_upgrade(database, DOCUMENT_IDENTITY_REVISION)
+    async with database.begin() as conn:
+        await conn.execute(
+            sa.text("""INSERT INTO knowledge_base_files
+            (uuid, workspace_uuid, kb_id, file_name, extension, status, engine_document_id)
+            VALUES ('host-stable', 'workspace-a', 'kb-a', 'original.txt', 'txt', 'completed', 'opaque-engine-id')""")
+        )
+    await run_alembic_upgrade(database)
+    await run_alembic_upgrade(database)
+    assert await get_alembic_current(database) == current_head()
+    async with database.connect() as conn:
+        row = (await conn.execute(sa.text('SELECT * FROM knowledge_base_files'))).mappings().one()
+        assert row['uuid'] == 'host-stable'
+        assert row['engine_document_id'] == 'opaque-engine-id'
+        assert row['status'] == 'completed'
+        tables = await conn.run_sync(lambda sync: sa.inspect(sync).get_table_names())
+        assert 'pipeline_migration_snapshots' in tables
+
+
+@pytest.mark.asyncio
 async def test_fresh_metadata_then_migration_is_idempotent(database):
     await create_schema(database)
     await run_alembic_stamp(database, OLD_HEAD)
     await run_alembic_upgrade(database)
-    assert await get_alembic_current(database) == NEW_HEAD
+    assert await get_alembic_current(database) == current_head()
     async with database.connect() as conn:
         assert 'engine_document_id' in await conn.run_sync(
             lambda sync: {col['name'] for col in sa.inspect(sync).get_columns('knowledge_base_files')}

@@ -16,7 +16,13 @@ import pytest
         ('cloud', ('invalid', 'shared-runtime-v1'), True, 'rejected', 'CERTIFIED_PLUGIN_CLOUD_CERTIFICATE_INVALID'),
         ('oss', ('absent', None), False, 'dedicated_allowed', 'CERTIFIED_PLUGIN_OSS_LEGACY_DEDICATED'),
         ('oss', ('valid', 'shared-runtime-v1'), False, 'shared_eligible', 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE'),
-        ('oss', ('invalid', 'shared-runtime-v1'), False, 'administrator_force_required', 'CERTIFIED_PLUGIN_OSS_FORCE_REQUIRED'),
+        (
+            'oss',
+            ('invalid', 'shared-runtime-v1'),
+            False,
+            'administrator_force_required',
+            'CERTIFIED_PLUGIN_OSS_FORCE_REQUIRED',
+        ),
         ('oss', ('invalid', 'shared-runtime-v1'), True, 'dedicated_allowed', 'CERTIFIED_PLUGIN_OSS_FORCED_DEDICATED'),
     ],
 )

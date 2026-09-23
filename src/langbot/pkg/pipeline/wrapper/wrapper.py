@@ -140,8 +140,8 @@ class ResponseWrapper(stage.PipelineStage):
                                 reply_chain = result.get_content_platform_message_chain()
                                 is_plugin_reply = False
 
-                            # Attach files the agent produced in the sandbox
-                            # outbox, but only on the terminal assistant message.
+                            # Only collect Box outbox files for a terminal assistant
+                            # response; also accept provider final chunks here.
                             if self._is_final_assistant_message(result):
                                 await self._append_outbound_attachments(query, reply_chain)
 
@@ -161,12 +161,8 @@ class ResponseWrapper(stage.PipelineStage):
                     elif (
                         isinstance(result, provider_message.MessageChunk) and result.is_final and not result.tool_calls
                     ):
-                        # Final streaming chunk with no text content. It may still
-                        # carry sandbox outbox attachments; deliver them when present.
-                        # Otherwise emit nothing: appending an empty message chain
-                        # would be sent to the platform as an empty bubble and, on
-                        # streaming adapters (e.g. WeCom), would also close the
-                        # stream so the real answer arrives as a separate message.
+                        # A blank final chunk may carry Box outbox files, but do not
+                        # send an empty chain: streaming adapters treat it as final.
                         reply_chain = platform_message.MessageChain([])
                         await self._append_outbound_attachments(query, reply_chain)
                         if len(reply_chain) > 0:
