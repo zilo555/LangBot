@@ -40,10 +40,14 @@ test('hides the entire workspace switcher slot for a singleton local workspace',
   );
 });
 
-test('keeps bot cards at the same vertical spacing as knowledge-base cards', () => {
+test('keeps bot forms spaced with responsive setup and detail columns', () => {
+  const fieldset = botFormSource.match(
+    /<fieldset\s[\s\S]*?disabled=\{isLoading\}/,
+  )?.[0];
+  assert.ok(fieldset, 'the form must retain its loading-disabled fieldset');
   assert.match(
-    botFormSource,
-    /<fieldset className="space-y-6" disabled=\{isLoading\}>/,
+    fieldset,
+    /initBotId\s*\?\s*'grid gap-4 lg:h-full lg:min-h-0 lg:grid-cols-\[minmax\(0,2fr\)_minmax\(0,3fr\)\] lg:grid-rows-\[minmax\(0,1fr\)\]'\s*:\s*'grid items-start gap-6 lg:grid-cols-\[minmax\(16rem,0\.7fr\)_minmax\(0,2fr\)\]'/,
   );
   assert.match(kbFormSource, /<form[\s\S]*?className="space-y-6"/);
 });
@@ -68,6 +72,13 @@ test('does not expose storage analysis in Cloud settings or via a deep link', ()
   assert.match(
     settingsDialogSource,
     /section === 'storageAnalysis' &&\s*canViewStorageAnalysis &&\s*\(\s*<StorageAnalysisPanel/,
+  );
+});
+
+test('renders storage analysis with the storage icon in the user menu', () => {
+  assert.match(
+    homeSidebarSource,
+    /canViewStorageAnalysis\s*&&\s*\(\s*<DropdownMenuItem[\s\S]*?<HardDrive\s*\/>[\s\S]*?\{t\('storageAnalysis\.title'\)\}/,
   );
 });
 

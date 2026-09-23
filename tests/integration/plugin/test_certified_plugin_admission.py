@@ -92,6 +92,60 @@ async def test_oss_requires_explicit_administrator_force_for_declared_invalid_ar
     connector.handler.apply_plugin_installation.assert_not_awaited()
 
 
+@pytest.mark.asyncio
+@pytest.mark.parametrize('requested_version', [None, '1.0.0'])
+@pytest.mark.parametrize('archive_kind', ['signed_shared', 'legacy'])
+async def test_marketplace_version_selection_keeps_certificate_gate_and_single_apply(
+    monkeypatch, requested_version, archive_kind
+):
+    import json
+
+    import langbot.pkg.plugin.connector as connector_module
+    from langbot.pkg.core.taskmgr import TaskContext
+
+    package, trusted_public_keys = _archive(archive_kind)
+    connector, _execution_context, binding = _connector('cloud', trusted_public_keys)
+    connector._refresh_runner_registry = AsyncMock()
+    requests = []
+
+    async def marketplace_get(_client, url, **kwargs):
+        requests.append(url)
+        if '/plugins/download/' in url:
+            assert url.endswith('/certified/example/1.0.0')
+            return 200, package
+        if url.endswith('/versions'):
+            return 200, json.dumps({'data': {'versions': [{'version': '1.0.0'}]}}).encode()
+        return 404, b'{}'
+
+    monkeypatch.setattr(connector_module, '_marketplace_get', marketplace_get)
+    info = {'plugin_author': 'certified', 'plugin_name': 'example'}
+    if requested_version is not None:
+        info['plugin_version'] = requested_version
+    task_context = TaskContext.new()
+    if archive_kind == 'legacy':
+        with pytest.raises(ValueError, match='CERTIFIED_PLUGIN_CLOUD_CERTIFICATE_REQUIRED'):
+            await connector.install_plugin(PluginInstallSource.MARKETPLACE, info, task_context)
+        connector._store_artifact_package.assert_not_awaited()
+        connector._persist_installation_package.assert_not_awaited()
+        connector.handler.apply_plugin_installation.assert_not_awaited()
+        connector._refresh_runner_registry.assert_not_awaited()
+    else:
+        await connector.install_plugin(PluginInstallSource.MARKETPLACE, info, task_context)
+        persisted_info = connector._persist_installation_package.await_args.kwargs['install_info']
+        assert persisted_info['plugin_version'] == '1.0.0'
+        assert persisted_info['_certification']['runtime_profile'] == 'shared-runtime-v1'
+        connector.handler.apply_plugin_installation.assert_awaited_once_with(
+            binding, artifact_package=package, enabled=True
+        )
+        connector._refresh_runner_registry.assert_awaited_once()
+        assert task_context.metadata['progress_percent'] == 100
+    if requested_version is not None:
+        # Confirmed migrations must fetch the reviewed release, never latest/MCP/skill.
+        assert len(requests) == 1
+    else:
+        assert any(url.endswith('/versions') for url in requests)
+
+
 def _connector(deployment: str, trusted_public_keys: dict[str, str]):
     package_digest = 'a' * 64
     execution_context = ExecutionContext(

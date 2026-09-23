@@ -22,6 +22,7 @@ from ...api.http.service import totp as totp_service
 from ...api.http.service import model as model_service
 from ...api.http.service import provider as provider_service
 from ...api.http.service import pipeline as pipeline_service
+from ...api.http.service import agent as agent_service
 from ...api.http.service import bot as bot_service
 from ...api.http.service import knowledge as knowledge_service
 from ...api.http.service import mcp as mcp_service
@@ -38,6 +39,7 @@ from ...vector import mgr as vectordb_mgr
 from .. import taskmgr
 from ...telemetry import telemetry as telemetry_module
 from ...survey import manager as survey_module
+from ...agent.runner import RunnerRegistry, AgentRunOrchestrator, RunnerDefaultConfigService
 from ...workspace import service as workspace_service_module
 from ...workspace import collaboration as workspace_collaboration_module
 from ...workspace import invitation_delivery as invitation_delivery_module
@@ -112,6 +114,9 @@ class BuildAppStage(stage.BootingStage):
 
         pipeline_service_inst = pipeline_service.PipelineService(ap)
         ap.pipeline_service = pipeline_service_inst
+
+        agent_service_inst = agent_service.AgentService(ap)
+        ap.agent_service = agent_service_inst
 
         bot_service_inst = bot_service.BotService(ap)
         ap.bot_service = bot_service_inst
@@ -308,6 +313,16 @@ class BuildAppStage(stage.BootingStage):
         plugin_connector_inst = plugin_connector.PluginRuntimeConnector(ap, runtime_disconnect_callback)
         ap.plugin_connector = plugin_connector_inst
         workspace_service_inst.release_startup_execution_bindings()
+
+        # Initialize agent runner subsystem
+        runner_registry_inst = RunnerRegistry(ap)
+        ap.runner_registry = runner_registry_inst
+
+        runner_default_config_service_inst = RunnerDefaultConfigService(ap)
+        ap.runner_default_config_service = runner_default_config_service_inst
+
+        agent_run_orchestrator_inst = AgentRunOrchestrator(ap, runner_registry_inst)
+        ap.agent_run_orchestrator = agent_run_orchestrator_inst
 
         ctrl = controller.Controller(ap)
         ap.ctrl = ctrl

@@ -15,7 +15,7 @@ import json
 import secrets
 import time
 import traceback
-from typing import Any, Callable, Optional
+from typing import TYPE_CHECKING, Any, Callable, Optional
 
 import aiohttp
 
@@ -33,7 +33,9 @@ from langbot.libs.wecom_ai_bot_api.api import (
     extract_wecom_event_type,
     parse_select_button_action,
 )
-from langbot.pkg.platform.logger import EventLogger
+
+if TYPE_CHECKING:
+    from langbot.pkg.platform.logger import EventLogger
 
 DEFAULT_WS_URL = 'wss://openws.work.weixin.qq.com'
 
@@ -498,6 +500,8 @@ class WecomBotWsClient:
             card_payload: ``{"msgtype": "template_card", "template_card": {...}}``
                 as produced by :func:`build_button_interaction_payload`.
         """
+        if card_payload.get('msgtype') != 'template_card' or not isinstance(card_payload.get('template_card'), dict):
+            raise ValueError('invalid WeCom template_card payload')
         req_id = _generate_req_id(CMD_SEND_MSG)
         body = dict(card_payload)
         body['chatid'] = chat_id
@@ -685,6 +689,18 @@ class WecomBotWsClient:
                 import re as _re
 
                 if not _re.sub(r'[\s​‌‍﻿]', '', next_content):
+                    return True
+
+            # A blank *final* snapshot would close the stream with an empty
+            # bubble and strand the real answer in a separate reply_text
+            # message. Keep the session open so a following non-blank chunk can
+            # finalize it. The non-final branch above already skips blank
+            # snapshots; final snapshots with earlier content are non-blank
+            # here because ``next_content`` falls back to the previous content.
+            if is_final:
+                import re as _re
+
+                if not _re.sub(r'[\s\u200b\u200c\u200d\ufeff]', '', next_content):
                     return True
 
             # Generate feedback_id for final chunk
