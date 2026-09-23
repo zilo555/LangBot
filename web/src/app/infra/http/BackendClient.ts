@@ -1404,17 +1404,25 @@ export class BackendClient extends BaseHttpClient {
       totpCode?: string;
     } = {},
   ): Promise<{ user: string }> {
-    return this.post(
-      '/api/v1/user/reset-password',
-      {
-        user,
-        new_password: newPassword,
-        method: options.method ?? 'recovery_key',
-        recovery_key: options.recoveryKey,
-        totp_code: options.totpCode,
-      },
-      { skipWorkspace: true },
-    );
+    // Only send the second-factor fields that apply to the selected method, so
+    // the default recovery-key flow keeps its historical wire shape (no empty
+    // `method`/`totp_code` keys) and stays byte-compatible with existing callers.
+    const body: Record<string, unknown> = {
+      user,
+      new_password: newPassword,
+    };
+    if (options.method && options.method !== 'recovery_key') {
+      body.method = options.method;
+    }
+    if (options.recoveryKey) {
+      body.recovery_key = options.recoveryKey;
+    }
+    if (options.totpCode) {
+      body.totp_code = options.totpCode;
+    }
+    return this.post('/api/v1/user/reset-password', body, {
+      skipWorkspace: true,
+    });
   }
 
   public changePassword(
