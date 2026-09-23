@@ -196,7 +196,10 @@ export default function TotpEnrollDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(next) => (next ? onOpenChange(true) : closeDialog())}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => (next ? onOpenChange(true) : closeDialog())}
+    >
       <DialogContent className="sm:max-w-[460px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">

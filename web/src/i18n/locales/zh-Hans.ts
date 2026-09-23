@@ -1334,18 +1334,23 @@ const zhHans = {
     totpManageTitle: '两步验证',
     totpManageDesc: '重新生成恢复代码，或关闭两步验证。',
     totpRegenerateCodes: '重新生成恢复代码',
-    totpRegenerateDesc: '请输入当前验证器验证码或恢复代码，以生成一组新的恢复代码。',
+    totpRegenerateDesc:
+      '请输入当前验证器验证码或恢复代码，以生成一组新的恢复代码。',
     totpRecoveryCodesRegenerated: '已生成新的恢复代码',
     totpStatusDisabled: '未启用',
     totpCodesRemaining: '剩余 {{count}} 个恢复代码',
     totpManagerSectionDesc: '所有者和管理员可以查看并重置任意账户的两步验证。',
     revokeTotp: '重新绑定',
     totpAdminResetTitle: '重新绑定 {{user}} 的两步验证',
-    totpAdminResetDesc: '请让该账户用身份验证器扫描下方二维码，再把生成的 6 位验证码填入下方完成绑定。',
+    totpAdminResetDesc:
+      '请让该账户用身份验证器扫描下方二维码，再把生成的 6 位验证码填入下方完成绑定。',
     totpAdminResetWarning: '开始绑定后，{{user}} 原来的身份验证器会立即失效。',
-    totpAdminResetHint: '如果该账户当前无法登录，可让其在任意身份验证器中扫描此二维码。',
-    totpAdminHandOverCodes: '请把这些恢复代码转交给 {{user}}，它们只会显示一次。',
-    revokeTotpConfirm: '确定要关闭 {{user}} 的两步验证吗？关闭后该账户仅凭密码即可登录。',
+    totpAdminResetHint:
+      '如果该账户当前无法登录，可让其在任意身份验证器中扫描此二维码。',
+    totpAdminHandOverCodes:
+      '请把这些恢复代码转交给 {{user}}，它们只会显示一次。',
+    revokeTotpConfirm:
+      '确定要关闭 {{user}} 的两步验证吗？关闭后该账户仅凭密码即可登录。',
     revokeTotpSuccess: '已重置两步验证',
     you: '你',
     noAccounts: '暂无账户',
@@ -1364,8 +1369,10 @@ const zhHans = {
     totpDisabledSuccess: '两步验证已停用',
     totpInvalidCode: '验证码无效，请检查后重试',
     totpRecoveryCodesTitle: '恢复代码',
-    totpRecoveryCodesDesc: '请将这些一次性恢复代码保存在安全的地方，它们只会显示一次。',
-    totpRecoveryCodesWarning: '每个代码只能使用一次。如果验证器和这些代码都丢失，您将无法登录。',
+    totpRecoveryCodesDesc:
+      '请将这些一次性恢复代码保存在安全的地方，它们只会显示一次。',
+    totpRecoveryCodesWarning:
+      '每个代码只能使用一次。如果验证器和这些代码都丢失，您将无法登录。',
     totpSavedCodes: '我已保存这些代码',
     regenerateRecoveryCodes: '重新生成恢复代码',
     bindSpaceFailed: '绑定 LangBot 账号失败',

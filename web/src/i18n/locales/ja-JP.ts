@@ -1323,7 +1323,8 @@ const jaJP = {
     resetFailed:
       'パスワードのリセットに失敗しました。メールアドレスと復旧キーを確認してください',
     backToLogin: 'ログインに戻る',
-    secondFactorFailed: '確認に失敗しました。コードを確認して再試行してください',
+    secondFactorFailed:
+      '確認に失敗しました。コードを確認して再試行してください',
     verifyWith: '確認方法',
     methodRecoveryKey: 'リカバリーキー',
     methodTotp: '認証アプリ',
@@ -1333,7 +1334,8 @@ const jaJP = {
     totpCodeRequired: '認証コードを入力してください',
     enterTotpCode: '6桁のコードを入力',
     recoveryCode: 'リカバリーコード',
-    recoveryCodeDescription: '二段階認証を有効にしたときに保存した一度限りのリカバリーコードを入力してください',
+    recoveryCodeDescription:
+      '二段階認証を有効にしたときに保存した一度限りのリカバリーコードを入力してください',
     recoveryCodeRequired: 'リカバリーコードを入力してください',
     enterRecoveryCodeValue: 'リカバリーコードを入力',
   },
@@ -1396,29 +1398,39 @@ const jaJP = {
     passkeyDeleteSuccess: 'パスキーを削除しました',
     passkeyRenameSuccess: 'パスキー名を変更しました',
     totpSectionTitle: '二段階認証',
-    totpSectionDesc: 'ログインの第二要素として時間ベースのワンタイムパスワードを追加します',
+    totpSectionDesc:
+      'ログインの第二要素として時間ベースのワンタイムパスワードを追加します',
     totpEnabledDesc: '二段階認証は有効です · 残りリカバリーコード {{count}} 個',
     enableTotp: '有効化',
     manageTotp: '管理',
     totpEnrollTitle: '二段階認証を有効にする',
-    totpEnrollDesc: '認証アプリでQRコードをスキャンし、生成されたコードを入力して確認します',
+    totpEnrollDesc:
+      '認証アプリでQRコードをスキャンし、生成されたコードを入力して確認します',
     totpStartEnroll: 'シークレットを生成',
     totpGeneratingSecret: '新しいシークレットを生成しています…',
     totpManageTitle: '二段階認証',
-    totpManageDesc: 'リカバリーコードを再生成するか、二段階認証を無効にできます。',
+    totpManageDesc:
+      'リカバリーコードを再生成するか、二段階認証を無効にできます。',
     totpRegenerateCodes: 'リカバリーコードを再生成',
-    totpRegenerateDesc: '現在の認証コードまたはリカバリーコードを入力すると、新しいコードを発行します。',
+    totpRegenerateDesc:
+      '現在の認証コードまたはリカバリーコードを入力すると、新しいコードを発行します。',
     totpRecoveryCodesRegenerated: '新しいリカバリーコードを生成しました',
     totpStatusDisabled: '未設定',
     totpCodesRemaining: 'リカバリーコード残り {{count}} 個',
-    totpManagerSectionDesc: 'オーナーと管理者はすべてのアカウントの二段階認証を確認・解除できます。',
+    totpManagerSectionDesc:
+      'オーナーと管理者はすべてのアカウントの二段階認証を確認・解除できます。',
     revokeTotp: '再バインド',
     totpAdminResetTitle: '{{user}} の二段階認証を再バインド',
-    totpAdminResetDesc: '対象アカウントに認証アプリでQRコードを読み取ってもらい、表示される6桁のコードを下に入力して完了します。',
-    totpAdminResetWarning: '再バインドを開始すると、{{user}} の既存の認証アプリは直ちに無効になります。',
-    totpAdminResetHint: '対象アカウントが今ログインできない場合、任意の認証アプリでこのQRコードを読み取ってもらえます。',
-    totpAdminHandOverCodes: 'これらのリカバリーコードを {{user}} に渡してください。表示は一度だけです。',
-    revokeTotpConfirm: '{{user}} の二段階認証を無効にしますか？以降はパスワードのみでログインできます。',
+    totpAdminResetDesc:
+      '対象アカウントに認証アプリでQRコードを読み取ってもらい、表示される6桁のコードを下に入力して完了します。',
+    totpAdminResetWarning:
+      '再バインドを開始すると、{{user}} の既存の認証アプリは直ちに無効になります。',
+    totpAdminResetHint:
+      '対象アカウントが今ログインできない場合、任意の認証アプリでこのQRコードを読み取ってもらえます。',
+    totpAdminHandOverCodes:
+      'これらのリカバリーコードを {{user}} に渡してください。表示は一度だけです。',
+    revokeTotpConfirm:
+      '{{user}} の二段階認証を無効にしますか？以降はパスワードのみでログインできます。',
     revokeTotpSuccess: '二段階認証を解除しました',
     you: '自分',
     noAccounts: '表示するアカウントがありません',
@@ -1432,13 +1444,16 @@ const jaJP = {
     totpLastUsed: '最終確認: {{date}}',
     totpNeverUsed: '未使用',
     disableTotp: '二段階認証を無効にする',
-    disableTotpDesc: '現在の認証コードまたはリカバリーコードを入力して、二段階認証を無効にします',
+    disableTotpDesc:
+      '現在の認証コードまたはリカバリーコードを入力して、二段階認証を無効にします',
     totpEnabledSuccess: '二段階認証を有効にしました',
     totpDisabledSuccess: '二段階認証を無効にしました',
     totpInvalidCode: 'コードが無効です。確認してもう一度お試しください',
     totpRecoveryCodesTitle: 'リカバリーコード',
-    totpRecoveryCodesDesc: 'これらの一度限りのリカバリーコードを安全な場所に保存してください。表示は一度だけです。',
-    totpRecoveryCodesWarning: '各コードは一度だけ使用できます。認証アプリとこれらのコードを失うと、ログインできなくなります。',
+    totpRecoveryCodesDesc:
+      'これらの一度限りのリカバリーコードを安全な場所に保存してください。表示は一度だけです。',
+    totpRecoveryCodesWarning:
+      '各コードは一度だけ使用できます。認証アプリとこれらのコードを失うと、ログインできなくなります。',
     totpSavedCodes: 'コードを保存しました',
     regenerateRecoveryCodes: 'リカバリーコードを再生成',
     bindSpaceFailed: 'LangBot アカウントの連携に失敗しました',

@@ -1330,7 +1330,8 @@ const viVN = {
     totpCodeRequired: 'Mã xác thực không được để trống',
     enterTotpCode: 'Nhập mã 6 chữ số',
     recoveryCode: 'Mã khôi phục',
-    recoveryCodeDescription: 'Nhập một trong các mã khôi phục dùng một lần bạn đã lưu khi bật xác minh hai bước',
+    recoveryCodeDescription:
+      'Nhập một trong các mã khôi phục dùng một lần bạn đã lưu khi bật xác minh hai bước',
     recoveryCodeRequired: 'Mã khôi phục không được để trống',
     enterRecoveryCodeValue: 'Nhập mã khôi phục',
   },
@@ -1394,29 +1395,38 @@ const viVN = {
     passkeyDeleteSuccess: 'Đã xóa mã khóa truy cập',
     passkeyRenameSuccess: 'Đã đổi tên mã khóa truy cập thành công',
     totpSectionTitle: 'Xác minh hai bước',
-    totpSectionDesc: 'Thêm mật khẩu dùng một lần theo thời gian làm yếu tố đăng nhập thứ hai',
+    totpSectionDesc:
+      'Thêm mật khẩu dùng một lần theo thời gian làm yếu tố đăng nhập thứ hai',
     totpEnabledDesc: 'Đã bật xác minh hai bước · còn {{count}} mã khôi phục',
     enableTotp: 'Bật',
     manageTotp: 'Quản lý',
     totpEnrollTitle: 'Bật xác minh hai bước',
-    totpEnrollDesc: 'Quét mã QR bằng ứng dụng xác thực, sau đó xác nhận mã được tạo',
+    totpEnrollDesc:
+      'Quét mã QR bằng ứng dụng xác thực, sau đó xác nhận mã được tạo',
     totpStartEnroll: 'Tạo khóa bí mật',
     totpGeneratingSecret: 'Đang tạo khóa bí mật mới…',
     totpManageTitle: 'Xác minh hai bước',
     totpManageDesc: 'Tạo lại mã khôi phục hoặc tắt yếu tố xác minh thứ hai.',
     totpRegenerateCodes: 'Tạo lại mã khôi phục',
-    totpRegenerateDesc: 'Nhập mã xác thực hoặc mã khôi phục hiện tại để tạo bộ mã mới.',
+    totpRegenerateDesc:
+      'Nhập mã xác thực hoặc mã khôi phục hiện tại để tạo bộ mã mới.',
     totpRecoveryCodesRegenerated: 'Đã tạo mã khôi phục mới',
     totpStatusDisabled: 'Chưa bật',
     totpCodesRemaining: 'Còn {{count}} mã khôi phục',
-    totpManagerSectionDesc: 'Chủ sở hữu và quản trị viên có thể xem và đặt lại yếu tố thứ hai của bất kỳ tài khoản nào.',
+    totpManagerSectionDesc:
+      'Chủ sở hữu và quản trị viên có thể xem và đặt lại yếu tố thứ hai của bất kỳ tài khoản nào.',
     revokeTotp: 'Liên kết lại',
     totpAdminResetTitle: 'Liên kết lại xác thực hai bước cho {{user}}',
-    totpAdminResetDesc: 'Yêu cầu tài khoản đó quét mã QR bằng ứng dụng xác thực, rồi nhập mã 6 chữ số bên dưới để hoàn tất.',
-    totpAdminResetWarning: 'Khi bắt đầu liên kết lại, ứng dụng xác thực hiện tại của {{user}} sẽ ngừng hoạt động ngay.',
-    totpAdminResetHint: 'Nếu tài khoản đó hiện không thể đăng nhập, họ có thể quét mã QR này bằng bất kỳ ứng dụng xác thực nào.',
-    totpAdminHandOverCodes: 'Hãy chuyển các mã khôi phục này cho {{user}}. Chúng chỉ hiển thị một lần.',
-    revokeTotpConfirm: 'Tắt xác minh hai bước cho {{user}}? Sau đó họ chỉ cần mật khẩu để đăng nhập.',
+    totpAdminResetDesc:
+      'Yêu cầu tài khoản đó quét mã QR bằng ứng dụng xác thực, rồi nhập mã 6 chữ số bên dưới để hoàn tất.',
+    totpAdminResetWarning:
+      'Khi bắt đầu liên kết lại, ứng dụng xác thực hiện tại của {{user}} sẽ ngừng hoạt động ngay.',
+    totpAdminResetHint:
+      'Nếu tài khoản đó hiện không thể đăng nhập, họ có thể quét mã QR này bằng bất kỳ ứng dụng xác thực nào.',
+    totpAdminHandOverCodes:
+      'Hãy chuyển các mã khôi phục này cho {{user}}. Chúng chỉ hiển thị một lần.',
+    revokeTotpConfirm:
+      'Tắt xác minh hai bước cho {{user}}? Sau đó họ chỉ cần mật khẩu để đăng nhập.',
     revokeTotpSuccess: 'Đã đặt lại xác minh hai bước',
     you: 'bạn',
     noAccounts: 'Không có tài khoản để hiển thị',
@@ -1430,13 +1440,16 @@ const viVN = {
     totpLastUsed: 'Xác minh gần nhất: {{date}}',
     totpNeverUsed: 'Chưa sử dụng',
     disableTotp: 'Tắt xác minh hai bước',
-    disableTotpDesc: 'Nhập mã từ ứng dụng xác thực hiện tại hoặc mã khôi phục để tắt xác minh hai bước',
+    disableTotpDesc:
+      'Nhập mã từ ứng dụng xác thực hiện tại hoặc mã khôi phục để tắt xác minh hai bước',
     totpEnabledSuccess: 'Đã bật xác minh hai bước',
     totpDisabledSuccess: 'Đã tắt xác minh hai bước',
     totpInvalidCode: 'Mã không hợp lệ, vui lòng kiểm tra và thử lại',
     totpRecoveryCodesTitle: 'Mã khôi phục',
-    totpRecoveryCodesDesc: 'Lưu các mã khôi phục dùng một lần này ở nơi an toàn. Chúng chỉ hiển thị một lần.',
-    totpRecoveryCodesWarning: 'Mỗi mã chỉ dùng được một lần. Nếu bạn mất ứng dụng xác thực và các mã này, bạn sẽ mất quyền truy cập đăng nhập.',
+    totpRecoveryCodesDesc:
+      'Lưu các mã khôi phục dùng một lần này ở nơi an toàn. Chúng chỉ hiển thị một lần.',
+    totpRecoveryCodesWarning:
+      'Mỗi mã chỉ dùng được một lần. Nếu bạn mất ứng dụng xác thực và các mã này, bạn sẽ mất quyền truy cập đăng nhập.',
     totpSavedCodes: 'Tôi đã lưu các mã này',
     regenerateRecoveryCodes: 'Tạo lại mã khôi phục',
     bindSpaceFailed: 'Liên kết tài khoản LangBot thất bại',

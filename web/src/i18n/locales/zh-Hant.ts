@@ -1335,18 +1335,23 @@ const zhHant = {
     totpManageTitle: '兩步驗證',
     totpManageDesc: '重新產生恢復代碼，或關閉兩步驗證。',
     totpRegenerateCodes: '重新產生恢復代碼',
-    totpRegenerateDesc: '請輸入目前驗證器驗證碼或恢復代碼，以產生一組新的恢復代碼。',
+    totpRegenerateDesc:
+      '請輸入目前驗證器驗證碼或恢復代碼，以產生一組新的恢復代碼。',
     totpRecoveryCodesRegenerated: '已產生新的恢復代碼',
     totpStatusDisabled: '未啟用',
     totpCodesRemaining: '剩餘 {{count}} 個恢復代碼',
     totpManagerSectionDesc: '擁有者與管理員可以檢視並重設任意帳號的兩步驗證。',
     revokeTotp: '重新綁定',
     totpAdminResetTitle: '重新綁定 {{user}} 的兩步驗證',
-    totpAdminResetDesc: '請讓該帳號用驗證器掃描下方二維碼，再把產生的 6 位驗證碼填入下方完成綁定。',
+    totpAdminResetDesc:
+      '請讓該帳號用驗證器掃描下方二維碼，再把產生的 6 位驗證碼填入下方完成綁定。',
     totpAdminResetWarning: '開始綁定後，{{user}} 原本的驗證器會立即失效。',
-    totpAdminResetHint: '如果該帳號目前無法登入，可讓其在任意驗證器中掃描此二維碼。',
-    totpAdminHandOverCodes: '請將這些恢復代碼轉交給 {{user}}，它們只會顯示一次。',
-    revokeTotpConfirm: '確定要關閉 {{user}} 的兩步驗證嗎？關閉後該帳號僅憑密碼即可登入。',
+    totpAdminResetHint:
+      '如果該帳號目前無法登入，可讓其在任意驗證器中掃描此二維碼。',
+    totpAdminHandOverCodes:
+      '請將這些恢復代碼轉交給 {{user}}，它們只會顯示一次。',
+    revokeTotpConfirm:
+      '確定要關閉 {{user}} 的兩步驗證嗎？關閉後該帳號僅憑密碼即可登入。',
     revokeTotpSuccess: '已重設兩步驗證',
     you: '你',
     noAccounts: '暫無帳號',
@@ -1365,8 +1370,10 @@ const zhHant = {
     totpDisabledSuccess: '兩步驗證已停用',
     totpInvalidCode: '驗證碼無效，請檢查後重試',
     totpRecoveryCodesTitle: '恢復代碼',
-    totpRecoveryCodesDesc: '請將這些一次性恢復代碼保存在安全的地方，它們只會顯示一次。',
-    totpRecoveryCodesWarning: '每個代碼只能使用一次。如果驗證器和這些代碼都遺失，您將無法登入。',
+    totpRecoveryCodesDesc:
+      '請將這些一次性恢復代碼保存在安全的地方，它們只會顯示一次。',
+    totpRecoveryCodesWarning:
+      '每個代碼只能使用一次。如果驗證器和這些代碼都遺失，您將無法登入。',
     totpSavedCodes: '我已儲存這些代碼',
     regenerateRecoveryCodes: '重新產生恢復代碼',
     bindSpaceFailed: '綁定 LangBot 帳號失敗',

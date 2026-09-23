@@ -99,8 +99,10 @@ const esES = {
     verify: 'Verificar',
     back: 'Atrás',
     totpChallengeTitle: 'Verificación en dos pasos',
-    totpChallengeDesc: 'Introduce el código de 6 dígitos de tu aplicación de autenticación para continuar',
-    totpUseRecoveryCode: 'Introduce uno de tus códigos de recuperación de un solo uso para continuar',
+    totpChallengeDesc:
+      'Introduce el código de 6 dígitos de tu aplicación de autenticación para continuar',
+    totpUseRecoveryCode:
+      'Introduce uno de tus códigos de recuperación de un solo uso para continuar',
     enterTotpCode: 'Introduce el código de 6 dígitos',
     enterRecoveryCode: 'Introduce el código de recuperación',
     useRecoveryCode: 'Usar un código de recuperación',
@@ -1353,17 +1355,20 @@ const esES = {
     resetFailed:
       'Error al restablecer la contraseña, por favor verifica tu correo y clave de recuperación',
     backToLogin: 'Volver al inicio de sesión',
-    secondFactorFailed: 'La verificación falló, comprueba el código e inténtalo de nuevo',
+    secondFactorFailed:
+      'La verificación falló, comprueba el código e inténtalo de nuevo',
     verifyWith: 'Verificar con',
     methodRecoveryKey: 'Clave de recuperación',
     methodTotp: 'Autenticador',
     methodRecoveryCode: 'Código de recuperación',
     totpCode: 'Código del autenticador',
-    totpCodeDescription: 'Introduce el código de 6 dígitos que muestra tu aplicación de autenticación',
+    totpCodeDescription:
+      'Introduce el código de 6 dígitos que muestra tu aplicación de autenticación',
     totpCodeRequired: 'El código del autenticador no puede estar vacío',
     enterTotpCode: 'Introduce el código de 6 dígitos',
     recoveryCode: 'Código de recuperación',
-    recoveryCodeDescription: 'Introduce uno de los códigos de recuperación de un solo uso que guardaste al activar la verificación en dos pasos',
+    recoveryCodeDescription:
+      'Introduce uno de los códigos de recuperación de un solo uso que guardaste al activar la verificación en dos pasos',
     recoveryCodeRequired: 'El código de recuperación no puede estar vacío',
     enterRecoveryCodeValue: 'Introduce el código de recuperación',
   },
@@ -1427,29 +1432,40 @@ const esES = {
     passkeyDeleteSuccess: 'Llave de acceso eliminada',
     passkeyRenameSuccess: 'Nombre de llave de acceso modificado con éxito',
     totpSectionTitle: 'Verificación en dos pasos',
-    totpSectionDesc: 'Añade una contraseña de un solo uso basada en tiempo como segundo factor de inicio de sesión',
-    totpEnabledDesc: 'Verificación en dos pasos activada · quedan {{count}} códigos de recuperación',
+    totpSectionDesc:
+      'Añade una contraseña de un solo uso basada en tiempo como segundo factor de inicio de sesión',
+    totpEnabledDesc:
+      'Verificación en dos pasos activada · quedan {{count}} códigos de recuperación',
     enableTotp: 'Activar',
     manageTotp: 'Gestionar',
     totpEnrollTitle: 'Activar la verificación en dos pasos',
-    totpEnrollDesc: 'Escanea el código QR con tu aplicación de autenticación y confirma el código generado',
+    totpEnrollDesc:
+      'Escanea el código QR con tu aplicación de autenticación y confirma el código generado',
     totpStartEnroll: 'Generar secreto',
     totpGeneratingSecret: 'Generando un nuevo secreto…',
     totpManageTitle: 'Verificación en dos pasos',
-    totpManageDesc: 'Regenera tus códigos de recuperación o desactiva el segundo factor.',
+    totpManageDesc:
+      'Regenera tus códigos de recuperación o desactiva el segundo factor.',
     totpRegenerateCodes: 'Regenerar códigos de recuperación',
-    totpRegenerateDesc: 'Introduce un código actual del autenticador o de recuperación para emitir un conjunto nuevo.',
+    totpRegenerateDesc:
+      'Introduce un código actual del autenticador o de recuperación para emitir un conjunto nuevo.',
     totpRecoveryCodesRegenerated: 'Nuevos códigos de recuperación generados',
     totpStatusDisabled: 'No activada',
     totpCodesRemaining: 'Quedan {{count}} códigos de recuperación',
-    totpManagerSectionDesc: 'Los propietarios y administradores pueden revisar y restablecer el segundo factor de cualquier cuenta.',
+    totpManagerSectionDesc:
+      'Los propietarios y administradores pueden revisar y restablecer el segundo factor de cualquier cuenta.',
     revokeTotp: 'Reasignar',
     totpAdminResetTitle: 'Reasignar la verificación en dos pasos de {{user}}',
-    totpAdminResetDesc: 'Pide a la cuenta que escanee el código QR con su autenticador y que introduzca abajo el código de 6 dígitos para finalizar.',
-    totpAdminResetWarning: 'Al iniciar la reasignación, el autenticador actual de {{user}} deja de funcionar de inmediato.',
-    totpAdminResetHint: 'Si la cuenta no puede iniciar sesión ahora, puede escanear este código QR en cualquier aplicación de autenticación.',
-    totpAdminHandOverCodes: 'Entrega estos códigos de recuperación a {{user}}. Solo se muestran una vez.',
-    revokeTotpConfirm: '¿Desactivar la verificación en dos pasos de {{user}}? Después podrá iniciar sesión solo con la contraseña.',
+    totpAdminResetDesc:
+      'Pide a la cuenta que escanee el código QR con su autenticador y que introduzca abajo el código de 6 dígitos para finalizar.',
+    totpAdminResetWarning:
+      'Al iniciar la reasignación, el autenticador actual de {{user}} deja de funcionar de inmediato.',
+    totpAdminResetHint:
+      'Si la cuenta no puede iniciar sesión ahora, puede escanear este código QR en cualquier aplicación de autenticación.',
+    totpAdminHandOverCodes:
+      'Entrega estos códigos de recuperación a {{user}}. Solo se muestran una vez.',
+    revokeTotpConfirm:
+      '¿Desactivar la verificación en dos pasos de {{user}}? Después podrá iniciar sesión solo con la contraseña.',
     revokeTotpSuccess: 'Verificación en dos pasos restablecida',
     you: 'tú',
     noAccounts: 'No hay cuentas que mostrar',
@@ -1463,13 +1479,16 @@ const esES = {
     totpLastUsed: 'Última verificación: {{date}}',
     totpNeverUsed: 'Aún no usado',
     disableTotp: 'Desactivar la verificación en dos pasos',
-    disableTotpDesc: 'Introduce un código actual del autenticador o un código de recuperación para desactivar la verificación en dos pasos',
+    disableTotpDesc:
+      'Introduce un código actual del autenticador o un código de recuperación para desactivar la verificación en dos pasos',
     totpEnabledSuccess: 'Verificación en dos pasos activada',
     totpDisabledSuccess: 'Verificación en dos pasos desactivada',
     totpInvalidCode: 'Código no válido, compruébalo e inténtalo de nuevo',
     totpRecoveryCodesTitle: 'Códigos de recuperación',
-    totpRecoveryCodesDesc: 'Guarda estos códigos de recuperación de un solo uso en un lugar seguro. Solo se muestran una vez.',
-    totpRecoveryCodesWarning: 'Cada código funciona una sola vez. Si pierdes el autenticador y estos códigos, perderás el acceso al inicio de sesión.',
+    totpRecoveryCodesDesc:
+      'Guarda estos códigos de recuperación de un solo uso en un lugar seguro. Solo se muestran una vez.',
+    totpRecoveryCodesWarning:
+      'Cada código funciona una sola vez. Si pierdes el autenticador y estos códigos, perderás el acceso al inicio de sesión.',
     totpSavedCodes: 'He guardado estos códigos',
     regenerateRecoveryCodes: 'Regenerar códigos de recuperación',
     bindSpaceFailed: 'Error al vincular la cuenta de LangBot',

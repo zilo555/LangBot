@@ -1309,7 +1309,9 @@ export class BackendClient extends BaseHttpClient {
     );
   }
 
-  public confirmTotpEnroll(code: string): Promise<{ recovery_codes: string[] }> {
+  public confirmTotpEnroll(
+    code: string,
+  ): Promise<{ recovery_codes: string[] }> {
     return this.post(
       '/api/v1/user/totp/enroll/confirm',
       { code },
@@ -1328,9 +1330,13 @@ export class BackendClient extends BaseHttpClient {
   }
 
   public disableTotp(code: string): Promise<void> {
-    return this.post('/api/v1/user/totp/disable', { code }, {
-      skipWorkspace: true,
-    });
+    return this.post(
+      '/api/v1/user/totp/disable',
+      { code },
+      {
+        skipWorkspace: true,
+      },
+    );
   }
 
   // ============ TOTP oversight (Workspace owner/admin only) ============

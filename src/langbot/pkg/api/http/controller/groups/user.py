@@ -817,9 +817,7 @@ class UserRouterGroup(group.RouterGroup):
             rotate = bool(json_data.get('rotate', False))
 
             try:
-                enrollment = await self.ap.totp_service.begin_enrollment(
-                    account.uuid, account.user, rotate=rotate
-                )
+                enrollment = await self.ap.totp_service.begin_enrollment(account.uuid, account.user, rotate=rotate)
             except totp_module.TotpError as e:
                 return self.http_status(409, e.code, str(e))
 
@@ -985,9 +983,7 @@ class UserRouterGroup(group.RouterGroup):
                 return self.http_status(404, 'account_not_found', 'Account not found')
 
             try:
-                enrollment = await self.ap.totp_service.begin_enrollment(
-                    target_account_uuid, target.user, force=True
-                )
+                enrollment = await self.ap.totp_service.begin_enrollment(target_account_uuid, target.user, force=True)
             except totp_module.TotpError as e:
                 return self.http_status(409, e.code, str(e))
 

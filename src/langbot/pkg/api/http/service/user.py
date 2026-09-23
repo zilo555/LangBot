@@ -630,9 +630,7 @@ class UserService:
                 return False
 
         try:
-            verified = await totp_service.verify_code(
-                user_obj.uuid, code, allow_recovery=allow_recovery
-            )
+            verified = await totp_service.verify_code(user_obj.uuid, code, allow_recovery=allow_recovery)
         except totp_service_module.TotpError:
             # Covers "not enrolled" and "invalid code" alike. Both are simply a
             # failed verification for this caller; neither should surface as a

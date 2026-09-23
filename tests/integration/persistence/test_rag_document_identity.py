@@ -11,11 +11,15 @@ import pytest_asyncio
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import create_async_engine
 
+from alembic.config import Config as AlembicConfig
+from alembic.script import ScriptDirectory
+
 from langbot.pkg.api.http.context import ExecutionContext
 from langbot.pkg.entity.persistence.base import Base
 from langbot.pkg.entity.persistence.rag import File, KnowledgeBase
 from langbot.pkg.entity.persistence.user import User
 from langbot.pkg.entity.persistence.workspace import Workspace
+from langbot.pkg.persistence import alembic_runner
 from langbot.pkg.persistence.alembic_runner import (
     get_alembic_current,
     run_alembic_downgrade,
@@ -27,7 +31,21 @@ from langbot.pkg.rag.knowledge.kbmgr import RuntimeKnowledgeBase
 from langbot.pkg.workspace.errors import WorkspaceNotFoundError
 
 OLD_HEAD = '0024_passkey_credentials'
-NEW_HEAD = '0025_rag_document_identity'
+
+
+def _current_script_head() -> str:
+    """Resolve the live Alembic head instead of pinning a revision number.
+
+    Parallel migrations (the TOTP and RAG document identity branches) are joined
+    by a merge revision, so the head moves whenever either branch gains a new
+    migration. Resolving it here keeps this test from needing an edit each time.
+    """
+
+    cfg = AlembicConfig()
+    cfg.set_main_option('script_location', str(alembic_runner._ALEMBIC_DIR))
+    return ScriptDirectory.from_config(cfg).get_current_head()
+
+
 CONTEXT = ExecutionContext(instance_uuid='instance-a', workspace_uuid='workspace-a', placement_generation=5)
 
 
@@ -361,7 +379,7 @@ async def test_populated_legacy_migration_roundtrip(database):
         row = (await conn.execute(sa.text('SELECT * FROM knowledge_base_files'))).mappings().one()
         assert row['uuid'] == 'legacy' and row['status'] == 'completed'
         assert row['engine_document_id'] is None
-    assert await get_alembic_current(database) == NEW_HEAD
+    assert await get_alembic_current(database) == _current_script_head()
     await run_alembic_upgrade(database)
     await run_alembic_stamp(database, OLD_HEAD)
     await run_alembic_upgrade(database)
@@ -379,7 +397,7 @@ async def test_fresh_metadata_then_migration_is_idempotent(database):
     await create_schema(database)
     await run_alembic_stamp(database, OLD_HEAD)
     await run_alembic_upgrade(database)
-    assert await get_alembic_current(database) == NEW_HEAD
+    assert await get_alembic_current(database) == _current_script_head()
     async with database.connect() as conn:
         assert 'engine_document_id' in await conn.run_sync(
             lambda sync: {col['name'] for col in sa.inspect(sync).get_columns('knowledge_base_files')}

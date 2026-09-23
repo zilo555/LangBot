@@ -1406,9 +1406,11 @@ const enUS = {
     totpStartEnroll: 'Generate Secret',
     totpGeneratingSecret: 'Generating a new secret...',
     totpManageTitle: 'Two-factor authentication',
-    totpManageDesc: 'Regenerate your recovery codes or turn the second factor off.',
+    totpManageDesc:
+      'Regenerate your recovery codes or turn the second factor off.',
     totpRegenerateCodes: 'Regenerate recovery codes',
-    totpRegenerateDesc: 'Enter a current authenticator or recovery code to issue a fresh set of codes.',
+    totpRegenerateDesc:
+      'Enter a current authenticator or recovery code to issue a fresh set of codes.',
     totpRecoveryCodesRegenerated: 'New recovery codes generated',
     totpStatusDisabled: 'Not enabled',
     totpCodesRemaining: '{{count}} recovery codes left',
@@ -1416,11 +1418,16 @@ const enUS = {
       'Owners and admins can review and revoke the second factor of any Account.',
     revokeTotp: 'Re-bind',
     totpAdminResetTitle: 'Re-bind two-factor authentication for {{user}}',
-    totpAdminResetDesc: 'Have the Account scan the QR code with their authenticator, then enter the 6-digit code below to finish binding.',
-    totpAdminResetWarning: 'Once re-binding starts, {{user}} existing authenticator stops working immediately.',
-    totpAdminResetHint: 'If the Account cannot sign in right now, they can scan this QR code in any authenticator app.',
-    totpAdminHandOverCodes: 'Hand these recovery codes over to {{user}}. They are shown only once.',
-    revokeTotpConfirm: 'Turn off two-factor authentication for {{user}}? They will be able to sign in with only a password afterwards.',
+    totpAdminResetDesc:
+      'Have the Account scan the QR code with their authenticator, then enter the 6-digit code below to finish binding.',
+    totpAdminResetWarning:
+      'Once re-binding starts, {{user}} existing authenticator stops working immediately.',
+    totpAdminResetHint:
+      'If the Account cannot sign in right now, they can scan this QR code in any authenticator app.',
+    totpAdminHandOverCodes:
+      'Hand these recovery codes over to {{user}}. They are shown only once.',
+    revokeTotpConfirm:
+      'Turn off two-factor authentication for {{user}}? They will be able to sign in with only a password afterwards.',
     revokeTotpSuccess: 'Two-factor authentication revoked',
     you: 'you',
     noAccounts: 'No accounts to show',

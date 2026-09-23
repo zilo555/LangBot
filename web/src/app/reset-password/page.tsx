@@ -121,7 +121,11 @@ export default function ResetPassword() {
       });
   }
 
-  const methodButton = (value: ResetMethod, label: string, Icon: typeof KeyRound) => (
+  const methodButton = (
+    value: ResetMethod,
+    label: string,
+    Icon: typeof KeyRound,
+  ) => (
     <button
       type="button"
       onClick={() => {
@@ -264,7 +268,9 @@ export default function ResetPassword() {
                                 : t('resetPassword.enterRecoveryCodeValue')
                             }
                             className={`pl-10 ${
-                              method === 'totp' ? 'tracking-widest' : 'font-mono'
+                              method === 'totp'
+                                ? 'tracking-widest'
+                                : 'font-mono'
                             }`}
                             autoComplete="off"
                             spellCheck={false}

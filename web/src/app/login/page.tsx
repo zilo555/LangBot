@@ -234,24 +234,30 @@ export default function Login() {
           toast.success(t('common.loginSuccess'));
         }
       })
-      .catch((error: { code?: string; msg?: string; data?: { challenge_token?: string } }) => {
-        // The backend answers `totp_required` when the password was correct but
-        // a second factor is still outstanding. It also hands back the
-        // challenge token that must accompany the code.
-        if (error?.code === 'totp_required') {
-          setPendingEmail(username);
-          setTotpChallengeToken(error?.data?.challenge_token || '');
-          setTotpStep(true);
-          setUseRecoveryCode(false);
-          setTotpCode('');
-          return;
-        }
-        if (error?.code === 'totp_invalid_code') {
-          toast.error(t('common.totpInvalidCode'));
-          return;
-        }
-        toast.error(t('common.loginFailed'));
-      });
+      .catch(
+        (error: {
+          code?: string;
+          msg?: string;
+          data?: { challenge_token?: string };
+        }) => {
+          // The backend answers `totp_required` when the password was correct but
+          // a second factor is still outstanding. It also hands back the
+          // challenge token that must accompany the code.
+          if (error?.code === 'totp_required') {
+            setPendingEmail(username);
+            setTotpChallengeToken(error?.data?.challenge_token || '');
+            setTotpStep(true);
+            setUseRecoveryCode(false);
+            setTotpCode('');
+            return;
+          }
+          if (error?.code === 'totp_invalid_code') {
+            toast.error(t('common.totpInvalidCode'));
+            return;
+          }
+          toast.error(t('common.loginFailed'));
+        },
+      );
   }
 
   async function handleTotpSubmit(event: React.FormEvent) {
@@ -477,157 +483,157 @@ export default function Login() {
             </form>
           ) : (
             <>
-          {/* Space and password login are per-account capabilities. */}
-          {showSpaceLogin && (
-            <div className="space-y-3">
-              <Button
-                type="button"
-                className="w-full cursor-pointer"
-                onClick={handleSpaceLoginClick}
-                disabled={spaceLoading}
-              >
-                {spaceLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Layers className="mr-2 h-4 w-4" />
-                )}
-                {t('common.loginWithSpace')}
-              </Button>
-            </div>
-          )}
+              {/* Space and password login are per-account capabilities. */}
+              {showSpaceLogin && (
+                <div className="space-y-3">
+                  <Button
+                    type="button"
+                    className="w-full cursor-pointer"
+                    onClick={handleSpaceLoginClick}
+                    disabled={spaceLoading}
+                  >
+                    {spaceLoading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Layers className="mr-2 h-4 w-4" />
+                    )}
+                    {t('common.loginWithSpace')}
+                  </Button>
+                </div>
+              )}
 
-          {showPasskeyLogin && (
-            <div className="space-y-3">
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full cursor-pointer"
-                onClick={handlePasskeyLogin}
-                disabled={passkeyLoading}
-              >
-                {passkeyLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Fingerprint className="mr-2 h-4 w-4" />
-                )}
-                {t('common.loginWithPasskey')}
-              </Button>
-            </div>
-          )}
+              {showPasskeyLogin && (
+                <div className="space-y-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full cursor-pointer"
+                    onClick={handlePasskeyLogin}
+                    disabled={passkeyLoading}
+                  >
+                    {passkeyLoading ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <Fingerprint className="mr-2 h-4 w-4" />
+                    )}
+                    {t('common.loginWithPasskey')}
+                  </Button>
+                </div>
+              )}
 
-          {/* Divider - only show if both login methods are available */}
-          {(showSpaceLogin || showPasskeyLogin) && showLocalLogin && (
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white dark:bg-card px-2 text-muted-foreground">
-                  {t('common.or')}
-                </span>
-              </div>
-            </div>
-          )}
+              {/* Divider - only show if both login methods are available */}
+              {(showSpaceLogin || showPasskeyLogin) && showLocalLogin && (
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-white dark:bg-card px-2 text-muted-foreground">
+                      {t('common.or')}
+                    </span>
+                  </div>
+                </div>
+              )}
 
-          {/* Password login remains available to every account with a password. */}
-          {showLocalLogin && (
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-6"
-              >
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t('common.email')}</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                          <Input
-                            placeholder={t('common.enterEmail')}
-                            className="pl-10"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              {/* Password login remains available to every account with a password. */}
+              {showLocalLogin && (
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="space-y-6"
+                  >
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>{t('common.email')}</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                              <Input
+                                placeholder={t('common.enterEmail')}
+                                className="pl-10"
+                                {...field}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <div className="flex justify-between">
-                        <FormLabel>{t('common.password')}</FormLabel>
-                        <Link
-                          to="/reset-password"
-                          className="text-sm text-blue-500"
-                        >
-                          {t('common.forgotPassword')}
-                        </Link>
-                      </div>
+                    <FormField
+                      control={form.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex justify-between">
+                            <FormLabel>{t('common.password')}</FormLabel>
+                            <Link
+                              to="/reset-password"
+                              className="text-sm text-blue-500"
+                            >
+                              {t('common.forgotPassword')}
+                            </Link>
+                          </div>
 
-                      <FormControl>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                          <Input
-                            type="password"
-                            placeholder={t('common.enterPassword')}
-                            className="pl-10"
-                            {...field}
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                          <FormControl>
+                            <div className="relative">
+                              <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                              <Input
+                                type="password"
+                                placeholder={t('common.enterPassword')}
+                                className="pl-10"
+                                {...field}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                <Button
-                  type="submit"
-                  variant={showSpaceLogin ? 'outline' : 'default'}
-                  className="w-full cursor-pointer"
+                    <Button
+                      type="submit"
+                      variant={showSpaceLogin ? 'outline' : 'default'}
+                      className="w-full cursor-pointer"
+                    >
+                      {t('common.loginWithPassword')}
+                    </Button>
+                  </form>
+                </Form>
+              )}
+
+              <p className="text-xs text-center text-muted-foreground">
+                {t('common.agreementNotice')}{' '}
+                <a
+                  href="https://langbot.app/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-foreground transition-colors"
                 >
-                  {t('common.loginWithPassword')}
-                </Button>
-              </form>
-            </Form>
-          )}
-
-          <p className="text-xs text-center text-muted-foreground">
-            {t('common.agreementNotice')}{' '}
-            <a
-              href="https://langbot.app/terms"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-foreground transition-colors"
-            >
-              {t('common.termsOfService')}
-            </a>
-            {'、'}
-            <a
-              href="https://langbot.app/privacy"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-foreground transition-colors"
-            >
-              {t('common.privacyPolicy')}
-            </a>{' '}
-            {t('common.and')}{' '}
-            <a
-              href={t('common.dataCollectionPolicyUrl')}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline hover:text-foreground transition-colors"
-            >
-              {t('common.dataCollectionPolicy')}
-            </a>
-          </p>
+                  {t('common.termsOfService')}
+                </a>
+                {'、'}
+                <a
+                  href="https://langbot.app/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-foreground transition-colors"
+                >
+                  {t('common.privacyPolicy')}
+                </a>{' '}
+                {t('common.and')}{' '}
+                <a
+                  href={t('common.dataCollectionPolicyUrl')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:text-foreground transition-colors"
+                >
+                  {t('common.dataCollectionPolicy')}
+                </a>
+              </p>
             </>
           )}
         </CardContent>

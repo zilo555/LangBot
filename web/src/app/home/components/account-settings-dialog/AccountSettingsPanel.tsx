@@ -71,12 +71,12 @@ export default function AccountSettingsPanel({
   const [registeringPasskey, setRegisteringPasskey] = useState(false);
   const [totpDialogOpen, setTotpDialogOpen] = useState(false);
   // Latched when the dialog opens so a status refresh cannot swap the flow.
-  const [totpDialogMode, setTotpDialogMode] = useState<TotpDialogMode>('enroll');
+  const [totpDialogMode, setTotpDialogMode] =
+    useState<TotpDialogMode>('enroll');
   // Owner/admin re-binding flow: the target Account is latched on open.
   const [adminResetOpen, setAdminResetOpen] = useState(false);
-  const [adminResetTarget, setAdminResetTarget] = useState<TotpAccountRow | null>(
-    null,
-  );
+  const [adminResetTarget, setAdminResetTarget] =
+    useState<TotpAccountRow | null>(null);
   const [totpRows, setTotpRows] = useState<TotpAccountRow[]>([]);
   const [isManager, setIsManager] = useState(false);
   const [accountUuid, setAccountUuid] = useState('');
@@ -497,7 +497,9 @@ export default function AccountSettingsPanel({
                             size="sm"
                             className="h-8 cursor-pointer"
                             onClick={() => {
-                              setTotpDialogMode(row.enabled ? 'manage' : 'enroll');
+                              setTotpDialogMode(
+                                row.enabled ? 'manage' : 'enroll',
+                              );
                               setTotpDialogOpen(true);
                             }}
                             disabled={!systemInfo.allow_modify_login_info}

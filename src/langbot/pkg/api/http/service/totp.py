@@ -348,9 +348,7 @@ class TotpService:
             pending_secret = self._decrypt_secret(credential.secret_ciphertext, credential.key_version)
             return TotpEnrollment(
                 uuid=credential.uuid,
-                qr_code_data_url=render_totp_qr_data_url(
-                    build_totp_uri(pending_secret.decode('ascii'), user_email)
-                ),
+                qr_code_data_url=render_totp_qr_data_url(build_totp_uri(pending_secret.decode('ascii'), user_email)),
                 algorithm=credential.algorithm,
                 digits=credential.digits,
                 period=credential.period,
@@ -688,9 +686,13 @@ class TotpService:
         return bool(result.rowcount)
 
     async def count_unused_recovery_codes(self, account_uuid: str) -> int:
-        statement = sqlalchemy.select(sqlalchemy.func.count()).select_from(totp_entity.TotpRecoveryCode).where(
-            totp_entity.TotpRecoveryCode.account_uuid == account_uuid,
-            totp_entity.TotpRecoveryCode.used_at.is_(None),
+        statement = (
+            sqlalchemy.select(sqlalchemy.func.count())
+            .select_from(totp_entity.TotpRecoveryCode)
+            .where(
+                totp_entity.TotpRecoveryCode.account_uuid == account_uuid,
+                totp_entity.TotpRecoveryCode.used_at.is_(None),
+            )
         )
         async with self._session_factory()() as session:
             return int(await session.scalar(statement) or 0)
