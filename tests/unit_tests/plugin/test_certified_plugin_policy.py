@@ -152,57 +152,48 @@ def test_log_visibility_policy_only_scopes_valid_shared_certifications(
     assert visibility.value == expected_visibility
 
 
+def _complete_persisted_certification() -> dict[str, object]:
+    return {
+        'artifact_digest': 'a' * 64,
+        'normalized_digest': 'b' * 64,
+        'verification': 'valid',
+        'certificate_runtime_profile': 'shared-runtime-v1',
+        'certificate_id': 'ed25519:trusted-issuer',
+        'runtime_profile': 'shared-runtime-v1',
+        'admission_code': 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE',
+    }
+
+
 @pytest.mark.parametrize(
     ('certification', 'expected_mode'),
     [
-        (
-            {
-                'artifact_digest': 'a' * 64,
-                'verification': 'valid',
-                'certificate_runtime_profile': 'shared-runtime-v1',
-                'runtime_profile': 'shared-runtime-v1',
-                'admission_code': 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE',
-            },
-            PluginExecutionMode.SHARED_CERTIFIED,
-        ),
+        (_complete_persisted_certification(), PluginExecutionMode.SHARED_CERTIFIED),
         (None, PluginExecutionMode.DEDICATED),
         ({}, PluginExecutionMode.DEDICATED),
         (
             {
-                'artifact_digest': 'a' * 64,
+                **_complete_persisted_certification(),
                 'verification': 'invalid',
-                'certificate_runtime_profile': 'shared-runtime-v1',
-                'runtime_profile': 'shared-runtime-v1',
-                'admission_code': 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE',
             },
             PluginExecutionMode.DEDICATED,
         ),
         (
             {
+                **_complete_persisted_certification(),
                 'artifact_digest': 'b' * 64,
-                'verification': 'valid',
-                'certificate_runtime_profile': 'shared-runtime-v1',
-                'runtime_profile': 'shared-runtime-v1',
-                'admission_code': 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE',
             },
             PluginExecutionMode.DEDICATED,
         ),
         (
             {
-                'artifact_digest': 'a' * 64,
-                'verification': 'valid',
-                'certificate_runtime_profile': 'shared-runtime-v1',
+                **_complete_persisted_certification(),
                 'runtime_profile': 'dedicated',
-                'admission_code': 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE',
             },
             PluginExecutionMode.DEDICATED,
         ),
         (
             {
-                'artifact_digest': 'a' * 64,
-                'verification': 'valid',
-                'certificate_runtime_profile': 'shared-runtime-v1',
-                'runtime_profile': 'shared-runtime-v1',
+                **_complete_persisted_certification(),
                 'admission_code': 'CERTIFIED_PLUGIN_OSS_FORCED_DEDICATED',
             },
             PluginExecutionMode.DEDICATED,
@@ -210,7 +201,7 @@ def test_log_visibility_policy_only_scopes_valid_shared_certifications(
     ],
 )
 def test_persisted_certification_selects_shared_execution_only_for_exact_admitted_artifact(
-    certification: dict[str, str] | None,
+    certification: dict[str, object] | None,
     expected_mode: PluginExecutionMode,
 ) -> None:
     from langbot.pkg.plugin.certification import execution_mode_for_persisted_installation
@@ -223,6 +214,97 @@ def test_persisted_certification_selects_shared_execution_only_for_exact_admitte
             install_info=install_info,
         )
         is expected_mode
+    )
+
+
+@pytest.mark.parametrize(
+    'missing_field',
+    [
+        'artifact_digest',
+        'normalized_digest',
+        'verification',
+        'certificate_runtime_profile',
+        'certificate_id',
+        'runtime_profile',
+        'admission_code',
+    ],
+)
+def test_persisted_certification_requires_every_shared_admission_fact(missing_field: str) -> None:
+    from langbot.pkg.plugin.certification import execution_mode_for_persisted_installation
+
+    certification = _complete_persisted_certification()
+    del certification[missing_field]
+
+    assert (
+        execution_mode_for_persisted_installation(
+            artifact_digest='a' * 64,
+            install_info={'_certification': certification},
+        )
+        is PluginExecutionMode.DEDICATED
+    )
+
+
+@pytest.mark.parametrize(
+    ('field', 'malformed_value'),
+    [
+        ('artifact_digest', None),
+        ('artifact_digest', 123),
+        ('artifact_digest', ''),
+        ('normalized_digest', None),
+        ('normalized_digest', 123),
+        ('normalized_digest', ''),
+        ('normalized_digest', ' ' * 64),
+        ('normalized_digest', 'b' * 63),
+        ('normalized_digest', 'g' * 64),
+        ('certificate_id', None),
+        ('certificate_id', 123),
+        ('certificate_id', ''),
+        ('certificate_id', '   '),
+        ('verification', None),
+        ('verification', 123),
+        ('verification', ''),
+        ('certificate_runtime_profile', None),
+        ('certificate_runtime_profile', 123),
+        ('certificate_runtime_profile', ''),
+        ('runtime_profile', None),
+        ('runtime_profile', 123),
+        ('runtime_profile', ''),
+        ('admission_code', None),
+        ('admission_code', 123),
+        ('admission_code', ''),
+    ],
+)
+def test_persisted_certification_rejects_malformed_shared_admission_fact(
+    field: str,
+    malformed_value: object,
+) -> None:
+    from langbot.pkg.plugin.certification import execution_mode_for_persisted_installation
+
+    certification = _complete_persisted_certification()
+    certification[field] = malformed_value
+
+    assert (
+        execution_mode_for_persisted_installation(
+            artifact_digest='a' * 64,
+            install_info={'_certification': certification},
+        )
+        is PluginExecutionMode.DEDICATED
+    )
+
+
+@pytest.mark.parametrize('malformed_digest', ['', 'a' * 63, 'g' * 64])
+def test_persisted_certification_rejects_malformed_matching_raw_digest(malformed_digest: str) -> None:
+    from langbot.pkg.plugin.certification import execution_mode_for_persisted_installation
+
+    certification = _complete_persisted_certification()
+    certification['artifact_digest'] = malformed_digest
+
+    assert (
+        execution_mode_for_persisted_installation(
+            artifact_digest=malformed_digest,
+            install_info={'_certification': certification},
+        )
+        is PluginExecutionMode.DEDICATED
     )
 
 

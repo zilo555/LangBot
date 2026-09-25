@@ -60,6 +60,8 @@ async def test_install_plugin_admits_archive_before_persistence_and_applies_sele
     assert persisted_info['_certification']['runtime_profile'] == expected_profile
     assert persisted_info['_certification']['artifact_digest'] == hashlib.sha256(package).hexdigest()
     assert persisted_info['_certification']['normalized_digest'] == _normalized_digest(package)
+    if archive_kind == 'signed_shared':
+        assert persisted_info['_certification']['certificate_id'] == 'ephemeral'
     connector.handler.apply_plugin_installation.assert_awaited_once_with(
         binding,
         artifact_package=package,

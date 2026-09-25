@@ -762,8 +762,10 @@ class TestSetPluginConfig:
                 '_artifact_storage': 'tenant_binary_storage_v1',
                 '_certification': {
                     'artifact_digest': TEST_INSTALLATION_BINDING.artifact_digest,
+                    'normalized_digest': 'b' * 64,
                     'verification': 'valid',
                     'certificate_runtime_profile': 'shared-runtime-v1',
+                    'certificate_id': 'ed25519:trusted-issuer',
                     'runtime_profile': 'shared-runtime-v1',
                     'admission_code': 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE',
                 },

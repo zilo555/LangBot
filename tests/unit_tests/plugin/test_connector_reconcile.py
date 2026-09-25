@@ -52,6 +52,7 @@ def mock_archive_admission(connector: PluginRuntimeConnector, digest: str) -> No
                     'normalized_digest': digest,
                     'verification': 'valid',
                     'certificate_runtime_profile': 'shared-runtime-v1',
+                    'certificate_id': 'ed25519:trusted-issuer',
                     'runtime_profile': 'shared-runtime-v1',
                     'admission_code': 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE',
                 },
@@ -186,8 +187,10 @@ async def test_reconcile_reload_projects_certified_exact_artifact_to_shared_exec
         digest,
         certification={
             'artifact_digest': digest,
+            'normalized_digest': 'b' * 64,
             'verification': 'valid',
             'certificate_runtime_profile': 'shared-runtime-v1',
+            'certificate_id': 'ed25519:trusted-issuer',
             'runtime_profile': 'shared-runtime-v1',
             'admission_code': 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE',
         },
