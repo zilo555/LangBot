@@ -27,27 +27,48 @@ if [ -z "${DATA_DIR}" ]; then
     DATA_DIR="${TRIM_PKGVAR}/data"
 fi
 export LANGBOT_DATA_ROOT="${DATA_DIR}"
-mkdir -p "${DATA_DIR}" 2>/dev/null || true
+mkdir -p "${DATA_DIR}" || {
+    echo "Data share not writable: ${DATA_DIR}" > "${TRIM_TEMP_LOGFILE}"
+    exit 1
+}
 
-# --- Locate Python ---
-PYTHON_BIN="python3"
-! command -v "${PYTHON_BIN}" >/dev/null 2>&1 && PYTHON_BIN="python"
+# --- Writable HOME / tool caches / venv on the data share ---
+# Must match cmd/install_callback: under run-as: package neither the system
+# HOME nor TRIM_APPDEST are guaranteed writable, and the venv lives at
+# ${DATA_DIR}/.venv instead of inside the app dir.
+export HOME="${DATA_DIR}/.home"
+export UV_CACHE_DIR="${DATA_DIR}/.cache/uv"
+# Never download a managed CPython — distro Python only (see install_callback)
+export UV_PYTHON_DOWNLOADS=never
+export UV_PROJECT_ENVIRONMENT="${DATA_DIR}/.venv"
+mkdir -p "${HOME}" "${UV_CACHE_DIR}" || {
+    echo "Data share not writable: ${DATA_DIR}" > "${TRIM_TEMP_LOGFILE}"
+    exit 1
+}
 
-# --- Locate uv ---
-# install_callback puts the bundled uv binary at ${TRIM_PKGVAR}/bin/uv
-UV_BIN="${TRIM_PKGVAR}/bin/uv"
-if [ ! -x "${UV_BIN}" ]; then
-    UV_BIN="uv"
-fi
-if ! command -v "${UV_BIN}" >/dev/null 2>&1; then
-    UV_BIN="${HOME}/.local/bin/uv"
-fi
-if ! command -v "${UV_BIN}" >/dev/null 2>&1 && [ ! -x "${UV_BIN}" ]; then
-    UV_BIN="${HOME}/.cargo/bin/uv"
-fi
-if ! command -v "${UV_BIN}" >/dev/null 2>&1 && [ ! -x "${UV_BIN}" ]; then
-    UV_BIN="${APP_DIR}/.venv/bin/uv"
-fi
+# --- CPU architecture (must be resolved before locating bundled binaries) ---
+ARCH=$(uname -m)
+case "${ARCH}" in
+    x86_64|aarch64) ;;
+    *)
+        echo "Unsupported CPU architecture: ${ARCH}" > "${TRIM_TEMP_LOGFILE}"
+        exit 1
+        ;;
+esac
+
+# --- Locate Python: official python312 App Store app (same borrow pattern as Node.js) ---
+PYTHON_BIN="/var/apps/python312/target/bin/python3"
+[ -x "${PYTHON_BIN}" ] || {
+    echo "Python interpreter missing or not executable: ${PYTHON_BIN} (install the python312 app)" > "${TRIM_TEMP_LOGFILE}"
+    exit 1
+}
+
+# --- Locate uv: bundled binary at its single canonical path in the app dir ---
+UV_BIN="${TRIM_APPDEST}/bin/uv-${ARCH}"
+[ -x "${UV_BIN}" ] || {
+    echo "Bundled uv binary missing or not executable: ${UV_BIN}" > "${TRIM_TEMP_LOGFILE}"
+    exit 1
+}
 
 case $1 in
   start)
@@ -69,7 +90,7 @@ case $1 in
         exit 1
     }
 
-    if [ ! -d ".venv" ]; then
+    if [ ! -d "${DATA_DIR}/.venv" ]; then
         echo "Python virtual environment not found. Please reinstall LangBot." > "${TRIM_TEMP_LOGFILE}"
         exit 1
     fi
@@ -79,6 +100,9 @@ case $1 in
     # fresh data/ with a default 5300 config gets recreated inside target/ on
     # every install/upgrade. The symlink keeps everything on the persistent
     # share; it is recreated here on each start (upgrades wipe target/).
+    # Requires the package user to have write permission on the app dir — if
+    # fnOS ever mounts it read-only, this fails loudly instead of silently
+    # running against an ephemeral data directory.
     APP_DATA="${APP_DIR}/data"
     if [ -L "${APP_DATA}" ]; then
         # already a symlink; re-point if the persistent dir changed
@@ -87,7 +111,7 @@ case $1 in
         # legacy real dir (created by LangBot before this fix): merge into the
         # persistent dir without overwriting newer files already there
         mkdir -p "${DATA_DIR}"
-        cp -an "${APP_DATA}/." "${DATA_DIR}/" 2>/dev/null || cp -a "${APP_DATA}/." "${DATA_DIR}/"
+        cp -an "${APP_DATA}/." "${DATA_DIR}/." || cp -a "${APP_DATA}/." "${DATA_DIR}/"
         rm -rf "${APP_DATA}"
         ln -s "${DATA_DIR}" "${APP_DATA}"
     else
@@ -146,7 +170,22 @@ except Exception:
     # (--standalone-runtime would require an external runtime at
     #  ws://langbot_plugin_runtime:5400, which only exists in Docker Compose.)
     # --standalone-box omitted: Box sandbox defaults off, users enable via Web UI
-    nohup "${UV_BIN}" run --no-sync main.py \
+    #
+    # Privilege model: the whole app runs as the generated package user
+    # (run-as: package, see config/privilege) — no root anywhere. HOME /
+    # UV_CACHE_DIR / UV_PROJECT_ENVIRONMENT are exported at the top and point
+    # at the persistent share so tool caches (uv, npm/npx) and the relocated
+    # venv stay writable regardless of the generated user's system home.
+    #
+    # Process-group lifecycle: setsid makes the main process a session/group
+    # leader, so PID == PGID. "stop" kills the whole group — stdio children
+    # (plugin runtime, Box) die with the parent and can never survive as
+    # orphans holding their ws ports after a crash, stop or upgrade.
+    command -v setsid >/dev/null 2>&1 || {
+        echo "setsid not found (util-linux required for process-group lifecycle)" > "${TRIM_TEMP_LOGFILE}"
+        exit 1
+    }
+    setsid nohup "${UV_BIN}" run --no-sync main.py \
         > "${LOG_FILE}" 2>&1 &
     echo $! > "${PID_FILE}"
 
@@ -165,12 +204,18 @@ except Exception:
     if [ -f "${PID_FILE}" ]; then
         PID=$(cat "${PID_FILE}" | tr -d '[:space:]')
         if [ -n "${PID}" ]; then
-            kill "${PID}" 2>/dev/null
+            # Started with setsid, so PID == PGID: kill the whole group so
+            # stdio children (plugin runtime, Box) die with the parent. The
+            # plain-PID kill covers instances started before the setsid
+            # change (group kill is a no-op for them).
+            kill -TERM -- "-${PID}" 2>/dev/null
+            kill -TERM "${PID}" 2>/dev/null
             for _ in 1 2 3 4 5 6 7 8 9 10; do
                 kill -0 "${PID}" 2>/dev/null || break
                 sleep 1
             done
-            kill -9 "${PID}" 2>/dev/null
+            kill -KILL -- "-${PID}" 2>/dev/null
+            kill -KILL "${PID}" 2>/dev/null
         fi
         rm -f "${PID_FILE}"
     fi

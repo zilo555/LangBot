@@ -1,6 +1,8 @@
 # For connect to plugin runtime.
 from __future__ import annotations
 
+from langbot.pkg.telemetry import diagnostics
+
 import asyncio
 import contextlib
 import contextvars
@@ -21,7 +23,19 @@ from langbot_plugin.api.entities.builtin.pipeline.query import provider_session
 
 from ..core import app
 from . import handler
+from .errors import (
+    PluginRuntimeNotConnectedError,
+    PluginInstallationFailedError,
+    MarketplacePluginVersionNotFoundError,
+)
 from .archive import inspect_plugin_archive_metadata
+from .certification import (
+    AdmissionDisposition,
+    PluginCertificationFacts,
+    VerifiedArchiveCertificate,
+    decide_plugin_admission,
+    verify_plugin_archive_certificate,
+)
 from .github import (
     validate_github_plugin_install_info,
     validate_github_release_asset_url,
@@ -87,8 +101,10 @@ async def _read_httpx_response_limited(
     response: httpx.Response,
     *,
     max_bytes: int,
+    task_context: taskmgr.TaskContext | None = None,
 ) -> bytes:
     content_length = response.headers.get('content-length')
+    declared_size: int | None = None
     if content_length is not None:
         try:
             declared_size = int(content_length)
@@ -97,9 +113,16 @@ async def _read_httpx_response_limited(
         if declared_size is not None and declared_size > max_bytes:
             raise ValueError(f'Remote response exceeds the {max_bytes}-byte limit')
 
+    started = time.monotonic()
+    if task_context is not None:
+        task_context.metadata.update(download_current=0, download_total=max(declared_size or 0, 0))
     body = bytearray()
     async for chunk in response.aiter_bytes(chunk_size=64 * 1024):
         body.extend(chunk)
+        if task_context is not None:
+            task_context.metadata.update(
+                download_current=len(body), download_speed=len(body) / max(time.monotonic() - started, 0.001)
+            )
         if len(body) > max_bytes:
             raise ValueError(f'Remote response exceeds the {max_bytes}-byte limit')
     return bytes(body)
@@ -111,14 +134,25 @@ async def _marketplace_get(
     *,
     max_bytes: int,
     allow_not_found: bool = False,
+    task_context: taskmgr.TaskContext | None = None,
 ) -> tuple[int, bytes]:
     async with client.stream('GET', url) as response:
         if allow_not_found and response.status_code == 404:
             return response.status_code, b''
+        if response.is_error:
+            body = await _read_httpx_response_limited(response, max_bytes=min(max_bytes, 64 * 1024))
+            try:
+                payload = json.loads(body)
+            except (ValueError, UnicodeDecodeError):
+                payload = {}
+            # Space currently returns HTTP 500 for a missing plugin release.
+            if isinstance(payload, dict) and str(payload.get('msg', '')).startswith('plugin version not found:'):
+                raise MarketplacePluginVersionNotFoundError('The requested plugin version is not available')
         response.raise_for_status()
         return response.status_code, await _read_httpx_response_limited(
             response,
             max_bytes=max_bytes,
+            task_context=task_context,
         )
 
 
@@ -132,23 +166,28 @@ def _decode_json_object(body: bytes, *, subject: str) -> dict[str, Any]:
     return payload
 
 
-class PluginRuntimeNotConnectedError(RuntimeError):
-    """Raised when plugin runtime operations are requested before connection."""
+def _select_marketplace_plugin_version(
+    versions: Any,
+    *,
+    requested_version: str | None,
+    plugin_author: str,
+    plugin_name: str,
+) -> str:
+    if not isinstance(versions, list) or not versions:
+        raise ValueError(f'Plugin {plugin_author}/{plugin_name} has no versions')
 
+    if requested_version is None:
+        candidate = versions[0]
+        if not isinstance(candidate, dict) or not candidate.get('version'):
+            raise ValueError(f'Plugin {plugin_author}/{plugin_name} has no versions')
+        return str(candidate['version'])
 
-class PluginInstallationFailedError(RuntimeError):
-    """Stable Runtime desired-state failure for one plugin installation."""
-
-    def __init__(
-        self,
-        installation_uuid: str,
-        error_code: str,
-        message: str,
-    ) -> None:
-        self.installation_uuid = installation_uuid
-        self.error_code = error_code
-        self.runtime_message = message
-        super().__init__(f'Plugin installation {installation_uuid} failed [{error_code}]: {message}')
+    for candidate in versions:
+        if isinstance(candidate, dict) and str(candidate.get('version') or '') == requested_version:
+            return requested_version
+    raise ValueError(
+        f'Plugin {plugin_author}/{plugin_name} version {requested_version} is not available in marketplace'
+    )
 
 
 class PluginRuntimeConnector(ManagedRuntimeConnector):
@@ -668,6 +707,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
                         }
                     )
 
+    @diagnostics.observe('lifecycle', 'runtime.prepare_connected_runtime', source='runtime', stage='execute')
     async def _prepare_connected_runtime(self) -> None:
         """Handshake follow-up: pin OSS compatibility, then replay authority."""
 
@@ -789,9 +829,13 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
         if not self.is_enable_plugin or not hasattr(self, 'handler'):
             return
         runtime_handler = self._runtime_handler()
-        desired_states = await self._load_workspace_desired_states(execution_context)
-        desired_by_uuid = {state.binding.installation_uuid: state for state in desired_states}
         async with self._state_lock:
+            # Read the durable desired state while holding the same gate used by
+            # install/remove bookkeeping. Otherwise a request can load a stale
+            # pre-install snapshot, wait for the installer to publish its
+            # in-memory state, and then incorrectly remove that new binding.
+            desired_states = await self._load_workspace_desired_states(execution_context)
+            desired_by_uuid = {state.binding.installation_uuid: state for state in desired_states}
             previous_ids = set(self._workspace_installations.get(execution_context.workspace_uuid, set()))
             for installation_uuid in previous_ids - set(desired_by_uuid):
                 previous = self._known_desired_states.get(installation_uuid)
@@ -849,6 +893,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
                     self.schedule_reconnect()
                     failures = 0
 
+    @diagnostics.observe('lifecycle', 'runtime.initialize', source='runtime', stage='execute')
     async def initialize(self):
         if not self.is_enable_plugin:
             self.ap.logger.info('Plugin system is disabled.')
@@ -1039,7 +1084,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
         self._connected.clear()
         runtime_handler = getattr(self, 'handler', None)
         if runtime_handler is not None:
-            with contextlib.suppress(Exception):
+            with contextlib.suppress(Exception, asyncio.CancelledError):
                 await runtime_handler.close()
             if getattr(self, 'handler', None) is runtime_handler:
                 del self.handler
@@ -1060,7 +1105,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
             del self.handler_task
         close_ctrl = getattr(getattr(self, 'ctrl', None), 'close', None)
         if close_ctrl is not None:
-            with contextlib.suppress(Exception):
+            with contextlib.suppress(Exception, asyncio.CancelledError):
                 await close_ctrl()
 
     async def aclose(self) -> None:
@@ -1078,8 +1123,26 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
         await self._stop_transport()
         await self._close_managed_subprocess()
 
+    @staticmethod
+    def _runtime_debug_port_from_url(debug_url: str) -> int:
+        """Extract the local plugin runtime debug port from its display URL."""
+        try:
+            parsed = urlparse(debug_url if '://' in debug_url else f'//{debug_url}')
+            return parsed.port or 5401
+        except (TypeError, ValueError):
+            return 5401
+
     async def initialize_plugins(self):
         pass
+
+    async def _refresh_runner_registry(self) -> None:
+        registry = getattr(self.ap, 'runner_registry', None)
+        if registry is None:
+            return
+        try:
+            await registry.refresh(await self._current_execution_context())
+        except Exception as e:
+            self.ap.logger.warning(f'Failed to refresh agent runner registry: {e}')
 
     async def ping_plugin_runtime(self):
         return await self._runtime_handler().ping()
@@ -1605,6 +1668,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
         plugin_author: str,
         plugin_name: str,
         task_context: taskmgr.TaskContext | None,
+        version: str | None = None,
     ) -> tuple[bytes | None, str | None]:
         """Return a plugin package, or install an MCP/skill and return none."""
 
@@ -1614,6 +1678,23 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
             timeout=15,
             event_hooks=httpclient.httpx_response_limit_hooks(_MARKETPLACE_PLUGIN_DOWNLOAD_MAX_BYTES),
         ) as client:
+            if version is not None:
+                if (
+                    not isinstance(version, str)
+                    or not version
+                    or any(
+                        c not in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._+-' for c in version
+                    )
+                ):
+                    raise ValueError('Invalid plugin version')
+                _status, package = await _marketplace_get(
+                    client,
+                    f'{space_url}/api/v1/marketplace/plugins/download/{plugin_author}/{plugin_name}/{version}',
+                    max_bytes=_MARKETPLACE_PLUGIN_DOWNLOAD_MAX_BYTES,
+                    task_context=task_context,
+                )
+                return package, version
+
             mcp_status, mcp_body = await _marketplace_get(
                 client,
                 f'{space_url}/api/v1/marketplace/mcps/{plugin_author}/{plugin_name}',
@@ -1668,21 +1749,60 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
                 subject='Marketplace plugin versions',
             )
             versions = versions_payload.get('data', {}).get('versions', [])
-            if (
-                not isinstance(versions, list)
-                or not versions
-                or not isinstance(versions[0], dict)
-                or not versions[0].get('version')
-            ):
-                raise ValueError(f'Plugin {plugin_author}/{plugin_name} has no versions')
-            latest_version = str(versions[0]['version'])
+            version = _select_marketplace_plugin_version(
+                versions,
+                requested_version=None,
+                plugin_author=plugin_author,
+                plugin_name=plugin_name,
+            )
             _download_status, plugin_package = await _marketplace_get(
                 client,
-                f'{space_url}/api/v1/marketplace/plugins/download/{plugin_author}/{plugin_name}/{latest_version}',
+                f'{space_url}/api/v1/marketplace/plugins/download/{plugin_author}/{plugin_name}/{version}',
                 max_bytes=_MARKETPLACE_PLUGIN_DOWNLOAD_MAX_BYTES,
+                task_context=task_context,
             )
-            return plugin_package, latest_version
+            return plugin_package, version
 
+    def _admit_plugin_archive(
+        self,
+        file_bytes: bytes,
+        install_info: dict[str, Any],
+    ) -> tuple[dict[str, Any], VerifiedArchiveCertificate]:
+        """Verify and admit one archive before it can reach durable storage or Runtime."""
+
+        certification_config = self.ap.instance_config.data.get('plugin', {}).get('certification', {})
+        if not isinstance(certification_config, dict):
+            raise ValueError('plugin.certification must be a mapping')
+        verified = verify_plugin_archive_certificate(
+            file_bytes,
+            trusted_public_keys=certification_config.get('trusted_public_keys', {}),
+        )
+        facts = PluginCertificationFacts(
+            installation_uuid='pending-installation',
+            artifact_digest=verified.normalized_digest,
+            certificate=verified.certificate,
+        )
+        decision = decide_plugin_admission(
+            deployment=getattr(getattr(self.ap, 'deployment', None), 'mode', 'oss'),
+            facts=facts,
+            administrator_force=install_info.get('administrator_force') is True,
+        )
+        if decision.disposition not in {
+            AdmissionDisposition.DEDICATED_ALLOWED,
+            AdmissionDisposition.SHARED_ELIGIBLE,
+        }:
+            raise ValueError(decision.code.value)
+        certification_info = {
+            'normalized_digest': facts.artifact_digest,
+            'verification': facts.certificate.verification.value,
+            'certificate_runtime_profile': facts.certificate.runtime_profile,
+            'certificate_id': facts.certificate.certificate_id,
+            'runtime_profile': decision.runtime_profile,
+            'admission_code': decision.code.value,
+        }
+        return {**install_info, '_certification': certification_info}, verified
+
+    @diagnostics.observe('lifecycle', 'runtime.install_plugin', source='runtime', stage='execute')
     async def install_plugin(
         self,
         install_source: PluginInstallSource,
@@ -1695,12 +1815,29 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
         plugin_name = str(install_info.get('plugin_name') or '')
         file_bytes: bytes | None
 
+        if task_context is not None:
+            # Reset the per-install counters so re-installing the same plugin
+            # cannot inherit stale progress metadata from a previous task.
+            task_context.set_current_action('preparing plugin install')
+            task_context.metadata.update(
+                {
+                    'download_total': 0,
+                    'download_current': 0,
+                    'download_speed': 0,
+                }
+            )
+
         if install_source == PluginInstallSource.MARKETPLACE:
+            if task_context is not None:
+                task_context.set_current_action('downloading plugin package')
+                task_context.metadata['progress_percent'] = 15
+            version_options = {'version': install_info['plugin_version']} if install_info.get('plugin_version') else {}
             file_bytes, version = await self._download_marketplace_package(
                 execution_context,
                 plugin_author,
                 plugin_name,
                 task_context,
+                **version_options,
             )
             if file_bytes is None:
                 return
@@ -1719,6 +1856,10 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
         else:
             raise ValueError(f'Unsupported plugin install source: {install_source.value}')
 
+        if task_context is not None:
+            task_context.set_current_action('validating plugin package')
+            task_context.metadata['progress_percent'] = 32
+        install_info, verified_certificate = self._admit_plugin_archive(file_bytes, install_info)
         manifest_author, manifest_name = self._inspect_plugin_package(file_bytes, task_context)
         if not manifest_author or not manifest_name:
             raise ValueError('Plugin package manifest identity is missing')
@@ -1729,36 +1870,44 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
         plugin_author, plugin_name = manifest_author, manifest_name
         if task_context is not None:
             task_context.metadata['plugin_name'] = f'{plugin_author}/{plugin_name}'
+            task_context.set_current_action('preparing plugin installation')
+            task_context.metadata['progress_percent'] = 45
 
+        if task_context is not None:
+            task_context.set_current_action('storing plugin package')
         artifact_digest = hashlib.sha256(file_bytes).hexdigest()
         await self._store_artifact_package(execution_context, artifact_digest, file_bytes)
+        if task_context is not None:
+            task_context.set_current_action('persisting the installation')
         try:
-            binding, previous_digest, previous_was_durable = await self._persist_installation_package(
-                execution_context,
-                plugin_author=plugin_author,
-                plugin_name=plugin_name,
-                install_source=install_source,
-                install_info=install_info,
-                artifact_digest=artifact_digest,
-            )
+            # Persist and publish the new desired generation under the same
+            # gate used by request-time reconciliation. This closes the small
+            # window where another request could observe the durable row first
+            # and perform the same slow Runtime apply while holding the gate.
+            async with self._state_lock:
+                binding, previous_digest, previous_was_durable = await self._persist_installation_package(
+                    execution_context,
+                    plugin_author=plugin_author,
+                    plugin_name=plugin_name,
+                    install_source=install_source,
+                    install_info=install_info,
+                    artifact_digest=artifact_digest,
+                )
+                desired = PluginInstallationDesiredState(binding=binding, enabled=True)
+                runtime_handler.register_installation_binding(
+                    binding,
+                    plugin_author=plugin_author,
+                    plugin_name=plugin_name,
+                )
+                self._known_desired_states[binding.installation_uuid] = desired
+                self._workspace_installations.setdefault(binding.workspace_uuid, set()).add(binding.installation_uuid)
         except Exception:
             await self._delete_artifact_if_unreferenced(execution_context, artifact_digest)
             raise
-        runtime_handler.register_installation_binding(
-            binding,
-            plugin_author=plugin_author,
-            plugin_name=plugin_name,
-        )
-        await self._apply_desired_state(
-            PluginInstallationDesiredState(binding=binding, enabled=True),
-            artifact_package=file_bytes,
-        )
-        desired = PluginInstallationDesiredState(binding=binding, enabled=True)
-        self._known_desired_states[binding.installation_uuid] = desired
-        self._workspace_installations.setdefault(binding.workspace_uuid, set()).add(binding.installation_uuid)
-        if previous_digest is not None and previous_digest != artifact_digest:
-            await self._delete_artifact_if_unreferenced(execution_context, previous_digest)
-        if previous_digest is not None and not previous_was_durable and self.runtime_profile == 'oss_dev':
+        certification_facts = verified_certificate.for_installation(binding.installation_uuid)
+        if certification_facts.artifact_digest != install_info['_certification']['normalized_digest']:
+            raise RuntimeError('Plugin certification digest changed before Runtime apply')
+        if not previous_was_durable and self.runtime_profile == 'oss_dev':
             bridge = self._legacy_oss_bridge_binding(execution_context)
             try:
                 with runtime_handler.installation_scope(bridge):
@@ -1766,8 +1915,32 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
                         pass
             except Exception as exc:
                 self.ap.logger.debug(f'Legacy OSS plugin cleanup skipped: {exc}')
+        if task_context is not None:
+            operation = task_context.metadata.get('operation')
+            task_context.set_current_action(
+                'applying plugin update' if operation == 'upgrade' else 'installing or starting plugin'
+            )
+            task_context.metadata['progress_percent'] = 62
+        await self._apply_desired_state(
+            desired,
+            artifact_package=file_bytes,
+        )
+        if previous_digest is not None and previous_digest != artifact_digest:
+            await self._delete_artifact_if_unreferenced(execution_context, previous_digest)
+        if task_context is not None:
+            task_context.set_current_action('waiting for plugin initialization')
+            task_context.metadata['progress_percent'] = 84
         await self._wait_for_installed_plugin_ready(plugin_author, plugin_name, task_context)
+        if task_context is not None:
+            task_context.set_current_action('refreshing plugin components')
+            task_context.metadata['progress_percent'] = 95
+        await self._refresh_runner_registry()
+        if task_context is not None:
+            operation = task_context.metadata.get('operation')
+            task_context.set_current_action('plugin updated' if operation == 'upgrade' else 'plugin installed')
+            task_context.metadata['progress_percent'] = 100
 
+    @diagnostics.observe('lifecycle', 'runtime.upgrade_plugin', source='runtime', stage='execute')
     async def upgrade_plugin(
         self,
         plugin_author: str,
@@ -1778,6 +1951,14 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
         if setting.install_source != PluginInstallSource.MARKETPLACE.value:
             raise ValueError(f'Plugin {plugin_author}/{plugin_name} is not installed from marketplace')
         if task_context is not None:
+            task_context.metadata.update(
+                {
+                    'plugin_name': f'{plugin_author}/{plugin_name}',
+                    'install_source': 'marketplace',
+                    'operation': 'upgrade',
+                    'progress_percent': 3,
+                }
+            )
             task_context.set_current_action('checking for latest version')
         await self.install_plugin(
             PluginInstallSource.MARKETPLACE,
@@ -1786,6 +1967,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
         )
         return {}
 
+    @diagnostics.observe('lifecycle', 'runtime.delete_plugin', source='runtime', stage='execute')
     async def delete_plugin(
         self,
         plugin_author: str,
@@ -1843,6 +2025,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
                 self._workspace_installations.pop(binding.workspace_uuid, None)
         if task_context is not None:
             task_context.set_current_action('plugin removed')
+        await self._refresh_runner_registry()
         return {}
 
     async def list_plugins(self, component_kinds: list[str] | None = None) -> list[dict[str, Any]]:
@@ -2053,6 +2236,10 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
             event_ctx = context.EventContext.model_validate(result['event_context'])
             emitted_plugins.extend(result.get('emitted_plugins', []))
             response_sources.extend(result.get('response_sources', []))
+            if event_ctx.is_prevented_postorder():
+                break
+        if query is not None:
+            event_ctx.event.query = query
         event_ctx._emitted_plugins = emitted_plugins
         event_ctx._response_sources = response_sources
 
@@ -2172,13 +2359,101 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
             include_plugins=bound_plugins,
         )
         runtime_handler = self._runtime_handler()
-        with runtime_handler.installation_scope(binding):
-            gen = runtime_handler.execute_command(
-                command_ctx.model_dump(serialize_as_any=True),
-                include_plugins=bound_plugins,
-            )
-            async for ret in gen:
+        gen = runtime_handler.execute_command(
+            command_ctx.model_dump(serialize_as_any=True),
+            include_plugins=bound_plugins,
+        )
+        async with contextlib.aclosing(self._installation_scoped_stream(runtime_handler, binding, gen)) as scoped:
+            async for ret in scoped:
                 yield command_context.CommandReturn.model_validate(ret)
+
+    # Runner methods
+    async def list_runners(self, bound_plugins: list[str] | None = None) -> list[dict[str, Any]]:
+        """List all available Runner components.
+
+        Returns list of dicts with plugin_author, plugin_name, runner_name, manifest, etc.
+        """
+        if not self.is_enable_plugin:
+            return []
+
+        if not self._runtime_available():
+            return []
+        runtime_handler = self._runtime_handler()
+        runners: list[dict[str, Any]] = []
+        for binding in await self._operation_bindings(include_plugins=bound_plugins):
+            with runtime_handler.installation_scope(binding):
+                runners.extend(await runtime_handler.list_runners(include_plugins=bound_plugins))
+        return runners
+
+    async def run_runner(
+        self,
+        plugin_author: str,
+        plugin_name: str,
+        runner_name: str,
+        context: dict[str, Any],
+    ) -> typing.AsyncGenerator[dict[str, Any], None]:
+        """Run an Runner from a plugin.
+
+        Args:
+            plugin_author: Plugin author
+            plugin_name: Plugin name
+            runner_name: Runner component name
+            context: RunnerContext as dict
+
+        Yields:
+            RunnerResult dicts
+        """
+        if not self.is_enable_plugin:
+            # Return a protocol-level failure result.
+            yield {
+                'type': 'run.failed',
+                'data': {
+                    'error': 'Plugin system is disabled',
+                    'code': 'plugin.disabled',
+                    'retryable': False,
+                },
+            }
+            return
+
+        workspace_id = (context.get('conversation') or {}).get('workspace_id') or (context.get('runtime') or {}).get(
+            'metadata', {}
+        ).get('workspace_id')
+        if not isinstance(workspace_id, str) or not workspace_id.strip():
+            raise ValueError('Runner execution requires a Workspace')
+        execution_context = await self._current_execution_context()
+        if workspace_id.strip() != execution_context.workspace_uuid:
+            raise WorkspaceNotFoundError('Plugin resource not found')
+        await self.require_workspace_context(execution_context)
+        binding = await self._target_binding(
+            plugin_author,
+            plugin_name,
+            require_enabled=True,
+        )
+        runtime_handler = self._runtime_handler()
+        gen = runtime_handler.run_runner(plugin_author, plugin_name, runner_name, context)
+        async with contextlib.aclosing(self._installation_scoped_stream(runtime_handler, binding, gen)) as scoped:
+            async for ret in scoped:
+                yield ret
+
+    @staticmethod
+    async def _installation_scoped_stream(runtime_handler, binding, gen):
+        """Keep ContextVar tokens inside a single resume, never across yields.
+
+        Consumers may use a different Task for each anext (e.g. wait_for).
+        Reset the installation before exposing a result to the consumer, and
+        re-enter the same immutable binding for transport cleanup.
+        """
+        try:
+            while True:
+                with runtime_handler.installation_scope(binding):
+                    try:
+                        result = await anext(gen)
+                    except StopAsyncIteration:
+                        return
+                yield result
+        finally:
+            with runtime_handler.installation_scope(binding):
+                await gen.aclose()
 
     async def retrieve_knowledge(
         self,

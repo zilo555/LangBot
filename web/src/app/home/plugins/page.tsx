@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import PluginDetailContent from './PluginDetailContent';
 import styles from './plugins.module.css';
 import { Button } from '@/components/ui/button';
-import { Power, Code, Copy, Check, Bug, Unlink } from 'lucide-react';
+import { Power, Code, Copy, Check, Bug, Unlink, Search, X } from 'lucide-react';
 import { copyToClipboard } from '@/app/utils/clipboard';
 import {
   Popover,
@@ -36,7 +36,7 @@ export default function PluginConfigPage() {
   const detailId = searchParams.get('id');
 
   if (detailId) {
-    return <PluginDetailContent id={detailId} />;
+    return <PluginDetailContent key={detailId} id={detailId} />;
   }
 
   return <PluginListView />;
@@ -63,6 +63,7 @@ function PluginListView() {
   const [copiedDebugUrl, setCopiedDebugUrl] = useState(false);
   const [copiedDebugKey, setCopiedDebugKey] = useState(false);
   const [filterType, setFilterType] = useState<FilterType>('all');
+  const [installedSearchQuery, setInstalledSearchQuery] = useState('');
   const pluginInstalledRef = useRef<PluginInstalledComponentRef>(null);
 
   useEffect(() => {
@@ -83,9 +84,18 @@ function PluginListView() {
   }, [t]);
 
   useEffect(() => {
-    const onComplete = (_taskId: number, success: boolean, error?: string) => {
+    const onComplete = (
+      _taskId: number,
+      success: boolean,
+      error?: string,
+      operation?: 'install' | 'upgrade',
+    ) => {
       if (success) {
-        toast.success(t('plugins.installSuccess'));
+        toast.success(
+          operation === 'upgrade'
+            ? t('plugins.updateSuccess')
+            : t('plugins.installSuccess'),
+        );
         pluginInstalledRef.current?.refreshPluginList();
         refreshPlugins();
       } else {
@@ -179,6 +189,27 @@ function PluginListView() {
           </Tabs>
         </div>
         <div className="flex flex-row items-center gap-2 flex-wrap">
+          {/* Search installed extensions by label / name / author / description */}
+          <div className="relative w-full sm:w-56">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={installedSearchQuery}
+              onChange={(e) => setInstalledSearchQuery(e.target.value)}
+              placeholder={t('plugins.searchInstalled')}
+              aria-label={t('plugins.searchInstalled')}
+              className="pl-9 pr-8 text-sm"
+            />
+            {installedSearchQuery && (
+              <button
+                type="button"
+                aria-label={t('common.clear')}
+                onClick={() => setInstalledSearchQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
           <div className="flex items-center gap-2 px-1 sm:px-2">
             <Switch
               id="group-by-type"
@@ -227,6 +258,7 @@ function PluginListView() {
                   <Input
                     value={debugInfo?.debug_url || ''}
                     readOnly
+                    aria-label={t('plugins.debugUrl')}
                     className="flex-1 min-w-0 font-mono text-xs h-8"
                   />
                   <Button
@@ -255,6 +287,7 @@ function PluginListView() {
                         debugInfo?.plugin_debug_key || t('plugins.noDebugKey')
                       }
                       readOnly
+                      aria-label={t('plugins.debugKey')}
                       className="w-[220px] font-mono text-xs h-8"
                     />
                     <Button
@@ -300,6 +333,8 @@ function PluginListView() {
           ref={pluginInstalledRef}
           filterType={filterType}
           groupByType={groupByType}
+          searchQuery={installedSearchQuery}
+          onClearSearch={() => setInstalledSearchQuery('')}
         />
       </div>
     </div>

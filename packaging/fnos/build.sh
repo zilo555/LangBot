@@ -73,8 +73,11 @@ rsync -a \
 [ -d "${FPK_DIR}/app/langbot/web/dist" ] || { echo "ERROR: web/dist missing after rsync!" >&2; exit 1; }
 echo "    Source synced ($(du -sh "${FPK_DIR}/app/langbot" | cut -f1))"
 
-# --- 2.5 Download bundled uv binaries (offline install on NAS) ---
-echo "[2.5/5] Downloading bundled uv binaries..."
+# --- 2.5 Download bundled uv binary (offline install on NAS) ---
+# Python comes from the official python312 App Store app (see manifest
+# install_dep_apps); only uv is carried in the package. The download is a
+# hard requirement — the build fails without it (no fallback installs).
+echo "[2.5/5] Downloading bundled uv binary..."
 UV_VERSION="0.12.9"
 mkdir -p "${FPK_DIR}/app/bin"
 for arch in x86_64 aarch64; do
@@ -84,15 +87,13 @@ for arch in x86_64 aarch64; do
         continue
     fi
     tmp="$(mktemp -d)"
-    if curl -sSL -o "${tmp}/uv.tar.gz" \
+    curl -fsSL -o "${tmp}/uv.tar.gz" \
         "https://github.com/astral-sh/uv/releases/download/${UV_VERSION}/uv-${arch}-unknown-linux-gnu.tar.gz" \
         && tar xzf "${tmp}/uv.tar.gz" -C "${tmp}" \
-        && cp "${tmp}/uv-${arch}-unknown-linux-gnu/uv" "${out}"; then
-        chmod +x "${out}"
-        echo "    uv-${arch} downloaded (${UV_VERSION})"
-    else
-        echo "    WARNING: failed to download uv for ${arch}, install will fall back to online install" >&2
-    fi
+        && cp "${tmp}/uv-${arch}-unknown-linux-gnu/uv" "${out}" \
+        && chmod +x "${out}" \
+        && echo "    uv-${arch} downloaded (${UV_VERSION})" \
+        || { echo "ERROR: failed to download uv for ${arch}" >&2; rm -rf "${tmp}"; exit 1; }
     rm -rf "${tmp}"
 done
 

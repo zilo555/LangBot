@@ -1,8 +1,12 @@
+import { hasModelReasoningAbility } from '@/app/home/components/reasoning/model-reasoning';
 import {
   DynamicFormItemType,
   IDynamicFormItemSchema,
   IFileConfig,
 } from '@/app/infra/entities/form/dynamic';
+import StructuredFieldEditor from './StructuredFieldEditor';
+import PresetSelect from './PresetSelect';
+import { isSimplePrompt } from './StructuredFieldValue';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -44,7 +48,9 @@ import {
   Plus,
   X,
   Eye,
+  EyeOff,
   Wrench,
+  BrainCircuit,
   Trash2,
   Sparkles,
   Info,
@@ -70,6 +76,13 @@ import { LANGBOT_MODELS_PROVIDER_REQUESTER } from '@/app/home/components/models-
 import ReasoningLevelPicker, {
   REASONING_LEVELS,
 } from '@/app/home/components/reasoning/ReasoningLevelPicker';
+import LangBotModelMetadata from '@/app/home/components/model-availability/LangBotModelMetadata';
+import { sortModelsByCatalog } from '@/app/home/components/model-availability/sort-models';
+import { useLangBotModelAvailability } from '@/app/home/components/model-availability/useLangBotModelAvailability';
+
+const MODEL_SELECT_TRIGGER_CLASS =
+  'w-full min-w-0 bg-[#ffffff] dark:bg-[#2a2a2e] *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:flex-1';
+const MODEL_SELECT_ITEM_CLASS = '*:[span]:last:min-w-0 *:[span]:last:flex-1';
 
 function hasUsableUuid<T extends { uuid?: string | null }>(
   item: T,
@@ -79,6 +92,44 @@ function hasUsableUuid<T extends { uuid?: string | null }>(
 
 function hasUsableOptionName(option: { name?: string | null }): boolean {
   return typeof option.name === 'string' && option.name.trim().length > 0;
+}
+
+function getPluginComponentIconURL(value?: string): string | null {
+  if (!value?.startsWith('plugin:')) {
+    return null;
+  }
+
+  const match = value.match(/^plugin:([^/]+)\/([^/]+)(?:\/|$)/);
+  if (!match) {
+    return null;
+  }
+
+  return httpClient.getPluginIconURL(match[1], match[2]);
+}
+
+function SelectOptionContent({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  const iconURL = getPluginComponentIconURL(value);
+
+  return (
+    <div className="flex min-w-0 items-center gap-2">
+      {iconURL && (
+        <img
+          src={iconURL}
+          alt=""
+          className="size-5 shrink-0 rounded object-cover"
+        />
+      )}
+      <div className="min-w-0 flex flex-col">
+        <span className="truncate">{label}</span>
+      </div>
+    </div>
+  );
 }
 
 export default function DynamicFormItemComponent({
@@ -107,6 +158,7 @@ export default function DynamicFormItemComponent({
   const [bots, setBots] = useState<Bot[]>([]);
   const [tools, setTools] = useState<PluginTool[]>([]);
   const [uploading, setUploading] = useState<boolean>(false);
+  const [secretVisible, setSecretVisible] = useState(false);
   const [kbDialogOpen, setKbDialogOpen] = useState(false);
   const [tempSelectedKBIds, setTempSelectedKBIds] = useState<string[]>([]);
   const [toolsDialogOpen, setToolsDialogOpen] = useState(false);
@@ -117,6 +169,53 @@ export default function DynamicFormItemComponent({
   const [modelsDialogOpen, setModelsDialogOpen] = useState(false);
   const [settingsSection, setSettingsSection] =
     useState<SettingsSection>('models');
+  const isModelSelector = [
+    DynamicFormItemType.LLM_MODEL_SELECTOR,
+    DynamicFormItemType.EMBEDDING_MODEL_SELECTOR,
+    DynamicFormItemType.RERANK_MODEL_SELECTOR,
+    DynamicFormItemType.MODEL_FALLBACK_SELECTOR,
+  ].includes(config.type);
+  const {
+    metadata: langbotModelMetadata,
+    loaded: langbotModelAvailabilityLoaded,
+  } = useLangBotModelAvailability(
+    isModelSelector && !systemInfo.disable_models_service,
+  );
+
+  const renderModelOption = (model: {
+    uuid: string;
+    name: string;
+    abilities?: string[];
+    reasoning_capabilities?: { supported?: boolean };
+    provider?: { requester?: string };
+  }) => (
+    <span className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+      <span className="inline-flex min-w-0 items-center gap-1">
+        <span className="truncate">{model.name}</span>
+        {model.abilities?.includes('vision') && (
+          <Eye className="h-3 w-3 text-muted-foreground" />
+        )}
+        {model.abilities?.includes('func_call') && (
+          <Wrench className="h-3 w-3 text-muted-foreground" />
+        )}
+        {hasModelReasoningAbility(model) && (
+          <BrainCircuit
+            className="h-3 w-3 shrink-0 text-muted-foreground"
+            aria-label={t('models.reasoningAbility')}
+          />
+        )}
+      </span>
+      {model.provider?.requester === LANGBOT_MODELS_PROVIDER_REQUESTER && (
+        <LangBotModelMetadata
+          metadata={
+            langbotModelMetadata[model.uuid] ?? langbotModelMetadata[model.name]
+          }
+          loaded={langbotModelAvailabilityLoaded}
+          compact
+        />
+      )}
+    </span>
+  );
 
   const fetchLlmModels = () => {
     httpClient
@@ -292,11 +391,13 @@ export default function DynamicFormItemComponent({
   switch (config.type) {
     case DynamicFormItemType.INT:
     case DynamicFormItemType.FLOAT:
+    case DynamicFormItemType.NUMBER:
       return (
         <Input
           type="number"
           className="w-full max-w-xs"
           {...field}
+          value={field.value ?? ''}
           onChange={(e) => field.onChange(Number(e.target.value))}
         />
       );
@@ -305,7 +406,11 @@ export default function DynamicFormItemComponent({
       if (config.options && config.options.length > 0) {
         return (
           <div className="flex w-full max-w-md min-w-0 items-center gap-1.5">
-            <Input className="min-w-0 flex-1" {...field} />
+            <Input
+              className="min-w-0 flex-1"
+              {...field}
+              value={field.value ?? ''}
+            />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -336,18 +441,68 @@ export default function DynamicFormItemComponent({
           </div>
         );
       }
-      return <Input className="w-full max-w-md" {...field} />;
+      return (
+        <Input
+          className="w-full max-w-md"
+          {...field}
+          value={field.value ?? ''}
+        />
+      );
+
+    case DynamicFormItemType.SECRET:
+      return (
+        <div className="relative w-full max-w-md">
+          <Input
+            type={secretVisible ? 'text' : 'password'}
+            autoComplete="new-password"
+            className="pr-10"
+            {...field}
+            value={field.value ?? ''}
+          />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 size-8 -translate-y-1/2 text-muted-foreground"
+                aria-label={
+                  secretVisible
+                    ? t('common.hideSecret')
+                    : t('common.showSecret')
+                }
+                onClick={() => setSecretVisible((visible) => !visible)}
+              >
+                {secretVisible ? (
+                  <EyeOff className="size-4" />
+                ) : (
+                  <Eye className="size-4" />
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {secretVisible ? t('common.hideSecret') : t('common.showSecret')}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      );
 
     case DynamicFormItemType.TEXT:
       return (
         <Textarea
           {...field}
+          value={field.value ?? ''}
           className="min-h-[120px] w-full max-w-full resize-y overflow-x-hidden break-all"
         />
       );
 
+    case DynamicFormItemType.JSON:
+      return <StructuredFieldEditor field={field} />;
+
     case DynamicFormItemType.BOOLEAN:
-      return <Switch checked={field.value} onCheckedChange={field.onChange} />;
+      return (
+        <Switch checked={!!field.value} onCheckedChange={field.onChange} />
+      );
 
     case DynamicFormItemType.STRING_ARRAY:
       return (
@@ -394,10 +549,23 @@ export default function DynamicFormItemComponent({
       );
 
     case DynamicFormItemType.SELECT:
+      if (config.allow_custom) {
+        return <PresetSelect config={config} field={field} />;
+      }
+      const selectedOption = config.options?.find(
+        (option) => option.name === field.value,
+      );
       return (
-        <Select value={field.value} onValueChange={field.onChange}>
+        <Select value={field.value ?? ''} onValueChange={field.onChange}>
           <SelectTrigger className="w-full max-w-md bg-[#ffffff] dark:bg-[#2a2a2e]">
-            <SelectValue placeholder={t('common.select')} />
+            {selectedOption ? (
+              <SelectOptionContent
+                label={extractI18nObject(selectedOption.label)}
+                value={selectedOption.name}
+              />
+            ) : (
+              <SelectValue placeholder={t('common.select')} />
+            )}
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
@@ -407,7 +575,10 @@ export default function DynamicFormItemComponent({
                   value={option.name}
                   description={option.name}
                 >
-                  {extractI18nObject(option.label)}
+                  <SelectOptionContent
+                    label={extractI18nObject(option.label)}
+                    value={option.name}
+                  />
                 </SelectItem>
               ))}
             </SelectGroup>
@@ -422,8 +593,11 @@ export default function DynamicFormItemComponent({
           model.abilities?.includes(requiredModelAbility),
       );
       // Separate space models from regular models
-      const spaceModels = selectableModels.filter(
-        (m) => m.provider?.requester === LANGBOT_MODELS_PROVIDER_REQUESTER,
+      const spaceModels = sortModelsByCatalog(
+        selectableModels.filter(
+          (m) => m.provider?.requester === LANGBOT_MODELS_PROVIDER_REQUESTER,
+        ),
+        langbotModelMetadata,
       );
       const regularModels = selectableModels.filter(
         (m) => m.provider?.requester !== LANGBOT_MODELS_PROVIDER_REQUESTER,
@@ -475,7 +649,7 @@ export default function DynamicFormItemComponent({
                 className={
                   compactModelSelector
                     ? 'w-full min-w-0 gap-1 border-0 bg-transparent px-1 text-xs text-muted-foreground shadow-none hover:bg-muted data-[size=default]:h-7 [&_[data-slot=select-value]_svg]:hidden'
-                    : 'min-w-0 bg-[#ffffff] dark:bg-[#2a2a2e]'
+                    : MODEL_SELECT_TRIGGER_CLASS
                 }
               >
                 <SelectValue placeholder={t('models.selectModel')} />
@@ -485,16 +659,12 @@ export default function DynamicFormItemComponent({
                   <SelectGroup key={providerName}>
                     <SelectLabel>{providerName}</SelectLabel>
                     {models.map((model) => (
-                      <SelectItem key={model.uuid} value={model.uuid}>
-                        <span className="inline-flex items-center gap-1">
-                          {model.name}
-                          {model.abilities?.includes('vision') && (
-                            <Eye className="h-3 w-3 text-muted-foreground" />
-                          )}
-                          {model.abilities?.includes('func_call') && (
-                            <Wrench className="h-3 w-3 text-muted-foreground" />
-                          )}
-                        </span>
+                      <SelectItem
+                        key={model.uuid}
+                        value={model.uuid}
+                        className={MODEL_SELECT_ITEM_CLASS}
+                      >
+                        {renderModelOption(model)}
                       </SelectItem>
                     ))}
                   </SelectGroup>
@@ -589,16 +759,12 @@ export default function DynamicFormItemComponent({
                           </span>
                         </SelectLabel>
                         {models.map((model) => (
-                          <SelectItem key={model.uuid} value={model.uuid}>
-                            <span className="inline-flex items-center gap-1">
-                              {model.name}
-                              {model.abilities?.includes('vision') && (
-                                <Eye className="h-3 w-3 text-muted-foreground" />
-                              )}
-                              {model.abilities?.includes('func_call') && (
-                                <Wrench className="h-3 w-3 text-muted-foreground" />
-                              )}
-                            </span>
+                          <SelectItem
+                            key={model.uuid}
+                            value={model.uuid}
+                            className={MODEL_SELECT_ITEM_CLASS}
+                          >
+                            {renderModelOption(model)}
                           </SelectItem>
                         ))}
                       </SelectGroup>
@@ -635,8 +801,11 @@ export default function DynamicFormItemComponent({
       );
 
     case DynamicFormItemType.EMBEDDING_MODEL_SELECTOR: {
-      const spaceEmbeddingModels = embeddingModels.filter(
-        (m) => m.provider?.requester === LANGBOT_MODELS_PROVIDER_REQUESTER,
+      const spaceEmbeddingModels = sortModelsByCatalog(
+        embeddingModels.filter(
+          (m) => m.provider?.requester === LANGBOT_MODELS_PROVIDER_REQUESTER,
+        ),
+        langbotModelMetadata,
       );
       const regularEmbeddingModels = embeddingModels.filter(
         (m) => m.provider?.requester !== LANGBOT_MODELS_PROVIDER_REQUESTER,
@@ -675,7 +844,7 @@ export default function DynamicFormItemComponent({
         <div className="flex w-full max-w-md min-w-0 items-center gap-1.5">
           <div className="min-w-0 flex-1">
             <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger className="min-w-0 bg-[#ffffff] dark:bg-[#2a2a2e]">
+              <SelectTrigger className={MODEL_SELECT_TRIGGER_CLASS}>
                 <SelectValue
                   placeholder={t('knowledge.selectEmbeddingModel')}
                 />
@@ -686,8 +855,12 @@ export default function DynamicFormItemComponent({
                     <SelectGroup key={providerName}>
                       <SelectLabel>{providerName}</SelectLabel>
                       {models.map((model) => (
-                        <SelectItem key={model.uuid} value={model.uuid}>
-                          {model.name}
+                        <SelectItem
+                          key={model.uuid}
+                          value={model.uuid}
+                          className={MODEL_SELECT_ITEM_CLASS}
+                        >
+                          {renderModelOption(model)}
                         </SelectItem>
                       ))}
                     </SelectGroup>
@@ -778,8 +951,12 @@ export default function DynamicFormItemComponent({
                           </span>
                         </SelectLabel>
                         {models.map((model) => (
-                          <SelectItem key={model.uuid} value={model.uuid}>
-                            {model.name}
+                          <SelectItem
+                            key={model.uuid}
+                            value={model.uuid}
+                            className={MODEL_SELECT_ITEM_CLASS}
+                          >
+                            {renderModelOption(model)}
                           </SelectItem>
                         ))}
                       </SelectGroup>
@@ -826,6 +1003,18 @@ export default function DynamicFormItemComponent({
         },
         {} as Record<string, RerankModel[]>,
       );
+      for (const [providerName, models] of Object.entries(
+        groupedRerankModels,
+      )) {
+        if (
+          models[0]?.provider?.requester === LANGBOT_MODELS_PROVIDER_REQUESTER
+        ) {
+          groupedRerankModels[providerName] = sortModelsByCatalog(
+            models,
+            langbotModelMetadata,
+          );
+        }
+      }
 
       return (
         <div className="w-full max-w-md min-w-0">
@@ -833,7 +1022,7 @@ export default function DynamicFormItemComponent({
             value={field.value || '__none__'}
             onValueChange={(v) => field.onChange(v === '__none__' ? '' : v)}
           >
-            <SelectTrigger className="min-w-0 bg-[#ffffff] dark:bg-[#2a2a2e]">
+            <SelectTrigger className={MODEL_SELECT_TRIGGER_CLASS}>
               <SelectValue placeholder={t('models.rerank')} />
             </SelectTrigger>
             <SelectContent>
@@ -843,8 +1032,12 @@ export default function DynamicFormItemComponent({
                   <SelectGroup key={providerName}>
                     <SelectLabel>{providerName}</SelectLabel>
                     {models.map((model) => (
-                      <SelectItem key={model.uuid} value={model.uuid}>
-                        {model.name}
+                      <SelectItem
+                        key={model.uuid}
+                        value={model.uuid}
+                        className={MODEL_SELECT_ITEM_CLASS}
+                      >
+                        {renderModelOption(model)}
                       </SelectItem>
                     ))}
                   </SelectGroup>
@@ -857,8 +1050,11 @@ export default function DynamicFormItemComponent({
 
     case DynamicFormItemType.MODEL_FALLBACK_SELECTOR: {
       // Separate space models from regular models
-      const fbSpaceModels = llmModels.filter(
-        (m) => m.provider?.requester === LANGBOT_MODELS_PROVIDER_REQUESTER,
+      const fbSpaceModels = sortModelsByCatalog(
+        llmModels.filter(
+          (m) => m.provider?.requester === LANGBOT_MODELS_PROVIDER_REQUESTER,
+        ),
+        langbotModelMetadata,
       );
       const fbRegularModels = llmModels.filter(
         (m) => m.provider?.requester !== LANGBOT_MODELS_PROVIDER_REQUESTER,
@@ -952,7 +1148,7 @@ export default function DynamicFormItemComponent({
         placeholder: string,
       ) => (
         <Select value={value} onValueChange={onChange}>
-          <SelectTrigger className="min-w-0 bg-[#ffffff] dark:bg-[#2a2a2e]">
+          <SelectTrigger className={MODEL_SELECT_TRIGGER_CLASS}>
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
           <SelectContent>
@@ -961,16 +1157,12 @@ export default function DynamicFormItemComponent({
                 <SelectGroup key={providerName}>
                   <SelectLabel>{providerName}</SelectLabel>
                   {models.map((model) => (
-                    <SelectItem key={model.uuid} value={model.uuid}>
-                      <span className="inline-flex items-center gap-1">
-                        {model.name}
-                        {model.abilities?.includes('vision') && (
-                          <Eye className="h-3 w-3 text-muted-foreground" />
-                        )}
-                        {model.abilities?.includes('func_call') && (
-                          <Wrench className="h-3 w-3 text-muted-foreground" />
-                        )}
-                      </span>
+                    <SelectItem
+                      key={model.uuid}
+                      value={model.uuid}
+                      className={MODEL_SELECT_ITEM_CLASS}
+                    >
+                      {renderModelOption(model)}
                     </SelectItem>
                   ))}
                 </SelectGroup>
@@ -1066,16 +1258,12 @@ export default function DynamicFormItemComponent({
                       </span>
                     </SelectLabel>
                     {models.map((model) => (
-                      <SelectItem key={model.uuid} value={model.uuid}>
-                        <span className="inline-flex items-center gap-1">
-                          {model.name}
-                          {model.abilities?.includes('vision') && (
-                            <Eye className="h-3 w-3 text-muted-foreground" />
-                          )}
-                          {model.abilities?.includes('func_call') && (
-                            <Wrench className="h-3 w-3 text-muted-foreground" />
-                          )}
-                        </span>
+                      <SelectItem
+                        key={model.uuid}
+                        value={model.uuid}
+                        className={MODEL_SELECT_ITEM_CLASS}
+                      >
+                        {renderModelOption(model)}
                       </SelectItem>
                     ))}
                   </SelectGroup>
@@ -1096,11 +1284,7 @@ export default function DynamicFormItemComponent({
       ) => {
         if (!modelUuid) return;
         const updated = { ...modelValue.reasoning };
-        if (level === 'provider_default') {
-          delete updated[modelUuid];
-        } else {
-          updated[modelUuid] = level;
-        }
+        updated[modelUuid] = level;
         updateValue({ reasoning: updated });
       };
 
@@ -1129,6 +1313,7 @@ export default function DynamicFormItemComponent({
         const model = llmModels.find(
           (candidate) => candidate.uuid === modelUuid,
         );
+        if (!hasModelReasoningAbility(model)) return null;
         const currentLevel =
           modelValue.reasoning[modelUuid] || 'provider_default';
         const availableLevels = model?.reasoning_capabilities?.levels || [
@@ -1703,6 +1888,9 @@ export default function DynamicFormItemComponent({
       );
 
     case DynamicFormItemType.PROMPT_EDITOR: {
+      if (!isSimplePrompt(field.value)) {
+        return <StructuredFieldEditor field={field} prompt />;
+      }
       // Guard: field.value may be undefined when the form resets or
       // initialValues haven't propagated yet. Fall back to a default
       // single system-prompt entry to prevent the .map() crash.
@@ -1747,7 +1935,7 @@ export default function DynamicFormItemComponent({
                 {/* 内容输入 */}
                 <Textarea
                   className="min-h-20 w-full min-w-0 flex-1 resize-y overflow-x-hidden break-all sm:w-[300px]"
-                  value={item.content}
+                  value={item.content ?? ''}
                   onChange={(e) => {
                     const newValue = [...(field.value ?? promptItems)];
                     newValue[index] = {

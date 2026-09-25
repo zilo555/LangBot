@@ -426,6 +426,15 @@ class PluginsRouterGroup(group.RouterGroup):
         async def _(author: str, plugin_name: str, request_context: RequestContext) -> str:
             execution_context = await self.ap.plugin_connector.require_workspace_context(request_context)
             ctx = taskmgr.TaskContext.new()
+            ctx.metadata.update(
+                {
+                    'plugin_name': f'{author}/{plugin_name}',
+                    'install_source': 'marketplace',
+                    'operation': 'upgrade',
+                    'progress_percent': 3,
+                }
+            )
+            ctx.set_current_action('checking for latest version')
             wrapper = self.ap.task_mgr.create_user_task(
                 self._run_fenced_plugin_operation(
                     execution_context,
@@ -923,10 +932,13 @@ class PluginsRouterGroup(group.RouterGroup):
                 return self.http_status(400, -1, 'file is required')
 
             file_bytes = file.read()
+            form = await quart.request.form
+            administrator_force = form.get('administrator_force', '').strip().lower() == 'true'
             execution_context = await self.ap.plugin_connector.require_workspace_context(request_context)
 
             data = {
                 'plugin_file': file_bytes,
+                'administrator_force': administrator_force,
             }
 
             ctx = taskmgr.TaskContext.new()

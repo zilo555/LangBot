@@ -1,6 +1,7 @@
 from __future__ import annotations
 import asyncio
 import io
+import inspect
 import mimetypes
 import os.path
 import traceback
@@ -43,9 +44,42 @@ class RuntimeKnowledgeBase(KnowledgeBaseInterface):
         super().__init__(ap)
         self.knowledge_base_entity = knowledge_base_entity
         self.execution_context = execution_context
+        # Shared across KB object reloads, but deliberately not a remote-work fence.
+        self._ingestion_tasks = ap.__dict__.setdefault('_knowledge_ingestion_tasks', {})
+        locks = ap.__dict__.setdefault('_knowledge_ingestion_locks', {})
+        self.ingestion_admission_lock = locks.setdefault(
+            (execution_context.workspace_uuid, self.get_uuid()), asyncio.Lock()
+        )
 
     async def initialize(self):
-        pass
+        await self.reconcile_interrupted_ingestions(self.execution_context)
+
+    async def reconcile_interrupted_ingestions(self, execution_context: ExecutionContext) -> None:
+        """Persist loss of Host observation, never infer remote quiescence.
+
+        A restarted Host cannot observe the old SDK request's outcome. Retain its
+        row, upload and identity for operator reconciliation; do not retry/delete.
+        The shared admission lock protects newly queued tasks during KB reloads.
+        """
+        async with self.ingestion_admission_lock:
+            live_ids = [
+                key[2]
+                for key, task in self._ingestion_tasks.items()
+                if key[:2] == (execution_context.workspace_uuid, self.get_uuid()) and not task.done()
+            ]
+
+            async def reconcile():
+                await self._assert_execution_context(execution_context)
+                await self.ap.persistence_mgr.execute_async(
+                    sqlalchemy.update(persistence_rag.File)
+                    .where(persistence_rag.File.workspace_uuid == execution_context.workspace_uuid)
+                    .where(persistence_rag.File.kb_id == self.get_uuid())
+                    .where(persistence_rag.File.status.in_(['pending', 'processing']))
+                    .where(persistence_rag.File.uuid.not_in(live_ids))
+                    .values(status='interrupted')
+                )
+
+            await run_in_workspace_uow(self.ap, execution_context.workspace_uuid, reconcile)
 
     async def _assert_execution_context(self, execution_context: ExecutionContext) -> None:
         """Reject stale or cross-Workspace runtime access."""
@@ -99,23 +133,38 @@ class RuntimeKnowledgeBase(KnowledgeBaseInterface):
         task_context: taskmgr.TaskContext,
         parser_plugin_id: str | None = None,
     ):
-        await run_in_workspace_uow(
-            self.ap,
-            execution_context.workspace_uuid,
-            lambda: self._assert_execution_context(execution_context),
-        )
-        self._require_upload_object_key(execution_context, file.file_name)
+        key = (execution_context.workspace_uuid, self.get_uuid(), file.uuid)
+        current_task = asyncio.current_task()
+        existing = self._ingestion_tasks.get(key)
+        if existing is not None and existing is not current_task and not existing.done():
+            raise RuntimeError('Knowledge file ingestion is already running')
+        self._ingestion_tasks[key] = current_task
+        engine_document_id = None
+        dispatched = False
+        confirmed_failure = False
+        cleanup_upload = False
+        status_visible = False
         try:
-            # set file status to processing
+            await run_in_workspace_uow(
+                self.ap,
+                execution_context.workspace_uuid,
+                lambda: self._assert_execution_context(execution_context),
+            )
+            self._require_upload_object_key(execution_context, file.file_name)
+            # Claim only pending work. Recovered/terminal rows cannot be replayed.
             status_visible = False
             for retry_delay in (0.0, 0.01, 0.05, 0.1):
                 if retry_delay:
                     await asyncio.sleep(retry_delay)
-                if await self._set_file_status(execution_context, file.uuid, 'processing'):
+                async with self.ingestion_admission_lock:
+                    claimed = await self._set_file_status(
+                        execution_context, file.uuid, 'processing', expected_statuses=('pending',)
+                    )
+                if claimed:
                     status_visible = True
                     break
             if not status_visible:
-                raise WorkspaceNotFoundError('Knowledge file was not committed before its background task started')
+                raise WorkspaceNotFoundError('Knowledge file is missing, already claimed, or interrupted')
 
             task_context.set_current_action('Processing file')
 
@@ -146,9 +195,12 @@ class RuntimeKnowledgeBase(KnowledgeBaseInterface):
                     'metadata': {},
                 }
                 await self._require_plugin_runtime_context(execution_context)
+                dispatched = True
                 parsed_content = await self.ap.plugin_connector.call_parser(parser_plugin_id, parse_context, file_bytes)
+                dispatched = False
 
-            # Call plugin to ingest document
+            # From dispatch until a valid response, failure is an unknown outcome.
+            dispatched = True
             result = await self._ingest_document(
                 execution_context,
                 {
@@ -162,57 +214,109 @@ class RuntimeKnowledgeBase(KnowledgeBaseInterface):
                 parsed_content=parsed_content,
             )
 
-            # Check plugin result status
+            # Failed ingestion can still have created an upstream document (for
+            # example, upload succeeded but parsing failed). Retain that identity
+            # for cleanup too. Never coerce or normalize an opaque engine ID.
+            returned_id = result.get('document_id')
+            if isinstance(returned_id, str) and returned_id.strip():
+                engine_document_id = returned_id
             if result.get('status') == 'failed':
+                confirmed_failure = engine_document_id is not None
                 error_msg = result.get('error_message', 'Plugin ingestion returned failed status')
                 raise Exception(error_msg)
+            if engine_document_id is None:
+                raise ValueError('Plugin ingestion must return a nonempty string document_id')
 
-            # set file status to completed
-            if not await self._set_file_status(execution_context, file.uuid, 'completed'):
-                raise WorkspaceNotFoundError('Knowledge file not found')
+            # Commit the identity and completion together, never a status-only
+            # success that loses the only way to address the upstream document.
+            if not await self._set_file_status(
+                execution_context,
+                file.uuid,
+                'completed',
+                engine_document_id=engine_document_id,
+                expected_statuses=('processing',),
+            ):
+                raise WorkspaceNotFoundError('Knowledge file not found or ingestion interrupted')
+            cleanup_upload = True
 
-        except Exception as e:
-            self.ap.logger.error(f'Error storing file {file.uuid}: {e}')
-            traceback.print_exc()
-            # A stale placement is fenced from all writes, including failure
-            # status updates from an old background task.
+        except (Exception, asyncio.CancelledError) as e:
+            cancelled = isinstance(e, asyncio.CancelledError)
+            status = 'interrupted' if cancelled or (dispatched and not confirmed_failure) else 'failed'
+            self.ap.logger.warning(f'Knowledge ingestion {status} for file {file.uuid}')
+            # A cancelled RPC waiter or transport error cannot establish remote
+            # failure. Preserve any returned ID and never downgrade a committed
+            # completion after an ambiguous commit acknowledgement.
             try:
-                if not await self._set_file_status(execution_context, file.uuid, 'failed'):
-                    raise WorkspaceNotFoundError('Knowledge file not found')
+                if status_visible or cancelled:
+                    changed = await self._set_file_status(
+                        execution_context,
+                        file.uuid,
+                        status,
+                        engine_document_id=engine_document_id,
+                        expected_statuses=('pending', 'processing') if cancelled else ('processing',),
+                    )
+                    cleanup_upload = changed and status == 'failed'
             except Exception:
                 self.ap.logger.warning(f'Skipping stale RAG task status update for file {file.uuid}')
-
             raise
         finally:
-            # An old background task must not touch an upload after its
-            # placement generation has been fenced off.
-            try:
-                await self._assert_execution_context(execution_context)
-                await self.ap.storage_mgr.delete_scoped_object_key(
-                    execution_context,
-                    file.file_name,
-                    expected_owner_type='upload_document',
-                )
-            except (WorkspaceRequiredError, WorkspaceNotFoundError):
-                self.ap.logger.warning(f'Skipping stale RAG upload cleanup for file {file.uuid}')
+            if self._ingestion_tasks.get(key) is current_task:
+                self._ingestion_tasks.pop(key, None)
+            # Only release recovery material after an acknowledged terminal write.
+            if cleanup_upload:
+                try:
+                    await run_in_workspace_uow(
+                        self.ap,
+                        execution_context.workspace_uuid,
+                        lambda: self._assert_execution_context(execution_context),
+                    )
+                    await self.ap.storage_mgr.delete_scoped_object_key(
+                        execution_context,
+                        file.file_name,
+                        expected_owner_type='upload_document',
+                    )
+                except (WorkspaceRequiredError, WorkspaceNotFoundError):
+                    self.ap.logger.warning(f'Skipping stale RAG upload cleanup for file {file.uuid}')
 
     async def _set_file_status(
         self,
         execution_context: ExecutionContext,
         file_uuid: str,
         status: str,
+        *,
+        engine_document_id: str | None = None,
+        expected_statuses: tuple[str, ...] | None = None,
     ) -> bool:
-        """Commit one detached-task status transition in its own tenant UoW."""
+        """Commit one detached-task status/identity transition in its tenant UoW."""
 
         async def update() -> bool:
             await self._assert_execution_context(execution_context)
-            result = await self.ap.persistence_mgr.execute_async(
+            values = {'status': status}
+            if engine_document_id is not None:
+                values['engine_document_id'] = engine_document_id
+            statement = (
                 sqlalchemy.update(persistence_rag.File)
                 .where(persistence_rag.File.workspace_uuid == execution_context.workspace_uuid)
+                .where(persistence_rag.File.kb_id == self.knowledge_base_entity.uuid)
                 .where(persistence_rag.File.uuid == file_uuid)
-                .values(status=status)
+                .values(**values)
             )
-            return getattr(result, 'rowcount', 0) > 0
+            if expected_statuses is not None:
+                statement = statement.where(persistence_rag.File.status.in_(expected_statuses))
+            result = await self.ap.persistence_mgr.execute_async(statement)
+            changed = getattr(result, 'rowcount', 0) > 0
+            if not changed and engine_document_id is not None:
+                # A different Host may already have recovered observation. Save
+                # the late identity without claiming that the attempt completed.
+                await self.ap.persistence_mgr.execute_async(
+                    sqlalchemy.update(persistence_rag.File)
+                    .where(persistence_rag.File.workspace_uuid == execution_context.workspace_uuid)
+                    .where(persistence_rag.File.kb_id == self.get_uuid())
+                    .where(persistence_rag.File.uuid == file_uuid)
+                    .where(persistence_rag.File.status == 'interrupted')
+                    .values(engine_document_id=engine_document_id)
+                )
+            return changed
 
         persistence_mgr = self.ap.persistence_mgr
         managed_mode = getattr(getattr(persistence_mgr, 'mode', None), 'value', None) in {
@@ -264,33 +368,43 @@ class RuntimeKnowledgeBase(KnowledgeBaseInterface):
 
         file_obj = persistence_rag.File(**file_obj_data)
 
-        await self.ap.persistence_mgr.execute_async(sqlalchemy.insert(persistence_rag.File).values(file_obj_data))
+        # Serialize admission with reconciliation, not with remote ingestion.
+        async with self.ingestion_admission_lock:
+            await self.ap.persistence_mgr.execute_async(sqlalchemy.insert(persistence_rag.File).values(file_obj_data))
+            ctx = taskmgr.TaskContext.new()
+            coroutine = self._store_file_task(
+                execution_context, file_obj, task_context=ctx, parser_plugin_id=parser_plugin_id
+            )
+            try:
+                wrapper = self.ap.task_mgr.create_user_task(
+                    coroutine,
+                    kind='knowledge-operation',
+                    name=f'knowledge-store-file-{file_id}',
+                    label=f'Store file {file_id}',
+                    context=ctx,
+                    instance_uuid=execution_context.instance_uuid,
+                    workspace_uuid=execution_context.workspace_uuid,
+                    placement_generation=execution_context.placement_generation,
+                )
+            except taskmgr.TaskCapacityError:
+                await self.ap.persistence_mgr.execute_async(
+                    sqlalchemy.delete(persistence_rag.File)
+                    .where(persistence_rag.File.workspace_uuid == execution_context.workspace_uuid)
+                    .where(persistence_rag.File.uuid == file_uuid)
+                )
+                raise
+            key = (execution_context.workspace_uuid, kb_id, file_uuid)
+            self._ingestion_tasks[key] = wrapper.task
 
-        # run background task asynchronously
-        ctx = taskmgr.TaskContext.new()
-        try:
-            wrapper = self.ap.task_mgr.create_user_task(
-                self._store_file_task(
-                    execution_context,
-                    file_obj,
-                    task_context=ctx,
-                    parser_plugin_id=parser_plugin_id,
-                ),
-                kind='knowledge-operation',
-                name=f'knowledge-store-file-{file_id}',
-                label=f'Store file {file_id}',
-                context=ctx,
-                instance_uuid=execution_context.instance_uuid,
-                workspace_uuid=execution_context.workspace_uuid,
-                placement_generation=execution_context.placement_generation,
-            )
-        except taskmgr.TaskCapacityError:
-            await self.ap.persistence_mgr.execute_async(
-                sqlalchemy.delete(persistence_rag.File)
-                .where(persistence_rag.File.workspace_uuid == execution_context.workspace_uuid)
-                .where(persistence_rag.File.uuid == file_uuid)
-            )
-            raise
+            def forget_task(task):
+                # The task manager wraps the coroutine; pre-start cancellation
+                # need not enter that wrapper's finally block.
+                if inspect.getcoroutinestate(coroutine) == inspect.CORO_CREATED:
+                    coroutine.close()
+                if self._ingestion_tasks.get(key) is task:
+                    self._ingestion_tasks.pop(key, None)
+
+            wrapper.task.add_done_callback(forget_task)
         return wrapper.id
 
     async def _store_zip_file(
@@ -445,17 +559,37 @@ class RuntimeKnowledgeBase(KnowledgeBaseInterface):
     async def delete_file(self, execution_context: ExecutionContext, file_id: str):
         await self._assert_execution_context(execution_context)
         result = await self.ap.persistence_mgr.execute_async(
-            sqlalchemy.select(persistence_rag.File.uuid)
+            sqlalchemy.select(persistence_rag.File)
             .where(persistence_rag.File.workspace_uuid == execution_context.workspace_uuid)
             .where(persistence_rag.File.kb_id == self.knowledge_base_entity.uuid)
             .where(persistence_rag.File.uuid == file_id)
             .limit(1)
         )
-        if result.first() is None:
+        file = result.first()
+        if file is None:
             raise WorkspaceNotFoundError('Knowledge file not found')
-        await self._delete_document(execution_context, file_id)
+        # Pending/processing tasks may still create an upstream document. Do not
+        # discard their tracking row or race a delete against that creation.
+        if file.status in {'pending', 'processing'}:
+            raise RuntimeError(
+                'Cannot delete a file while ingestion is pending or processing; wait for the task to finish'
+            )
+        if file.status == 'interrupted':
+            raise RuntimeError(
+                'Knowledge ingestion was interrupted; its remote outcome is unknown. '
+                'The file, upload and known engine identity were retained. '
+                'Check plugin/upstream state and stop or settle the old ingestion before operator reconciliation; '
+                'automatic deletion or re-ingestion is unsafe.'
+            )
+        document_id = file.engine_document_id if file.engine_document_id is not None else file_id
+        if await self._delete_document(execution_context, document_id) is not True:
+            raise RuntimeError(
+                'Knowledge engine did not confirm document deletion; the file was retained. '
+                'Check the engine configuration and plugin logs before retrying.'
+            )
 
-        # Also cleanup DB record
+        # The plugin call may outlive the original placement generation.
+        await self._assert_execution_context(execution_context)
         await self.ap.persistence_mgr.execute_async(
             sqlalchemy.delete(persistence_rag.File)
             .where(persistence_rag.File.workspace_uuid == execution_context.workspace_uuid)
@@ -802,6 +936,7 @@ class RAGManager:
         creation_settings: dict,
         retrieval_settings: dict | None = None,
         description: str = '',
+        initialize: bool = True,
     ) -> persistence_rag.KnowledgeBase:
         """Create a new knowledge base using a RAG plugin."""
         execution_context = await self._to_execution_context(context)
@@ -831,6 +966,7 @@ class RAGManager:
             'collection_id': collection_id,
             'creation_settings': creation_settings,
             'retrieval_settings': retrieval_settings or {},
+            'initialized': initialize,
         }
 
         # Create Entity
@@ -839,20 +975,21 @@ class RAGManager:
         # Persist
         await self.ap.persistence_mgr.execute_async(sqlalchemy.insert(persistence_rag.KnowledgeBase).values(kb_data))
 
-        # Load into Runtime
-        runtime_kb = await self.load_knowledge_base(execution_context, kb)
+        if initialize:
+            # Drafts stay out of the runtime until their engine settings are saved.
+            runtime_kb = await self.load_knowledge_base(execution_context, kb)
 
-        # Notify Plugin — rollback DB record and runtime entry on failure
-        try:
-            await runtime_kb._on_kb_create(execution_context)
-        except Exception:
-            self._pop_runtime(execution_context, kb_uuid)
-            await self.ap.persistence_mgr.execute_async(
-                sqlalchemy.delete(persistence_rag.KnowledgeBase)
-                .where(persistence_rag.KnowledgeBase.workspace_uuid == execution_context.workspace_uuid)
-                .where(persistence_rag.KnowledgeBase.uuid == kb_uuid)
-            )
-            raise
+            # Roll back the record and runtime entry if plugin initialization fails.
+            try:
+                await runtime_kb._on_kb_create(execution_context)
+            except Exception:
+                self._pop_runtime(execution_context, kb_uuid)
+                await self.ap.persistence_mgr.execute_async(
+                    sqlalchemy.delete(persistence_rag.KnowledgeBase)
+                    .where(persistence_rag.KnowledgeBase.workspace_uuid == execution_context.workspace_uuid)
+                    .where(persistence_rag.KnowledgeBase.uuid == kb_uuid)
+                )
+                raise
 
         self.ap.logger.info(f'Created new Knowledge Base {name} ({kb_uuid}) using plugin {knowledge_engine_plugin_id}')
         return kb
@@ -878,6 +1015,8 @@ class RAGManager:
                         .order_by(persistence_rag.KnowledgeBase.uuid)
                     )
                     for knowledge_base in result.all():
+                        if knowledge_base.initialized is False:
+                            continue
                         try:
                             await self.load_knowledge_base(
                                 ExecutionContext(
@@ -899,6 +1038,8 @@ class RAGManager:
         knowledge_bases = result.all()
 
         for knowledge_base in knowledge_bases:
+            if knowledge_base.initialized is False:
+                continue
             try:
                 binding = await self.ap.workspace_service.get_execution_binding(knowledge_base.workspace_uuid)
                 execution_context = ExecutionContext(

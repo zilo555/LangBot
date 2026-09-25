@@ -49,6 +49,7 @@ def _entity(*, kb_uuid='kb-a', workspace_uuid='workspace-a', plugin_id='author/e
         collection_id=kb_uuid,
         creation_settings={},
         retrieval_settings={},
+        initialized=True,
     )
 
 
@@ -67,6 +68,7 @@ def _app():
                     'collection_id': row.collection_id,
                     'creation_settings': row.creation_settings,
                     'retrieval_settings': row.retrieval_settings,
+                    'initialized': row.initialized,
                 }
             ),
         ),
@@ -122,6 +124,24 @@ async def test_create_binds_workspace_and_uses_tuple_runtime_key():
         kb.uuid,
         {'model': 'embedding-a'},
     )
+
+
+@pytest.mark.asyncio
+async def test_create_draft_persists_without_loading_or_notifying_plugin():
+    app = _app()
+    manager = RAGManager(app)
+
+    kb = await manager.create_knowledge_base(
+        CONTEXT_A,
+        name='Draft',
+        knowledge_engine_plugin_id='author/engine',
+        creation_settings={},
+        initialize=False,
+    )
+
+    assert kb.initialized is False
+    assert ('workspace-a', kb.uuid) not in manager.knowledge_bases
+    app.plugin_connector.rag_on_kb_create.assert_not_awaited()
 
 
 @pytest.mark.asyncio
@@ -268,7 +288,9 @@ async def test_ingestion_payload_uses_host_owned_kb_collection():
 async def test_delete_file_checks_workspace_and_parent_before_plugin_call():
     app = _app()
     runtime = RuntimeKnowledgeBase(app, _entity(), CONTEXT_A)
-    app.persistence_mgr.execute_async.return_value = _Result(first=('file-a',))
+    app.persistence_mgr.execute_async.return_value = _Result(
+        first=SimpleNamespace(uuid='file-a', status='completed', engine_document_id=None)
+    )
 
     await runtime.delete_file(CONTEXT_A, 'file-a')
     app.plugin_connector.call_rag_delete_document.assert_awaited_once_with(
@@ -384,7 +406,8 @@ class TestRAGManagerCreateKnowledgeBase:
             )
 
         assert manager.knowledge_bases == {}
-        assert app.persistence_mgr.execute_async.await_count == 2
+        # Insert, interrupted-ingestion reconciliation, rollback delete.
+        assert app.persistence_mgr.execute_async.await_count == 3
 
     @pytest.mark.asyncio
     async def test_sets_default_retrieval_settings(self):
@@ -456,7 +479,9 @@ class TestRuntimeKnowledgeBaseDeleteFile:
     @pytest.mark.asyncio
     async def test_delete_file_calls_plugin_and_db(self):
         app = _app()
-        app.persistence_mgr.execute_async.return_value = _Result(first=('file-uuid',))
+        app.persistence_mgr.execute_async.return_value = _Result(
+            first=SimpleNamespace(uuid='file-uuid', status='completed', engine_document_id=None)
+        )
 
         await RuntimeKnowledgeBase(app, _entity(), CONTEXT_A).delete_file(
             CONTEXT_A,
@@ -514,7 +539,7 @@ class TestRAGManagerLoadKnowledgeBasesFromDB:
         }
 
     @pytest.mark.asyncio
-    async def test_cloud_startup_reuses_validated_binding(self):
+    async def test_cloud_startup_revalidates_binding_before_recovery_write(self):
         class TenantUow:
             async def __aenter__(self):
                 return self
@@ -534,15 +559,13 @@ class TestRAGManagerLoadKnowledgeBasesFromDB:
         app.persistence_mgr.tenant_uow = lambda _workspace_uuid: TenantUow()
         app.persistence_mgr.execute_async.return_value = _Result([_entity()])
         app.workspace_service.list_active_execution_bindings = AsyncMock(return_value=[binding])
-        app.workspace_service.get_execution_binding = AsyncMock(
-            side_effect=AssertionError('startup RAG loader repeated a validated binding lookup')
-        )
+        app.workspace_service.get_execution_binding = AsyncMock(return_value=binding)
         manager = RAGManager(app)
 
         await manager.load_knowledge_bases_from_db()
 
         assert set(manager.knowledge_bases) == {('workspace-a', 'kb-a')}
-        app.workspace_service.get_execution_binding.assert_not_awaited()
+        app.workspace_service.get_execution_binding.assert_awaited_once_with('workspace-a', expected_generation=5)
 
     @pytest.mark.asyncio
     async def test_handles_load_error_gracefully(self):

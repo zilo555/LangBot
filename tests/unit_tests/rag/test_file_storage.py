@@ -90,7 +90,7 @@ class TestStoreFile:
 
         def create_user_task(coro, **kwargs):
             coro.close()
-            return SimpleNamespace(id='task-1', kwargs=kwargs)
+            return SimpleNamespace(id='task-1', kwargs=kwargs, task=Mock())
 
         kb.ap.task_mgr.create_user_task = Mock(side_effect=create_user_task)
 
@@ -279,7 +279,7 @@ class TestStoreFileTask:
 
         kb._assert_execution_context = AsyncMock(side_effect=assert_execution_context)
         kb._set_file_status = AsyncMock(side_effect=[True, True])
-        kb._ingest_document = AsyncMock(return_value={'status': 'completed'})
+        kb._ingest_document = AsyncMock(return_value={'status': 'completed', 'document_id': 'file-uuid'})
         object_key = _upload_key('scoped.pdf')
         file_obj = SimpleNamespace(uuid='file-uuid', file_name=object_key, extension='pdf')
 
@@ -290,7 +290,7 @@ class TestStoreFileTask:
     @pytest.mark.asyncio
     async def test_store_file_task_marks_completed_and_cleans_storage(self):
         kb = _make_kb()
-        kb._ingest_document = AsyncMock(return_value={'status': 'completed'})
+        kb._ingest_document = AsyncMock(return_value={'status': 'completed', 'document_id': 'file-uuid'})
         object_key = _upload_key('test.pdf')
         file_obj = SimpleNamespace(uuid='file-uuid', file_name=object_key, extension='pdf')
         task_context = Mock()
@@ -306,7 +306,9 @@ class TestStoreFileTask:
     @pytest.mark.asyncio
     async def test_store_file_task_marks_failed_and_cleans_storage(self):
         kb = _make_kb()
-        kb._ingest_document = AsyncMock(return_value={'status': 'failed', 'error_message': 'parser failed'})
+        kb._ingest_document = AsyncMock(
+            return_value={'status': 'failed', 'error_message': 'parser failed', 'document_id': 'file-uuid'}
+        )
         object_key = _upload_key('bad.pdf')
         file_obj = SimpleNamespace(uuid='file-uuid', file_name=object_key, extension='pdf')
         task_context = Mock()

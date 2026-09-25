@@ -29,6 +29,12 @@ class KnowledgeBase(Base):
     )
     creation_settings = sqlalchemy.Column(sqlalchemy.JSON, nullable=True, default=None)
     retrieval_settings = sqlalchemy.Column(sqlalchemy.JSON, nullable=True, default=None)
+    initialized = sqlalchemy.Column(
+        sqlalchemy.Boolean,
+        nullable=False,
+        default=True,
+        server_default=sqlalchemy.true(),
+    )
     # Server-selected pgvector dimension. ``None`` means no embedding has been
     # written yet; the first pgvector upsert binds it atomically.
     embedding_dimension = sqlalchemy.Column(sqlalchemy.Integer, nullable=True)
@@ -44,6 +50,7 @@ class KnowledgeBase(Base):
         'workspace_uuid',
         'legacy_vector_collection',
         'embedding_dimension',
+        'initialized',
         'emoji',
         'created_at',
         'updated_at',
@@ -80,7 +87,11 @@ class File(Base):
     file_name = sqlalchemy.Column(sqlalchemy.String)
     extension = sqlalchemy.Column(sqlalchemy.String)
     created_at = sqlalchemy.Column(sqlalchemy.DateTime, default=sqlalchemy.func.now())
-    status = sqlalchemy.Column(sqlalchemy.String, default='pending')  # pending, processing, completed, failed
+    status = sqlalchemy.Column(
+        sqlalchemy.String, default='pending'
+    )  # pending, processing, completed, failed, interrupted
+    # Server-owned engine identity; the public Host file UUID never changes.
+    engine_document_id = sqlalchemy.Column(sqlalchemy.Text, nullable=True)
 
     __table_args__ = (
         sqlalchemy.UniqueConstraint('workspace_uuid', 'uuid', name='uq_knowledge_base_files_workspace_uuid'),
