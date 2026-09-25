@@ -133,6 +133,7 @@ async def test_oss_admits_unresolvable_declaration_on_the_dedicated_profile() ->
         binding,
         artifact_package=package,
         enabled=True,
+        execution_mode=PluginExecutionMode.DEDICATED,
     )
 
 
