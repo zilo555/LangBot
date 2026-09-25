@@ -47,6 +47,7 @@ class AdmissionCode(str, Enum):
     OSS_FORCE_REQUIRED = 'CERTIFIED_PLUGIN_OSS_FORCE_REQUIRED'
     OSS_FORCED_DEDICATED = 'CERTIFIED_PLUGIN_OSS_FORCED_DEDICATED'
     OSS_CERTIFIED_DEDICATED = 'CERTIFIED_PLUGIN_OSS_CERTIFIED_DEDICATED'
+    OSS_UNTRUSTED_DEDICATED = 'CERTIFIED_PLUGIN_OSS_UNTRUSTED_DEDICATED'
 
 
 class PluginLogVisibility(str, Enum):
@@ -147,10 +148,19 @@ def verify_plugin_archive_certificate(
 ) -> VerifiedArchiveCertificate:
     """Use the SDK ZIP-comment API and retain its normalized-digest binding."""
 
-    verification = verify_archive(archive, trusted_public_key_ring(trusted_public_keys).get)
+    key_ring = trusted_public_key_ring(trusted_public_keys)
+    verification = verify_archive(archive, key_ring.get)
     envelope = verification.envelope
     runtime_profile = envelope.shared_runtime if envelope is not None else None
-    certificate_id = envelope.key_id if envelope is not None else None
+    # Record the issuer identity only when this instance actually resolved it
+    # through the configured ring. When the ring is empty (for example a
+    # self-hosted deployment that never configured
+    # ``plugin.certification.trusted_public_keys``) the declaration is
+    # unresolvable rather than rejected, so ``certificate_id`` stays unset and
+    # admission can degrade to the dedicated profile instead of blocking.
+    certificate_id = (
+        envelope.key_id if envelope is not None and envelope.key_id in key_ring else None
+    )
     state = {
         'absent': CertificateVerification.ABSENT,
         'malformed': CertificateVerification.MALFORMED,
@@ -212,6 +222,23 @@ def decide_plugin_admission(
             DEDICATED_RUNTIME,
         )
 
+    # A self-hosted deployment that has not configured the issuer key ring cannot
+    # verify a marketplace archive's declaration. Falling back to the dedicated
+    # runtime (rather than blocking the install) is not a privilege escalation:
+    # the certificate is signed by an issuer this instance does not declare
+    # trusted, so no shared-runtime privilege may be granted. Shared-runtime
+    # isolation is therefore refused while the existing OSS dedicated profile
+    # keeps the install working. Cloud remains fail-closed above.
+    if not trusted_issuer_configured(facts):
+        return PluginAdmissionDecision(
+            AdmissionDisposition.DEDICATED_ALLOWED,
+            AdmissionCode.OSS_UNTRUSTED_DEDICATED,
+            DEDICATED_RUNTIME,
+        )
+
+    # The key ring is configured, yet the declaration still failed to verify
+    # (malformed, signature mismatch, unsupported schema, ...). Surface that as
+    # an explicit decision instead of silently degrading.
     if administrator_force:
         return PluginAdmissionDecision(
             AdmissionDisposition.DEDICATED_ALLOWED,
@@ -224,6 +251,19 @@ def decide_plugin_admission(
         AdmissionCode.OSS_FORCE_REQUIRED,
         DEDICATED_RUNTIME,
     )
+
+
+def trusted_issuer_configured(facts: PluginCertificationFacts) -> bool:
+    """Report whether the deployment holds a trusted issuer key for this archive.
+
+    ``CertificateFacts`` records the verifying key only when it was resolved
+    through the configured ring, so an unresolvable declaration (``unknown_key``)
+    leaves ``certificate_id`` unset. That distinguishes "this operator never
+    configured the issuer" from "a configured trust decision rejected the
+    archive".
+    """
+
+    return bool((facts.certificate.certificate_id or '').strip())
 
 
 def decide_plugin_log_visibility(facts: PluginCertificationFacts) -> PluginLogVisibility:
