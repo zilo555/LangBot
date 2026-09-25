@@ -11,15 +11,15 @@ import pytest
 
 FIXTURES = json.loads((Path(__file__).parents[2] / 'fixtures/pipeline_migration/synthetic_legacy.json').read_text())
 TARGETS = {
-    'local-agent': ('LocalAgent', '0.1.7', None),
-    'dify-service-api': ('DifyAgent', '0.1.7', None),
-    'coze-api': ('CozeAgent', '0.1.7', None),
-    'dashscope-app-api': ('DashScopeAgent', '0.1.7', None),
-    'n8n-service-api': ('N8nAgent', '0.1.7', None),
-    'langflow-api': ('LangflowAgent', '0.1.7', None),
-    'deerflow-api': ('DeerFlowAgent', '0.1.7', None),
-    'tbox-app-api': ('TboxAgent', '0.1.5', None),
-    'weknora-api': ('WeKnoraAgent', '0.1.7', None),
+    'local-agent': ('LocalAgent', '0.1.10', None),
+    'dify-service-api': ('DifyAgent', '0.1.10', None),
+    'coze-api': ('CozeAgent', '0.1.10', None),
+    'dashscope-app-api': ('DashScopeAgent', '0.1.10', None),
+    'n8n-service-api': ('N8nAgent', '0.1.10', None),
+    'langflow-api': ('LangflowAgent', '0.1.10', None),
+    'deerflow-api': ('DeerFlowAgent', '0.1.10', None),
+    'tbox-app-api': ('TboxAgent', '0.1.8', None),
+    'weknora-api': ('WeKnoraAgent', '0.1.10', None),
 }
 
 
@@ -976,10 +976,10 @@ def test_default_local_agent_blocks_instead_of_inventing_round_translation():
     }
     original = copy.deepcopy(source)
     result = planner().plan_legacy_pipeline(source)
-    assert planner().PLANNER_VERSION == '3'
+    assert planner().PLANNER_VERSION == '4'
     assert result['state'] == 'blocked'
     assert result['target_runner_id'] == 'plugin:langbot-team/LocalAgent/default'
-    assert result['target_plugin'] == {'author': 'langbot-team', 'name': 'LocalAgent', 'version': '0.1.7'}
+    assert result['target_plugin'] == {'author': 'langbot-team', 'name': 'LocalAgent', 'version': '0.1.10'}
     assert {'code': 'missing_field', 'field': 'ai.local-agent.prompt'} in result['blockers']
     assert result['config'] is None
     assert source == original
