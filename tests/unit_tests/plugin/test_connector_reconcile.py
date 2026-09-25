@@ -8,7 +8,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from langbot_plugin.entities.io.context import InstallationBinding
+from langbot_plugin.entities.io.context import InstallationBinding, PluginExecutionMode
 from langbot_plugin.runtime.plugin.mgr import PluginInstallSource
 
 from langbot.pkg.api.http.context import ExecutionContext
@@ -45,7 +45,17 @@ def mock_archive_admission(connector: PluginRuntimeConnector, digest: str) -> No
     # is exercised by integration/plugin/test_certified_plugin_admission.py.
     connector._admit_plugin_archive = Mock(
         side_effect=lambda _package, info: (
-            {**info, '_certification': {'normalized_digest': digest}},
+            {
+                **info,
+                '_certification': {
+                    'artifact_digest': digest,
+                    'normalized_digest': digest,
+                    'verification': 'valid',
+                    'certificate_runtime_profile': 'shared-runtime-v1',
+                    'runtime_profile': 'shared-runtime-v1',
+                    'admission_code': 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE',
+                },
+            },
             SimpleNamespace(for_installation=lambda _uuid: SimpleNamespace(artifact_digest=digest)),
         )
     )
@@ -56,6 +66,7 @@ def plugin_setting(
     artifact_digest: str,
     *,
     durable: bool = True,
+    certification: dict[str, str] | None = None,
 ) -> SimpleNamespace:
     return SimpleNamespace(
         plugin_author='author',
@@ -67,7 +78,10 @@ def plugin_setting(
         priority=0,
         created_at=datetime.datetime(2026, 1, 1),
         install_source='local',
-        install_info={'_artifact_storage': 'tenant_binary_storage_v1'} if durable else {},
+        install_info={
+            **({'_artifact_storage': 'tenant_binary_storage_v1'} if durable else {}),
+            **({'_certification': certification} if certification is not None else {}),
+        },
     )
 
 
@@ -164,6 +178,43 @@ async def test_shared_reconnect_replays_two_workspaces_and_removes_missing_proje
 
 
 @pytest.mark.asyncio
+async def test_reconcile_reload_projects_certified_exact_artifact_to_shared_execution():
+    binding = execution_binding('workspace-a')
+    digest = 'a' * 64
+    setting = plugin_setting(
+        '01',
+        digest,
+        certification={
+            'artifact_digest': digest,
+            'verification': 'valid',
+            'certificate_runtime_profile': 'shared-runtime-v1',
+            'runtime_profile': 'shared-runtime-v1',
+            'admission_code': 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE',
+        },
+    )
+    connector = shared_connector([[binding]], {'workspace-a': [setting]})
+    connector.handler = runtime_handler()
+
+    await connector._prepare_connected_runtime()
+
+    desired = connector.handler.reconcile_plugin_installations.await_args.args[0][0]
+    assert desired.execution_mode is PluginExecutionMode.SHARED_CERTIFIED
+
+
+@pytest.mark.asyncio
+async def test_reconcile_reload_defaults_legacy_installation_to_dedicated_execution():
+    binding = execution_binding('workspace-a')
+    setting = plugin_setting('01', 'a' * 64)
+    connector = shared_connector([[binding]], {'workspace-a': [setting]})
+    connector.handler = runtime_handler()
+
+    await connector._prepare_connected_runtime()
+
+    desired = connector.handler.reconcile_plugin_installations.await_args.args[0][0]
+    assert desired.execution_mode is PluginExecutionMode.DEDICATED
+
+
+@pytest.mark.asyncio
 async def test_empty_projected_workspaces_do_not_retain_installation_sets():
     binding_a = execution_binding('workspace-a')
     binding_b = execution_binding('workspace-b')
@@ -223,6 +274,7 @@ async def test_fresh_shared_runtime_cache_replays_persisted_local_package():
         desired.binding,
         artifact_package=package,
         enabled=True,
+        execution_mode=PluginExecutionMode.DEDICATED,
     )
 
 
@@ -304,6 +356,7 @@ async def test_local_install_persists_verified_package_before_runtime_apply():
         binding,
         artifact_package=package,
         enabled=True,
+        execution_mode=PluginExecutionMode.DEDICATED,
     )
 
 
@@ -396,6 +449,9 @@ async def test_marketplace_upgrade_reports_multistep_progress():
         'download_current': 0,
         'download_speed': 0,
     }
+    assert connector.handler.apply_plugin_installation.await_args.kwargs['execution_mode'] is (
+        PluginExecutionMode.SHARED_CERTIFIED
+    )
 
 
 @pytest.mark.asyncio
@@ -430,7 +486,13 @@ async def test_workspace_reads_do_not_wait_for_an_installation_apply():
     connector._persist_installation_package = AsyncMock(return_value=(binding, None, False))
     connector._wait_for_installed_plugin_ready = AsyncMock()
     connector._load_workspace_desired_states = AsyncMock(
-        return_value=[PluginInstallationDesiredState(binding=binding, enabled=True)]
+        return_value=[
+            PluginInstallationDesiredState(
+                binding=binding,
+                enabled=True,
+                execution_mode=PluginExecutionMode.SHARED_CERTIFIED,
+            )
+        ]
     )
     apply_started = asyncio.Event()
     release_apply = asyncio.Event()

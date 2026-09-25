@@ -6,6 +6,8 @@ import zipfile
 
 import pytest
 
+from langbot_plugin.entities.io.context import PluginExecutionMode
+
 
 @pytest.mark.parametrize(
     ('deployment', 'certificate', 'force', 'expected_disposition', 'expected_code'),
@@ -148,6 +150,80 @@ def test_log_visibility_policy_only_scopes_valid_shared_certifications(
     visibility = decide_plugin_log_visibility(facts)
 
     assert visibility.value == expected_visibility
+
+
+@pytest.mark.parametrize(
+    ('certification', 'expected_mode'),
+    [
+        (
+            {
+                'artifact_digest': 'a' * 64,
+                'verification': 'valid',
+                'certificate_runtime_profile': 'shared-runtime-v1',
+                'runtime_profile': 'shared-runtime-v1',
+                'admission_code': 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE',
+            },
+            PluginExecutionMode.SHARED_CERTIFIED,
+        ),
+        (None, PluginExecutionMode.DEDICATED),
+        ({}, PluginExecutionMode.DEDICATED),
+        (
+            {
+                'artifact_digest': 'a' * 64,
+                'verification': 'invalid',
+                'certificate_runtime_profile': 'shared-runtime-v1',
+                'runtime_profile': 'shared-runtime-v1',
+                'admission_code': 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE',
+            },
+            PluginExecutionMode.DEDICATED,
+        ),
+        (
+            {
+                'artifact_digest': 'b' * 64,
+                'verification': 'valid',
+                'certificate_runtime_profile': 'shared-runtime-v1',
+                'runtime_profile': 'shared-runtime-v1',
+                'admission_code': 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE',
+            },
+            PluginExecutionMode.DEDICATED,
+        ),
+        (
+            {
+                'artifact_digest': 'a' * 64,
+                'verification': 'valid',
+                'certificate_runtime_profile': 'shared-runtime-v1',
+                'runtime_profile': 'dedicated',
+                'admission_code': 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE',
+            },
+            PluginExecutionMode.DEDICATED,
+        ),
+        (
+            {
+                'artifact_digest': 'a' * 64,
+                'verification': 'valid',
+                'certificate_runtime_profile': 'shared-runtime-v1',
+                'runtime_profile': 'shared-runtime-v1',
+                'admission_code': 'CERTIFIED_PLUGIN_OSS_FORCED_DEDICATED',
+            },
+            PluginExecutionMode.DEDICATED,
+        ),
+    ],
+)
+def test_persisted_certification_selects_shared_execution_only_for_exact_admitted_artifact(
+    certification: dict[str, str] | None,
+    expected_mode: PluginExecutionMode,
+) -> None:
+    from langbot.pkg.plugin.certification import execution_mode_for_persisted_installation
+
+    install_info = {} if certification is None else {'_certification': certification}
+
+    assert (
+        execution_mode_for_persisted_installation(
+            artifact_digest='a' * 64,
+            install_info=install_info,
+        )
+        is expected_mode
+    )
 
 
 def _archive_bytes(manifest: dict[str, object]) -> bytes:

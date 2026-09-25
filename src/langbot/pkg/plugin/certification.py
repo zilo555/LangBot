@@ -14,6 +14,7 @@ from enum import Enum
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from langbot_plugin.certification import normalized_zip_digest, verify_archive
+from langbot_plugin.entities.io.context import PluginExecutionMode
 
 
 SHARED_RUNTIME_V1 = 'shared-runtime-v1'
@@ -232,3 +233,27 @@ def decide_plugin_log_visibility(facts: PluginCertificationFacts) -> PluginLogVi
     if facts.certificate.is_valid_shared_runtime:
         return PluginLogVisibility.TENANT_SCOPED
     return PluginLogVisibility.DETAILED_PROCESS
+
+
+def execution_mode_for_persisted_installation(
+    *,
+    artifact_digest: str,
+    install_info: object,
+) -> PluginExecutionMode:
+    """Derive placement only from persisted facts bound to the exact artifact."""
+
+    if not isinstance(install_info, Mapping):
+        return PluginExecutionMode.DEDICATED
+    certification = install_info.get('_certification')
+    if not isinstance(certification, Mapping):
+        return PluginExecutionMode.DEDICATED
+    shared_facts = {
+        'artifact_digest': artifact_digest,
+        'verification': CertificateVerification.VALID.value,
+        'certificate_runtime_profile': SHARED_RUNTIME_V1,
+        'runtime_profile': SHARED_RUNTIME_V1,
+        'admission_code': AdmissionCode.SHARED_ELIGIBLE.value,
+    }
+    if all(certification.get(key) == value for key, value in shared_facts.items()):
+        return PluginExecutionMode.SHARED_CERTIFIED
+    return PluginExecutionMode.DEDICATED
