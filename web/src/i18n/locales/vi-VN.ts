@@ -1,5 +1,4 @@
 import pipelineMigration from './pipeline-migration/vi-VN';
-
 const viVN = {
   assistant: {
     modelHint: 'Đổi mô hình trợ lý cho tin nhắn tiếp theo',
@@ -97,81 +96,9 @@ const viVN = {
       },
     },
   },
-
   guidedTour: {
     eventDebugDescription:
       'Chọn sự kiện được hỗ trợ, nhập dữ liệu thử rồi xem đầu ra và kết quả công cụ. Hành động nền tảng được mô phỏng; mô hình và công cụ khác chạy theo cấu hình.',
-
-    bot: {
-      connection: {
-        title: 'Chọn phương thức kết nối',
-        description:
-          'Chọn phương thức được bộ chuyển đổi hỗ trợ. Các tham số tương ứng sẽ tự động cập nhật.',
-      },
-      basic: {
-        title: 'Đặt tên bot',
-        description:
-          'Dùng tên dễ nhận biết để tìm kết nối này trong định tuyến và nhật ký.',
-      },
-      adapter: {
-        title: 'Chọn bộ chuyển đổi nền tảng',
-        description:
-          'Chọn bộ chuyển đổi cho bot. Phương thức kết nối và tham số nền tảng được cấu hình sau khi tạo.',
-      },
-      parameters: {
-        title: 'Cấu hình nền tảng',
-        description:
-          'Nhập thông tin xác thực và tham số. Xem tài liệu bộ chuyển đổi để thiết lập phía nền tảng.',
-        action: 'Mở tài liệu bộ chuyển đổi',
-      },
-      routing: {
-        title: 'Định tuyến sự kiện đến',
-        description: 'Chọn bộ xử lý cho từng sự kiện bot nhận được.',
-      },
-      save: {
-        title: 'Lưu cấu hình bot',
-        description:
-          'Kiểm tra tham số kết nối và định tuyến sự kiện rồi lưu. Sau đó bật bot khi sẵn sàng.',
-      },
-      submit: {
-        title: 'Tạo bot',
-        description:
-          'Tạo bot ở trạng thái tắt rồi tiếp tục cấu hình kết nối và tham số trên trang bot.',
-      },
-    },
-    knowledge: {
-      basic: {
-        title: 'Mô tả cơ sở tri thức',
-        description:
-          'Đặt tên dễ nhận biết và mô tả tùy chọn trước khi chọn bộ máy lưu trữ và truy xuất.',
-      },
-      engine: {
-        title: 'Kiểm tra bộ máy tri thức',
-        description:
-          'Xác nhận bộ máy của cơ sở tri thức này. Tham số và thiết lập truy xuất nằm bên dưới.',
-        action: 'Duyệt chợ bộ máy tri thức',
-      },
-      parameters: {
-        title: 'Cấu hình tham số bộ máy',
-        description:
-          'Điền thiết lập lưu trữ, mô hình, thông tin xác thực hoặc dịch vụ bên ngoài mà bộ máy yêu cầu.',
-      },
-      retrieval: {
-        title: 'Cấu hình truy xuất',
-        description:
-          'Đặt cách bộ máy tìm và trả về nội dung liên quan cho bộ xử lý.',
-      },
-      save: {
-        title: 'Lưu cấu hình cơ sở tri thức',
-        description: 'Kiểm tra tham số bộ máy và thiết lập truy xuất rồi lưu.',
-      },
-      submit: {
-        title: 'Tạo cơ sở tri thức',
-        description:
-          'Tạo cơ sở tri thức rồi thêm tài liệu hoặc kết nối nguồn mà bộ máy hỗ trợ.',
-      },
-    },
-
     pipeline: {
       trigger: {
         title: 'Chọn tin nhắn cần trả lời',
@@ -243,12 +170,49 @@ const viVN = {
           'Sau khi lưu, thêm cấu hình vào mục bộ xử lý plugin trên trang bot. Các sự kiện plugin khai báo được nhận tự động, không cần định tuyến riêng từng sự kiện.',
       },
     },
+    previous: 'Bước trước',
     label: 'Hướng dẫn sử dụng',
     progress: 'Bước {{current}} / {{total}}',
-    previous: 'Bước trước',
     next: 'Tiếp theo',
     finish: 'Hoàn tất hướng dẫn',
     skip: 'Bỏ qua',
+    bot: {
+      connection: {
+        title: 'Chọn phương thức kết nối',
+        description:
+          'Chọn phương thức được bộ chuyển đổi hỗ trợ. Các tham số tương ứng sẽ tự động cập nhật.',
+      },
+      basic: {
+        title: 'Đặt tên bot',
+        description:
+          'Dùng tên dễ nhận biết để tìm kết nối này trong định tuyến và nhật ký.',
+      },
+      adapter: {
+        title: 'Chọn bộ chuyển đổi nền tảng',
+        description:
+          'Chọn bộ chuyển đổi cho bot. Phương thức kết nối và tham số nền tảng được cấu hình sau khi tạo.',
+      },
+      parameters: {
+        title: 'Cấu hình nền tảng',
+        description:
+          'Nhập thông tin xác thực và tham số. Xem tài liệu bộ chuyển đổi để thiết lập phía nền tảng.',
+        action: 'Mở tài liệu bộ chuyển đổi',
+      },
+      routing: {
+        title: 'Định tuyến sự kiện đến',
+        description: 'Chọn bộ xử lý cho từng sự kiện bot nhận được.',
+      },
+      save: {
+        title: 'Lưu cấu hình bot',
+        description:
+          'Kiểm tra tham số kết nối và định tuyến sự kiện rồi lưu. Sau đó bật bot khi sẵn sàng.',
+      },
+      submit: {
+        title: 'Tạo bot',
+        description:
+          'Tạo bot ở trạng thái tắt rồi tiếp tục cấu hình kết nối và tham số trên trang bot.',
+      },
+    },
     processorCreate: {
       type: {
         title: 'Chọn loại bộ xử lý',
@@ -287,6 +251,38 @@ const viVN = {
           'Mở thẻ Sự kiện và công cụ để chọn sự kiện Agent nhận và các công cụ nền tảng hoặc LangBot được phép sử dụng.',
       },
     },
+    knowledge: {
+      basic: {
+        title: 'Mô tả cơ sở tri thức',
+        description:
+          'Đặt tên dễ nhận biết và mô tả tùy chọn trước khi chọn bộ máy lưu trữ và truy xuất.',
+      },
+      engine: {
+        title: 'Kiểm tra bộ máy tri thức',
+        description:
+          'Xác nhận bộ máy của cơ sở tri thức này. Tham số và thiết lập truy xuất nằm bên dưới.',
+        action: 'Duyệt chợ bộ máy tri thức',
+      },
+      parameters: {
+        title: 'Cấu hình tham số bộ máy',
+        description:
+          'Điền thiết lập lưu trữ, mô hình, thông tin xác thực hoặc dịch vụ bên ngoài mà bộ máy yêu cầu.',
+      },
+      retrieval: {
+        title: 'Cấu hình truy xuất',
+        description:
+          'Đặt cách bộ máy tìm và trả về nội dung liên quan cho bộ xử lý.',
+      },
+      save: {
+        title: 'Lưu cấu hình cơ sở tri thức',
+        description: 'Kiểm tra tham số bộ máy và thiết lập truy xuất rồi lưu.',
+      },
+      submit: {
+        title: 'Tạo cơ sở tri thức',
+        description:
+          'Tạo cơ sở tri thức rồi thêm tài liệu hoặc kết nối nguồn mà bộ máy hỗ trợ.',
+      },
+    },
   },
   pipelineMigration,
   sidebar: {
@@ -305,15 +301,9 @@ const viVN = {
     editionCloud: 'Cloud',
   },
   common: {
-    loadFailed: 'Không tải được. Vui lòng thử lại.',
-    showSecret: 'Hiện thông tin bí mật',
-    hideSecret: 'Ẩn thông tin bí mật',
-    editBasicInfo: 'Sửa thông tin cơ bản',
-    editBasicInfoDescription: 'Đổi tên, mô tả và biểu tượng.',
-    editBasicInfoDescriptionNoIcon: 'Đổi tên và mô tả.',
-    management: 'Quản lý',
-
     customValue: 'Tùy chỉnh',
+    loadFailed: 'Không tải được. Vui lòng thử lại.',
+    search: 'Tìm kiếm',
     login: 'Đăng nhập',
     logout: 'Đăng xuất',
     accountOptions: 'Cài đặt',
@@ -329,6 +319,8 @@ const viVN = {
     loginLoadErrorDesc:
       'Không thể kết nối đến máy chủ LangBot. Vui lòng đảm bảo dịch vụ đang chạy và thử lại.',
     retry: 'Thử lại',
+    showSecret: 'Hiện thông tin bí mật',
+    hideSecret: 'Ẩn thông tin bí mật',
     enterEmail: 'Nhập địa chỉ email',
     enterPassword: 'Nhập mật khẩu',
     invalidEmail: 'Vui lòng nhập địa chỉ email hợp lệ',
@@ -340,6 +332,10 @@ const viVN = {
     joinDiscord: 'Tham gia Discord',
     create: 'Tạo',
     edit: 'Chỉnh sửa',
+    editBasicInfo: 'Sửa thông tin cơ bản',
+    editBasicInfoDescription: 'Đổi tên, mô tả và biểu tượng.',
+    editBasicInfoDescriptionNoIcon: 'Đổi tên và mô tả.',
+    management: 'Quản lý',
     delete: 'Xóa',
     add: 'Thêm',
     select: 'Chọn',
@@ -485,12 +481,11 @@ const viVN = {
     actions: 'Hành động',
     apiKeyCreatedMessage:
       'Vui lòng sao chép khóa API này, nếu nút không hoạt động, vui lòng sao chép thủ công.',
+    apiKeyStoredSecurely: 'Secret shown only when created',
     none: 'Không có',
     more: 'Thêm ({{count}})',
     less: 'Thu gọn',
     noItems: 'Không có mục nào',
-
-    apiKeyStoredSecurely: 'Secret shown only when created',
   },
   notFound: {
     title: 'Không tìm thấy trang',
@@ -647,6 +642,10 @@ const viVN = {
     loginWithSpace: 'Đăng nhập bằng tài khoản LangBot',
     loginToUseModels:
       'Đăng nhập bằng tài khoản LangBot để sử dụng mô hình đám mây',
+    ownerMustBindSpace:
+      'The Workspace owner must connect a LangBot Account for LangBot Models.',
+    usesOwnerSpaceBilling:
+      "Uses the Workspace owner's LangBot Account billing and credits.",
     noModels: 'Chưa cấu hình mô hình nào',
     availability: {
       available: 'Khả dụng ở lần kiểm tra gần nhất',
@@ -699,13 +698,44 @@ const viVN = {
       fallbackList: 'Mô hình dự phòng',
       addFallback: 'Thêm mô hình dự phòng',
     },
-
-    ownerMustBindSpace:
-      'The Workspace owner must connect a LangBot Account for LangBot Models.',
-    usesOwnerSpaceBilling:
-      "Uses the Workspace owner's LangBot Account billing and credits.",
   },
   bots: {
+    pluginSubscriptions: {
+      incompleteEvents:
+        'Bot hiện chỉ hỗ trợ một số sự kiện mà bộ xử lý theo dõi ({{events}}). Bộ xử lý có thể không hoạt động đầy đủ trong mọi trường hợp.',
+      description:
+        'Tự động nhận sự kiện do plugin khai báo, hoạt động độc lập với các tuyến ở trên.',
+      empty: 'Chưa liên kết bộ xử lý plugin.',
+      add: 'Thêm bộ xử lý plugin',
+      existing: 'Chọn cấu hình',
+      new: 'Cấu hình mới',
+      noExisting: 'Chưa có cấu hình khả dụng. Hãy tạo mới.',
+      shared:
+        'Các bot dùng chung cấu hình sẽ chia sẻ thiết lập và trạng thái chạy.',
+      saveHint: 'Lưu bot để kích hoạt liên kết.',
+      createAndBind: 'Tạo và liên kết',
+      created: 'Đã tạo cấu hình. Lưu bot để kích hoạt liên kết.',
+      enable: 'Bật {{name}}',
+      remove: 'Hủy liên kết {{name}}',
+      configure: 'Cấu hình',
+      logs: 'Xem nhật ký',
+    },
+    applyFailed: 'Đã lưu cấu hình nhưng không thể áp dụng',
+    internalErrorHint:
+      'Đã xảy ra lỗi nội bộ. Hãy kiểm tra nhật ký máy chủ bằng mã lỗi.',
+    errorReference: 'Mã lỗi: {{id}}',
+    title: 'Bot',
+    description:
+      'Tạo và quản lý Bot, là điểm kết nối của LangBot với các nền tảng khác nhau',
+    createBot: 'Tạo Bot',
+    selectFromSidebar: 'Chọn một Bot từ thanh bên',
+    editBot: 'Chỉnh sửa Bot',
+    getBotListError: 'Lấy danh sách Bot thất bại: ',
+    botName: 'Tên Bot',
+    botDescription: 'Mô tả Bot',
+    botNameRequired: 'Tên Bot không được để trống',
+    botDescriptionRequired: 'Mô tả Bot không được để trống',
+    adapterRequired: 'Adapter không được để trống',
     connectionMode: 'Phương thức kết nối',
     connectionModeDescription:
       'Chọn phương thức kết nối được bộ chuyển đổi hỗ trợ.',
@@ -717,6 +747,44 @@ const viVN = {
       'LangBot duy trì kết nối socket hoặc luồng đi ra.',
     noAdaptersForConnectionMode:
       'Không có bộ chuyển đổi đã cài đặt nào hỗ trợ phương thức này.',
+    defaultDescription: 'Một Bot',
+    getBotConfigError: 'Lấy cấu hình Bot thất bại: ',
+    saveSuccess: 'Lưu thành công',
+    saveError: 'Lưu thất bại: ',
+    createSuccess: 'Tạo thành công. Vui lòng cấu hình định tuyến sự kiện',
+    createError: 'Tạo thất bại: ',
+    deleteSuccess: 'Xóa thành công',
+    deleteError: 'Xóa thất bại: ',
+    deleteConfirmation: 'Bạn có chắc chắn muốn xóa Bot này không?',
+    platformAdapter: 'Nền tảng/Lựa chọn Adapter',
+    selectAdapter: 'Chọn Adapter',
+    legacyAdapters: 'Adapter cũ',
+    legacyAdapterBadge: 'Cũ',
+    legacyAdaptersHint:
+      'Các adapter này đã có phiên bản hướng sự kiện mới hơn.\nChúng chỉ được giữ lại để tương thích với cấu hình hiện có và không được khuyến nghị cho Bot mới.',
+    adapterConfig: 'Cấu hình Adapter',
+    viewAdapterDocs: 'Xem tài liệu',
+    bindPipeline: 'Liên kết Pipeline',
+    selectPipeline: 'Chọn Pipeline',
+    selectBot: 'Chọn Bot',
+    botLogTitle: 'Nhật ký Bot',
+    enableAutoRefresh: 'Bật tự động làm mới',
+    session: 'Phiên',
+    yesterday: 'Hôm qua',
+    earlier: 'Trước đó',
+    dateFormat: '{{day}}/{{month}}',
+    setBotEnableError: 'Thiết lập trạng thái bật Bot thất bại',
+    log: 'Nhật ký',
+    configuration: 'Cấu hình',
+    logs: 'Nhật ký',
+    basicInfo: 'Thông tin cơ bản',
+    basicInfoDescription: 'Đặt tên và mô tả Bot',
+    routingConnection: 'Định tuyến & Kết nối',
+    routingConnectionDescription:
+      'Liên kết Pipeline xử lý tin nhắn cho Bot này',
+    eventRouting: 'Định tuyến sự kiện',
+    eventRoutingDescription:
+      'Chọn bộ xử lý cho từng sự kiện của Bot. Chỉnh sửa logic trong cấu hình Agent hoặc Pipeline tương ứng. Pipeline chỉ hỗ trợ sự kiện tin nhắn.',
     eventBindings: 'Định tuyến sự kiện',
     addEventBinding: 'Thêm tuyến',
     addBehavior: 'Thêm hành vi',
@@ -778,6 +846,7 @@ const viVN = {
     routeFallbackIgnored:
       'Sự kiện không khớp tuyến nào sẽ bị bỏ qua. Chỉ thêm tuyến nhận tất cả khi mọi sự kiện cần kết quả rõ ràng.',
     testRoute: 'Kiểm tra tuyến',
+    adapterEventDebugAction: 'Kiểm tra lắng nghe',
     adapterEventDebugTitle: 'Gỡ lỗi sự kiện nền tảng',
     adapterEventDebugDescription:
       'Tạo sự kiện trên {{platform}}. Sự kiện sẽ xuất hiện khi bộ chuyển đổi nhận được.',
@@ -856,6 +925,25 @@ const viVN = {
     dryRunDiagnosticMatched: '{{route}} khớp. {{reason}}',
     dryRunDiagnosticSkipped: 'Đã bỏ qua {{route}}. {{reason}}',
     eventCustom: 'Sự kiện tùy chỉnh',
+    eventWildcard: 'Tất cả sự kiện',
+    eventNamespaceWildcard: '{{namespace}}.*',
+    eventNames: {
+      message_received: 'Nhận tin nhắn',
+      message_edited: 'Tin nhắn được chỉnh sửa',
+      message_deleted: 'Tin nhắn bị xóa',
+      message_reaction: 'Cảm xúc cho tin nhắn',
+      feedback_received: 'Nhận phản hồi',
+      friend_request_received: 'Nhận lời mời kết bạn',
+      friend_added: 'Đã thêm bạn',
+      group_member_joined: 'Thành viên tham gia nhóm',
+      group_member_left: 'Thành viên rời nhóm',
+      group_member_banned: 'Thành viên bị cấm tham gia nhóm',
+      bot_invited_to_group: 'Bot được mời vào nhóm',
+      bot_removed_from_group: 'Bot bị xóa khỏi nhóm',
+      bot_muted: 'Bot bị cấm gửi tin nhắn',
+      bot_unmuted: 'Bot được phép gửi tin nhắn trở lại',
+      platform_specific: 'Sự kiện riêng của nền tảng',
+    },
     eventDescriptions: {
       all: 'Khớp mọi sự kiện bộ chuyển đổi này nhận được.',
       namespace: 'Khớp mọi sự kiện {{group}}.',
@@ -900,102 +988,6 @@ const viVN = {
     operator_not_contains: 'không chứa',
     operator_starts_with: 'bắt đầu bằng',
     operator_regex: 'biểu thức chính quy',
-
-    eventWildcard: 'Tất cả sự kiện',
-    eventNamespaceWildcard: '{{namespace}}.*',
-    eventNames: {
-      message_received: 'Nhận tin nhắn',
-      message_edited: 'Tin nhắn được chỉnh sửa',
-      message_deleted: 'Tin nhắn bị xóa',
-      message_reaction: 'Cảm xúc cho tin nhắn',
-      feedback_received: 'Nhận phản hồi',
-      friend_request_received: 'Nhận lời mời kết bạn',
-      friend_added: 'Đã thêm bạn',
-      group_member_joined: 'Thành viên tham gia nhóm',
-      group_member_left: 'Thành viên rời nhóm',
-      group_member_banned: 'Thành viên bị cấm tham gia nhóm',
-      bot_invited_to_group: 'Bot được mời vào nhóm',
-      bot_removed_from_group: 'Bot bị xóa khỏi nhóm',
-      bot_muted: 'Bot bị cấm gửi tin nhắn',
-      bot_unmuted: 'Bot được phép gửi tin nhắn trở lại',
-      platform_specific: 'Sự kiện riêng của nền tảng',
-    },
-    pluginSubscriptions: {
-      incompleteEvents:
-        'Bot hiện chỉ hỗ trợ một số sự kiện mà bộ xử lý theo dõi ({{events}}). Bộ xử lý có thể không hoạt động đầy đủ trong mọi trường hợp.',
-      description:
-        'Tự động nhận sự kiện do plugin khai báo, hoạt động độc lập với các tuyến ở trên.',
-      empty: 'Chưa liên kết bộ xử lý plugin.',
-      add: 'Thêm bộ xử lý plugin',
-      existing: 'Chọn cấu hình',
-      new: 'Cấu hình mới',
-      noExisting: 'Chưa có cấu hình khả dụng. Hãy tạo mới.',
-      shared:
-        'Các bot dùng chung cấu hình sẽ chia sẻ thiết lập và trạng thái chạy.',
-      saveHint: 'Lưu bot để kích hoạt liên kết.',
-      createAndBind: 'Tạo và liên kết',
-      created: 'Đã tạo cấu hình. Lưu bot để kích hoạt liên kết.',
-      enable: 'Bật {{name}}',
-      remove: 'Hủy liên kết {{name}}',
-      configure: 'Cấu hình',
-      logs: 'Xem nhật ký',
-    },
-    applyFailed: 'Đã lưu cấu hình nhưng không thể áp dụng',
-    internalErrorHint:
-      'Đã xảy ra lỗi nội bộ. Hãy kiểm tra nhật ký máy chủ bằng mã lỗi.',
-    errorReference: 'Mã lỗi: {{id}}',
-
-    adapterEventDebugAction: 'Kiểm tra lắng nghe',
-    title: 'Bot',
-    description:
-      'Tạo và quản lý Bot, là điểm kết nối của LangBot với các nền tảng khác nhau',
-    createBot: 'Tạo Bot',
-    selectFromSidebar: 'Chọn một Bot từ thanh bên',
-    editBot: 'Chỉnh sửa Bot',
-    getBotListError: 'Lấy danh sách Bot thất bại: ',
-    botName: 'Tên Bot',
-    botDescription: 'Mô tả Bot',
-    botNameRequired: 'Tên Bot không được để trống',
-    botDescriptionRequired: 'Mô tả Bot không được để trống',
-    adapterRequired: 'Adapter không được để trống',
-    defaultDescription: 'Một Bot',
-    getBotConfigError: 'Lấy cấu hình Bot thất bại: ',
-    saveSuccess: 'Lưu thành công',
-    saveError: 'Lưu thất bại: ',
-    createSuccess: 'Tạo thành công. Vui lòng cấu hình định tuyến sự kiện',
-    createError: 'Tạo thất bại: ',
-    deleteSuccess: 'Xóa thành công',
-    deleteError: 'Xóa thất bại: ',
-    deleteConfirmation: 'Bạn có chắc chắn muốn xóa Bot này không?',
-    platformAdapter: 'Nền tảng/Lựa chọn Adapter',
-    selectAdapter: 'Chọn Adapter',
-    legacyAdapters: 'Adapter cũ',
-    legacyAdapterBadge: 'Cũ',
-    legacyAdaptersHint:
-      'Các adapter này đã có phiên bản hướng sự kiện mới hơn.\nChúng chỉ được giữ lại để tương thích với cấu hình hiện có và không được khuyến nghị cho Bot mới.',
-    adapterConfig: 'Cấu hình Adapter',
-    viewAdapterDocs: 'Xem tài liệu',
-    bindPipeline: 'Liên kết Pipeline',
-    selectPipeline: 'Chọn Pipeline',
-    selectBot: 'Chọn Bot',
-    botLogTitle: 'Nhật ký Bot',
-    enableAutoRefresh: 'Bật tự động làm mới',
-    session: 'Phiên',
-    yesterday: 'Hôm qua',
-    earlier: 'Trước đó',
-    dateFormat: '{{day}}/{{month}}',
-    setBotEnableError: 'Thiết lập trạng thái bật Bot thất bại',
-    log: 'Nhật ký',
-    configuration: 'Cấu hình',
-    logs: 'Nhật ký',
-    basicInfo: 'Thông tin cơ bản',
-    basicInfoDescription: 'Đặt tên và mô tả Bot',
-    routingConnection: 'Định tuyến & Kết nối',
-    routingConnectionDescription:
-      'Liên kết Pipeline xử lý tin nhắn cho Bot này',
-    eventRouting: 'Định tuyến sự kiện',
-    eventRoutingDescription:
-      'Chọn bộ xử lý cho từng sự kiện của Bot. Chỉnh sửa logic trong cấu hình Agent hoặc Pipeline tương ứng. Pipeline chỉ hỗ trợ sự kiện tin nhắn.',
     routingRules: 'Quy tắc định tuyến có điều kiện',
     routingRulesDescription:
       'Các quy tắc được đánh giá theo thứ tự; kết quả khớp đầu tiên sẽ định tuyến đến pipeline tương ứng. Nếu không khớp, pipeline mặc định ở trên sẽ được sử dụng.',
@@ -1080,6 +1072,10 @@ const viVN = {
       discarded: 'Đã loại bỏ',
       userMessage: 'Người dùng',
       botMessage: 'Trợ lý',
+      totalSessions: '{{count}} phiên',
+      userSearch: 'ID hoặc tên người dùng',
+      startDate: 'Ngày bắt đầu',
+      endDate: 'Ngày kết thúc',
     },
     admins: {
       title: 'Admins',
@@ -1097,12 +1093,115 @@ const viVN = {
       deleteError: 'Failed to remove admin: ',
       noAdmins: 'No admins configured',
       setAdminTitle: 'Set as admin',
-      removeAdminTitle: 'Remove admin',
       adminBadge: 'Admin',
       configureAdmins: 'Manage Admins',
+      removeAdminTitle: 'Remove admin',
     },
   },
   agents: {
+    monitoring: {
+      description:
+        'Xem sự kiện kích hoạt, đầu ra mô hình và quá trình gọi công cụ của mỗi tác vụ.',
+      empty: 'Chưa có lượt chạy. Kích hoạt sự kiện hoặc chạy thử gỡ lỗi.',
+      input: 'Đầu vào kích hoạt',
+      eventData: 'Dữ liệu sự kiện',
+      execution: 'Quá trình thực thi',
+      rawEvents: 'Sự kiện gốc',
+      inputUnavailable: 'Đầu vào của lượt chạy này chưa được ghi lại.',
+    },
+    eventProcessor: {
+      configurations: 'Cấu hình bộ xử lý plugin',
+      configTab: 'Cấu hình',
+      logsTab: 'Nhật ký',
+      noSettings: 'Bộ xử lý plugin này không cần cấu hình.',
+      createPageTitle: 'Tạo bộ xử lý sự kiện',
+      processWithPlugin: 'Xử lý bằng mã plugin',
+      pluginSettings: 'Cài đặt plugin',
+      pluginSettingsDescription: 'Tham số do plugin này khai báo.',
+      selectToDebug: 'Chọn plugin ở trên để bắt đầu gỡ lỗi.',
+      debugOutput: 'Đầu ra bộ xử lý',
+      debugDescription:
+        'Sự kiện đầu vào, nhật ký plugin và kết quả hành động của lần kiểm thử này.',
+      debugNotice:
+        'Plugin xử lý sự kiện kiểm thử. Hành động nền tảng dùng Mock và không gửi tin nhắn thật; các công cụ khác chạy theo cấu hình.',
+      create: 'Tạo bộ xử lý plugin',
+      type: 'Bộ xử lý plugin',
+      description: 'Xử lý sự kiện bằng mã và logic do plugin cung cấp.',
+      component: 'Bộ xử lý plugin',
+      selectComponent: 'Chọn bộ xử lý plugin',
+      unavailable: 'Thành phần không khả dụng',
+      noComponents: 'Chưa cài plugin cung cấp bộ xử lý.',
+      installPlugin: 'Cài plugin',
+      loadError: 'Không thể tải chi tiết.',
+      refresh: 'Làm mới',
+      runs: 'Lịch sử chạy',
+      noRuns: 'Chưa có lần chạy nào. Liên kết bộ xử lý với bot để bắt đầu.',
+      bindBot: 'Liên kết với bot',
+      trace: 'Nhật ký và luồng tin nhắn',
+      selectRun: 'Chọn một lần chạy để xem chi tiết.',
+      input: 'Sự kiện đầu vào',
+      destination: 'Đích gửi',
+      loadMore: 'Tải thêm',
+      activation: 'Cài plugin, tạo cấu hình bộ xử lý rồi liên kết bot.',
+      status_timeout: 'Hết thời gian',
+      status_pending: 'Đang chờ',
+      status_running: 'Đang chạy',
+      status_completed: 'Hoàn tất',
+      status_failed: 'Thất bại',
+      status_cancelled: 'Đã hủy',
+      status_queued: 'Trong hàng đợi',
+      trace_run_completed: 'Chạy hoàn tất',
+      trace_run_failed: 'Chạy thất bại',
+      trace_tool_call_started: 'Bắt đầu hành động',
+      trace_tool_call_completed: 'Kết quả hành động',
+    },
+    debugData: {
+      chatId: 'ID cuộc trò chuyện',
+      feedbackType: 'Loại phản hồi (1: thích, 2: không thích, 3: hủy)',
+      title: 'Dữ liệu sự kiện',
+      form: 'Trường thường dùng',
+      json: 'JSON đầy đủ',
+      groupId: 'ID nhóm',
+      memberId: 'ID thành viên',
+      memberName: 'Tên thành viên',
+      userId: 'ID người dùng',
+      userName: 'Tên người dùng',
+      requesterId: 'ID người yêu cầu',
+      requesterName: 'Tên người yêu cầu',
+      messageId: 'ID tin nhắn',
+      duration: 'Thời lượng (giây)',
+      message: 'Nội dung tin nhắn',
+      newMessage: 'Nội dung đã sửa',
+      verificationMessage: 'Tin nhắn xác minh',
+      reaction: 'Biểu cảm',
+      groupName: 'Tên nhóm',
+      feedback: 'Phản hồi',
+      rating: 'Đánh giá',
+      eventName: 'Tên sự kiện',
+      privateChat: 'Để trống cho trò chuyện riêng',
+      sampleUser: 'Người dùng thử',
+      sampleMessage: 'Xin chào',
+      sampleFeedback: 'Rất hữu ích',
+      invalidField: 'Kiểm tra {{field}}',
+    },
+    title: 'Bộ xử lý',
+    description:
+      'Tạo bộ xử lý có thể tái sử dụng và dùng chúng trong định tuyến sự kiện của bot',
+    create: 'Tạo bộ xử lý',
+    editAgent: 'Chỉnh sửa Agent',
+    selectFromSidebar: 'Chọn bộ xử lý từ thanh bên',
+    agentType: 'Agent',
+    agentTypeDescription:
+      'Dùng runner để xử lý tin nhắn, thành viên nhóm, bạn bè, phản hồi và các sự kiện nền tảng khác.',
+    pipelineType: 'Quy trình',
+    kindBadgeAgent: 'Agent',
+    kindBadgePipeline: 'Pipeline',
+    groupByKind: 'Nhóm theo loại',
+    groupByKindShort: 'Nhóm',
+    pipelineTypeDescription:
+      'Chạy theo quy trình cố định: nhận tin nhắn, gọi AI và trả lời người dùng, với cơ sở tri thức và plugin có thể cấu hình. Chỉ xử lý sự kiện tin nhắn, phù hợp với tác vụ có các bước rõ ràng và cần kiểm soát quá trình xử lý.',
+    allEvents: 'Hỗ trợ tất cả sự kiện',
+    messageEventsOnly: 'Chỉ sự kiện tin nhắn',
     chooseType: 'Chọn cách hoạt động',
     chooseTypeDescription:
       'Chọn loại bộ xử lý trước. Bạn có thể cấu hình thêm sau khi tạo.',
@@ -1128,8 +1227,15 @@ const viVN = {
     diagramAI: 'AI',
     diagramPostprocess: 'Tinh chỉnh',
     diagramOutput: 'Đầu ra',
+    basicInfo: 'Thông tin cơ bản',
+    basicInfoDescription: 'Đặt tên, biểu tượng và mô tả',
+    runnerSettings: 'Runner',
+    advanced: 'Nâng cao',
     eventsAndTools: 'Sự kiện và công cụ',
     eventsAndToolsDescription: 'Đặt sự kiện kích hoạt và công cụ có thể dùng.',
+    bindableEvents: 'Phạm vi sự kiện có thể gắn',
+    bindableEventsDescription:
+      'Giới hạn những tuyến sự kiện bot có thể chọn Agent này. Mặc định phù hợp với hầu hết trường hợp.',
     configuredEvents: 'Sự kiện đã thêm',
     configuredEventsCount: 'Tổng {{count}}',
     addEvent: 'Thêm sự kiện',
@@ -1177,6 +1283,26 @@ const viVN = {
       write: 'Hành động',
       dangerous: 'Nhạy cảm',
     },
+    supportedEvents: 'Phạm vi sự kiện',
+    supportedEventsDescription:
+      'Chọn tất cả sự kiện, một nhóm hoặc từng sự kiện. Tuyến bot chỉ hiển thị Agent này cho các sự kiện phù hợp.',
+    searchEvents: 'Tìm sự kiện…',
+    noEventsFound: 'Không tìm thấy sự kiện phù hợp',
+    nameRequired: 'Tên không được để trống',
+    createSuccess: 'Tạo thành công',
+    createError: 'Tạo thất bại: ',
+    loadError: 'Tải thất bại: ',
+    saveSuccess: 'Lưu thành công',
+    saveError: 'Lưu thất bại: ',
+    deleteSuccess: 'Xóa thành công',
+    deleteError: 'Xóa thất bại: ',
+    deleteConfirmation: 'Bạn có chắc muốn xóa Agent này không?',
+    dangerZone: 'Vùng nguy hiểm',
+    dangerZoneDescription: 'Hành động không thể hoàn tác và mang tính phá hủy',
+    deleteAgentAction: 'Xóa Agent này',
+    deleteAgentHint:
+      'Sau khi xóa, các sự kiện đã gắn vào nó sẽ không thể thực thi được nữa.',
+    noRunnerMetadata: 'Hiện chưa có siêu dữ liệu Runner khả dụng.',
     runnerStatusLoading: 'Đang kiểm tra trạng thái trình chạy',
     runnerStatusCheckFailed: 'Không kiểm tra được trạng thái trình chạy',
     runnerStatusCheckFailedDescription:
@@ -1270,140 +1396,6 @@ const viVN = {
     debugReviewRunnerConfig: 'Kiểm tra cấu hình trình chạy',
     debugErrorDetails: 'Xem chi tiết lỗi',
     debugRunFailed: 'Chạy gỡ lỗi Agent thất bại',
-
-    monitoring: {
-      description:
-        'Xem sự kiện kích hoạt, đầu ra mô hình và quá trình gọi công cụ của mỗi tác vụ.',
-      empty: 'Chưa có lượt chạy. Kích hoạt sự kiện hoặc chạy thử gỡ lỗi.',
-      input: 'Đầu vào kích hoạt',
-      eventData: 'Dữ liệu sự kiện',
-      execution: 'Quá trình thực thi',
-      rawEvents: 'Sự kiện gốc',
-      inputUnavailable: 'Đầu vào của lượt chạy này chưa được ghi lại.',
-    },
-    eventProcessor: {
-      configurations: 'Cấu hình bộ xử lý plugin',
-      configTab: 'Cấu hình',
-      logsTab: 'Nhật ký',
-      noSettings: 'Bộ xử lý plugin này không cần cấu hình.',
-      createPageTitle: 'Tạo bộ xử lý sự kiện',
-      processWithPlugin: 'Xử lý bằng mã plugin',
-      pluginSettings: 'Cài đặt plugin',
-      pluginSettingsDescription: 'Tham số do plugin này khai báo.',
-      selectToDebug: 'Chọn plugin ở trên để bắt đầu gỡ lỗi.',
-
-      debugOutput: 'Đầu ra bộ xử lý',
-      debugDescription:
-        'Sự kiện đầu vào, nhật ký plugin và kết quả hành động của lần kiểm thử này.',
-      debugNotice:
-        'Plugin xử lý sự kiện kiểm thử. Hành động nền tảng dùng Mock và không gửi tin nhắn thật; các công cụ khác chạy theo cấu hình.',
-
-      create: 'Tạo bộ xử lý plugin',
-      type: 'Bộ xử lý plugin',
-      description: 'Xử lý sự kiện bằng mã và logic do plugin cung cấp.',
-      component: 'Bộ xử lý plugin',
-      selectComponent: 'Chọn bộ xử lý plugin',
-      unavailable: 'Thành phần không khả dụng',
-      noComponents: 'Chưa cài plugin cung cấp bộ xử lý.',
-      installPlugin: 'Cài plugin',
-      loadError: 'Không thể tải chi tiết.',
-      refresh: 'Làm mới',
-      runs: 'Lịch sử chạy',
-      noRuns: 'Chưa có lần chạy nào. Liên kết bộ xử lý với bot để bắt đầu.',
-      bindBot: 'Liên kết với bot',
-      trace: 'Nhật ký và luồng tin nhắn',
-      selectRun: 'Chọn một lần chạy để xem chi tiết.',
-      input: 'Sự kiện đầu vào',
-      destination: 'Đích gửi',
-      loadMore: 'Tải thêm',
-      activation: 'Cài plugin, tạo cấu hình bộ xử lý rồi liên kết bot.',
-      status_timeout: 'Hết thời gian',
-      status_pending: 'Đang chờ',
-      status_running: 'Đang chạy',
-      status_completed: 'Hoàn tất',
-      status_failed: 'Thất bại',
-      status_cancelled: 'Đã hủy',
-      status_queued: 'Trong hàng đợi',
-      trace_run_completed: 'Chạy hoàn tất',
-      trace_run_failed: 'Chạy thất bại',
-      trace_tool_call_started: 'Bắt đầu hành động',
-      trace_tool_call_completed: 'Kết quả hành động',
-    },
-    debugData: {
-      chatId: 'ID cuộc trò chuyện',
-      feedbackType: 'Loại phản hồi (1: thích, 2: không thích, 3: hủy)',
-
-      title: 'Dữ liệu sự kiện',
-      form: 'Trường thường dùng',
-      json: 'JSON đầy đủ',
-      groupId: 'ID nhóm',
-      memberId: 'ID thành viên',
-      memberName: 'Tên thành viên',
-      userId: 'ID người dùng',
-      userName: 'Tên người dùng',
-      requesterId: 'ID người yêu cầu',
-      requesterName: 'Tên người yêu cầu',
-      messageId: 'ID tin nhắn',
-      duration: 'Thời lượng (giây)',
-      message: 'Nội dung tin nhắn',
-      newMessage: 'Nội dung đã sửa',
-      verificationMessage: 'Tin nhắn xác minh',
-      reaction: 'Biểu cảm',
-      groupName: 'Tên nhóm',
-      feedback: 'Phản hồi',
-      rating: 'Đánh giá',
-      eventName: 'Tên sự kiện',
-      privateChat: 'Để trống cho trò chuyện riêng',
-      sampleUser: 'Người dùng thử',
-      sampleMessage: 'Xin chào',
-      sampleFeedback: 'Rất hữu ích',
-      invalidField: 'Kiểm tra {{field}}',
-    },
-    title: 'Bộ xử lý',
-    description:
-      'Tạo bộ xử lý có thể tái sử dụng và dùng chúng trong định tuyến sự kiện của bot',
-    create: 'Tạo bộ xử lý',
-    editAgent: 'Chỉnh sửa Agent',
-    selectFromSidebar: 'Chọn bộ xử lý từ thanh bên',
-    agentType: 'Agent',
-    agentTypeDescription:
-      'Dùng runner để xử lý tin nhắn, thành viên nhóm, bạn bè, phản hồi và các sự kiện nền tảng khác.',
-    pipelineType: 'Quy trình',
-    kindBadgeAgent: 'Agent',
-    kindBadgePipeline: 'Pipeline',
-    groupByKind: 'Nhóm theo loại',
-    groupByKindShort: 'Nhóm',
-    pipelineTypeDescription:
-      'Chạy theo quy trình cố định: nhận tin nhắn, gọi AI và trả lời người dùng, với cơ sở tri thức và plugin có thể cấu hình. Chỉ xử lý sự kiện tin nhắn, phù hợp với tác vụ có các bước rõ ràng và cần kiểm soát quá trình xử lý.',
-    allEvents: 'Hỗ trợ tất cả sự kiện',
-    messageEventsOnly: 'Chỉ sự kiện tin nhắn',
-    basicInfo: 'Thông tin cơ bản',
-    basicInfoDescription: 'Đặt tên, biểu tượng và mô tả',
-    runnerSettings: 'Runner',
-    advanced: 'Nâng cao',
-    bindableEvents: 'Phạm vi sự kiện có thể gắn',
-    bindableEventsDescription:
-      'Giới hạn những tuyến sự kiện bot có thể chọn Agent này. Mặc định phù hợp với hầu hết trường hợp.',
-    supportedEvents: 'Phạm vi sự kiện',
-    supportedEventsDescription:
-      'Chọn tất cả sự kiện, một nhóm hoặc từng sự kiện. Tuyến bot chỉ hiển thị Agent này cho các sự kiện phù hợp.',
-    searchEvents: 'Tìm sự kiện…',
-    noEventsFound: 'Không tìm thấy sự kiện phù hợp',
-    nameRequired: 'Tên không được để trống',
-    createSuccess: 'Tạo thành công',
-    createError: 'Tạo thất bại: ',
-    loadError: 'Tải thất bại: ',
-    saveSuccess: 'Lưu thành công',
-    saveError: 'Lưu thất bại: ',
-    deleteSuccess: 'Xóa thành công',
-    deleteError: 'Xóa thất bại: ',
-    deleteConfirmation: 'Bạn có chắc muốn xóa Agent này không?',
-    dangerZone: 'Vùng nguy hiểm',
-    dangerZoneDescription: 'Hành động không thể hoàn tác và mang tính phá hủy',
-    deleteAgentAction: 'Xóa Agent này',
-    deleteAgentHint:
-      'Sau khi xóa, các sự kiện đã gắn vào nó sẽ không thể thực thi được nữa.',
-    noRunnerMetadata: 'Hiện chưa có siêu dữ liệu Runner khả dụng.',
   },
   plugins: {
     title: 'Tiện ích mở rộng',
@@ -1520,6 +1512,7 @@ const viVN = {
       components: 'Thành phần',
       ready: 'Gói plugin đã được giải nén. Xác nhận để bắt đầu cài đặt.',
     },
+    uploadPluginOnly: 'Chỉ hỗ trợ gói plugin .lbpkg',
     dragToUpload: 'Kéo tệp plugin vào đây để tải lên',
     unsupportedFileType:
       'Loại tệp không được hỗ trợ, chỉ hỗ trợ tệp .lbpkg và .zip',
@@ -1590,18 +1583,19 @@ const viVN = {
     installFromGithubDesc: 'Cài đặt plugin từ GitHub Release',
     goToMarketplace: 'Đi đến chợ ứng dụng',
     installProgress: {
+      title: 'Đang cài đặt {{name}}',
       updateTitle: 'Đang cập nhật {{name}}',
+      titleGeneric: 'Cài đặt Plugin',
+      titlePlugin: 'Đang cài đặt plugin {{name}}',
+      titleMCP: 'Đang cài đặt máy chủ MCP {{name}}',
+      titleSkill: 'Đang cài đặt kỹ năng {{name}}',
+      overallProgress: 'Tiến độ tổng thể',
       checkingUpdate: 'Đang kiểm tra cập nhật',
+      downloading: 'Đang tải Plugin',
       validating: 'Đang xác thực gói',
+      installingDeps: 'Đang cài đặt phụ thuộc',
       applyingUpdate: 'Đang áp dụng cập nhật',
       activating: 'Đang khởi chạy và làm mới thành phần',
-      updateComplete: 'Đã cập nhật plugin thành công',
-
-      title: 'Đang cài đặt {{name}}',
-      titleGeneric: 'Cài đặt Plugin',
-      overallProgress: 'Tiến độ tổng thể',
-      downloading: 'Đang tải Plugin',
-      installingDeps: 'Đang cài đặt phụ thuộc',
       initializing: 'Đang khởi tạo cài đặt',
       launching: 'Đang khởi chạy Plugin',
       completed: 'Hoàn thành',
@@ -1610,26 +1604,22 @@ const viVN = {
       depsInfo: '{{count}} phụ thuộc cần cài đặt',
       depsProgress: 'Đã cài {{installed}}/{{total}} · Còn lại {{remaining}}',
       installComplete: 'Cài đặt plugin thành công',
+      updateComplete: 'Đã cập nhật plugin thành công',
+      installCompletePlugin: 'Đã cài đặt plugin thành công',
+      installCompleteMCP: 'Đã cài đặt máy chủ MCP thành công',
+      installCompleteSkill: 'Đã cài đặt kỹ năng thành công',
       dismiss: 'Bỏ qua',
       background: 'Chạy nền',
       taskQueue: 'Tác vụ cài đặt',
       clearCompleted: 'Xóa đã hoàn thành',
       noTasks: 'Không có tác vụ cài đặt',
-      titlePlugin: 'Đang cài đặt plugin {{name}}',
-      titleMCP: 'Đang cài đặt máy chủ MCP {{name}}',
-      titleSkill: 'Đang cài đặt kỹ năng {{name}}',
-      installCompletePlugin: 'Đã cài đặt plugin thành công',
-      installCompleteMCP: 'Đã cài đặt máy chủ MCP thành công',
-      installCompleteSkill: 'Đã cài đặt kỹ năng thành công',
     },
-    uploadPluginOnly: 'Chỉ hỗ trợ gói plugin .lbpkg',
   },
   market: {
     runnerUsage: 'Mục đích trình chạy',
     runnerUsageAll: 'Tất cả',
     runnerUsageAgent: 'Agent / Pipeline',
     runnerUsageEvent: 'Bộ xử lý plugin',
-
     searchPlaceholder: 'Tìm kiếm plugin...',
     searchPlaceholderCount:
       'Tìm kiếm {{count}} tiện ích mở rộng, khả năng hoặc tình huống...',
@@ -1642,6 +1632,10 @@ const viVN = {
     allLoaded: 'Đã hiển thị tất cả plugin',
     allLoadedCount: 'Đã hiển thị tất cả {{count}} tiện ích mở rộng',
     install: 'Cài đặt',
+    installCard: 'Cài đặt {{name}}',
+    installedCard: 'Đã cài đặt {{name}}',
+    installed: 'Đã cài đặt',
+    updateAvailable: 'Có bản cập nhật',
     installConfirm:
       'Bạn có chắc chắn muốn cài đặt plugin "{{name}}" ({{version}}) không?',
     downloadComplete: 'Tải plugin "{{name}}" hoàn tất',
@@ -1719,10 +1713,6 @@ const viVN = {
       clearAll: 'Xóa tất cả',
       noTags: 'Không có thẻ nào',
     },
-    installCard: 'Cài đặt {{name}}',
-    installedCard: 'Đã cài đặt {{name}}',
-    installed: 'Đã cài đặt',
-    updateAvailable: 'Có bản cập nhật',
   },
   mcp: {
     title: 'MCP',
@@ -1864,8 +1854,6 @@ const viVN = {
     deleteMCPHint: 'Sau khi xóa, cấu hình máy chủ MCP này không thể khôi phục.',
   },
   pipelines: {
-    managementDescription: 'Sao chép hoặc xóa pipeline này.',
-
     title: 'Quy trình',
     description:
       'Pipeline xác định luồng xử lý sự kiện tin nhắn, dùng để liên kết với Bot',
@@ -1887,6 +1875,7 @@ const viVN = {
     earliestEdited: 'Chỉnh sửa sớm nhất',
     basicInfo: 'Thông tin cơ bản',
     basicInfoDescription: 'Đặt tên, biểu tượng và mô tả Pipeline',
+    managementDescription: 'Sao chép hoặc xóa pipeline này.',
     aiCapabilities: 'AI',
     triggerConditions: 'Điều kiện kích hoạt',
     safetyControls: 'An toàn',
@@ -1938,9 +1927,9 @@ const viVN = {
       selectAll: 'Chọn tất cả',
       enableAllPlugins: 'Bật tất cả Plugin',
       enableAllMCPServers: 'Bật tất cả máy chủ MCP',
+      enableAllSkills: 'Bật tất cả kỹ năng',
       allPluginsEnabled: 'Đã bật tất cả plugin',
       allMCPServersEnabled: 'Đã bật tất cả máy chủ MCP',
-      enableAllSkills: 'Bật tất cả kỹ năng',
       allSkillsEnabled: 'Tất cả kỹ năng đã được bật',
       skillsTitle: 'Kỹ năng',
       noSkillsSelected: 'Chưa chọn kỹ năng',
@@ -1985,14 +1974,13 @@ const viVN = {
       selectKnowledgeBases: 'Chọn kho tri thức',
     },
     debugDialog: {
-      saveAndSend: 'Lưu và gửi',
-
       title: 'Trò chuyện Pipeline',
       selectPipeline: 'Chọn Pipeline',
       sessionType: 'Loại phiên',
       privateChat: 'Trò chuyện riêng',
       groupChat: 'Trò chuyện nhóm',
       send: 'Gửi',
+      saveAndSend: 'Lưu và gửi',
       reset: 'Đặt lại cuộc trò chuyện',
       inputPlaceholder: 'Gửi tin nhắn {{type}}...',
       noMessages: 'Không có tin nhắn',
@@ -2030,22 +2018,6 @@ const viVN = {
     },
   },
   knowledge: {
-    installedEngines: 'Bộ máy tri thức đã cài đặt',
-    noInstalledEngines: 'Chưa cài plugin bộ máy tri thức nào.',
-    marketplaceEngines: 'Plugin bộ máy tri thức trên chợ',
-    noMarketplaceEngines: 'Không có plugin bộ máy tri thức khả dụng.',
-    loadingEngineCatalog: 'Đang tải plugin trên chợ…',
-    engineCatalogUnavailable:
-      'Chợ tiện ích tạm thời không khả dụng. Mở lại bộ chọn để thử lại.',
-    viewMarketplace: 'Xem chợ tiện ích',
-    installingEngine: 'Đang cài {{engine}}…',
-    engineInstallSuccess: 'Đã cài {{engine}} và có thể chọn',
-    engineInstallFailed: 'Cài bộ máy tri thức thất bại. Vui lòng thử lại.',
-    engineVersionUnavailable: 'Plugin này chưa có phiên bản có thể cài đặt.',
-    engineInstallTimeout: 'Đang tiếp tục cài đặt. Làm mới trang để kiểm tra.',
-    engineRegistrationTimeout:
-      'Đã cài plugin nhưng bộ máy tri thức chưa sẵn sàng.',
-
     title: 'Cơ sở tri thức',
     createKnowledgeBase: 'Tạo cơ sở tri thức',
     selectFromSidebar: 'Chọn một cơ sở tri thức từ thanh bên',
@@ -2124,6 +2096,21 @@ const viVN = {
     knowledgeEngine: 'Công cụ tri thức',
     knowledgeEngineRequired: 'Công cụ tri thức là bắt buộc',
     selectKnowledgeEngine: 'Chọn công cụ tri thức',
+    installedEngines: 'Bộ máy tri thức đã cài đặt',
+    noInstalledEngines: 'Chưa cài plugin bộ máy tri thức nào.',
+    marketplaceEngines: 'Plugin bộ máy tri thức trên chợ',
+    noMarketplaceEngines: 'Không có plugin bộ máy tri thức khả dụng.',
+    loadingEngineCatalog: 'Đang tải plugin trên chợ…',
+    engineCatalogUnavailable:
+      'Chợ tiện ích tạm thời không khả dụng. Mở lại bộ chọn để thử lại.',
+    viewMarketplace: 'Xem chợ tiện ích',
+    installingEngine: 'Đang cài {{engine}}…',
+    engineInstallSuccess: 'Đã cài {{engine}} và có thể chọn',
+    engineInstallFailed: 'Cài bộ máy tri thức thất bại. Vui lòng thử lại.',
+    engineVersionUnavailable: 'Plugin này chưa có phiên bản có thể cài đặt.',
+    engineInstallTimeout: 'Đang tiếp tục cài đặt. Làm mới trang để kiểm tra.',
+    engineRegistrationTimeout:
+      'Đã cài plugin nhưng bộ máy tri thức chưa sẵn sàng.',
     builtInEngine: 'Công cụ tích hợp',
     cannotChangeKnowledgeEngine:
       'Không thể thay đổi công cụ tri thức sau khi tạo',
@@ -2217,8 +2204,8 @@ const viVN = {
     resetSuccess: 'Đặt lại mật khẩu thành công, vui lòng đăng nhập',
     resetFailed:
       'Đặt lại mật khẩu thất bại, vui lòng kiểm tra email và khóa khôi phục',
-    backToLogin: 'Quay lại đăng nhập',
     secondFactorFailed: 'Xác minh thất bại, vui lòng kiểm tra mã và thử lại',
+    backToLogin: 'Quay lại đăng nhập',
     verifyWith: 'Xác minh bằng',
     methodRecoveryKey: 'Khóa khôi phục',
     methodTotp: 'Ứng dụng xác thực',
@@ -2356,13 +2343,95 @@ const viVN = {
     setPasswordHint: 'Đặt mật khẩu để đăng nhập bằng email và mật khẩu',
     spaceEmailMismatch:
       'Email tài khoản LangBot không khớp với email tài khoản cục bộ',
-
     space_account_not_registeredTitle: 'Account not registered',
     space_account_not_registered:
       'No local account is registered for this LangBot Account email. Ask the Workspace owner for an invitation.',
     space_account_binding_requiredTitle: 'LangBot Account connection required',
     space_account_binding_required:
       'This local account must connect a LangBot Account from Account settings before using LangBot Account login.',
+  },
+  workspace: {
+    title: 'Workspace',
+    description: 'Manage members, roles, and invitation links',
+    selectTitle: 'Choose a Workspace',
+    selectDescription: 'Select where you want to continue in LangBot.',
+    selectionLoadFailed:
+      'Your Workspaces could not be loaded. Please try again.',
+    switchWorkspace: 'Switch Workspace',
+    settings: 'Workspace Settings',
+    currentPlan: 'Current plan',
+    planUnavailable: 'Unavailable',
+    upgradePlan: 'Change or upgrade plan',
+    ossSingletonDescription:
+      'This self-hosted instance has one Workspace and can include multiple users.',
+    cloudManagedDescription:
+      'This Workspace is hosted by LangBot Cloud. Manage members here; billing opens in Cloud.',
+    loadFailed: 'Failed to load Workspace information',
+    members: 'Members',
+    you: 'You',
+    inviteMember: 'Invite a member',
+    inviteDescription:
+      'Create a one-time link to add another user to this Workspace.',
+    emailPlaceholder: 'member@example.com',
+    createInvitation: 'Create invitation',
+    invitationCreated: 'Invitation created',
+    delivery: {
+      sent: 'Invitation sent',
+      link_only: 'Invitation link created',
+      failed: 'Invitation link created, but email could not be sent',
+    },
+    invitationCreateFailed: 'Failed to create invitation',
+    oneTimeLinkWarning: 'Copy this link now. It is shown only once.',
+    copyInvitation: 'Copy invitation link',
+    invitationCopied: 'Invitation link copied',
+    pendingInvitations: 'Pending invitations',
+    expiresAt: 'Expires {{date}}',
+    revokeInvitation: 'Revoke invitation',
+    invitationRevoked: 'Invitation revoked',
+    invitationRevokeFailed: 'Failed to revoke invitation',
+    acceptInvitation: 'Accept invitation',
+    invitedToWorkspace: 'You were invited to {{workspace}}',
+    checkingInvitation: 'Checking this invitation...',
+    invitationMissing: 'This invitation link is missing required information.',
+    invitationExpired: 'This invitation has expired.',
+    invitationAlreadyRevoked: 'This invitation was revoked.',
+    invitationAlreadyUsed: 'This invitation was already used.',
+    invitationInvalid: 'This invitation is invalid or no longer available.',
+    invitationAccepted: 'Invitation accepted',
+    invitationAcceptFailed: 'Failed to accept invitation',
+    invitationEmailMismatch:
+      'This invitation belongs to a different email address.',
+    existingAccountLoginRequired:
+      'An account already exists for this email. Sign in to continue.',
+    acceptAsCurrentAccount: 'Accept with current account',
+    authenticatedInvitationNotice:
+      'Sign out first, then sign in with the invited account. Your invitation will be preserved.',
+    logoutAndReturn: 'Sign out and return to this invitation',
+    switchAccount: 'Switch account',
+    registerAndAccept: 'Create account and accept',
+    alreadyHaveAccount: 'I already have an account',
+    confirmPassword: 'Confirm password',
+    passwordMinimum: 'Password must contain at least 8 characters.',
+    passwordMismatch: 'The passwords do not match.',
+    backToLogin: 'Back to sign in',
+    memberUpdated: 'Member role updated',
+    memberUpdateFailed: 'Failed to update member role',
+    removeMember: 'Remove member',
+    removeMemberConfirm: 'Remove this member from the Workspace?',
+    memberRemoved: 'Member removed',
+    memberRemoveFailed: 'Failed to remove member',
+    transferOwnership: 'Transfer ownership',
+    types: {
+      personal: 'Personal',
+      team: 'Team',
+    },
+    roles: {
+      owner: 'Owner',
+      admin: 'Admin',
+      developer: 'Developer',
+      operator: 'Operator',
+      viewer: 'Viewer',
+    },
   },
   monitoring: {
     title: 'Bảng điều khiển',
@@ -2401,8 +2470,8 @@ const viVN = {
       embeddingCalls: 'Cuộc gọi Embedding',
       modelCalls: 'Cuộc gọi mô hình',
       tokens: 'Giám sát Token',
-      sessions: 'Phân tích phiên',
       feedback: 'Phản hồi người dùng',
+      sessions: 'Phân tích phiên',
       errors: 'Nhật ký lỗi',
     },
     messageList: {
@@ -2461,6 +2530,8 @@ const viVN = {
       arguments: 'Tham số',
       result: 'Kết quả',
       noToolCalls: 'Chưa ghi nhận lượt gọi công cụ',
+      showDetails: 'Hiện chi tiết',
+      hideDetails: 'Ẩn chi tiết',
     },
     tokens: {
       totalTokens: 'Tổng số Token',
@@ -2625,15 +2696,34 @@ const viVN = {
   settingsDialog: {
     title: 'Cài đặt',
     nav: {
+      workspace: 'Workspace',
       models: 'Mô hình',
       api: 'API',
       storage: 'Lưu trữ',
       account: 'Tài khoản',
-
-      workspace: 'Workspace',
     },
   },
   storageAnalysis: {
+    title: 'Phân tích lưu trữ',
+    description: 'Kiểm tra dung lượng lưu trữ và các mục có thể dọn dẹp',
+    openDialog: 'Xem phân tích',
+    dialogTitle: 'Phân tích lưu trữ',
+    generatedAt: 'Tạo lúc {{time}}',
+    loading: 'Đang tải...',
+    refresh: 'Làm mới',
+    totalSize: 'Tổng dung lượng',
+    binaryStorage: 'Lưu trữ nhị phân plugin',
+    uploadCleanup: 'Tệp tải lên hết hạn',
+    logCleanup: 'Nhật ký hết hạn',
+    sections: 'Khu vực lưu trữ',
+    monitoringTables: 'Bảng giám sát',
+    runtimeTasks: 'Tác vụ runtime',
+    cleanupPolicy: 'Chính sách dọn dẹp',
+    uploadRetention: 'Thời gian giữ tệp tải lên',
+    logRetention: 'Thời gian giữ nhật ký',
+    databaseType: 'Loại cơ sở dữ liệu',
+    days: 'ngày',
+    missing: 'Thiếu',
     notCreated: 'Chưa tạo',
     processStorage: 'Lưu trữ theo tiến trình',
     processStorageDescription:
@@ -2672,32 +2762,18 @@ const viVN = {
       box_runtime:
         'Không gian sandbox, không gian tiến trình MCP, thư mục trao đổi tệp đính kèm và kỹ năng.',
     },
-
-    title: 'Phân tích lưu trữ',
-    description: 'Kiểm tra dung lượng lưu trữ và các mục có thể dọn dẹp',
-    openDialog: 'Xem phân tích',
-    dialogTitle: 'Phân tích lưu trữ',
-    generatedAt: 'Tạo lúc {{time}}',
-    loading: 'Đang tải...',
-    refresh: 'Làm mới',
-    totalSize: 'Tổng dung lượng',
-    binaryStorage: 'Lưu trữ nhị phân plugin',
-    uploadCleanup: 'Tệp tải lên hết hạn',
-    logCleanup: 'Nhật ký hết hạn',
-    sections: 'Khu vực lưu trữ',
-    monitoringTables: 'Bảng giám sát',
-    runtimeTasks: 'Tác vụ runtime',
-    cleanupPolicy: 'Chính sách dọn dẹp',
-    uploadRetention: 'Thời gian giữ tệp tải lên',
-    logRetention: 'Thời gian giữ nhật ký',
-    databaseType: 'Loại cơ sở dữ liệu',
-    days: 'ngày',
-    missing: 'Thiếu',
     expiredUploads: 'Tệp tải lên hết hạn',
     expiredLogs: 'Nhật ký hết hạn',
     noExpiredUploads: 'Không có tệp tải lên hết hạn',
     noExpiredLogs: 'Không có nhật ký hết hạn',
     sectionNames: {
+      database: 'Cơ sở dữ liệu',
+      logs: 'Nhật ký',
+      storage: 'Tệp tải lên',
+      vector_store: 'Kho vector',
+      plugins: 'Plugin',
+      mcp: 'MCP',
+      temp: 'Tệp tạm',
       legacy_plugins: 'Gói plugin cũ',
       artifacts: 'Thành phẩm plugin đã xác minh',
       dependency_environments: 'Môi trường phụ thuộc',
@@ -2713,14 +2789,6 @@ const viVN = {
       session_temp: 'Tệp tạm sandbox',
       managed_process_workspaces:
         'Không gian tiến trình được quản lý (bao gồm MCP)',
-
-      database: 'Cơ sở dữ liệu',
-      logs: 'Nhật ký',
-      storage: 'Tệp tải lên',
-      vector_store: 'Kho vector',
-      plugins: 'Plugin',
-      mcp: 'MCP',
-      temp: 'Tệp tạm',
     },
   },
   limitation: {
@@ -2736,235 +2804,6 @@ const viVN = {
       'Không thể kiểm tra hạn mức hiện tại của không gian làm việc. Vui lòng thử lại.',
     createDisabledTooltip:
       'Đã đạt giới hạn {{resource}} ({{max}}) của workspace này. Hãy xóa một mục hiện có trước khi tạo mới.',
-  },
-  wizard: {
-    sidebarDescription: 'Tạo Bot với các bước hướng dẫn',
-    loading: 'Đang tải trình hướng dẫn...',
-    loadError: 'Tải dữ liệu trình hướng dẫn thất bại',
-    skip: 'Bỏ qua',
-    skipConfirmMessage:
-      'Bạn có thể vào lại trình hướng dẫn Bắt đầu nhanh từ menu tài khoản sau, hoặc tạo Bot thủ công.',
-    skipConfirmOk: 'OK',
-    prev: 'Trước',
-    next: 'Tiếp',
-    finish: 'Tạo & Triển khai',
-    confirmCreateBot: 'Xác nhận, Tạo Bot',
-    createSuccess: 'Tạo Pipeline và liên kết với Bot thành công!',
-    botCreateSuccess: 'Tạo Bot thành công!',
-    botSaveSuccess: 'Cấu hình Bot đã lưu và bật!',
-    createError: 'Tạo tài nguyên thất bại',
-    skipSaveError: 'Lưu trạng thái bỏ qua thất bại. Vui lòng thử lại.',
-    completeSaveError: 'Lưu trạng thái hoàn tất thất bại. Vui lòng thử lại.',
-    step: {
-      platform: 'Nền tảng',
-      botConfig: 'Thiết lập Bot',
-      aiEngine: 'Công cụ AI',
-      done: 'Hoàn tất',
-    },
-    platform: {
-      title: 'Chọn nền tảng',
-      description: 'Chọn nền tảng nhắn tin mà Bot của bạn sẽ kết nối.',
-    },
-    botConfig: {
-      title: 'Cấu hình Bot của bạn',
-      description: 'Thiết lập Bot và xác minh hoạt động trước khi tiếp tục.',
-      saveBot: 'Lưu & Bật Bot',
-      resaveBot: 'Lưu lại cấu hình',
-      botSaved:
-        'Cấu hình Bot đã lưu và bật. Kiểm tra nhật ký để xác minh kết nối.',
-      waitingForMessage:
-        'Bot đã được bật. Hãy gửi cho Bot một tin nhắn từ nền tảng nhắn tin để tiếp tục.',
-      messageReceived:
-        'Bot đã nhận được tin nhắn. Bạn có thể tiếp tục sang bước tiếp theo.',
-      messageReceivedLocalAccountWarning:
-        'Kết nối phía Bot đã được cấu hình đúng và đã nhận được tin nhắn. Vì bạn không đăng nhập bằng tài khoản LangBot, lệnh gọi mô hình có thể thất bại; hãy tiếp tục sang bước tiếp theo để thêm mô hình của riêng bạn.',
-      pageBotPreviewFailed:
-        'Không thể tải cuộc trò chuyện thử nghiệm. Hãy lưu lại cấu hình để thử lại.',
-      pageBotTestPrompt:
-        'Page Bot đã được bật. Nhấp vào bong bóng trò chuyện ở góc dưới bên phải và gửi tin nhắn để xác minh toàn bộ luồng hội thoại.',
-      pageBotTestNotice:
-        'Chỉ dùng để kiểm thử. Hãy nhúng mã vào một trang web bên ngoài thực tế.',
-      webhookTestPrompt:
-        'URL callback đã sẵn sàng. Hãy cấu hình URL này trên nền tảng bên ngoài, sau đó gửi một tin nhắn thực cho Bot.',
-      httpTestPrompt:
-        'HTTP Bot đã được bật. Gửi một tin nhắn đến thực tế tại đây để xác minh kết nối.',
-      httpTestDefaultMessage: 'Xin chào, đây là tin nhắn kiểm tra kết nối.',
-      sendHttpTest: 'Gửi tin nhắn kiểm tra',
-      httpTestAccepted:
-        'Tin nhắn kiểm tra đã được chấp nhận và sẽ sớm xuất hiện trong nhật ký.',
-      httpTestMissingSecret:
-        'Hãy nhập khóa bí mật ký yêu cầu đến và lưu cấu hình trước.',
-      httpTestFailed: 'Không thể gửi tin nhắn kiểm tra: {{error}}',
-      logsTitle: 'Nhật ký Bot',
-      logsDescription:
-        'Giám sát hoạt động Bot để xác minh kết nối nền tảng đang hoạt động.',
-    },
-    aiEngine: {
-      loadingCatalog: 'Đang tải tiện ích trình chạy...',
-      catalogUnavailable: 'Danh mục trình chạy không khả dụng',
-      catalogUnavailableDescription:
-        'Trình chạy đã cài vẫn dùng được. Thử tải lại danh mục hoặc duyệt tiện ích.',
-      noMarketplaceRunners: 'Không có plugin trình chạy phù hợp mục đích này',
-      noMarketplaceRunnersDescription:
-        'Dùng trình chạy đã cài hoặc thử lại sau.',
-      browseRunners: 'Duyệt tiện ích trình chạy',
-      installAndContinue: 'Cài đặt và tiếp tục',
-      installing: 'Đang cài đặt...',
-      useInstalled: 'Dùng trình chạy này',
-      installedUnavailable: 'Đã cài, trình chạy không khả dụng',
-      installSuccess: 'Đã cài và chọn {{runner}}',
-      installFailed: 'Không cài được tiện ích trình chạy',
-      versionUnavailable: 'Chợ tiện ích không trả về phiên bản có thể cài đặt.',
-      installTimeout:
-        'Cài trình chạy hết thời gian chờ. Kiểm tra tác vụ trong mục Tiện ích.',
-      registrationTimeout:
-        'Đã cài tiện ích nhưng trình chạy chưa đăng ký. Kiểm tra môi trường chạy plugin rồi thử lại.',
-
-      defaultModelUnavailable: 'Chưa có mô hình mặc định. Vui lòng thử lại.',
-      defaultRunnerUnavailable: 'Local Agent chưa sẵn sàng. Vui lòng thử lại.',
-      preparingDefault: 'Đang chuẩn bị AI mặc định…',
-      title: 'Cấu hình công cụ AI',
-      description: 'Chọn công cụ AI sẽ cung cấp trí tuệ cho Bot của bạn.',
-      optionalDescription:
-        'AI mặc định đã sẵn sàng. Bạn có thể dùng ngay hoặc đổi cách kết nối.',
-      externalTitle: 'Kết nối Agent từ nền tảng bên ngoài',
-      externalDescription:
-        'Kết nối Dify, n8n, Coze hoặc Agent bên ngoài qua plugin Runner.',
-      ownModelTitle: 'Sử dụng mô hình của riêng tôi',
-      ownModelDescription:
-        'Thêm nhà cung cấp, sau đó quét hoặc nhập mô hình thủ công để hoàn tất thiết lập.',
-      ownModelSetupTitle: 'Thêm mô hình của riêng bạn',
-      ownModelSetupDescription:
-        'Thêm nhà cung cấp mô hình. Các mô hình trò chuyện sẽ được quét tự động, hoặc bạn có thể nhập ID mô hình thủ công.',
-      addProviderTitle: 'Thêm nhà cung cấp',
-      addProviderDescription:
-        'Nhập thông tin nhà cung cấp và API Key dùng để kết nối và quét mô hình.',
-      selectModelTitle: 'Chọn mô hình',
-      selectScannedModelTitle: 'Chọn mô hình',
-      selectScannedModelDescription:
-        'Mô hình đã chọn sẽ thay thế mô hình chính trong pipeline của bot này.',
-      scanModelMode: 'Quét mô hình',
-      manualModelMode: 'Thêm thủ công',
-      scanningModels: 'Đang quét các mô hình khả dụng…',
-      noScannedModels:
-        'Không tìm thấy mô hình trò chuyện khả dụng. Hãy kiểm tra cấu hình nhà cung cấp.',
-      scanModelsFailed:
-        'Quét mô hình thất bại. Hãy kiểm tra URL và API Key rồi thử lại.',
-      manualFallbackFailed:
-        'Quét tự động thất bại. Hãy nhập ID mô hình được nhà cung cấp hỗ trợ.',
-      manualFallbackEmpty:
-        'Không tìm thấy mô hình. Hãy nhập ID mô hình được nhà cung cấp hỗ trợ.',
-      manualModelId: 'ID mô hình',
-      manualModelIdPlaceholder: 'Ví dụ: gpt-4o',
-      manualModelIdDescription:
-        'Nhập tham số mô hình được sử dụng trong các yêu cầu mô hình.',
-      manualModelOptions: 'Khả năng mô hình tùy chọn',
-      editProvider: 'Chỉnh sửa nhà cung cấp',
-      rescanModels: 'Quét lại mô hình',
-      moreFeaturesTitle: 'Dùng cấu hình mặc định',
-      moreFeaturesDescription:
-        'Tiếp tục dùng Local Agent và mô hình đề xuất. Có thể thêm công cụ và cơ sở tri thức sau.',
-      runnerDescription: 'Chọn Runner cho Agent bên ngoài và cấu hình kết nối.',
-      backToChoices: 'Quay lại các tùy chọn',
-      backToList: 'Quay lại danh sách',
-      createExternal: 'Tạo và liên kết',
-      finishWithModel: 'Sử dụng mô hình đã chọn và hoàn tất',
-      openWorkbench: 'Mở bàn làm việc',
-    },
-    config: {
-      botInfo: 'Thông tin Bot',
-      botNamePlaceholder: 'Nhập tên Bot',
-      botDescPlaceholder: 'Nhập mô tả Bot (tùy chọn)',
-      platformConfig: 'Cấu hình {{platform}}',
-      aiConfig: 'Cấu hình {{engine}}',
-    },
-    done: {
-      title: 'Hoàn tất!',
-      description:
-        'Bot của bạn đã được tạo và kết nối với Pipeline AI. Bạn có thể quản lý nó từ bàn làm việc.',
-      backToWorkbench: 'Quay lại bàn làm việc',
-    },
-  },
-  errorPage: {
-    unexpectedError: 'Đã xảy ra lỗi',
-    unexpectedErrorDescription:
-      'Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.',
-    notFound: 'Không tìm thấy trang',
-    notFoundDescription:
-      'Trang bạn tìm kiếm không tồn tại hoặc đã được di chuyển.',
-    backendUnavailableStatus: 'Backend không khả dụng',
-    goBack: 'Quay lại',
-    backToHome: 'Về trang chủ',
-    backToLogin: 'Quay lại đăng nhập',
-    retrying: 'Đang thử lại',
-    retryFailed:
-      'Vẫn không thể kết nối backend. Hãy khởi động dịch vụ rồi thử lại.',
-  },
-  feishu: {
-    createApp: 'Tạo ứng dụng Feishu chỉ với một lần nhấp',
-    scanQRCode:
-      'Quét mã QR bên dưới bằng Feishu để ủy quyền và tự động tạo ứng dụng',
-    waitingForScan: 'Đang chờ quét',
-    createSuccess:
-      'Tạo ứng dụng thành công! Thông tin xác thực đã được điền tự động',
-    createFailed: 'Tạo ứng dụng thất bại',
-    connecting: 'Đang kết nối tới dịch vụ Feishu...',
-    expired: 'Mã QR đã hết hạn, vui lòng thử lại',
-    denied: 'Người dùng đã từ chối ủy quyền',
-    connectionLost: 'Kết nối đã bị mất, vui lòng thử lại',
-    reconnecting: 'Đang kết nối lại...',
-    retry: 'Thử lại',
-  },
-  weixin: {
-    scanLogin: 'Đăng nhập WeChat bằng mã QR',
-    scanQRCode:
-      'Quét mã QR bên dưới bằng WeChat để ủy quyền và tự động điền token',
-    loginSuccess: 'Đăng nhập thành công! Token đã được điền tự động',
-    loginFailed: 'Đăng nhập thất bại',
-    connecting: 'Đang kết nối tới dịch vụ WeChat...',
-    waitingForScan: 'Đang chờ quét mã',
-    retry: 'Thử lại',
-  },
-  dingtalk: {
-    createApp: 'Tạo ứng dụng DingTalk chỉ với một lần nhấp',
-    scanQRCode:
-      'Quét mã QR bên dưới bằng DingTalk để ủy quyền và tự động tạo ứng dụng',
-    waitingForScan: 'Đang chờ quét',
-    createSuccess:
-      'Tạo ứng dụng thành công! Thông tin xác thực đã được điền tự động',
-    createFailed: 'Tạo ứng dụng thất bại',
-    connecting: 'Đang kết nối tới dịch vụ DingTalk...',
-    retry: 'Thử lại',
-    robotCodeNote:
-      'Không thể tự động lấy Robot Code. Vui lòng vào trang quản trị nhà phát triển DingTalk > Cấu hình robot để sao chép thủ công. Trường này là bắt buộc cho các tính năng như nhận diện hình ảnh và tải tệp lên.',
-  },
-  wecombot: {
-    createBot: 'Tạo bot WeCom chỉ với một lần nhấp',
-    scanQRCode: 'Quét mã QR bên dưới bằng WeCom để ủy quyền và tự động tạo bot',
-    waitingForScan: 'Đang chờ quét',
-    createSuccess:
-      'Tạo bot thành công! Thông tin xác thực đã được điền tự động',
-    createFailed: 'Tạo bot thất bại',
-    connecting: 'Đang kết nối tới dịch vụ WeCom...',
-    retry: 'Thử lại',
-    robotNameNote: 'Không thể tự động lấy tên bot. Vui lòng điền thủ công.',
-  },
-  qqofficial: {
-    createBinding: 'Liên kết bot QQ Official bằng QR một chạm',
-    scanQRCode:
-      'Quét mã QR bên dưới bằng QQ trên di động và xác nhận liên kết trong «QQ Bot Assistant»',
-    waitingForScan: 'Đang chờ quét',
-    bindSuccess: 'Liên kết thành công! AppID và Secret đã được điền tự động',
-    bindFailed: 'Liên kết thất bại',
-    connecting: 'Đang kết nối tới dịch vụ QQ...',
-    retry: 'Thử lại',
-    tokenNote:
-      'Bộ chuyển đổi hiện tại không dùng trường Token; có thể để trống.',
-    boundBy: 'Được liên kết bởi người dùng QQ {{openid}}',
-  },
-  pluginPages: {
-    selectFromSidebar: 'Chọn một trang plugin từ thanh bên',
-    invalidPage: 'Trang plugin không hợp lệ',
   },
   skills: {
     title: 'Kỹ năng',
@@ -3060,6 +2899,153 @@ const viVN = {
     saveFileSuccess: 'Đã lưu tệp thành công',
     saveFileError: 'Lưu tệp thất bại: ',
   },
+  wizard: {
+    sidebarDescription: 'Tạo Bot với các bước hướng dẫn',
+    loading: 'Đang tải trình hướng dẫn...',
+    loadError: 'Tải dữ liệu trình hướng dẫn thất bại',
+    skip: 'Bỏ qua',
+    skipConfirmMessage:
+      'Bạn có thể vào lại trình hướng dẫn Bắt đầu nhanh từ menu tài khoản sau, hoặc tạo Bot thủ công.',
+    skipConfirmOk: 'OK',
+    prev: 'Trước',
+    next: 'Tiếp',
+    finish: 'Tạo & Triển khai',
+    confirmCreateBot: 'Xác nhận, Tạo Bot',
+    createSuccess: 'Tạo Pipeline và liên kết với Bot thành công!',
+    botCreateSuccess: 'Tạo Bot thành công!',
+    botSaveSuccess: 'Cấu hình Bot đã lưu và bật!',
+    createError: 'Tạo tài nguyên thất bại',
+    skipSaveError: 'Lưu trạng thái bỏ qua thất bại. Vui lòng thử lại.',
+    completeSaveError: 'Lưu trạng thái hoàn tất thất bại. Vui lòng thử lại.',
+    step: {
+      platform: 'Nền tảng',
+      botConfig: 'Thiết lập Bot',
+      aiEngine: 'Công cụ AI',
+      done: 'Hoàn tất',
+    },
+    platform: {
+      title: 'Chọn nền tảng',
+      description: 'Chọn nền tảng nhắn tin mà Bot của bạn sẽ kết nối.',
+    },
+    botConfig: {
+      title: 'Cấu hình Bot của bạn',
+      description: 'Thiết lập Bot và xác minh hoạt động trước khi tiếp tục.',
+      saveBot: 'Lưu & Bật Bot',
+      resaveBot: 'Lưu lại cấu hình',
+      botSaved:
+        'Cấu hình Bot đã lưu và bật. Kiểm tra nhật ký để xác minh kết nối.',
+      waitingForMessage:
+        'Bot đã được bật. Hãy gửi cho Bot một tin nhắn từ nền tảng nhắn tin để tiếp tục.',
+      messageReceived:
+        'Bot đã nhận được tin nhắn. Bạn có thể tiếp tục sang bước tiếp theo.',
+      messageReceivedLocalAccountWarning:
+        'Kết nối phía Bot đã được cấu hình đúng và đã nhận được tin nhắn. Vì bạn không đăng nhập bằng tài khoản LangBot, lệnh gọi mô hình có thể thất bại; hãy tiếp tục sang bước tiếp theo để thêm mô hình của riêng bạn.',
+      pageBotPreviewFailed:
+        'Không thể tải cuộc trò chuyện thử nghiệm. Hãy lưu lại cấu hình để thử lại.',
+      pageBotTestPrompt:
+        'Page Bot đã được bật. Nhấp vào bong bóng trò chuyện ở góc dưới bên phải và gửi tin nhắn để xác minh toàn bộ luồng hội thoại.',
+      pageBotTestNotice:
+        'Chỉ dùng để kiểm thử. Hãy nhúng mã vào một trang web bên ngoài thực tế.',
+      webhookTestPrompt:
+        'URL callback đã sẵn sàng. Hãy cấu hình URL này trên nền tảng bên ngoài, sau đó gửi một tin nhắn thực cho Bot.',
+      httpTestPrompt:
+        'HTTP Bot đã được bật. Gửi một tin nhắn đến thực tế tại đây để xác minh kết nối.',
+      httpTestDefaultMessage: 'Xin chào, đây là tin nhắn kiểm tra kết nối.',
+      sendHttpTest: 'Gửi tin nhắn kiểm tra',
+      httpTestAccepted:
+        'Tin nhắn kiểm tra đã được chấp nhận và sẽ sớm xuất hiện trong nhật ký.',
+      httpTestMissingSecret:
+        'Hãy nhập khóa bí mật ký yêu cầu đến và lưu cấu hình trước.',
+      httpTestFailed: 'Không thể gửi tin nhắn kiểm tra: {{error}}',
+      logsTitle: 'Nhật ký Bot',
+      logsDescription:
+        'Giám sát hoạt động Bot để xác minh kết nối nền tảng đang hoạt động.',
+    },
+    aiEngine: {
+      defaultModelUnavailable: 'Chưa có mô hình mặc định. Vui lòng thử lại.',
+      defaultRunnerUnavailable: 'Local Agent chưa sẵn sàng. Vui lòng thử lại.',
+      preparingDefault: 'Đang chuẩn bị AI mặc định…',
+      title: 'Cấu hình công cụ AI',
+      description: 'Chọn công cụ AI sẽ cung cấp trí tuệ cho Bot của bạn.',
+      optionalDescription:
+        'AI mặc định đã sẵn sàng. Bạn có thể dùng ngay hoặc đổi cách kết nối.',
+      externalTitle: 'Kết nối Agent từ nền tảng bên ngoài',
+      externalDescription:
+        'Kết nối Dify, n8n, Coze hoặc Agent bên ngoài qua plugin Runner.',
+      ownModelTitle: 'Sử dụng mô hình của riêng tôi',
+      ownModelDescription:
+        'Thêm nhà cung cấp, sau đó quét hoặc nhập mô hình thủ công để hoàn tất thiết lập.',
+      ownModelSetupTitle: 'Thêm mô hình của riêng bạn',
+      ownModelSetupDescription:
+        'Thêm nhà cung cấp mô hình. Các mô hình trò chuyện sẽ được quét tự động, hoặc bạn có thể nhập ID mô hình thủ công.',
+      addProviderTitle: 'Thêm nhà cung cấp',
+      addProviderDescription:
+        'Nhập thông tin nhà cung cấp và API Key dùng để kết nối và quét mô hình.',
+      selectModelTitle: 'Chọn mô hình',
+      selectScannedModelTitle: 'Chọn mô hình',
+      selectScannedModelDescription:
+        'Mô hình đã chọn sẽ thay thế mô hình chính trong pipeline của bot này.',
+      scanModelMode: 'Quét mô hình',
+      manualModelMode: 'Thêm thủ công',
+      scanningModels: 'Đang quét các mô hình khả dụng…',
+      noScannedModels:
+        'Không tìm thấy mô hình trò chuyện khả dụng. Hãy kiểm tra cấu hình nhà cung cấp.',
+      scanModelsFailed:
+        'Quét mô hình thất bại. Hãy kiểm tra URL và API Key rồi thử lại.',
+      manualFallbackFailed:
+        'Quét tự động thất bại. Hãy nhập ID mô hình được nhà cung cấp hỗ trợ.',
+      manualFallbackEmpty:
+        'Không tìm thấy mô hình. Hãy nhập ID mô hình được nhà cung cấp hỗ trợ.',
+      manualModelId: 'ID mô hình',
+      manualModelIdPlaceholder: 'Ví dụ: gpt-4o',
+      manualModelIdDescription:
+        'Nhập tham số mô hình được sử dụng trong các yêu cầu mô hình.',
+      manualModelOptions: 'Khả năng mô hình tùy chọn',
+      editProvider: 'Chỉnh sửa nhà cung cấp',
+      rescanModels: 'Quét lại mô hình',
+      moreFeaturesTitle: 'Dùng cấu hình mặc định',
+      moreFeaturesDescription:
+        'Tiếp tục dùng Local Agent và mô hình đề xuất. Có thể thêm công cụ và cơ sở tri thức sau.',
+      runnerDescription: 'Chọn Runner cho Agent bên ngoài và cấu hình kết nối.',
+      backToChoices: 'Quay lại các tùy chọn',
+      backToList: 'Quay lại danh sách',
+      createExternal: 'Tạo và liên kết',
+      finishWithModel: 'Sử dụng mô hình đã chọn và hoàn tất',
+      openWorkbench: 'Mở bàn làm việc',
+      loadingCatalog: 'Đang tải tiện ích trình chạy...',
+      catalogUnavailable: 'Danh mục trình chạy không khả dụng',
+      catalogUnavailableDescription:
+        'Trình chạy đã cài vẫn dùng được. Thử tải lại danh mục hoặc duyệt tiện ích.',
+      noMarketplaceRunners: 'Không có plugin trình chạy phù hợp mục đích này',
+      noMarketplaceRunnersDescription:
+        'Dùng trình chạy đã cài hoặc thử lại sau.',
+      browseRunners: 'Duyệt tiện ích trình chạy',
+      installAndContinue: 'Cài đặt và tiếp tục',
+      installing: 'Đang cài đặt...',
+      useInstalled: 'Dùng trình chạy này',
+      installedUnavailable: 'Đã cài, trình chạy không khả dụng',
+      installSuccess: 'Đã cài và chọn {{runner}}',
+      installFailed: 'Không cài được tiện ích trình chạy',
+      versionUnavailable: 'Chợ tiện ích không trả về phiên bản có thể cài đặt.',
+      installTimeout:
+        'Cài trình chạy hết thời gian chờ. Kiểm tra tác vụ trong mục Tiện ích.',
+      registrationTimeout:
+        'Đã cài tiện ích nhưng trình chạy chưa đăng ký. Kiểm tra môi trường chạy plugin rồi thử lại.',
+    },
+    config: {
+      botInfo: 'Thông tin Bot',
+      botNamePlaceholder: 'Nhập tên Bot',
+      botDescPlaceholder: 'Nhập mô tả Bot (tùy chọn)',
+      platformConfig: 'Cấu hình {{platform}}',
+      aiConfig: 'Cấu hình {{engine}}',
+    },
+    done: {
+      title: 'Hoàn tất!',
+      description:
+        'Bot của bạn đã được tạo và kết nối với Pipeline AI. Bạn có thể quản lý nó từ bàn làm việc.',
+      backToWorkbench: 'Quay lại bàn làm việc',
+    },
+  },
   addExtension: {
     installTitle: 'Cài đặt {{type}}',
     installConfirm: 'Cài đặt {{type}} "{{name}}"?',
@@ -3091,90 +3077,86 @@ const viVN = {
     unsupportedFileType:
       'Loại tệp không được hỗ trợ. Chỉ hỗ trợ tệp .zip và .lbpkg',
   },
-
-  workspace: {
-    title: 'Workspace',
-    description: 'Manage members, roles, and invitation links',
-    selectTitle: 'Choose a Workspace',
-    selectDescription: 'Select where you want to continue in LangBot.',
-    selectionLoadFailed:
-      'Your Workspaces could not be loaded. Please try again.',
-    switchWorkspace: 'Switch Workspace',
-    settings: 'Workspace Settings',
-    currentPlan: 'Current plan',
-    planUnavailable: 'Unavailable',
-    upgradePlan: 'Change or upgrade plan',
-    ossSingletonDescription:
-      'This self-hosted instance has one Workspace and can include multiple users.',
-    cloudManagedDescription:
-      'This Workspace is hosted by LangBot Cloud. Manage members here; billing opens in Cloud.',
-    loadFailed: 'Failed to load Workspace information',
-    members: 'Members',
-    you: 'You',
-    inviteMember: 'Invite a member',
-    inviteDescription:
-      'Create a one-time link to add another user to this Workspace.',
-    emailPlaceholder: 'member@example.com',
-    createInvitation: 'Create invitation',
-    invitationCreated: 'Invitation created',
-    delivery: {
-      sent: 'Invitation sent',
-      link_only: 'Invitation link created',
-      failed: 'Invitation link created, but email could not be sent',
-    },
-    invitationCreateFailed: 'Failed to create invitation',
-    oneTimeLinkWarning: 'Copy this link now. It is shown only once.',
-    copyInvitation: 'Copy invitation link',
-    invitationCopied: 'Invitation link copied',
-    pendingInvitations: 'Pending invitations',
-    expiresAt: 'Expires {{date}}',
-    revokeInvitation: 'Revoke invitation',
-    invitationRevoked: 'Invitation revoked',
-    invitationRevokeFailed: 'Failed to revoke invitation',
-    acceptInvitation: 'Accept invitation',
-    invitedToWorkspace: 'You were invited to {{workspace}}',
-    checkingInvitation: 'Checking this invitation...',
-    invitationMissing: 'This invitation link is missing required information.',
-    invitationExpired: 'This invitation has expired.',
-    invitationAlreadyRevoked: 'This invitation was revoked.',
-    invitationAlreadyUsed: 'This invitation was already used.',
-    invitationInvalid: 'This invitation is invalid or no longer available.',
-    invitationAccepted: 'Invitation accepted',
-    invitationAcceptFailed: 'Failed to accept invitation',
-    invitationEmailMismatch:
-      'This invitation belongs to a different email address.',
-    existingAccountLoginRequired:
-      'An account already exists for this email. Sign in to continue.',
-    acceptAsCurrentAccount: 'Accept with current account',
-    authenticatedInvitationNotice:
-      'Sign out first, then sign in with the invited account. Your invitation will be preserved.',
-    logoutAndReturn: 'Sign out and return to this invitation',
-    switchAccount: 'Switch account',
-    registerAndAccept: 'Create account and accept',
-    alreadyHaveAccount: 'I already have an account',
-    confirmPassword: 'Confirm password',
-    passwordMinimum: 'Password must contain at least 8 characters.',
-    passwordMismatch: 'The passwords do not match.',
-    backToLogin: 'Back to sign in',
-    memberUpdated: 'Member role updated',
-    memberUpdateFailed: 'Failed to update member role',
-    removeMember: 'Remove member',
-    removeMemberConfirm: 'Remove this member from the Workspace?',
-    memberRemoved: 'Member removed',
-    memberRemoveFailed: 'Failed to remove member',
-    transferOwnership: 'Transfer ownership',
-    types: {
-      personal: 'Personal',
-      team: 'Team',
-    },
-    roles: {
-      owner: 'Owner',
-      admin: 'Admin',
-      developer: 'Developer',
-      operator: 'Operator',
-      viewer: 'Viewer',
-    },
+  errorPage: {
+    unexpectedError: 'Đã xảy ra lỗi',
+    unexpectedErrorDescription:
+      'Đã xảy ra lỗi không mong muốn. Vui lòng thử lại sau.',
+    notFound: 'Không tìm thấy trang',
+    notFoundDescription:
+      'Trang bạn tìm kiếm không tồn tại hoặc đã được di chuyển.',
+    backendUnavailableStatus: 'Backend không khả dụng',
+    goBack: 'Quay lại',
+    backToHome: 'Về trang chủ',
+    backToLogin: 'Quay lại đăng nhập',
+    retrying: 'Đang thử lại',
+    retryFailed:
+      'Vẫn không thể kết nối backend. Hãy khởi động dịch vụ rồi thử lại.',
+  },
+  feishu: {
+    createApp: 'Tạo ứng dụng Feishu chỉ với một lần nhấp',
+    scanQRCode:
+      'Quét mã QR bên dưới bằng Feishu để ủy quyền và tự động tạo ứng dụng',
+    waitingForScan: 'Đang chờ quét',
+    createSuccess:
+      'Tạo ứng dụng thành công! Thông tin xác thực đã được điền tự động',
+    createFailed: 'Tạo ứng dụng thất bại',
+    connecting: 'Đang kết nối tới dịch vụ Feishu...',
+    expired: 'Mã QR đã hết hạn, vui lòng thử lại',
+    denied: 'Người dùng đã từ chối ủy quyền',
+    connectionLost: 'Kết nối đã bị mất, vui lòng thử lại',
+    reconnecting: 'Đang kết nối lại...',
+    retry: 'Thử lại',
+  },
+  weixin: {
+    scanLogin: 'Đăng nhập WeChat bằng mã QR',
+    scanQRCode:
+      'Quét mã QR bên dưới bằng WeChat để ủy quyền và tự động điền token',
+    loginSuccess: 'Đăng nhập thành công! Token đã được điền tự động',
+    loginFailed: 'Đăng nhập thất bại',
+    connecting: 'Đang kết nối tới dịch vụ WeChat...',
+    waitingForScan: 'Đang chờ quét mã',
+    retry: 'Thử lại',
+  },
+  dingtalk: {
+    createApp: 'Tạo ứng dụng DingTalk chỉ với một lần nhấp',
+    scanQRCode:
+      'Quét mã QR bên dưới bằng DingTalk để ủy quyền và tự động tạo ứng dụng',
+    waitingForScan: 'Đang chờ quét',
+    createSuccess:
+      'Tạo ứng dụng thành công! Thông tin xác thực đã được điền tự động',
+    createFailed: 'Tạo ứng dụng thất bại',
+    connecting: 'Đang kết nối tới dịch vụ DingTalk...',
+    retry: 'Thử lại',
+    robotCodeNote:
+      'Không thể tự động lấy Robot Code. Vui lòng vào trang quản trị nhà phát triển DingTalk > Cấu hình robot để sao chép thủ công. Trường này là bắt buộc cho các tính năng như nhận diện hình ảnh và tải tệp lên.',
+  },
+  wecombot: {
+    createBot: 'Tạo bot WeCom chỉ với một lần nhấp',
+    scanQRCode: 'Quét mã QR bên dưới bằng WeCom để ủy quyền và tự động tạo bot',
+    waitingForScan: 'Đang chờ quét',
+    createSuccess:
+      'Tạo bot thành công! Thông tin xác thực đã được điền tự động',
+    createFailed: 'Tạo bot thất bại',
+    connecting: 'Đang kết nối tới dịch vụ WeCom...',
+    retry: 'Thử lại',
+    robotNameNote: 'Không thể tự động lấy tên bot. Vui lòng điền thủ công.',
+  },
+  qqofficial: {
+    createBinding: 'Liên kết bot QQ Official bằng QR một chạm',
+    scanQRCode:
+      'Quét mã QR bên dưới bằng QQ trên di động và xác nhận liên kết trong «QQ Bot Assistant»',
+    waitingForScan: 'Đang chờ quét',
+    bindSuccess: 'Liên kết thành công! AppID và Secret đã được điền tự động',
+    bindFailed: 'Liên kết thất bại',
+    connecting: 'Đang kết nối tới dịch vụ QQ...',
+    retry: 'Thử lại',
+    tokenNote:
+      'Bộ chuyển đổi hiện tại không dùng trường Token; có thể để trống.',
+    boundBy: 'Được liên kết bởi người dùng QQ {{openid}}',
+  },
+  pluginPages: {
+    selectFromSidebar: 'Chọn một trang plugin từ thanh bên',
+    invalidPage: 'Trang plugin không hợp lệ',
   },
 };
-
 export default viVN;

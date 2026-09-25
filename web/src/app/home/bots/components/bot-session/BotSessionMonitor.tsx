@@ -682,7 +682,6 @@ const BotSessionMonitor = forwardRef<
             </button>
             <span className="text-[11px] text-muted-foreground tabular-nums">
               {t('bots.sessionMonitor.totalSessions', {
-                defaultValue: '{{count}} sessions',
                 count: sessionTotal,
               })}
             </span>
@@ -695,12 +694,8 @@ const BotSessionMonitor = forwardRef<
                 onKeyDown={(event) =>
                   event.key === 'Enter' && applyUserSearch()
                 }
-                aria-label={t('bots.sessionMonitor.userSearch', {
-                  defaultValue: 'User ID or name',
-                })}
-                placeholder={t('bots.sessionMonitor.userSearch', {
-                  defaultValue: 'User ID or name',
-                })}
+                aria-label={t('bots.sessionMonitor.userSearch')}
+                placeholder={t('bots.sessionMonitor.userSearch')}
                 className="h-7 min-w-0 flex-1 rounded border bg-background px-2 text-xs"
               />
               <button
@@ -708,7 +703,7 @@ const BotSessionMonitor = forwardRef<
                 onClick={applyUserSearch}
                 className="h-7 rounded border px-2 text-[11px] hover:bg-accent"
               >
-                {t('common.search', { defaultValue: 'Search' })}
+                {t('common.search')}
               </button>
             </div>
             <div className="grid grid-cols-2 gap-1">
@@ -720,9 +715,7 @@ const BotSessionMonitor = forwardRef<
                   setSessionPage(0);
                   setStartDate(event.target.value);
                 }}
-                aria-label={t('bots.sessionMonitor.startDate', {
-                  defaultValue: 'Start date',
-                })}
+                aria-label={t('bots.sessionMonitor.startDate')}
                 className="h-7 min-w-0 rounded border bg-background px-1 text-[10px]"
               />
               <input
@@ -733,9 +726,7 @@ const BotSessionMonitor = forwardRef<
                   setSessionPage(0);
                   setEndDate(event.target.value);
                 }}
-                aria-label={t('bots.sessionMonitor.endDate', {
-                  defaultValue: 'End date',
-                })}
+                aria-label={t('bots.sessionMonitor.endDate')}
                 className="h-7 min-w-0 rounded border bg-background px-1 text-[10px]"
               />
             </div>
@@ -821,7 +812,7 @@ const BotSessionMonitor = forwardRef<
           <div className="h-8 border-t px-1.5 flex items-center justify-between shrink-0 text-[11px]">
             <button
               type="button"
-              aria-label={t('common.previous', { defaultValue: 'Previous' })}
+              aria-label={t('common.previous')}
               disabled={sessionPage === 0 || loadingSessions}
               onClick={() => setSessionPage((page) => Math.max(0, page - 1))}
               className="p-1 rounded hover:bg-accent disabled:opacity-40"
@@ -833,7 +824,7 @@ const BotSessionMonitor = forwardRef<
             </span>
             <button
               type="button"
-              aria-label={t('common.next', { defaultValue: 'Next' })}
+              aria-label={t('common.next')}
               disabled={sessionPage + 1 >= sessionPageCount || loadingSessions}
               onClick={() => setSessionPage((page) => page + 1)}
               className="p-1 rounded hover:bg-accent disabled:opacity-40"
@@ -1049,9 +1040,6 @@ const BotSessionMonitor = forwardRef<
                                           <div className="mb-1 text-[11px] font-medium text-muted-foreground">
                                             {t(
                                               'monitoring.toolCalls.arguments',
-                                              {
-                                                defaultValue: '参数',
-                                              },
                                             )}
                                           </div>
                                           <pre className="whitespace-pre-wrap break-words rounded bg-background/80 p-2 font-mono text-[11px] leading-4 text-muted-foreground">
@@ -1062,9 +1050,7 @@ const BotSessionMonitor = forwardRef<
                                       {call.result && (
                                         <div>
                                           <div className="mb-1 text-[11px] font-medium text-muted-foreground">
-                                            {t('monitoring.toolCalls.result', {
-                                              defaultValue: '结果',
-                                            })}
+                                            {t('monitoring.toolCalls.result')}
                                           </div>
                                           <pre className="whitespace-pre-wrap break-words rounded bg-background/80 p-2 font-mono text-[11px] leading-4 text-muted-foreground">
                                             {truncateToolDetail(call.result)}
@@ -1083,11 +1069,7 @@ const BotSessionMonitor = forwardRef<
                               )}
 
                               <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                                <span>
-                                  {t('monitoring.toolCalls.title', {
-                                    defaultValue: '工具调用',
-                                  })}
-                                </span>
+                                <span>{t('monitoring.toolCalls.title')}</span>
                                 <span className="tabular-nums">
                                   {formatTime(call.timestamp)}
                                 </span>
@@ -1096,18 +1078,8 @@ const BotSessionMonitor = forwardRef<
                                     <span>·</span>
                                     <span>
                                       {expandedToolCall
-                                        ? t(
-                                            'monitoring.toolCalls.hideDetails',
-                                            {
-                                              defaultValue: '隐藏详情',
-                                            },
-                                          )
-                                        : t(
-                                            'monitoring.toolCalls.showDetails',
-                                            {
-                                              defaultValue: '查看详情',
-                                            },
-                                          )}
+                                        ? t('monitoring.toolCalls.hideDetails')
+                                        : t('monitoring.toolCalls.showDetails')}
                                     </span>
                                   </>
                                 )}
@@ -1151,12 +1123,8 @@ const BotSessionMonitor = forwardRef<
                             >
                               <span>
                                 {isUser
-                                  ? t('bots.sessionMonitor.userMessage', {
-                                      defaultValue: 'User',
-                                    })
-                                  : t('bots.sessionMonitor.botMessage', {
-                                      defaultValue: 'Assistant',
-                                    })}
+                                  ? t('bots.sessionMonitor.userMessage')
+                                  : t('bots.sessionMonitor.botMessage')}
                               </span>
                               <span className="tabular-nums">
                                 {formatTime(msg.timestamp)}
@@ -1164,9 +1132,7 @@ const BotSessionMonitor = forwardRef<
                               {isDiscarded ? (
                                 <span className="inline-flex items-center gap-0.5 text-destructive">
                                   <Ban className="w-3 h-3" />
-                                  {t('bots.sessionMonitor.discarded', {
-                                    defaultValue: 'Discarded',
-                                  })}
+                                  {t('bots.sessionMonitor.discarded')}
                                 </span>
                               ) : msg.pipeline_name ? (
                                 <span className="inline-flex items-center gap-0.5 opacity-70">
@@ -1225,7 +1191,7 @@ const BotSessionMonitor = forwardRef<
                   className="inline-flex items-center gap-1 rounded px-2 py-1 hover:bg-accent disabled:opacity-40"
                 >
                   <ChevronLeft className="size-3.5" />
-                  {t('common.previous', { defaultValue: 'Previous' })}
+                  {t('common.previous')}
                 </button>
                 <span className="tabular-nums text-muted-foreground">
                   {messagePage + 1} / {messagePageCount} · {messageTotal}
@@ -1238,7 +1204,7 @@ const BotSessionMonitor = forwardRef<
                   onClick={() => setMessagePage((page) => page + 1)}
                   className="inline-flex items-center gap-1 rounded px-2 py-1 hover:bg-accent disabled:opacity-40"
                 >
-                  {t('common.next', { defaultValue: 'Next' })}
+                  {t('common.next')}
                   <ChevronRight className="size-3.5" />
                 </button>
               </div>

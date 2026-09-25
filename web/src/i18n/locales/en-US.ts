@@ -306,6 +306,7 @@ const enUS = {
   common: {
     customValue: 'Custom',
     loadFailed: 'Failed to load. Please try again.',
+    search: 'Search',
     login: 'Login',
     logout: 'Logout',
     accountOptions: 'Settings',
@@ -1076,6 +1077,10 @@ const enUS = {
       discarded: 'Discarded',
       userMessage: 'User',
       botMessage: 'Assistant',
+      totalSessions: '{{count}} sessions',
+      userSearch: 'User ID or name',
+      startDate: 'Start date',
+      endDate: 'End date',
     },
     admins: {
       title: 'Admins',
@@ -2546,6 +2551,8 @@ const enUS = {
       arguments: 'Arguments',
       result: 'Result',
       noToolCalls: 'No tool calls recorded',
+      showDetails: 'Show details',
+      hideDetails: 'Hide details',
     },
     tokens: {
       totalTokens: 'Total Tokens',

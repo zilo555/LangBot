@@ -1,5 +1,4 @@
 import pipelineMigration from './pipeline-migration/zh-Hans';
-
 const zhHans = {
   assistant: {
     modelHint: '切换助手模型，从下一条消息生效',
@@ -93,7 +92,6 @@ const zhHans = {
   guidedTour: {
     eventDebugDescription:
       '选择支持的事件并填写测试数据，运行后查看输出和工具调用结果。平台操作仅模拟执行，模型和其他工具按实际配置执行。',
-
     pipeline: {
       trigger: {
         title: '选择要回复的消息',
@@ -288,6 +286,7 @@ const zhHans = {
   common: {
     customValue: '自定义',
     loadFailed: '加载失败，请重试。',
+    search: '搜索',
     login: '登录',
     logout: '退出登录',
     accountOptions: '系统设置',
@@ -685,7 +684,6 @@ const zhHans = {
     applyFailed: '配置已保存，但应用失败',
     internalErrorHint: '发生内部错误，请通过错误编号查看后端日志。',
     errorReference: '错误编号：{{id}}',
-
     title: '机器人',
     description: '创建和管理机器人，这是 LangBot 与各个平台连接的入口',
     createBot: '创建机器人',
@@ -1014,6 +1012,10 @@ const zhHans = {
       discarded: '已丢弃',
       userMessage: '用户',
       botMessage: '助手',
+      totalSessions: '{{count}} 个会话',
+      userSearch: '用户 ID 或名称',
+      startDate: '开始日期',
+      endDate: '结束日期',
     },
     admins: {
       title: '管理员',
@@ -1055,12 +1057,10 @@ const zhHans = {
       pluginSettings: '插件设置',
       pluginSettingsDescription: '由当前插件声明的参数。',
       selectToDebug: '请先在上方选择插件，再开始调试。',
-
       debugOutput: '处理器输出',
       debugDescription: '当前测试的输入事件、插件日志和动作结果。',
       debugNotice:
         '插件真实处理测试事件；回复、发送等平台动作使用 Mock，不发送真实消息。其他工具仍按实际配置执行。',
-
       create: '创建插件处理器',
       type: '插件处理器',
       description: '由插件代码处理预先声明的特定事件，按插件编写的逻辑执行。',
@@ -1095,7 +1095,6 @@ const zhHans = {
     debugData: {
       chatId: '会话 ID',
       feedbackType: '反馈类型（1：赞，2：踩，3：取消）',
-
       title: '事件数据',
       form: '常用字段',
       json: '完整 JSON',
@@ -1344,7 +1343,6 @@ const zhHans = {
     noMatchingPlugins: '没有找到匹配的插件',
     loading: '加载中...',
     getPluginListError: '获取插件列表失败:',
-    pluginConfig: '插件配置',
     noPluginInstalled: '暂未安装任何插件',
     noExtensionInstalled: '暂未安装任何扩展',
     searchInstalled: '搜索已安装扩展',
@@ -1352,6 +1350,7 @@ const zhHans = {
     loadingExtensions: '正在加载扩展...',
     groupByType: '按格式分组',
     groupByTypeShort: '分组',
+    pluginConfig: '插件配置',
     pluginSort: '插件排序',
     pluginSortDescription:
       '插件顺序会影响同一事件内的处理顺序，请拖动插件卡片排序',
@@ -1533,7 +1532,6 @@ const zhHans = {
     runnerUsageAll: '全部',
     runnerUsageAgent: 'Agent / 流水线',
     runnerUsageEvent: '插件处理器',
-
     searchPlaceholder: '搜索插件...',
     searchPlaceholderCount: '搜索 {{count}} 个扩展、能力或场景...',
     searchResults: '搜索到 {{count}} 个扩展',
@@ -1607,13 +1605,9 @@ const zhHans = {
     typeMCP: 'MCP',
     typeSkill: '技能',
     requestPlugin: '请求插件',
-    tags: {
-      filterByTags: '按标签筛选',
-      selected: '已选',
-      selectTags: '选择标签',
-      clearAll: '清空',
-      noTags: '暂无标签',
-    },
+    viewDetails: '查看详情',
+    deprecated: '已弃用',
+    deprecatedTooltip: '请安装对应「知识引擎」插件',
     filters: {
       allFormats: '全部格式',
       more: '筛选',
@@ -1623,9 +1617,13 @@ const zhHans = {
       technicalType: '扩展格式',
     },
     allExtensions: '全部扩展',
-    viewDetails: '查看详情',
-    deprecated: '已弃用',
-    deprecatedTooltip: '请安装对应「知识引擎」插件',
+    tags: {
+      filterByTags: '按标签筛选',
+      selected: '已选',
+      selectTags: '选择标签',
+      clearAll: '清空',
+      noTags: '暂无标签',
+    },
   },
   mcp: {
     title: 'MCP',
@@ -2088,8 +2086,8 @@ const zhHans = {
     resetting: '重置中...',
     resetSuccess: '密码重置成功，请登录',
     resetFailed: '密码重置失败，请检查邮箱和恢复密钥是否正确',
-    backToLogin: '返回登录',
     secondFactorFailed: '验证失败，请检查验证码后重试',
+    backToLogin: '返回登录',
     verifyWith: '验证方式',
     methodRecoveryKey: '恢复密钥',
     methodTotp: '身份验证器',
@@ -2113,8 +2111,8 @@ const zhHans = {
       '将在请求时附加到请求体中，如 encoding_format, dimensions 等',
   },
   llm: {
-    llmModels: '对话模型',
     description: '管理 LLM 模型,用于对话消息生成',
+    llmModels: '对话模型',
     extraParametersDescription:
       '将在请求时附加到请求体中，如 max_tokens, temperature, top_p 等',
   },
@@ -2397,6 +2395,8 @@ const zhHans = {
       arguments: '参数',
       result: '结果',
       noToolCalls: '未记录工具调用',
+      showDetails: '查看详情',
+      hideDetails: '隐藏详情',
     },
     tokens: {
       totalTokens: '总 Token 数',
@@ -2711,8 +2711,8 @@ const zhHans = {
     advancedSettings: '高级设置',
     searchSkills: '搜索技能...',
     selectSkills: '选择技能',
-    builtin: '内置',
     addSkill: '添加技能',
+    builtin: '内置',
     importFromGithub: '从 GitHub 安装技能',
     createManually: '手动创建',
     uploadZip: '上传 ZIP 包',
@@ -2983,5 +2983,4 @@ const zhHans = {
     invalidPage: '无效的插件页面',
   },
 };
-
 export default zhHans;
