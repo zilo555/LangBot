@@ -15,6 +15,7 @@ from .....entity.errors import account as account_errors
 from ...context import RequestContext
 from .....cloud.launch import SpaceLaunchError
 from ...service.user import ControlPlaneDirectoryRequiredError, PublicRegistrationClosedError
+from ...service import totp as totp_module
 
 # Fixed-window admission quota for the unauthenticated reset-password endpoint (#2392).
 # The admission check and slot bump share ONE synchronous critical section with no await
@@ -112,14 +113,92 @@ class UserRouterGroup(group.RouterGroup):
                 return self.http_status(403, 'password_login_disabled', 'Password login is disabled on LangBot Cloud')
             json_data = await quart.request.json
 
+            user_email = json_data['user']
+            password = json_data['password']
+            totp_code = json_data.get('totp_code') or json_data.get('code')
+
             try:
-                token = await self.ap.user_service.authenticate(json_data['user'], json_data['password'])
+                token = await self.ap.user_service.authenticate(user_email, password, totp_code)
             except argon2.exceptions.VerifyMismatchError:
                 return self.fail(1, 'Invalid username or password')
+            except totp_module.TotpRequiredError:
+                # Primary factors passed, but the second factor is still missing.
+                # Issue a challenge instead of a session token.
+                challenge_token = await self.ap.user_service.issue_totp_login_challenge(user_email)
+                if challenge_token is None:
+                    return self.fail(1, 'A second factor is required')
+                return (
+                    quart.jsonify(
+                        {
+                            'code': 'totp_required',
+                            'msg': 'A TOTP second factor is required',
+                            'data': {'challenge_token': challenge_token},
+                        }
+                    ),
+                    401,
+                )
+            except totp_module.TotpInvalidCodeError:
+                return self.http_status(401, 'totp_invalid_code', 'Invalid TOTP or recovery code')
             except ValueError as e:
                 return self.fail(1, str(e))
 
             return self.success(data={'token': token})
+
+        # ---- TOTP second factor (login challenge) ----
+
+        @self.route('/totp/challenge', methods=['POST'], auth_type=group.AuthType.NONE)
+        async def _() -> str:
+            """Start a login second-factor challenge.
+
+            Always answers with a token, even for unknown or non-enrolled
+            Accounts: a distinguishable reply would let an unauthenticated caller
+            enumerate which emails have a second factor.
+            """
+            json_data = (await quart.request.json) or {}
+            user_email = json_data.get('user')
+
+            if not isinstance(user_email, str) or not user_email:
+                return self.fail(1, 'Missing user parameter')
+
+            challenge_token = await self.ap.user_service.issue_uniform_totp_login_challenge(user_email)
+            return self.success(data={'challenge_token': challenge_token})
+
+        @self.route('/totp/verify', methods=['POST'], auth_type=group.AuthType.NONE)
+        async def _() -> str:
+            """Complete the login second factor and return a session token.
+
+            A ``challenge_token`` is mandatory: it proves the password step ran
+            for this Account, so a bare code can never mint a session on its own.
+            """
+            json_data = (await quart.request.json) or {}
+            user_email = json_data.get('user')
+            code = json_data.get('code')
+            challenge_token = json_data.get('challenge_token')
+
+            if (
+                not isinstance(user_email, str)
+                or not user_email
+                or not isinstance(code, str)
+                or not code
+                or not isinstance(challenge_token, str)
+                or not challenge_token
+            ):
+                return self.fail(1, 'Missing user, code or challenge_token parameter')
+
+            verified = await self.ap.user_service.verify_totp_second_factor(
+                user_email,
+                code,
+                challenge_token=challenge_token,
+            )
+            if not verified:
+                return self.http_status(401, 'totp_invalid_code', 'Invalid TOTP or recovery code')
+
+            user_obj = await self.ap.user_service.get_user_by_email(user_email)
+            if user_obj is None:
+                return self.http_status(401, 'totp_invalid_code', 'Invalid TOTP or recovery code')
+
+            token = await self.ap.user_service.generate_jwt_token(user_obj)
+            return self.success(data={'token': token, 'user': user_obj.user})
 
         @self.route('/check-token', methods=['GET'], auth_type=group.AuthType.ACCOUNT_TOKEN)
         async def _(account) -> str:
@@ -138,8 +217,10 @@ class UserRouterGroup(group.RouterGroup):
             json_data = await quart.request.json
 
             user_email = json_data['user']
-            recovery_key = json_data['recovery_key']
             new_password = json_data['new_password']
+            # Second-factor method: 'recovery_key' (instance-wide, default),
+            # 'totp' (an authenticator code) or 'recovery_code' (a one-time code).
+            method = json_data.get('method') or 'recovery_key'
 
             # hard sleep 3s for security
             await asyncio.sleep(3)
@@ -152,19 +233,35 @@ class UserRouterGroup(group.RouterGroup):
             if user_obj is None:
                 return self.http_status(400, -1, 'User not found')
 
-            stored_key = self.ap.instance_config.data['system']['recovery_key']
-            try:
-                key_matches = (
-                    isinstance(recovery_key, str)
-                    and isinstance(stored_key, str)
-                    and hmac.compare_digest(recovery_key.encode(), stored_key.encode())
-                )
-            except UnicodeEncodeError:
-                # JSON can contain lone surrogates, which are not valid UTF-8.
-                key_matches = False
+            if method in ('totp', 'recovery_code'):
+                # Account-scoped second factor: a live TOTP code or, for the
+                # recovery_code method, a one-time recovery code.
+                allow_recovery = method == 'recovery_code'
+                second_factor = json_data.get('totp_code') or json_data.get('code')
+                if not isinstance(second_factor, str) or not second_factor:
+                    return self.http_status(400, -1, 'Missing TOTP or recovery code')
 
-            if not key_matches:
-                return self.http_status(403, -1, 'Invalid recovery key')
+                if not await self.ap.user_service.verify_totp_second_factor(
+                    user_email,
+                    second_factor,
+                    allow_recovery=allow_recovery,
+                ):
+                    return self.http_status(403, -1, 'Invalid TOTP or recovery code')
+            else:
+                recovery_key = json_data.get('recovery_key')
+                stored_key = self.ap.instance_config.data['system']['recovery_key']
+                try:
+                    key_matches = (
+                        isinstance(recovery_key, str)
+                        and isinstance(stored_key, str)
+                        and hmac.compare_digest(recovery_key.encode(), stored_key.encode())
+                    )
+                except UnicodeEncodeError:
+                    # JSON can contain lone surrogates, which are not valid UTF-8.
+                    key_matches = False
+
+                if not key_matches:
+                    return self.http_status(403, -1, 'Invalid recovery key')
 
             await self.ap.user_service.reset_password(user_email, new_password)
 
@@ -673,6 +770,268 @@ class UserRouterGroup(group.RouterGroup):
             if not deleted:
                 return self.http_status(404, -1, 'Passkey not found')
             return self.success()
+
+        # ---- TOTP second factor (account settings) ----
+
+        # The second factor belongs to the Account, so these routes are
+        # ACCOUNT_TOKEN scoped. Requiring a Workspace would lock out an Account
+        # that has not been added to one yet.
+        @self.route('/totp/status', methods=['GET'], auth_type=group.AuthType.ACCOUNT_TOKEN)
+        async def _(account) -> str:
+            """Report second-factor state without ever returning the secret."""
+            totp_service = self.ap.totp_service
+            credential = await totp_service.get_credential(account.uuid)
+            return self.success(
+                data={
+                    'enabled': bool(credential is not None and credential.confirmed_at is not None),
+                    'pending': bool(credential is not None and credential.confirmed_at is None),
+                    'confirmed_at': (
+                        credential.confirmed_at.isoformat() if credential and credential.confirmed_at else None
+                    ),
+                    'last_used_at': (
+                        credential.last_used_at.isoformat() if credential and credential.last_used_at else None
+                    ),
+                    'recovery_codes_remaining': (
+                        await totp_service.count_unused_recovery_codes(account.uuid) if credential else 0
+                    ),
+                }
+            )
+
+        @self.route('/totp/enroll', methods=['POST'], auth_type=group.AuthType.ACCOUNT_TOKEN)
+        async def _(account) -> str:
+            """Start TOTP enrolment; returns a server-rendered QR code only.
+
+            The shared secret is intentionally never returned to the client so it
+            cannot be read out of the browser or any proxy in between.
+            """
+            allow_modify_login_info = self.ap.instance_config.data.get('system', {}).get(
+                'allow_modify_login_info', True
+            )
+            if not allow_modify_login_info:
+                return self.http_status(403, -1, 'Modifying login info is disabled')
+
+            json_data = (await quart.request.json) or {}
+            # rotate=True (explicit refresh) mints a new secret; the default
+            # reuses any pending enrolment so duplicate requests cannot
+            # invalidate the QR code already displayed to the operator.
+            rotate = bool(json_data.get('rotate', False))
+
+            try:
+                enrollment = await self.ap.totp_service.begin_enrollment(account.uuid, account.user, rotate=rotate)
+            except totp_module.TotpError as e:
+                return self.http_status(409, e.code, str(e))
+
+            return self.success(
+                data={
+                    'uuid': enrollment.uuid,
+                    'qr_code_data_url': enrollment.qr_code_data_url,
+                    'algorithm': enrollment.algorithm,
+                    'digits': enrollment.digits,
+                    'period': enrollment.period,
+                }
+            )
+
+        @self.route('/totp/enroll/confirm', methods=['POST'], auth_type=group.AuthType.ACCOUNT_TOKEN)
+        async def _(account) -> str:
+            """Confirm enrolment with the first code; returns recovery codes once."""
+            allow_modify_login_info = self.ap.instance_config.data.get('system', {}).get(
+                'allow_modify_login_info', True
+            )
+            if not allow_modify_login_info:
+                return self.http_status(403, -1, 'Modifying login info is disabled')
+
+            json_data = (await quart.request.json) or {}
+            code = json_data.get('code')
+            if not isinstance(code, str) or not code:
+                return self.fail(1, 'Missing code parameter')
+
+            try:
+                result = await self.ap.totp_service.confirm_enrollment(account.uuid, code)
+            except totp_module.TotpNotEnrolledError as e:
+                return self.http_status(404, e.code, str(e))
+            except totp_module.TotpInvalidCodeError as e:
+                return self.http_status(400, e.code, str(e))
+            except totp_module.TotpError as e:
+                return self.http_status(409, e.code, str(e))
+
+            return self.success(data={'recovery_codes': result.codes})
+
+        @self.route('/totp/recovery-codes', methods=['POST'], auth_type=group.AuthType.ACCOUNT_TOKEN)
+        async def _(account) -> str:
+            """Regenerate recovery codes after a valid TOTP or recovery code."""
+            allow_modify_login_info = self.ap.instance_config.data.get('system', {}).get(
+                'allow_modify_login_info', True
+            )
+            if not allow_modify_login_info:
+                return self.http_status(403, -1, 'Modifying login info is disabled')
+
+            json_data = (await quart.request.json) or {}
+            code = json_data.get('code')
+            if not isinstance(code, str) or not code:
+                return self.fail(1, 'Missing code parameter')
+
+            try:
+                result = await self.ap.totp_service.regenerate_recovery_codes(account.uuid, code)
+            except totp_module.TotpNotEnrolledError as e:
+                return self.http_status(404, e.code, str(e))
+            except totp_module.TotpInvalidCodeError as e:
+                return self.http_status(403, e.code, str(e))
+
+            return self.success(data={'recovery_codes': result.codes})
+
+        @self.route('/totp/disable', methods=['POST'], auth_type=group.AuthType.ACCOUNT_TOKEN)
+        async def _(account) -> str:
+            """Disable TOTP, requiring a live TOTP or recovery code."""
+            allow_modify_login_info = self.ap.instance_config.data.get('system', {}).get(
+                'allow_modify_login_info', True
+            )
+            if not allow_modify_login_info:
+                return self.http_status(403, -1, 'Modifying login info is disabled')
+
+            json_data = (await quart.request.json) or {}
+            code = json_data.get('code')
+
+            try:
+                await self.ap.totp_service.disable(account.uuid, code=code)
+            except totp_module.TotpNotEnrolledError as e:
+                return self.http_status(404, e.code, str(e))
+            except totp_module.TotpInvalidCodeError as e:
+                return self.http_status(403, e.code, str(e))
+
+            return self.success()
+
+        # ---- TOTP oversight for owners and admins ----
+
+        async def _require_workspace_manager(request_context: RequestContext) -> None:
+            """Raise unless the caller's Workspace role is owner or admin."""
+
+            if request_context is None:
+                raise PermissionError('A Workspace context is required')
+            access = await self.ap.workspace_collaboration_service.resolve_account_workspace(
+                request_context.account_uuid,
+                request_context.workspace_uuid,
+            )
+            if access.membership.role not in ('owner', 'admin'):
+                raise PermissionError('Only Workspace owners and admins may manage other Accounts')
+
+        @self.route('/totp/accounts', methods=['GET'], auth_type=group.AuthType.USER_TOKEN)
+        async def _(request_context: RequestContext) -> str:
+            """List the second-factor state of every Account for owners/admins.
+
+            Oversight is deliberately instance-wide: managing the second factor
+            of any Account is an owner/admin responsibility and is not scoped to
+            the caller's Workspace.
+            """
+            try:
+                await _require_workspace_manager(request_context)
+            except PermissionError as e:
+                return self.http_status(403, 'permission_denied', str(e))
+            except Exception:
+                return self.http_status(403, 'permission_denied', 'Not permitted')
+
+            accounts = await self.ap.totp_service.list_account_states()
+            return self.success(data={'accounts': accounts})
+
+        @self.route('/totp/accounts/<target_account_uuid>', methods=['DELETE'], auth_type=group.AuthType.USER_TOKEN)
+        async def _(request_context: RequestContext, target_account_uuid: str) -> str:
+            """Revoke another Account's second factor when its codes are lost."""
+            allow_modify_login_info = self.ap.instance_config.data.get('system', {}).get(
+                'allow_modify_login_info', True
+            )
+            if not allow_modify_login_info:
+                return self.http_status(403, -1, 'Modifying login info is disabled')
+
+            try:
+                await _require_workspace_manager(request_context)
+            except PermissionError as e:
+                return self.http_status(403, 'permission_denied', str(e))
+            except Exception:
+                return self.http_status(403, 'permission_denied', 'Not permitted')
+
+            revoked = await self.ap.totp_service.revoke_for_account(target_account_uuid)
+            if not revoked:
+                return self.http_status(404, 'totp_not_enrolled', 'TOTP is not enabled for that Account')
+            return self.success()
+
+        @self.route(
+            '/totp/accounts/<target_account_uuid>/enroll',
+            methods=['POST'],
+            auth_type=group.AuthType.USER_TOKEN,
+        )
+        async def _(request_context: RequestContext, target_account_uuid: str) -> str:
+            """Start a forced re-binding of another Account's second factor.
+
+            Returns a server-rendered QR code so an owner/admin can walk the
+            Account through binding a new authenticator. The shared secret is
+            never returned to the client.
+            """
+            allow_modify_login_info = self.ap.instance_config.data.get('system', {}).get(
+                'allow_modify_login_info', True
+            )
+            if not allow_modify_login_info:
+                return self.http_status(403, -1, 'Modifying login info is disabled')
+
+            try:
+                await _require_workspace_manager(request_context)
+            except PermissionError as e:
+                return self.http_status(403, 'permission_denied', str(e))
+            except Exception:
+                return self.http_status(403, 'permission_denied', 'Not permitted')
+
+            target = await self.ap.totp_service.get_account(target_account_uuid)
+            if target is None:
+                return self.http_status(404, 'account_not_found', 'Account not found')
+
+            try:
+                enrollment = await self.ap.totp_service.begin_enrollment(target_account_uuid, target.user, force=True)
+            except totp_module.TotpError as e:
+                return self.http_status(409, e.code, str(e))
+
+            return self.success(
+                data={
+                    'uuid': enrollment.uuid,
+                    'qr_code_data_url': enrollment.qr_code_data_url,
+                    'algorithm': enrollment.algorithm,
+                    'digits': enrollment.digits,
+                    'period': enrollment.period,
+                }
+            )
+
+        @self.route(
+            '/totp/accounts/<target_account_uuid>/enroll/confirm',
+            methods=['POST'],
+            auth_type=group.AuthType.USER_TOKEN,
+        )
+        async def _(request_context: RequestContext, target_account_uuid: str) -> str:
+            """Activate a forced re-binding with the first code; returns recovery codes once."""
+            allow_modify_login_info = self.ap.instance_config.data.get('system', {}).get(
+                'allow_modify_login_info', True
+            )
+            if not allow_modify_login_info:
+                return self.http_status(403, -1, 'Modifying login info is disabled')
+
+            try:
+                await _require_workspace_manager(request_context)
+            except PermissionError as e:
+                return self.http_status(403, 'permission_denied', str(e))
+            except Exception:
+                return self.http_status(403, 'permission_denied', 'Not permitted')
+
+            json_data = (await quart.request.json) or {}
+            code = json_data.get('code')
+            if not isinstance(code, str) or not code:
+                return self.fail(1, 'Missing code parameter')
+
+            try:
+                result = await self.ap.totp_service.confirm_enrollment(target_account_uuid, code)
+            except totp_module.TotpNotEnrolledError as e:
+                return self.http_status(404, e.code, str(e))
+            except totp_module.TotpInvalidCodeError as e:
+                return self.http_status(400, e.code, str(e))
+            except totp_module.TotpError as e:
+                return self.http_status(409, e.code, str(e))
+
+            return self.success(data={'recovery_codes': result.codes})
 
     async def _handle_space_direct_launch(
         self,

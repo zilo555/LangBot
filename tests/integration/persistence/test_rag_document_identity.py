@@ -11,12 +11,16 @@ import pytest_asyncio
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import create_async_engine
 
+from alembic.config import Config as AlembicConfig
+from alembic.script import ScriptDirectory
+
 from langbot.pkg.api.http.context import ExecutionContext
 from langbot.pkg.entity.persistence.base import Base
 from langbot.pkg.entity.persistence.pipeline import LegacyPipeline
 from langbot.pkg.entity.persistence.rag import File, KnowledgeBase
 from langbot.pkg.entity.persistence.user import User
 from langbot.pkg.entity.persistence.workspace import Workspace
+from langbot.pkg.persistence import alembic_runner
 from langbot.pkg.persistence.alembic_runner import (
     get_alembic_current,
     run_alembic_downgrade,
@@ -30,16 +34,22 @@ from langbot.pkg.workspace.errors import WorkspaceNotFoundError
 OLD_HEAD = '0024_passkey_credentials'
 
 
-def current_head():
-    from alembic.config import Config
-    from alembic.script import ScriptDirectory
-    from langbot.pkg.persistence.alembic_runner import _ALEMBIC_DIR
+def current_head() -> str:
+    """Resolve the live Alembic head instead of pinning a revision number.
 
-    config = Config()
-    config.set_main_option('script_location', _ALEMBIC_DIR)
-    return ScriptDirectory.from_config(config).get_current_head()
+    Parallel migrations (the TOTP and RAG document identity branches) are joined
+    by a merge revision, so the head moves whenever either branch gains a new
+    migration. Resolving it here keeps this test from needing an edit each time.
+    """
+
+    cfg = AlembicConfig()
+    cfg.set_main_option('script_location', str(alembic_runner._ALEMBIC_DIR))
+    return ScriptDirectory.from_config(cfg).get_current_head()
 
 
+# The document identity work lives on its own branch: upgrades that exercise it
+# must name the revision explicitly, because upgrading to the head would now
+# also traverse the unrelated TOTP branch that shares this merge point.
 DOCUMENT_IDENTITY_REVISION = '0025_rag_document_identity'
 CONTEXT = ExecutionContext(instance_uuid='instance-a', workspace_uuid='workspace-a', placement_generation=5)
 

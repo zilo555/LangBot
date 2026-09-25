@@ -366,6 +366,7 @@ const enUS = {
     deleteError: 'Delete failed: ',
     addRound: 'Add Round',
     copy: 'Copy',
+    download: 'Download',
     copySuccess: 'Copy Successfully',
     copyFailed: 'Copy Failed',
     test: 'Test',
@@ -389,6 +390,19 @@ const enUS = {
     passkeyLoginSuccess: 'Passkey verified successfully, signing in...',
     passkeyLoginFailed: 'Failed to sign in with Passkey',
     passkeyNotSupported: 'Passkey is not supported on this browser or device',
+    verify: 'Verify',
+    back: 'Back',
+    totpChallengeTitle: 'Two-factor verification',
+    totpChallengeDesc:
+      'Enter the 6-digit code from your authenticator app to continue',
+    totpUseRecoveryCode:
+      'Enter one of your single-use recovery codes to continue',
+    enterTotpCode: 'Enter 6-digit code',
+    enterRecoveryCode: 'Enter recovery code',
+    useRecoveryCode: 'Use a recovery code',
+    useTotpCode: 'Use an authenticator code',
+    totpInvalidCode: 'Invalid or already-used code, please try again',
+    totpVerifyFailed: 'Two-factor verification failed, please try again',
     spaceLoginTitle: 'Login with LangBot Account',
     spaceLoginDescription:
       'Scan the QR code or visit the link below to authorize',
@@ -2203,7 +2217,23 @@ const enUS = {
     resetSuccess: 'Password reset successfully, please login',
     resetFailed:
       'Password reset failed, please check your email and recovery key',
+    secondFactorFailed:
+      'Verification failed, please check your code and try again',
     backToLogin: 'Back to Login',
+    verifyWith: 'Verify with',
+    methodRecoveryKey: 'Recovery Key',
+    methodTotp: 'Authenticator',
+    methodRecoveryCode: 'Recovery Code',
+    totpCode: 'Authenticator Code',
+    totpCodeDescription:
+      'Enter the 6-digit code shown in your authenticator app',
+    totpCodeRequired: 'Authenticator code cannot be empty',
+    enterTotpCode: 'Enter 6-digit code',
+    recoveryCode: 'Recovery Code',
+    recoveryCodeDescription:
+      'Enter one of the single-use recovery codes you saved when enabling two-factor authentication',
+    recoveryCodeRequired: 'Recovery code cannot be empty',
+    enterRecoveryCodeValue: 'Enter recovery code',
   },
   embedding: {
     description: 'Manage Embedding models for text vectorization',
@@ -2263,6 +2293,66 @@ const enUS = {
     passkeyAddedSuccess: 'Passkey added successfully',
     passkeyDeleteSuccess: 'Passkey deleted',
     passkeyRenameSuccess: 'Passkey renamed successfully',
+    totpSectionTitle: 'Two-Factor Authentication',
+    totpSectionDesc:
+      'Add a time-based one-time password as a second sign-in factor',
+    totpEnabledDesc:
+      'Two-factor authentication is enabled · {{count}} recovery codes remaining',
+    enableTotp: 'Enable',
+    manageTotp: 'Manage',
+    totpEnrollTitle: 'Enable Two-Factor Authentication',
+    totpEnrollDesc:
+      'Scan the QR code with your authenticator app, then confirm the generated code',
+    totpStartEnroll: 'Generate Secret',
+    totpGeneratingSecret: 'Generating a new secret...',
+    totpManageTitle: 'Two-factor authentication',
+    totpManageDesc:
+      'Regenerate your recovery codes or turn the second factor off.',
+    totpRegenerateCodes: 'Regenerate recovery codes',
+    totpRegenerateDesc:
+      'Enter a current authenticator or recovery code to issue a fresh set of codes.',
+    totpRecoveryCodesRegenerated: 'New recovery codes generated',
+    totpStatusDisabled: 'Not enabled',
+    totpCodesRemaining: '{{count}} recovery codes left',
+    totpManagerSectionDesc:
+      'Owners and admins can review and revoke the second factor of any Account.',
+    revokeTotp: 'Re-bind',
+    totpAdminResetTitle: 'Re-bind two-factor authentication for {{user}}',
+    totpAdminResetDesc:
+      'Have the Account scan the QR code with their authenticator, then enter the 6-digit code below to finish binding.',
+    totpAdminResetWarning:
+      'Once re-binding starts, {{user}} existing authenticator stops working immediately.',
+    totpAdminResetHint:
+      'If the Account cannot sign in right now, they can scan this QR code in any authenticator app.',
+    totpAdminHandOverCodes:
+      'Hand these recovery codes over to {{user}}. They are shown only once.',
+    revokeTotpConfirm:
+      'Turn off two-factor authentication for {{user}}? They will be able to sign in with only a password afterwards.',
+    revokeTotpSuccess: 'Two-factor authentication revoked',
+    you: 'you',
+    noAccounts: 'No accounts to show',
+    totpRefreshSecret: 'Refresh QR code',
+    totpQrAlt: 'Two-factor authentication QR code',
+    totpEnterCode: 'Verification code',
+    enterCode: 'Enter code',
+    totpVerifyAndEnable: 'Verify and Enable',
+    totpOrRecoveryCode: 'Authenticator or recovery code',
+    totpStatusEnabled: 'Two-factor authentication enabled',
+    totpLastUsed: 'Last verified: {{date}}',
+    totpNeverUsed: 'Not used yet',
+    disableTotp: 'Disable Two-Factor Authentication',
+    disableTotpDesc:
+      'Enter a current authenticator code or a recovery code to turn off two-factor authentication',
+    totpEnabledSuccess: 'Two-factor authentication enabled',
+    totpDisabledSuccess: 'Two-factor authentication disabled',
+    totpInvalidCode: 'Invalid code, please check and try again',
+    totpRecoveryCodesTitle: 'Recovery codes',
+    totpRecoveryCodesDesc:
+      'Save these single-use recovery codes in a safe place. They are shown only once.',
+    totpRecoveryCodesWarning:
+      'Each code works once. If you lose your authenticator and these codes, you will lose access to sign-in.',
+    totpSavedCodes: 'I have saved these codes',
+    regenerateRecoveryCodes: 'Regenerate recovery codes',
     bindSpaceFailed: 'Failed to bind LangBot Account',
     bindSpaceInvalidState:
       'Invalid bind request. Please try again from account settings.',

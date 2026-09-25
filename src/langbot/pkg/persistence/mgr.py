@@ -67,6 +67,8 @@ _ALEMBIC_TENANT_TABLES = {
     'model_providers',
     'codex_credentials',
     'passkey_credentials',
+    'totp_credentials',
+    'totp_recovery_codes',
     'llm_models',
     'embedding_models',
     'rerank_models',
