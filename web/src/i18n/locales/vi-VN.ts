@@ -1,6 +1,58 @@
 import pipelineMigration from './pipeline-migration/vi-VN';
 
 const viVN = {
+  assistant: {
+    modelHint: 'Đổi mô hình trợ lý cho tin nhắn tiếp theo',
+    details: 'Xem dữ liệu thô',
+    found: 'Tìm thấy {{count}} mục',
+    completed: 'Hoàn tất',
+    failed: 'Thất bại',
+    denied: 'Không thực thi',
+    partial: 'Kết quả chưa đầy đủ',
+    operationFailed:
+      'Thao tác thất bại. Kiểm tra chi tiết và trạng thái tài nguyên trước khi thử thay đổi lại.',
+    operationDenied:
+      'Đã từ chối. Không có thao tác nào trong lô này được thực thi.',
+    openResource: 'Mở tài nguyên',
+    sendUnconfirmed:
+      'Chưa xác nhận gửi. Kiểm tra kết nối rồi mở lại cuộc trò chuyện.',
+    draftPlaceholder: 'Có thể soạn tin nhắn tiếp theo trong lúc chờ…',
+    operations: {
+      create_pipeline: 'Tạo Pipeline',
+      configure_pipeline: 'Cấu hình Pipeline',
+      create_knowledge_base: 'Tạo cơ sở tri thức',
+      get_pipeline: 'Xem Pipeline',
+      get_knowledge_schema: 'Xem lược đồ knowledge engine',
+    },
+    resources: {
+      models: 'Tìm mô hình trò chuyện',
+      embedding_models: 'Tìm mô hình embedding',
+      pipelines: 'Tìm Pipeline',
+      knowledge_bases: 'Tìm cơ sở tri thức',
+      knowledge_engines: 'Tìm knowledge engine',
+    },
+    title: 'Trợ lý không gian làm việc',
+    subtitle: 'Xây dựng và quản lý ứng dụng của bạn',
+    newChat: 'Cuộc trò chuyện mới',
+    close: 'Đóng',
+    welcome:
+      'Hãy cho tôi biết bạn muốn xây dựng gì. Tôi có thể xem không gian làm việc này và đề xuất cấu hình cơ sở tri thức cùng Pipeline để bạn xác nhận.',
+    discover: 'Có những mô hình, cơ sở tri thức và Pipeline nào khả dụng?',
+    build: 'Giúp tôi tạo ứng dụng hỏi đáp dựa trên cơ sở tri thức.',
+    toolResult: 'Kết quả thao tác',
+    review: 'Kiểm tra thao tác và tham số cụ thể trước khi xác nhận',
+    confirm: 'Xác nhận và thực thi',
+    decline: 'Từ chối',
+    working: 'Đang xử lý…',
+    modelUnavailable:
+      'Mô hình không khả dụng. Kiểm tra cấu hình và quyền truy cập rồi bắt đầu cuộc trò chuyện mới.',
+    error:
+      'Lượt này chưa hoàn tất. Kiểm tra kết quả tài nguyên trước khi bắt đầu cuộc trò chuyện mới; hệ thống không tự động thử lại thay đổi.',
+    running:
+      'Lượt này vẫn đang chạy hoặc bị gián đoạn trước khi lưu kết quả. Mở lại trợ lý để làm mới; kiểm tra tài nguyên trước khi bắt đầu lại.',
+    placeholder: 'Mô tả ứng dụng của bạn…',
+    send: 'Gửi',
+  },
   sidebarGuide: {
     steps: {
       monitoring: {
