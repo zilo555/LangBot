@@ -1,6 +1,59 @@
 import pipelineMigration from './pipeline-migration/es-ES';
 
 const esES = {
+  assistant: {
+    modelHint: 'Cambia el modelo del asistente para el próximo mensaje',
+    details: 'Ver datos sin procesar',
+    found: 'Se encontraron {{count}} elementos',
+    completed: 'Completado',
+    failed: 'Fallido',
+    denied: 'No ejecutado',
+    partial: 'Resultado parcial',
+    operationFailed:
+      'La operación falló. Revisa los detalles y el estado de los recursos antes de reintentar un cambio.',
+    operationDenied: 'Rechazado. Nada de este lote se ejecutó.',
+    openResource: 'Abrir recurso',
+    sendUnconfirmed:
+      'Entrega sin confirmar. Comprueba tu conexión y vuelve a abrir la conversación.',
+    draftPlaceholder: 'Escribe tu próximo mensaje mientras esperas…',
+    operations: {
+      create_pipeline: 'Crear Pipeline',
+      configure_pipeline: 'Configurar Pipeline',
+      create_knowledge_base: 'Crear base de conocimiento',
+      get_pipeline: 'Consultar Pipeline',
+      get_knowledge_schema: 'Consultar el esquema del motor de conocimiento',
+    },
+    resources: {
+      models: 'Buscar modelos de chat',
+      embedding_models: 'Buscar modelos de embeddings',
+      pipelines: 'Buscar Pipelines',
+      knowledge_bases: 'Buscar bases de conocimiento',
+      knowledge_engines: 'Buscar motores de conocimiento',
+    },
+    title: 'Asistente del espacio de trabajo',
+    subtitle: 'Crea y gestiona tus aplicaciones',
+    newChat: 'Nueva conversación',
+    close: 'Cerrar',
+    welcome:
+      'Dime qué quieres crear. Puedo inspeccionar este espacio de trabajo y proponer cambios en la base de conocimiento y el Pipeline para que los confirmes.',
+    discover:
+      '¿Qué modelos, bases de conocimiento y Pipelines hay disponibles?',
+    build:
+      'Ayúdame a crear una aplicación de preguntas y respuestas con base de conocimiento.',
+    toolResult: 'Resultado de la operación',
+    review: 'Revisa las operaciones exactas antes de ejecutarlas',
+    confirm: 'Confirmar y ejecutar',
+    decline: 'Rechazar',
+    working: 'Procesando…',
+    modelUnavailable:
+      'Modelo no disponible. Revisa su configuración y acceso, y luego inicia una nueva conversación.',
+    error:
+      'Este turno no se completó. Revisa los resultados de los recursos antes de iniciar una nueva conversación; los cambios no se reintentan automáticamente.',
+    running:
+      'Este turno sigue en ejecución o se interrumpió antes de guardar su resultado. Vuelve a abrir el asistente para actualizar; revisa los recursos antes de empezar de nuevo.',
+    placeholder: 'Describe tu aplicación…',
+    send: 'Enviar',
+  },
   sidebarGuide: {
     steps: {
       monitoring: {
