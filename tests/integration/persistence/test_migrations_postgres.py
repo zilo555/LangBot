@@ -330,6 +330,76 @@ class TestPostgreSQLMigrationBaseline:
         assert rev == '0001_baseline'
 
     @pytest.mark.asyncio
+    async def test_certification_artifact_digest_backfill_updates_only_complete_legacy_shared_rows(
+        self,
+        postgres_engine,
+        clean_tables,
+        clean_alembic_version,
+    ):
+        async with postgres_engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        await run_alembic_stamp(postgres_engine, '0031_merge_totp_assistant')
+
+        plugin_settings = Base.metadata.tables['plugin_settings']
+        workspaces = Base.metadata.tables['workspaces']
+        digest = 'a' * 64
+        complete = {
+            'normalized_digest': 'B' * 64,
+            'verification': 'valid',
+            'certificate_runtime_profile': 'shared-runtime-v1',
+            'certificate_id': 'ed25519:trusted-issuer',
+            'runtime_profile': 'shared-runtime-v1',
+            'admission_code': 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE',
+            'preserved': {'key': True},
+        }
+        rows = {
+            'eligible': complete,
+            'invalid': {**complete, 'verification': 'invalid'},
+            'present': {**complete, 'artifact_digest': 'c' * 64},
+        }
+        async with postgres_engine.begin() as conn:
+            for index, (name, certification) in enumerate(rows.items(), start=1):
+                workspace_uuid = f'61100000-0000-4000-8000-{index:012d}'
+                await conn.execute(
+                    workspaces.insert().values(
+                        uuid=workspace_uuid,
+                        instance_uuid=f'postgres-cert-backfill-{index}',
+                        name=name,
+                        slug=name,
+                    )
+                )
+                await conn.execute(
+                    plugin_settings.insert().values(
+                        workspace_uuid=workspace_uuid,
+                        plugin_author='langbot',
+                        plugin_name=name,
+                        installation_uuid=f'71100000-0000-4000-8000-{index:012d}',
+                        artifact_digest=digest,
+                        runtime_revision=1,
+                        install_info={'_certification': certification, 'preserved': ['install-info']},
+                    )
+                )
+
+        await run_alembic_upgrade(postgres_engine, 'head')
+
+        async with postgres_engine.connect() as conn:
+            stored = dict(
+                (await conn.execute(sa.select(plugin_settings.c.plugin_name, plugin_settings.c.install_info))).all()
+            )
+        assert stored['eligible'] == {
+            '_certification': {**complete, 'artifact_digest': digest},
+            'preserved': ['install-info'],
+        }
+        assert stored['invalid'] == {
+            '_certification': rows['invalid'],
+            'preserved': ['install-info'],
+        }
+        assert stored['present'] == {
+            '_certification': rows['present'],
+            'preserved': ['install-info'],
+        }
+
+    @pytest.mark.asyncio
     async def test_fresh_postgres_schema_accepts_application_casefold_identity(
         self,
         postgres_engine,
