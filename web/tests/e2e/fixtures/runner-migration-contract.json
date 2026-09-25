@@ -1,5 +1,5 @@
 {
-  "planner_version": "3",
+  "planner_version": "4",
   "fixture_only": true,
   "legacy_sections": {
     "local-agent": {
@@ -86,7 +86,7 @@
         "metadata": {
           "author": "langbot-team",
           "name": "LocalAgent",
-          "version": "0.1.7",
+          "version": "0.1.10",
           "repository": "https://github.com/langbot-app/langbot-plugins/tree/main/Runner/LocalAgent",
           "label": {
             "en_US": "Local Agent",
@@ -588,7 +588,7 @@
         "metadata": {
           "author": "langbot-team",
           "name": "DifyAgent",
-          "version": "0.1.7",
+          "version": "0.1.10",
           "repository": "https://github.com/langbot-app/langbot-plugins/tree/main/Runner/dify-agent",
           "label": {
             "en_US": "Dify Agent",
@@ -958,7 +958,7 @@
         "metadata": {
           "author": "langbot-team",
           "name": "CozeAgent",
-          "version": "0.1.7",
+          "version": "0.1.10",
           "repository": "https://github.com/langbot-app/langbot-plugins/tree/main/Runner/coze-agent",
           "label": {
             "en_US": "Coze Agent",
@@ -1269,7 +1269,7 @@
         "metadata": {
           "author": "langbot-team",
           "name": "DashScopeAgent",
-          "version": "0.1.7",
+          "version": "0.1.10",
           "repository": "https://github.com/langbot-app/langbot-plugins/tree/main/Runner/dashscope-agent",
           "label": {
             "en_US": "Dashscope Agent",
@@ -1562,7 +1562,7 @@
         "metadata": {
           "author": "langbot-team",
           "name": "N8nAgent",
-          "version": "0.1.7",
+          "version": "0.1.10",
           "repository": "https://github.com/langbot-app/langbot-plugins/tree/main/Runner/n8n-agent",
           "label": {
             "en_US": "N8n Agent",
@@ -2038,7 +2038,7 @@
         "metadata": {
           "author": "langbot-team",
           "name": "LangflowAgent",
-          "version": "0.1.7",
+          "version": "0.1.10",
           "repository": "https://github.com/langbot-app/langbot-plugins/tree/main/Runner/langflow-agent",
           "label": {
             "en_US": "Langflow Agent",
@@ -2316,7 +2316,7 @@
         "metadata": {
           "author": "langbot-team",
           "name": "DeerFlowAgent",
-          "version": "0.1.7",
+          "version": "0.1.10",
           "repository": "https://github.com/langbot-app/langbot-plugins/tree/main/Runner/deerflow-agent",
           "label": {
             "en_US": "DeerFlow Agent",
@@ -2598,7 +2598,7 @@
         "metadata": {
           "author": "langbot-team",
           "name": "TboxAgent",
-          "version": "0.1.5",
+          "version": "0.1.8",
           "repository": "https://github.com/langbot-app/langbot-plugins/tree/main/Runner/tbox-agent",
           "label": {
             "en_US": "Tbox Agent",
@@ -2766,7 +2766,7 @@
         "metadata": {
           "author": "langbot-team",
           "name": "WeKnoraAgent",
-          "version": "0.1.7",
+          "version": "0.1.10",
           "repository": "https://github.com/langbot-app/langbot-plugins/tree/main/Runner/weknora-agent",
           "label": {
             "en_US": "WeKnora Agent",
@@ -3155,7 +3155,7 @@
         "target_plugin": {
           "author": "langbot-team",
           "name": "LocalAgent",
-          "version": "0.1.7"
+          "version": "0.1.10"
         },
         "config": {
           "trigger": {
@@ -3459,7 +3459,7 @@
         "target_plugin": {
           "author": "langbot-team",
           "name": "DifyAgent",
-          "version": "0.1.7"
+          "version": "0.1.10"
         },
         "config": {
           "trigger": {
@@ -3742,7 +3742,7 @@
         "target_plugin": {
           "author": "langbot-team",
           "name": "CozeAgent",
-          "version": "0.1.7"
+          "version": "0.1.10"
         },
         "config": {
           "trigger": {
@@ -4025,7 +4025,7 @@
         "target_plugin": {
           "author": "langbot-team",
           "name": "DashScopeAgent",
-          "version": "0.1.7"
+          "version": "0.1.10"
         },
         "config": {
           "trigger": {
@@ -4299,7 +4299,7 @@
         "target_plugin": {
           "author": "langbot-team",
           "name": "N8nAgent",
-          "version": "0.1.7"
+          "version": "0.1.10"
         },
         "config": {
           "trigger": {
@@ -4584,7 +4584,7 @@
         "target_plugin": {
           "author": "langbot-team",
           "name": "LangflowAgent",
-          "version": "0.1.7"
+          "version": "0.1.10"
         },
         "config": {
           "trigger": {
@@ -4862,7 +4862,7 @@
         "target_plugin": {
           "author": "langbot-team",
           "name": "DeerFlowAgent",
-          "version": "0.1.7"
+          "version": "0.1.10"
         },
         "config": {
           "trigger": {
@@ -5131,7 +5131,7 @@
         "target_plugin": {
           "author": "langbot-team",
           "name": "TboxAgent",
-          "version": "0.1.5"
+          "version": "0.1.8"
         },
         "config": {
           "trigger": {
@@ -5402,7 +5402,7 @@
         "target_plugin": {
           "author": "langbot-team",
           "name": "WeKnoraAgent",
-          "version": "0.1.7"
+          "version": "0.1.10"
         },
         "config": {
           "trigger": {

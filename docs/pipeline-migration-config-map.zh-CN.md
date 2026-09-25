@@ -1,6 +1,6 @@
 # 旧流水线迁移：配置去向与语义变更
 
-本文对应迁移规划器 v3。原生行为基线：`9b7ba0d64708496ace30a82866f6dbc185f089dc`。
+本文对应迁移规划器 v4。原生行为基线：`9b7ba0d64708496ace30a82866f6dbc185f089dc`。
 
 ## 迁移边界
 
@@ -26,17 +26,17 @@
 
 ## 插件版本要求
 
-以下是本次本地源码的目标版本；本表不代表插件已经发布。旧版本即使名称相同，也不能作为新迁移能力的证明。
+以下是迁移器要求的已发布 Certified Plugin 版本。旧版本即使名称相同，也不能作为当前 Cloud 迁移能力的证明。
 
-- `local-agent` → `LocalAgent` **0.1.6**。
-- `dify-service-api` → `DifyAgent` **0.1.7**。
-- `coze-api` → `CozeAgent` **0.1.7**。
-- `dashscope-app-api` → `DashScopeAgent` **0.1.7**。
-- `n8n-service-api` → `N8nAgent` **0.1.7**。
-- `langflow-api` → `LangflowAgent` **0.1.7**。
-- `deerflow-api` → `DeerFlowAgent` **0.1.7**。
-- `tbox-app-api` → `TboxAgent` **0.1.5**。
-- `weknora-api` → `WeKnoraAgent` **0.1.7**。
+- `local-agent` → `LocalAgent` **0.1.10**。
+- `dify-service-api` → `DifyAgent` **0.1.10**。
+- `coze-api` → `CozeAgent` **0.1.10**。
+- `dashscope-app-api` → `DashScopeAgent` **0.1.10**。
+- `n8n-service-api` → `N8nAgent` **0.1.10**。
+- `langflow-api` → `LangflowAgent` **0.1.10**。
+- `deerflow-api` → `DeerFlowAgent` **0.1.10**。
+- `tbox-app-api` → `TboxAgent` **0.1.8**。
+- `weknora-api` → `WeKnoraAgent` **0.1.10**。
 
 ## 逐字段完整清单
 
