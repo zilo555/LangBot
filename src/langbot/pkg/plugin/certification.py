@@ -14,6 +14,7 @@ from enum import Enum
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from langbot_plugin.certification import normalized_zip_digest, verify_archive
+from langbot_plugin.entities.io.context import PluginExecutionMode
 
 
 SHARED_RUNTIME_V1 = 'shared-runtime-v1'
@@ -270,3 +271,37 @@ def decide_plugin_log_visibility(facts: PluginCertificationFacts) -> PluginLogVi
     if facts.certificate.is_valid_shared_runtime:
         return PluginLogVisibility.TENANT_SCOPED
     return PluginLogVisibility.DETAILED_PROCESS
+
+
+def execution_mode_for_persisted_installation(
+    *,
+    artifact_digest: str,
+    install_info: object,
+) -> PluginExecutionMode:
+    """Derive placement only from persisted facts bound to the exact artifact."""
+
+    if len(artifact_digest) != 64 or any(character not in '0123456789abcdef' for character in artifact_digest.lower()):
+        return PluginExecutionMode.DEDICATED
+    if not isinstance(install_info, Mapping):
+        return PluginExecutionMode.DEDICATED
+    certification = install_info.get('_certification')
+    if not isinstance(certification, Mapping):
+        return PluginExecutionMode.DEDICATED
+    normalized_digest = certification.get('normalized_digest')
+    if not isinstance(normalized_digest, str) or len(normalized_digest) != 64:
+        return PluginExecutionMode.DEDICATED
+    if any(character not in '0123456789abcdef' for character in normalized_digest.lower()):
+        return PluginExecutionMode.DEDICATED
+    certificate_id = certification.get('certificate_id')
+    if not isinstance(certificate_id, str) or not certificate_id.strip():
+        return PluginExecutionMode.DEDICATED
+    shared_facts = {
+        'artifact_digest': artifact_digest,
+        'verification': CertificateVerification.VALID.value,
+        'certificate_runtime_profile': SHARED_RUNTIME_V1,
+        'runtime_profile': SHARED_RUNTIME_V1,
+        'admission_code': AdmissionCode.SHARED_ELIGIBLE.value,
+    }
+    if all(certification.get(key) == value for key, value in shared_facts.items()):
+        return PluginExecutionMode.SHARED_CERTIFIED
+    return PluginExecutionMode.DEDICATED

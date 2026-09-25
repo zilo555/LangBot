@@ -8,11 +8,12 @@ persistence, or a Plugin Runtime apply request. It calls the SDK public
 certificate envelope from the ZIP comment and verifies the signed normalized
 ZIP digest without extracting the payload.
 
-Core retains the normalized digest (`normalized_zip_digest()`), verification
-state, declared shared-runtime profile, key ID, selected admission profile, and
-stable admission code in the durable plugin `install_info._certification`
-record. The record belongs to the installation row; no schema migration is
-needed for this additive JSON metadata.
+Core retains the artifact SHA-256, normalized digest
+(`normalized_zip_digest()`), verification state, declared shared-runtime
+profile, key ID, selected admission profile, and stable admission code in the
+durable plugin `install_info._certification` record. The record belongs to the
+installation row; no schema migration is needed for this additive JSON
+metadata.
 
 ## Trusted issuer configuration
 
@@ -80,13 +81,14 @@ protects those endpoints. A force never creates a Cloud dedicated fallback.
 
 ## Runtime and logs
 
-The current Plugin Runtime control protocol has one process-wide runtime profile
-per Core instance. In Cloud that existing profile is `shared`; Cloud admission
-therefore prevents an archive that did not select `shared-runtime-v1` from
-reaching its apply API. In OSS the existing `oss_dev` runtime remains the
-dedicated compatibility profile. Core records the selected profile for every
-installation so a future multi-runtime control protocol can consume it without
-re-verifying an already persisted archive.
+SDK 0.6.2 carries an installation-level execution mode in both apply and
+authoritative reconcile payloads. Core selects `shared-runtime-v1` only when
+the persisted certification record says verification was valid, both the
+certificate and admission profiles are `shared-runtime-v1`, the admission code
+is shared-eligible, and the record's artifact SHA-256 exactly matches the
+installation row. Missing, malformed, stale, invalid, or dedicated admission
+facts select `dedicated`. Install, upgrade, configuration revision, restart,
+and reconnect all use this same persisted-fact derivation.
 
 The existing public plugin-log boundary already applies the immutable
 installation binding (including workspace UUID) through
@@ -98,7 +100,5 @@ same existing installation scope.
 
 ## SDK versioning
 
-Core intentionally continues to declare `langbot-plugin==0.5.8` until the SDK
-beta containing this public certification API is released. Local development
-and the integration tests may install the SDK source checkout, but this Core
-change does not publish or pin a prerelease.
+Core pins `langbot-plugin==0.6.2`, the first published SDK release carrying the
+canonical installation execution-mode contract.

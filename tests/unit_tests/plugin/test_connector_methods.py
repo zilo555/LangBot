@@ -17,7 +17,7 @@ from unittest.mock import AsyncMock, Mock
 from importlib import import_module
 
 from tests.factories import text_query
-from langbot_plugin.entities.io.context import InstallationBinding
+from langbot_plugin.entities.io.context import InstallationBinding, PluginExecutionMode
 
 from langbot.pkg.api.http.context import ExecutionContext
 from langbot.pkg.workspace.errors import WorkspaceNotFoundError
@@ -758,7 +758,18 @@ class TestSetPluginConfig:
             runtime_revision=1,
             artifact_digest=TEST_INSTALLATION_BINDING.artifact_digest,
             enabled=True,
-            install_info={'_artifact_storage': 'tenant_binary_storage_v1'},
+            install_info={
+                '_artifact_storage': 'tenant_binary_storage_v1',
+                '_certification': {
+                    'artifact_digest': TEST_INSTALLATION_BINDING.artifact_digest,
+                    'normalized_digest': 'b' * 64,
+                    'verification': 'valid',
+                    'certificate_runtime_profile': 'shared-runtime-v1',
+                    'certificate_id': 'ed25519:trusted-issuer',
+                    'runtime_profile': 'shared-runtime-v1',
+                    'admission_code': 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE',
+                },
+            },
         )
         connector._setting_for_plugin = AsyncMock(return_value=(TEST_EXECUTION_CONTEXT, setting))
         connector.ap.persistence_mgr.execute_async = AsyncMock(return_value=SimpleNamespace(rowcount=1))
@@ -777,6 +788,7 @@ class TestSetPluginConfig:
             applied_binding,
             artifact_package=None,
             enabled=True,
+            execution_mode=PluginExecutionMode.SHARED_CERTIFIED,
         )
 
 

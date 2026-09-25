@@ -17,6 +17,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from langbot.pkg.api.http.context import ExecutionContext
 from langbot.pkg.plugin.connector import PluginRuntimeConnector
 from langbot_plugin.entities.io.context import InstallationBinding
+from langbot_plugin.entities.io.context import PluginExecutionMode
 from langbot_plugin.runtime.plugin.mgr import PluginInstallSource
 
 
@@ -57,11 +58,19 @@ async def test_install_plugin_admits_archive_before_persistence_and_applies_sele
     )
     persisted_info = connector._persist_installation_package.await_args.kwargs['install_info']
     assert persisted_info['_certification']['runtime_profile'] == expected_profile
+    assert persisted_info['_certification']['artifact_digest'] == hashlib.sha256(package).hexdigest()
     assert persisted_info['_certification']['normalized_digest'] == _normalized_digest(package)
+    if archive_kind == 'signed_shared':
+        assert persisted_info['_certification']['certificate_id'] == 'ephemeral'
     connector.handler.apply_plugin_installation.assert_awaited_once_with(
         binding,
         artifact_package=package,
         enabled=True,
+        execution_mode=(
+            PluginExecutionMode.SHARED_CERTIFIED
+            if expected_profile == 'shared-runtime-v1'
+            else PluginExecutionMode.DEDICATED
+        ),
     )
 
 
@@ -124,6 +133,7 @@ async def test_oss_admits_unresolvable_declaration_on_the_dedicated_profile() ->
         binding,
         artifact_package=package,
         enabled=True,
+        execution_mode=PluginExecutionMode.DEDICATED,
     )
 
 
@@ -183,7 +193,10 @@ async def test_marketplace_version_selection_keeps_certificate_gate_and_single_a
         assert persisted_info['plugin_version'] == '1.0.0'
         assert persisted_info['_certification']['runtime_profile'] == 'shared-runtime-v1'
         connector.handler.apply_plugin_installation.assert_awaited_once_with(
-            binding, artifact_package=package, enabled=True
+            binding,
+            artifact_package=package,
+            enabled=True,
+            execution_mode=PluginExecutionMode.SHARED_CERTIFIED,
         )
         connector._refresh_runner_registry.assert_awaited_once()
         assert task_context.metadata['progress_percent'] == 100

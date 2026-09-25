@@ -34,6 +34,7 @@ from .certification import (
     PluginCertificationFacts,
     VerifiedArchiveCertificate,
     decide_plugin_admission,
+    execution_mode_for_persisted_installation,
     verify_plugin_archive_certificate,
 )
 from .github import (
@@ -62,6 +63,7 @@ from langbot_plugin.runtime.security import (
 )
 from langbot_plugin.entities.io.context import (
     InstallationBinding,
+    PluginExecutionMode,
     PluginInstallationDesiredState,
     PluginWorkerPolicy,
     RuntimeIdentity,
@@ -343,6 +345,13 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
             artifact_digest=setting.artifact_digest,
         )
 
+    @staticmethod
+    def _execution_mode_from_setting(setting: persistence_plugin.PluginSetting) -> PluginExecutionMode:
+        return execution_mode_for_persisted_installation(
+            artifact_digest=setting.artifact_digest,
+            install_info=setting.install_info,
+        )
+
     def _legacy_oss_bridge_binding(self, execution_context: ExecutionContext) -> InstallationBinding:
         seed = f'langbot:oss-plugin-bridge:{execution_context.instance_uuid}:{execution_context.workspace_uuid}'
         return InstallationBinding(
@@ -511,6 +520,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
                 PluginInstallationDesiredState(
                     binding=binding,
                     enabled=setting.enabled,
+                    execution_mode=self._execution_mode_from_setting(setting),
                 )
             )
         return tuple(desired_states)
@@ -526,6 +536,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
             desired.binding,
             artifact_package=artifact_package,
             enabled=desired.enabled,
+            execution_mode=desired.execution_mode,
         )
         self._raise_apply_failure(desired, result)
         if result.get('state') != 'artifact_missing':
@@ -551,6 +562,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
             desired.binding,
             artifact_package=persisted_package,
             enabled=desired.enabled,
+            execution_mode=desired.execution_mode,
         )
         self._raise_apply_failure(desired, repaired)
         if repaired.get('state') == 'artifact_missing':
@@ -1793,6 +1805,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
         }:
             raise ValueError(decision.code.value)
         certification_info = {
+            'artifact_digest': hashlib.sha256(file_bytes).hexdigest(),
             'normalized_digest': facts.artifact_digest,
             'verification': facts.certificate.verification.value,
             'certificate_runtime_profile': facts.certificate.runtime_profile,
@@ -1893,7 +1906,14 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
                     install_info=install_info,
                     artifact_digest=artifact_digest,
                 )
-                desired = PluginInstallationDesiredState(binding=binding, enabled=True)
+                desired = PluginInstallationDesiredState(
+                    binding=binding,
+                    enabled=True,
+                    execution_mode=execution_mode_for_persisted_installation(
+                        artifact_digest=artifact_digest,
+                        install_info=install_info,
+                    ),
+                )
                 runtime_handler.register_installation_binding(
                     binding,
                     plugin_author=plugin_author,
@@ -2143,6 +2163,7 @@ class PluginRuntimeConnector(ManagedRuntimeConnector):
         desired = PluginInstallationDesiredState(
             binding=binding,
             enabled=setting.enabled,
+            execution_mode=self._execution_mode_from_setting(setting),
         )
         is_legacy_oss = self.runtime_profile == 'oss_dev' and (
             not isinstance(setting.install_info, dict)

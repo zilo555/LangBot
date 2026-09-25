@@ -10,7 +10,12 @@ from unittest.mock import AsyncMock, MagicMock, Mock
 import pytest
 
 from langbot_plugin.entities.io.actions.enums import LangBotToRuntimeAction, PluginToRuntimeAction
-from langbot_plugin.entities.io.context import ActionContext, InstallationBinding, PluginInstallationDesiredState
+from langbot_plugin.entities.io.context import (
+    ActionContext,
+    InstallationBinding,
+    PluginExecutionMode,
+    PluginInstallationDesiredState,
+)
 
 
 def make_handler(app):
@@ -90,7 +95,25 @@ async def test_reconcile_plugin_installations_accepts_configured_cold_start_time
 
     await runtime_handler.reconcile_plugin_installations((desired,), timeout=900)
 
-    assert runtime_handler.call_action.await_args.kwargs["timeout"] == 900
+    assert runtime_handler.call_action.await_args.kwargs['timeout'] == 900
+
+
+@pytest.mark.asyncio
+async def test_apply_plugin_installation_serializes_certified_shared_execution_mode():
+    runtime_handler = make_handler(SimpleNamespace())
+    runtime_handler.send_file = AsyncMock(return_value='artifact-file')
+    runtime_handler.call_action = AsyncMock(return_value={'state': 'starting'})
+    binding = next(iter(runtime_handler._installation_bindings.values()))[0]
+
+    await runtime_handler.apply_plugin_installation(
+        binding,
+        artifact_package=b'package',
+        enabled=True,
+        execution_mode=PluginExecutionMode.SHARED_CERTIFIED,
+    )
+
+    assert runtime_handler.call_action.await_args.args[0] == LangBotToRuntimeAction.APPLY_PLUGIN_INSTALLATION
+    assert runtime_handler.call_action.await_args.args[1]['execution_mode'] == 'shared-runtime-v1'
 
 
 class TestHandlerQueryVariables:
