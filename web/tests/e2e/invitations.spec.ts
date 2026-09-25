@@ -27,9 +27,9 @@ test('terminal invitation errors refresh on a new fragment and allow account swi
   });
 
   await page.goto('/invitations/accept#token=used-invitation');
-  await expect(
-    page.getByText('This invitation was already used.'),
-  ).toBeVisible();
+  await expect(page.getByTestId('invitation-error')).toContainText(
+    'This invitation was already used.',
+  );
   await expect
     .poll(() =>
       page.evaluate(() =>
@@ -41,7 +41,9 @@ test('terminal invitation errors refresh on a new fragment and allow account swi
   await page.evaluate(() => {
     window.location.hash = 'token=revoked-invitation';
   });
-  await expect(page.getByText('This invitation was revoked.')).toBeVisible();
+  await expect(page.getByTestId('invitation-error')).toContainText(
+    'This invitation was revoked.',
+  );
 
   await page.getByRole('button', { name: 'Back to sign in' }).click();
   await expect(page).toHaveURL(/\/login$/);
@@ -101,9 +103,11 @@ test('login preserves an explicit invitation email mismatch error', async ({
   await expect(page).toHaveURL(
     /\/invitations\/accept\?error=invitation_email_mismatch$/,
   );
-  await expect(
-    page.getByText('This invitation belongs to a different email address.'),
-  ).toBeVisible();
+  // The same copy is also shown as a transient toast, so target the page's
+  // inline error region to keep the assertion deterministic.
+  await expect(page.getByTestId('invitation-error')).toContainText(
+    'This invitation belongs to a different email address.',
+  );
   await expect(page.getByText('Login successful')).toHaveCount(0);
 });
 

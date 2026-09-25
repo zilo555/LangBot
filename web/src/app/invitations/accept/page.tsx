@@ -296,7 +296,7 @@ export default function AcceptInvitationPage() {
             <div className="space-y-4">
               <div className="flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
                 <AlertCircle className="mt-0.5 size-4 shrink-0" />
-                <span>{errorMessage}</span>
+                <span data-testid="invitation-error">{errorMessage}</span>
               </div>
               <Button
                 variant="outline"
@@ -313,7 +313,7 @@ export default function AcceptInvitationPage() {
               {errorMessage && (
                 <div className="flex items-start gap-2 rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-sm text-destructive">
                   <AlertCircle className="mt-0.5 size-4 shrink-0" />
-                  <span>{errorMessage}</span>
+                  <span data-testid="invitation-error">{errorMessage}</span>
                 </div>
               )}
 
