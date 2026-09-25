@@ -1,5 +1,4 @@
 import pipelineMigration from './pipeline-migration/es-ES';
-
 const esES = {
   assistant: {
     modelHint: 'Cambia el modelo del asistente para el próximo mensaje',
@@ -98,82 +97,9 @@ const esES = {
       },
     },
   },
-
   guidedTour: {
     eventDebugDescription:
       'Elige un evento compatible, introduce datos de prueba y revisa la salida y los resultados de las herramientas. Las acciones de plataforma se simulan; los modelos y las demás herramientas se ejecutan según su configuración.',
-
-    bot: {
-      connection: {
-        title: 'Elegir un método de conexión',
-        description:
-          'Elige un método compatible con este adaptador. Sus parámetros se actualizarán automáticamente.',
-      },
-      basic: {
-        title: 'Asignar un nombre al bot',
-        description:
-          'Usa un nombre reconocible para encontrar esta conexión en las rutas y los registros.',
-      },
-      adapter: {
-        title: 'Elegir un adaptador de plataforma',
-        description:
-          'Elige el adaptador de este bot. Configurarás la conexión y los parámetros de la plataforma después de crearlo.',
-      },
-      parameters: {
-        title: 'Configurar la plataforma',
-        description:
-          'Introduce las credenciales y los parámetros. Consulta la documentación del adaptador para los ajustes del lado de la plataforma.',
-        action: 'Abrir documentación del adaptador',
-      },
-      routing: {
-        title: 'Dirigir los eventos entrantes',
-        description: 'Elige qué procesador recibe cada evento de este bot.',
-      },
-      save: {
-        title: 'Guardar la configuración del bot',
-        description:
-          'Comprueba la conexión y las rutas de eventos, y guarda los cambios. Después puedes activar el bot.',
-      },
-      submit: {
-        title: 'Crear el bot',
-        description:
-          'Crea el bot desactivado y continúa configurando la conexión y los parámetros en su página.',
-      },
-    },
-    knowledge: {
-      basic: {
-        title: 'Describir la base de conocimiento',
-        description:
-          'Asigna un nombre y, si lo deseas, una descripción antes de elegir el motor de almacenamiento y búsqueda.',
-      },
-      engine: {
-        title: 'Revisar el motor de conocimiento',
-        description:
-          'Confirma el motor de esta base de conocimiento. Sus parámetros y opciones de búsqueda se configuran debajo.',
-        action: 'Explorar motores de conocimiento',
-      },
-      parameters: {
-        title: 'Configurar parámetros del motor',
-        description:
-          'Completa los ajustes de almacenamiento, modelo, credenciales o servicio externo que solicita el motor.',
-      },
-      retrieval: {
-        title: 'Configurar la búsqueda',
-        description:
-          'Define cómo busca el motor y devuelve contenido relevante a los procesadores.',
-      },
-      save: {
-        title: 'Guardar la base de conocimiento',
-        description:
-          'Comprueba los parámetros del motor y la búsqueda, y guarda la configuración.',
-      },
-      submit: {
-        title: 'Crear la base de conocimiento',
-        description:
-          'Crea la base de conocimiento y añade documentos o conecta fuentes compatibles con el motor elegido.',
-      },
-    },
-
     pipeline: {
       trigger: {
         title: 'Elegir qué mensajes responder',
@@ -246,12 +172,49 @@ const esES = {
           'Tras guardar, añade esta configuración en la sección de procesadores de plugins del bot. Recibirá automáticamente los eventos declarados, sin rutas individuales.',
       },
     },
+    previous: 'Anterior',
     label: 'Guía de uso',
     progress: 'Paso {{current}} de {{total}}',
-    previous: 'Anterior',
     next: 'Siguiente',
     finish: 'Finalizar guía',
     skip: 'Omitir',
+    bot: {
+      connection: {
+        title: 'Elegir un método de conexión',
+        description:
+          'Elige un método compatible con este adaptador. Sus parámetros se actualizarán automáticamente.',
+      },
+      basic: {
+        title: 'Asignar un nombre al bot',
+        description:
+          'Usa un nombre reconocible para encontrar esta conexión en las rutas y los registros.',
+      },
+      adapter: {
+        title: 'Elegir un adaptador de plataforma',
+        description:
+          'Elige el adaptador de este bot. Configurarás la conexión y los parámetros de la plataforma después de crearlo.',
+      },
+      parameters: {
+        title: 'Configurar la plataforma',
+        description:
+          'Introduce las credenciales y los parámetros. Consulta la documentación del adaptador para los ajustes del lado de la plataforma.',
+        action: 'Abrir documentación del adaptador',
+      },
+      routing: {
+        title: 'Dirigir los eventos entrantes',
+        description: 'Elige qué procesador recibe cada evento de este bot.',
+      },
+      save: {
+        title: 'Guardar la configuración del bot',
+        description:
+          'Comprueba la conexión y las rutas de eventos, y guarda los cambios. Después puedes activar el bot.',
+      },
+      submit: {
+        title: 'Crear el bot',
+        description:
+          'Crea el bot desactivado y continúa configurando la conexión y los parámetros en su página.',
+      },
+    },
     processorCreate: {
       type: {
         title: 'Elegir un tipo de procesador',
@@ -290,6 +253,39 @@ const esES = {
           'Abre Eventos y herramientas para elegir qué eventos recibe este agente y qué herramientas de plataforma o de LangBot puede usar.',
       },
     },
+    knowledge: {
+      basic: {
+        title: 'Describir la base de conocimiento',
+        description:
+          'Asigna un nombre y, si lo deseas, una descripción antes de elegir el motor de almacenamiento y búsqueda.',
+      },
+      engine: {
+        title: 'Revisar el motor de conocimiento',
+        description:
+          'Confirma el motor de esta base de conocimiento. Sus parámetros y opciones de búsqueda se configuran debajo.',
+        action: 'Explorar motores de conocimiento',
+      },
+      parameters: {
+        title: 'Configurar parámetros del motor',
+        description:
+          'Completa los ajustes de almacenamiento, modelo, credenciales o servicio externo que solicita el motor.',
+      },
+      retrieval: {
+        title: 'Configurar la búsqueda',
+        description:
+          'Define cómo busca el motor y devuelve contenido relevante a los procesadores.',
+      },
+      save: {
+        title: 'Guardar la base de conocimiento',
+        description:
+          'Comprueba los parámetros del motor y la búsqueda, y guarda la configuración.',
+      },
+      submit: {
+        title: 'Crear la base de conocimiento',
+        description:
+          'Crea la base de conocimiento y añade documentos o conecta fuentes compatibles con el motor elegido.',
+      },
+    },
   },
   pipelineMigration,
   sidebar: {
@@ -308,15 +304,11 @@ const esES = {
     editionCloud: 'Cloud',
   },
   common: {
-    loadFailed: 'No se pudo cargar. Inténtalo de nuevo.',
-    showSecret: 'Mostrar secreto',
-    hideSecret: 'Ocultar secreto',
-    editBasicInfo: 'Editar información básica',
-    editBasicInfoDescription: 'Cambia el nombre, la descripción y el icono.',
-    editBasicInfoDescriptionNoIcon: 'Cambia el nombre y la descripción.',
-    management: 'Administración',
-
     customValue: 'Personalizado',
+    loadFailed: 'No se pudo cargar. Inténtalo de nuevo.',
+    search: 'Buscar',
+    previous: 'Anterior',
+    next: 'Siguiente',
     login: 'Iniciar sesión',
     logout: 'Cerrar sesión',
     accountOptions: 'Configuración',
@@ -333,6 +325,8 @@ const esES = {
     loginLoadErrorDesc:
       'No se puede conectar al backend de LangBot. Asegúrate de que el servicio esté en ejecución e inténtalo de nuevo.',
     retry: 'Reintentar',
+    showSecret: 'Mostrar secreto',
+    hideSecret: 'Ocultar secreto',
     enterEmail: 'Introduce la dirección de correo electrónico',
     enterPassword: 'Introduce la contraseña',
     invalidEmail:
@@ -345,6 +339,10 @@ const esES = {
     joinDiscord: 'Únete a Discord',
     create: 'Crear',
     edit: 'Editar',
+    editBasicInfo: 'Editar información básica',
+    editBasicInfoDescription: 'Cambia el nombre, la descripción y el icono.',
+    editBasicInfoDescriptionNoIcon: 'Cambia el nombre y la descripción.',
+    management: 'Administración',
     delete: 'Eliminar',
     add: 'Añadir',
     select: 'Seleccionar',
@@ -494,12 +492,11 @@ const esES = {
     actions: 'Acciones',
     apiKeyCreatedMessage:
       'Por favor copia esta clave API, si el botón no funciona, cópiala manualmente.',
+    apiKeyStoredSecurely: 'Secret shown only when created',
     none: 'Ninguno',
     more: 'Más ({{count}})',
     less: 'Menos',
     noItems: 'Sin elementos',
-
-    apiKeyStoredSecurely: 'Secret shown only when created',
   },
   notFound: {
     title: 'Página no encontrada',
@@ -660,6 +657,10 @@ const esES = {
     loginWithSpace: 'Iniciar sesión con una cuenta de LangBot',
     loginToUseModels:
       'Inicia sesión con una cuenta de LangBot para usar modelos en la nube',
+    ownerMustBindSpace:
+      'The Workspace owner must connect a LangBot Account for LangBot Models.',
+    usesOwnerSpaceBilling:
+      "Uses the Workspace owner's LangBot Account billing and credits.",
     noModels: 'No hay modelos configurados',
     availability: {
       available: 'Disponible en la última comprobación',
@@ -713,13 +714,44 @@ const esES = {
       fallbackList: 'Modelos de respaldo',
       addFallback: 'Añadir modelo de respaldo',
     },
-
-    ownerMustBindSpace:
-      'The Workspace owner must connect a LangBot Account for LangBot Models.',
-    usesOwnerSpaceBilling:
-      "Uses the Workspace owner's LangBot Account billing and credits.",
   },
   bots: {
+    pluginSubscriptions: {
+      incompleteEvents:
+        'Este bot solo admite algunos de los eventos suscritos ({{events}}). El procesador podría no comportarse como se espera en todos los casos.',
+      description:
+        'Recibe automáticamente los eventos declarados por el plugin, de forma independiente de las rutas anteriores.',
+      empty: 'No hay procesadores vinculados.',
+      add: 'Añadir procesador de plugin',
+      existing: 'Elegir configuración',
+      new: 'Nueva configuración',
+      noExisting: 'No hay configuraciones disponibles. Crea una.',
+      shared:
+        'Los bots que usan la misma configuración comparten ajustes y estado de ejecución.',
+      saveHint: 'Guarda el bot para activar el vínculo.',
+      createAndBind: 'Crear y vincular',
+      created: 'Configuración creada. Guarda el bot para activar el vínculo.',
+      enable: 'Activar {{name}}',
+      remove: 'Desvincular {{name}}',
+      configure: 'Configurar',
+      logs: 'Ver registros',
+    },
+    applyFailed: 'Configuración guardada, pero no se pudo aplicar',
+    internalErrorHint:
+      'Se produjo un error interno. Consulta los registros del servidor con esta referencia.',
+    errorReference: 'Referencia del error: {{id}}',
+    title: 'Bots',
+    description:
+      'Crea y gestiona Bots, que son los puntos de entrada para que LangBot se conecte con diversas plataformas',
+    createBot: 'Crear Bot',
+    selectFromSidebar: 'Selecciona un Bot de la barra lateral',
+    editBot: 'Editar Bot',
+    getBotListError: 'Error al obtener la lista de Bots: ',
+    botName: 'Nombre del Bot',
+    botDescription: 'Descripción del Bot',
+    botNameRequired: 'El nombre del Bot no puede estar vacío',
+    botDescriptionRequired: 'La descripción del Bot no puede estar vacía',
+    adapterRequired: 'El adaptador no puede estar vacío',
     connectionMode: 'Método de conexión',
     connectionModeDescription:
       'Elige un método de conexión compatible con este adaptador.',
@@ -731,6 +763,44 @@ const esES = {
       'LangBot mantiene abierta una conexión saliente de socket o streaming.',
     noAdaptersForConnectionMode:
       'Ningún adaptador instalado admite este método de conexión.',
+    defaultDescription: 'Un Bot',
+    getBotConfigError: 'Error al obtener la configuración del Bot: ',
+    saveSuccess: 'Guardado correctamente',
+    saveError: 'Error al guardar: ',
+    createSuccess: 'Creado correctamente. Configura el enrutamiento de eventos',
+    createError: 'Error al crear: ',
+    deleteSuccess: 'Eliminado correctamente',
+    deleteError: 'Error al eliminar: ',
+    deleteConfirmation: '¿Estás seguro de que deseas eliminar este Bot?',
+    platformAdapter: 'Selección de plataforma/adaptador',
+    selectAdapter: 'Seleccionar adaptador',
+    legacyAdapters: 'Adaptadores heredados',
+    legacyAdapterBadge: 'Heredado',
+    legacyAdaptersHint:
+      'Estos adaptadores tienen versiones nuevas orientadas a eventos.\nSe mantienen solo para configuraciones existentes y no se recomiendan para Bots nuevos.',
+    adapterConfig: 'Configuración del adaptador',
+    viewAdapterDocs: 'Ver documentación',
+    bindPipeline: 'Vincular Pipeline',
+    selectPipeline: 'Seleccionar Pipeline',
+    selectBot: 'Seleccionar Bot',
+    botLogTitle: 'Registro del Bot',
+    enableAutoRefresh: 'Activar actualización automática',
+    session: 'Sesión',
+    yesterday: 'Ayer',
+    earlier: 'Anterior',
+    dateFormat: '{{day}}/{{month}}',
+    setBotEnableError: 'Error al establecer el estado de activación del Bot',
+    log: 'Registro',
+    configuration: 'Configuración',
+    logs: 'Registros',
+    basicInfo: 'Información básica',
+    basicInfoDescription: 'Establece el nombre y la descripción del Bot',
+    routingConnection: 'Enrutamiento y conexión',
+    routingConnectionDescription:
+      'Vincula el Pipeline que procesa los mensajes de este Bot',
+    eventRouting: 'Enrutamiento de eventos',
+    eventRoutingDescription:
+      'Elige qué procesador maneja cada evento recibido por este Bot. Edita la lógica en la configuración del Agent o Pipeline correspondiente. Los Pipelines solo admiten eventos de mensaje.',
     eventBindings: 'Rutas de eventos',
     addEventBinding: 'Añadir ruta',
     addBehavior: 'Añadir comportamiento',
@@ -793,6 +863,7 @@ const esES = {
     routeFallbackIgnored:
       'Se ignoran los eventos sin ruta coincidente. Añade una ruta general solo si todos los eventos necesitan un resultado explícito.',
     testRoute: 'Comprobar ruta',
+    adapterEventDebugAction: 'Probar escucha',
     adapterEventDebugTitle: 'Depuración de eventos de plataforma',
     adapterEventDebugDescription:
       'Genera un evento en {{platform}}. Aparecerá aquí cuando lo reciba el adaptador.',
@@ -874,6 +945,25 @@ const esES = {
     dryRunDiagnosticMatched: '{{route}} coincide. {{reason}}',
     dryRunDiagnosticSkipped: 'Se omitió {{route}}. {{reason}}',
     eventCustom: 'Evento personalizado',
+    eventWildcard: 'Todos los eventos',
+    eventNamespaceWildcard: '{{namespace}}.*',
+    eventNames: {
+      message_received: 'Mensaje recibido',
+      message_edited: 'Mensaje editado',
+      message_deleted: 'Mensaje eliminado',
+      message_reaction: 'Reacción a un mensaje',
+      feedback_received: 'Comentarios recibidos',
+      friend_request_received: 'Solicitud de amistad recibida',
+      friend_added: 'Amigo añadido',
+      group_member_joined: 'Miembro unido al grupo',
+      group_member_left: 'Miembro salió del grupo',
+      group_member_banned: 'Miembro bloqueado',
+      bot_invited_to_group: 'Bot invitado al grupo',
+      bot_removed_from_group: 'Bot eliminado del grupo',
+      bot_muted: 'Bot silenciado',
+      bot_unmuted: 'Bot ya no silenciado',
+      platform_specific: 'Evento específico de la plataforma',
+    },
     eventDescriptions: {
       all: 'Coincide con todos los eventos recibidos por este adaptador.',
       namespace: 'Coincide con todos los eventos de {{group}}.',
@@ -922,102 +1012,6 @@ const esES = {
     operator_not_contains: 'no contiene',
     operator_starts_with: 'empieza por',
     operator_regex: 'expresión regular',
-
-    eventWildcard: 'Todos los eventos',
-    eventNamespaceWildcard: '{{namespace}}.*',
-    eventNames: {
-      message_received: 'Mensaje recibido',
-      message_edited: 'Mensaje editado',
-      message_deleted: 'Mensaje eliminado',
-      message_reaction: 'Reacción a un mensaje',
-      feedback_received: 'Comentarios recibidos',
-      friend_request_received: 'Solicitud de amistad recibida',
-      friend_added: 'Amigo añadido',
-      group_member_joined: 'Miembro unido al grupo',
-      group_member_left: 'Miembro salió del grupo',
-      group_member_banned: 'Miembro bloqueado',
-      bot_invited_to_group: 'Bot invitado al grupo',
-      bot_removed_from_group: 'Bot eliminado del grupo',
-      bot_muted: 'Bot silenciado',
-      bot_unmuted: 'Bot ya no silenciado',
-      platform_specific: 'Evento específico de la plataforma',
-    },
-    pluginSubscriptions: {
-      incompleteEvents:
-        'Este bot solo admite algunos de los eventos suscritos ({{events}}). El procesador podría no comportarse como se espera en todos los casos.',
-      description:
-        'Recibe automáticamente los eventos declarados por el plugin, de forma independiente de las rutas anteriores.',
-      empty: 'No hay procesadores vinculados.',
-      add: 'Añadir procesador de plugin',
-      existing: 'Elegir configuración',
-      new: 'Nueva configuración',
-      noExisting: 'No hay configuraciones disponibles. Crea una.',
-      shared:
-        'Los bots que usan la misma configuración comparten ajustes y estado de ejecución.',
-      saveHint: 'Guarda el bot para activar el vínculo.',
-      createAndBind: 'Crear y vincular',
-      created: 'Configuración creada. Guarda el bot para activar el vínculo.',
-      enable: 'Activar {{name}}',
-      remove: 'Desvincular {{name}}',
-      configure: 'Configurar',
-      logs: 'Ver registros',
-    },
-    applyFailed: 'Configuración guardada, pero no se pudo aplicar',
-    internalErrorHint:
-      'Se produjo un error interno. Consulta los registros del servidor con esta referencia.',
-    errorReference: 'Referencia del error: {{id}}',
-
-    adapterEventDebugAction: 'Probar escucha',
-    title: 'Bots',
-    description:
-      'Crea y gestiona Bots, que son los puntos de entrada para que LangBot se conecte con diversas plataformas',
-    createBot: 'Crear Bot',
-    selectFromSidebar: 'Selecciona un Bot de la barra lateral',
-    editBot: 'Editar Bot',
-    getBotListError: 'Error al obtener la lista de Bots: ',
-    botName: 'Nombre del Bot',
-    botDescription: 'Descripción del Bot',
-    botNameRequired: 'El nombre del Bot no puede estar vacío',
-    botDescriptionRequired: 'La descripción del Bot no puede estar vacía',
-    adapterRequired: 'El adaptador no puede estar vacío',
-    defaultDescription: 'Un Bot',
-    getBotConfigError: 'Error al obtener la configuración del Bot: ',
-    saveSuccess: 'Guardado correctamente',
-    saveError: 'Error al guardar: ',
-    createSuccess: 'Creado correctamente. Configura el enrutamiento de eventos',
-    createError: 'Error al crear: ',
-    deleteSuccess: 'Eliminado correctamente',
-    deleteError: 'Error al eliminar: ',
-    deleteConfirmation: '¿Estás seguro de que deseas eliminar este Bot?',
-    platformAdapter: 'Selección de plataforma/adaptador',
-    selectAdapter: 'Seleccionar adaptador',
-    legacyAdapters: 'Adaptadores heredados',
-    legacyAdapterBadge: 'Heredado',
-    legacyAdaptersHint:
-      'Estos adaptadores tienen versiones nuevas orientadas a eventos.\nSe mantienen solo para configuraciones existentes y no se recomiendan para Bots nuevos.',
-    adapterConfig: 'Configuración del adaptador',
-    viewAdapterDocs: 'Ver documentación',
-    bindPipeline: 'Vincular Pipeline',
-    selectPipeline: 'Seleccionar Pipeline',
-    selectBot: 'Seleccionar Bot',
-    botLogTitle: 'Registro del Bot',
-    enableAutoRefresh: 'Activar actualización automática',
-    session: 'Sesión',
-    yesterday: 'Ayer',
-    earlier: 'Anterior',
-    dateFormat: '{{day}}/{{month}}',
-    setBotEnableError: 'Error al establecer el estado de activación del Bot',
-    log: 'Registro',
-    configuration: 'Configuración',
-    logs: 'Registros',
-    basicInfo: 'Información básica',
-    basicInfoDescription: 'Establece el nombre y la descripción del Bot',
-    routingConnection: 'Enrutamiento y conexión',
-    routingConnectionDescription:
-      'Vincula el Pipeline que procesa los mensajes de este Bot',
-    eventRouting: 'Enrutamiento de eventos',
-    eventRoutingDescription:
-      'Elige qué procesador maneja cada evento recibido por este Bot. Edita la lógica en la configuración del Agent o Pipeline correspondiente. Los Pipelines solo admiten eventos de mensaje.',
     routingRules: 'Reglas de enrutamiento condicional',
     routingRulesDescription:
       'Las reglas se evalúan en orden; la primera coincidencia enruta a su pipeline. Si ninguna coincide, se usa el pipeline predeterminado.',
@@ -1103,6 +1097,10 @@ const esES = {
       discarded: 'Descartado',
       userMessage: 'Usuario',
       botMessage: 'Asistente',
+      totalSessions: '{{count}} sesiones',
+      userSearch: 'ID o nombre de usuario',
+      startDate: 'Fecha de inicio',
+      endDate: 'Fecha de fin',
     },
     admins: {
       title: 'Admins',
@@ -1120,12 +1118,119 @@ const esES = {
       deleteError: 'Failed to remove admin: ',
       noAdmins: 'No admins configured',
       setAdminTitle: 'Set as admin',
-      removeAdminTitle: 'Remove admin',
       adminBadge: 'Admin',
       configureAdmins: 'Manage Admins',
+      removeAdminTitle: 'Remove admin',
     },
   },
   agents: {
+    monitoring: {
+      description:
+        'Consulta el evento, la salida del modelo y las herramientas de cada tarea.',
+      empty:
+        'Sin ejecuciones. Activa un evento o ejecuta una prueba de depuración.',
+      input: 'Entrada inicial',
+      eventData: 'Datos del evento',
+      execution: 'Pasos de ejecución',
+      rawEvents: 'Eventos sin procesar',
+      inputUnavailable: 'No se registró la entrada de esta ejecución.',
+    },
+    eventProcessor: {
+      configurations: 'Configuraciones de procesadores de plugins',
+      configTab: 'Configuración',
+      logsTab: 'Registros',
+      noSettings: 'Este procesador de plugin no requiere configuración.',
+      createPageTitle: 'Crear procesador de eventos',
+      processWithPlugin: 'Procesar con código del plugin',
+      pluginSettings: 'Ajustes del plugin',
+      pluginSettingsDescription: 'Parámetros definidos por este plugin.',
+      selectToDebug: 'Selecciona un plugin arriba para iniciar la depuración.',
+      debugOutput: 'Salida del procesador',
+      debugDescription:
+        'Eventos de entrada, registros del plugin y resultados de acciones de esta prueba.',
+      debugNotice:
+        'El plugin procesa un evento de prueba. Las acciones de plataforma usan Mock y no envían mensajes reales; las demás herramientas se ejecutan según su configuración.',
+      create: 'Crear procesador de plugin',
+      type: 'Procesador de plugin',
+      description:
+        'Procesa eventos con código y lógica definidos por un plugin.',
+      component: 'Procesador de plugin',
+      selectComponent: 'Seleccionar un procesador de plugin',
+      unavailable: 'Componente no disponible',
+      noComponents: 'No hay plugins instalados que proporcionen procesadores.',
+      installPlugin: 'Instalar un plugin',
+      loadError: 'No se pudieron cargar los detalles.',
+      refresh: 'Actualizar',
+      runs: 'Ejecuciones',
+      noRuns: 'Sin ejecuciones. Vincula este procesador a un bot para empezar.',
+      bindBot: 'Vincular a un bot',
+      trace: 'Registros y flujo de mensajes',
+      selectRun: 'Selecciona una ejecución para ver los detalles.',
+      input: 'Evento recibido',
+      destination: 'Destino de entrega',
+      loadMore: 'Cargar más',
+      activation:
+        'Instala un plugin, crea una configuración de procesador y vincula un bot.',
+      status_timeout: 'Tiempo agotado',
+      status_pending: 'Pendiente',
+      status_running: 'En ejecución',
+      status_completed: 'Completado',
+      status_failed: 'Error',
+      status_cancelled: 'Cancelado',
+      status_queued: 'En cola',
+      trace_run_completed: 'Ejecución completada',
+      trace_run_failed: 'Ejecución fallida',
+      trace_tool_call_started: 'Acción iniciada',
+      trace_tool_call_completed: 'Resultado de la acción',
+    },
+    debugData: {
+      chatId: 'ID del chat',
+      feedbackType:
+        'Tipo de valoración (1: positiva, 2: negativa, 3: cancelar)',
+      title: 'Datos del evento',
+      form: 'Campos comunes',
+      json: 'JSON completo',
+      groupId: 'ID del grupo',
+      memberId: 'ID del miembro',
+      memberName: 'Nombre del miembro',
+      userId: 'ID del usuario',
+      userName: 'Nombre del usuario',
+      requesterId: 'ID del solicitante',
+      requesterName: 'Nombre del solicitante',
+      messageId: 'ID del mensaje',
+      duration: 'Duración (segundos)',
+      message: 'Contenido del mensaje',
+      newMessage: 'Contenido editado',
+      verificationMessage: 'Mensaje de verificación',
+      reaction: 'Reacción',
+      groupName: 'Nombre del grupo',
+      feedback: 'Comentarios',
+      rating: 'Puntuación',
+      eventName: 'Nombre del evento',
+      privateChat: 'Vacío para chat privado',
+      sampleUser: 'Usuario de prueba',
+      sampleMessage: 'Hola',
+      sampleFeedback: 'Muy útil',
+      invalidField: 'Revisa {{field}}',
+    },
+    title: 'Procesadores',
+    description:
+      'Crea procesadores reutilizables y úsalos en el enrutamiento de eventos del bot',
+    create: 'Crear procesador',
+    editAgent: 'Editar Agent',
+    selectFromSidebar: 'Selecciona un procesador en la barra lateral',
+    agentType: 'Agent',
+    agentTypeDescription:
+      'Usa un runner para procesar mensajes, miembros de grupo, amigos, retroalimentación y otros eventos de plataforma.',
+    pipelineType: 'Flujo de trabajo',
+    kindBadgeAgent: 'Agent',
+    kindBadgePipeline: 'Pipeline',
+    groupByKind: 'Agrupar por tipo',
+    groupByKindShort: 'Agrupar',
+    pipelineTypeDescription:
+      'Sigue un flujo fijo: recibir un mensaje, consultar a la IA y responder al usuario, con bases de conocimiento y plugins configurables. Solo procesa eventos de mensaje, para tareas con pasos claros y control del proceso.',
+    allEvents: 'Compatible con todos los eventos',
+    messageEventsOnly: 'Solo eventos de mensaje',
     chooseType: 'Elegir cómo funciona',
     chooseTypeDescription:
       'Elige primero el tipo de procesador. Podrás configurarlo después de crearlo.',
@@ -1151,9 +1256,16 @@ const esES = {
     diagramAI: 'IA',
     diagramPostprocess: 'Refinar',
     diagramOutput: 'Salida',
+    basicInfo: 'Información básica',
+    basicInfoDescription: 'Establece el nombre, icono y descripción',
+    runnerSettings: 'Runner',
+    advanced: 'Avanzado',
     eventsAndTools: 'Eventos y herramientas',
     eventsAndToolsDescription:
       'Define los eventos de activación y las herramientas disponibles.',
+    bindableEvents: 'Rango de eventos vinculables',
+    bindableEventsDescription:
+      'Limita qué rutas de eventos del bot pueden seleccionar este Agent. El valor predeterminado sirve para la mayoría de los casos.',
     configuredEvents: 'Eventos añadidos',
     configuredEventsCount: '{{count}} en total',
     addEvent: 'Añadir evento',
@@ -1202,6 +1314,26 @@ const esES = {
       write: 'Acción',
       dangerous: 'Sensible',
     },
+    supportedEvents: 'Rango de eventos',
+    supportedEventsDescription:
+      'Elige todos los eventos, un grupo o eventos concretos. Las rutas del bot solo mostrarán este Agent para los eventos compatibles.',
+    searchEvents: 'Buscar eventos…',
+    noEventsFound: 'No se encontraron eventos',
+    nameRequired: 'El nombre no puede estar vacío',
+    createSuccess: 'Creado correctamente',
+    createError: 'Error al crear: ',
+    loadError: 'Error al cargar: ',
+    saveSuccess: 'Guardado correctamente',
+    saveError: 'Error al guardar: ',
+    deleteSuccess: 'Eliminado correctamente',
+    deleteError: 'Error al eliminar: ',
+    deleteConfirmation: '¿Estás seguro de que deseas eliminar este Agent?',
+    dangerZone: 'Zona de peligro',
+    dangerZoneDescription: 'Acciones irreversibles y destructivas',
+    deleteAgentAction: 'Eliminar este Agent',
+    deleteAgentHint:
+      'Una vez eliminado, los eventos vinculados a él ya no podrán ejecutarse.',
+    noRunnerMetadata: 'No hay metadatos de Runner disponibles actualmente.',
     runnerStatusLoading: 'Comprobando estado del ejecutor',
     runnerStatusCheckFailed: 'No se pudo comprobar el estado del ejecutor',
     runnerStatusCheckFailedDescription:
@@ -1299,144 +1431,6 @@ const esES = {
     debugReviewRunnerConfig: 'Revisar configuración del ejecutor',
     debugErrorDetails: 'Ver detalles del error',
     debugRunFailed: 'Falló la depuración del Agent',
-
-    monitoring: {
-      description:
-        'Consulta el evento, la salida del modelo y las herramientas de cada tarea.',
-      empty:
-        'Sin ejecuciones. Activa un evento o ejecuta una prueba de depuración.',
-      input: 'Entrada inicial',
-      eventData: 'Datos del evento',
-      execution: 'Pasos de ejecución',
-      rawEvents: 'Eventos sin procesar',
-      inputUnavailable: 'No se registró la entrada de esta ejecución.',
-    },
-    eventProcessor: {
-      configurations: 'Configuraciones de procesadores de plugins',
-      configTab: 'Configuración',
-      logsTab: 'Registros',
-      noSettings: 'Este procesador de plugin no requiere configuración.',
-      createPageTitle: 'Crear procesador de eventos',
-      processWithPlugin: 'Procesar con código del plugin',
-      pluginSettings: 'Ajustes del plugin',
-      pluginSettingsDescription: 'Parámetros definidos por este plugin.',
-      selectToDebug: 'Selecciona un plugin arriba para iniciar la depuración.',
-
-      debugOutput: 'Salida del procesador',
-      debugDescription:
-        'Eventos de entrada, registros del plugin y resultados de acciones de esta prueba.',
-      debugNotice:
-        'El plugin procesa un evento de prueba. Las acciones de plataforma usan Mock y no envían mensajes reales; las demás herramientas se ejecutan según su configuración.',
-
-      create: 'Crear procesador de plugin',
-      type: 'Procesador de plugin',
-      description:
-        'Procesa eventos con código y lógica definidos por un plugin.',
-      component: 'Procesador de plugin',
-      selectComponent: 'Seleccionar un procesador de plugin',
-      unavailable: 'Componente no disponible',
-      noComponents: 'No hay plugins instalados que proporcionen procesadores.',
-      installPlugin: 'Instalar un plugin',
-      loadError: 'No se pudieron cargar los detalles.',
-      refresh: 'Actualizar',
-      runs: 'Ejecuciones',
-      noRuns: 'Sin ejecuciones. Vincula este procesador a un bot para empezar.',
-      bindBot: 'Vincular a un bot',
-      trace: 'Registros y flujo de mensajes',
-      selectRun: 'Selecciona una ejecución para ver los detalles.',
-      input: 'Evento recibido',
-      destination: 'Destino de entrega',
-      loadMore: 'Cargar más',
-      activation:
-        'Instala un plugin, crea una configuración de procesador y vincula un bot.',
-      status_timeout: 'Tiempo agotado',
-      status_pending: 'Pendiente',
-      status_running: 'En ejecución',
-      status_completed: 'Completado',
-      status_failed: 'Error',
-      status_cancelled: 'Cancelado',
-      status_queued: 'En cola',
-      trace_run_completed: 'Ejecución completada',
-      trace_run_failed: 'Ejecución fallida',
-      trace_tool_call_started: 'Acción iniciada',
-      trace_tool_call_completed: 'Resultado de la acción',
-    },
-    debugData: {
-      chatId: 'ID del chat',
-      feedbackType:
-        'Tipo de valoración (1: positiva, 2: negativa, 3: cancelar)',
-
-      title: 'Datos del evento',
-      form: 'Campos comunes',
-      json: 'JSON completo',
-      groupId: 'ID del grupo',
-      memberId: 'ID del miembro',
-      memberName: 'Nombre del miembro',
-      userId: 'ID del usuario',
-      userName: 'Nombre del usuario',
-      requesterId: 'ID del solicitante',
-      requesterName: 'Nombre del solicitante',
-      messageId: 'ID del mensaje',
-      duration: 'Duración (segundos)',
-      message: 'Contenido del mensaje',
-      newMessage: 'Contenido editado',
-      verificationMessage: 'Mensaje de verificación',
-      reaction: 'Reacción',
-      groupName: 'Nombre del grupo',
-      feedback: 'Comentarios',
-      rating: 'Puntuación',
-      eventName: 'Nombre del evento',
-      privateChat: 'Vacío para chat privado',
-      sampleUser: 'Usuario de prueba',
-      sampleMessage: 'Hola',
-      sampleFeedback: 'Muy útil',
-      invalidField: 'Revisa {{field}}',
-    },
-    title: 'Procesadores',
-    description:
-      'Crea procesadores reutilizables y úsalos en el enrutamiento de eventos del bot',
-    create: 'Crear procesador',
-    editAgent: 'Editar Agent',
-    selectFromSidebar: 'Selecciona un procesador en la barra lateral',
-    agentType: 'Agent',
-    agentTypeDescription:
-      'Usa un runner para procesar mensajes, miembros de grupo, amigos, retroalimentación y otros eventos de plataforma.',
-    pipelineType: 'Flujo de trabajo',
-    kindBadgeAgent: 'Agent',
-    kindBadgePipeline: 'Pipeline',
-    groupByKind: 'Agrupar por tipo',
-    groupByKindShort: 'Agrupar',
-    pipelineTypeDescription:
-      'Sigue un flujo fijo: recibir un mensaje, consultar a la IA y responder al usuario, con bases de conocimiento y plugins configurables. Solo procesa eventos de mensaje, para tareas con pasos claros y control del proceso.',
-    allEvents: 'Compatible con todos los eventos',
-    messageEventsOnly: 'Solo eventos de mensaje',
-    basicInfo: 'Información básica',
-    basicInfoDescription: 'Establece el nombre, icono y descripción',
-    runnerSettings: 'Runner',
-    advanced: 'Avanzado',
-    bindableEvents: 'Rango de eventos vinculables',
-    bindableEventsDescription:
-      'Limita qué rutas de eventos del bot pueden seleccionar este Agent. El valor predeterminado sirve para la mayoría de los casos.',
-    supportedEvents: 'Rango de eventos',
-    supportedEventsDescription:
-      'Elige todos los eventos, un grupo o eventos concretos. Las rutas del bot solo mostrarán este Agent para los eventos compatibles.',
-    searchEvents: 'Buscar eventos…',
-    noEventsFound: 'No se encontraron eventos',
-    nameRequired: 'El nombre no puede estar vacío',
-    createSuccess: 'Creado correctamente',
-    createError: 'Error al crear: ',
-    loadError: 'Error al cargar: ',
-    saveSuccess: 'Guardado correctamente',
-    saveError: 'Error al guardar: ',
-    deleteSuccess: 'Eliminado correctamente',
-    deleteError: 'Error al eliminar: ',
-    deleteConfirmation: '¿Estás seguro de que deseas eliminar este Agent?',
-    dangerZone: 'Zona de peligro',
-    dangerZoneDescription: 'Acciones irreversibles y destructivas',
-    deleteAgentAction: 'Eliminar este Agent',
-    deleteAgentHint:
-      'Una vez eliminado, los eventos vinculados a él ya no podrán ejecutarse.',
-    noRunnerMetadata: 'No hay metadatos de Runner disponibles actualmente.',
   },
   plugins: {
     title: 'Extensiones',
@@ -1557,6 +1551,7 @@ const esES = {
       ready:
         'El paquete del plugin está descomprimido. Confirma para iniciar la instalación.',
     },
+    uploadPluginOnly: 'Solo se admiten paquetes de plugin .lbpkg',
     dragToUpload: 'Arrastra el archivo del plugin aquí para subirlo',
     unsupportedFileType:
       'Tipo de archivo no soportado, solo se admiten archivos .lbpkg y .zip',
@@ -1625,18 +1620,19 @@ const esES = {
     installFromGithubDesc: 'Instalar plugin desde GitHub Release',
     goToMarketplace: 'Ir a la tienda',
     installProgress: {
+      title: 'Instalando {{name}}',
       updateTitle: 'Actualizando {{name}}',
+      titleGeneric: 'Instalación de Plugin',
+      titlePlugin: 'Instalando plugin {{name}}',
+      titleMCP: 'Instalando servidor MCP {{name}}',
+      titleSkill: 'Instalando skill {{name}}',
+      overallProgress: 'Progreso general',
       checkingUpdate: 'Buscando actualizaciones',
+      downloading: 'Descargando Plugin',
       validating: 'Validando paquete',
+      installingDeps: 'Instalando dependencias',
       applyingUpdate: 'Aplicando actualización',
       activating: 'Iniciando y actualizando componentes',
-      updateComplete: 'Plugin actualizado correctamente',
-
-      title: 'Instalando {{name}}',
-      titleGeneric: 'Instalación de Plugin',
-      overallProgress: 'Progreso general',
-      downloading: 'Descargando Plugin',
-      installingDeps: 'Instalando dependencias',
       initializing: 'Inicializando configuración',
       launching: 'Iniciando Plugin',
       completed: 'Completado',
@@ -1646,26 +1642,22 @@ const esES = {
       depsProgress:
         '{{installed}}/{{total}} instaladas · {{remaining}} restantes',
       installComplete: 'Plugin instalado correctamente',
+      updateComplete: 'Plugin actualizado correctamente',
+      installCompletePlugin: 'Plugin instalado correctamente',
+      installCompleteMCP: 'Servidor MCP instalado correctamente',
+      installCompleteSkill: 'Skill instalada correctamente',
       dismiss: 'Descartar',
       background: 'Ejecutar en segundo plano',
       taskQueue: 'Tareas de instalación',
       clearCompleted: 'Limpiar completados',
       noTasks: 'No hay tareas de instalación',
-      titlePlugin: 'Instalando plugin {{name}}',
-      titleMCP: 'Instalando servidor MCP {{name}}',
-      titleSkill: 'Instalando skill {{name}}',
-      installCompletePlugin: 'Plugin instalado correctamente',
-      installCompleteMCP: 'Servidor MCP instalado correctamente',
-      installCompleteSkill: 'Skill instalada correctamente',
     },
-    uploadPluginOnly: 'Solo se admiten paquetes de plugin .lbpkg',
   },
   market: {
     runnerUsage: 'Uso del ejecutor',
     runnerUsageAll: 'Todos',
     runnerUsageAgent: 'Agent / Flujo',
     runnerUsageEvent: 'Procesador de plugin',
-
     searchPlaceholder: 'Buscar plugins...',
     searchPlaceholderCount:
       'Buscar {{count}} extensiones, capacidades o casos de uso...',
@@ -1678,6 +1670,10 @@ const esES = {
     allLoaded: 'Todos los plugins mostrados',
     allLoadedCount: 'Se muestran las {{count}} extensiones',
     install: 'Instalar',
+    installCard: 'Instalar {{name}}',
+    installedCard: '{{name}} instalado',
+    installed: 'Instalado',
+    updateAvailable: 'Actualización disponible',
     installConfirm:
       '¿Estás seguro de que deseas instalar el plugin "{{name}}" ({{version}})?',
     downloadComplete: 'Descarga del plugin "{{name}}" completada',
@@ -1757,10 +1753,6 @@ const esES = {
       clearAll: 'Borrar todo',
       noTags: 'No hay etiquetas disponibles',
     },
-    installCard: 'Instalar {{name}}',
-    installedCard: '{{name}} instalado',
-    installed: 'Instalado',
-    updateAvailable: 'Actualización disponible',
   },
   mcp: {
     title: 'MCP',
@@ -1904,8 +1896,6 @@ const esES = {
       'Una vez eliminada, la configuración de este servidor MCP no se podrá recuperar.',
   },
   pipelines: {
-    managementDescription: 'Copia o elimina este flujo.',
-
     title: 'Flujos',
     description:
       'Los Pipelines definen el flujo de procesamiento de eventos de mensajes, se usan para vincular a los Bots',
@@ -1928,6 +1918,7 @@ const esES = {
     basicInfo: 'Información básica',
     basicInfoDescription:
       'Establece el nombre, icono y descripción del Pipeline',
+    managementDescription: 'Copia o elimina este flujo.',
     aiCapabilities: 'IA',
     triggerConditions: 'Disparador',
     safetyControls: 'Seguridad',
@@ -1982,9 +1973,9 @@ const esES = {
       selectAll: 'Seleccionar todo',
       enableAllPlugins: 'Activar todos los plugins',
       enableAllMCPServers: 'Activar todos los servidores MCP',
+      enableAllSkills: 'Activar todas las skills',
       allPluginsEnabled: 'Todos los plugins activados',
       allMCPServersEnabled: 'Todos los servidores MCP activados',
-      enableAllSkills: 'Activar todas las skills',
       allSkillsEnabled: 'Todas las skills están activadas',
       skillsTitle: 'Skills',
       noSkillsSelected: 'No hay skills seleccionadas',
@@ -2029,14 +2020,13 @@ const esES = {
       selectKnowledgeBases: 'Seleccionar bases de conocimiento',
     },
     debugDialog: {
-      saveAndSend: 'Guardar y enviar',
-
       title: 'Chat del Pipeline',
       selectPipeline: 'Seleccionar Pipeline',
       sessionType: 'Tipo de sesión',
       privateChat: 'Chat privado',
       groupChat: 'Chat grupal',
       send: 'Enviar',
+      saveAndSend: 'Guardar y enviar',
       reset: 'Reiniciar conversación',
       inputPlaceholder: 'Enviar mensaje {{type}}...',
       noMessages: 'Sin mensajes',
@@ -2075,26 +2065,6 @@ const esES = {
     },
   },
   knowledge: {
-    installedEngines: 'Motores de conocimiento instalados',
-    noInstalledEngines:
-      'Aún no hay plugins de motores de conocimiento instalados.',
-    marketplaceEngines: 'Plugins de motores de conocimiento en el mercado',
-    noMarketplaceEngines:
-      'No hay plugins de motores de conocimiento disponibles.',
-    loadingEngineCatalog: 'Cargando plugins del mercado…',
-    engineCatalogUnavailable:
-      'El mercado no está disponible temporalmente. Vuelve a abrir el selector para reintentar.',
-    viewMarketplace: 'Ver mercado',
-    installingEngine: 'Instalando {{engine}}…',
-    engineInstallSuccess:
-      '{{engine}} está instalado y listo para seleccionarse',
-    engineInstallFailed: 'Falló la instalación del motor. Inténtalo de nuevo.',
-    engineVersionUnavailable: 'Este plugin no tiene una versión instalable.',
-    engineInstallTimeout:
-      'La instalación continúa. Actualiza la página para comprobar el estado.',
-    engineRegistrationTimeout:
-      'El plugin está instalado, pero su motor aún no está listo.',
-
     title: 'Conocimiento',
     createKnowledgeBase: 'Crear base de conocimiento',
     selectFromSidebar:
@@ -2177,6 +2147,25 @@ const esES = {
     knowledgeEngine: 'Motor de conocimiento',
     knowledgeEngineRequired: 'El motor de conocimiento es obligatorio',
     selectKnowledgeEngine: 'Seleccionar motor de conocimiento',
+    installedEngines: 'Motores de conocimiento instalados',
+    noInstalledEngines:
+      'Aún no hay plugins de motores de conocimiento instalados.',
+    marketplaceEngines: 'Plugins de motores de conocimiento en el mercado',
+    noMarketplaceEngines:
+      'No hay plugins de motores de conocimiento disponibles.',
+    loadingEngineCatalog: 'Cargando plugins del mercado…',
+    engineCatalogUnavailable:
+      'El mercado no está disponible temporalmente. Vuelve a abrir el selector para reintentar.',
+    viewMarketplace: 'Ver mercado',
+    installingEngine: 'Instalando {{engine}}…',
+    engineInstallSuccess:
+      '{{engine}} está instalado y listo para seleccionarse',
+    engineInstallFailed: 'Falló la instalación del motor. Inténtalo de nuevo.',
+    engineVersionUnavailable: 'Este plugin no tiene una versión instalable.',
+    engineInstallTimeout:
+      'La instalación continúa. Actualiza la página para comprobar el estado.',
+    engineRegistrationTimeout:
+      'El plugin está instalado, pero su motor aún no está listo.',
     builtInEngine: 'Motor integrado',
     cannotChangeKnowledgeEngine:
       'El motor de conocimiento no se puede cambiar después de la creación',
@@ -2278,9 +2267,9 @@ const esES = {
       'Contraseña restablecida correctamente, por favor inicia sesión',
     resetFailed:
       'Error al restablecer la contraseña, por favor verifica tu correo y clave de recuperación',
-    backToLogin: 'Volver al inicio de sesión',
     secondFactorFailed:
       'La verificación falló, comprueba el código e inténtalo de nuevo',
+    backToLogin: 'Volver al inicio de sesión',
     verifyWith: 'Verificar con',
     methodRecoveryKey: 'Clave de recuperación',
     methodTotp: 'Autenticador',
@@ -2422,13 +2411,95 @@ const esES = {
       'Establece una contraseña para iniciar sesión con correo y contraseña',
     spaceEmailMismatch:
       'El correo de la cuenta de LangBot no coincide con el correo de la cuenta local',
-
     space_account_not_registeredTitle: 'Account not registered',
     space_account_not_registered:
       'No local account is registered for this LangBot Account email. Ask the Workspace owner for an invitation.',
     space_account_binding_requiredTitle: 'LangBot Account connection required',
     space_account_binding_required:
       'This local account must connect a LangBot Account from Account settings before using LangBot Account login.',
+  },
+  workspace: {
+    title: 'Workspace',
+    description: 'Manage members, roles, and invitation links',
+    selectTitle: 'Choose a Workspace',
+    selectDescription: 'Select where you want to continue in LangBot.',
+    selectionLoadFailed:
+      'Your Workspaces could not be loaded. Please try again.',
+    switchWorkspace: 'Switch Workspace',
+    settings: 'Workspace Settings',
+    currentPlan: 'Current plan',
+    planUnavailable: 'Unavailable',
+    upgradePlan: 'Change or upgrade plan',
+    ossSingletonDescription:
+      'This self-hosted instance has one Workspace and can include multiple users.',
+    cloudManagedDescription:
+      'This Workspace is hosted by LangBot Cloud. Manage members here; billing opens in Cloud.',
+    loadFailed: 'Failed to load Workspace information',
+    members: 'Members',
+    you: 'You',
+    inviteMember: 'Invite a member',
+    inviteDescription:
+      'Create a one-time link to add another user to this Workspace.',
+    emailPlaceholder: 'member@example.com',
+    createInvitation: 'Create invitation',
+    invitationCreated: 'Invitation created',
+    delivery: {
+      sent: 'Invitation sent',
+      link_only: 'Invitation link created',
+      failed: 'Invitation link created, but email could not be sent',
+    },
+    invitationCreateFailed: 'Failed to create invitation',
+    oneTimeLinkWarning: 'Copy this link now. It is shown only once.',
+    copyInvitation: 'Copy invitation link',
+    invitationCopied: 'Invitation link copied',
+    pendingInvitations: 'Pending invitations',
+    expiresAt: 'Expires {{date}}',
+    revokeInvitation: 'Revoke invitation',
+    invitationRevoked: 'Invitation revoked',
+    invitationRevokeFailed: 'Failed to revoke invitation',
+    acceptInvitation: 'Accept invitation',
+    invitedToWorkspace: 'You were invited to {{workspace}}',
+    checkingInvitation: 'Checking this invitation...',
+    invitationMissing: 'This invitation link is missing required information.',
+    invitationExpired: 'This invitation has expired.',
+    invitationAlreadyRevoked: 'This invitation was revoked.',
+    invitationAlreadyUsed: 'This invitation was already used.',
+    invitationInvalid: 'This invitation is invalid or no longer available.',
+    invitationAccepted: 'Invitation accepted',
+    invitationAcceptFailed: 'Failed to accept invitation',
+    invitationEmailMismatch:
+      'This invitation belongs to a different email address.',
+    existingAccountLoginRequired:
+      'An account already exists for this email. Sign in to continue.',
+    acceptAsCurrentAccount: 'Accept with current account',
+    authenticatedInvitationNotice:
+      'Sign out first, then sign in with the invited account. Your invitation will be preserved.',
+    logoutAndReturn: 'Sign out and return to this invitation',
+    switchAccount: 'Switch account',
+    registerAndAccept: 'Create account and accept',
+    alreadyHaveAccount: 'I already have an account',
+    confirmPassword: 'Confirm password',
+    passwordMinimum: 'Password must contain at least 8 characters.',
+    passwordMismatch: 'The passwords do not match.',
+    backToLogin: 'Back to sign in',
+    memberUpdated: 'Member role updated',
+    memberUpdateFailed: 'Failed to update member role',
+    removeMember: 'Remove member',
+    removeMemberConfirm: 'Remove this member from the Workspace?',
+    memberRemoved: 'Member removed',
+    memberRemoveFailed: 'Failed to remove member',
+    transferOwnership: 'Transfer ownership',
+    types: {
+      personal: 'Personal',
+      team: 'Team',
+    },
+    roles: {
+      owner: 'Owner',
+      admin: 'Admin',
+      developer: 'Developer',
+      operator: 'Operator',
+      viewer: 'Viewer',
+    },
   },
   monitoring: {
     title: 'Panel de control',
@@ -2468,8 +2539,8 @@ const esES = {
       embeddingCalls: 'Llamadas Embedding',
       modelCalls: 'Llamadas a modelos',
       tokens: 'Monitoreo de Tokens',
-      sessions: 'Análisis de sesiones',
       feedback: 'Comentarios de usuarios',
+      sessions: 'Análisis de sesiones',
       errors: 'Registros de errores',
     },
     messageList: {
@@ -2529,6 +2600,8 @@ const esES = {
       arguments: 'Argumentos',
       result: 'Resultado',
       noToolCalls: 'No se registraron llamadas de herramientas',
+      showDetails: 'Mostrar detalles',
+      hideDetails: 'Ocultar detalles',
     },
     tokens: {
       totalTokens: 'Tokens totales',
@@ -2693,15 +2766,35 @@ const esES = {
   settingsDialog: {
     title: 'Configuración',
     nav: {
+      workspace: 'Workspace',
       models: 'Modelos',
       api: 'API',
       storage: 'Almacenamiento',
       account: 'Cuenta',
-
-      workspace: 'Workspace',
     },
   },
   storageAnalysis: {
+    title: 'Análisis de almacenamiento',
+    description:
+      'Inspecciona el uso de almacenamiento y los candidatos de limpieza',
+    openDialog: 'Ver análisis',
+    dialogTitle: 'Análisis de almacenamiento',
+    generatedAt: 'Generado el {{time}}',
+    loading: 'Cargando...',
+    refresh: 'Actualizar',
+    totalSize: 'Tamaño total',
+    binaryStorage: 'Almacenamiento binario de plugins',
+    uploadCleanup: 'Subidas caducadas',
+    logCleanup: 'Registros caducados',
+    sections: 'Secciones de almacenamiento',
+    monitoringTables: 'Tablas de monitoreo',
+    runtimeTasks: 'Tareas en ejecución',
+    cleanupPolicy: 'Política de limpieza',
+    uploadRetention: 'Retención de subidas',
+    logRetention: 'Retención de registros',
+    databaseType: 'Tipo de base de datos',
+    days: 'días',
+    missing: 'Falta',
     notCreated: 'Aún no creado',
     processStorage: 'Almacenamiento por proceso',
     processStorageDescription:
@@ -2742,33 +2835,18 @@ const esES = {
       box_runtime:
         'Espacios de trabajo de sandbox, procesos MCP, directorios de intercambio de adjuntos y habilidades.',
     },
-
-    title: 'Análisis de almacenamiento',
-    description:
-      'Inspecciona el uso de almacenamiento y los candidatos de limpieza',
-    openDialog: 'Ver análisis',
-    dialogTitle: 'Análisis de almacenamiento',
-    generatedAt: 'Generado el {{time}}',
-    loading: 'Cargando...',
-    refresh: 'Actualizar',
-    totalSize: 'Tamaño total',
-    binaryStorage: 'Almacenamiento binario de plugins',
-    uploadCleanup: 'Subidas caducadas',
-    logCleanup: 'Registros caducados',
-    sections: 'Secciones de almacenamiento',
-    monitoringTables: 'Tablas de monitoreo',
-    runtimeTasks: 'Tareas en ejecución',
-    cleanupPolicy: 'Política de limpieza',
-    uploadRetention: 'Retención de subidas',
-    logRetention: 'Retención de registros',
-    databaseType: 'Tipo de base de datos',
-    days: 'días',
-    missing: 'Falta',
     expiredUploads: 'Subidas caducadas',
     expiredLogs: 'Registros caducados',
     noExpiredUploads: 'No hay archivos subidos caducados',
     noExpiredLogs: 'No hay registros caducados',
     sectionNames: {
+      database: 'Base de datos',
+      logs: 'Registros',
+      storage: 'Archivos subidos',
+      vector_store: 'Almacén vectorial',
+      plugins: 'Plugins',
+      mcp: 'MCP',
+      temp: 'Archivos temporales',
       legacy_plugins: 'Paquetes de plugins antiguos',
       artifacts: 'Artefactos de plugins verificados',
       dependency_environments: 'Entornos de dependencias',
@@ -2784,14 +2862,6 @@ const esES = {
       session_temp: 'Archivos temporales de sandbox',
       managed_process_workspaces:
         'Espacios de procesos administrados (incluido MCP)',
-
-      database: 'Base de datos',
-      logs: 'Registros',
-      storage: 'Archivos subidos',
-      vector_store: 'Almacén vectorial',
-      plugins: 'Plugins',
-      mcp: 'MCP',
-      temp: 'Archivos temporales',
     },
   },
   limitation: {
@@ -2807,246 +2877,6 @@ const esES = {
       'No se pudo verificar la cuota actual del espacio de trabajo. Inténtalo de nuevo.',
     createDisabledTooltip:
       'Se alcanzó el límite de {{resource}} ({{max}}) de este espacio de trabajo. Elimina uno existente antes de crear otro.',
-  },
-  wizard: {
-    sidebarDescription: 'Crea un Bot con pasos guiados',
-    loading: 'Cargando asistente...',
-    loadError: 'Error al cargar los datos del asistente',
-    skip: 'Omitir',
-    skipConfirmMessage:
-      'Puedes volver a acceder al asistente de inicio rápido desde el menú de cuenta más tarde, o crear un Bot manualmente.',
-    skipConfirmOk: 'Aceptar',
-    prev: 'Anterior',
-    next: 'Siguiente',
-    finish: 'Crear y desplegar',
-    confirmCreateBot: 'Confirmar, crear Bot',
-    createSuccess: '¡Pipeline creado y vinculado al Bot correctamente!',
-    botCreateSuccess: '¡Bot creado correctamente!',
-    botSaveSuccess: '¡Configuración del Bot guardada y activada!',
-    createError: 'Error al crear los recursos',
-    skipSaveError:
-      'Error al guardar el estado de omisión. Por favor, inténtalo de nuevo.',
-    completeSaveError:
-      'Error al guardar el estado de finalización. Por favor, inténtalo de nuevo.',
-    step: {
-      platform: 'Plataforma',
-      botConfig: 'Configuración del Bot',
-      aiEngine: 'Motor de IA',
-      done: 'Listo',
-    },
-    platform: {
-      title: 'Selecciona una plataforma',
-      description:
-        'Elige la plataforma de mensajería a la que se conectará tu Bot.',
-    },
-    botConfig: {
-      title: 'Configura tu Bot',
-      description:
-        'Configura tu Bot y verifica que funcione antes de continuar.',
-      saveBot: 'Guardar y activar Bot',
-      resaveBot: 'Volver a guardar configuración',
-      botSaved:
-        'Configuración del Bot guardada y activada. Consulta los registros para verificar la conexión.',
-      waitingForMessage:
-        'El Bot está activado. Envíale un mensaje desde tu plataforma de mensajería para continuar.',
-      messageReceived:
-        'El Bot recibió un mensaje. Puedes continuar al siguiente paso.',
-      messageReceivedLocalAccountWarning:
-        'La conexión del Bot está configurada correctamente y recibió un mensaje. Como no has iniciado sesión con una cuenta de LangBot, las llamadas al modelo pueden fallar; continúa al siguiente paso para añadir tu propio modelo.',
-      pageBotPreviewFailed:
-        'No se pudo cargar el chat de prueba. Guarda la configuración de nuevo para reintentar.',
-      pageBotTestPrompt:
-        'El Bot de página está activado. Haz clic en la burbuja de chat de la esquina inferior derecha y envía un mensaje para verificar el flujo completo de la conversación.',
-      pageBotTestNotice:
-        'Solo para pruebas. Inserta el código en una página web externa real.',
-      webhookTestPrompt:
-        'La URL de devolución de llamada está lista. Configúrala en la plataforma externa y envía un mensaje real al Bot.',
-      httpTestPrompt:
-        'El Bot HTTP está activado. Envía aquí un mensaje entrante real para verificar la conexión.',
-      httpTestDefaultMessage: 'Hola, este es un mensaje de prueba de conexión.',
-      sendHttpTest: 'Enviar mensaje de prueba',
-      httpTestAccepted:
-        'El mensaje de prueba fue aceptado. Aparecerá en el registro en breve.',
-      httpTestMissingSecret:
-        'Introduce un secreto de firma entrante y guarda primero la configuración.',
-      httpTestFailed: 'No se pudo enviar el mensaje de prueba: {{error}}',
-      logsTitle: 'Registros del Bot',
-      logsDescription:
-        'Monitorea la actividad del Bot para verificar que la conexión con la plataforma funcione.',
-    },
-    aiEngine: {
-      loadingCatalog: 'Cargando extensiones de ejecutores...',
-      catalogUnavailable: 'El catálogo de ejecutores no está disponible',
-      catalogUnavailableDescription:
-        'Los ejecutores instalados siguen disponibles. Reintenta cargar el catálogo o explora las extensiones.',
-      noMarketplaceRunners: 'Ningún plugin de ejecutor coincide con este uso',
-      noMarketplaceRunnersDescription:
-        'Usa un ejecutor instalado o inténtalo más tarde.',
-      browseRunners: 'Explorar extensiones de ejecutores',
-      installAndContinue: 'Instalar y continuar',
-      installing: 'Instalando...',
-      useInstalled: 'Usar este ejecutor',
-      installedUnavailable: 'Instalado, ejecutor no disponible',
-      installSuccess: '{{runner}} instalado y seleccionado',
-      installFailed: 'No se pudo instalar la extensión de ejecutor',
-      versionUnavailable: 'El mercado no devolvió ninguna versión instalable.',
-      installTimeout:
-        'La instalación del ejecutor agotó el tiempo de espera. Revisa la tarea en Extensiones.',
-      registrationTimeout:
-        'La extensión se instaló, pero el ejecutor no se registró. Revisa el entorno de ejecución de plugins y reinténtalo.',
-
-      defaultModelUnavailable:
-        'No hay un modelo predeterminado disponible. Inténtalo de nuevo.',
-      defaultRunnerUnavailable:
-        'Local Agent aún no está listo. Inténtalo de nuevo.',
-      preparingDefault: 'Preparando la IA predeterminada…',
-      title: 'Configura el motor de IA',
-      description:
-        'Elige el motor de IA que impulsará la inteligencia de tu Bot.',
-      optionalDescription:
-        'La IA ya está configurada. Puedes usarla o cambiar la conexión.',
-      externalTitle: 'Conectar un Agent de una plataforma externa',
-      externalDescription:
-        'Conecta Dify, n8n, Coze u otro Agent externo mediante un plugin Runner.',
-      ownModelTitle: 'Usar mi propio modelo',
-      ownModelDescription:
-        'Añade un proveedor y luego escanea o introduce manualmente un modelo para completar la configuración.',
-      ownModelSetupTitle: 'Añade tu propio modelo',
-      ownModelSetupDescription:
-        'Añade un proveedor de modelos. Los modelos de chat se detectan automáticamente, o puedes introducir un ID de modelo manualmente.',
-      addProviderTitle: 'Añadir proveedor',
-      addProviderDescription:
-        'Introduce los datos del proveedor y la clave de API usados para conectar y detectar modelos.',
-      selectModelTitle: 'Elige un modelo',
-      selectScannedModelTitle: 'Elige un modelo',
-      selectScannedModelDescription:
-        'El modelo seleccionado sustituirá al modelo principal del pipeline de este bot.',
-      scanModelMode: 'Detectar modelos',
-      manualModelMode: 'Añadir manualmente',
-      scanningModels: 'Detectando modelos disponibles…',
-      noScannedModels:
-        'No se encontraron modelos de chat disponibles. Revisa la configuración del proveedor.',
-      scanModelsFailed:
-        'No se pudieron detectar los modelos. Revisa la URL y la clave de API e inténtalo de nuevo.',
-      manualFallbackFailed:
-        'La detección automática falló. Introduce un ID de modelo compatible con el proveedor.',
-      manualFallbackEmpty:
-        'No se encontraron modelos. Introduce un ID de modelo compatible con el proveedor.',
-      manualModelId: 'ID del modelo',
-      manualModelIdPlaceholder: 'Por ejemplo: gpt-4o',
-      manualModelIdDescription:
-        'Introduce el parámetro de modelo utilizado en las solicitudes.',
-      manualModelOptions: 'Capacidades opcionales del modelo',
-      editProvider: 'Editar proveedor',
-      rescanModels: 'Volver a detectar modelos',
-      moreFeaturesTitle: 'Usar la configuración predeterminada',
-      moreFeaturesDescription:
-        'Usa Local Agent y el modelo recomendado. Podrás añadir herramientas y bases de conocimiento después.',
-      runnerDescription:
-        'Selecciona un Runner para el Agent externo y configura su conexión.',
-      backToChoices: 'Volver a las opciones',
-      backToList: 'Volver a la lista',
-      createExternal: 'Crear y vincular',
-      finishWithModel: 'Usar el modelo seleccionado y finalizar',
-      openWorkbench: 'Abrir área de trabajo',
-    },
-    config: {
-      botInfo: 'Información del Bot',
-      botNamePlaceholder: 'Introduce el nombre del Bot',
-      botDescPlaceholder: 'Introduce la descripción del Bot (opcional)',
-      platformConfig: 'Configuración de {{platform}}',
-      aiConfig: 'Configuración de {{engine}}',
-    },
-    done: {
-      title: '¡Todo listo!',
-      description:
-        'Tu Bot ha sido creado y conectado al Pipeline de IA. Ahora puedes gestionarlo desde el panel de trabajo.',
-      backToWorkbench: 'Volver al panel de trabajo',
-    },
-  },
-  errorPage: {
-    unexpectedError: 'Algo salió mal',
-    unexpectedErrorDescription:
-      'Ocurrió un error inesperado. Por favor, inténtelo de nuevo más tarde.',
-    notFound: 'Página no encontrada',
-    notFoundDescription: 'La página que buscas no existe o ha sido movida.',
-    backendUnavailableStatus: 'Backend no disponible',
-    goBack: 'Volver',
-    backToHome: 'Ir al inicio',
-    backToLogin: 'Volver al inicio de sesión',
-    retrying: 'Reintentando',
-    retryFailed:
-      'Aún no se puede conectar con el backend. Inicia el servicio e inténtalo de nuevo.',
-  },
-  feishu: {
-    createApp: 'Crear aplicación de Feishu con un clic',
-    scanQRCode:
-      'Escanea el código QR de abajo con Feishu para autorizar y crear la aplicación automáticamente',
-    waitingForScan: 'Esperando escaneo',
-    createSuccess:
-      '¡Aplicación creada correctamente! Las credenciales se han rellenado automáticamente',
-    createFailed: 'Error al crear la aplicación',
-    connecting: 'Conectando con el servicio de Feishu...',
-    expired: 'El código QR ha caducado. Inténtalo de nuevo',
-    denied: 'El usuario rechazó la autorización',
-    connectionLost: 'Se perdió la conexión. Inténtalo de nuevo',
-    reconnecting: 'Reconectando...',
-    retry: 'Reintentar',
-  },
-  weixin: {
-    scanLogin: 'Iniciar sesión en WeChat con QR',
-    scanQRCode:
-      'Escanea el código QR de abajo con WeChat para autorizar e introducir el token automáticamente',
-    loginSuccess:
-      '¡Inicio de sesión correcto! El token se ha rellenado automáticamente',
-    loginFailed: 'Error al iniciar sesión',
-    connecting: 'Conectando con el servicio de WeChat...',
-    waitingForScan: 'Esperando escaneo',
-    retry: 'Reintentar',
-  },
-  dingtalk: {
-    createApp: 'Crear aplicación de DingTalk con un clic',
-    scanQRCode:
-      'Escanea el código QR de abajo con DingTalk para autorizar y crear la aplicación automáticamente',
-    waitingForScan: 'Esperando escaneo',
-    createSuccess:
-      '¡Aplicación creada correctamente! Las credenciales se han rellenado automáticamente',
-    createFailed: 'Error al crear la aplicación',
-    connecting: 'Conectando con el servicio de DingTalk...',
-    retry: 'Reintentar',
-    robotCodeNote:
-      'El código del robot no puede obtenerse automáticamente. Ve al panel de desarrolladores de DingTalk > Configuración del robot para copiarlo manualmente. Es necesario para funciones como reconocimiento de imágenes y carga de archivos.',
-  },
-  wecombot: {
-    createBot: 'Crear bot de WeCom con un clic',
-    scanQRCode:
-      'Escanea el código QR de abajo con WeCom para autorizar y crear el bot automáticamente',
-    waitingForScan: 'Esperando escaneo',
-    createSuccess:
-      '¡Bot creado correctamente! Las credenciales se han rellenado automáticamente',
-    createFailed: 'Error al crear el bot',
-    connecting: 'Conectando con el servicio de WeCom...',
-    retry: 'Reintentar',
-    robotNameNote:
-      'El nombre del robot no puede obtenerse automáticamente. Introdúcelo manualmente.',
-  },
-  qqofficial: {
-    createBinding: 'Vinculación QR con un clic para el bot oficial de QQ',
-    scanQRCode:
-      'Escanea el código QR siguiente con QQ móvil y autoriza la vinculación en «QQ Bot Assistant»',
-    waitingForScan: 'Esperando escaneo',
-    bindSuccess:
-      '¡Vinculación correcta! AppID y Secret se han rellenado automáticamente',
-    bindFailed: 'Error en la vinculación',
-    connecting: 'Conectando con el servicio de QQ...',
-    retry: 'Reintentar',
-    tokenNote:
-      'El campo Token no es utilizado por el adaptador actual; puedes dejarlo vacío.',
-    boundBy: 'Vinculado por el usuario QQ {{openid}}',
-  },
-  pluginPages: {
-    selectFromSidebar: 'Selecciona una página de plugin en la barra lateral',
-    invalidPage: 'Página de plugin no válida',
   },
   skills: {
     title: 'Skills',
@@ -3143,6 +2973,161 @@ const esES = {
     saveFileSuccess: 'Archivo guardado correctamente',
     saveFileError: 'Error al guardar el archivo: ',
   },
+  wizard: {
+    sidebarDescription: 'Crea un Bot con pasos guiados',
+    loading: 'Cargando asistente...',
+    loadError: 'Error al cargar los datos del asistente',
+    skip: 'Omitir',
+    skipConfirmMessage:
+      'Puedes volver a acceder al asistente de inicio rápido desde el menú de cuenta más tarde, o crear un Bot manualmente.',
+    skipConfirmOk: 'Aceptar',
+    prev: 'Anterior',
+    next: 'Siguiente',
+    finish: 'Crear y desplegar',
+    confirmCreateBot: 'Confirmar, crear Bot',
+    createSuccess: '¡Pipeline creado y vinculado al Bot correctamente!',
+    botCreateSuccess: '¡Bot creado correctamente!',
+    botSaveSuccess: '¡Configuración del Bot guardada y activada!',
+    createError: 'Error al crear los recursos',
+    skipSaveError:
+      'Error al guardar el estado de omisión. Por favor, inténtalo de nuevo.',
+    completeSaveError:
+      'Error al guardar el estado de finalización. Por favor, inténtalo de nuevo.',
+    step: {
+      platform: 'Plataforma',
+      botConfig: 'Configuración del Bot',
+      aiEngine: 'Motor de IA',
+      done: 'Listo',
+    },
+    platform: {
+      title: 'Selecciona una plataforma',
+      description:
+        'Elige la plataforma de mensajería a la que se conectará tu Bot.',
+    },
+    botConfig: {
+      title: 'Configura tu Bot',
+      description:
+        'Configura tu Bot y verifica que funcione antes de continuar.',
+      saveBot: 'Guardar y activar Bot',
+      resaveBot: 'Volver a guardar configuración',
+      botSaved:
+        'Configuración del Bot guardada y activada. Consulta los registros para verificar la conexión.',
+      waitingForMessage:
+        'El Bot está activado. Envíale un mensaje desde tu plataforma de mensajería para continuar.',
+      messageReceived:
+        'El Bot recibió un mensaje. Puedes continuar al siguiente paso.',
+      messageReceivedLocalAccountWarning:
+        'La conexión del Bot está configurada correctamente y recibió un mensaje. Como no has iniciado sesión con una cuenta de LangBot, las llamadas al modelo pueden fallar; continúa al siguiente paso para añadir tu propio modelo.',
+      pageBotPreviewFailed:
+        'No se pudo cargar el chat de prueba. Guarda la configuración de nuevo para reintentar.',
+      pageBotTestPrompt:
+        'El Bot de página está activado. Haz clic en la burbuja de chat de la esquina inferior derecha y envía un mensaje para verificar el flujo completo de la conversación.',
+      pageBotTestNotice:
+        'Solo para pruebas. Inserta el código en una página web externa real.',
+      webhookTestPrompt:
+        'La URL de devolución de llamada está lista. Configúrala en la plataforma externa y envía un mensaje real al Bot.',
+      httpTestPrompt:
+        'El Bot HTTP está activado. Envía aquí un mensaje entrante real para verificar la conexión.',
+      httpTestDefaultMessage: 'Hola, este es un mensaje de prueba de conexión.',
+      sendHttpTest: 'Enviar mensaje de prueba',
+      httpTestAccepted:
+        'El mensaje de prueba fue aceptado. Aparecerá en el registro en breve.',
+      httpTestMissingSecret:
+        'Introduce un secreto de firma entrante y guarda primero la configuración.',
+      httpTestFailed: 'No se pudo enviar el mensaje de prueba: {{error}}',
+      logsTitle: 'Registros del Bot',
+      logsDescription:
+        'Monitorea la actividad del Bot para verificar que la conexión con la plataforma funcione.',
+    },
+    aiEngine: {
+      defaultModelUnavailable:
+        'No hay un modelo predeterminado disponible. Inténtalo de nuevo.',
+      defaultRunnerUnavailable:
+        'Local Agent aún no está listo. Inténtalo de nuevo.',
+      preparingDefault: 'Preparando la IA predeterminada…',
+      title: 'Configura el motor de IA',
+      description:
+        'Elige el motor de IA que impulsará la inteligencia de tu Bot.',
+      optionalDescription:
+        'La IA ya está configurada. Puedes usarla o cambiar la conexión.',
+      externalTitle: 'Conectar un Agent de una plataforma externa',
+      externalDescription:
+        'Conecta Dify, n8n, Coze u otro Agent externo mediante un plugin Runner.',
+      ownModelTitle: 'Usar mi propio modelo',
+      ownModelDescription:
+        'Añade un proveedor y luego escanea o introduce manualmente un modelo para completar la configuración.',
+      ownModelSetupTitle: 'Añade tu propio modelo',
+      ownModelSetupDescription:
+        'Añade un proveedor de modelos. Los modelos de chat se detectan automáticamente, o puedes introducir un ID de modelo manualmente.',
+      addProviderTitle: 'Añadir proveedor',
+      addProviderDescription:
+        'Introduce los datos del proveedor y la clave de API usados para conectar y detectar modelos.',
+      selectModelTitle: 'Elige un modelo',
+      selectScannedModelTitle: 'Elige un modelo',
+      selectScannedModelDescription:
+        'El modelo seleccionado sustituirá al modelo principal del pipeline de este bot.',
+      scanModelMode: 'Detectar modelos',
+      manualModelMode: 'Añadir manualmente',
+      scanningModels: 'Detectando modelos disponibles…',
+      noScannedModels:
+        'No se encontraron modelos de chat disponibles. Revisa la configuración del proveedor.',
+      scanModelsFailed:
+        'No se pudieron detectar los modelos. Revisa la URL y la clave de API e inténtalo de nuevo.',
+      manualFallbackFailed:
+        'La detección automática falló. Introduce un ID de modelo compatible con el proveedor.',
+      manualFallbackEmpty:
+        'No se encontraron modelos. Introduce un ID de modelo compatible con el proveedor.',
+      manualModelId: 'ID del modelo',
+      manualModelIdPlaceholder: 'Por ejemplo: gpt-4o',
+      manualModelIdDescription:
+        'Introduce el parámetro de modelo utilizado en las solicitudes.',
+      manualModelOptions: 'Capacidades opcionales del modelo',
+      editProvider: 'Editar proveedor',
+      rescanModels: 'Volver a detectar modelos',
+      moreFeaturesTitle: 'Usar la configuración predeterminada',
+      moreFeaturesDescription:
+        'Usa Local Agent y el modelo recomendado. Podrás añadir herramientas y bases de conocimiento después.',
+      runnerDescription:
+        'Selecciona un Runner para el Agent externo y configura su conexión.',
+      backToChoices: 'Volver a las opciones',
+      backToList: 'Volver a la lista',
+      createExternal: 'Crear y vincular',
+      finishWithModel: 'Usar el modelo seleccionado y finalizar',
+      openWorkbench: 'Abrir área de trabajo',
+      loadingCatalog: 'Cargando extensiones de ejecutores...',
+      catalogUnavailable: 'El catálogo de ejecutores no está disponible',
+      catalogUnavailableDescription:
+        'Los ejecutores instalados siguen disponibles. Reintenta cargar el catálogo o explora las extensiones.',
+      noMarketplaceRunners: 'Ningún plugin de ejecutor coincide con este uso',
+      noMarketplaceRunnersDescription:
+        'Usa un ejecutor instalado o inténtalo más tarde.',
+      browseRunners: 'Explorar extensiones de ejecutores',
+      installAndContinue: 'Instalar y continuar',
+      installing: 'Instalando...',
+      useInstalled: 'Usar este ejecutor',
+      installedUnavailable: 'Instalado, ejecutor no disponible',
+      installSuccess: '{{runner}} instalado y seleccionado',
+      installFailed: 'No se pudo instalar la extensión de ejecutor',
+      versionUnavailable: 'El mercado no devolvió ninguna versión instalable.',
+      installTimeout:
+        'La instalación del ejecutor agotó el tiempo de espera. Revisa la tarea en Extensiones.',
+      registrationTimeout:
+        'La extensión se instaló, pero el ejecutor no se registró. Revisa el entorno de ejecución de plugins y reinténtalo.',
+    },
+    config: {
+      botInfo: 'Información del Bot',
+      botNamePlaceholder: 'Introduce el nombre del Bot',
+      botDescPlaceholder: 'Introduce la descripción del Bot (opcional)',
+      platformConfig: 'Configuración de {{platform}}',
+      aiConfig: 'Configuración de {{engine}}',
+    },
+    done: {
+      title: '¡Todo listo!',
+      description:
+        'Tu Bot ha sido creado y conectado al Pipeline de IA. Ahora puedes gestionarlo desde el panel de trabajo.',
+      backToWorkbench: 'Volver al panel de trabajo',
+    },
+  },
   addExtension: {
     installTitle: 'Instalar {{type}}',
     installConfirm: '¿Instalar {{type}} "{{name}}"?',
@@ -3174,90 +3159,89 @@ const esES = {
     unsupportedFileType:
       'Tipo de archivo no admitido. Solo se admiten archivos .zip y .lbpkg',
   },
-
-  workspace: {
-    title: 'Workspace',
-    description: 'Manage members, roles, and invitation links',
-    selectTitle: 'Choose a Workspace',
-    selectDescription: 'Select where you want to continue in LangBot.',
-    selectionLoadFailed:
-      'Your Workspaces could not be loaded. Please try again.',
-    switchWorkspace: 'Switch Workspace',
-    settings: 'Workspace Settings',
-    currentPlan: 'Current plan',
-    planUnavailable: 'Unavailable',
-    upgradePlan: 'Change or upgrade plan',
-    ossSingletonDescription:
-      'This self-hosted instance has one Workspace and can include multiple users.',
-    cloudManagedDescription:
-      'This Workspace is hosted by LangBot Cloud. Manage members here; billing opens in Cloud.',
-    loadFailed: 'Failed to load Workspace information',
-    members: 'Members',
-    you: 'You',
-    inviteMember: 'Invite a member',
-    inviteDescription:
-      'Create a one-time link to add another user to this Workspace.',
-    emailPlaceholder: 'member@example.com',
-    createInvitation: 'Create invitation',
-    invitationCreated: 'Invitation created',
-    delivery: {
-      sent: 'Invitation sent',
-      link_only: 'Invitation link created',
-      failed: 'Invitation link created, but email could not be sent',
-    },
-    invitationCreateFailed: 'Failed to create invitation',
-    oneTimeLinkWarning: 'Copy this link now. It is shown only once.',
-    copyInvitation: 'Copy invitation link',
-    invitationCopied: 'Invitation link copied',
-    pendingInvitations: 'Pending invitations',
-    expiresAt: 'Expires {{date}}',
-    revokeInvitation: 'Revoke invitation',
-    invitationRevoked: 'Invitation revoked',
-    invitationRevokeFailed: 'Failed to revoke invitation',
-    acceptInvitation: 'Accept invitation',
-    invitedToWorkspace: 'You were invited to {{workspace}}',
-    checkingInvitation: 'Checking this invitation...',
-    invitationMissing: 'This invitation link is missing required information.',
-    invitationExpired: 'This invitation has expired.',
-    invitationAlreadyRevoked: 'This invitation was revoked.',
-    invitationAlreadyUsed: 'This invitation was already used.',
-    invitationInvalid: 'This invitation is invalid or no longer available.',
-    invitationAccepted: 'Invitation accepted',
-    invitationAcceptFailed: 'Failed to accept invitation',
-    invitationEmailMismatch:
-      'This invitation belongs to a different email address.',
-    existingAccountLoginRequired:
-      'An account already exists for this email. Sign in to continue.',
-    acceptAsCurrentAccount: 'Accept with current account',
-    authenticatedInvitationNotice:
-      'Sign out first, then sign in with the invited account. Your invitation will be preserved.',
-    logoutAndReturn: 'Sign out and return to this invitation',
-    switchAccount: 'Switch account',
-    registerAndAccept: 'Create account and accept',
-    alreadyHaveAccount: 'I already have an account',
-    confirmPassword: 'Confirm password',
-    passwordMinimum: 'Password must contain at least 8 characters.',
-    passwordMismatch: 'The passwords do not match.',
-    backToLogin: 'Back to sign in',
-    memberUpdated: 'Member role updated',
-    memberUpdateFailed: 'Failed to update member role',
-    removeMember: 'Remove member',
-    removeMemberConfirm: 'Remove this member from the Workspace?',
-    memberRemoved: 'Member removed',
-    memberRemoveFailed: 'Failed to remove member',
-    transferOwnership: 'Transfer ownership',
-    types: {
-      personal: 'Personal',
-      team: 'Team',
-    },
-    roles: {
-      owner: 'Owner',
-      admin: 'Admin',
-      developer: 'Developer',
-      operator: 'Operator',
-      viewer: 'Viewer',
-    },
+  errorPage: {
+    unexpectedError: 'Algo salió mal',
+    unexpectedErrorDescription:
+      'Ocurrió un error inesperado. Por favor, inténtelo de nuevo más tarde.',
+    notFound: 'Página no encontrada',
+    notFoundDescription: 'La página que buscas no existe o ha sido movida.',
+    backendUnavailableStatus: 'Backend no disponible',
+    goBack: 'Volver',
+    backToHome: 'Ir al inicio',
+    backToLogin: 'Volver al inicio de sesión',
+    retrying: 'Reintentando',
+    retryFailed:
+      'Aún no se puede conectar con el backend. Inicia el servicio e inténtalo de nuevo.',
+  },
+  feishu: {
+    createApp: 'Crear aplicación de Feishu con un clic',
+    scanQRCode:
+      'Escanea el código QR de abajo con Feishu para autorizar y crear la aplicación automáticamente',
+    waitingForScan: 'Esperando escaneo',
+    createSuccess:
+      '¡Aplicación creada correctamente! Las credenciales se han rellenado automáticamente',
+    createFailed: 'Error al crear la aplicación',
+    connecting: 'Conectando con el servicio de Feishu...',
+    expired: 'El código QR ha caducado. Inténtalo de nuevo',
+    denied: 'El usuario rechazó la autorización',
+    connectionLost: 'Se perdió la conexión. Inténtalo de nuevo',
+    reconnecting: 'Reconectando...',
+    retry: 'Reintentar',
+  },
+  weixin: {
+    scanLogin: 'Iniciar sesión en WeChat con QR',
+    scanQRCode:
+      'Escanea el código QR de abajo con WeChat para autorizar e introducir el token automáticamente',
+    loginSuccess:
+      '¡Inicio de sesión correcto! El token se ha rellenado automáticamente',
+    loginFailed: 'Error al iniciar sesión',
+    connecting: 'Conectando con el servicio de WeChat...',
+    waitingForScan: 'Esperando escaneo',
+    retry: 'Reintentar',
+  },
+  dingtalk: {
+    createApp: 'Crear aplicación de DingTalk con un clic',
+    scanQRCode:
+      'Escanea el código QR de abajo con DingTalk para autorizar y crear la aplicación automáticamente',
+    waitingForScan: 'Esperando escaneo',
+    createSuccess:
+      '¡Aplicación creada correctamente! Las credenciales se han rellenado automáticamente',
+    createFailed: 'Error al crear la aplicación',
+    connecting: 'Conectando con el servicio de DingTalk...',
+    retry: 'Reintentar',
+    robotCodeNote:
+      'El código del robot no puede obtenerse automáticamente. Ve al panel de desarrolladores de DingTalk > Configuración del robot para copiarlo manualmente. Es necesario para funciones como reconocimiento de imágenes y carga de archivos.',
+  },
+  wecombot: {
+    createBot: 'Crear bot de WeCom con un clic',
+    scanQRCode:
+      'Escanea el código QR de abajo con WeCom para autorizar y crear el bot automáticamente',
+    waitingForScan: 'Esperando escaneo',
+    createSuccess:
+      '¡Bot creado correctamente! Las credenciales se han rellenado automáticamente',
+    createFailed: 'Error al crear el bot',
+    connecting: 'Conectando con el servicio de WeCom...',
+    retry: 'Reintentar',
+    robotNameNote:
+      'El nombre del robot no puede obtenerse automáticamente. Introdúcelo manualmente.',
+  },
+  qqofficial: {
+    createBinding: 'Vinculación QR con un clic para el bot oficial de QQ',
+    scanQRCode:
+      'Escanea el código QR siguiente con QQ móvil y autoriza la vinculación en «QQ Bot Assistant»',
+    waitingForScan: 'Esperando escaneo',
+    bindSuccess:
+      '¡Vinculación correcta! AppID y Secret se han rellenado automáticamente',
+    bindFailed: 'Error en la vinculación',
+    connecting: 'Conectando con el servicio de QQ...',
+    retry: 'Reintentar',
+    tokenNote:
+      'El campo Token no es utilizado por el adaptador actual; puedes dejarlo vacío.',
+    boundBy: 'Vinculado por el usuario QQ {{openid}}',
+  },
+  pluginPages: {
+    selectFromSidebar: 'Selecciona una página de plugin en la barra lateral',
+    invalidPage: 'Página de plugin no válida',
   },
 };
-
 export default esES;

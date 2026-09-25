@@ -1,5 +1,4 @@
 import pipelineMigration from './pipeline-migration/ja-JP';
-
 const jaJP = {
   assistant: {
     modelHint: '次のメッセージからモデルを切り替え',
@@ -99,9 +98,6 @@ const jaJP = {
   guidedTour: {
     eventDebugDescription:
       '対応するイベントを選び、テストデータを入力して出力とツールの結果を確認します。プラットフォーム操作は模擬実行され、モデルや他のツールは設定に従って実行されます。',
-
-    skip: 'スキップ',
-
     pipeline: {
       trigger: {
         title: '返信するメッセージを選ぶ',
@@ -179,13 +175,8 @@ const jaJP = {
     progress: 'ステップ {{current}} / {{total}}',
     next: '次へ',
     finish: 'ガイドを完了',
+    skip: 'スキップ',
     bot: {
-      save: {
-        title: 'ボット設定を保存する',
-        description:
-          '接続パラメーターとイベントルーティングを確認して保存します。準備ができたらボットを有効にできます。',
-      },
-
       connection: {
         title: '接続方式を選択',
         description:
@@ -210,6 +201,11 @@ const jaJP = {
         title: 'イベントルートを設定',
         description:
           '各イベントを処理するプロセッサーを選びます。作成後にもルートを追加できます。',
+      },
+      save: {
+        title: 'ボット設定を保存する',
+        description:
+          '接続パラメーターとイベントルーティングを確認して保存します。準備ができたらボットを有効にできます。',
       },
       submit: {
         title: 'ボットを作成',
@@ -256,11 +252,6 @@ const jaJP = {
       },
     },
     knowledge: {
-      save: {
-        title: 'ナレッジベースの設定を保存する',
-        description: 'エンジンのパラメーターと検索設定を確認して保存します。',
-      },
-
       basic: {
         title: 'ナレッジベース情報を入力',
         description:
@@ -281,6 +272,10 @@ const jaJP = {
         title: '検索方法を設定',
         description:
           '関連コンテンツの検索方法とプロセッサーへの返却方法を設定します。',
+      },
+      save: {
+        title: 'ナレッジベースの設定を保存する',
+        description: 'エンジンのパラメーターと検索設定を確認して保存します。',
       },
       submit: {
         title: 'ナレッジベースを作成',
@@ -307,6 +302,9 @@ const jaJP = {
   common: {
     customValue: 'カスタム',
     loadFailed: '読み込みに失敗しました。再試行してください。',
+    search: '検索',
+    previous: '前へ',
+    next: '次へ',
     login: 'ログイン',
     logout: 'ログアウト',
     accountOptions: 'システム設定',
@@ -729,7 +727,6 @@ const jaJP = {
     internalErrorHint:
       '内部エラーが発生しました。エラー番号でバックエンドのログを確認してください。',
     errorReference: 'エラー番号: {{id}}',
-
     title: 'ボット',
     description:
       'ボットの作成と管理を行います。LangBotと各プラットフォームを接続するためのエントリーポイントです',
@@ -1088,6 +1085,10 @@ const jaJP = {
       discarded: '破棄済み',
       userMessage: 'ユーザー',
       botMessage: 'アシスタント',
+      totalSessions: '{{count}} セッション',
+      userSearch: 'ユーザーIDまたは名前',
+      startDate: '開始日',
+      endDate: '終了日',
     },
     admins: {
       title: 'Admins',
@@ -1105,113 +1106,12 @@ const jaJP = {
       deleteError: 'Failed to remove admin: ',
       noAdmins: 'No admins configured',
       setAdminTitle: 'Set as admin',
-      removeAdminTitle: 'Remove admin',
       adminBadge: 'Admin',
       configureAdmins: 'Manage Admins',
+      removeAdminTitle: 'Remove admin',
     },
   },
   agents: {
-    eventsAndTools: 'イベントとツール',
-    eventsAndToolsDescription: '起動イベントと利用できるツールを設定します。',
-    configuredEvents: '追加済みのイベント',
-    configuredEventsCount: '合計 {{count}} 件',
-    addEvent: 'イベントを追加',
-    removeEvent: 'イベントを削除',
-    eventActions: '自動で有効になるツール',
-    eventToolEnabled: '有効',
-    eventToolsEnabledCount: '{{count}} 個のツールが有効',
-    noEventActions: 'このイベントで利用できるアクションはありません。',
-    noEventsConfigured: 'イベントが未追加です',
-    noEventsConfiguredDescription:
-      'この Agent を起動できるイベントがありません。',
-    noEventsConfiguredBadge: 'イベントなし',
-    apiTools: 'ツールへのアクセス',
-    apiToolsDescription: 'この Agent が呼び出せるツールを選びます。',
-    otherTools: 'その他のツール',
-    otherToolsDescription:
-      'プラットフォーム、サンドボックス、MCP、プラグイン、スキルのツールを選びます。',
-    apiToolsSelected: '{{count}} 個を選択中',
-    apiToolsSecurityHint: 'この Agent に必要なツールだけを有効にしてください。',
-    apiToolsSearch: 'ツールを検索…',
-    eventApiTools: 'イベントツール',
-    eventToolUnavailable: '利用不可',
-    eventApiToolsDescription:
-      '操作対象は現在のイベントから決まります。Agent はアクションのパラメーターのみを指定します。',
-    platformApiTools: 'プラットフォームツール',
-    platformApiToolsDescription:
-      'Agent はユーザー、グループ、メッセージの ID を選べます。必要な権限だけを付与してください。',
-    apiToolEvents: 'イベント',
-    apiToolParameters: 'Agent のパラメーター',
-    apiToolSource: '提供元',
-    apiToolNoParameters: 'なし',
-    sandboxTools: 'サンドボックス',
-    mcpTools: 'MCP',
-    pluginTools: 'プラグイン',
-    skillTools: 'スキル',
-    langbotBuiltIn: 'LangBot',
-    apiToolDetails: '詳細',
-    apiToolHideDetails: '非表示',
-    apiToolsNoResults: '一致する API やツールはありません',
-    apiToolsCatalogUnavailable:
-      'LangBot サーバーが API ツール一覧を返しませんでした。サーバーを更新して再起動したか確認してください。プラットフォームにツールがないという意味ではありません。',
-    hostToolsCatalogUnavailable: 'ツール一覧は一時的に利用できません。',
-    apiToolRisk: {
-      read: '読み取り専用',
-      write: 'アクション',
-      dangerous: '機密性の高い操作',
-    },
-    runnerConfigIncomplete: 'ランナー設定が未完了です',
-    runnerConfigIncompleteDescription: '必須項目を入力してください：{{fields}}',
-    debugTab: 'イベントデバッグ',
-    debugTitle: 'Agent のイベントデバッグ',
-    debugDescription:
-      '現在の Agent にメッセージやプラットフォームイベントを渡して実行し、実際の出力を確認します。',
-    debugResetSession: 'セッションをリセット',
-    debugEventType: 'イベントの種類',
-    debugNoEventsTitle: 'デバッグできるイベントがありません',
-    debugNoEventsDescription:
-      'まず「イベントとツール」でイベントを追加してください。',
-    debugMessageReceived: 'メッセージ受信',
-    debugGroupMemberJoined: 'メンバーのグループ参加',
-    debugGroupMemberLeft: 'メンバーのグループ退出',
-    debugFriendRequested: '友達申請の受信',
-    debugFeedbackReceived: 'フィードバック受信',
-    debugCustomEvent: 'カスタムイベント',
-    debugCustomEventType: 'カスタムイベント名',
-    debugMessageInput: '会話の入力',
-    debugEventSummary: 'イベントの概要',
-    debugInputPlaceholder: 'Agent に処理させる内容を入力',
-    debugEventPayload: 'イベントデータ（JSON）',
-    debugSupportedEvents: 'Agent が対応するイベント',
-    debugRun: 'テストを実行',
-    debugSaveAndRun: '保存して実行',
-    debugRunning: '実行中',
-    debugTranscript: 'デバッグ記録',
-    debugTranscriptDescription:
-      '現在のデバッグセッションの入力と Agent の出力です。',
-    debugEmptyTitle: 'この Agent の動作を確認する',
-    debugEmptyTranscript:
-      'イベントを選び、テスト内容を入力して「テストを実行」を押します。結果はこのページに表示されます。',
-    debugAgentOutput: 'Agent の出力',
-    debugTestInput: 'テスト入力',
-    debugNoTextOutput: 'テキスト出力なしで実行が完了しました。',
-    debugEventTypeRequired: 'イベントの種類を入力してください',
-    debugInputRequired: '会話の入力を記入してください',
-    debugInvalidPayload:
-      'イベントデータは有効な JSON オブジェクトである必要があります',
-    debugUnsupportedEvent: 'このイベントは Agent に紐付けできる範囲外です',
-    debugRunnerConfigInvalidDescription:
-      'ランナー設定が未完了です：{{message}}',
-    debugRunnerExecutionFailedDescription:
-      '実行に失敗しました。選択したモデルとランナー設定を確認し、再試行してください。',
-    debugRunnerTimeoutDescription:
-      '実行がタイムアウトしました。後で再試行するか、ランナーのタイムアウト設定を変更してください。',
-    debugApiKeyRequired: 'API キーがありません',
-    debugOpenRunnerConfig: 'ランナー設定を開く',
-    debugReviewRunnerConfig: 'ランナー設定を確認',
-    debugErrorDetails: 'エラーの詳細を表示',
-    debugRunFailed: 'Agent のデバッグ実行に失敗しました',
-
     monitoring: {
       description:
         '各タスクのトリガーイベント、モデル出力、ツール実行を確認します。',
@@ -1233,13 +1133,11 @@ const jaJP = {
       pluginSettings: 'プラグイン設定',
       pluginSettingsDescription: 'このプラグインが定義するパラメーターです。',
       selectToDebug: '上でプラグインを選択してデバッグを開始してください。',
-
       debugOutput: 'プロセッサー出力',
       debugDescription:
         'このテストの入力イベント、プラグインログ、アクション結果。',
       debugNotice:
         'プラグインはテストイベントを実際に処理します。返信や送信などは Mock を使用し、実際のメッセージは送信しません。他のツールは設定どおりに実行されます。',
-
       create: 'プラグインプロセッサーを作成',
       type: 'プラグインプロセッサー',
       description:
@@ -1277,7 +1175,6 @@ const jaJP = {
     debugData: {
       chatId: 'チャット ID',
       feedbackType: 'フィードバック種別（1: 高評価、2: 低評価、3: 取消）',
-
       title: 'イベントデータ',
       form: '基本項目',
       json: '完全な JSON',
@@ -1304,30 +1201,6 @@ const jaJP = {
       sampleFeedback: 'とても役立ちました',
       invalidField: '{{field}}を確認してください',
     },
-    debugReasoning: '思考内容',
-    debugTextOutput: 'テキスト出力',
-    debugPlatformNotice:
-      'プラットフォームツールは Mock を使用します。Agent は実際にツールを呼び出し、返信・送信などは模擬実行されます。他のツールは設定どおりに実行されます。',
-    debugToolSimulated: '模擬実行成功 · Mock',
-    debugStop: 'デバッグを停止',
-    debugMockOptions: 'Mock シナリオ（JSON）',
-    debugInvalidMock:
-      'Mock シナリオは有効な JSON オブジェクトで指定してください。',
-    debugToolMockFailed: '模擬実行失敗 · Mock',
-    debugMockOptionsHelp:
-      '既定は成功です。errors にツール別エラー、results に結果、unsupported_apis に未対応 API を指定します。例：{"errors":{"event_reply":"送信失敗"}}',
-    debugCancelled:
-      'デバッグを停止しました。それまでの実行記録は保持されます。',
-    debugNoToolCalls:
-      'ツール呼び出しの記録はありません。テキストの生成は送信完了を意味しません。',
-    debugToolCount:
-      '{{count}} 件のツール呼び出しを記録しました。実行状態と結果は以下をご確認ください。',
-    debugToolRunning: '実行中',
-    debugToolCompleted: '完了',
-    debugToolFailed: '失敗',
-    debugToolInterrupted: '結果なし',
-    debugToolArguments: '引数',
-    debugToolResult: '実行結果',
     title: 'プロセッサー',
     description:
       '再利用可能なプロセッサーを作成し、ボットのイベントルーティングで使用します',
@@ -1375,9 +1248,58 @@ const jaJP = {
     basicInfoDescription: '名前、アイコン、説明を設定します',
     runnerSettings: 'Runner',
     advanced: '詳細',
+    eventsAndTools: 'イベントとツール',
+    eventsAndToolsDescription: '起動イベントと利用できるツールを設定します。',
     bindableEvents: '紐付け可能なイベント範囲',
     bindableEventsDescription:
       'この Agent を選択できるボットイベントルートの範囲を制限します。通常は既定値のままで問題ありません。',
+    configuredEvents: '追加済みのイベント',
+    configuredEventsCount: '合計 {{count}} 件',
+    addEvent: 'イベントを追加',
+    removeEvent: 'イベントを削除',
+    eventActions: '自動で有効になるツール',
+    eventToolEnabled: '有効',
+    eventToolsEnabledCount: '{{count}} 個のツールが有効',
+    noEventActions: 'このイベントで利用できるアクションはありません。',
+    noEventsConfigured: 'イベントが未追加です',
+    noEventsConfiguredDescription:
+      'この Agent を起動できるイベントがありません。',
+    noEventsConfiguredBadge: 'イベントなし',
+    apiTools: 'ツールへのアクセス',
+    apiToolsDescription: 'この Agent が呼び出せるツールを選びます。',
+    otherTools: 'その他のツール',
+    otherToolsDescription:
+      'プラットフォーム、サンドボックス、MCP、プラグイン、スキルのツールを選びます。',
+    apiToolsSelected: '{{count}} 個を選択中',
+    apiToolsSecurityHint: 'この Agent に必要なツールだけを有効にしてください。',
+    apiToolsSearch: 'ツールを検索…',
+    eventApiTools: 'イベントツール',
+    eventToolUnavailable: '利用不可',
+    eventApiToolsDescription:
+      '操作対象は現在のイベントから決まります。Agent はアクションのパラメーターのみを指定します。',
+    platformApiTools: 'プラットフォームツール',
+    platformApiToolsDescription:
+      'Agent はユーザー、グループ、メッセージの ID を選べます。必要な権限だけを付与してください。',
+    apiToolEvents: 'イベント',
+    apiToolParameters: 'Agent のパラメーター',
+    apiToolSource: '提供元',
+    apiToolNoParameters: 'なし',
+    sandboxTools: 'サンドボックス',
+    mcpTools: 'MCP',
+    pluginTools: 'プラグイン',
+    skillTools: 'スキル',
+    langbotBuiltIn: 'LangBot',
+    apiToolDetails: '詳細',
+    apiToolHideDetails: '非表示',
+    apiToolsNoResults: '一致する API やツールはありません',
+    apiToolsCatalogUnavailable:
+      'LangBot サーバーが API ツール一覧を返しませんでした。サーバーを更新して再起動したか確認してください。プラットフォームにツールがないという意味ではありません。',
+    hostToolsCatalogUnavailable: 'ツール一覧は一時的に利用できません。',
+    apiToolRisk: {
+      read: '読み取り専用',
+      write: 'アクション',
+      dangerous: '機密性の高い操作',
+    },
     supportedEvents: 'イベント範囲',
     supportedEventsDescription:
       'すべてのイベント、イベントグループ、または個別のイベントを選択します。ボットルートでは一致するイベントにのみこの Agent が表示されます。',
@@ -1417,9 +1339,84 @@ const jaJP = {
     selectedRunnerUnavailableDescription:
       '{{runner}} は現在登録されていません。別の Runner を選択するか、対応する拡張機能を復元してください。',
     noRunnerSelected: 'Runner が選択されていません',
+    runnerConfigIncomplete: 'ランナー設定が未完了です',
+    runnerConfigIncompleteDescription: '必須項目を入力してください：{{fields}}',
     runnerReady: 'Runner の準備完了',
     runnerReadyDescription:
       '{{runner}} は登録済みで、プラグインランタイムに接続されています。',
+    debugTab: 'イベントデバッグ',
+    debugTitle: 'Agent のイベントデバッグ',
+    debugDescription:
+      '現在の Agent にメッセージやプラットフォームイベントを渡して実行し、実際の出力を確認します。',
+    debugResetSession: 'セッションをリセット',
+    debugEventType: 'イベントの種類',
+    debugNoEventsTitle: 'デバッグできるイベントがありません',
+    debugNoEventsDescription:
+      'まず「イベントとツール」でイベントを追加してください。',
+    debugMessageReceived: 'メッセージ受信',
+    debugGroupMemberJoined: 'メンバーのグループ参加',
+    debugGroupMemberLeft: 'メンバーのグループ退出',
+    debugFriendRequested: '友達申請の受信',
+    debugFeedbackReceived: 'フィードバック受信',
+    debugCustomEvent: 'カスタムイベント',
+    debugCustomEventType: 'カスタムイベント名',
+    debugMessageInput: '会話の入力',
+    debugEventSummary: 'イベントの概要',
+    debugInputPlaceholder: 'Agent に処理させる内容を入力',
+    debugEventPayload: 'イベントデータ（JSON）',
+    debugSupportedEvents: 'Agent が対応するイベント',
+    debugRun: 'テストを実行',
+    debugSaveAndRun: '保存して実行',
+    debugRunning: '実行中',
+    debugTranscript: 'デバッグ記録',
+    debugTranscriptDescription:
+      '現在のデバッグセッションの入力と Agent の出力です。',
+    debugEmptyTitle: 'この Agent の動作を確認する',
+    debugEmptyTranscript:
+      'イベントを選び、テスト内容を入力して「テストを実行」を押します。結果はこのページに表示されます。',
+    debugAgentOutput: 'Agent の出力',
+    debugReasoning: '思考内容',
+    debugTextOutput: 'テキスト出力',
+    debugPlatformNotice:
+      'プラットフォームツールは Mock を使用します。Agent は実際にツールを呼び出し、返信・送信などは模擬実行されます。他のツールは設定どおりに実行されます。',
+    debugToolSimulated: '模擬実行成功 · Mock',
+    debugStop: 'デバッグを停止',
+    debugMockOptions: 'Mock シナリオ（JSON）',
+    debugInvalidMock:
+      'Mock シナリオは有効な JSON オブジェクトで指定してください。',
+    debugToolMockFailed: '模擬実行失敗 · Mock',
+    debugMockOptionsHelp:
+      '既定は成功です。errors にツール別エラー、results に結果、unsupported_apis に未対応 API を指定します。例：{"errors":{"event_reply":"送信失敗"}}',
+    debugCancelled:
+      'デバッグを停止しました。それまでの実行記録は保持されます。',
+    debugNoToolCalls:
+      'ツール呼び出しの記録はありません。テキストの生成は送信完了を意味しません。',
+    debugToolCount:
+      '{{count}} 件のツール呼び出しを記録しました。実行状態と結果は以下をご確認ください。',
+    debugToolRunning: '実行中',
+    debugToolCompleted: '完了',
+    debugToolFailed: '失敗',
+    debugToolInterrupted: '結果なし',
+    debugToolArguments: '引数',
+    debugToolResult: '実行結果',
+    debugTestInput: 'テスト入力',
+    debugNoTextOutput: 'テキスト出力なしで実行が完了しました。',
+    debugEventTypeRequired: 'イベントの種類を入力してください',
+    debugInputRequired: '会話の入力を記入してください',
+    debugInvalidPayload:
+      'イベントデータは有効な JSON オブジェクトである必要があります',
+    debugUnsupportedEvent: 'このイベントは Agent に紐付けできる範囲外です',
+    debugRunnerConfigInvalidDescription:
+      'ランナー設定が未完了です：{{message}}',
+    debugRunnerExecutionFailedDescription:
+      '実行に失敗しました。選択したモデルとランナー設定を確認し、再試行してください。',
+    debugRunnerTimeoutDescription:
+      '実行がタイムアウトしました。後で再試行するか、ランナーのタイムアウト設定を変更してください。',
+    debugApiKeyRequired: 'API キーがありません',
+    debugOpenRunnerConfig: 'ランナー設定を開く',
+    debugReviewRunnerConfig: 'ランナー設定を確認',
+    debugErrorDetails: 'エラーの詳細を表示',
+    debugRunFailed: 'Agent のデバッグ実行に失敗しました',
   },
   plugins: {
     title: '拡張機能',
@@ -1538,6 +1535,7 @@ const jaJP = {
       ready:
         'プラグインパッケージを展開しました。確認するとインストールを開始します。',
     },
+    uploadPluginOnly: '.lbpkg プラグインパッケージのみ対応しています',
     dragToUpload: 'ファイルをここにドラッグしてアップロード',
     unsupportedFileType:
       'サポートされていないファイルタイプです。.lbpkg と .zip ファイルのみサポートされています',
@@ -1609,6 +1607,9 @@ const jaJP = {
       title: '{{name}} をインストール中',
       updateTitle: '{{name}} を更新中',
       titleGeneric: 'プラグインのインストール',
+      titlePlugin: 'プラグイン {{name}} をインストール中',
+      titleMCP: 'MCP サーバー {{name}} をインストール中',
+      titleSkill: 'スキル {{name}} をインストール中',
       overallProgress: '全体の進捗',
       checkingUpdate: '最新バージョンを確認中',
       downloading: 'プラグインをダウンロード中',
@@ -1626,26 +1627,21 @@ const jaJP = {
         '{{installed}}/{{total}} インストール済み · 残り {{remaining}} 個',
       installComplete: 'プラグインのインストール完了',
       updateComplete: 'プラグインの更新が完了しました',
+      installCompletePlugin: 'プラグインをインストールしました',
+      installCompleteMCP: 'MCP サーバーをインストールしました',
+      installCompleteSkill: 'スキルをインストールしました',
       dismiss: '閉じる',
       background: 'バックグラウンドで実行',
       taskQueue: 'プラグインタスク',
       clearCompleted: '完了を消去',
       noTasks: 'プラグインタスクはありません',
-      titlePlugin: 'プラグイン {{name}} をインストール中',
-      titleMCP: 'MCP サーバー {{name}} をインストール中',
-      titleSkill: 'スキル {{name}} をインストール中',
-      installCompletePlugin: 'プラグインをインストールしました',
-      installCompleteMCP: 'MCP サーバーをインストールしました',
-      installCompleteSkill: 'スキルをインストールしました',
     },
-    uploadPluginOnly: '.lbpkg プラグインパッケージのみ対応しています',
   },
   market: {
     runnerUsage: 'ランナーの用途',
     runnerUsageAll: 'すべて',
     runnerUsageAgent: 'Agent / パイプライン',
     runnerUsageEvent: 'プラグインプロセッサー',
-
     searchPlaceholder: 'プラグインを検索...',
     searchPlaceholderCount:
       '{{count}} 個の拡張機能・機能・ユースケースを検索...',
@@ -1658,6 +1654,10 @@ const jaJP = {
     allLoaded: 'すべてのプラグインが表示されました',
     allLoadedCount: '{{count}} 個の拡張機能をすべて表示しました',
     install: 'インストール',
+    installCard: '{{name}} をインストール',
+    installedCard: '{{name}} はインストール済み',
+    installed: 'インストール済み',
+    updateAvailable: '更新があります',
     installConfirm:
       'プラグイン "{{name}}" ({{version}}) をインストールしますか？',
     downloadComplete: 'プラグイン "{{name}}" のダウンロードが完了しました',
@@ -1718,13 +1718,10 @@ const jaJP = {
     typeMCP: 'MCP',
     typeSkill: 'スキル',
     requestPlugin: 'プラグインをリクエスト',
-    tags: {
-      filterByTags: 'タグで絞り込み',
-      selected: '選択済み',
-      selectTags: 'タグを選択',
-      clearAll: 'クリア',
-      noTags: 'タグがありません',
-    },
+    viewDetails: '詳細を表示',
+    deprecated: '非推奨',
+    deprecatedTooltip:
+      '対応する「ナレッジエンジン」プラグインをインストールしてください。',
     filters: {
       allFormats: 'すべての種類',
       more: 'もっと',
@@ -1733,14 +1730,13 @@ const jaJP = {
       technicalType: '技術タイプ',
     },
     allExtensions: 'すべての拡張機能',
-    viewDetails: '詳細を表示',
-    deprecated: '非推奨',
-    deprecatedTooltip:
-      '対応する「ナレッジエンジン」プラグインをインストールしてください。',
-    installCard: '{{name}} をインストール',
-    installedCard: '{{name}} はインストール済み',
-    installed: 'インストール済み',
-    updateAvailable: '更新があります',
+    tags: {
+      filterByTags: 'タグで絞り込み',
+      selected: '選択済み',
+      selectTags: 'タグを選択',
+      clearAll: 'クリア',
+      noTags: 'タグがありません',
+    },
   },
   mcp: {
     title: 'MCP',
@@ -1753,6 +1749,7 @@ const jaJP = {
     getServerListError: 'MCPサーバーリストの取得に失敗しました：',
     serverName: 'サーバー名',
     serverMode: '接続モード',
+    selectMode: '接続モードを選択',
     stdio: 'Stdioモード',
     sse: 'SSEモード',
     http: 'HTTPモード',
@@ -1765,7 +1762,6 @@ const jaJP = {
     remoteUrlPlaceholder: 'https://example.com/mcp',
     remoteUrlDescription:
       'MCP サーバーの URL を貼り付けてください。Streamable HTTP と従来の SSE エンドポイントの両方に対応しています。',
-    selectMode: '接続モードを選択',
     noServerInstalled: 'MCPサーバーが設定されていません',
     serverNameRequired: 'サーバー名は必須です',
     commandRequired: 'コマンドは必須です',
@@ -1954,9 +1950,9 @@ const jaJP = {
       selectAll: 'すべて選択',
       enableAllPlugins: 'すべてのプラグインを有効にする',
       enableAllMCPServers: 'すべてのMCPサーバーを有効にする',
+      enableAllSkills: 'すべてのスキルを有効化',
       allPluginsEnabled: 'すべてのプラグインが有効になっています',
       allMCPServersEnabled: 'すべてのMCPサーバーが有効になっています',
-      enableAllSkills: 'すべてのスキルを有効化',
       allSkillsEnabled: 'すべてのスキルが有効です',
       skillsTitle: 'スキル',
       noSkillsSelected: 'スキルが選択されていません',
@@ -2001,14 +1997,13 @@ const jaJP = {
       selectKnowledgeBases: 'ナレッジベースを選択',
     },
     debugDialog: {
-      saveAndSend: '保存して送信',
-
       title: 'パイプラインのチャット',
       selectPipeline: 'パイプラインを選択',
       sessionType: 'セッションタイプ',
       privateChat: 'プライベートチャット',
       groupChat: 'グループチャット',
       send: '送信',
+      saveAndSend: '保存して送信',
       reset: '会話をリセット',
       inputPlaceholder: '{{type}}メッセージを送信...',
       noMessages: 'メッセージがありません',
@@ -2122,25 +2117,6 @@ const jaJP = {
     fileName: 'ファイル名',
     noResults: '検索結果がありません',
     retrieveError: '検索に失敗しました：',
-    basicInfo: '基本情報',
-    basicInfoDescription: 'ナレッジベースの名前、アイコン、説明を設定',
-    engineSettings: 'エンジン設定',
-    engineSettingsDescription: '選択したナレッジエンジンの設定',
-    engineSettingsReadonly: '編集モードでは変更できません',
-    engineSettingsInvalid:
-      'エンジン設定の検証に失敗しました、必須項目を確認してください',
-    retrievalSettingsInvalid:
-      '検索設定の検証に失敗しました、必須項目を確認してください',
-    retrievalSettings: '検索設定',
-    retrievalSettingsDescription: 'このナレッジベースからの文書検索方法を設定',
-    dangerZone: '危険ゾーン',
-    dangerZoneDescription: '元に戻せない操作',
-    deleteKbAction: 'このナレッジベースを削除',
-    deleteKbHint:
-      '削除すると、このナレッジベース内のすべての文書とデータが完全に削除されます。',
-    noEnginesAvailable: '利用可能なナレッジエンジンがありません',
-    installEngineHint:
-      '先に「ナレッジエンジン」プラグインをインストールしてください',
     unknownEngine: '不明なエンジン',
     knowledgeEngine: 'ナレッジエンジン',
     knowledgeEngineRequired: 'ナレッジエンジンは必須です',
@@ -2169,6 +2145,25 @@ const jaJP = {
     builtInEngine: '組み込みエンジン',
     cannotChangeKnowledgeEngine:
       '作成後にナレッジエンジンを変更することはできません',
+    basicInfo: '基本情報',
+    basicInfoDescription: 'ナレッジベースの名前、アイコン、説明を設定',
+    engineSettings: 'エンジン設定',
+    engineSettingsDescription: '選択したナレッジエンジンの設定',
+    engineSettingsReadonly: '編集モードでは変更できません',
+    engineSettingsInvalid:
+      'エンジン設定の検証に失敗しました、必須項目を確認してください',
+    retrievalSettingsInvalid:
+      '検索設定の検証に失敗しました、必須項目を確認してください',
+    retrievalSettings: '検索設定',
+    retrievalSettingsDescription: 'このナレッジベースからの文書検索方法を設定',
+    dangerZone: '危険ゾーン',
+    dangerZoneDescription: '元に戻せない操作',
+    deleteKbAction: 'このナレッジベースを削除',
+    deleteKbHint:
+      '削除すると、このナレッジベース内のすべての文書とデータが完全に削除されます。',
+    noEnginesAvailable: '利用可能なナレッジエンジンがありません',
+    installEngineHint:
+      '先に「ナレッジエンジン」プラグインをインストールしてください',
     createKnowledgeBaseFailed: 'ナレッジベースの作成に失敗しました：',
     loadKnowledgeBaseFailed: 'ナレッジベースの読み込みに失敗しました：',
     deleteKnowledgeBaseFailed: 'ナレッジベースの削除に失敗しました：',
@@ -2239,9 +2234,9 @@ const jaJP = {
     resetSuccess: 'パスワードのリセットに成功しました。ログインしてください',
     resetFailed:
       'パスワードのリセットに失敗しました。メールアドレスと復旧キーを確認してください',
-    backToLogin: 'ログインに戻る',
     secondFactorFailed:
       '確認に失敗しました。コードを確認して再試行してください',
+    backToLogin: 'ログインに戻る',
     verifyWith: '確認方法',
     methodRecoveryKey: 'リカバリーキー',
     methodTotp: '認証アプリ',
@@ -2395,6 +2390,10 @@ const jaJP = {
     selectionLoadFailed:
       'ワークスペースを読み込めませんでした。もう一度お試しください。',
     switchWorkspace: 'ワークスペースを切り替え',
+    settings: 'Workspace Settings',
+    currentPlan: 'Current plan',
+    planUnavailable: 'Unavailable',
+    upgradePlan: 'Change or upgrade plan',
     ossSingletonDescription:
       'このセルフホストインスタンスには1つのワークスペースがあり、複数のユーザーを追加できます。',
     cloudManagedDescription:
@@ -2465,11 +2464,6 @@ const jaJP = {
       operator: 'オペレーター',
       viewer: '閲覧者',
     },
-
-    settings: 'Workspace Settings',
-    currentPlan: 'Current plan',
-    planUnavailable: 'Unavailable',
-    upgradePlan: 'Change or upgrade plan',
   },
   monitoring: {
     title: 'ダッシュボード',
@@ -2509,8 +2503,8 @@ const jaJP = {
       embeddingCalls: 'Embedding呼び出し',
       modelCalls: 'モデル呼び出し',
       tokens: 'トークン監視',
-      sessions: 'セッション分析',
       feedback: 'ユーザーフィードバック',
+      sessions: 'セッション分析',
       errors: 'エラーログ',
     },
     messageList: {
@@ -2569,6 +2563,8 @@ const jaJP = {
       arguments: '引数',
       result: '結果',
       noToolCalls: 'ツール呼び出しは記録されていません',
+      showDetails: '詳細を表示',
+      hideDetails: '詳細を非表示',
     },
     tokens: {
       totalTokens: '総トークン数',
@@ -2629,12 +2625,12 @@ const jaJP = {
       noData: 'セッションが見つかりません',
     },
     errors: {
+      title: 'エラー',
       errorType: 'エラータイプ',
       errorMessage: 'エラーメッセージ',
       occurredAt: '発生時刻',
       noErrors: 'エラーが見つかりません',
       stackTrace: 'スタックトレース',
-      title: 'エラー',
     },
     feedback: {
       title: 'ユーザーフィードバック',
@@ -2672,11 +2668,11 @@ const jaJP = {
       submitFailed: '送信に失敗しました。後でもう一度お試しください。',
       removeImage: '画像を削除',
     },
-    messageDetails: {
-      noData: 'このクエリにはLLM呼び出しやエラーがありません',
-    },
     queries: {
       title: 'クエリ',
+    },
+    messageDetails: {
+      noData: 'このクエリにはLLM呼び出しやエラーがありません',
     },
     queryVariables: {
       title: 'クエリ変数',
@@ -2741,6 +2737,26 @@ const jaJP = {
     },
   },
   storageAnalysis: {
+    title: 'ストレージ分析',
+    description: 'ストレージ使用量とクリーンアップ候補を確認します',
+    openDialog: '分析を表示',
+    dialogTitle: 'ストレージ分析',
+    generatedAt: '生成日時 {{time}}',
+    loading: '読み込み中...',
+    refresh: '更新',
+    totalSize: '合計サイズ',
+    binaryStorage: 'プラグインバイナリストレージ',
+    uploadCleanup: '期限切れアップロード',
+    logCleanup: '期限切れログ',
+    sections: 'ストレージセクション',
+    monitoringTables: '監視テーブル',
+    runtimeTasks: '実行タスク',
+    cleanupPolicy: 'クリーンアップポリシー',
+    uploadRetention: 'アップロード保持期間',
+    logRetention: 'ログ保持期間',
+    databaseType: 'データベース種別',
+    days: '日',
+    missing: 'なし',
     notCreated: '未作成',
     processStorage: 'プロセス別ストレージ',
     processStorageDescription:
@@ -2779,32 +2795,18 @@ const jaJP = {
       box_runtime:
         'サンドボックスと MCP プロセスのワークスペース、添付ファイル交換ディレクトリ、スキル。',
     },
-
-    title: 'ストレージ分析',
-    description: 'ストレージ使用量とクリーンアップ候補を確認します',
-    openDialog: '分析を表示',
-    dialogTitle: 'ストレージ分析',
-    generatedAt: '生成日時 {{time}}',
-    loading: '読み込み中...',
-    refresh: '更新',
-    totalSize: '合計サイズ',
-    binaryStorage: 'プラグインバイナリストレージ',
-    uploadCleanup: '期限切れアップロード',
-    logCleanup: '期限切れログ',
-    sections: 'ストレージセクション',
-    monitoringTables: '監視テーブル',
-    runtimeTasks: '実行タスク',
-    cleanupPolicy: 'クリーンアップポリシー',
-    uploadRetention: 'アップロード保持期間',
-    logRetention: 'ログ保持期間',
-    databaseType: 'データベース種別',
-    days: '日',
-    missing: 'なし',
     expiredUploads: '期限切れアップロード',
     expiredLogs: '期限切れログ',
     noExpiredUploads: '期限切れのアップロードファイルはありません',
     noExpiredLogs: '期限切れのログファイルはありません',
     sectionNames: {
+      database: 'データベース',
+      logs: 'ログ',
+      storage: 'アップロードファイル',
+      vector_store: 'ベクターストア',
+      plugins: 'プラグイン',
+      mcp: 'MCP',
+      temp: '一時ファイル',
       legacy_plugins: '旧プラグインパッケージ',
       artifacts: '検証済みプラグイン成果物',
       dependency_environments: '依存関係の環境',
@@ -2819,14 +2821,6 @@ const jaJP = {
       session_caches: 'サンドボックスランタイムのキャッシュ',
       session_temp: 'サンドボックスの一時ファイル',
       managed_process_workspaces: '管理プロセスのワークスペース（MCP を含む）',
-
-      database: 'データベース',
-      logs: 'ログ',
-      storage: 'アップロードファイル',
-      vector_store: 'ベクターストア',
-      plugins: 'プラグイン',
-      mcp: 'MCP',
-      temp: '一時ファイル',
     },
   },
   limitation: {
@@ -2842,6 +2836,97 @@ const jaJP = {
       '現在のワークスペース上限を確認できません。もう一度お試しください。',
     createDisabledTooltip:
       'このワークスペースの{{resource}}数が上限（{{max}}個）に達しました。新しく作成する前に既存の{{resource}}を削除してください。',
+  },
+  skills: {
+    title: 'スキル',
+    description: '会話中に有効化できるスキルを作成・管理します',
+    createSkill: 'スキルを作成',
+    createSkillDescription:
+      'ローカルディレクトリをインポートするか、情報を入力して作成します',
+    editSkill: 'スキルを編集',
+    getSkillListError: 'スキル一覧の取得に失敗しました: ',
+    skillName: 'スキル名',
+    displayName: 'スキル名',
+    displayNamePlaceholder: '表示名（任意の言語に対応）',
+    skillSlug: 'ディレクトリ名',
+    skillSlugPlaceholder: 'english-name-only',
+    skillSlugHelp:
+      'スキルのディレクトリ名として使用します。英字、数字、ハイフン、アンダースコアのみ使用できます。',
+    skillDescription: 'スキルの説明',
+    skillInstructions: '指示内容',
+    saveSuccess: '保存しました',
+    saveError: '保存に失敗しました: ',
+    createSuccess: '作成しました',
+    createError: '作成に失敗しました: ',
+    deleteSuccess: '削除しました',
+    deleteError: '削除に失敗しました: ',
+    deleteConfirmation: 'このスキルを削除してもよろしいですか？',
+    delete: 'スキルを削除',
+    skillNameRequired: 'スキル名は必須です',
+    skillDescriptionRequired: 'スキルの説明は必須です',
+    packageRootRequired: 'パッケージルートパスは必須です',
+    scan: 'スキャン',
+    scanSuccess: 'ディレクトリをスキャンしました',
+    scanError: 'ディレクトリのスキャンに失敗しました: ',
+    noSkills: '設定済みのスキルはありません',
+    preview: 'プレビュー',
+    previewInstructions: 'SKILL.md 内容プレビュー',
+    instructionsPlaceholder: 'Markdown 形式でスキルの指示を入力...',
+    descriptionPlaceholder: 'このスキルの概要（LLM に表示されます）',
+    packageRoot: 'パッケージディレクトリ',
+    packageRootHelp:
+      '任意。既存のスキルディレクトリをインポートする場合のみ必要です。新規スキルでは空のままにしてください。スキャンは現在のディレクトリと最大 2 階層下まで確認します。',
+    importLocalDirectory: 'ローカルスキルディレクトリをインポート',
+    chooseSkillDirectory: 'SKILL.md のディレクトリを選択',
+    chooseAnotherDirectory: '別のディレクトリを選択',
+    importingDirectory: 'プレビュー中...',
+    clearDirectoryPreview: '選択したディレクトリをクリア',
+    noSkillMdInDirectory: '選択したディレクトリに SKILL.md が見つかりません',
+    multipleSkillMdInDirectory:
+      '選択したディレクトリに複数の SKILL.md があります。単一のスキルディレクトリを直接選択してください。',
+    importDirectoryError: 'ディレクトリのインポートに失敗しました: ',
+    advancedSettings: '詳細設定',
+    searchSkills: 'スキルを検索...',
+    selectSkills: 'スキルを選択',
+    addSkill: 'スキルを追加',
+    builtin: '組み込み',
+    importFromGithub: 'GitHub からスキルをインストール',
+    createManually: '手動で作成',
+    uploadZip: 'ZIP パッケージをアップロード',
+    uploadZipOnly: '.zip スキルパッケージのみ対応しています',
+    installSuccess: 'スキルをインストールしました',
+    installError: 'スキルのインストールに失敗しました: ',
+    enterRepoUrl: 'GitHub リポジトリ URL を入力',
+    repoUrlPlaceholder: '例: https://github.com/owner/repo',
+    fetchingReleases: 'リリースを取得中...',
+    selectRelease: 'リリースを選択',
+    noReleasesFound: 'リリースが見つかりません',
+    fetchReleasesError: 'リリースの取得に失敗しました: ',
+    selectAsset: 'インストールするファイルを選択',
+    sourceArchive: 'ソースコード (zip)',
+    noAssetsFound: 'このリリースにはインストール可能なファイルがありません',
+    fetchAssetsError: 'ファイルの取得に失敗しました: ',
+    backToReleases: 'リリースへ戻る',
+    backToRepoUrl: 'リポジトリ URL へ戻る',
+    backToAssets: 'ファイル一覧へ戻る',
+    releaseTag: 'タグ: {{tag}}',
+    publishedAt: '公開日時: {{date}}',
+    prerelease: 'プレリリース',
+    assetSize: 'サイズ: {{size}}',
+    confirmInstall: 'インストールを確認',
+    installing: 'スキルをインストール中...',
+    loading: '読み込み中...',
+    previewLoadError: 'プレビューの読み込みに失敗しました',
+    selectFromSidebar: 'サイドバーからスキルを選択してください',
+    dangerZone: '危険な操作',
+    dangerZoneDescription: '元に戻せない破壊的な操作',
+    files: 'ファイル',
+    noFiles: 'ファイルが見つかりません',
+    loadFilesError: 'ファイルの読み込みに失敗しました: ',
+    readFileError: 'ファイルの読み取りに失敗しました: ',
+    saveFile: 'ファイルを保存',
+    saveFileSuccess: 'ファイルを保存しました',
+    saveFileError: 'ファイルの保存に失敗しました: ',
   },
   wizard: {
     sidebarDescription: 'ガイド付きステップでボットを作成',
@@ -3015,10 +3100,6 @@ const jaJP = {
     addMCPServerHint: 'MCPツールサーバー拡張を接続',
     installFromGithub: 'GitHubからプラグインをインストール',
     installFromGithubHint: 'GitHub Releaseからプラグイン拡張をインストール',
-    createSkill: '新しいスキルを作成',
-    createSkillHint: '新しいスキル拡張を手動で作成',
-    unsupportedFileType:
-      'サポートされていないファイルタイプです。.zipと.lbpkgファイルのみサポートされています',
     githubUrlHelp: 'GitHub URL を貼り付けてください',
     githubUrlTooltip:
       'プラグイン: リポジトリ、Release、Tag の URL を貼り付けます。スキル: スキルディレクトリ内の SKILL.md ページ URL を貼り付けます。',
@@ -3027,6 +3108,10 @@ const jaJP = {
     githubUrlRequired: 'GitHub URL を入力してください',
     previewSkill: 'スキルをプレビュー',
     noSkillPreviewFound: 'インポート可能なスキルが見つかりません',
+    createSkill: '新しいスキルを作成',
+    createSkillHint: '新しいスキル拡張を手動で作成',
+    unsupportedFileType:
+      'サポートされていないファイルタイプです。.zipと.lbpkgファイルのみサポートされています',
   },
   errorPage: {
     unexpectedError: 'エラーが発生しました',
@@ -3103,97 +3188,5 @@ const jaJP = {
     selectFromSidebar: 'サイドバーからプラグインページを選択してください',
     invalidPage: '無効なプラグインページ',
   },
-  skills: {
-    title: 'スキル',
-    description: '会話中に有効化できるスキルを作成・管理します',
-    createSkill: 'スキルを作成',
-    createSkillDescription:
-      'ローカルディレクトリをインポートするか、情報を入力して作成します',
-    editSkill: 'スキルを編集',
-    getSkillListError: 'スキル一覧の取得に失敗しました: ',
-    skillName: 'スキル名',
-    displayName: 'スキル名',
-    displayNamePlaceholder: '表示名（任意の言語に対応）',
-    skillSlug: 'ディレクトリ名',
-    skillSlugPlaceholder: 'english-name-only',
-    skillSlugHelp:
-      'スキルのディレクトリ名として使用します。英字、数字、ハイフン、アンダースコアのみ使用できます。',
-    skillDescription: 'スキルの説明',
-    skillInstructions: '指示内容',
-    saveSuccess: '保存しました',
-    saveError: '保存に失敗しました: ',
-    createSuccess: '作成しました',
-    createError: '作成に失敗しました: ',
-    deleteSuccess: '削除しました',
-    deleteError: '削除に失敗しました: ',
-    deleteConfirmation: 'このスキルを削除してもよろしいですか？',
-    delete: 'スキルを削除',
-    skillNameRequired: 'スキル名は必須です',
-    skillDescriptionRequired: 'スキルの説明は必須です',
-    packageRootRequired: 'パッケージルートパスは必須です',
-    scan: 'スキャン',
-    scanSuccess: 'ディレクトリをスキャンしました',
-    scanError: 'ディレクトリのスキャンに失敗しました: ',
-    noSkills: '設定済みのスキルはありません',
-    preview: 'プレビュー',
-    previewInstructions: 'SKILL.md 内容プレビュー',
-    instructionsPlaceholder: 'Markdown 形式でスキルの指示を入力...',
-    descriptionPlaceholder: 'このスキルの概要（LLM に表示されます）',
-    packageRoot: 'パッケージディレクトリ',
-    packageRootHelp:
-      '任意。既存のスキルディレクトリをインポートする場合のみ必要です。新規スキルでは空のままにしてください。スキャンは現在のディレクトリと最大 2 階層下まで確認します。',
-    importLocalDirectory: 'ローカルスキルディレクトリをインポート',
-    chooseSkillDirectory: 'SKILL.md のディレクトリを選択',
-    chooseAnotherDirectory: '別のディレクトリを選択',
-    importingDirectory: 'プレビュー中...',
-    clearDirectoryPreview: '選択したディレクトリをクリア',
-    noSkillMdInDirectory: '選択したディレクトリに SKILL.md が見つかりません',
-    multipleSkillMdInDirectory:
-      '選択したディレクトリに複数の SKILL.md があります。単一のスキルディレクトリを直接選択してください。',
-    importDirectoryError: 'ディレクトリのインポートに失敗しました: ',
-    advancedSettings: '詳細設定',
-    searchSkills: 'スキルを検索...',
-    selectSkills: 'スキルを選択',
-    addSkill: 'スキルを追加',
-    builtin: '組み込み',
-    importFromGithub: 'GitHub からスキルをインストール',
-    createManually: '手動で作成',
-    uploadZip: 'ZIP パッケージをアップロード',
-    uploadZipOnly: '.zip スキルパッケージのみ対応しています',
-    installSuccess: 'スキルをインストールしました',
-    installError: 'スキルのインストールに失敗しました: ',
-    enterRepoUrl: 'GitHub リポジトリ URL を入力',
-    repoUrlPlaceholder: '例: https://github.com/owner/repo',
-    fetchingReleases: 'リリースを取得中...',
-    selectRelease: 'リリースを選択',
-    noReleasesFound: 'リリースが見つかりません',
-    fetchReleasesError: 'リリースの取得に失敗しました: ',
-    selectAsset: 'インストールするファイルを選択',
-    sourceArchive: 'ソースコード (zip)',
-    noAssetsFound: 'このリリースにはインストール可能なファイルがありません',
-    fetchAssetsError: 'ファイルの取得に失敗しました: ',
-    backToReleases: 'リリースへ戻る',
-    backToRepoUrl: 'リポジトリ URL へ戻る',
-    backToAssets: 'ファイル一覧へ戻る',
-    releaseTag: 'タグ: {{tag}}',
-    publishedAt: '公開日時: {{date}}',
-    prerelease: 'プレリリース',
-    assetSize: 'サイズ: {{size}}',
-    confirmInstall: 'インストールを確認',
-    installing: 'スキルをインストール中...',
-    loading: '読み込み中...',
-    previewLoadError: 'プレビューの読み込みに失敗しました',
-    selectFromSidebar: 'サイドバーからスキルを選択してください',
-    dangerZone: '危険な操作',
-    dangerZoneDescription: '元に戻せない破壊的な操作',
-    files: 'ファイル',
-    noFiles: 'ファイルが見つかりません',
-    loadFilesError: 'ファイルの読み込みに失敗しました: ',
-    readFileError: 'ファイルの読み取りに失敗しました: ',
-    saveFile: 'ファイルを保存',
-    saveFileSuccess: 'ファイルを保存しました',
-    saveFileError: 'ファイルの保存に失敗しました: ',
-  },
 };
-
 export default jaJP;
