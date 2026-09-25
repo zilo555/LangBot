@@ -10,27 +10,63 @@ from langbot_plugin.entities.io.context import PluginExecutionMode
 
 
 @pytest.mark.parametrize(
-    ('deployment', 'certificate', 'force', 'expected_disposition', 'expected_code'),
+    ('deployment', 'certificate', 'certificate_id', 'force', 'expected_disposition', 'expected_code'),
     [
-        ('cloud', ('valid', 'shared-runtime-v1'), False, 'shared_eligible', 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE'),
-        ('cloud', ('absent', None), False, 'rejected', 'CERTIFIED_PLUGIN_CLOUD_CERTIFICATE_REQUIRED'),
-        ('cloud', ('malformed', None), False, 'rejected', 'CERTIFIED_PLUGIN_CLOUD_CERTIFICATE_INVALID'),
-        ('cloud', ('invalid', 'shared-runtime-v1'), True, 'rejected', 'CERTIFIED_PLUGIN_CLOUD_CERTIFICATE_INVALID'),
-        ('oss', ('absent', None), False, 'dedicated_allowed', 'CERTIFIED_PLUGIN_OSS_LEGACY_DEDICATED'),
-        ('oss', ('valid', 'shared-runtime-v1'), False, 'shared_eligible', 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE'),
+        ('cloud', ('valid', 'shared-runtime-v1'), 'issuer', False, 'shared_eligible', 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE'),
+        ('cloud', ('absent', None), None, False, 'rejected', 'CERTIFIED_PLUGIN_CLOUD_CERTIFICATE_REQUIRED'),
+        ('cloud', ('malformed', None), None, False, 'rejected', 'CERTIFIED_PLUGIN_CLOUD_CERTIFICATE_INVALID'),
+        (
+            'cloud',
+            ('invalid', 'shared-runtime-v1'),
+            'issuer',
+            True,
+            'rejected',
+            'CERTIFIED_PLUGIN_CLOUD_CERTIFICATE_INVALID',
+        ),
+        ('oss', ('absent', None), None, False, 'dedicated_allowed', 'CERTIFIED_PLUGIN_OSS_LEGACY_DEDICATED'),
+        ('oss', ('valid', 'shared-runtime-v1'), 'issuer', False, 'shared_eligible', 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE'),
         (
             'oss',
             ('invalid', 'shared-runtime-v1'),
+            'issuer',
             False,
             'administrator_force_required',
             'CERTIFIED_PLUGIN_OSS_FORCE_REQUIRED',
         ),
-        ('oss', ('invalid', 'shared-runtime-v1'), True, 'dedicated_allowed', 'CERTIFIED_PLUGIN_OSS_FORCED_DEDICATED'),
+        (
+            'oss',
+            ('invalid', 'shared-runtime-v1'),
+            'issuer',
+            True,
+            'dedicated_allowed',
+            'CERTIFIED_PLUGIN_OSS_FORCED_DEDICATED',
+        ),
+        # A declaration the operator cannot resolve (no trusted key ring configured)
+        # must keep the OSS install working on the dedicated profile instead of
+        # blocking every certified marketplace package.
+        (
+            'oss',
+            ('invalid', 'shared-runtime-v1'),
+            None,
+            False,
+            'dedicated_allowed',
+            'CERTIFIED_PLUGIN_OSS_UNTRUSTED_DEDICATED',
+        ),
+        (
+            'oss',
+            ('invalid', 'shared-runtime-v1'),
+            None,
+            True,
+            'dedicated_allowed',
+            'CERTIFIED_PLUGIN_OSS_UNTRUSTED_DEDICATED',
+        ),
+        ('oss', ('malformed', None), None, False, 'dedicated_allowed', 'CERTIFIED_PLUGIN_OSS_UNTRUSTED_DEDICATED'),
     ],
 )
 def test_admission_policy_enforces_certification_matrix(
     deployment: str,
     certificate: tuple[str, str | None],
+    certificate_id: str | None,
     force: bool,
     expected_disposition: str,
     expected_code: str,
@@ -49,6 +85,7 @@ def test_admission_policy_enforces_certification_matrix(
         certificate=CertificateFacts(
             verification=CertificateVerification(verification),
             runtime_profile=runtime_profile,
+            certificate_id=certificate_id,
         ),
     )
 

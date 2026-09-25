@@ -641,9 +641,37 @@ def test_dify_saved_timeout_is_not_blindly_activated(timeout):
     assert {'code': 'dify.timeout_default', 'field': 'ai.dify-service-api.timeout'} in result['warnings']
 
 
-@pytest.mark.parametrize('current', [None, '', False, [], 'plugin:bad', ' plugin:a/b/c', 'plugin:a/b/c/extra'])
+@pytest.mark.parametrize('current', [None, False, [], 'plugin:bad', ' plugin:a/b/c', 'plugin:a/b/c/extra'])
 def test_malformed_current_id_is_not_already_current(current):
     source = {'ai': {'runner': {'id': current}}}
+    assert_block(plan(source), 'invalid_runner_id', 'ai.runner.id')
+
+
+@pytest.mark.parametrize('blank', ['', '   '])
+def test_blank_current_id_without_legacy_section_is_not_legacy(blank):
+    """A saved pipeline that simply has no runner selected is not legacy.
+
+    It has no legacy runner section to convert and no target to synthesize, so it
+    must report not_legacy instead of blocking the whole batch with a
+    malformed-id diagnostic.
+    """
+    source = {'ai': {'runner': {'id': blank, 'expire-time': 0}, 'runner_config': {}}}
+    result = plan(source)
+    assert result['state'] == 'not_legacy'
+    assert result['config'] is None
+    assert result['blockers'] == []
+    assert result['changed_paths'] == []
+    assert result['target_plugin'] is None
+
+
+def test_blank_current_id_with_legacy_section_stays_blocked():
+    """A blank id cannot silently coexist with a legacy section.
+
+    An unselected plugin runner plus a legacy section is an ambiguous state that
+    the operator must resolve, so it keeps the malformed-id blocker.
+    """
+    source = source_for()
+    source['ai']['runner'] = {'id': '', 'expire-time': 0}
     assert_block(plan(source), 'invalid_runner_id', 'ai.runner.id')
 
 

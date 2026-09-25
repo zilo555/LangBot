@@ -31,7 +31,7 @@ pytestmark = pytest.mark.integration
         ('cloud', 'signed_shared', False, 'shared-runtime-v1'),
         ('oss', 'signed_shared', False, 'shared-runtime-v1'),
         ('oss', 'legacy', False, 'dedicated'),
-        ('oss', 'invalid_shared', True, 'dedicated'),
+        ('oss', 'forged_shared', True, 'dedicated'),
     ],
 )
 async def test_install_plugin_admits_archive_before_persistence_and_applies_selected_profile(
@@ -90,10 +90,58 @@ async def test_cloud_rejects_untrusted_archive_before_storage_persistence_or_run
 
 @pytest.mark.asyncio
 async def test_oss_requires_explicit_administrator_force_for_declared_invalid_archive() -> None:
-    package, trusted_public_keys = _archive('invalid_shared')
+    # The archive declares the profile of a key this instance *does* trust but is
+    # signed by a different key, so the ring resolves its key_id and the failing
+    # signature is an explicit trust decision rather than an unconfigured ring.
+    package, trusted_public_keys = _archive('forged_shared')
     connector, _execution_context, _binding = _connector('oss', trusted_public_keys)
 
     with pytest.raises(ValueError, match='CERTIFIED_PLUGIN_OSS_FORCE_REQUIRED'):
+        await connector.install_plugin(PluginInstallSource.LOCAL, {'plugin_file': package})
+
+    connector._store_artifact_package.assert_not_awaited()
+    connector._persist_installation_package.assert_not_awaited()
+    connector.handler.apply_plugin_installation.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_oss_admits_unresolvable_declaration_on_the_dedicated_profile() -> None:
+    """A self-hosted instance without the issuer key ring must still install.
+
+    Certified marketplace packages declare ``shared-runtime-v1`` and are signed by
+    the marketplace issuer. An OSS instance that never configured
+    ``plugin.certification.trusted_public_keys`` cannot resolve that issuer, so it
+    must degrade the install to the dedicated profile instead of rejecting every
+    certified package with ``CERTIFIED_PLUGIN_OSS_FORCE_REQUIRED``.
+    """
+
+    package, _trusted_public_keys = _archive('signed_shared')
+    connector, execution_context, binding = _connector('oss', {})
+
+    await connector.install_plugin(PluginInstallSource.LOCAL, {'plugin_file': package})
+
+    persisted_info = connector._persist_installation_package.await_args.kwargs['install_info']
+    assert persisted_info['_certification']['runtime_profile'] == 'dedicated'
+    assert persisted_info['_certification']['admission_code'] == 'CERTIFIED_PLUGIN_OSS_UNTRUSTED_DEDICATED'
+    assert persisted_info['_certification']['verification'] == 'invalid'
+    connector._store_artifact_package.assert_awaited_once_with(
+        execution_context,
+        hashlib.sha256(package).hexdigest(),
+        package,
+    )
+    connector.handler.apply_plugin_installation.assert_awaited_once_with(
+        binding,
+        artifact_package=package,
+        enabled=True,
+    )
+
+
+@pytest.mark.asyncio
+async def test_cloud_rejects_unresolvable_declaration_before_storage() -> None:
+    package, _trusted_public_keys = _archive('signed_shared')
+    connector, _execution_context, _binding = _connector('cloud', {})
+
+    with pytest.raises(ValueError, match='CERTIFIED_PLUGIN_CLOUD_CERTIFICATE_INVALID'):
         await connector.install_plugin(PluginInstallSource.LOCAL, {'plugin_file': package})
 
     connector._store_artifact_package.assert_not_awaited()
@@ -213,6 +261,24 @@ def _archive(kind: str) -> tuple[bytes, dict[str, str]]:
 
     from langbot_plugin.certification import create_envelope, write_envelope
 
+    def _raw_public_key(private_key: Ed25519PrivateKey) -> str:
+        return base64.b64encode(
+            private_key.public_key().public_bytes(
+                serialization.Encoding.Raw,
+                serialization.PublicFormat.Raw,
+            )
+        ).decode('ascii')
+
+    if kind == 'forged_shared':
+        # Declares a key ID the instance trusts but signs with a different key,
+        # so the configured ring resolves the identity and rejects the signature.
+        trusted_key = Ed25519PrivateKey.generate()
+        forged_archive = write_envelope(
+            raw_archive,
+            create_envelope(raw_archive, 'trusted', Ed25519PrivateKey.generate().sign),
+        )
+        return forged_archive, {'trusted': _raw_public_key(trusted_key)}
+
     signing_key = Ed25519PrivateKey.generate()
     signed_archive = write_envelope(
         raw_archive,
@@ -222,11 +288,7 @@ def _archive(kind: str) -> tuple[bytes, dict[str, str]]:
             signing_key.sign,
         ),
     )
-    trusted_key = signing_key.public_key().public_bytes(
-        serialization.Encoding.Raw,
-        serialization.PublicFormat.Raw,
-    )
-    return signed_archive, {'ephemeral': base64.b64encode(trusted_key).decode('ascii')}
+    return signed_archive, {'ephemeral': _raw_public_key(signing_key)}
 
 
 def _normalized_digest(archive: bytes) -> str:

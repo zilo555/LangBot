@@ -634,6 +634,12 @@ def plan_legacy_pipeline(config, extensions_preferences=None) -> dict:
         return _block(result, 'mixed_runner_selection', 'ai.runner')
     if 'id' in selection:
         current = selection['id']
+        # A blank runner id paired with no legacy runner section means the saved
+        # pipeline simply has no runner selected. There is nothing to migrate and
+        # nothing to convert, so report not_legacy instead of failing the whole
+        # batch with a malformed-id blocker.
+        if type(current) is str and not current.strip() and not any(legacy in ai for legacy in _TARGETS):
+            return result
         if type(current) is not str or not re.fullmatch(r'plugin:[^/\s]+/[^/\s]+/[^/\s]+', current):
             return _block(result, 'invalid_runner_id', 'ai.runner.id')
         result['state'] = 'already_current'

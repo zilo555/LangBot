@@ -31,6 +31,19 @@ keys, not private/signing keys. An invalid key-ring configuration is rejected
 rather than weakening verification. Keep active issuer keys during a rotation
 until archives signed by retired IDs are no longer installed.
 
+The ring may also be supplied out-of-band, which is how hosted deployments
+provision it:
+
+```bash
+PLUGIN__CERTIFICATION__TRUSTED_PUBLIC_KEYS_JSON='{"ed25519:issuer":"<base64>"}'
+```
+
+An **empty** ring is a supported state, not a misconfiguration. OSS defaults to
+it, so a self-hosted instance that has not provisioned any issuer key still
+installs packages (see the admission matrix below). Configure the ring to grant
+the shared-runtime profile; leave it empty to keep every package on the
+dedicated profile.
+
 ## Admission matrix
 
 | Deployment | SDK verification | Explicit `administrator_force` | Result |
@@ -40,8 +53,25 @@ until archives signed by retired IDs are no longer installed.
 | Cloud | malformed, untrusted, invalid, or non-shared | any | reject before storage with `CERTIFIED_PLUGIN_CLOUD_CERTIFICATE_INVALID` |
 | OSS | absent legacy envelope | any | admitted to the dedicated profile |
 | OSS | valid envelope declaring `shared-runtime-v1` | any | selected shared profile |
-| OSS | malformed or invalid declaration | false | reject with `CERTIFIED_PLUGIN_OSS_FORCE_REQUIRED` |
-| OSS | malformed or invalid declaration | true | admitted to the dedicated profile |
+| OSS | declaration signed by a **key this instance resolves** | false | reject with `CERTIFIED_PLUGIN_OSS_FORCE_REQUIRED` |
+| OSS | declaration signed by a **key this instance resolves** | true | admitted to the dedicated profile |
+| OSS | declaration this instance **cannot resolve** (empty ring) | any | admitted to the dedicated profile |
+
+The OSS row that matters for availability is the last one. Marketplace
+packages are signed by the marketplace issuer and declare
+`shared-runtime-v1`, while OSS ships an empty key ring by default. Treating that
+as a rejection made every certified marketplace package uninstallable with
+`CERTIFIED_PLUGIN_OSS_FORCE_REQUIRED` before artifact storage. Because the
+certificate is signed by an issuer the instance does not declare trusted, no
+shared-runtime privilege may be granted, so admission degrades the install to
+the existing `oss_dev` dedicated profile and records
+`CERTIFIED_PLUGIN_OSS_UNTRUSTED_DEDICATED`. This is not an escalation: it
+withholds the shared profile rather than granting it.
+
+A declaration is "resolvable" only when its `key_id` is present in the
+configured ring. When the ring is configured and the declaration still fails
+(malformed, `signature_invalid`, `digest_mismatch`, `unsupported_schema`, ...),
+admission stays explicit and requires `administrator_force`.
 
 `administrator_force` is deliberately strict: it is recognized only when the
 install request carries boolean `true`. The local upload endpoint accepts the
