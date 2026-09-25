@@ -90,6 +90,7 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
   // control restores the full button, and the two states never race because
   // every transition is derived from the same `dockedEdge` snapshot.
   const [railExpanded, setRailExpanded] = useState(false);
+  const pointerOver = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const hoverLocked = useRef(false);
   const dragState = useRef<{
@@ -234,15 +235,28 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
    * reliable) and clears the lock; only then does hovering reveal the button.
    */
   function handlePointerEnter() {
+    pointerOver.current = true;
     if (hoverLocked.current) return;
     if (shouldExpandRail({ dockedEdge, railExpanded, dragging }))
       setRailExpanded(true);
   }
 
   function handlePointerLeave() {
+    pointerOver.current = false;
     hoverLocked.current = false;
     // Never collapse mid-drag; the drop handler owns the final state.
     if (dragState.current || dragging) return;
+    if (shouldCollapseRail({ dockedEdge, railExpanded, dragging }))
+      setRailExpanded(false);
+  }
+
+  /*
+   * A click or an aborted swipe never arms the long press, so no drop handler
+   * runs. Re-sync the rail from the real pointer position on release, otherwise
+   * a button expanded by hover would stay expanded with the cursor gone.
+   */
+  function settleRailAfterRelease() {
+    if (pointerOver.current || dragState.current || dragging) return;
     if (shouldCollapseRail({ dockedEdge, railExpanded, dragging }))
       setRailExpanded(false);
   }
@@ -309,6 +323,9 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
     window.addEventListener('pointerup', onWindowUp);
     window.addEventListener('pointercancel', onWindowUp);
 
+    // Release outside a drag still needs to reconcile the rail.
+    window.addEventListener('pointerup', settleRailAfterRelease, { once: true });
+
     longPressTimer.current = window.setTimeout(() => {
       if (dragState.current !== state) return;
       state.active = true;
@@ -371,9 +388,16 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, storageKey]);
 
+  // `open` is a dependency so a freshly opened panel jumps to the newest turn
+  // instead of leaving the user at the oldest message. The rAF waits for the
+  // popover to lay out before measuring the sentinel.
   useEffect(() => {
-    end.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, [conversation, busy, pendingText]);
+    if (!open) return;
+    const frame = window.requestAnimationFrame(() => {
+      end.current?.scrollIntoView({ behavior: 'auto', block: 'nearest' });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [open, conversation, busy, pendingText]);
 
   async function submit(approved?: boolean) {
     if (
