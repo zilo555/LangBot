@@ -55,25 +55,34 @@ export type AssistantHoverInput = {
   dragging: boolean;
 };
 
-/** Hovering any part of the control must reveal the full button again. */
+/** Distance to the viewport edge that snaps the button into the rail. */
+
+/**
+ * Hovering any part of the control must reveal the full button again.
+ * Only a docked *and still collapsed* button needs to expand, so a pointer that
+ * merely jitters inside an already expanded button does no state churn.
+ */
 export function shouldExpandRail(input: AssistantHoverInput): boolean {
   if (input.dragging) return false;
   return !!input.dockedEdge && !input.railExpanded;
 }
 
 /**
- * A docked button collapses to the strip only when it is idle and the pointer
- * has left. The panel being open pins it, because the popover is anchored.
+ * A docked button collapses to the strip when the pointer leaves. This is the
+ * mirror of `shouldExpandRail` and is keyed on `railExpanded` being *true* —
+ * the earlier `!railExpanded` form made a revealed button impossible to
+ * re-collapse, which is the bug this guards against. The panel being open pins
+ * it, because the popover stays anchored to the button.
  */
 export function shouldCollapseRail(input: AssistantHoverInput): boolean {
   if (input.dragging) return false;
-  return !!input.dockedEdge && !input.railExpanded;
+  return !!input.dockedEdge && input.railExpanded;
 }
 
 /**
  * After a drop the button always starts collapsed, even though the pointer is
- * still over it. The next pointermove re-expands it, which avoids the
- * "drops under the cursor and never comes back" race.
+ * still over it. The rail is then held collapsed until the pointer exits, which
+ * avoids the "drops under the cursor and never comes back" race.
  */
 export function restingRailExpanded(): boolean {
   return false;

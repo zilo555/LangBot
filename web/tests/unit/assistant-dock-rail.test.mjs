@@ -102,15 +102,34 @@ test('a drag in progress never expands or collapses the rail', () => {
   assert.equal(shouldCollapseRail(dragging), false);
 });
 
-test('a docked, idle button is the only state that collapses', () => {
+test('only an *expanded* docked button collapses when the pointer leaves', () => {
+  // Regression: keying this on `!railExpanded` made a revealed button
+  // impossible to collapse again, so it stayed open forever after one hover.
   assert.equal(
-    shouldCollapseRail({ dockedEdge: 'left', railExpanded: false, dragging: false }),
+    shouldCollapseRail({ dockedEdge: 'left', railExpanded: true, dragging: false }),
     true,
   );
   assert.equal(
-    shouldCollapseRail({ dockedEdge: null, railExpanded: false, dragging: false }),
+    shouldCollapseRail({ dockedEdge: 'left', railExpanded: false, dragging: false }),
     false,
   );
+  assert.equal(
+    shouldCollapseRail({ dockedEdge: null, railExpanded: true, dragging: false }),
+    false,
+  );
+});
+
+test('expand then leave round-trips back to the collapsed rail', () => {
+  const docked = { dockedEdge: 'right', railExpanded: false, dragging: false };
+  // Hover: reveal the button.
+  assert.equal(shouldExpandRail(docked), true);
+  // Pointer leaves: the revealed button must collapse again.
+  assert.equal(
+    shouldCollapseRail({ ...docked, railExpanded: true }),
+    true,
+  );
+  // A second hover re-reveals it, so the cycle is repeatable.
+  assert.equal(shouldExpandRail(docked), true);
 });
 
 test('dropping always starts collapsed so the rail is never stuck open', () => {

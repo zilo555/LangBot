@@ -505,7 +505,7 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
           <span
             role="presentation"
             aria-hidden="true"
-            className={`pointer-events-none absolute top-1/2 h-6 -translate-y-1/2 rounded-full bg-[#3b82f6] shadow-md ${
+            className={`pointer-events-none absolute top-1/2 h-14 -translate-y-1/2 rounded-full bg-[#3b82f6] shadow-md ${
               dockedEdge === 'right' ? 'right-0' : 'left-0'
             }`}
             style={{ width: ASSISTANT_RAIL_WIDTH }}
