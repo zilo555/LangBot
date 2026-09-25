@@ -158,9 +158,7 @@ def verify_plugin_archive_certificate(
     # ``plugin.certification.trusted_public_keys``) the declaration is
     # unresolvable rather than rejected, so ``certificate_id`` stays unset and
     # admission can degrade to the dedicated profile instead of blocking.
-    certificate_id = (
-        envelope.key_id if envelope is not None and envelope.key_id in key_ring else None
-    )
+    certificate_id = envelope.key_id if envelope is not None and envelope.key_id in key_ring else None
     state = {
         'absent': CertificateVerification.ABSENT,
         'malformed': CertificateVerification.MALFORMED,
