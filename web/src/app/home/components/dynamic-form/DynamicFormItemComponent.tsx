@@ -139,6 +139,8 @@ export default function DynamicFormItemComponent({
   onFileUploaded,
   setFormValue,
   systemContext,
+  requiredModelAbility,
+  compactModelSelector = false,
 }: {
   config: IDynamicFormItemSchema;
   field: ControllerRenderProps<any, any>;
@@ -146,6 +148,8 @@ export default function DynamicFormItemComponent({
   onFileUploaded?: (fileKey: string) => void;
   setFormValue?: (name: string, value: unknown) => void;
   systemContext?: Record<string, unknown>;
+  requiredModelAbility?: string;
+  compactModelSelector?: boolean;
 }) {
   const [llmModels, setLlmModels] = useState<LLMModel[]>([]);
   const [embeddingModels, setEmbeddingModels] = useState<EmbeddingModel[]>([]);
@@ -583,14 +587,19 @@ export default function DynamicFormItemComponent({
       );
 
     case DynamicFormItemType.LLM_MODEL_SELECTOR:
+      const selectableModels = llmModels.filter(
+        (model) =>
+          !requiredModelAbility ||
+          model.abilities?.includes(requiredModelAbility),
+      );
       // Separate space models from regular models
       const spaceModels = sortModelsByCatalog(
-        llmModels.filter(
+        selectableModels.filter(
           (m) => m.provider?.requester === LANGBOT_MODELS_PROVIDER_REQUESTER,
         ),
         langbotModelMetadata,
       );
-      const regularModels = llmModels.filter(
+      const regularModels = selectableModels.filter(
         (m) => m.provider?.requester !== LANGBOT_MODELS_PROVIDER_REQUESTER,
       );
 
@@ -630,8 +639,19 @@ export default function DynamicFormItemComponent({
       return (
         <div className="flex w-full max-w-md min-w-0 items-center gap-1.5">
           <div className="min-w-0 flex-1">
-            <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger className={MODEL_SELECT_TRIGGER_CLASS}>
+            <Select
+              value={field.value}
+              onValueChange={field.onChange}
+              disabled={field.disabled}
+            >
+              <SelectTrigger
+                aria-label={t('models.selectModel')}
+                className={
+                  compactModelSelector
+                    ? 'w-full min-w-0 gap-1 border-0 bg-transparent px-1 text-xs text-muted-foreground shadow-none hover:bg-muted data-[size=default]:h-7 [&_[data-slot=select-value]_svg]:hidden'
+                    : MODEL_SELECT_TRIGGER_CLASS
+                }
+              >
                 <SelectValue placeholder={t('models.selectModel')} />
               </SelectTrigger>
               <SelectContent>
@@ -760,7 +780,7 @@ export default function DynamicFormItemComponent({
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-9 w-9 shrink-0"
+                className={compactModelSelector ? 'hidden' : 'h-9 w-9 shrink-0'}
                 onClick={() => {
                   setSettingsSection('models');
                   setModelsDialogOpen(true);

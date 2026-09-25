@@ -1,6 +1,57 @@
 import pipelineMigration from './pipeline-migration/th-TH';
 
 const thTH = {
+  assistant: {
+    modelHint: 'สลับโมเดลผู้ช่วยสำหรับข้อความถัดไป',
+    details: 'ดูข้อมูลดิบ',
+    found: 'พบ {{count}} รายการ',
+    completed: 'เสร็จสิ้น',
+    failed: 'ล้มเหลว',
+    denied: 'ไม่ได้ดำเนินการ',
+    partial: 'ผลลัพธ์ไม่สมบูรณ์',
+    operationFailed:
+      'การดำเนินการล้มเหลว ตรวจสอบรายละเอียดและสถานะทรัพยากรก่อนลองเปลี่ยนแปลงอีกครั้ง',
+    operationDenied: 'ถูกปฏิเสธ ไม่มีการดำเนินการใดในชุดนี้',
+    openResource: 'เปิดทรัพยากร',
+    sendUnconfirmed:
+      'ยังไม่ยืนยันการส่ง ตรวจสอบการเชื่อมต่อแล้วเปิดบทสนทนาใหม่',
+    draftPlaceholder: 'ร่างข้อความถัดไประหว่างรอได้…',
+    operations: {
+      create_pipeline: 'สร้าง Pipeline',
+      configure_pipeline: 'ตั้งค่า Pipeline',
+      create_knowledge_base: 'สร้างฐานความรู้',
+      get_pipeline: 'ดู Pipeline',
+      get_knowledge_schema: 'ดูสคีมาของ knowledge engine',
+    },
+    resources: {
+      models: 'ค้นหาโมเดลแชต',
+      embedding_models: 'ค้นหาโมเดล embedding',
+      pipelines: 'ค้นหา Pipeline',
+      knowledge_bases: 'ค้นหาฐานความรู้',
+      knowledge_engines: 'ค้นหา knowledge engine',
+    },
+    title: 'ผู้ช่วยพื้นที่ทำงาน',
+    subtitle: 'สร้างและจัดการแอปของคุณ',
+    newChat: 'บทสนทนาใหม่',
+    close: 'ปิด',
+    welcome:
+      'บอกฉันว่าคุณอยากสร้างอะไร ฉันตรวจสอบพื้นที่ทำงานนี้และเสนอการตั้งค่าฐานความรู้และ Pipeline ให้คุณยืนยันก่อนดำเนินการ',
+    discover: 'มีโมเดล ฐานความรู้ และ Pipeline อะไรที่ใช้ได้บ้าง?',
+    build: 'ช่วยสร้างแอปตอบคำถามจากฐานความรู้ให้หน่อย',
+    toolResult: 'ผลลัพธ์การดำเนินการ',
+    review: 'ตรวจสอบการดำเนินการและพารามิเตอร์ก่อนยืนยัน',
+    confirm: 'ยืนยันและดำเนินการ',
+    decline: 'ปฏิเสธ',
+    working: 'กำลังประมวลผล…',
+    modelUnavailable:
+      'โมเดลใช้งานไม่ได้ ตรวจสอบการตั้งค่าและสิทธิ์การเข้าถึง แล้วเริ่มบทสนทนาใหม่',
+    error:
+      'รอบนี้ไม่สำเร็จ ตรวจสอบผลลัพธ์ของทรัพยากรก่อนเริ่มบทสนทนาใหม่ ระบบจะไม่ลองเปลี่ยนแปลงซ้ำโดยอัตโนมัติ',
+    running:
+      'รอบนี้ยังทำงานอยู่ หรือถูกขัดจังหวะก่อนบันทึกผลลัพธ์ เปิดผู้ช่วยใหม่เพื่อรีเฟรช และตรวจสอบทรัพยากรก่อนเริ่มใหม่',
+    placeholder: 'อธิบายแอปที่คุณต้องการ…',
+    send: 'ส่ง',
+  },
   sidebarGuide: {
     steps: {
       monitoring: {

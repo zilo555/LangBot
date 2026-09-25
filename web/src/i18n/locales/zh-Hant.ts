@@ -1,6 +1,55 @@
 import pipelineMigration from './pipeline-migration/zh-Hant';
 
 const zhHant = {
+  assistant: {
+    modelHint: '切換助手模型，從下一條訊息生效',
+    details: '檢視原始資料',
+    found: '找到 {{count}} 項',
+    completed: '已完成',
+    failed: '失敗',
+    denied: '未執行',
+    partial: '結果不完整',
+    operationFailed: '操作失敗，請查看詳情；涉及變更時先檢查資源狀態。',
+    operationDenied: '已拒絕，本批操作沒有執行。',
+    openResource: '開啟資源',
+    sendUnconfirmed: '傳送狀態未確認，請檢查連線後重新開啟對話。',
+    draftPlaceholder: '可以先寫下一條，回覆完成後傳送…',
+    operations: {
+      create_pipeline: '建立 Pipeline',
+      configure_pipeline: '設定 Pipeline',
+      create_knowledge_base: '建立知識庫',
+      get_pipeline: '查看 Pipeline',
+      get_knowledge_schema: '查看知識引擎設定',
+    },
+    resources: {
+      models: '查詢聊天模型',
+      embedding_models: '查詢嵌入模型',
+      pipelines: '查詢 Pipeline',
+      knowledge_bases: '查詢知識庫',
+      knowledge_engines: '查詢知識引擎',
+    },
+    title: '工作區助手',
+    subtitle: '建構和管理你的應用',
+    newChat: '新對話',
+    close: '關閉',
+    welcome:
+      '告訴我你想建構什麼應用。我可以查看目前工作區，並提出知識庫和 Pipeline 設定方案，由你確認後執行。',
+    discover: '目前有哪些可用的模型、知識庫和 Pipeline？',
+    build: '幫我建立一個知識庫問答應用。',
+    toolResult: '操作結果',
+    review: '請檢查具體操作及參數，確認後執行',
+    confirm: '確認執行',
+    decline: '拒絕',
+    working: '正在處理…',
+    modelUnavailable:
+      '模型暫不可用。請檢查模型設定和存取權限，然後開啟新對話。',
+    error:
+      '本輪未完成。請先檢查資源和操作結果，再開啟新對話；系統不會自動重試變更。',
+    running:
+      '本輪仍在執行，或執行結果尚未儲存時發生了中斷。重新開啟助手可重新整理；重新開始前請檢查資源。',
+    placeholder: '描述你想建構的應用…',
+    send: '傳送',
+  },
   sidebarGuide: {
     steps: {
       monitoring: {

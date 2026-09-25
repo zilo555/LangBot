@@ -19,18 +19,18 @@ import re
 from urllib.parse import urlsplit
 from string import Formatter
 
-PLANNER_VERSION = '3'
+PLANNER_VERSION = '4'
 
 _TARGETS = {
-    'local-agent': ('LocalAgent', '0.1.7'),
-    'dify-service-api': ('DifyAgent', '0.1.7'),
-    'coze-api': ('CozeAgent', '0.1.7'),
-    'dashscope-app-api': ('DashScopeAgent', '0.1.7'),
-    'n8n-service-api': ('N8nAgent', '0.1.7'),
-    'langflow-api': ('LangflowAgent', '0.1.7'),
-    'deerflow-api': ('DeerFlowAgent', '0.1.7'),
-    'tbox-app-api': ('TboxAgent', '0.1.5'),
-    'weknora-api': ('WeKnoraAgent', '0.1.7'),
+    'local-agent': ('LocalAgent', '0.1.10'),
+    'dify-service-api': ('DifyAgent', '0.1.10'),
+    'coze-api': ('CozeAgent', '0.1.10'),
+    'dashscope-app-api': ('DashScopeAgent', '0.1.10'),
+    'n8n-service-api': ('N8nAgent', '0.1.10'),
+    'langflow-api': ('LangflowAgent', '0.1.10'),
+    'deerflow-api': ('DeerFlowAgent', '0.1.10'),
+    'tbox-app-api': ('TboxAgent', '0.1.8'),
+    'weknora-api': ('WeKnoraAgent', '0.1.10'),
 }
 _DEERFLOW_FIELDS = {
     'api-base',
