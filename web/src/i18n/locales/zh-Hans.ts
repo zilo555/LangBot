@@ -287,6 +287,8 @@ const zhHans = {
     customValue: '自定义',
     loadFailed: '加载失败，请重试。',
     search: '搜索',
+    previous: '上一步',
+    next: '下一步',
     login: '登录',
     logout: '退出登录',
     accountOptions: '系统设置',

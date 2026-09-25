@@ -304,6 +304,8 @@ const viVN = {
     customValue: 'Tùy chỉnh',
     loadFailed: 'Không tải được. Vui lòng thử lại.',
     search: 'Tìm kiếm',
+    previous: 'Bước trước',
+    next: 'Tiếp theo',
     login: 'Đăng nhập',
     logout: 'Đăng xuất',
     accountOptions: 'Cài đặt',

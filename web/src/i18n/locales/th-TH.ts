@@ -301,6 +301,8 @@ const thTH = {
     customValue: 'กำหนดเอง',
     loadFailed: 'โหลดไม่สำเร็จ โปรดลองอีกครั้ง',
     search: 'ค้นหา',
+    previous: 'ขั้นตอนก่อนหน้า',
+    next: 'ถัดไป',
     login: 'เข้าสู่ระบบ',
     logout: 'ออกจากระบบ',
     accountOptions: 'การตั้งค่า',

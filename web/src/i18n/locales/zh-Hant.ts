@@ -283,6 +283,8 @@ const zhHant = {
     customValue: '自訂',
     loadFailed: '載入失敗，請重試。',
     search: '搜尋',
+    previous: '上一步',
+    next: '下一步',
     login: '登入',
     logout: '登出',
     accountOptions: '系統設定',

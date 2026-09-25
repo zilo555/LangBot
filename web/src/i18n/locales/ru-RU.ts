@@ -306,6 +306,8 @@ const ruRU = {
     customValue: 'Свой вариант',
     loadFailed: 'Не удалось загрузить. Попробуйте ещё раз.',
     search: 'Поиск',
+    previous: 'Назад',
+    next: 'Далее',
     login: 'Войти',
     logout: 'Выйти',
     accountOptions: 'Настройки',

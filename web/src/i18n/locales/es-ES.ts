@@ -307,6 +307,8 @@ const esES = {
     customValue: 'Personalizado',
     loadFailed: 'No se pudo cargar. Inténtalo de nuevo.',
     search: 'Buscar',
+    previous: 'Anterior',
+    next: 'Siguiente',
     login: 'Iniciar sesión',
     logout: 'Cerrar sesión',
     accountOptions: 'Configuración',

@@ -303,6 +303,8 @@ const jaJP = {
     customValue: 'カスタム',
     loadFailed: '読み込みに失敗しました。再試行してください。',
     search: '検索',
+    previous: '前へ',
+    next: '次へ',
     login: 'ログイン',
     logout: 'ログアウト',
     accountOptions: 'システム設定',

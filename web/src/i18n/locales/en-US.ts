@@ -307,6 +307,8 @@ const enUS = {
     customValue: 'Custom',
     loadFailed: 'Failed to load. Please try again.',
     search: 'Search',
+    previous: 'Previous',
+    next: 'Next',
     login: 'Login',
     logout: 'Logout',
     accountOptions: 'Settings',
