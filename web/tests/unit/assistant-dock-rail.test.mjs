@@ -50,15 +50,18 @@ test('clamping keeps the button fully inside the viewport', () => {
 });
 
 test('a narrow viewport never produces a negative travel range', () => {
-  assert.deepEqual(
-    clampAssistantPosition(10, 10, { width: 20, height: 20 }),
-    { x: 0, y: 0 },
-  );
+  assert.deepEqual(clampAssistantPosition(10, 10, { width: 20, height: 20 }), {
+    x: 0,
+    y: 0,
+  });
 });
 
 test('positions within the snap threshold dock to the nearest edge', () => {
   assert.equal(resolveAssistantEdge(0, viewport), 'left');
-  assert.equal(resolveAssistantEdge(ASSISTANT_SNAP_THRESHOLD, viewport), 'left');
+  assert.equal(
+    resolveAssistantEdge(ASSISTANT_SNAP_THRESHOLD, viewport),
+    'left',
+  );
   assert.equal(resolveAssistantEdge(maxX, viewport), 'right');
   assert.equal(
     resolveAssistantEdge(maxX - ASSISTANT_SNAP_THRESHOLD, viewport),
@@ -82,16 +85,28 @@ test('the left edge wins ties so a centred drop is deterministic', () => {
 
 test('hovering a docked rail expands it, hovering a free button does not', () => {
   assert.equal(
-    shouldExpandRail({ dockedEdge: 'right', railExpanded: false, dragging: false }),
+    shouldExpandRail({
+      dockedEdge: 'right',
+      railExpanded: false,
+      dragging: false,
+    }),
     true,
   );
   assert.equal(
-    shouldExpandRail({ dockedEdge: null, railExpanded: false, dragging: false }),
+    shouldExpandRail({
+      dockedEdge: null,
+      railExpanded: false,
+      dragging: false,
+    }),
     false,
   );
   // Already expanded: nothing to do, so no redundant state churn on every move.
   assert.equal(
-    shouldExpandRail({ dockedEdge: 'left', railExpanded: true, dragging: false }),
+    shouldExpandRail({
+      dockedEdge: 'left',
+      railExpanded: true,
+      dragging: false,
+    }),
     false,
   );
 });
@@ -106,15 +121,27 @@ test('only an *expanded* docked button collapses when the pointer leaves', () =>
   // Regression: keying this on `!railExpanded` made a revealed button
   // impossible to collapse again, so it stayed open forever after one hover.
   assert.equal(
-    shouldCollapseRail({ dockedEdge: 'left', railExpanded: true, dragging: false }),
+    shouldCollapseRail({
+      dockedEdge: 'left',
+      railExpanded: true,
+      dragging: false,
+    }),
     true,
   );
   assert.equal(
-    shouldCollapseRail({ dockedEdge: 'left', railExpanded: false, dragging: false }),
+    shouldCollapseRail({
+      dockedEdge: 'left',
+      railExpanded: false,
+      dragging: false,
+    }),
     false,
   );
   assert.equal(
-    shouldCollapseRail({ dockedEdge: null, railExpanded: true, dragging: false }),
+    shouldCollapseRail({
+      dockedEdge: null,
+      railExpanded: true,
+      dragging: false,
+    }),
     false,
   );
 });
@@ -124,10 +151,7 @@ test('expand then leave round-trips back to the collapsed rail', () => {
   // Hover: reveal the button.
   assert.equal(shouldExpandRail(docked), true);
   // Pointer leaves: the revealed button must collapse again.
-  assert.equal(
-    shouldCollapseRail({ ...docked, railExpanded: true }),
-    true,
-  );
+  assert.equal(shouldCollapseRail({ ...docked, railExpanded: true }), true);
   // A second hover re-reveals it, so the cycle is repeatable.
   assert.equal(shouldExpandRail(docked), true);
 });

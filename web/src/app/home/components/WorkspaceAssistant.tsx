@@ -20,7 +20,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import {
-  ASSISTANT_BUTTON_SIZE,
   ASSISTANT_RAIL_WIDTH,
   clampAssistantPosition as clampInViewport,
   resolveAssistantEdge,
@@ -81,9 +80,8 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
   const controller = useRef(new AbortController());
   const end = useRef<HTMLDivElement>(null);
 
-  const [dragPosition, setDragPosition] = useState<AssistantDragPosition | null>(
-    null,
-  );
+  const [dragPosition, setDragPosition] =
+    useState<AssistantDragPosition | null>(null);
   const [dragging, setDragging] = useState(false);
   const [dockedEdge, setDockedEdge] = useState<AssistantEdge>(null);
   // The rail collapses only while the pointer is away. Hovering any part of the
@@ -193,10 +191,7 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
     if (edge) lockHoverUntilPointerExit();
     try {
       if (edge) {
-        window.localStorage.setItem(
-          `${storageKey}:button-docked-edge`,
-          edge,
-        );
+        window.localStorage.setItem(`${storageKey}:button-docked-edge`, edge);
       } else {
         window.localStorage.removeItem(`${storageKey}:button-docked-edge`);
       }
@@ -324,7 +319,9 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
     window.addEventListener('pointercancel', onWindowUp);
 
     // Release outside a drag still needs to reconcile the rail.
-    window.addEventListener('pointerup', settleRailAfterRelease, { once: true });
+    window.addEventListener('pointerup', settleRailAfterRelease, {
+      once: true,
+    });
 
     longPressTimer.current = window.setTimeout(() => {
       if (dragState.current !== state) return;
@@ -491,11 +488,7 @@ function AssistantPanel({ storageKey }: { storageKey: string }) {
   return (
     <div
       ref={containerRef}
-      className={
-        dragPosition
-          ? 'fixed z-50'
-          : 'fixed bottom-20 right-5 z-50'
-      }
+      className={dragPosition ? 'fixed z-50' : 'fixed bottom-20 right-5 z-50'}
       style={inlinePosition}
       onPointerEnter={handlePointerEnter}
       onPointerLeave={handlePointerLeave}
