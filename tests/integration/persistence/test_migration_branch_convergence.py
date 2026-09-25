@@ -16,6 +16,7 @@ import uuid
 import pytest
 import sqlalchemy as sa
 from sqlalchemy.ext.asyncio import create_async_engine
+from langbot_plugin.entities.io.context import PluginExecutionMode
 
 from langbot.pkg.entity import persistence
 from langbot.pkg.entity.persistence.base import Base
@@ -25,6 +26,7 @@ from langbot.pkg.persistence.alembic_runner import (
     run_alembic_downgrade,
     run_alembic_upgrade,
 )
+from langbot.pkg.plugin.certification import execution_mode_for_persisted_installation
 from langbot.pkg.utils import importutil
 
 
@@ -350,6 +352,143 @@ async def test_empty_database_startup_schema_then_real_migrations(convergence_en
         # This is the documented fresh-install contract: create_all precedes Alembic.
         await conn.run_sync(Base.metadata.create_all)
     await run_alembic_upgrade(engine, 'head')
+    assert await get_alembic_current(engine) == get_alembic_head()
+
+
+def _legacy_shared_certification(**overrides):
+    certification = {
+        'normalized_digest': 'B' * 64,
+        'verification': 'valid',
+        'certificate_runtime_profile': 'shared-runtime-v1',
+        'certificate_id': 'ed25519:trusted-issuer',
+        'runtime_profile': 'shared-runtime-v1',
+        'admission_code': 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE',
+        'preserved_certificate_key': {'nested': True},
+    }
+    certification.update(overrides)
+    return certification
+
+
+@pytest.mark.asyncio
+async def test_certification_artifact_digest_backfill_is_safe_and_enables_shared_placement(convergence_engine):
+    engine = convergence_engine
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    await run_alembic_upgrade(engine, '0031_merge_totp_assistant')
+
+    valid_digest = 'a' * 64
+    rows = {
+        'eligible-a': (_legacy_shared_certification(), valid_digest),
+        'eligible-b': (_legacy_shared_certification(), valid_digest),
+        'present-matching': (_legacy_shared_certification(artifact_digest=valid_digest), valid_digest),
+        'present-mismatched': (_legacy_shared_certification(artifact_digest='c' * 64), valid_digest),
+        'invalid': (_legacy_shared_certification(verification='invalid'), valid_digest),
+        'incomplete': (_legacy_shared_certification(certificate_id='   '), valid_digest),
+        'missing-fact': (
+            {
+                key: value
+                for key, value in _legacy_shared_certification().items()
+                if key != 'certificate_runtime_profile'
+            },
+            valid_digest,
+        ),
+        'malformed-normalized': (_legacy_shared_certification(normalized_digest='g' * 64), valid_digest),
+        'dedicated-certificate': (
+            _legacy_shared_certification(certificate_runtime_profile='dedicated'),
+            valid_digest,
+        ),
+        'dedicated': (_legacy_shared_certification(runtime_profile='dedicated'), valid_digest),
+        'wrong-admission': (_legacy_shared_certification(admission_code='SHARED_ELIGIBLE'), valid_digest),
+        'uppercase-row-digest': (_legacy_shared_certification(), 'A' * 64),
+        'nonhex-row-digest': (_legacy_shared_certification(), 'g' * 64),
+    }
+    plugin_settings = Base.metadata.tables['plugin_settings']
+    workspaces = Base.metadata.tables['workspaces']
+    async with engine.begin() as conn:
+        for index, (name, (certification, artifact_digest)) in enumerate(rows.items(), start=1):
+            workspace_uuid = f'41100000-0000-4000-8000-{index:012d}'
+            await conn.execute(
+                workspaces.insert().values(
+                    uuid=workspace_uuid,
+                    instance_uuid=f'cert-backfill-{index}',
+                    name=name,
+                    slug=name,
+                )
+            )
+            await conn.execute(
+                plugin_settings.insert().values(
+                    workspace_uuid=workspace_uuid,
+                    plugin_author='langbot',
+                    plugin_name=name,
+                    installation_uuid=f'51100000-0000-4000-8000-{index:012d}',
+                    artifact_digest=artifact_digest,
+                    runtime_revision=1,
+                    install_info={
+                        '_certification': certification,
+                        'preserved_install_key': ['keep', {'nested': True}],
+                    },
+                )
+            )
+
+    await run_alembic_upgrade(engine, 'head')
+    # Re-running the data revision itself must also be harmless.
+    migration = __import__(
+        'langbot.pkg.persistence.alembic.versions.0032_certification_artifact_digest_backfill',
+        fromlist=['upgrade'],
+    )
+    async with engine.begin() as conn:
+        await conn.run_sync(lambda sync: migration.backfill_certification_artifact_digests(sync))
+        stored = {
+            name: (artifact_digest, install_info)
+            for name, artifact_digest, install_info in (
+                await conn.execute(
+                    sa.select(
+                        plugin_settings.c.plugin_name,
+                        plugin_settings.c.artifact_digest,
+                        plugin_settings.c.install_info,
+                    )
+                )
+            ).all()
+        }
+
+    for name in ('eligible-a', 'eligible-b'):
+        eligible_digest, eligible_info = stored[name]
+        assert eligible_info['preserved_install_key'] == ['keep', {'nested': True}]
+        assert eligible_info['_certification']['preserved_certificate_key'] == {'nested': True}
+        assert eligible_info['_certification']['artifact_digest'] == eligible_digest == valid_digest
+        assert (
+            execution_mode_for_persisted_installation(
+                artifact_digest=eligible_digest,
+                install_info=eligible_info,
+            )
+            is PluginExecutionMode.SHARED_CERTIFIED
+        )
+
+    for name, (original_certification, artifact_digest) in rows.items():
+        if name in {'eligible-a', 'eligible-b'}:
+            continue
+        stored_digest, stored_info = stored[name]
+        assert stored_digest == artifact_digest
+        assert stored_info['_certification'] == original_certification
+        if name != 'present-matching':
+            assert (
+                execution_mode_for_persisted_installation(
+                    artifact_digest=stored_digest,
+                    install_info=stored_info,
+                )
+                is PluginExecutionMode.DEDICATED
+            )
+
+
+@pytest.mark.asyncio
+async def test_certification_artifact_digest_backfill_accepts_fresh_current_schema(convergence_engine):
+    engine = convergence_engine
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    await run_alembic_upgrade(engine, 'head')
+    await run_alembic_upgrade(engine, 'head')
+
     assert await get_alembic_current(engine) == get_alembic_head()
 
 
