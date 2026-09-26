@@ -24,6 +24,7 @@ from langbot_plugin.entities.io.context import (
     ActionContext,
     ApplyPluginInstallationRequest,
     InstallationBinding,
+    PluginExecutionMode,
     PluginInstallationDesiredState,
     PluginWorkerPolicy,
     ReconcilePluginInstallationsRequest,
@@ -2793,6 +2794,7 @@ class RuntimeConnectionHandler(handler.Handler):
         *,
         artifact_package: bytes | None,
         enabled: bool,
+        execution_mode: PluginExecutionMode = PluginExecutionMode.DEDICATED,
     ) -> dict[str, Any]:
         with self.installation_scope(binding):
             artifact_file_key = None
@@ -2801,6 +2803,7 @@ class RuntimeConnectionHandler(handler.Handler):
             request = ApplyPluginInstallationRequest(
                 artifact_file_key=artifact_file_key,
                 enabled=enabled,
+                execution_mode=execution_mode,
             )
             return await self.call_action(
                 LangBotToRuntimeAction.APPLY_PLUGIN_INSTALLATION,
