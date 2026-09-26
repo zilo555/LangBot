@@ -1,7 +1,7 @@
 """add workspace operation traceability table
 
-Revision ID: 0032_operation_traceability
-Revises: 0031_merge_totp_assistant
+Revision ID: 0033_operation_traceability
+Revises: 0032_cert_artifact_digest
 Create Date: 2026-09-25
 
 The table is append-only and tenant-owned. Fresh installs already receive it
@@ -22,8 +22,8 @@ import sqlalchemy as sa
 from alembic import op
 
 
-revision = '0032_operation_traceability'
-down_revision = '0031_merge_totp_assistant'
+revision = '0033_operation_traceability'
+down_revision = '0032_cert_artifact_digest'
 branch_labels = None
 depends_on = None
 
