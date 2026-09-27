@@ -21,6 +21,7 @@ const esES = {
       create_knowledge_base: 'Crear base de conocimiento',
       get_pipeline: 'Consultar Pipeline',
       get_knowledge_schema: 'Consultar el esquema del motor de conocimiento',
+      list_operation_logs: 'Consultar la trazabilidad de operaciones',
     },
     resources: {
       models: 'Buscar modelos de chat',
@@ -2779,6 +2780,7 @@ const esES = {
     description: 'Rastrea cambios y consultas de los administradores',
     captureLevel: 'Nivel de captura',
     retention: 'Retención',
+    retentionSummary: 'Conservar {{days}} días · hasta {{rows}} registros',
     retentionDays: 'Días de retención',
     maxRows: 'Registros máximos',
     dedupeWindow: 'Ventana de deduplicación (s)',

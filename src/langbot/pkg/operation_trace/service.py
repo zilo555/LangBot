@@ -1653,6 +1653,7 @@ class WorkspaceSettingsService:
         since: datetime.datetime | None = None,
         until: datetime.datetime | None = None,
         integrity: str | None = None,
+        search: str | None = None,
     ) -> dict[str, typing.Any]:
         """Return one page of operation records plus a Workspace-wide summary.
 
@@ -1664,6 +1665,13 @@ class WorkspaceSettingsService:
         ``integrity`` optionally narrows the listing to the records that failed
         verification, which lets the panel make its counters actionable instead
         of decorative.
+
+        ``search`` is a case-insensitive substring match over the action,
+        resource type, resource id, actor name and summary. It exists so a
+        caller can ask a narrow question ("install", a plugin name, an account)
+        without pulling the whole history: the exact ``action`` filter compares
+        the stored key, so an approximate term like ``install`` would otherwise
+        return nothing and force a full dump.
         """
 
         resolved_limit = max(1, min(int(limit or DEFAULT_PAGE_SIZE), MAX_PAGE_SIZE))
@@ -1681,6 +1689,17 @@ class WorkspaceSettingsService:
                 filters.append(model.resource_type == resource_type)
             if actor_account_uuid:
                 filters.append(model.actor_account_uuid == actor_account_uuid)
+            if search:
+                needle = f'%{str(search).strip()}%'
+                filters.append(
+                    sqlalchemy.or_(
+                        model.action.ilike(needle),
+                        model.resource_type.ilike(needle),
+                        model.resource_id.ilike(needle),
+                        model.actor_name.ilike(needle),
+                        model.summary.ilike(needle),
+                    )
+                )
             if level is not None:
                 filters.append(model.level == int(level))
             if since is not None:

@@ -21,6 +21,7 @@ const thTH = {
       create_knowledge_base: 'สร้างฐานความรู้',
       get_pipeline: 'ดู Pipeline',
       get_knowledge_schema: 'ดูสคีมาของ knowledge engine',
+      list_operation_logs: 'ดูการติดตามการดำเนินการ',
     },
     resources: {
       models: 'ค้นหาโมเดลแชต',
@@ -2676,6 +2677,7 @@ const thTH = {
     description: 'ติดตามการแก้ไขและการดูของผู้ดูแลและเจ้าของ',
     captureLevel: 'ระดับการบันทึก',
     retention: 'นโยบายการเก็บรักษา',
+    retentionSummary: 'เก็บ {{days}} วัน · สูงสุด {{rows}} รายการ',
     retentionDays: 'จำนวนวันเก็บรักษา',
     maxRows: 'จำนวนบันทึกสูงสุด',
     dedupeWindow: 'ช่วงเวลาลบรายการซ้ำ (วินาที)',

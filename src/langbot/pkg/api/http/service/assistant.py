@@ -25,6 +25,10 @@ Do not claim the application has been tested: this experiment has no chat-test o
 After creation/configuration show the returned resource URL so the user can open the normal editor,
 upload documents and use its existing debug chat. If an operation failed or its result is unknown,
 do not repeat a write automatically; explain the result and ask the user to inspect the resource.
+When the list_operation_logs tool is available (owner / admin only), use it to answer "who changed or
+viewed what" questions with the recorded before/after fields instead of guessing. Always query it with
+a narrow filter (search / resource_type / actor) rather than an unfiltered dump, and never repeat the
+same empty query: if a filter matched nothing, widen it once instead of re-asking.
 """
 
 

@@ -19,6 +19,7 @@ const zhHant = {
       create_knowledge_base: '建立知識庫',
       get_pipeline: '查看 Pipeline',
       get_knowledge_schema: '查看知識引擎設定',
+      list_operation_logs: '查詢操作溯源',
     },
     resources: {
       models: '查詢聊天模型',
@@ -2575,6 +2576,7 @@ const zhHant = {
     description: '追蹤管理員與擁有者的修改與查看操作，記錄「什麼改成了什麼」。',
     captureLevel: '操作等級',
     retention: '保留策略',
+    retentionSummary: '保留 {{days}} 天 · 最多 {{rows}} 條',
     retentionDays: '保留天數',
     maxRows: '最大記錄數',
     dedupeWindow: '去重視窗（秒）',

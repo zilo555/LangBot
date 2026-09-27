@@ -21,6 +21,7 @@ const ruRU = {
       create_knowledge_base: 'Создать базу знаний',
       get_pipeline: 'Посмотреть Pipeline',
       get_knowledge_schema: 'Посмотреть схему движка знаний',
+      list_operation_logs: 'Просмотр трассировки операций',
     },
     resources: {
       models: 'Найти чат-модели',
@@ -2749,6 +2750,7 @@ const ruRU = {
     description: 'Отслеживание изменений и просмотров администраторов',
     captureLevel: 'Уровень записи',
     retention: 'Хранение',
+    retentionSummary: 'Хранить {{days}} дн. · до {{rows}} записей',
     retentionDays: 'Дней хранения',
     maxRows: 'Максимум записей',
     dedupeWindow: 'Окно дедупликации (с)',

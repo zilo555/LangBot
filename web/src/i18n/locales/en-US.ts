@@ -21,6 +21,7 @@ const enUS = {
       create_knowledge_base: 'Create knowledge base',
       get_pipeline: 'Read Pipeline',
       get_knowledge_schema: 'Read knowledge engine schema',
+      list_operation_logs: 'Read operation trace',
     },
     resources: {
       models: 'Find chat models',
@@ -2724,6 +2725,7 @@ const enUS = {
     description: 'Trace admin and owner edits and views, and what changed.',
     captureLevel: 'Capture level',
     retention: 'Retention',
+    retentionSummary: 'Keep {{days}} days · up to {{rows}} records',
     retentionDays: 'Retention days',
     maxRows: 'Max records',
     dedupeWindow: 'Dedupe window (s)',

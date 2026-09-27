@@ -19,6 +19,7 @@ const zhHans = {
       create_knowledge_base: '创建知识库',
       get_pipeline: '查看 Pipeline',
       get_knowledge_schema: '查看知识引擎配置',
+      list_operation_logs: '查询操作溯源',
     },
     resources: {
       models: '查询聊天模型',
@@ -2574,6 +2575,7 @@ const zhHans = {
     description: '追踪管理员与拥有者的修改和查看操作，记录“什么改成了什么”。',
     captureLevel: '操作等级',
     retention: '保留策略',
+    retentionSummary: '保留 {{days}} 天 · 最多 {{rows}} 条',
     retentionDays: '保留天数',
     maxRows: '最大记录数',
     dedupeWindow: '去重窗口（秒）',

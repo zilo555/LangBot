@@ -45,7 +45,9 @@ export default function AssistantToolResult({
     ? result
     : Array.isArray(data.items)
       ? data.items
-      : null;
+      : Array.isArray(data.records)
+        ? data.records
+        : null;
   const total = typeof data.total === 'number' ? data.total : items?.length;
   const kind = tool?.arguments.kind;
   const label =
@@ -142,7 +144,13 @@ export default function AssistantToolResult({
                     : {};
                 return (
                   <li key={index} className="truncate">
-                    {String(entry.name || entry.uuid || '—')}
+                    {String(
+                      entry.name ||
+                        entry.summary ||
+                        entry.action ||
+                        entry.uuid ||
+                        '—',
+                    )}
                   </li>
                 );
               })}

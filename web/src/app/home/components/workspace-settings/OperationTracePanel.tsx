@@ -15,6 +15,11 @@ import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
 import { Item, ItemContent, ItemMedia, ItemTitle } from '@/components/ui/item';
 import {
@@ -341,6 +346,9 @@ export default function OperationTracePanel({
   const [retentionDays, setRetentionDays] = useState<number>(30);
   const [maxRows, setMaxRows] = useState<number>(20000);
   const [dedupeSeconds, setDedupeSeconds] = useState<number>(60);
+  // Retention is an advanced, rarely-touched policy: it collapses by default so
+  // the capture level and the records list stay the focus of the panel.
+  const [retentionOpen, setRetentionOpen] = useState(false);
   // Only one record shows its full change detail at a time, so the list stays
   // scannable: the payload diff is long and is opt-in per row.
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -631,66 +639,85 @@ export default function OperationTracePanel({
           </div>
         </section>
 
-        <section className="space-y-3">
-          <h3 className="text-sm font-semibold">
-            {t('operationTrace.retention')}
-          </h3>
-          <div className="flex flex-wrap items-end gap-2">
-            <label className="flex flex-col gap-1 text-xs">
-              <span className="text-muted-foreground">
-                {t('operationTrace.retentionDays')}
-              </span>
-              <Input
-                type="number"
-                className="w-28"
-                min={governance?.limits.min_retention_days ?? 1}
-                max={governance?.limits.max_retention_days ?? 3650}
-                value={retentionDays}
-                disabled={!canConfigure}
-                onChange={(event) =>
-                  setRetentionDays(Number(event.target.value))
-                }
+        <Collapsible open={retentionOpen} onOpenChange={setRetentionOpen}>
+          <section className="space-y-3">
+            <CollapsibleTrigger className="flex w-full items-center gap-2 text-left">
+              <ChevronDown
+                className={`size-4 shrink-0 text-muted-foreground transition-transform ${
+                  retentionOpen ? '' : '-rotate-90'
+                }`}
               />
-            </label>
-            <label className="flex flex-col gap-1 text-xs">
-              <span className="text-muted-foreground">
-                {t('operationTrace.maxRows')}
-              </span>
-              <Input
-                type="number"
-                className="w-32"
-                min={governance?.limits.min_max_rows ?? 100}
-                max={governance?.limits.max_max_rows ?? 500000}
-                value={maxRows}
-                disabled={!canConfigure}
-                onChange={(event) => setMaxRows(Number(event.target.value))}
-              />
-            </label>
-            <label className="flex flex-col gap-1 text-xs">
-              <span className="text-muted-foreground">
-                {t('operationTrace.dedupeWindow')}
-              </span>
-              <Input
-                type="number"
-                className="w-28"
-                min={governance?.limits.min_dedupe_window_seconds ?? 0}
-                max={governance?.limits.max_dedupe_window_seconds ?? 3600}
-                value={dedupeSeconds}
-                disabled={!canConfigure}
-                onChange={(event) =>
-                  setDedupeSeconds(Number(event.target.value))
-                }
-              />
-            </label>
-            <Button
-              size="sm"
-              onClick={() => void saveRetention()}
-              disabled={!canConfigure || saving}
-            >
-              {t('operationTrace.save')}
-            </Button>
-          </div>
-        </section>
+              <h3 className="text-sm font-semibold">
+                {t('operationTrace.retention')}
+              </h3>
+              {!retentionOpen && (
+                <span className="ml-auto truncate text-xs text-muted-foreground">
+                  {t('operationTrace.retentionSummary', {
+                    days: retentionDays,
+                    rows: maxRows,
+                  })}
+                </span>
+              )}
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="flex flex-wrap items-end gap-2 pt-3">
+                <label className="flex flex-col gap-1 text-xs">
+                  <span className="text-muted-foreground">
+                    {t('operationTrace.retentionDays')}
+                  </span>
+                  <Input
+                    type="number"
+                    className="w-28"
+                    min={governance?.limits.min_retention_days ?? 1}
+                    max={governance?.limits.max_retention_days ?? 3650}
+                    value={retentionDays}
+                    disabled={!canConfigure}
+                    onChange={(event) =>
+                      setRetentionDays(Number(event.target.value))
+                    }
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-xs">
+                  <span className="text-muted-foreground">
+                    {t('operationTrace.maxRows')}
+                  </span>
+                  <Input
+                    type="number"
+                    className="w-32"
+                    min={governance?.limits.min_max_rows ?? 100}
+                    max={governance?.limits.max_max_rows ?? 500000}
+                    value={maxRows}
+                    disabled={!canConfigure}
+                    onChange={(event) => setMaxRows(Number(event.target.value))}
+                  />
+                </label>
+                <label className="flex flex-col gap-1 text-xs">
+                  <span className="text-muted-foreground">
+                    {t('operationTrace.dedupeWindow')}
+                  </span>
+                  <Input
+                    type="number"
+                    className="w-28"
+                    min={governance?.limits.min_dedupe_window_seconds ?? 0}
+                    max={governance?.limits.max_dedupe_window_seconds ?? 3600}
+                    value={dedupeSeconds}
+                    disabled={!canConfigure}
+                    onChange={(event) =>
+                      setDedupeSeconds(Number(event.target.value))
+                    }
+                  />
+                </label>
+                <Button
+                  size="sm"
+                  onClick={() => void saveRetention()}
+                  disabled={!canConfigure || saving}
+                >
+                  {t('operationTrace.save')}
+                </Button>
+              </div>
+            </CollapsibleContent>
+          </section>
+        </Collapsible>
 
         <section className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">

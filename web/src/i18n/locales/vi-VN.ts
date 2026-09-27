@@ -22,6 +22,7 @@ const viVN = {
       create_knowledge_base: 'Tạo cơ sở tri thức',
       get_pipeline: 'Xem Pipeline',
       get_knowledge_schema: 'Xem lược đồ knowledge engine',
+      list_operation_logs: 'Truy vấn truy vết thao tác',
     },
     resources: {
       models: 'Tìm mô hình trò chuyện',
@@ -2711,6 +2712,7 @@ const viVN = {
     description: 'Theo dõi thao tác sửa và xem của quản trị viên',
     captureLevel: 'Mức ghi nhận',
     retention: 'Chính sách lưu trữ',
+    retentionSummary: 'Lưu {{days}} ngày · tối đa {{rows}} bản ghi',
     retentionDays: 'Số ngày lưu',
     maxRows: 'Số bản ghi tối đa',
     dedupeWindow: 'Khoảng khử trùng lặp (giây)',

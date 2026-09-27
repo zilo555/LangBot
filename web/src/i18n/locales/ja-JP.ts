@@ -21,6 +21,7 @@ const jaJP = {
       create_knowledge_base: 'ナレッジベース作成',
       get_pipeline: 'Pipeline 参照',
       get_knowledge_schema: 'エンジン設定の参照',
+      list_operation_logs: '操作トレーサビリティの参照',
     },
     resources: {
       models: 'チャットモデル検索',
@@ -2742,6 +2743,7 @@ const jaJP = {
     description: '管理者とオーナーの操作を追跡します。',
     captureLevel: 'キャプチャレベル',
     retention: '保持ポリシー',
+    retentionSummary: '{{days}} 日間保持 · 最大 {{rows}} 件',
     retentionDays: '保持日数',
     maxRows: '最大レコード数',
     dedupeWindow: '重複排除ウィンドウ（秒）',
