@@ -53,7 +53,7 @@ def _app():
             require_workspace_context=AsyncMock(side_effect=lambda context: context),
             get_rag_creation_schema=AsyncMock(return_value={}),
             get_rag_retrieval_schema=AsyncMock(return_value={}),
-            list_knowledge_engines=AsyncMock(return_value=[]),
+            list_knowledge_engines=AsyncMock(return_value=[{'plugin_id': 'author/engine'}]),
             list_parsers=AsyncMock(return_value=[]),
         ),
     )
@@ -338,14 +338,15 @@ async def test_schema_validation_refences_before_second_runtime_call():
 
 
 @pytest.mark.asyncio
-async def test_engine_schemas_are_context_gated_and_fail_soft_on_connector_error():
+async def test_engine_schemas_are_context_gated_and_report_connector_error():
     app = _app()
     app.plugin_connector.get_rag_creation_schema.return_value = {'schema': ['creation']}
     app.plugin_connector.get_rag_retrieval_schema.side_effect = RuntimeError('offline')
     service = KnowledgeService(app)
 
     assert await service.get_engine_creation_schema(CONTEXT, 'author/engine') == {'schema': ['creation']}
-    assert await service.get_engine_retrieval_schema(CONTEXT, 'author/engine') == {}
+    with pytest.raises(RuntimeError, match='offline'):
+        await service.get_engine_retrieval_schema(CONTEXT, 'author/engine')
     with pytest.raises(WorkspaceRequiredError):
         await service.get_engine_creation_schema(None, 'author/engine')
 
@@ -535,12 +536,12 @@ class TestListKnowledgeEngines:
         app.plugin_connector.list_knowledge_engines.assert_not_awaited()
 
     @pytest.mark.asyncio
-    async def test_returns_empty_on_exception(self):
+    async def test_reports_runtime_exception(self):
         app = _app()
         app.plugin_connector.list_knowledge_engines.side_effect = RuntimeError('Connection error')
 
-        assert await KnowledgeService(app).list_knowledge_engines(CONTEXT) == []
-        app.logger.warning.assert_called_once()
+        with pytest.raises(RuntimeError, match='Connection error'):
+            await KnowledgeService(app).list_knowledge_engines(CONTEXT)
 
 
 class TestListParsers:
@@ -603,17 +604,12 @@ class TestGetEngineSchemas:
         assert 'properties' in result
 
     @pytest.mark.asyncio
-    async def test_returns_empty_dict_on_exception(self):
+    async def test_reports_schema_runtime_exception(self):
         app = _app()
         app.plugin_connector.get_rag_creation_schema.side_effect = RuntimeError('Plugin error')
 
-        result = await KnowledgeService(app).get_engine_creation_schema(
-            CONTEXT,
-            'author/engine',
-        )
-
-        assert result == {}
-        app.logger.warning.assert_called_once()
+        with pytest.raises(RuntimeError, match='Plugin error'):
+            await KnowledgeService(app).get_engine_creation_schema(CONTEXT, 'author/engine')
 
 
 class TestKnowledgeBaseSecretViews:
@@ -652,3 +648,12 @@ class TestKnowledgeBaseSecretViews:
             )
 
         app.rag_mgr.create_knowledge_base.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_missing_engine_is_not_an_empty_schema():
+    app = _app()
+    app.plugin_connector.list_knowledge_engines.return_value = []
+    with pytest.raises(WorkspaceNotFoundError, match='Knowledge engine not found'):
+        await KnowledgeService(app).get_engine_creation_schema(CONTEXT, 'missing/engine')
+    app.plugin_connector.get_rag_creation_schema.assert_not_awaited()

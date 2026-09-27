@@ -173,6 +173,9 @@ class QueryPool:
             else:
                 self.active_query_count_by_workspace.pop(query_workspace_uuid, None)
             plugin_diagnostics.discard_query_state(query)
+            completion = getattr(query, '_completion_event', None)
+            if completion is not None:
+                completion.set()
             counter_key = (
                 execution_context.instance_uuid,
                 execution_context.workspace_uuid,
@@ -426,6 +429,9 @@ class QueryPool:
                 self.queries.pop(index)
                 break
         plugin_diagnostics.discard_query_state(query)
+        completion = getattr(query, '_completion_event', None)
+        if completion is not None:
+            completion.set()
         return True
 
     async def __aenter__(self):

@@ -1373,13 +1373,14 @@ class BoxService:
             self._runtime_connector.dispose()
 
     async def get_sessions(self, context: TenantContext) -> list[dict]:
-        if not self._available:
+        if not self._enabled:
+            if self.managed_admission_required:
+                await self.require_workspace_sandbox(context)
             return []
         execution_context = await self.require_workspace_sandbox(context)
-        try:
-            return await self.client.get_sessions(action_context=self._action_context(execution_context))
-        except Exception:
-            return []
+        if not self._available:
+            raise RuntimeError('Sandbox is unavailable; inspect sandbox status')
+        return await self.client.get_sessions(action_context=self._action_context(execution_context))
 
     async def get_storage_analysis(self, context: TenantContext) -> dict:
         """Return Workspace-scoped storage measured by the Box Runtime."""
