@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Fingerprint,
@@ -15,14 +16,7 @@ import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemMedia,
-  ItemTitle,
-} from '@/components/ui/item';
+import { Item, ItemContent, ItemMedia, ItemTitle } from '@/components/ui/item';
 import {
   Select,
   SelectContent,
@@ -61,33 +55,69 @@ const PAGE_SIZE = 20;
  */
 const REDACTED_SENTINEL = '__redacted__';
 
+/**
+ * Longest value a collapsed row shows verbatim. Anything longer is replaced by
+ * its size, because a pipeline ``config`` or ``extensions_preferences`` renders
+ * as hundreds of characters that wrap onto several lines and read as two
+ * near-identical blobs side by side.
+ */
+const COLLAPSED_VALUE_CHARS = 64;
+
+/** Render a before/after value in full (used when a row is expanded). */
+function formatValue(value: unknown, redactedLabel: string): string {
+  if (value === null || value === undefined || value === '') return '—';
+  // The backend stores a machine sentinel for masked fields; the label is
+  // localized here so no interface text ships from the backend.
+  if (value === REDACTED_SENTINEL) return redactedLabel;
+  if (typeof value === 'object') return JSON.stringify(value);
+  return String(value);
+}
+
+/**
+ * Render a before/after value compactly: short values verbatim, long ones as
+ * their size. The two sizes almost always differ, so the change stays legible
+ * without the full payload competing with the rest of the row.
+ */
+function summarizeValue(
+  value: unknown,
+  redactedLabel: string,
+  sizeLabel: (count: number) => string,
+): string {
+  if (value === REDACTED_SENTINEL) return redactedLabel;
+  if (value === null || value === undefined || value === '') return '—';
+  const text =
+    typeof value === 'string' ? value : (JSON.stringify(value) ?? '');
+  if (text.length > COLLAPSED_VALUE_CHARS) return sizeLabel(text.length);
+  return text;
+}
+
 /** Render one before → after pair in a compact, readable row. */
 function ChangeRow({
   change,
   redactedLabel,
+  sizeLabel,
+  collapsed = false,
 }: {
   change: OperationChangeField;
   redactedLabel: string;
+  sizeLabel: (count: number) => string;
+  collapsed?: boolean;
 }) {
-  const format = (value: unknown): string => {
-    if (value === null || value === undefined || value === '') return '—';
-    // The backend stores a machine sentinel for masked fields; the label is
-    // localized here so no interface text ships from the backend.
-    if (value === REDACTED_SENTINEL) return redactedLabel;
-    if (typeof value === 'object') return JSON.stringify(value);
-    return String(value);
-  };
+  const render = (value: unknown): string =>
+    collapsed
+      ? summarizeValue(value, redactedLabel, sizeLabel)
+      : formatValue(value, redactedLabel);
   return (
     <div className="flex flex-wrap items-baseline gap-1.5 font-mono text-xs">
       <span className="text-muted-foreground">{change.field}</span>
       <span className="rounded bg-muted px-1.5 py-0.5 break-all">
-        {format(change.before)}
+        {render(change.before)}
       </span>
       <span aria-hidden="true" className="text-muted-foreground">
         →
       </span>
       <span className="rounded bg-primary/10 px-1.5 py-0.5 break-all">
-        {format(change.after)}
+        {render(change.after)}
       </span>
     </div>
   );
@@ -99,6 +129,58 @@ function outcomeVariant(
   if (outcome === 'error') return 'destructive';
   if (outcome === 'denied') return 'outline';
   return 'secondary';
+}
+
+/**
+ * How many changes a collapsed row spells out before summarizing the rest.
+ * Three covers the common case (a name + a couple of flags) so the vast
+ * majority of rows answer "what changed" without a click.
+ */
+const COLLAPSED_CHANGE_LIMIT = 3;
+
+/**
+ * Render a record's before → after diff inline.
+ *
+ * "What was changed into what" is the reason this log exists, and the diff
+ * already arrived with the page, so it is shown on the collapsed row instead
+ * of behind a click. Only the fields that differ are listed; the rest fold
+ * into a single "+N" note that the expanded row spells out in full.
+ */
+function ChangeList({
+  changes,
+  redactedLabel,
+  sizeLabel,
+  limit,
+  moreLabel,
+  collapsed = false,
+}: {
+  changes: OperationChangeField[];
+  redactedLabel: string;
+  sizeLabel: (count: number) => string;
+  limit?: number;
+  moreLabel: (hidden: number) => string;
+  collapsed?: boolean;
+}) {
+  const shown = limit === undefined ? changes : changes.slice(0, limit);
+  const hidden = changes.length - shown.length;
+  return (
+    <div className="flex flex-col gap-0.5">
+      {shown.map((change, index) => (
+        <ChangeRow
+          key={`${change.field}-${index}`}
+          change={change}
+          redactedLabel={redactedLabel}
+          sizeLabel={sizeLabel}
+          collapsed={collapsed}
+        />
+      ))}
+      {hidden > 0 && (
+        <span className="font-mono text-[10px] text-muted-foreground">
+          {moreLabel(hidden)}
+        </span>
+      )}
+    </div>
+  );
 }
 
 /** A record paired with how many times it repeated on the current page. */
@@ -182,6 +264,63 @@ function formatTimestamp(value: string | null): string {
     second: '2-digit',
   });
   return sameDay ? time : `${date.toLocaleDateString()} ${time}`;
+}
+
+/**
+ * Local calendar day a record belongs to. "today"/"yesterday" are named so the
+ * timeline reads relatively at the top and absolutely further back.
+ */
+function dayKey(value: string | null): string {
+  const date = value ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) return 'unknown';
+  const iso = (candidate: Date) =>
+    `${candidate.getFullYear()}-${candidate.getMonth()}-${candidate.getDate()}`;
+  const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (iso(date) === iso(now)) return 'today';
+  if (iso(date) === iso(yesterday)) return 'yesterday';
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
+    date.getDate(),
+  ).padStart(2, '0')}`;
+}
+
+/** A day's worth of records, so a long history reads as a timeline. */
+interface DayGroup {
+  key: string;
+  records: GroupedRecord[];
+}
+
+/** Header for a day group; absolute dates pass through unchanged. */
+function dayHeading(
+  key: string,
+  labels: { today: string; yesterday: string; unknown: string },
+): string {
+  if (key === 'today') return labels.today;
+  if (key === 'yesterday') return labels.yesterday;
+  if (key === 'unknown') return labels.unknown;
+  return key;
+}
+
+/**
+ * Bucket records by calendar day, preserving the newest-first order.
+ *
+ * The backend returns a flat stream newest-first; without day headers an
+ * operator paging through hundreds of rows cannot tell where "today" ends and
+ * "last week" begins, which is the first thing they look for.
+ */
+function groupByDay(records: GroupedRecord[]): DayGroup[] {
+  const groups: DayGroup[] = [];
+  for (const record of records) {
+    const key = dayKey(record.record.created_at);
+    const last = groups[groups.length - 1];
+    if (last && last.key === key) {
+      last.records.push(record);
+      continue;
+    }
+    groups.push({ key, records: [record] });
+  }
+  return groups;
 }
 
 export default function OperationTracePanel({
@@ -295,7 +434,15 @@ export default function OperationTracePanel({
     [page],
   );
 
+  // A timeline reads top-down: "today", then "yesterday", then dated buckets.
+  const dayGroups = useMemo(() => groupByDay(groupedRecords), [groupedRecords]);
+
   const integrityFilter: OperationIntegrityFilter = query.integrity ?? 'all';
+  // "Mutations only" is the default answer to "who changed something"; the
+  // level filter already exists, so this is a one-click view rather than new
+  // query API surface. Level >= 1 drops the pure "view" observations that
+  // otherwise dominate an L2 (read-level) log.
+  const mutationsOnly = query.level === 1;
 
   // Clicking a counter turns it into a drill-down: the panel is the only place
   // the operator can learn *which* records failed verification, so a badge that
@@ -677,6 +824,24 @@ export default function OperationTracePanel({
                   ))}
                 </SelectContent>
               </Select>
+              {/* The log is an answer to "who changed something", so the pure
+                  "view" observations can be hidden in one click. It reuses the
+                  level filter (mutations are level >= 1) rather than adding new
+                  query API. */}
+              <Button
+                size="sm"
+                variant={mutationsOnly ? 'default' : 'outline'}
+                className="h-8"
+                onClick={() =>
+                  setQuery((prev) => ({
+                    ...prev,
+                    level: prev.level === 1 ? undefined : 1,
+                    offset: 0,
+                  }))
+                }
+              >
+                {t('operationTrace.mutationsOnly')}
+              </Button>
             </div>
           </div>
 
@@ -688,167 +853,186 @@ export default function OperationTracePanel({
                   : t('operationTrace.emptyFiltered')}
               </p>
             )}
-            {groupedRecords.map(({ key, record, count }) => {
-              const expanded = expandedId === record.id;
-              return (
-                <Item
-                  key={key}
-                  size="sm"
-                  variant="muted"
-                  className={`items-start rounded-lg ${
-                    record.tampered
-                      ? 'border-destructive/60 bg-destructive/5'
-                      : ''
-                  }`}
-                >
-                  <ItemMedia variant="icon">
-                    {record.tampered ? (
-                      <ShieldAlert className="size-4 text-destructive" />
-                    ) : (
-                      <History className="size-4" />
-                    )}
-                  </ItemMedia>
-                  <ItemContent className="min-w-0">
-                    {/* Primary line: only what changed hands — the action, the
-                        resource, and an exception badge. The level ("L2") and
-                        the "verified" badge were constant for almost every row
-                        and only added noise, so they are gone. */}
-                    <ItemTitle className="flex flex-wrap items-center gap-1.5">
-                      <span className="font-medium">
-                        {t(record.action_i18n_key, {
-                          defaultValue: record.action ?? '',
-                        })}
-                      </span>
-                      {record.resource_type && (
-                        <span className="text-xs text-muted-foreground">
-                          {t(
-                            `operationTrace.resourceTypes.${record.resource_type}`,
-                            {
-                              defaultValue: record.resource_type,
-                            },
-                          )}
-                        </span>
-                      )}
-                      {record.resource_id && (
-                        <span
-                          className="max-w-[18rem] truncate font-mono text-xs text-muted-foreground"
-                          title={record.resource_id}
-                        >
-                          {record.resource_id}
-                        </span>
-                      )}
-                      {record.outcome !== 'ok' && (
-                        <Badge variant={outcomeVariant(record.outcome)}>
-                          {t(`operationTrace.outcomes.${record.outcome}`)}
-                        </Badge>
-                      )}
-                      {record.tampered && (
-                        <Badge variant="destructive">
-                          <ShieldAlert className="size-3" />
-                          {t('operationTrace.tamperedBadge')}
-                        </Badge>
-                      )}
-                      {count > 1 && (
-                        <Badge variant="outline" className="shrink-0">
-                          ×{count}
-                        </Badge>
-                      )}
-                    </ItemTitle>
-                    <ItemDescription className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs">
-                      <span className="font-medium">
-                        {record.actor_name ??
-                          record.actor_account_uuid ??
-                          t('operationTrace.systemActor')}
-                      </span>
-                      <span aria-hidden="true">·</span>
-                      <span>
-                        {record.actor_role
-                          ? t(`workspace.roles.${record.actor_role}`)
-                          : t('operationTrace.systemActor')}
-                      </span>
-                      {record.http_method && (
-                        <>
-                          <span aria-hidden="true">·</span>
-                          <span className="font-mono">
-                            {record.http_method}
-                            {/* A successful 2xx is the default; only surface the
-                                status when it carries a signal (an error). */}
-                            {record.status_code !== null &&
-                            record.status_code >= 400
-                              ? ` ${record.status_code}`
-                              : ''}
+            {dayGroups.map((group) => (
+              <div key={group.key} className="space-y-2">
+                <div className="flex items-center gap-2 pt-1">
+                  <span className="text-[11px] font-medium text-muted-foreground">
+                    {dayHeading(group.key, {
+                      today: t('operationTrace.today'),
+                      yesterday: t('operationTrace.yesterday'),
+                      unknown: t('operationTrace.unknownDay'),
+                    })}
+                  </span>
+                  <span className="h-px flex-1 bg-border" />
+                </div>
+                {group.records.map(({ key, record, count }) => {
+                  const expanded = expandedId === record.id;
+                  const actor =
+                    record.actor_name ??
+                    record.actor_account_uuid ??
+                    t('operationTrace.systemActor');
+                  const role = record.actor_role
+                    ? t(`workspace.roles.${record.actor_role}`)
+                    : t('operationTrace.systemActor');
+                  return (
+                    <Item
+                      key={key}
+                      size="sm"
+                      variant="muted"
+                      role="button"
+                      tabIndex={0}
+                      aria-expanded={expanded}
+                      onClick={() => setExpandedId(expanded ? null : record.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault();
+                          setExpandedId(expanded ? null : record.id);
+                        }
+                      }}
+                      className={`items-start rounded-lg ${
+                        record.tampered
+                          ? 'border-destructive/60 bg-destructive/5'
+                          : ''
+                      } ${expanded ? 'ring-1 ring-border' : ''}`}
+                    >
+                      <ItemMedia variant="icon">
+                        {record.tampered ? (
+                          <ShieldAlert className="size-4 text-destructive" />
+                        ) : (
+                          <History className="size-4" />
+                        )}
+                      </ItemMedia>
+                      <ItemContent className="min-w-0 gap-1.5">
+                        {/* Identity first: who did it and when. That is the
+                            question the log is opened to answer, so it leads
+                            instead of hiding in a muted description line. */}
+                        <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-xs">
+                          <span className="font-medium text-foreground">
+                            {actor}
                           </span>
-                        </>
-                      )}
-                      <span aria-hidden="true">·</span>
-                      <span>{formatTimestamp(record.created_at)}</span>
-                      {record.changes.length > 0 && (
-                        <>
-                          <span aria-hidden="true">·</span>
-                          <button
-                            type="button"
-                            className="cursor-pointer underline underline-offset-2 hover:text-foreground"
-                            onClick={() =>
-                              setExpandedId(expanded ? null : record.id)
-                            }
-                          >
-                            {expanded
-                              ? t('operationTrace.hideDetails')
-                              : t('operationTrace.changesCount', {
-                                  count: record.changes.length,
-                                })}
-                          </button>
-                        </>
-                      )}
-                    </ItemDescription>
-                    {/* The registered route is the concrete answer to "what is
-                        this entry?": a bare "Resource / System" label is opaque
-                        without the endpoint it came from. */}
-                    {record.route && (
-                      <p
-                        className="mt-0.5 truncate font-mono text-[10px] text-muted-foreground"
-                        title={record.route}
-                      >
-                        {record.route}
-                      </p>
-                    )}
-                    {/* The change digest is only meaningful once expanded, so
-                        the collapsed row stays a single scannable line. */}
-                    {expanded && record.changes.length > 0 && (
-                      <div className="mt-2 space-y-1 rounded-md bg-background/60 p-2">
-                        {record.changes.map((change, index) => (
-                          <ChangeRow
-                            key={`${record.id}-${index}-${change.field}`}
-                            change={change}
-                            redactedLabel={t('operationTrace.redacted')}
+                          <span className="text-muted-foreground">·</span>
+                          <span className="text-muted-foreground">{role}</span>
+                          <span className="text-muted-foreground">·</span>
+                          <span className="text-muted-foreground">
+                            {formatTimestamp(record.created_at)}
+                          </span>
+                        </div>
+                        {/* What happened, to which resource — always present,
+                            followed on the next line by the concrete diff. */}
+                        <ItemTitle className="flex flex-wrap items-center gap-1.5">
+                          <span className="font-medium">
+                            {t(record.action_i18n_key, {
+                              defaultValue: record.action ?? '',
+                            })}
+                          </span>
+                          {record.resource_type && (
+                            <span className="text-xs text-muted-foreground">
+                              {t(
+                                `operationTrace.resourceTypes.${record.resource_type}`,
+                                { defaultValue: record.resource_type },
+                              )}
+                            </span>
+                          )}
+                          {record.resource_id && (
+                            <span
+                              className="max-w-[18rem] truncate font-mono text-xs text-muted-foreground"
+                              title={record.resource_id}
+                            >
+                              {record.resource_id}
+                            </span>
+                          )}
+                          {record.outcome !== 'ok' && (
+                            <Badge variant={outcomeVariant(record.outcome)}>
+                              {t(`operationTrace.outcomes.${record.outcome}`)}
+                            </Badge>
+                          )}
+                          {record.tampered && (
+                            <Badge variant="destructive">
+                              <ShieldAlert className="size-3" />
+                              {t('operationTrace.tamperedBadge')}
+                            </Badge>
+                          )}
+                          {count > 1 && (
+                            <Badge variant="outline" className="shrink-0">
+                              ×{count}
+                            </Badge>
+                          )}
+                        </ItemTitle>
+                        {/* "What was changed into what" is the whole point of
+                            the log and the data already arrived with the page,
+                            so the diff is spelled out on the collapsed row. */}
+                        {record.changes.length > 0 && (
+                          <div className="rounded-md bg-background/60 p-2">
+                            <ChangeList
+                              changes={record.changes}
+                              redactedLabel={t('operationTrace.redacted')}
+                              sizeLabel={(size) =>
+                                t('operationTrace.elidedValue', { count: size })
+                              }
+                              limit={
+                                expanded ? undefined : COLLAPSED_CHANGE_LIMIT
+                              }
+                              moreLabel={(hidden) =>
+                                t('operationTrace.moreChanges', {
+                                  count: hidden,
+                                })
+                              }
+                              collapsed={!expanded}
+                            />
+                          </div>
+                        )}
+                        {/* The whole card is the toggle, so the chevron is the
+                            only affordance needed; clicking anywhere expands
+                            it. That removes the ambiguity of a small text link
+                            whose expanded state looked almost identical. */}
+                        <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                          <ChevronDown
+                            className={`size-3 transition-transform ${
+                              expanded ? 'rotate-180' : ''
+                            }`}
+                            aria-hidden="true"
                           />
-                        ))}
-                      </div>
-                    )}
-                  </ItemContent>
-                  {/* Restore the always-visible right column: each row is
-                      anchored by its duration and tamper-evidence hash, so the
-                      digest stays one click away instead of being the only way
-                      to see it. */}
-                  <ItemActions className="max-sm:hidden">
-                    <div className="flex flex-col items-end gap-0.5 text-right">
-                      <span className="text-[10px] text-muted-foreground">
-                        {record.duration_ms}ms
-                      </span>
-                      {record.record_hash && (
-                        <span
-                          className="flex items-center gap-1 font-mono text-[10px] text-muted-foreground"
-                          title={record.record_hash}
-                        >
-                          <Fingerprint className="size-3" />
-                          {record.record_hash.slice(0, 8)}
+                          {expanded
+                            ? t('operationTrace.hideDetails')
+                            : t('operationTrace.showDetails')}
                         </span>
-                      )}
-                    </div>
-                  </ItemActions>
-                </Item>
-              );
-            })}
+                        {/* Diagnostics are opt-in: route, method, status,
+                            duration and the evidence hash matter when an
+                            operator investigates one entry, not while scanning
+                            the timeline. */}
+                        {expanded && (
+                          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 border-t border-border/60 pt-1.5 font-mono text-[10px] text-muted-foreground">
+                            {record.route && (
+                              <span className="truncate" title={record.route}>
+                                {record.route}
+                              </span>
+                            )}
+                            {record.http_method && (
+                              <span>
+                                {record.http_method}
+                                {record.status_code !== null
+                                  ? ` ${record.status_code}`
+                                  : ''}
+                              </span>
+                            )}
+                            <span>{record.duration_ms}ms</span>
+                            {record.record_hash && (
+                              <span
+                                className="flex items-center gap-1"
+                                title={record.record_hash}
+                              >
+                                <Fingerprint className="size-3" />
+                                {record.record_hash.slice(0, 16)}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </ItemContent>
+                    </Item>
+                  );
+                })}
+              </div>
+            ))}
           </div>
 
           <div className="flex items-center justify-between">

@@ -2709,6 +2709,13 @@ const thTH = {
     chainFailedCount: 'ลิงก์ขาด {{count}} รายการ',
     scanTruncated: 'ตรวจสอบเฉพาะ {{count}} รายการล่าสุด',
     emptyFiltered: 'ไม่มีรายการที่ต้องตรวจสอบภายใต้ตัวกรองปัจจุบัน',
+    mutationsOnly: 'เฉพาะการแก้ไข',
+    today: 'วันนี้',
+    yesterday: 'เมื่อวาน',
+    unknownDay: 'ไม่ทราบเวลา',
+    showDetails: 'รายละเอียด',
+    moreChanges: 'อีก {{count}} รายการ',
+    elidedValue: '{{count}} ตัวอักษร',
     levels: {
       off: {
         label: 'ปิดการติดตาม',
@@ -2773,6 +2780,7 @@ const thTH = {
       knowledge_base_update: 'แก้ไขฐานความรู้',
       mcp_view: 'ดูเซิร์ฟเวอร์ MCP',
       mcp_config: 'แก้ไขเซิร์ฟเวอร์ MCP',
+      pipeline_extensions_update: 'แก้ไขการผูกส่วนขยายของไปป์ไลน์',
       export: 'ส่งออกข้อมูล',
       execute: 'รันงาน',
       debug: 'ดีบักงาน',

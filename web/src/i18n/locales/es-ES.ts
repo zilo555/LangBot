@@ -2812,6 +2812,13 @@ const esES = {
     chainFailedCount: '{{count}} enlaces rotos',
     scanTruncated: 'Solo se verifican los últimos {{count}}',
     emptyFiltered: 'Ningún registro requiere verificación',
+    mutationsOnly: 'Solo cambios',
+    today: 'Hoy',
+    yesterday: 'Ayer',
+    unknownDay: 'Fecha desconocida',
+    showDetails: 'Detalles',
+    moreChanges: '+{{count}} más',
+    elidedValue: '{{count}} caracteres',
     levels: {
       off: {
         label: 'Sin trazabilidad',
@@ -2876,6 +2883,8 @@ const esES = {
       knowledge_base_update: 'Cambiar base de conocimiento',
       mcp_view: 'Ver servidor MCP',
       mcp_config: 'Cambiar servidor MCP',
+      pipeline_extensions_update:
+        'Actualizar vinculaciones de extensiones del pipeline',
       export: 'Exportar datos',
       execute: 'Ejecutar tarea',
       debug: 'Depurar tarea',

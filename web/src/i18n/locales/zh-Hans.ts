@@ -2607,6 +2607,13 @@ const zhHans = {
     chainFailedCount: '{{count}} 条链路断裂',
     scanTruncated: '仅校验最近 {{count}} 条',
     emptyFiltered: '当前筛选下没有需要校验的记录',
+    mutationsOnly: '只看修改',
+    today: '今天',
+    yesterday: '昨天',
+    unknownDay: '未知时间',
+    showDetails: '详情',
+    moreChanges: '还有 {{count}} 项',
+    elidedValue: '{{count}} 字符',
     levels: {
       off: {
         label: '关闭溯源',
@@ -2671,6 +2678,7 @@ const zhHans = {
       knowledge_base_update: '修改知识库',
       mcp_view: '查看 MCP 服务器',
       mcp_config: '修改 MCP 服务器',
+      pipeline_extensions_update: '修改管道扩展绑定',
       export: '导出数据',
       execute: '执行任务',
       debug: '调试任务',

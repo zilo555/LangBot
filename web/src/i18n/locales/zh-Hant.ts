@@ -2608,6 +2608,13 @@ const zhHant = {
     chainFailedCount: '{{count}} 筆鏈結中斷',
     scanTruncated: '僅校驗最近 {{count}} 筆',
     emptyFiltered: '目前篩選下沒有需要校驗的記錄',
+    mutationsOnly: '只看修改',
+    today: '今天',
+    yesterday: '昨天',
+    unknownDay: '未知時間',
+    showDetails: '詳情',
+    moreChanges: '還有 {{count}} 項',
+    elidedValue: '{{count}} 字元',
     levels: {
       off: {
         label: '關閉溯源',
@@ -2672,6 +2679,7 @@ const zhHant = {
       knowledge_base_update: '修改知識庫',
       mcp_view: '查看 MCP 伺服器',
       mcp_config: '修改 MCP 伺服器',
+      pipeline_extensions_update: '修改管道擴展綁定',
       export: '匯出資料',
       execute: '執行任務',
       debug: '偵錯任務',

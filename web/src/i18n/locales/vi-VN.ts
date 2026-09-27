@@ -2744,6 +2744,13 @@ const viVN = {
     chainFailedCount: '{{count}} liên kết bị đứt',
     scanTruncated: 'Chỉ xác minh {{count}} bản ghi mới nhất',
     emptyFiltered: 'Không có bản ghi nào cần xác minh với bộ lọc hiện tại',
+    mutationsOnly: 'Chỉ thay đổi',
+    today: 'Hôm nay',
+    yesterday: 'Hôm qua',
+    unknownDay: 'Không rõ thời gian',
+    showDetails: 'Chi tiết',
+    moreChanges: '+{{count}} mục',
+    elidedValue: '{{count}} ký tự',
     levels: {
       off: {
         label: 'Tắt truy vết',
@@ -2808,6 +2815,7 @@ const viVN = {
       knowledge_base_update: 'Thay đổi cơ sở tri thức',
       mcp_view: 'Xem máy chủ MCP',
       mcp_config: 'Thay đổi máy chủ MCP',
+      pipeline_extensions_update: 'Cập nhật liên kết tiện ích của pipeline',
       export: 'Xuất dữ liệu',
       execute: 'Chạy tác vụ',
       debug: 'Gỡ lỗi tác vụ',

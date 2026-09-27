@@ -2775,6 +2775,13 @@ const jaJP = {
     chainFailedCount: '{{count}} 件のリンク断絶',
     scanTruncated: '最新 {{count}} 件のみ検証',
     emptyFiltered: '現在のフィルターでは検証が必要な記録はありません',
+    mutationsOnly: '変更のみ',
+    today: '今日',
+    yesterday: '昨日',
+    unknownDay: '不明な日時',
+    showDetails: '詳細',
+    moreChanges: '他 {{count}} 件',
+    elidedValue: '{{count}} 文字',
     levels: {
       off: {
         label: 'トレース無効',
@@ -2839,6 +2846,7 @@ const jaJP = {
       knowledge_base_update: 'ナレッジベースを変更',
       mcp_view: 'MCP サーバーを閲覧',
       mcp_config: 'MCP サーバーを変更',
+      pipeline_extensions_update: 'パイプライン拡張の紐付けを変更',
       export: 'データをエクスポート',
       execute: 'タスクを実行',
       debug: 'タスクをデバッグ',

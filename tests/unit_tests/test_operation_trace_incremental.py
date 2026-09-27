@@ -90,6 +90,12 @@ async def _tail_hash(engine) -> str | None:
     return result.scalar_one_or_none()
 
 
+def _cached_views(service) -> list:
+    """Return the cache keys currently held for the test Workspace."""
+
+    return [key for key in service._integrity_cache if key[0] == WORKSPACE]
+
+
 def _counting_verifier(service, monkeypatch):
     """Replace the per-row verifier with one that records the ids it hashes."""
 
@@ -128,7 +134,9 @@ async def test_cached_read_within_ttl_reuses_without_rehashing(trace_env, monkey
     assert first['summary']['scanned'] == 5
     assert first['summary']['tampered'] == 0
     assert len(calls) == 5
-    assert set(service._integrity_cache[WORKSPACE]['verified']) == set(ids)
+    views = _cached_views(service)
+    assert len(views) == 1
+    assert set(service._integrity_cache[views[0]]['verified']) == set(ids)
 
     # A warm read inside the TTL must not re-hash anything at all: this is the
     # shield that makes a burst of panel opens, refreshes and page turns cheap.
@@ -227,10 +235,43 @@ async def test_age_prune_drops_the_stale_integrity_cache(trace_env):
 
     # Warm the cache: its verified map now records the row retention will drop.
     await service.query_logs(WORKSPACE)
-    assert WORKSPACE in service._integrity_cache
+    assert _cached_views(service)
 
     await service.prune(WORKSPACE, retention_days=1)
 
     # Deleting the oldest rows invalidated the cached prefix.
-    assert WORKSPACE not in service._integrity_cache
+    assert _cached_views(service) == []
     assert 'expired' in (await service.prune(WORKSPACE, retention_days=1))
+
+
+async def test_each_listing_view_is_cached_independently(trace_env, monkeypatch):
+    service, engine = trace_env
+    await _append(service, engine, 4)
+
+    # Two different listing filters must not collide: each gets its own entry,
+    # and a view that was never scanned must still be verified from scratch.
+    all_view = [MODEL.workspace_uuid == WORKSPACE]
+    mutation_view = [MODEL.workspace_uuid == WORKSPACE, MODEL.level == 1]
+    await service._integrity_summary(MODEL, all_view)
+    await service._integrity_summary(MODEL, mutation_view)
+
+    views = _cached_views(service)
+    assert len(views) == 2
+    assert len({key[1] for key in views}) == 2
+
+
+async def test_invalidation_clears_every_cached_view(trace_env):
+    service, engine = trace_env
+    await _append(service, engine, 2)
+    old_row = _build_row(99, await _tail_hash(engine), created_at=datetime.datetime(2020, 1, 1))
+    async with engine.begin() as connection:
+        await connection.execute(sqlalchemy.insert(MODEL).values(**old_row))
+
+    await service._integrity_summary(MODEL, [MODEL.workspace_uuid == WORKSPACE])
+    await service._integrity_summary(MODEL, [MODEL.workspace_uuid == WORKSPACE, MODEL.level == 1])
+    assert len(_cached_views(service)) == 2
+
+    await service.prune(WORKSPACE, retention_days=1)
+
+    # A deletion invalidates *all* views for the Workspace, not just one.
+    assert _cached_views(service) == []

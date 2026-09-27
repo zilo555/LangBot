@@ -409,6 +409,13 @@ ACTION_RULE_TABLE: typing.Final[tuple[ActionRule, ...]] = (
         bucket='write',
         resource_type='mcp_server',
     ),
+    # --- Pipelines -------------------------------------------------------
+    ActionRule(
+        action='pipeline_extensions_update',
+        category='resource',
+        bucket='write',
+        resource_type='pipeline',
+    ),
     # --- Generic resource verbs -----------------------------------------
     ActionRule(
         action='export',
@@ -491,7 +498,11 @@ _ROUTE_RULES: typing.Final[tuple[tuple[tuple[str, ...], str, str], ...]] = (
     (('/plugins/', '/upgrade'), 'plugin_view', 'plugin_upgrade'),
     (('/plugins/', '/logs'), 'plugin_view', 'plugin_view'),
     (('/plugins',), 'plugin_view', 'plugin_view'),
-    (('/extensions',), 'plugin_view', 'plugin_config'),
+    # The pipeline extension bindings (plugins / MCP servers / skills) live on
+    # ``/pipelines/<uuid>/extensions``, not on a plugin. Without this rule the
+    # generic fragment below would classify the change as a plugin config edit.
+    # The read keeps the generic ``view`` for backwards-compatible labelling.
+    (('/extensions',), 'view', 'pipeline_extensions_update'),
     # --- Extension lifecycle: skills ------------------------------------
     (('/skills/', '/install'), 'skill_view', 'skill_install'),
     (('/skills',), 'skill_view', 'skill_view'),
@@ -977,6 +988,11 @@ class WorkspaceSettingsService:
         self._policy_cache_ttl = 5.0
         # Inserts since the last row-budget check, keyed by Workspace UUID.
         self._insert_counters: dict[str, int] = {}
+        # Verification cache keyed by (Workspace UUID, listing filters). The
+        # verification result is shareable across whatever narrows the listing,
+        # so keying on the whole filter set (not just the Workspace) lets the
+        # panel's common views -- "everything" and "mutations only" -- both hit
+        # the cache instead of forcing a full rescan on every page turn.
         # Single-writer queue. Trace recording must never run on the request
         # path: when tracing is enabled the WebUI fires a burst of parallel
         # requests (login alone touches a dozen endpoints) and doing several
@@ -1672,10 +1688,12 @@ class WorkspaceSettingsService:
             if until is not None:
                 filters.append(model.created_at <= until)
 
-            # Verify the filtered history once per request. This replaces the
-            # previous per-page sum, which made the counters silently restart at
-            # zero on every page after the first.
-            summary = await self._integrity_summary(model, filters)
+            # Verify the filtered history once per request, keyed by the listing
+            # filters so a view (all / mutations only / a resource) can reuse an
+            # already computed result while still paging. ``integrity`` is not
+            # part of the key: it only narrows *which* records are returned, not
+            # what the verification finds, so its views share the result too.
+            summary = await self._integrity_summary(model, filters, resolved_integrity)
 
             # ``total`` follows the active listing filter so the pagination badge
             # and the pager stay consistent with what the operator asked to see.
@@ -1758,6 +1776,17 @@ class WorkspaceSettingsService:
             'truncated': False,
         }
 
+    def _invalidate_integrity_cache(self, workspace_uuid: str) -> None:
+        """Drop every cached verification for one Workspace.
+
+        The cache is keyed by ``(Workspace, listing filters)`` so each view has
+        its own entry; a deletion invalidates all of them, not just the
+        unfiltered one.
+        """
+
+        for key in [key for key in self._integrity_cache if key[0] == workspace_uuid]:
+            self._integrity_cache.pop(key, None)
+
     @staticmethod
     def _verified_lists(verified: dict[int, tuple[bool, bool]]) -> tuple[list[int], list[int], list[int]]:
         """Split a verification map into (tampered, hash-failed, chain-failed) ids."""
@@ -1790,17 +1819,20 @@ class WorkspaceSettingsService:
         self,
         model: typing.Any,
         filters: list[typing.Any],
+        integrity_filter: str = INTEGRITY_FILTER_ALL,
     ) -> dict[str, typing.Any]:
         """Verify the filtered history and classify every failing record.
 
         A result computed within :data:`INTEGRITY_CACHE_TTL_SECONDS` is served
-        from the per-Workspace cache, which is what keeps the panel responsive:
-        opening, refreshing and paging all land inside that window and pay
-        nothing. A cache miss re-verifies the whole scan window from scratch --
-        the scan projects only the hash columns and the verifier only computes
-        two booleans, so the cost is bounded and, crucially, an edit to a row
-        that was verified on a previous pass is still caught. The cache is
-        skipped for filtered queries, which cannot share a full-history scan.
+        from the cache, which is what keeps the panel responsive: opening,
+        refreshing and paging all land inside that window and pay nothing. The
+        cache key is ``(Workspace, listing filters)`` -- an integrity drill-down
+        reuses the very result it is drilling into, and both "everything" and
+        "mutations only" are cached independently -- so a cache miss is rare.
+        A miss re-verifies the *whole* window from scratch: the scan projects
+        only the hash columns and the verifier only computes two booleans, so
+        the cost is bounded, and an edit to a row verified on a previous pass is
+        still caught.
         """
 
         workspace_uuid = None
@@ -1810,17 +1842,13 @@ class WorkspaceSettingsService:
             except AttributeError:
                 continue
             break
-        filter_key = tuple(str(condition) for condition in filters)
-        cacheable = len(filters) == 1 and workspace_uuid is not None
+        cache_key = (workspace_uuid, tuple(str(condition) for condition in filters))
+        cacheable = workspace_uuid is not None
         now = time.monotonic()
 
         if cacheable:
-            cached = self._integrity_cache.get(workspace_uuid)
-            if (
-                cached is not None
-                and cached['filter_key'] == filter_key
-                and now - cached['computed_at'] < INTEGRITY_CACHE_TTL_SECONDS
-            ):
+            cached = self._integrity_cache.get(cache_key)
+            if cached is not None and now - cached['computed_at'] < INTEGRITY_CACHE_TTL_SECONDS:
                 return self._cached_integrity_result(cached)
 
         started = time.monotonic()
@@ -1869,10 +1897,8 @@ class WorkspaceSettingsService:
                 'chain_failed_ids': chain_failed_ids,
             }
             if cacheable:
-                self._integrity_cache[workspace_uuid] = {
-                    'filter_key': filter_key,
+                self._integrity_cache[cache_key] = {
                     'verified': new_verified,
-                    'oldest_row': previous_row,
                     'computed_at': now,
                     'truncated': truncated,
                 }
@@ -2143,7 +2169,7 @@ class WorkspaceSettingsService:
                 return 0
             await self.ap.persistence_mgr.execute_async(sqlalchemy.delete(model).where(model.id.in_(list(oldest_ids))))
             # Cached verification no longer matches the surviving prefix.
-            self._integrity_cache.pop(workspace_uuid, None)
+            self._invalidate_integrity_cache(workspace_uuid)
             return len(oldest_ids)
         except Exception as exc:  # pragma: no cover - defensive
             self.ap.logger.debug(f'Operation log trim skipped: {exc}')
@@ -2186,7 +2212,7 @@ class WorkspaceSettingsService:
             # Age-based retention removed the oldest rows, so any cached
             # verification -- including its boundary baseline link -- no longer
             # describes the surviving chain.
-            self._integrity_cache.pop(workspace_uuid, None)
+            self._invalidate_integrity_cache(workspace_uuid)
 
         total = await self.count_logs(workspace_uuid)
         trimmed = await self._delete_oldest(workspace_uuid, max(total - budget, 0))

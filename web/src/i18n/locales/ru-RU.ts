@@ -2782,6 +2782,13 @@ const ruRU = {
     chainFailedCount: 'Разрыв связи: {{count}}',
     scanTruncated: 'Проверены только последние {{count}}',
     emptyFiltered: 'По текущим фильтрам нет записей, требующих проверки',
+    mutationsOnly: 'Только изменения',
+    today: 'Сегодня',
+    yesterday: 'Вчера',
+    unknownDay: 'Неизвестное время',
+    showDetails: 'Подробнее',
+    moreChanges: 'ещё {{count}}',
+    elidedValue: '{{count}} символов',
     levels: {
       off: {
         label: 'Трассировка выключена',
@@ -2846,6 +2853,7 @@ const ruRU = {
       knowledge_base_update: 'Изменение базы знаний',
       mcp_view: 'Просмотр сервера MCP',
       mcp_config: 'Изменение сервера MCP',
+      pipeline_extensions_update: 'Изменение привязок расширений конвейера',
       export: 'Экспорт данных',
       execute: 'Выполнение задачи',
       debug: 'Отладка задачи',

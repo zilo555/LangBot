@@ -2757,6 +2757,13 @@ const enUS = {
     chainFailedCount: '{{count}} broken links',
     scanTruncated: 'Only the latest {{count}} verified',
     emptyFiltered: 'No records need verification under the current filters',
+    mutationsOnly: 'Changes only',
+    today: 'Today',
+    yesterday: 'Yesterday',
+    unknownDay: 'Unknown time',
+    showDetails: 'Details',
+    moreChanges: '+{{count}} more',
+    elidedValue: '{{count}} chars',
     levels: {
       off: {
         label: 'Tracing off',
@@ -2821,6 +2828,7 @@ const enUS = {
       knowledge_base_update: 'Change knowledge base',
       mcp_view: 'View MCP server',
       mcp_config: 'Change MCP server',
+      pipeline_extensions_update: 'Update pipeline extension bindings',
       export: 'Export data',
       execute: 'Execute task',
       debug: 'Debug task',
