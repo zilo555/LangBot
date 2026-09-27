@@ -115,6 +115,16 @@ DEFAULT_PAGE_SIZE = 50
 #: is exactly what this bound avoids.
 MAX_INTEGRITY_SCAN_ROWS = 20000
 
+#: Integrity verification is cached per Workspace for this long. Recomputing a
+#: row's HMAC is the expensive part of the read path, and the chain only ever
+#: grows, so a fresh result can be reused across page loads and refreshes.
+INTEGRITY_CACHE_TTL_SECONDS = 30.0
+
+#: Records verified per incremental scan after the first pass. Recording appends
+#: a handful of rows between refreshes, so a bounded window keeps the per-request
+#: cost flat while still catching tampering near the head.
+INTEGRITY_DELTA_WINDOW = 500
+
 #: ``integrity`` query values accepted by :meth:`query_logs`. ``all`` keeps the
 #: previous behaviour; the other two map to the two failure modes the panel
 #: surfaces independently (hash mismatch vs. broken chain link).
@@ -959,6 +969,12 @@ class WorkspaceSettingsService:
         # race that used to manufacture false "chain broken" reports.
         self._queue: asyncio.Queue[dict[str, typing.Any]] = asyncio.Queue(maxsize=_QUEUE_MAX_SIZE)
         self._writer_task: asyncio.Task[None] | None = None
+        # Incremental integrity verification cache, keyed by Workspace UUID. The
+        # chain is append-only, so once a prefix is verified it stays valid; a
+        # later read only has to verify the rows appended since. Without this the
+        # panel re-hashed up to MAX_INTEGRITY_SCAN_ROWS rows on every open,
+        # refresh and page turn, which is what made reading the log feel slow.
+        self._integrity_cache: dict[str, dict[str, typing.Any]] = {}
         self._dropped_count = 0
         # Set while the queue is empty; lets tests/shutdown await a drain.
         self._idle = asyncio.Event()
@@ -1724,6 +1740,34 @@ class WorkspaceSettingsService:
             'truncated': False,
         }
 
+    @staticmethod
+    def _verified_lists(verified: dict[int, tuple[bool, bool]]) -> tuple[list[int], list[int], list[int]]:
+        """Split a verification map into (tampered, hash-failed, chain-failed) ids."""
+
+        tampered = [rid for rid, (integ, chain) in verified.items() if not integ or not chain]
+        hash_failed = [rid for rid, (integ, _chain) in verified.items() if not integ]
+        chain_failed = [rid for rid, (_integ, chain) in verified.items() if not chain]
+        return tampered, hash_failed, chain_failed
+
+    def _cached_integrity_result(self, cached: dict[str, typing.Any]) -> dict[str, typing.Any]:
+        """Rebuild the summary payload from a cached verification map."""
+
+        verified: dict[int, tuple[bool, bool]] = cached['verified']
+        tampered, hash_failed, chain_failed = self._verified_lists(verified)
+        summary = {
+            'tampered': len(tampered),
+            'integrity_failed': len(hash_failed),
+            'chain_failed': len(chain_failed),
+            'scanned': min(len(verified), MAX_INTEGRITY_SCAN_ROWS),
+            'truncated': cached.get('truncated', False),
+        }
+        return {
+            'summary': summary,
+            'tampered_ids': tampered,
+            'integrity_failed_ids': hash_failed,
+            'chain_failed_ids': chain_failed,
+        }
+
     async def _integrity_summary(
         self,
         model: typing.Any,
@@ -1731,28 +1775,58 @@ class WorkspaceSettingsService:
     ) -> dict[str, typing.Any]:
         """Verify the filtered history and classify every failing record.
 
-        Returns the three counters, the number of rows actually verified and the
-        record id lists needed to narrow the listing to one failure mode. The
-        scan walks the records newest-first and stops at
-        :data:`MAX_INTEGRITY_SCAN_ROWS`, so both the counters and the id lists
-        always describe the same, well-defined slice of the history.
+        The chain is append-only, so a previously verified prefix stays valid:
+        this keeps a per-Workspace cache and, after the first pass, verifies only
+        the rows appended since. That keeps the per-request cost flat instead of
+        re-hashing up to :data:`MAX_INTEGRITY_SCAN_ROWS` rows on every open,
+        refresh and page turn. The cache is skipped for filtered queries (which
+        cannot reuse a full-history scan) and reused for the plain listing.
         """
+
+        workspace_uuid = None
+        for condition in filters:
+            try:
+                workspace_uuid = condition.right.value
+            except AttributeError:
+                continue
+            break
+        filter_key = tuple(str(condition) for condition in filters)
+        cacheable = len(filters) == 1 and workspace_uuid is not None
+        now = time.monotonic()
+
+        if cacheable:
+            cached = self._integrity_cache.get(workspace_uuid)
+            if (
+                cached is not None
+                and cached['filter_key'] == filter_key
+                and now - cached['computed_at'] < INTEGRITY_CACHE_TTL_SECONDS
+            ):
+                return self._cached_integrity_result(cached)
 
         started = time.monotonic()
         try:
+            previous: dict[str, typing.Any] | None = None
+            if cacheable:
+                candidate = self._integrity_cache.get(workspace_uuid)
+                if candidate is not None and candidate['filter_key'] == filter_key:
+                    previous = candidate
+            if previous is not None:
+                max_scanned = min(INTEGRITY_DELTA_WINDOW, MAX_INTEGRITY_SCAN_ROWS)
+            else:
+                max_scanned = MAX_INTEGRITY_SCAN_ROWS
+
             rows_result = await self.ap.persistence_mgr.execute_async(
-                sqlalchemy.select(model).where(*filters).order_by(model.id.desc()).limit(MAX_INTEGRITY_SCAN_ROWS)
+                sqlalchemy.select(model).where(*filters).order_by(model.id.desc()).limit(max_scanned)
             )
             rows = list(rows_result.all())
 
-            oldest_id = rows[-1].id if rows else None
+            # Baseline for the oldest verified row, read on the first pass (its
+            # link sits outside the scan window) or reused from the cache.
             previous_row = None
-            verification_failed = False
-            if oldest_id is not None:
-                # Check the link of the oldest verified row against the row that
-                # precedes it, even when it sits outside the scan window: the
-                # baseline must still be read from the table, not guessed, or the
-                # boundary record would be reported as broken forever.
+            oldest_id = rows[-1].id if rows else None
+            if previous is not None:
+                previous_row = previous.get('oldest_row')
+            elif oldest_id is not None:
                 older_result = await self.ap.persistence_mgr.execute_async(
                     sqlalchemy.select(model)
                     .where(model.workspace_uuid == rows[0].workspace_uuid, model.id < oldest_id)
@@ -1761,38 +1835,50 @@ class WorkspaceSettingsService:
                 )
                 previous_row = older_result.first()
 
-            tampered_ids: list[int] = []
-            integrity_failed_ids: list[int] = []
-            chain_failed_ids: list[int] = []
+            new_verified = dict(previous['verified']) if previous is not None else {}
             for index, row in enumerate(rows):
+                if row.id in new_verified:
+                    continue
                 predecessor = rows[index + 1] if index + 1 < len(rows) else previous_row
                 record = self._serialize_log(row, previous_row=predecessor)
-                if not record['integrity_ok']:
-                    integrity_failed_ids.append(row.id)
-                if not record['chain_ok']:
-                    chain_failed_ids.append(row.id)
-                if record['tampered']:
-                    tampered_ids.append(row.id)
-                    verification_failed = True
+                new_verified[row.id] = (record['integrity_ok'], record['chain_ok'])
 
+            tampered_ids, integrity_failed_ids, chain_failed_ids = self._verified_lists(new_verified)
+            # ``scanned`` is the number of distinct rows verified so far (the
+            # cache grows by the newly appended rows), never a double count.
+            scanned = len(new_verified)
+            truncated = scanned >= MAX_INTEGRITY_SCAN_ROWS or (
+                previous is not None and previous.get('truncated', False)
+            )
             summary = {
                 'tampered': len(tampered_ids),
                 'integrity_failed': len(integrity_failed_ids),
                 'chain_failed': len(chain_failed_ids),
-                'scanned': len(rows),
-                'truncated': len(rows) >= MAX_INTEGRITY_SCAN_ROWS,
+                'scanned': min(scanned, MAX_INTEGRITY_SCAN_ROWS),
+                'truncated': truncated,
             }
-            if verification_failed or summary['truncated']:
-                # Worth logging: either the store was edited underneath us, or the
-                # history outgrew the verification window and the counters became
-                # approximate.
+            result = {
+                'summary': summary,
+                'tampered_ids': tampered_ids,
+                'integrity_failed_ids': integrity_failed_ids,
+                'chain_failed_ids': chain_failed_ids,
+            }
+            if cacheable:
+                self._integrity_cache[workspace_uuid] = {
+                    'filter_key': filter_key,
+                    'verified': new_verified,
+                    'oldest_row': previous_row,
+                    'computed_at': now,
+                    'truncated': truncated,
+                }
+            if summary['tampered'] or truncated:
                 logger.warning(
                     'Operation log integrity scan: %s tampered / %s hash / %s chain over %s rows (truncated=%s)',
                     summary['tampered'],
                     summary['integrity_failed'],
                     summary['chain_failed'],
                     summary['scanned'],
-                    summary['truncated'],
+                    truncated,
                 )
             elapsed_ms = int((time.monotonic() - started) * 1000)
             if elapsed_ms >= 250:
@@ -1801,12 +1887,7 @@ class WorkspaceSettingsService:
                     elapsed_ms,
                     summary['scanned'],
                 )
-            return {
-                'summary': summary,
-                'tampered_ids': tampered_ids,
-                'integrity_failed_ids': integrity_failed_ids,
-                'chain_failed_ids': chain_failed_ids,
-            }
+            return result
         except Exception as exc:  # pragma: no cover - defensive
             # Never take the whole log panel down because verification failed:
             # fall back to zeroed counters and an unfiltered listing.
@@ -2061,6 +2142,8 @@ class WorkspaceSettingsService:
             if not oldest_ids:
                 return 0
             await self.ap.persistence_mgr.execute_async(sqlalchemy.delete(model).where(model.id.in_(list(oldest_ids))))
+            # Cached verification no longer matches the surviving prefix.
+            self._integrity_cache.pop(workspace_uuid, None)
             return len(oldest_ids)
         except Exception as exc:  # pragma: no cover - defensive
             self.ap.logger.debug(f'Operation log trim skipped: {exc}')
