@@ -67,7 +67,7 @@ async def diagnostic_client(ap):
     return app.test_client()
 
 
-async def test_http_api_key_diagnostics_are_scoped_bounded_and_permission_checked(service):
+async def test_http_api_key_diagnostics_are_scoped_bounded_and_permission_checked(service):  # noqa: F811
     ap = service.ap
     ap.logger = Mock()
     ap.monitoring_service = service
@@ -106,18 +106,18 @@ async def test_http_api_key_diagnostics_are_scoped_bounded_and_permission_checke
     assert (await response.get_json())['code'] == 'managed_sandbox_unavailable'
 
 
-def runtime_app(service):
-    ap = service.ap
+def runtime_app(monitoring_service):
+    ap = monitoring_service.ap
     ap.logger = Mock()
-    ap.monitoring_service = service
+    ap.monitoring_service = monitoring_service
     ap.query_pool = QueryPool()
     ap.workspace_service = SimpleNamespace(
         get_execution_binding=AsyncMock(return_value=SimpleNamespace(instance_uuid='instance'))
     )
     ap.plugin_connector = SimpleNamespace(
-        emit_event=AsyncMock(side_effect=lambda event_obj, *_: SimpleNamespace(
-            event=event_obj, is_prevented_default=lambda: False
-        ))
+        emit_event=AsyncMock(
+            side_effect=lambda event_obj, *_: SimpleNamespace(event=event_obj, is_prevented_default=lambda: False)
+        )
     )
     ap.bot_service = SimpleNamespace(get_bot=AsyncMock(return_value={'name': 'CLI'}))
     ap.pipeline_service = SimpleNamespace(get_pipeline=AsyncMock(return_value={'uuid': 'p'}))
@@ -167,7 +167,7 @@ async def process_next(ap, *, fail=False):
     return query
 
 
-async def test_run_route_executes_pipeline_and_isolates_sessions_and_workspaces(service):
+async def test_run_route_executes_pipeline_and_isolates_sessions_and_workspaces(service):  # noqa: F811
     ap = runtime_app(service)
     client = await diagnostic_client(ap)
     assert (
@@ -196,7 +196,7 @@ async def test_run_route_executes_pipeline_and_isolates_sessions_and_workspaces(
     assert 'other-workspace' not in str(a_records)
 
 
-async def test_run_failure_timeout_and_missing_pipeline(service):
+async def test_run_failure_timeout_and_missing_pipeline(service):  # noqa: F811
     ap = runtime_app(service)
     task = asyncio.create_task(process_next(ap, fail=True))
     failed = await run_pipeline(ap, request_context(), 'p', 'fail')
@@ -226,17 +226,17 @@ async def test_extension_discovery_preserves_empty_bindings_and_redacts_plugins(
         mcp_service=SimpleNamespace(get_mcp_servers=AsyncMock(return_value=[])),
         skill_service=SimpleNamespace(list_skills=AsyncMock(return_value=[])),
     )
-    service = PipelineService(ap)
-    service.get_pipeline = AsyncMock(
+    pipeline_service = PipelineService(ap)
+    pipeline_service.get_pipeline = AsyncMock(
         return_value={'extensions_preferences': {'enable_all_plugins': False, 'plugins': []}}
     )
-    data = await service.get_pipeline_extensions(request_context(), 'p')
+    data = await pipeline_service.get_pipeline_extensions(request_context(), 'p')
     assert data['bound_plugins'] == [] and data['enable_all_plugins'] is False
     assert data['available_plugins'] == [{'api_key': '***'}]
     ap.plugin_connector.require_workspace_context.assert_awaited_once_with(request_context())
 
 
-async def test_compiled_cli_against_core_http(service, tmp_path):
+async def test_compiled_cli_against_core_http(service, tmp_path):  # noqa: F811
     """Optional cross-repo check: real HTTP/SQLite/Pipeline, synthetic runtime providers."""
     import json
     import os

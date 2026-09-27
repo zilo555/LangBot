@@ -90,6 +90,9 @@ def fake_monitoring_app():
 
     # Monitoring service
     app.monitoring_service = Mock()
+    from langbot.pkg.api.http.service.monitoring import MonitoringService
+
+    app.monitoring_service.normalize_page_window = MonitoringService(app).normalize_page_window
     app.monitoring_service.get_overview_metrics = AsyncMock(
         return_value={
             'total_messages': 100,
