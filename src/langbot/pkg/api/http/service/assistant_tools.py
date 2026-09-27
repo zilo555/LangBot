@@ -173,17 +173,34 @@ class CreateKnowledgeBase(CreatePipeline):
 #: further (e.g. the audit surface needs ``audit.view``, which only the owner
 #: and admin hold) and both are enforced identically when listing and calling.
 TOOLS = {
-    'list_resources': (ListResources, 'List existing Workspace resources. Discover IDs before using them.', False, None),
+    'list_resources': (
+        ListResources,
+        'List existing Workspace resources. Discover IDs before using them.',
+        False,
+        None,
+    ),
     'get_pipeline': (PipelineID, 'Read a Pipeline configuration with secrets redacted.', False, None),
     'get_knowledge_schema': (EngineID, 'Get the engine creation and retrieval configuration schemas.', False, None),
     'list_operation_logs': (
         ListOperationLogs,
-        'Read the Workspace operation trace (who changed or viewed what, with before/after fields). '
-        'Owner and admin only. Use it to answer "who did what" questions about this Workspace.',
+        'Search the Workspace operation trace (who changed or viewed what, with before/after fields). '
+        'Owner and admin only. Always pass a narrow filter instead of dumping everything: use "search" '
+        'for a substring such as a plugin name, an account or a verb (e.g. search="LangTARS" or '
+        'search="install"); use the exact "action" key only when known - valid keys include '
+        'plugin_install, plugin_uninstall, plugin_config, plugin_view, plugin_upgrade, skill_install, '
+        'skill_uninstall, create, update, delete, view, export, execute, debug, publish, member_invite, '
+        'member_role_update, member_remove, member_view, settings_update, settings_view, audit_log_view, '
+        'pipeline_extensions_update, knowledge_base_update, knowledge_base_delete, mcp_config, mcp_delete. '
+        'Combine resource_type and actor to answer "who installed X".',
         False,
         Permission.AUDIT_VIEW,
     ),
-    'create_pipeline': (CreatePipeline, 'Create an unconnected Pipeline draft. Requires user confirmation.', True, None),
+    'create_pipeline': (
+        CreatePipeline,
+        'Create an unconnected Pipeline draft. Requires user confirmation.',
+        True,
+        None,
+    ),
     'configure_pipeline': (
         ConfigurePipeline,
         'Set the local-agent model, system prompt and complete knowledge-base binding list. Requires confirmation.',

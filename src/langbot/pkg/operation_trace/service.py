@@ -360,6 +360,15 @@ ACTION_RULE_TABLE: typing.Final[tuple[ActionRule, ...]] = (
         bucket='write',
         resource_type='plugin',
     ),
+    # Uninstalling is a mutation with its own verb. Without it the DELETE on the
+    # shared ``/plugins/<author>/<name>`` route falls through to the read rule
+    # and an uninstall is mislabelled as a view.
+    ActionRule(
+        action='plugin_uninstall',
+        category='extension',
+        bucket='write',
+        resource_type='plugin',
+    ),
     ActionRule(
         action='plugin_upgrade',
         category='extension',
@@ -384,6 +393,12 @@ ACTION_RULE_TABLE: typing.Final[tuple[ActionRule, ...]] = (
         bucket='write',
         resource_type='skill',
     ),
+    ActionRule(
+        action='skill_uninstall',
+        category='extension',
+        bucket='write',
+        resource_type='skill',
+    ),
     # --- Knowledge & MCP -------------------------------------------------
     ActionRule(
         action='knowledge_base_view',
@@ -398,6 +413,12 @@ ACTION_RULE_TABLE: typing.Final[tuple[ActionRule, ...]] = (
         resource_type='knowledge_base',
     ),
     ActionRule(
+        action='knowledge_base_delete',
+        category='knowledge',
+        bucket='write',
+        resource_type='knowledge_base',
+    ),
+    ActionRule(
         action='mcp_view',
         category='integration',
         bucket='read',
@@ -405,6 +426,12 @@ ACTION_RULE_TABLE: typing.Final[tuple[ActionRule, ...]] = (
     ),
     ActionRule(
         action='mcp_config',
+        category='integration',
+        bucket='write',
+        resource_type='mcp_server',
+    ),
+    ActionRule(
+        action='mcp_delete',
         category='integration',
         bucket='write',
         resource_type='mcp_server',
@@ -471,6 +498,16 @@ ACTION_RULE_TABLE: typing.Final[tuple[ActionRule, ...]] = (
         bucket='read',
         resource_type='system',
     ),
+    # A management-assistant chat session is not a Workspace resource change:
+    # creating a conversation and sending a turn produce one opaque
+    # ``create/resource`` row each. They carry no "what changed" answer, so the
+    # whole family is dropped rather than cluttering the log with noise.
+    ActionRule(
+        action='assistant_session',
+        category='runtime',
+        bucket='skip',
+        resource_type='assistant_conversation',
+    ),
 )
 
 ACTION_RULES_BY_ACTION: typing.Final[dict[str, ActionRule]] = {rule.action: rule for rule in ACTION_RULE_TABLE}
@@ -479,45 +516,57 @@ _READ_METHODS: typing.Final = frozenset({'GET', 'HEAD', 'OPTIONS'})
 
 # Route rules evaluated in order; the first match wins, so the most specific
 # rule must precede its prefix. Each rule is ``(fragments, read_action,
-# write_action)``: every fragment must appear in the lowered route (a tuple
-# expresses an AND, which lets ``/plugins/<author>/<name>/config`` be told
-# apart from ``/plugins/<author>/<name>``), and the action is selected by
-# whether the method is a read verb.
-_ROUTE_RULES: typing.Final[tuple[tuple[tuple[str, ...], str, str], ...]] = (
+# write_action, delete_action)``: every fragment must appear in the lowered
+# route (a tuple expresses an AND, which lets ``/plugins/<author>/<name>/config``
+# be told apart from ``/plugins/<author>/<name>``), and the action is selected by
+# the method bucket -- read verb, ``DELETE``, or any other verb.
+#
+# ``delete_action`` is distinct because several resources register their read
+# and their destroy on the *same* path (``GET``/``DELETE /plugins/<author>/<name>``,
+# ``/knowledge/...``, ``/mcp/servers/<name>``). Keying only on fragments made a
+# ``DELETE`` fall into the write bucket and record an uninstall as a view or an
+# update, so the destructive operation left no readable trace.
+_ROUTE_RULES: typing.Final[tuple[tuple[tuple[str, ...], str, str, str | None], ...]] = (
     # --- Audit surface itself -------------------------------------------
-    (('/settings/operation-logs/export',), 'export', 'export'),
-    (('/settings/operation-logs',), 'audit_log_view', 'audit_log_view'),
-    (('/settings/operation-level',), 'settings_view', 'settings_update'),
-    (('/settings/governance',), 'settings_view', 'settings_update'),
-    (('/settings/limits',), 'settings_view', 'settings_update'),
+    (('/settings/operation-logs/export',), 'export', 'export', None),
+    (('/settings/operation-logs',), 'audit_log_view', 'audit_log_view', None),
+    (('/settings/operation-level',), 'settings_view', 'settings_update', None),
+    (('/settings/governance',), 'settings_view', 'settings_update', None),
+    (('/settings/limits',), 'settings_view', 'settings_update', None),
     # --- Extension lifecycle: plugins -----------------------------------
-    (('/plugins/install',), 'plugin_view', 'plugin_install'),
-    (('/plugins/github',), 'plugin_view', 'plugin_view'),
-    (('/plugins/', '/config'), 'plugin_view', 'plugin_config'),
-    (('/plugins/', '/page-api'), 'page_view', 'page_view'),
-    (('/plugins/', '/upgrade'), 'plugin_view', 'plugin_upgrade'),
-    (('/plugins/', '/logs'), 'plugin_view', 'plugin_view'),
-    (('/plugins',), 'plugin_view', 'plugin_view'),
+    # ``/plugins/install`` is an install; the bare ``/plugins/<author>/<name>``
+    # is a read when fetched and an uninstall when deleted.
+    (('/plugins/install',), 'plugin_view', 'plugin_install', None),
+    (('/plugins/github',), 'plugin_view', 'plugin_view', None),
+    (('/plugins/', '/config'), 'plugin_view', 'plugin_config', None),
+    (('/plugins/', '/page-api'), 'page_view', 'page_view', None),
+    (('/plugins/', '/upgrade'), 'plugin_view', 'plugin_upgrade', None),
+    (('/plugins/', '/logs'), 'plugin_view', 'plugin_view', None),
+    (('/plugins',), 'plugin_view', 'plugin_view', 'plugin_uninstall'),
     # The pipeline extension bindings (plugins / MCP servers / skills) live on
     # ``/pipelines/<uuid>/extensions``, not on a plugin. Without this rule the
     # generic fragment below would classify the change as a plugin config edit.
     # The read keeps the generic ``view`` for backwards-compatible labelling.
-    (('/extensions',), 'view', 'pipeline_extensions_update'),
+    (('/extensions',), 'view', 'pipeline_extensions_update', None),
     # --- Extension lifecycle: skills ------------------------------------
-    (('/skills/', '/install'), 'skill_view', 'skill_install'),
-    (('/skills',), 'skill_view', 'skill_view'),
+    (('/skills/', '/install'), 'skill_view', 'skill_install', None),
+    (('/skills',), 'skill_view', 'skill_view', 'skill_uninstall'),
     # --- Knowledge bases & MCP servers ----------------------------------
-    (('/knowledge/',), 'knowledge_base_view', 'knowledge_base_update'),
-    (('/mcp/', '/config'), 'mcp_view', 'mcp_config'),
-    (('/mcp',), 'mcp_view', 'mcp_config'),
+    (('/knowledge/',), 'knowledge_base_view', 'knowledge_base_update', 'knowledge_base_delete'),
+    (('/mcp/', '/config'), 'mcp_view', 'mcp_config', None),
+    (('/mcp',), 'mcp_view', 'mcp_config', 'mcp_delete'),
     # --- Member management ----------------------------------------------
-    (('/members',), 'member_view', 'member_role_update'),
-    (('/invitations',), 'member_view', 'member_invite'),
+    (('/members',), 'member_view', 'member_role_update', None),
+    (('/invitations',), 'member_view', 'member_invite', None),
+    # --- Agent-assistant session chatter (never traced) ------------------
+    # Placed before the generic verbs so a conversation turn is not recorded as
+    # an opaque ``create`` on a nameless resource.
+    (('/assistant',), 'assistant_session', 'assistant_session', 'assistant_session'),
     # --- Generic resource verbs -----------------------------------------
-    (('/export',), 'export', 'export'),
-    (('/debug',), 'debug', 'debug'),
-    (('/execute',), 'execute', 'execute'),
-    (('/publish',), 'publish', 'publish'),
+    (('/export',), 'export', 'export', None),
+    (('/debug',), 'debug', 'debug', None),
+    (('/execute',), 'execute', 'execute', None),
+    (('/publish',), 'publish', 'publish', None),
 )
 
 #: Refines the resource family for the generic verb rules. The route rules above
@@ -583,19 +632,28 @@ def classify(method: str, route: str) -> ActionRule:
     upper_method = (method or 'GET').upper()
     lowered_route = (route or '').lower()
     is_read = upper_method in _READ_METHODS
+    is_delete = upper_method == 'DELETE'
 
-    for fragments, read_action, write_action in _ROUTE_RULES:
+    for fragments, read_action, write_action, delete_action in _ROUTE_RULES:
         if all(fragment in lowered_route for fragment in fragments):
-            return _with_resource_type(ACTION_RULES_BY_ACTION[read_action if is_read else write_action], route)
+            if is_read:
+                action = read_action
+            elif is_delete:
+                # Fall back to the generic delete verb when a rule has no
+                # dedicated destroy action (still a mutation, never a view).
+                action = delete_action or 'delete'
+            else:
+                action = write_action
+            return _with_resource_type(ACTION_RULES_BY_ACTION[action], route)
 
     if is_read:
         return _with_resource_type(ACTION_RULES_BY_ACTION['view'], route)
+    if is_delete:
+        return _with_resource_type(ACTION_RULES_BY_ACTION['delete'], route)
     if upper_method == 'POST':
         return _with_resource_type(ACTION_RULES_BY_ACTION['create'], route)
     if upper_method in {'PUT', 'PATCH'}:
         return _with_resource_type(ACTION_RULES_BY_ACTION['update'], route)
-    if upper_method == 'DELETE':
-        return _with_resource_type(ACTION_RULES_BY_ACTION['delete'], route)
     return _with_resource_type(ACTION_RULES_BY_ACTION['probe'], route)
 
 
@@ -620,9 +678,13 @@ def bucket_allows(bucket: str, effective_level: int) -> bool:
     and ``audit`` are both *observation* buckets: viewing a resource and
     viewing the audit surface itself are reads, so a mutation-level Workspace
     must not fill its log with page views. They are only persisted once the
-    Workspace opts into the read level.
+    Workspace opts into the read level. ``skip`` is charter noise a Workspace
+    never needs traced (an assistant chat session's own turn traffic), so it is
+    dropped at every level instead of being mislabelled as a resource change.
     """
 
+    if bucket == 'skip':
+        return False
     if effective_level <= OPERATION_LEVEL_NONE:
         return False
     if bucket in ('read', 'audit'):
