@@ -444,6 +444,10 @@ class RuntimePipeline:
             self.ap.logger.debug(f'Processing query {query.query_id}')
 
             await self._execute_from_stage(0, query)
+            if '_cli_run_status' in query.variables:
+                query.variables['_cli_run_status'] = (
+                    'failed' if query.variables.get('_monitoring_has_error') else 'completed'
+                )
 
             # Record query success only if no error occurred during processing
             if not query.variables.get('_monitoring_has_error', False):

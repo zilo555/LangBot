@@ -16,7 +16,7 @@ class BoxRouterGroup(group.RouterGroup):
         @self.route(
             '/status',
             methods=['GET'],
-            auth_type=group.AuthType.USER_TOKEN,
+            auth_type=group.AuthType.USER_TOKEN_OR_API_KEY,
             permission=Permission.RESOURCE_VIEW,
         )
         async def _(request_context: RequestContext) -> str:
@@ -42,7 +42,7 @@ class BoxRouterGroup(group.RouterGroup):
         @self.route(
             '/sessions',
             methods=['GET'],
-            auth_type=group.AuthType.USER_TOKEN,
+            auth_type=group.AuthType.USER_TOKEN_OR_API_KEY,
             permission=Permission.AUDIT_VIEW,
         )
         async def _(request_context: RequestContext) -> str:
@@ -55,7 +55,7 @@ class BoxRouterGroup(group.RouterGroup):
         @self.route(
             '/errors',
             methods=['GET'],
-            auth_type=group.AuthType.USER_TOKEN,
+            auth_type=group.AuthType.USER_TOKEN_OR_API_KEY,
             permission=Permission.AUDIT_VIEW,
         )
         async def _(request_context: RequestContext) -> str:

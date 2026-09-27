@@ -5,6 +5,7 @@ import quart
 from ....authz import Permission, has_permission
 from ....context import RequestContext
 from ....service.secrets import redact_secrets
+from ....service.pipeline_run import run_pipeline
 from ... import group
 from ......pipeline.extension_preferences import (
     normalize_extension_preferences,
@@ -198,3 +199,18 @@ class PipelinesRouterGroup(group.RouterGroup):
             except ValueError as exc:
                 return self.http_status(400, -1, str(exc))
             return self.success()
+
+        @self.route(
+            '/<pipeline_uuid>/run',
+            methods=['POST'],
+            auth_type=group.AuthType.USER_TOKEN_OR_API_KEY,
+            permission=Permission.RUNTIME_OPERATE,
+        )
+        async def run(pipeline_uuid: str, request_context: RequestContext):
+            body = await quart.request.get_json()
+            if not isinstance(body, dict) or set(body) != {'message'}:
+                return self.http_status(400, -1, 'Expected an object containing message')
+            text = body['message']
+            if not isinstance(text, str) or not text.strip() or len(text) > 100_000:
+                return self.http_status(400, -1, 'message must contain 1..100000 characters')
+            return self.success(data=await run_pipeline(self.ap, request_context, pipeline_uuid, text))

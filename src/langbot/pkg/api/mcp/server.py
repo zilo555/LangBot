@@ -96,6 +96,119 @@ class LangBotMCPServer:
             }
             return _dump(data)
 
+        @mcp.tool(description='List knowledge engines and their capabilities.')
+        async def list_knowledge_engines() -> str:
+            return _dump(await ap.knowledge_service.list_knowledge_engines(_authorized(Permission.RESOURCE_VIEW)))
+
+        @mcp.tool(description='Get creation or retrieval schema for an author/name knowledge engine.')
+        async def get_knowledge_engine_schema(plugin_id: str, kind: typing.Literal['creation', 'retrieval']) -> str:
+            context = _authorized(Permission.RESOURCE_VIEW)
+            if kind == 'creation':
+                return _dump(await ap.knowledge_service.get_engine_creation_schema(context, plugin_id))
+            return _dump(await ap.knowledge_service.get_engine_retrieval_schema(context, plugin_id))
+
+        @mcp.tool(description='List document parsers, optionally filtered by MIME type.')
+        async def list_knowledge_parsers(mime_type: str | None = None) -> str:
+            return _dump(await ap.knowledge_service.list_parsers(_authorized(Permission.RESOURCE_VIEW), mime_type))
+
+        @mcp.tool(description='Read Pipeline extension bindings, enable-all switches and available extensions.')
+        async def get_pipeline_extensions(pipeline_uuid: str) -> str:
+            return _dump(
+                await ap.pipeline_service.get_pipeline_extensions(_authorized(Permission.RESOURCE_VIEW), pipeline_uuid)
+            )
+
+        @mcp.tool(description='Replace all Pipeline extension bindings. All binding lists and switches are required.')
+        async def update_pipeline_extensions(
+            pipeline_uuid: str,
+            bound_plugins: list[dict],
+            bound_mcp_servers: list[str],
+            bound_skills: list[str],
+            bound_mcp_resources: list[dict],
+            enable_all_plugins: bool,
+            enable_all_mcp_servers: bool,
+            enable_all_skills: bool,
+            mcp_resource_agent_read_enabled: bool,
+        ) -> str:
+            context = _authorized(Permission.RESOURCE_MANAGE)
+            require_permission(context, Permission.RESOURCE_VIEW)
+            await ap.pipeline_service.update_pipeline_extensions(
+                context,
+                pipeline_uuid,
+                bound_plugins,
+                bound_mcp_servers,
+                enable_all_plugins,
+                enable_all_mcp_servers,
+                bound_skills,
+                enable_all_skills,
+                bound_mcp_resources,
+                mcp_resource_agent_read_enabled,
+            )
+            return _dump(await ap.pipeline_service.get_pipeline_extensions(context, pipeline_uuid))
+
+        @mcp.tool(
+            description='Run one Pipeline turn in a fresh session. Calls configured models/tools. Never retry an unknown outcome automatically.'
+        )
+        async def run_pipeline(pipeline_uuid: str, message: str) -> str:
+            from ..http.service.pipeline_run import run_pipeline as execute
+
+            return _dump(await execute(ap, _authorized(Permission.RUNTIME_OPERATE), pipeline_uuid, message))
+
+        @mcp.tool(
+            description='Read Workspace sandbox status, sessions or recent errors. Does not create execution sessions.'
+        )
+        async def get_sandbox_diagnostics(kind: typing.Literal['status', 'sessions', 'errors'] = 'status') -> str:
+            context = _authorized(Permission.RESOURCE_VIEW if kind == 'status' else Permission.AUDIT_VIEW)
+            if kind == 'status':
+                return _dump(await ap.box_service.get_status(context))
+            if kind == 'sessions':
+                return _dump(await ap.box_service.get_sessions(context))
+            if ap.box_service.managed_admission_required:
+                await ap.box_service.require_workspace_sandbox(context)
+            return _dump(ap.box_service.get_recent_errors(context))
+
+        @mcp.tool(
+            description='Read bounded Workspace runtime records. Filters follow the monitoring service: bot_ids, pipeline_ids, session_ids, start_time, end_time, knowledge_base_id, user_query, is_active as supported by the record kind.'
+        )
+        async def get_monitoring_records(
+            kind: typing.Literal['messages', 'llm_calls', 'tool_calls', 'embedding_calls', 'sessions', 'errors'],
+            limit: int = 100,
+            offset: int = 0,
+            filters: dict | None = None,
+        ) -> str:
+            import datetime
+
+            context = _authorized(Permission.RESOURCE_VIEW)
+            allowed = {'start_time', 'end_time'}
+            if kind != 'embedding_calls':
+                allowed |= {'bot_ids', 'pipeline_ids'}
+            if kind in {'messages', 'tool_calls'}:
+                allowed.add('session_ids')
+            if kind == 'embedding_calls':
+                allowed.add('knowledge_base_id')
+            if kind == 'sessions':
+                allowed |= {'user_query', 'is_active'}
+            kwargs = dict(filters or {})
+            if set(kwargs) - allowed:
+                raise ValueError('Unsupported monitoring filter')
+            for field in ('start_time', 'end_time'):
+                if kwargs.get(field):
+                    value = datetime.datetime.fromisoformat(kwargs[field].replace('Z', '+00:00'))
+                    if value.tzinfo is not None:
+                        value = value.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+                    kwargs[field] = value
+            limit, offset = ap.monitoring_service.normalize_page_window(limit, offset)
+            rows, total = await getattr(ap.monitoring_service, 'get_' + kind)(
+                context, limit=limit, offset=offset, **kwargs
+            )
+            return _dump({kind: rows, 'total': total, 'limit': limit, 'offset': offset})
+
+        @mcp.tool(description='Read message details or session analysis within the authenticated Workspace.')
+        async def get_monitoring_details(kind: typing.Literal['message', 'session'], identifier: str) -> str:
+            context = _authorized(Permission.RESOURCE_VIEW)
+            if kind == 'message':
+                return _dump(await ap.monitoring_service.get_message_details(context, identifier))
+            return _dump(await ap.monitoring_service.get_session_analysis(context, identifier))
+
         # ----- Bots ---------------------------------------------------- #
         @mcp.tool(description='List all messaging-platform bots. Secrets are redacted.')
         async def list_bots() -> str:
