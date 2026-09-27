@@ -527,24 +527,28 @@ class Application:
                                         self.logger.warning(
                                             f'Storage maintenance failed for Workspace {context.workspace_uuid}: {exc}'
                                         )
-                            if 'operation_logs' in due:
-                                try:
-                                    report = await self.workspace_settings_service.prune(
-                                        context.workspace_uuid,
-                                    )
-                                    removed = report['expired'] + report['trimmed']
-                                    if removed > 0:
-                                        self.logger.info(
-                                            f'Operation log auto-cleanup for Workspace '
-                                            f'{context.workspace_uuid}: removed {removed} records'
+                                if 'operation_logs' in due:
+                                    # Retention is per Workspace, so this must run
+                                    # inside the binding loop; left outside it only
+                                    # the last discovered Workspace would ever be
+                                    # pruned while the others grew unbounded.
+                                    try:
+                                        report = await self.workspace_settings_service.prune(
+                                            context.workspace_uuid,
                                         )
-                                except asyncio.CancelledError:
-                                    raise
-                                except Exception as exc:
-                                    self.logger.warning(
-                                        f'Operation log auto-cleanup failed for '
-                                        f'Workspace {context.workspace_uuid}: {exc}'
-                                    )
+                                        removed = report['expired'] + report['trimmed']
+                                        if removed > 0:
+                                            self.logger.info(
+                                                f'Operation log auto-cleanup for Workspace '
+                                                f'{context.workspace_uuid}: removed {removed} records'
+                                            )
+                                    except asyncio.CancelledError:
+                                        raise
+                                    except Exception as exc:
+                                        self.logger.warning(
+                                            f'Operation log auto-cleanup failed for '
+                                            f'Workspace {context.workspace_uuid}: {exc}'
+                                        )
                             if 'invitations' in due:
                                 try:
                                     await self.workspace_collaboration_service.cleanup_expired_invitations(

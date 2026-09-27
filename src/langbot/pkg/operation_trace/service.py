@@ -116,14 +116,16 @@ DEFAULT_PAGE_SIZE = 50
 MAX_INTEGRITY_SCAN_ROWS = 20000
 
 #: Integrity verification is cached per Workspace for this long. Recomputing a
-#: row's HMAC is the expensive part of the read path, and the chain only ever
-#: grows, so a fresh result can be reused across page loads and refreshes.
+#: row's HMAC is the expensive part of the read path, so a result computed
+#: seconds ago is served straight from the cache, which makes a burst of panel
+#: opens, refreshes and page turns (all within this window) effectively free.
+#:
+#: The cache is a latency shield, never a correctness shortcut: a cache miss
+#: re-verifies the whole window because an in-place edit to an *already
+#: verified* row must still be caught. Skipping previously verified ids would
+#: turn the incremental scan into a permanent blind spot for exactly the
+#: tampering this feature exists to expose.
 INTEGRITY_CACHE_TTL_SECONDS = 30.0
-
-#: Records verified per incremental scan after the first pass. Recording appends
-#: a handful of rows between refreshes, so a bounded window keeps the per-request
-#: cost flat while still catching tampering near the head.
-INTEGRITY_DELTA_WINDOW = 500
 
 #: ``integrity`` query values accepted by :meth:`query_logs`. ``all`` keeps the
 #: previous behaviour; the other two map to the two failure modes the panel
@@ -215,6 +217,22 @@ _HASH_FIELDS: typing.Final = (
     'client_ip',
     'prev_hash',
 )
+
+
+def _integrity_scan_select(model: typing.Any, *conditions: typing.Any) -> typing.Any:
+    """Build a projection-only scan query for integrity verification.
+
+    Verification only re-hashes the row content plus the two chain pointers, so
+    selecting the whole row would pull the ``changes`` / ``detail`` Text payloads
+    and the client fingerprint for every scanned record. On a cold pass that is
+    up to :data:`MAX_INTEGRITY_SCAN_ROWS` rows of payload the verifier never
+    reads; projecting the hash columns keeps the read proportional to the hash
+    instead of to the payload size.
+    """
+
+    columns = [model.id, model.record_hash]
+    columns.extend(getattr(model, field) for field in _HASH_FIELDS)
+    return sqlalchemy.select(*columns).where(*conditions)
 
 
 # ---------------------------------------------------------------------------
@@ -1775,12 +1793,14 @@ class WorkspaceSettingsService:
     ) -> dict[str, typing.Any]:
         """Verify the filtered history and classify every failing record.
 
-        The chain is append-only, so a previously verified prefix stays valid:
-        this keeps a per-Workspace cache and, after the first pass, verifies only
-        the rows appended since. That keeps the per-request cost flat instead of
-        re-hashing up to :data:`MAX_INTEGRITY_SCAN_ROWS` rows on every open,
-        refresh and page turn. The cache is skipped for filtered queries (which
-        cannot reuse a full-history scan) and reused for the plain listing.
+        A result computed within :data:`INTEGRITY_CACHE_TTL_SECONDS` is served
+        from the per-Workspace cache, which is what keeps the panel responsive:
+        opening, refreshing and paging all land inside that window and pay
+        nothing. A cache miss re-verifies the whole scan window from scratch --
+        the scan projects only the hash columns and the verifier only computes
+        two booleans, so the cost is bounded and, crucially, an edit to a row
+        that was verified on a previous pass is still caught. The cache is
+        skipped for filtered queries, which cannot share a full-history scan.
         """
 
         workspace_uuid = None
@@ -1805,51 +1825,36 @@ class WorkspaceSettingsService:
 
         started = time.monotonic()
         try:
-            previous: dict[str, typing.Any] | None = None
-            if cacheable:
-                candidate = self._integrity_cache.get(workspace_uuid)
-                if candidate is not None and candidate['filter_key'] == filter_key:
-                    previous = candidate
-            if previous is not None:
-                max_scanned = min(INTEGRITY_DELTA_WINDOW, MAX_INTEGRITY_SCAN_ROWS)
-            else:
-                max_scanned = MAX_INTEGRITY_SCAN_ROWS
-
             rows_result = await self.ap.persistence_mgr.execute_async(
-                sqlalchemy.select(model).where(*filters).order_by(model.id.desc()).limit(max_scanned)
+                _integrity_scan_select(model, *filters).order_by(model.id.desc()).limit(MAX_INTEGRITY_SCAN_ROWS)
             )
             rows = list(rows_result.all())
 
-            # Baseline for the oldest verified row, read on the first pass (its
-            # link sits outside the scan window) or reused from the cache.
+            # Baseline for the oldest scanned row: its link points at a row that
+            # sits just outside the window. Reads are bounded by
+            # ``MAX_INTEGRITY_SCAN_ROWS``, so only a history larger than that
+            # window ever needs this extra row.
             previous_row = None
             oldest_id = rows[-1].id if rows else None
-            if previous is not None:
-                previous_row = previous.get('oldest_row')
-            elif oldest_id is not None:
+            if oldest_id is not None:
                 older_result = await self.ap.persistence_mgr.execute_async(
-                    sqlalchemy.select(model)
-                    .where(model.workspace_uuid == rows[0].workspace_uuid, model.id < oldest_id)
+                    _integrity_scan_select(model, model.workspace_uuid == rows[0].workspace_uuid, model.id < oldest_id)
                     .order_by(model.id.desc())
                     .limit(1)
                 )
                 previous_row = older_result.first()
 
-            new_verified = dict(previous['verified']) if previous is not None else {}
+            # Every pass re-verifies every scanned row. The map is deliberately
+            # not merged with the previous cache: a row verified once is exactly
+            # what an attacker would edit afterwards.
+            new_verified: dict[int, tuple[bool, bool]] = {}
             for index, row in enumerate(rows):
-                if row.id in new_verified:
-                    continue
                 predecessor = rows[index + 1] if index + 1 < len(rows) else previous_row
-                record = self._serialize_log(row, previous_row=predecessor)
-                new_verified[row.id] = (record['integrity_ok'], record['chain_ok'])
+                new_verified[row.id] = self._verify_hash_and_chain(row, predecessor)
 
             tampered_ids, integrity_failed_ids, chain_failed_ids = self._verified_lists(new_verified)
-            # ``scanned`` is the number of distinct rows verified so far (the
-            # cache grows by the newly appended rows), never a double count.
             scanned = len(new_verified)
-            truncated = scanned >= MAX_INTEGRITY_SCAN_ROWS or (
-                previous is not None and previous.get('truncated', False)
-            )
+            truncated = scanned >= MAX_INTEGRITY_SCAN_ROWS
             summary = {
                 'tampered': len(tampered_ids),
                 'integrity_failed': len(integrity_failed_ids),
@@ -1899,6 +1904,25 @@ class WorkspaceSettingsService:
                 'chain_failed_ids': [],
             }
 
+    @staticmethod
+    def _verify_hash_and_chain(row: typing.Any, previous_row: typing.Any | None) -> tuple[bool, bool]:
+        """Return ``(integrity_ok, chain_ok)`` for one row without serializing it.
+
+        The integrity scan runs over up to :data:`MAX_INTEGRITY_SCAN_ROWS` rows
+        and only needs the two booleans, so it must not build the full display
+        dict -- which decodes the ``changes`` / ``detail`` payloads and formats
+        timestamps -- for every scanned record. The hash payload here is exactly
+        :data:`_HASH_FIELDS`, the same single source of truth ``_serialize_log``
+        uses, so both paths can never drift apart.
+        """
+
+        hash_payload = {field: getattr(row, field) for field in _HASH_FIELDS}
+        integrity_ok = verify_record_hash(hash_payload, row.record_hash)
+        chain_ok = True
+        if previous_row is not None:
+            chain_ok = str(row.prev_hash or '') == str(previous_row.record_hash or '')
+        return integrity_ok, chain_ok
+
     def _serialize_log(self, row: typing.Any, *, previous_row: typing.Any | None = None) -> dict[str, typing.Any]:
         """Serialize one row and re-verify its tamper-evidence chain.
 
@@ -1908,31 +1932,7 @@ class WorkspaceSettingsService:
         """
 
         rule = ACTION_RULES_BY_ACTION.get(row.action or '')
-        hash_payload = {
-            'workspace_uuid': row.workspace_uuid,
-            'actor_account_uuid': row.actor_account_uuid,
-            'actor_name': row.actor_name,
-            'actor_role': row.actor_role,
-            'principal_type': row.principal_type,
-            'api_key_uuid': row.api_key_uuid,
-            'auth_type': row.auth_type,
-            'http_method': row.http_method,
-            'route': row.route,
-            'action': row.action,
-            'resource_type': row.resource_type,
-            'resource_id': row.resource_id,
-            'level': row.level,
-            'outcome': row.outcome,
-            'status_code': row.status_code,
-            'summary': row.summary,
-            'changes': row.changes,
-            'client_ip': row.client_ip,
-            'prev_hash': row.prev_hash,
-        }
-        integrity_ok = verify_record_hash(hash_payload, row.record_hash)
-        chain_ok = True
-        if previous_row is not None:
-            chain_ok = str(row.prev_hash or '') == str(previous_row.record_hash or '')
+        integrity_ok, chain_ok = self._verify_hash_and_chain(row, previous_row)
 
         return {
             'id': row.id,
@@ -2181,6 +2181,12 @@ class WorkspaceSettingsService:
             expired = int(result.rowcount or 0)
         except Exception as exc:  # pragma: no cover - defensive
             self.ap.logger.debug(f'Operation log retention prune skipped: {exc}')
+
+        if expired > 0:
+            # Age-based retention removed the oldest rows, so any cached
+            # verification -- including its boundary baseline link -- no longer
+            # describes the surviving chain.
+            self._integrity_cache.pop(workspace_uuid, None)
 
         total = await self.count_logs(workspace_uuid)
         trimmed = await self._delete_oldest(workspace_uuid, max(total - budget, 0))
