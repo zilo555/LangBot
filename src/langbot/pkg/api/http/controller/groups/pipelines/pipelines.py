@@ -4,6 +4,7 @@ import quart
 
 from ....authz import Permission, has_permission
 from ....context import RequestContext
+from ......operation_trace import service as settings_service
 from ....service.secrets import redact_secrets
 from ....service.pipeline_run import run_pipeline
 from ... import group
@@ -88,15 +89,30 @@ class PipelinesRouterGroup(group.RouterGroup):
             permission=Permission.RESOURCE_MANAGE,
         )
         async def _(pipeline_uuid: str, request_context: RequestContext) -> str:
+            quart.g.operation_log_resource_id = pipeline_uuid
             if quart.request.method == 'PUT':
+                json_data = await quart.request.json
+                try:
+                    previous = await self.ap.pipeline_service.get_pipeline(request_context, pipeline_uuid)
+                except Exception:
+                    previous = None
                 try:
                     await self.ap.pipeline_service.update_pipeline(
                         request_context,
                         pipeline_uuid,
-                        await quart.request.json,
+                        json_data,
                     )
                 except ValueError as exc:
                     return self.http_status(400, -1, str(exc))
+                changes = settings_service.changed_fields(
+                    previous if isinstance(previous, dict) else {},
+                    json_data if isinstance(json_data, dict) else {},
+                    ignore=('uuid', 'created_at', 'updated_at'),
+                )
+                rule = settings_service.ACTION_RULES_BY_ACTION.get('update')
+                quart.g.operation_log_changes = changes
+                if rule is not None and changes:
+                    quart.g.operation_log_summary = settings_service.build_summary(rule, changes)
             else:
                 await self.ap.pipeline_service.delete_pipeline(request_context, pipeline_uuid)
             return self.success()
@@ -159,7 +175,41 @@ class PipelinesRouterGroup(group.RouterGroup):
             permission=Permission.RESOURCE_MANAGE,
         )
         async def _(pipeline_uuid: str, request_context: RequestContext) -> str:
+            quart.g.operation_log_resource_id = pipeline_uuid
             json_data = await quart.request.json
+            # Capture "what was bound before" so the trace answers "what changed
+            # into what": without this the log could only say an extension was
+            # configured, never which binding was added or removed.
+            try:
+                previous = await self.ap.pipeline_service.get_pipeline(request_context, pipeline_uuid)
+            except Exception:
+                previous = None
+            # The request uses ``bound_*`` keys while the stored preferences use
+            # the canonical names, so both sides are normalized before diffing.
+            requested = {
+                canonical: json_data[field]
+                for field, canonical in {
+                    'bound_plugins': 'plugins',
+                    'bound_mcp_servers': 'mcp_servers',
+                    'bound_skills': 'skills',
+                    'bound_mcp_resources': 'mcp_resources',
+                    'enable_all_plugins': 'enable_all_plugins',
+                    'enable_all_mcp_servers': 'enable_all_mcp_servers',
+                    'enable_all_skills': 'enable_all_skills',
+                    'mcp_resource_agent_read_enabled': 'mcp_resource_agent_read_enabled',
+                }.items()
+                if field in json_data
+            }
+            if isinstance(previous, dict):
+                current = {
+                    **normalize_extension_preferences(previous.get('extensions_preferences')),
+                    **requested,
+                }
+            else:
+                current = requested
+            changes = settings_service.changed_fields(current, requested)
+            if changes:
+                quart.g.operation_log_changes = changes
             try:
                 validate_extension_preferences(
                     {

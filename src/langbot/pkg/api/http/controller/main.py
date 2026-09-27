@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import importlib
 import os
 import typing
 
@@ -26,6 +27,13 @@ importutil.import_modules_in_pkg(groups_platform)
 importutil.import_modules_in_pkg(groups_pipelines)
 importutil.import_modules_in_pkg(groups_knowledge)
 importutil.import_modules_in_pkg(groups_resources)
+
+# The traceability subsystem is self-contained and auto-registers its routes
+# through ``group.group_class``. Importing it here (instead of from within the
+# ``groups`` package) keeps the feature decoupled: the Core controller package
+# contains no code that depends on it, only this single bootstrap import. It
+# runs after the package scan so its routes join the same registry.
+importlib.import_module('langbot.pkg.operation_trace.routes')
 
 
 class BoundedJSONRequest(quart.Request):
