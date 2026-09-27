@@ -434,58 +434,34 @@ class KnowledgeService:
     # ================= Knowledge Engine Discovery =================
 
     async def list_knowledge_engines(self, context: TenantContext) -> list[dict]:
-        """List all available Knowledge Engines from plugins."""
+        """List engines; unavailable runtimes must not look like empty catalogs."""
         require_workspace_uuid(context)
-        engines = []
-
         if not self.ap.plugin_connector.is_enable_plugin:
-            return engines
+            return []
         await self.ap.plugin_connector.require_workspace_context(context)
-
-        # Get KnowledgeEngine plugins
-        try:
-            knowledge_engines = await self.ap.plugin_connector.list_knowledge_engines()
-            engines.extend(knowledge_engines)
-        except Exception as e:
-            self.ap.logger.warning(f'Failed to list Knowledge Engines from plugins: {e}')
-
-        return engines
+        return await self.ap.plugin_connector.list_knowledge_engines()
 
     async def list_parsers(self, context: TenantContext, mime_type: str | None = None) -> list[dict]:
-        """List available parsers, optionally filtered by MIME type."""
+        """List parsers, optionally filtered by MIME type."""
         require_workspace_uuid(context)
         if not self.ap.plugin_connector.is_enable_plugin:
             return []
         await self.ap.plugin_connector.require_workspace_context(context)
-        try:
-            parsers = await self.ap.plugin_connector.list_parsers()
-            if mime_type:
-                parsers = [p for p in parsers if mime_type in p.get('supported_mime_types', [])]
-            return parsers
-        except Exception as e:
-            self.ap.logger.warning(f'Failed to list parsers: {e}')
-            return []
+        parsers = await self.ap.plugin_connector.list_parsers()
+        return [p for p in parsers if mime_type in p.get('supported_mime_types', [])] if mime_type else parsers
+
+    async def _require_knowledge_engine(self, context: TenantContext, plugin_id: str) -> None:
+        engines = await self.list_knowledge_engines(context)
+        if not any(engine.get('plugin_id') == plugin_id for engine in engines):
+            raise WorkspaceNotFoundError('Knowledge engine not found')
+        await self.ap.plugin_connector.require_workspace_context(context)
 
     async def get_engine_creation_schema(self, context: TenantContext, plugin_id: str) -> dict:
-        """Get creation settings schema for a specific Knowledge Engine."""
-        require_workspace_uuid(context)
-        if not self.ap.plugin_connector.is_enable_plugin:
-            return {}
-        await self.ap.plugin_connector.require_workspace_context(context)
-        try:
-            return await self.ap.plugin_connector.get_rag_creation_schema(plugin_id)
-        except Exception as e:
-            self.ap.logger.warning(f'Failed to get creation schema for {plugin_id}: {e}')
-            return {}
+        """Get an existing engine's creation schema in this Workspace."""
+        await self._require_knowledge_engine(context, plugin_id)
+        return await self.ap.plugin_connector.get_rag_creation_schema(plugin_id)
 
     async def get_engine_retrieval_schema(self, context: TenantContext, plugin_id: str) -> dict:
-        """Get retrieval settings schema for a specific Knowledge Engine."""
-        require_workspace_uuid(context)
-        if not self.ap.plugin_connector.is_enable_plugin:
-            return {}
-        await self.ap.plugin_connector.require_workspace_context(context)
-        try:
-            return await self.ap.plugin_connector.get_rag_retrieval_schema(plugin_id)
-        except Exception as e:
-            self.ap.logger.warning(f'Failed to get retrieval schema for {plugin_id}: {e}')
-            return {}
+        """Get an existing engine's retrieval schema in this Workspace."""
+        await self._require_knowledge_engine(context, plugin_id)
+        return await self.ap.plugin_connector.get_rag_retrieval_schema(plugin_id)

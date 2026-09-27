@@ -75,7 +75,12 @@ class MonitoringRouterGroup(group.RouterGroup):
 
             return self.success(data=stats)
 
-        @self.route('/messages', methods=['GET'], permission=Permission.RESOURCE_VIEW)
+        @self.route(
+            '/messages',
+            methods=['GET'],
+            auth_type=group.AuthType.USER_TOKEN_OR_API_KEY,
+            permission=Permission.RESOURCE_VIEW,
+        )
         async def get_messages(request_context: RequestContext) -> str:
             """Get message logs"""
             # Parse query parameters
@@ -84,8 +89,9 @@ class MonitoringRouterGroup(group.RouterGroup):
             session_ids = quart.request.args.getlist('sessionId')
             start_time_str = quart.request.args.get('startTime')
             end_time_str = quart.request.args.get('endTime')
-            limit = int(quart.request.args.get('limit', 100))
-            offset = int(quart.request.args.get('offset', 0))
+            limit, offset = self.ap.monitoring_service.normalize_page_window(
+                quart.request.args.get('limit', 100), quart.request.args.get('offset', 0)
+            )
 
             # Parse datetime
             start_time = parse_iso_datetime(start_time_str)
@@ -111,7 +117,12 @@ class MonitoringRouterGroup(group.RouterGroup):
                 }
             )
 
-        @self.route('/llm-calls', methods=['GET'], permission=Permission.RESOURCE_VIEW)
+        @self.route(
+            '/llm-calls',
+            methods=['GET'],
+            auth_type=group.AuthType.USER_TOKEN_OR_API_KEY,
+            permission=Permission.RESOURCE_VIEW,
+        )
         async def get_llm_calls(request_context: RequestContext) -> str:
             """Get LLM call records"""
             # Parse query parameters
@@ -119,8 +130,9 @@ class MonitoringRouterGroup(group.RouterGroup):
             pipeline_ids = quart.request.args.getlist('pipelineId')
             start_time_str = quart.request.args.get('startTime')
             end_time_str = quart.request.args.get('endTime')
-            limit = int(quart.request.args.get('limit', 100))
-            offset = int(quart.request.args.get('offset', 0))
+            limit, offset = self.ap.monitoring_service.normalize_page_window(
+                quart.request.args.get('limit', 100), quart.request.args.get('offset', 0)
+            )
 
             # Parse datetime
             start_time = parse_iso_datetime(start_time_str)
@@ -145,7 +157,12 @@ class MonitoringRouterGroup(group.RouterGroup):
                 }
             )
 
-        @self.route('/tool-calls', methods=['GET'], permission=Permission.RESOURCE_VIEW)
+        @self.route(
+            '/tool-calls',
+            methods=['GET'],
+            auth_type=group.AuthType.USER_TOKEN_OR_API_KEY,
+            permission=Permission.RESOURCE_VIEW,
+        )
         async def get_tool_calls(request_context: RequestContext) -> str:
             """Get tool call records"""
             bot_ids = quart.request.args.getlist('botId')
@@ -153,8 +170,9 @@ class MonitoringRouterGroup(group.RouterGroup):
             session_ids = quart.request.args.getlist('sessionId')
             start_time_str = quart.request.args.get('startTime')
             end_time_str = quart.request.args.get('endTime')
-            limit = int(quart.request.args.get('limit', 100))
-            offset = int(quart.request.args.get('offset', 0))
+            limit, offset = self.ap.monitoring_service.normalize_page_window(
+                quart.request.args.get('limit', 100), quart.request.args.get('offset', 0)
+            )
 
             start_time = parse_iso_datetime(start_time_str)
             end_time = parse_iso_datetime(end_time_str)
@@ -179,15 +197,21 @@ class MonitoringRouterGroup(group.RouterGroup):
                 }
             )
 
-        @self.route('/embedding-calls', methods=['GET'], permission=Permission.RESOURCE_VIEW)
+        @self.route(
+            '/embedding-calls',
+            methods=['GET'],
+            auth_type=group.AuthType.USER_TOKEN_OR_API_KEY,
+            permission=Permission.RESOURCE_VIEW,
+        )
         async def get_embedding_calls(request_context: RequestContext) -> str:
             """Get embedding call records"""
             # Parse query parameters
             start_time_str = quart.request.args.get('startTime')
             end_time_str = quart.request.args.get('endTime')
             knowledge_base_id = quart.request.args.get('knowledgeBaseId')
-            limit = int(quart.request.args.get('limit', 100))
-            offset = int(quart.request.args.get('offset', 0))
+            limit, offset = self.ap.monitoring_service.normalize_page_window(
+                quart.request.args.get('limit', 100), quart.request.args.get('offset', 0)
+            )
 
             # Parse datetime
             start_time = parse_iso_datetime(start_time_str)
@@ -211,7 +235,12 @@ class MonitoringRouterGroup(group.RouterGroup):
                 }
             )
 
-        @self.route('/sessions', methods=['GET'], permission=Permission.RESOURCE_VIEW)
+        @self.route(
+            '/sessions',
+            methods=['GET'],
+            auth_type=group.AuthType.USER_TOKEN_OR_API_KEY,
+            permission=Permission.RESOURCE_VIEW,
+        )
         async def get_sessions(request_context: RequestContext) -> str:
             """Get session information"""
             # Parse query parameters
@@ -221,8 +250,9 @@ class MonitoringRouterGroup(group.RouterGroup):
             end_time_str = quart.request.args.get('endTime')
             user_query = quart.request.args.get('userQuery')
             is_active_str = quart.request.args.get('isActive')
-            limit = int(quart.request.args.get('limit', 100))
-            offset = int(quart.request.args.get('offset', 0))
+            limit, offset = self.ap.monitoring_service.normalize_page_window(
+                quart.request.args.get('limit', 100), quart.request.args.get('offset', 0)
+            )
 
             # Parse datetime
             start_time = parse_iso_datetime(start_time_str)
@@ -254,7 +284,12 @@ class MonitoringRouterGroup(group.RouterGroup):
                 }
             )
 
-        @self.route('/errors', methods=['GET'], permission=Permission.RESOURCE_VIEW)
+        @self.route(
+            '/errors',
+            methods=['GET'],
+            auth_type=group.AuthType.USER_TOKEN_OR_API_KEY,
+            permission=Permission.RESOURCE_VIEW,
+        )
         async def get_errors(request_context: RequestContext) -> str:
             """Get error logs"""
             # Parse query parameters
@@ -262,8 +297,9 @@ class MonitoringRouterGroup(group.RouterGroup):
             pipeline_ids = quart.request.args.getlist('pipelineId')
             start_time_str = quart.request.args.get('startTime')
             end_time_str = quart.request.args.get('endTime')
-            limit = int(quart.request.args.get('limit', 100))
-            offset = int(quart.request.args.get('offset', 0))
+            limit, offset = self.ap.monitoring_service.normalize_page_window(
+                quart.request.args.get('limit', 100), quart.request.args.get('offset', 0)
+            )
 
             # Parse datetime
             start_time = parse_iso_datetime(start_time_str)
@@ -404,7 +440,12 @@ class MonitoringRouterGroup(group.RouterGroup):
                 }
             )
 
-        @self.route('/sessions/<session_id>/analysis', methods=['GET'], permission=Permission.RESOURCE_VIEW)
+        @self.route(
+            '/sessions/<session_id>/analysis',
+            methods=['GET'],
+            auth_type=group.AuthType.USER_TOKEN_OR_API_KEY,
+            permission=Permission.RESOURCE_VIEW,
+        )
         async def get_session_analysis(session_id: str, request_context: RequestContext) -> str:
             """Get detailed analysis for a specific session"""
             start_time = parse_iso_datetime(quart.request.args.get('startTime'))
@@ -421,13 +462,18 @@ class MonitoringRouterGroup(group.RouterGroup):
             # The frontend will handle the 'found: false' case
             return self.success(data=analysis)
 
-        @self.route('/messages/<message_id>/details', methods=['GET'], permission=Permission.RESOURCE_VIEW)
+        @self.route(
+            '/messages/<message_id>/details',
+            methods=['GET'],
+            auth_type=group.AuthType.USER_TOKEN_OR_API_KEY,
+            permission=Permission.RESOURCE_VIEW,
+        )
         async def get_message_details(message_id: str, request_context: RequestContext) -> str:
             """Get detailed information for a specific message"""
             details = await self.ap.monitoring_service.get_message_details(request_context, message_id)
 
             if not details.get('found'):
-                return self.error(message=f'Message {message_id} not found', code=404)
+                return self.http_status(404, 'resource_not_found', 'Message not found')
 
             return self.success(data=details)
 
