@@ -394,6 +394,12 @@ ACTION_RULE_TABLE: typing.Final[tuple[ActionRule, ...]] = (
         resource_type='skill',
     ),
     ActionRule(
+        action='skill_update',
+        category='extension',
+        bucket='write',
+        resource_type='skill',
+    ),
+    ActionRule(
         action='skill_uninstall',
         category='extension',
         bucket='write',
@@ -492,6 +498,51 @@ ACTION_RULE_TABLE: typing.Final[tuple[ActionRule, ...]] = (
         bucket='read',
         resource_type='resource',
     ),
+    # --- Data-flow helpers (why a read: nothing to trace) ----------------
+    # Uploading a file or indexing a document into a knowledge base is data
+    # flowing into a resource, not a change to the resource's definition. It is
+    # offered as a read verb so the persist gate drops it for every role, the
+    # same way a file view is dropped, keeping the log to definition changes.
+    ActionRule(
+        action='file_view',
+        category='resource',
+        bucket='read',
+        resource_type='file',
+    ),
+    ActionRule(
+        action='ingest',
+        category='resource',
+        bucket='read',
+        resource_type='knowledge_base',
+    ),
+    # Removing a document from a knowledge base is destructive and worth tracing,
+    # unlike the upload/index that put it there.
+    ActionRule(
+        action='file_delete',
+        category='knowledge',
+        bucket='write',
+        resource_type='knowledge_base',
+    ),
+    # --- Platform ingress (external traffic, no Workspace actor) ---------
+    ActionRule(
+        action='ingress',
+        category='runtime',
+        bucket='skip',
+        resource_type='bot',
+    ),
+    # --- Provider credential handshake -----------------------------------
+    ActionRule(
+        action='codex_view',
+        category='integration',
+        bucket='read',
+        resource_type='model_provider',
+    ),
+    ActionRule(
+        action='codex_authorize',
+        category='integration',
+        bucket='write',
+        resource_type='model_provider',
+    ),
     ActionRule(
         action='probe',
         category='system',
@@ -508,6 +559,14 @@ ACTION_RULE_TABLE: typing.Final[tuple[ActionRule, ...]] = (
         bucket='skip',
         resource_type='assistant_conversation',
     ),
+    # Visitor traffic to an embedded public chat widget: unauthenticated, keyed
+    # only by a bot UUID, never a Workspace actor. Dropped rather than logged.
+    ActionRule(
+        action='embed',
+        category='runtime',
+        bucket='skip',
+        resource_type='bot',
+    ),
 )
 
 ACTION_RULES_BY_ACTION: typing.Final[dict[str, ActionRule]] = {rule.action: rule for rule in ACTION_RULE_TABLE}
@@ -516,57 +575,86 @@ _READ_METHODS: typing.Final = frozenset({'GET', 'HEAD', 'OPTIONS'})
 
 # Route rules evaluated in order; the first match wins, so the most specific
 # rule must precede its prefix. Each rule is ``(fragments, read_action,
-# write_action, delete_action)``: every fragment must appear in the lowered
-# route (a tuple expresses an AND, which lets ``/plugins/<author>/<name>/config``
-# be told apart from ``/plugins/<author>/<name>``), and the action is selected by
-# the method bucket -- read verb, ``DELETE``, or any other verb.
+# write_action, delete_action, fallback_action)``: every fragment must appear in
+# the lowered route (a tuple expresses an AND, which lets
+# ``/plugins/<author>/<name>/config`` be told apart from
+# ``/plugins/<author>/<name>``).
 #
-# ``delete_action`` is distinct because several resources register their read
-# and their destroy on the *same* path (``GET``/``DELETE /plugins/<author>/<name>``,
-# ``/knowledge/...``, ``/mcp/servers/<name>``). Keying only on fragments made a
-# ``DELETE`` fall into the write bucket and record an uninstall as a view or an
-# update, so the destructive operation left no readable trace.
-_ROUTE_RULES: typing.Final[tuple[tuple[tuple[str, ...], str, str, str | None], ...]] = (
+# The action is selected by the method bucket: a read verb uses ``read_action``,
+# ``DELETE`` uses ``delete_action``, a write verb uses ``write_action``. Two
+# subtlety guards exist because keying only on fragments and then trusting the
+# bucket silently mislabels real operations:
+#
+# * ``write_action`` may be ``None`` for a read-only surface (``/plugins/github``,
+#   the codex auth handshake, the public webhook ingress). A stray non-read verb
+#   then uses ``fallback_action`` instead of being recorded as a mutation.
+# * the bucket is re-derived from the *actual* method and the resolved action, so
+#   a mismatch can never route a real mutation into the read bucket (which is
+#   dropped at the mutation level) or a page load into the write bucket.
+_ROUTE_RULES: typing.Final[tuple[tuple[tuple[str, ...], str, str | None, str | None, str], ...]] = (
     # --- Audit surface itself -------------------------------------------
-    (('/settings/operation-logs/export',), 'export', 'export', None),
-    (('/settings/operation-logs',), 'audit_log_view', 'audit_log_view', None),
-    (('/settings/operation-level',), 'settings_view', 'settings_update', None),
-    (('/settings/governance',), 'settings_view', 'settings_update', None),
-    (('/settings/limits',), 'settings_view', 'settings_update', None),
+    (('/settings/operation-logs/export',), 'export', 'export', None, 'export'),
+    (('/settings/operation-logs',), 'audit_log_view', 'audit_log_view', None, 'audit_log_view'),
+    (('/settings/operation-level',), 'settings_view', 'settings_update', None, 'settings_view'),
+    (('/settings/governance',), 'settings_view', 'settings_update', None, 'settings_view'),
+    (('/settings/limits',), 'settings_view', 'settings_update', None, 'settings_view'),
     # --- Extension lifecycle: plugins -----------------------------------
     # ``/plugins/install`` is an install; the bare ``/plugins/<author>/<name>``
     # is a read when fetched and an uninstall when deleted.
-    (('/plugins/install',), 'plugin_view', 'plugin_install', None),
-    (('/plugins/github',), 'plugin_view', 'plugin_view', None),
-    (('/plugins/', '/config'), 'plugin_view', 'plugin_config', None),
-    (('/plugins/', '/page-api'), 'page_view', 'page_view', None),
-    (('/plugins/', '/upgrade'), 'plugin_view', 'plugin_upgrade', None),
-    (('/plugins/', '/logs'), 'plugin_view', 'plugin_view', None),
-    (('/plugins',), 'plugin_view', 'plugin_view', 'plugin_uninstall'),
+    (('/plugins/install',), 'plugin_view', 'plugin_install', None, 'plugin_view'),
+    (('/plugins/github',), 'plugin_view', None, None, 'plugin_view'),
+    # Editing or deleting a plugin's own config file is a plugin change, not an
+    # opaque resource delete. Must precede the ``/config`` rule below, whose
+    # fragment also matches ``config-files``.
+    (('/plugins/', '/config-files'), 'plugin_view', 'plugin_config', 'plugin_config', 'plugin_view'),
+    (('/plugins/', '/config'), 'plugin_view', 'plugin_config', None, 'plugin_view'),
+    (('/plugins/', '/page-api'), 'page_view', 'page_view', None, 'page_view'),
+    (('/plugins/', '/upgrade'), 'plugin_view', 'plugin_upgrade', None, 'plugin_view'),
+    (('/plugins/', '/logs'), 'plugin_view', 'plugin_view', None, 'plugin_view'),
+    (('/plugins',), 'plugin_view', 'plugin_view', 'plugin_uninstall', 'plugin_view'),
     # The pipeline extension bindings (plugins / MCP servers / skills) live on
     # ``/pipelines/<uuid>/extensions``, not on a plugin. Without this rule the
     # generic fragment below would classify the change as a plugin config edit.
     # The read keeps the generic ``view`` for backwards-compatible labelling.
-    (('/extensions',), 'view', 'pipeline_extensions_update', None),
+    (('/extensions',), 'view', 'pipeline_extensions_update', None, 'view'),
     # --- Extension lifecycle: skills ------------------------------------
-    (('/skills/', '/install'), 'skill_view', 'skill_install', None),
-    (('/skills',), 'skill_view', 'skill_view', 'skill_uninstall'),
+    # ``/skills/install/...`` is an install; the bare ``/skills`` collection is
+    # created with POST and the item is rewritten with PUT, so the write verb is
+    # an update -- not ``skill_view``, which used to drop a real skill edit into
+    # the read bucket where a mutation-level Workspace never persisted it.
+    (('/skills/', '/install'), 'skill_view', 'skill_install', None, 'skill_view'),
+    (('/skills',), 'skill_view', 'skill_update', 'skill_uninstall', 'skill_view'),
+    # --- Ingestion helpers (data flowing in, not a definition change) ----
+    # Ordered before the knowledge-base rule so a file upload or an index is not
+    # mislabelled as a knowledge-base definition update.
+    (('/knowledge/', '/files'), 'file_view', 'ingest', 'file_delete', 'file_view'),
     # --- Knowledge bases & MCP servers ----------------------------------
-    (('/knowledge/',), 'knowledge_base_view', 'knowledge_base_update', 'knowledge_base_delete'),
-    (('/mcp/', '/config'), 'mcp_view', 'mcp_config', None),
-    (('/mcp',), 'mcp_view', 'mcp_config', 'mcp_delete'),
+    (('/knowledge/',), 'knowledge_base_view', 'knowledge_base_update', 'knowledge_base_delete', 'knowledge_base_view'),
+    (('/mcp/', '/config'), 'mcp_view', 'mcp_config', None, 'mcp_view'),
+    (('/mcp',), 'mcp_view', 'mcp_config', 'mcp_delete', 'mcp_view'),
     # --- Member management ----------------------------------------------
-    (('/members',), 'member_view', 'member_role_update', None),
-    (('/invitations',), 'member_view', 'member_invite', None),
+    (('/members',), 'member_view', 'member_role_update', None, 'member_view'),
+    (('/invitations',), 'member_view', 'member_invite', None, 'member_view'),
     # --- Agent-assistant session chatter (never traced) ------------------
     # Placed before the generic verbs so a conversation turn is not recorded as
     # an opaque ``create`` on a nameless resource.
-    (('/assistant',), 'assistant_session', 'assistant_session', 'assistant_session'),
+    (('/assistant',), 'assistant_session', 'assistant_session', 'assistant_session', 'assistant_session'),
+    # --- Embedded public chat widget (visitor traffic, never traced) ------
+    (('/embed/',), 'embed', 'embed', 'embed', 'embed'),
+    # --- Public inbound webhook ingress (external traffic, never traced) --
+    # ``/bots/<uuid>`` is unauthenticated platform traffic, not a Workspace
+    # mutation; recording it as ``create/resource`` was pure noise.
+    (('/bots/',), 'ingress', 'ingress', 'ingress', 'ingress'),
+    # --- Provider credential handshake (in-flight pairing state) ---------
+    (('/codex/',), 'codex_view', None, 'codex_authorize', 'codex_view'),
+    # --- Ingestion helpers: uploading a document is data flowing in, not a
+    #     change to a resource definition. --------------------------------
+    (('/files/',), 'file_view', 'ingest', 'ingest', 'file_view'),
     # --- Generic resource verbs -----------------------------------------
-    (('/export',), 'export', 'export', None),
-    (('/debug',), 'debug', 'debug', None),
-    (('/execute',), 'execute', 'execute', None),
-    (('/publish',), 'publish', 'publish', None),
+    (('/export',), 'export', 'export', None, 'export'),
+    (('/debug',), 'debug', 'debug', None, 'debug'),
+    (('/execute',), 'execute', 'execute', None, 'execute'),
+    (('/publish',), 'publish', 'publish', None, 'publish'),
 )
 
 #: Refines the resource family for the generic verb rules. The route rules above
@@ -590,6 +678,11 @@ _RESOURCE_RULES: typing.Final[tuple[tuple[tuple[str, ...], str], ...]] = (
     (('/monitoring',), 'monitoring'),
     (('/webhooks',), 'webhook'),
     (('/apikeys',), 'api_key'),
+    (('/agents',), 'agent'),
+    (('/files/',), 'file'),
+    (('/skills',), 'skill'),
+    (('/extensions',), 'plugin'),
+    (('/assistant',), 'assistant_conversation'),
     # The sandbox, survey and generic system probes share the ``system`` family.
     (('/box/',), 'system'),
     (('/survey',), 'system'),
@@ -622,6 +715,35 @@ def _with_resource_type(rule: ActionRule, route: str) -> ActionRule:
     return dataclasses.replace(rule, resource_type=resource_type)
 
 
+#: Action names that describe an observation. A mutation can never be persisted
+#: under one of these: the read bucket is dropped at the mutation level, so a
+def _action_bucket(action: str, method: str) -> str:
+    """Return the capture bucket for a resolved action and the actual method.
+
+    The action table is the single source of truth: an action declares whether it
+    is a traceable change (``write``), an observation (``read``), the audit
+    surface itself (``audit``) or noise (``skip``). The only adjustment made here
+    is that a read *method* is always an observation -- so a GET that somehow
+    resolved to a write action still cannot be persisted as a mutation. Because
+    the table now names a real write action for every mutating route, trusting it
+    no longer lets a skill edit hide in the read bucket the way it used to.
+    """
+
+    bucket = ACTION_RULES_BY_ACTION[action].bucket
+    if bucket in ('audit', 'skip'):
+        return bucket
+    if method in _READ_METHODS:
+        return 'read'
+    return bucket
+
+
+def _resolve(rule: ActionRule, action: str, method: str, route: str) -> ActionRule:
+    """Attach the method-derived bucket to a classified action."""
+
+    refined = _with_resource_type(ACTION_RULES_BY_ACTION[action], route)
+    return dataclasses.replace(refined, bucket=_action_bucket(action, method))
+
+
 def classify(method: str, route: str) -> ActionRule:
     """Map one HTTP request to its normalized action rule.
 
@@ -634,7 +756,7 @@ def classify(method: str, route: str) -> ActionRule:
     is_read = upper_method in _READ_METHODS
     is_delete = upper_method == 'DELETE'
 
-    for fragments, read_action, write_action, delete_action in _ROUTE_RULES:
+    for fragments, read_action, write_action, delete_action, fallback_action in _ROUTE_RULES:
         if all(fragment in lowered_route for fragment in fragments):
             if is_read:
                 action = read_action
@@ -643,18 +765,22 @@ def classify(method: str, route: str) -> ActionRule:
                 # dedicated destroy action (still a mutation, never a view).
                 action = delete_action or 'delete'
             else:
-                action = write_action
-            return _with_resource_type(ACTION_RULES_BY_ACTION[action], route)
+                # A read-only surface declares no write action; never invent a
+                # mutation for it, use the observation action instead.
+                action = write_action or fallback_action
+            return _resolve(ACTION_RULES_BY_ACTION[action], action, upper_method, route)
 
     if is_read:
-        return _with_resource_type(ACTION_RULES_BY_ACTION['view'], route)
-    if is_delete:
-        return _with_resource_type(ACTION_RULES_BY_ACTION['delete'], route)
-    if upper_method == 'POST':
-        return _with_resource_type(ACTION_RULES_BY_ACTION['create'], route)
-    if upper_method in {'PUT', 'PATCH'}:
-        return _with_resource_type(ACTION_RULES_BY_ACTION['update'], route)
-    return _with_resource_type(ACTION_RULES_BY_ACTION['probe'], route)
+        action = 'view'
+    elif is_delete:
+        action = 'delete'
+    elif upper_method == 'POST':
+        action = 'create'
+    elif upper_method in {'PUT', 'PATCH'}:
+        action = 'update'
+    else:
+        action = 'probe'
+    return _resolve(ACTION_RULES_BY_ACTION[action], action, upper_method, route)
 
 
 def level_cap_for_role(role: str | None) -> int:
