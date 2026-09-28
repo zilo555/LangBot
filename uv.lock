@@ -2185,7 +2185,7 @@ requires-dist = [
     { name = "gewechat-client", specifier = ">=0.1.5" },
     { name = "html2text", specifier = ">=2024.2.26" },
     { name = "httpx", extras = ["socks"], specifier = ">=0.28.1" },
-    { name = "langbot-plugin", specifier = "==0.7.2" },
+    { name = "langbot-plugin", specifier = "==0.7.3" },
     { name = "langchain", specifier = ">=1.3.9" },
     { name = "langchain-core", specifier = ">=1.3.3" },
     { name = "langchain-text-splitters", specifier = ">=1.1.2" },
@@ -2255,7 +2255,7 @@ dev = [
 
 [[package]]
 name = "langbot-plugin"
-version = "0.7.2"
+version = "0.7.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
@@ -2276,9 +2276,9 @@ dependencies = [
     { name = "watchdog" },
     { name = "websockets" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ff/26/be3636f99159898a27d7333becc4751508352d09fc638f862c6176f91685/langbot_plugin-0.7.2.tar.gz", hash = "sha256:2af9a12bcc9aa94724a37efd65a7d910b661d0e8b524b73d7148aa1cec388ce9", size = 669804, upload-time = "2026-09-28T07:57:33.147327Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/30/3a/47a16c9c2c8b3dd536eb7b0eec6a7e754d2087d47b5c3fb4e0c9f00f1ae2/langbot_plugin-0.7.3.tar.gz", hash = "sha256:cac7fd2145c48efdd2c2223a3f787a4cc73fc7d529d58440d15732137bb0eb04", size = 669921, upload-time = "2026-09-28T08:36:28.070591Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/af/0e/e46bb16c77073edcc483ab7853a83a63bd5f80f366ef35c5be3d27e7f02d/langbot_plugin-0.7.2-py3-none-any.whl", hash = "sha256:de4875753f5c435dd7b7aaf5e42a0052d15086de59f288e9f3cfa694e7f4c048", size = 432376, upload-time = "2026-09-28T07:57:31.186102Z" },
+    { url = "https://files.pythonhosted.org/packages/38/0d/43d80f081ccb6cc4a6ffbb69aaa8d445ce470c2d1d445cbebcb60491bf93/langbot_plugin-0.7.3-py3-none-any.whl", hash = "sha256:a57c57797896b6475989ab6651d174728acfd66e097547fe22dd3c0c5b64ee96", size = 432496, upload-time = "2026-09-28T08:36:26.473566Z" },
 ]
 
 [[package]]
