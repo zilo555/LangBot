@@ -1871,6 +1871,9 @@ export default function HomeSidebar({
   const canViewStorageAnalysis =
     currentWorkspace?.workspace.source !== 'cloud_projection' &&
     currentWorkspace?.permissions.includes('audit.view');
+  // The operation log is an audit surface: owner / admin only.
+  const canViewOperationTrace =
+    currentWorkspace?.permissions.includes('audit.view') ?? false;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settingsSection, setSettingsSection] =
     useState<SettingsSection>('models');
@@ -2221,19 +2224,8 @@ export default function HomeSidebar({
                 <span>{t('models.title')}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            {/* Operation traceability is an audit surface: only roles holding
-                audit.view (owner / admin) get a direct sidebar entry. */}
-            {currentWorkspace?.permissions.includes('audit.view') && (
-              <SidebarMenuItem data-sidebar-guide="operation-trace">
-                <SidebarMenuButton
-                  onClick={() => openSettings('operationTrace')}
-                  tooltip={t('operationTrace.title')}
-                >
-                  <History className="size-4 text-blue-500" />
-                  <span>{t('operationTrace.title')}</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )}
+            {/* Operation log entry moved to the account menu: it is an audit
+                surface, not a primary navigation target. */}
           </SidebarMenu>
 
           {/* API-key management is available only to authorized Workspace roles. */}
@@ -2356,6 +2348,17 @@ export default function HomeSidebar({
                       >
                         <HardDrive />
                         {t('storageAnalysis.title')}
+                      </DropdownMenuItem>
+                    )}
+                    {canViewOperationTrace && (
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          openSettings('operationTrace');
+                        }}
+                      >
+                        <History />
+                        {t('operationTrace.title')}
                       </DropdownMenuItem>
                     )}
                     <DropdownMenuItem

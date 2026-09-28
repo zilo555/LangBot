@@ -106,13 +106,6 @@ export default function SettingsDialog({
       icon: <UsersRound className="size-4" />,
     },
     {
-      id: 'operationTrace',
-      label: t('settingsDialog.nav.operationTrace'),
-      title: t('operationTrace.title'),
-      description: t('operationTrace.description'),
-      icon: <History className="size-4" />,
-    },
-    {
       id: 'models',
       label: t('settingsDialog.nav.models'),
       title: t('models.title'),
@@ -139,6 +132,13 @@ export default function SettingsDialog({
       title: t('account.settings'),
       description: t('account.settingsDescription'),
       icon: <Settings className="size-4" />,
+    },
+    {
+      id: 'operationTrace',
+      label: t('settingsDialog.nav.operationTrace'),
+      title: t('operationTrace.title'),
+      description: t('operationTrace.description'),
+      icon: <History className="size-4" />,
     },
   ];
   const permissions = currentWorkspace?.permissions ?? [];
