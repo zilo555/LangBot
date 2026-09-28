@@ -267,8 +267,8 @@ class UserRouterGroup(group.RouterGroup):
 
             return self.success(data={'user': user_email})
 
-        @self.route('/change-password', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
-        async def _(user_email: str) -> str:
+        @self.route('/change-password', methods=['POST'], auth_type=group.AuthType.ACCOUNT_TOKEN)
+        async def _(account) -> str:
             # Check if password change is allowed
             allow_modify_login_info = self.ap.instance_config.data.get('system', {}).get(
                 'allow_modify_login_info', True
@@ -282,13 +282,13 @@ class UserRouterGroup(group.RouterGroup):
             new_password = json_data['new_password']
 
             try:
-                await self.ap.user_service.change_password(user_email, current_password, new_password)
+                await self.ap.user_service.change_password(account.normalized_email, current_password, new_password)
             except argon2.exceptions.VerifyMismatchError:
                 return self.http_status(400, -1, 'Current password is incorrect')
             except ValueError as e:
                 return self.http_status(400, -1, str(e))
 
-            return self.success(data={'user': user_email})
+            return self.success(data={'user': account.user})
 
         # Space OAuth endpoints (redirect flow)
 
@@ -323,19 +323,19 @@ class UserRouterGroup(group.RouterGroup):
             except ValueError as e:
                 return self.fail(1, str(e))
 
-        @self.route('/space/bind-authorize-url', methods=['GET'], auth_type=group.AuthType.USER_TOKEN)
-        async def _(request_context: RequestContext) -> str:
+        @self.route('/space/bind-authorize-url', methods=['GET'], auth_type=group.AuthType.ACCOUNT_TOKEN)
+        async def _(account) -> str:
             """Issue an account-bound, one-time Space OAuth redirect."""
             redirect_uri = quart.request.args.get('redirect_uri', '')
             if not redirect_uri:
                 return self.fail(1, 'Missing redirect_uri parameter')
-            if not request_context.account_uuid:
+            if not account.uuid:
                 return self.http_status(403, 'account_required', 'An Account is required')
             try:
                 redirect_uri = self._validate_space_redirect_uri(redirect_uri, bind=True)
                 state = await self.ap.user_service.issue_space_oauth_state(
                     'bind',
-                    account_uuid=request_context.account_uuid,
+                    account_uuid=account.uuid,
                 )
                 authorize_url = self.ap.space_service.get_oauth_authorize_url(redirect_uri, state)
                 return self.success(data={'authorize_url': authorize_url})
@@ -507,8 +507,8 @@ class UserRouterGroup(group.RouterGroup):
             capabilities['passkey_supported'] = True
             return self.success(data={'initialized': True, **capabilities})
 
-        @self.route('/set-password', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
-        async def _(user_email: str) -> str:
+        @self.route('/set-password', methods=['POST'], auth_type=group.AuthType.ACCOUNT_TOKEN)
+        async def _(account) -> str:
             """Set password for Space account (first time) or change password"""
             # Check if modifying login info is allowed
             allow_modify_login_info = self.ap.instance_config.data.get('system', {}).get(
@@ -524,13 +524,9 @@ class UserRouterGroup(group.RouterGroup):
             if not new_password:
                 return self.http_status(400, -1, 'New password is required')
 
-            user_obj = await self.ap.user_service.get_user_by_email(user_email)
-            if user_obj is None:
-                return self.http_status(404, -1, 'User not found')
-
             try:
-                await self.ap.user_service.set_password(user_email, new_password, current_password)
-                return self.success(data={'user': user_email})
+                await self.ap.user_service.set_password(account.normalized_email, new_password, current_password)
+                return self.success(data={'user': account.user})
             except ValueError as e:
                 return self.http_status(400, -1, str(e))
             except argon2.exceptions.VerifyMismatchError:
@@ -595,8 +591,12 @@ class UserRouterGroup(group.RouterGroup):
             except Exception:
                 raise
 
-        @self.route('/passkey/register/options', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
-        async def _(user_email: str) -> str:
+        # Passkeys belong to the Account, not to a Workspace: these routes are
+        # ACCOUNT_TOKEN scoped for the same reason as the second-factor routes
+        # below. Resolving the caller through the login name would also miss every
+        # Account whose login name is not its email.
+        @self.route('/passkey/register/options', methods=['POST'], auth_type=group.AuthType.ACCOUNT_TOKEN)
+        async def _(account) -> str:
             """Generate WebAuthn registration options for current account."""
             allow_modify_login_info = self.ap.instance_config.data.get('system', {}).get(
                 'allow_modify_login_info', True
@@ -604,16 +604,12 @@ class UserRouterGroup(group.RouterGroup):
             if not allow_modify_login_info:
                 return self.http_status(403, -1, 'Modifying login info is disabled')
 
-            user_obj = await self.ap.user_service.get_user_by_email(user_email)
-            if user_obj is None:
-                return self.http_status(404, -1, 'User not found')
-
             json_data = (await quart.request.json) or {}
             origin, rp_id = self._extract_origin_and_rp_id(json_data)
 
             try:
                 options, challenge_token = await self.ap.user_service.generate_passkey_registration_options(
-                    account_uuid=user_obj.uuid,
+                    account_uuid=account.uuid,
                     rp_id=rp_id,
                     origin=origin,
                     rp_name='LangBot',
@@ -622,18 +618,14 @@ class UserRouterGroup(group.RouterGroup):
             except Exception as e:
                 return self.fail(1, str(e))
 
-        @self.route('/passkey/register/verify', methods=['POST'], auth_type=group.AuthType.USER_TOKEN)
-        async def _(user_email: str) -> str:
+        @self.route('/passkey/register/verify', methods=['POST'], auth_type=group.AuthType.ACCOUNT_TOKEN)
+        async def _(account) -> str:
             """Verify WebAuthn registration response and save credential."""
             allow_modify_login_info = self.ap.instance_config.data.get('system', {}).get(
                 'allow_modify_login_info', True
             )
             if not allow_modify_login_info:
                 return self.http_status(403, -1, 'Modifying login info is disabled')
-
-            user_obj = await self.ap.user_service.get_user_by_email(user_email)
-            if user_obj is None:
-                return self.http_status(404, -1, 'User not found')
 
             json_data = await quart.request.json
             challenge_token = json_data.get('challenge_token')
@@ -700,14 +692,10 @@ class UserRouterGroup(group.RouterGroup):
             except Exception as e:
                 return self.fail(1, str(e))
 
-        @self.route('/passkeys', methods=['GET'], auth_type=group.AuthType.USER_TOKEN)
-        async def _(user_email: str) -> str:
+        @self.route('/passkeys', methods=['GET'], auth_type=group.AuthType.ACCOUNT_TOKEN)
+        async def _(account) -> str:
             """List registered passkeys for the current user."""
-            user_obj = await self.ap.user_service.get_user_by_email(user_email)
-            if user_obj is None:
-                return self.http_status(404, -1, 'User not found')
-
-            passkeys = await self.ap.user_service.get_user_passkeys(user_obj.uuid)
+            passkeys = await self.ap.user_service.get_user_passkeys(account.uuid)
             return self.success(
                 data=[
                     {
@@ -723,8 +711,8 @@ class UserRouterGroup(group.RouterGroup):
                 ]
             )
 
-        @self.route('/passkey/<passkey_uuid>', methods=['PATCH'], auth_type=group.AuthType.USER_TOKEN)
-        async def _(user_email: str, passkey_uuid: str) -> str:
+        @self.route('/passkey/<passkey_uuid>', methods=['PATCH'], auth_type=group.AuthType.ACCOUNT_TOKEN)
+        async def _(account, passkey_uuid: str) -> str:
             """Rename a registered passkey."""
             allow_modify_login_info = self.ap.instance_config.data.get('system', {}).get(
                 'allow_modify_login_info', True
@@ -732,17 +720,13 @@ class UserRouterGroup(group.RouterGroup):
             if not allow_modify_login_info:
                 return self.http_status(403, -1, 'Modifying login info is disabled')
 
-            user_obj = await self.ap.user_service.get_user_by_email(user_email)
-            if user_obj is None:
-                return self.http_status(404, -1, 'User not found')
-
             json_data = await quart.request.json
             name = (json_data.get('name') or '').strip()
             if not name:
                 return self.fail(1, 'Passkey name cannot be empty')
 
             updated = await self.ap.user_service.rename_user_passkey(
-                account_uuid=user_obj.uuid,
+                account_uuid=account.uuid,
                 passkey_uuid=passkey_uuid,
                 new_name=name,
             )
@@ -750,8 +734,8 @@ class UserRouterGroup(group.RouterGroup):
                 return self.http_status(404, -1, 'Passkey not found')
             return self.success(data={'uuid': updated.uuid, 'name': updated.name})
 
-        @self.route('/passkey/<passkey_uuid>', methods=['DELETE'], auth_type=group.AuthType.USER_TOKEN)
-        async def _(user_email: str, passkey_uuid: str) -> str:
+        @self.route('/passkey/<passkey_uuid>', methods=['DELETE'], auth_type=group.AuthType.ACCOUNT_TOKEN)
+        async def _(account, passkey_uuid: str) -> str:
             """Delete/revoke a registered passkey."""
             allow_modify_login_info = self.ap.instance_config.data.get('system', {}).get(
                 'allow_modify_login_info', True
@@ -759,12 +743,8 @@ class UserRouterGroup(group.RouterGroup):
             if not allow_modify_login_info:
                 return self.http_status(403, -1, 'Modifying login info is disabled')
 
-            user_obj = await self.ap.user_service.get_user_by_email(user_email)
-            if user_obj is None:
-                return self.http_status(404, -1, 'User not found')
-
             deleted = await self.ap.user_service.delete_user_passkey(
-                account_uuid=user_obj.uuid,
+                account_uuid=account.uuid,
                 passkey_uuid=passkey_uuid,
             )
             if not deleted:
