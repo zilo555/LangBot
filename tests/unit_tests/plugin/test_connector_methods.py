@@ -765,6 +765,7 @@ class TestSetPluginConfig:
                     'normalized_digest': 'b' * 64,
                     'verification': 'valid',
                     'certificate_runtime_profile': 'shared-runtime-v1',
+                    'certificate_component_model': 'stateless-v1',
                     'certificate_id': 'ed25519:trusted-issuer',
                     'runtime_profile': 'shared-runtime-v1',
                     'admission_code': 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE',
