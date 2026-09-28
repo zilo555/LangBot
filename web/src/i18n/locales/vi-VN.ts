@@ -2302,7 +2302,7 @@ const viVN = {
     totpStatusDisabled: 'Chưa bật',
     totpCodesRemaining: 'Còn {{count}} mã khôi phục',
     totpManagerSectionDesc:
-      'Chủ sở hữu và quản trị viên có thể xem và đặt lại yếu tố thứ hai của bất kỳ tài khoản nào.',
+      'Chủ sở hữu và quản trị viên có thể xem và đặt lại yếu tố thứ hai của các tài khoản trong không gian làm việc này.',
     revokeTotp: 'Liên kết lại',
     totpAdminResetTitle: 'Liên kết lại xác thực hai bước cho {{user}}',
     totpAdminResetDesc:

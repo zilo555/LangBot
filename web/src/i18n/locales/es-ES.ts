@@ -2367,7 +2367,7 @@ const esES = {
     totpStatusDisabled: 'No activada',
     totpCodesRemaining: 'Quedan {{count}} códigos de recuperación',
     totpManagerSectionDesc:
-      'Los propietarios y administradores pueden revisar y restablecer el segundo factor de cualquier cuenta.',
+      'Los propietarios y administradores pueden revisar y restablecer el segundo factor de las cuentas de este espacio de trabajo.',
     revokeTotp: 'Reasignar',
     totpAdminResetTitle: 'Reasignar la verificación en dos pasos de {{user}}',
     totpAdminResetDesc:

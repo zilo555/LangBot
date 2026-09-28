@@ -914,22 +914,52 @@ class UserRouterGroup(group.RouterGroup):
             if access.membership.role not in ('owner', 'admin'):
                 raise PermissionError('Only Workspace owners and admins may manage other Accounts')
 
+        async def _require_target_in_workspace(
+            request_context: RequestContext,
+            target_account_uuid: str,
+        ) -> bool:
+            """Report whether the target Account belongs to the caller's Workspace.
+
+            A cross-Workspace Account is reported as absent, so the response never
+            confirms another tenant's Account existence.
+            """
+
+            try:
+                await self.ap.workspace_collaboration_service.resolve_account_workspace(
+                    target_account_uuid,
+                    request_context.workspace_uuid,
+                )
+            except Exception:
+                return False
+            return True
+
         @self.route('/totp/accounts', methods=['GET'], auth_type=group.AuthType.USER_TOKEN)
         async def _(request_context: RequestContext) -> str:
-            """List the second-factor state of every Account for owners/admins.
+            """List the second-factor state of the caller's Workspace Accounts.
 
-            Oversight is deliberately instance-wide: managing the second factor
-            of any Account is an owner/admin responsibility and is not scoped to
-            the caller's Workspace.
+            Oversight is a Workspace responsibility: owners and admins answer for
+            the Accounts that belong to their own Workspace and must never see
+            another tenant's Accounts.
             """
             try:
-                await _require_workspace_manager(request_context)
+                access = await self.ap.workspace_collaboration_service.resolve_account_workspace(
+                    request_context.account_uuid,
+                    request_context.workspace_uuid,
+                )
+                if access.membership.role not in ('owner', 'admin'):
+                    raise PermissionError('Only Workspace owners and admins may manage other Accounts')
+                members = await self.ap.workspace_collaboration_service.list_members(
+                    request_context.workspace_uuid,
+                    access.membership,
+                )
             except PermissionError as e:
                 return self.http_status(403, 'permission_denied', str(e))
             except Exception:
                 return self.http_status(403, 'permission_denied', 'Not permitted')
 
-            accounts = await self.ap.totp_service.list_account_states()
+            accounts = await self.ap.totp_service.list_account_states(
+                account_uuids=[member.membership.account_uuid for member in members],
+            )
             return self.success(data={'accounts': accounts})
 
         @self.route('/totp/accounts/<target_account_uuid>', methods=['DELETE'], auth_type=group.AuthType.USER_TOKEN)
@@ -947,6 +977,9 @@ class UserRouterGroup(group.RouterGroup):
                 return self.http_status(403, 'permission_denied', str(e))
             except Exception:
                 return self.http_status(403, 'permission_denied', 'Not permitted')
+
+            if not await _require_target_in_workspace(request_context, target_account_uuid):
+                return self.http_status(404, 'account_not_found', 'Account not found')
 
             revoked = await self.ap.totp_service.revoke_for_account(target_account_uuid)
             if not revoked:
@@ -977,6 +1010,9 @@ class UserRouterGroup(group.RouterGroup):
                 return self.http_status(403, 'permission_denied', str(e))
             except Exception:
                 return self.http_status(403, 'permission_denied', 'Not permitted')
+
+            if not await _require_target_in_workspace(request_context, target_account_uuid):
+                return self.http_status(404, 'account_not_found', 'Account not found')
 
             target = await self.ap.totp_service.get_account(target_account_uuid)
             if target is None:
@@ -1021,6 +1057,9 @@ class UserRouterGroup(group.RouterGroup):
             code = json_data.get('code')
             if not isinstance(code, str) or not code:
                 return self.fail(1, 'Missing code parameter')
+
+            if not await _require_target_in_workspace(request_context, target_account_uuid):
+                return self.http_status(404, 'account_not_found', 'Account not found')
 
             try:
                 result = await self.ap.totp_service.confirm_enrollment(target_account_uuid, code)

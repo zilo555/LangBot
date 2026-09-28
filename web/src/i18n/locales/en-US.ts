@@ -2316,7 +2316,7 @@ const enUS = {
     totpStatusDisabled: 'Not enabled',
     totpCodesRemaining: '{{count}} recovery codes left',
     totpManagerSectionDesc:
-      'Owners and admins can review and revoke the second factor of any Account.',
+      'Owners and admins can review and revoke the second factor of Accounts in this Workspace.',
     revokeTotp: 'Re-bind',
     totpAdminResetTitle: 'Re-bind two-factor authentication for {{user}}',
     totpAdminResetDesc:

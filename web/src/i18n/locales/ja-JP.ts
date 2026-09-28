@@ -2331,7 +2331,7 @@ const jaJP = {
     totpStatusDisabled: '未設定',
     totpCodesRemaining: 'リカバリーコード残り {{count}} 個',
     totpManagerSectionDesc:
-      'オーナーと管理者はすべてのアカウントの二段階認証を確認・解除できます。',
+      'オーナーと管理者はこのワークスペースのアカウントの二段階認証を確認・解除できます。',
     revokeTotp: '再バインド',
     totpAdminResetTitle: '{{user}} の二段階認証を再バインド',
     totpAdminResetDesc:

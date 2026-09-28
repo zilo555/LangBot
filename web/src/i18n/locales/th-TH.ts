@@ -2268,7 +2268,7 @@ const thTH = {
     totpStatusDisabled: 'ยังไม่เปิดใช้',
     totpCodesRemaining: 'เหลือรหัสกู้คืน {{count}} รหัส',
     totpManagerSectionDesc:
-      'เจ้าของและผู้ดูแลสามารถตรวจสอบและรีเซ็ตการยืนยันสองขั้นตอนของบัญชีใดก็ได้',
+      'เจ้าของและผู้ดูแลสามารถตรวจสอบและรีเซ็ตการยืนยันสองขั้นตอนของบัญชีในพื้นที่ทำงานนี้',
     revokeTotp: 'ผูกใหม่',
     totpAdminResetTitle: 'ผูกการยืนยันสองขั้นตอนใหม่ให้ {{user}}',
     totpAdminResetDesc:
