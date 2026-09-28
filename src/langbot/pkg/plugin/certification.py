@@ -43,12 +43,11 @@ class AdmissionDisposition(str, Enum):
 
 class AdmissionCode(str, Enum):
     SHARED_ELIGIBLE = 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE'
-    CLOUD_CERTIFICATE_REQUIRED = 'CERTIFIED_PLUGIN_CLOUD_CERTIFICATE_REQUIRED'
+    UNSIGNED_DEDICATED = 'CERTIFIED_PLUGIN_UNSIGNED_DEDICATED'
     CLOUD_CERTIFICATE_INVALID = 'CERTIFIED_PLUGIN_CLOUD_CERTIFICATE_INVALID'
     OSS_LEGACY_DEDICATED = 'CERTIFIED_PLUGIN_OSS_LEGACY_DEDICATED'
     OSS_FORCE_REQUIRED = 'CERTIFIED_PLUGIN_OSS_FORCE_REQUIRED'
     OSS_FORCED_DEDICATED = 'CERTIFIED_PLUGIN_OSS_FORCED_DEDICATED'
-    OSS_CERTIFIED_DEDICATED = 'CERTIFIED_PLUGIN_OSS_CERTIFIED_DEDICATED'
     OSS_UNTRUSTED_DEDICATED = 'CERTIFIED_PLUGIN_OSS_UNTRUSTED_DEDICATED'
 
 
@@ -196,7 +195,7 @@ def decide_plugin_admission(
     facts: PluginCertificationFacts,
     administrator_force: bool = False,
 ) -> PluginAdmissionDecision:
-    """Apply Cloud fail-closed and OSS administrator-force admission rules."""
+    """Only verified cross-tenant certificates grant shared placement."""
 
     mode = DeploymentMode(deployment)
     certificate = facts.certificate
@@ -207,26 +206,16 @@ def decide_plugin_admission(
             SHARED_RUNTIME_V1,
         )
 
-    if mode is DeploymentMode.CLOUD:
-        code = (
-            AdmissionCode.CLOUD_CERTIFICATE_REQUIRED
-            if certificate.verification is CertificateVerification.ABSENT
-            else AdmissionCode.CLOUD_CERTIFICATE_INVALID
-        )
-        return PluginAdmissionDecision(AdmissionDisposition.REJECTED, code, DEDICATED_RUNTIME)
-
     if certificate.verification is CertificateVerification.ABSENT:
         return PluginAdmissionDecision(
             AdmissionDisposition.DEDICATED_ALLOWED,
-            AdmissionCode.OSS_LEGACY_DEDICATED,
+            AdmissionCode.UNSIGNED_DEDICATED if mode is DeploymentMode.CLOUD else AdmissionCode.OSS_LEGACY_DEDICATED,
             DEDICATED_RUNTIME,
         )
 
-    if certificate.verification is CertificateVerification.VALID:
+    if mode is DeploymentMode.CLOUD:
         return PluginAdmissionDecision(
-            AdmissionDisposition.DEDICATED_ALLOWED,
-            AdmissionCode.OSS_CERTIFIED_DEDICATED,
-            DEDICATED_RUNTIME,
+            AdmissionDisposition.REJECTED, AdmissionCode.CLOUD_CERTIFICATE_INVALID, DEDICATED_RUNTIME
         )
 
     # A self-hosted deployment that has not configured the issuer key ring cannot

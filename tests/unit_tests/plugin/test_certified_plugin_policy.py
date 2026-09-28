@@ -13,7 +13,8 @@ from langbot_plugin.entities.io.context import PluginExecutionMode
     ('deployment', 'certificate', 'certificate_id', 'force', 'expected_disposition', 'expected_code'),
     [
         ('cloud', ('valid', 'shared-runtime-v1'), 'issuer', False, 'shared_eligible', 'CERTIFIED_PLUGIN_SHARED_ELIGIBLE'),
-        ('cloud', ('absent', None), None, False, 'rejected', 'CERTIFIED_PLUGIN_CLOUD_CERTIFICATE_REQUIRED'),
+        ('cloud', ('absent', None), None, False, 'dedicated_allowed', 'CERTIFIED_PLUGIN_UNSIGNED_DEDICATED'),
+        ('cloud', ('absent', None), None, True, 'dedicated_allowed', 'CERTIFIED_PLUGIN_UNSIGNED_DEDICATED'),
         ('cloud', ('malformed', None), None, False, 'rejected', 'CERTIFIED_PLUGIN_CLOUD_CERTIFICATE_INVALID'),
         (
             'cloud',
@@ -132,6 +133,27 @@ def test_legacy_shared_certificate_without_stateless_contract_is_not_shared() ->
     )
 
     assert decision.disposition is AdmissionDisposition.REJECTED
+
+
+def test_oss_does_not_treat_valid_nonshared_signature_as_dedicated_certification() -> None:
+    from langbot.pkg.plugin.certification import (
+        AdmissionDisposition, CertificateFacts, CertificateVerification,
+        PluginCertificationFacts, decide_plugin_admission,
+    )
+
+    decision = decide_plugin_admission(
+        deployment='oss',
+        facts=PluginCertificationFacts(
+            installation_uuid='00000000-0000-4000-8000-000000000001',
+            artifact_digest='a' * 64,
+            certificate=CertificateFacts(
+                verification=CertificateVerification.VALID,
+                runtime_profile=None,
+                certificate_id='issuer',
+            ),
+        ),
+    )
+    assert decision.disposition is AdmissionDisposition.ADMINISTRATOR_FORCE_REQUIRED
 
 
 def test_archive_inspection_preserves_legacy_tuple_and_exposes_certificate_facts() -> None:

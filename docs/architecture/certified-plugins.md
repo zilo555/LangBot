@@ -49,8 +49,8 @@ dedicated profile.
 | Deployment | SDK verification | Explicit `administrator_force` | Result |
 | --- | --- | --- | --- |
 | Cloud | valid envelope declaring `shared-runtime-v1` + `stateless-v1` | any | admitted to the shared singleton profile |
-| Cloud | absent | any | reject before storage with `CERTIFIED_PLUGIN_CLOUD_CERTIFICATE_REQUIRED` |
-| Cloud | malformed, untrusted, invalid, or non-shared | any | reject before storage with `CERTIFIED_PLUGIN_CLOUD_CERTIFICATE_INVALID` |
+| Cloud | no signature | any | install on dedicated worker, without shared eligibility |
+| Cloud | malformed, untrusted, invalid, or non-shared declaration | any | reject before storage with `CERTIFIED_PLUGIN_CLOUD_CERTIFICATE_INVALID`; do not treat a broken signature as unsigned |
 | OSS | absent legacy envelope | any | admitted to the dedicated profile |
 | OSS | valid envelope declaring `shared-runtime-v1` + `stateless-v1` | any | selected shared singleton profile |
 | OSS | declaration signed by a **key this instance resolves** | false | reject with `CERTIFIED_PLUGIN_OSS_FORCE_REQUIRED` |
