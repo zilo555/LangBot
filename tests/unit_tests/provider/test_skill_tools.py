@@ -737,3 +737,23 @@ async def test_native_skill_tools_require_runner_box_binding():
     with pytest.raises(BoxValidationError, match='Runner must bind a Box'):
         await loader.invoke_tool('exec', {'command': 'true'}, _make_query())
     ap.box_service.execute_tool.assert_not_awaited()
+
+
+    @pytest.mark.asyncio
+    async def test_register_skill_hidden_when_cloud_scanning_is_disabled(self):
+        from langbot.pkg.provider.tools.loaders.skill_authoring import SkillToolLoader
+
+        ap = _make_ap()
+        ap.skill_mgr = _make_skill_manager({'demo': _make_skill_data(name='demo')})
+        ap.box_service = SimpleNamespace(
+            available=True,
+            managed_admission_required=True,
+            get_backend_status=AsyncMock(return_value={'backend': {'available': True}}),
+        )
+
+        loader = SkillToolLoader(ap)
+        await loader.initialize()
+
+        assert [tool.name for tool in await loader.get_tools()] == ['activate']
+        assert await loader.has_tool('register_skill') is False
+        assert await loader.has_tool('activate') is True

@@ -35,10 +35,7 @@ class SkillToolLoader(loader.ToolLoader):
         # Check if sandbox backend is available (same check as native tools)
         self._sandbox_available = await self._check_sandbox_available()
         if self._sandbox_available:
-            self._tools = [
-                self._build_activate_skill_tool(),
-                self._build_register_skill_tool(),
-            ]
+            self._tools = self._build_skill_tools()
         else:
             self.ap.logger.info(
                 'Skill tools (activate/register_skill) are NOT available. '
@@ -54,14 +51,32 @@ class SkillToolLoader(loader.ToolLoader):
         if not await self._is_available():
             return []
         if not self._tools:
-            self._tools = [
-                self._build_activate_skill_tool(),
-                self._build_register_skill_tool(),
-            ]
+            self._tools = self._build_skill_tools()
         return list(self._tools)
 
+    def _build_skill_tools(self) -> list[resource_tool.LLMTool]:
+        tools = [self._build_activate_skill_tool()]
+        if self._skill_registration_available():
+            tools.append(self._build_register_skill_tool())
+        else:
+            self.ap.logger.info(
+                'register_skill is NOT available: Cloud sandboxes never scan arbitrary '
+                'host skill directories. Install skills through the skill store instead.'
+            )
+        return tools
+
+    def _skill_registration_available(self) -> bool:
+        """Host skill scanning is disabled for Cloud-managed sandboxes."""
+
+        box_service = getattr(self.ap, 'box_service', None)
+        return not bool(getattr(box_service, 'managed_admission_required', False))
+
     async def has_tool(self, name: str) -> bool:
-        return await self._is_available() and name in SKILL_TOOL_NAMES
+        if not await self._is_available() or name not in SKILL_TOOL_NAMES:
+            return False
+        if name == REGISTER_SKILL_TOOL_NAME:
+            return self._skill_registration_available()
+        return True
 
     async def _is_available(self) -> bool:
         """Check if skill tools should be available.
