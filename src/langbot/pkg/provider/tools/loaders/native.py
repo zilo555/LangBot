@@ -754,9 +754,16 @@ class NativeToolLoader(loader.ToolLoader):
         return f'{str(base).rstrip("/")}/{relative}'
 
     async def _run_workspace_file_script(self, script: str, query: pipeline_query.Query) -> dict:
+        # Sandbox images built from a host rootfs may only ship `python3`, and a
+        # read-only /usr prevents creating a `python` shim inside the jail, so
+        # resolve the interpreter instead of assuming its name.
+        command = (
+            'PYTHON_BIN=$(command -v python3 || command -v python); '
+            f"\"$PYTHON_BIN\" - <<'PY'\n{script}\nPY"
+        )
         result = await self.ap.box_service.execute_tool(
             {
-                'command': f"python - <<'PY'\n{script}\nPY",
+                'command': command,
                 'timeout_sec': 30,
             },
             query,
