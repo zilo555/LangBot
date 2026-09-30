@@ -26,8 +26,25 @@ def debug_stream_response(service, context, agent_uuid: str, payload: dict) -> q
             await queue.put({'kind': 'result', 'data': result})
 
         async def execute() -> None:
+            application = getattr(service, 'ap', None)
+            persistence_mgr = getattr(application, 'persistence_mgr', None)
+            tenant_scope = getattr(persistence_mgr, 'tenant_scope', None)
+            scope = (
+                tenant_scope(context.workspace_uuid)
+                if callable(tenant_scope)
+                else contextlib.nullcontext()
+            )
             try:
-                result = await service.debug_agent(context, agent_uuid, payload, on_result=on_result)
+                # The streamed body is emitted after the request handler returned,
+                # so the request's tenant scope has already closed: carry the
+                # trusted Workspace identity into the deferred execution.
+                async with scope:
+                    result = await service.debug_agent(
+                        context,
+                        agent_uuid,
+                        payload,
+                        on_result=on_result,
+                    )
                 await queue.put({'kind': 'completed', 'data': result})
             except Exception as exc:
                 # The stream still uses HTTP 200 when execution returns an
@@ -46,6 +63,9 @@ def debug_stream_response(service, context, agent_uuid: str, payload: dict) -> q
                 elif isinstance(exc, RunnerError):
                     code, message = 'runner_error', 'The Agent runner could not complete this test'
                 else:
+                    logger = getattr(application, 'logger', None)
+                    if logger is not None:
+                        logger.exception('Agent debug stream execution failed')
                     code, message = 'runner_error', 'The Agent debug execution failed'
                 await queue.put({'kind': 'error', 'code': code, 'msg': message})
 
