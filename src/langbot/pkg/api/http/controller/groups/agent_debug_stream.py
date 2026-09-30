@@ -29,11 +29,7 @@ def debug_stream_response(service, context, agent_uuid: str, payload: dict) -> q
             application = getattr(service, 'ap', None)
             persistence_mgr = getattr(application, 'persistence_mgr', None)
             tenant_scope = getattr(persistence_mgr, 'tenant_scope', None)
-            scope = (
-                tenant_scope(context.workspace_uuid)
-                if callable(tenant_scope)
-                else contextlib.nullcontext()
-            )
+            scope = tenant_scope(context.workspace_uuid) if callable(tenant_scope) else contextlib.nullcontext()
             try:
                 # The streamed body is emitted after the request handler returned,
                 # so the request's tenant scope has already closed: carry the
