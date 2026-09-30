@@ -882,4 +882,4 @@ async def test_workspace_file_script_resolves_the_sandbox_interpreter():
     assert result == {'ok': True}
     command = captured['command']
     assert command.startswith('PYTHON_BIN=$(command -v python3 || command -v python)')
-    assert command.endswith(" - <<'PY'\nprint(\"x\")\nPY")
+    assert command.endswith(' - <<\'PY\'\nprint("x")\nPY')

@@ -738,7 +738,6 @@ async def test_native_skill_tools_require_runner_box_binding():
         await loader.invoke_tool('exec', {'command': 'true'}, _make_query())
     ap.box_service.execute_tool.assert_not_awaited()
 
-
     @pytest.mark.asyncio
     async def test_register_skill_hidden_when_cloud_scanning_is_disabled(self):
         from langbot.pkg.provider.tools.loaders.skill_authoring import SkillToolLoader
